@@ -1,0 +1,45 @@
+﻿<button type="button"
+        class="@BuildClass()"
+        @onclick="Toggle">
+    <span class="@ThumbClass"></span>
+</button>
+
+@code {
+    [Parameter] public bool Value { get; set; }
+    [Parameter] public EventCallback<bool> ValueChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    private async Task Toggle()
+    {
+        if (Disabled) return;
+        Value = !Value;
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private string BuildClass()
+    {
+        var trackOn = "bg-blue-600";                     // كان bg-mhd-primary-600
+        var trackOff = "bg-slate-300 dark:bg-slate-700";  // كان bg-mhd-border
+
+        var cls = new List<string>
+        {
+            "relative inline-flex items-center transition-colors duration-150",
+            "w-9 h-4 rounded-full",
+            Value ? trackOn : trackOff
+        };
+
+        if (Disabled)
+            cls.Add("opacity-50 cursor-not-allowed");
+        else
+            cls.Add("cursor-pointer");
+
+        return string.Join(" ", cls);
+    }
+
+    private string ThumbClass =>
+        string.Join(" ", new[]
+        {
+            "inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-150",
+            Value ? "translate-x-5" : "translate-x-0"
+        });
+}

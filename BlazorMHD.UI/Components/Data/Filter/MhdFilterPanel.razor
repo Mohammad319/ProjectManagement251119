@@ -1,0 +1,65 @@
+﻿@* FilterPanel.razor *@
+
+<div class="@BuildWrapperClass()">
+    <div class="flex items-center justify-between mb-1.5">
+        <h3 class="text-[0.75rem] font-semibold text-slate-900 dark:text-slate-100">
+            @Title
+        </h3>
+        <button type="button"
+                class="text-[0.70rem] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
+                @onclick="Toggle">
+            @(Collapsed ? "Show" : "Hide")
+        </button>
+    </div>
+
+    @if (!Collapsed)
+    {
+        <div class="space-y-1.5 mb-1.5">
+            @ChildContent
+        </div>
+
+        @if (ShowFooter)
+        {
+            <div class="flex justify-end gap-1 pt-1 text-[0.75rem]">
+                <button type="button"
+                        class="px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        @onclick="OnResetClicked">
+                    Reset
+                </button>
+                <button type="button"
+                        class="px-2 py-0.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                        @onclick="OnApplyClicked">
+                    Apply
+                </button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Filters";
+    [Parameter] public bool Collapsed { get; set; }
+    [Parameter] public EventCallback<bool> CollapsedChanged { get; set; }
+
+    [Parameter] public bool ShowFooter { get; set; } = true;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public EventCallback OnApply { get; set; }
+    [Parameter] public EventCallback OnReset { get; set; }
+
+    private async Task Toggle()
+    {
+        Collapsed = !Collapsed;
+        await CollapsedChanged.InvokeAsync(Collapsed);
+    }
+
+    private Task OnApplyClicked() =>
+        OnApply.HasDelegate ? OnApply.InvokeAsync() : Task.CompletedTask;
+
+    private Task OnResetClicked() =>
+        OnReset.HasDelegate ? OnReset.InvokeAsync() : Task.CompletedTask;
+
+    private string BuildWrapperClass()
+        => "border border-slate-200 dark:border-slate-800 rounded-md bg-white dark:bg-slate-950 p-2 text-[0.75rem] text-slate-700 dark:text-slate-200";
+}

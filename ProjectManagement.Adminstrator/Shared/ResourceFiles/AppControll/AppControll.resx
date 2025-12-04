@@ -1,0 +1,262 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="appUsers" xml:space="preserve">
+    <value>Site Administrators</value>
+  </data>
+  <data name="bindCapGroup" xml:space="preserve">
+    <value>Bind Cap with Group</value>
+  </data>
+  <data name="block" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="blockout" xml:space="preserve">
+    <value>Blockout</value>
+  </data>
+  <data name="capRole" xml:space="preserve">
+    <value>Cap Role</value>
+  </data>
+  <data name="confirmTenantBlock" xml:space="preserve">
+    <value>Are you sure you want to block the user?</value>
+  </data>
+  <data name="confirmTenantBlockout" xml:space="preserve">
+    <value>Are you sure you want to unblock the user?</value>
+  </data>
+  <data name="dateExpire" xml:space="preserve">
+    <value>Date Expire</value>
+  </data>
+  <data name="Db" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="expire" xml:space="preserve">
+    <value>Expire</value>
+  </data>
+  <data name="hasOwnDb" xml:space="preserve">
+    <value>Has Own Database</value>
+  </data>
+  <data name="keyWord" xml:space="preserve">
+    <value>Keyword</value>
+  </data>
+  <data name="index" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="maxCalculations" xml:space="preserve">
+    <value>Max Calculations</value>
+  </data>
+  <data name="maxUsers" xml:space="preserve">
+    <value>Max Users</value>
+  </data>
+  <data name="min" xml:space="preserve">
+    <value>Min</value>
+  </data>
+  <data name="msgRemoveBind {0} {1}" xml:space="preserve">
+    <value>Do you want to remove {0} from {1} ?</value>
+  </data>
+  <data name="removeBind {0} {1}" xml:space="preserve">
+    <value>Remove Bind {0} from {1}</value>
+  </data>
+  <data name="storage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="street" xml:space="preserve">
+    <value>Street</value>
+  </data>
+  <data name="tenant" xml:space="preserve">
+    <value>Tenant</value>
+  </data>
+  <data name="addKeyWord" xml:space="preserve">
+    <value>Add Keyword</value>
+  </data>
+  <data name="groups" xml:space="preserve">
+    <value>Groups</value>
+  </data>
+  <data name="capResourceBind" xml:space="preserve">
+    <value>Bind Cap with Resource </value>
+  </data>
+  <data name="TermsContent" xml:space="preserve">
+    <value>Terms of Use
+Effective Date: July 2025
+
+Welcome to Atasoft. By accessing or using our platform, you agree to the following terms and conditions. Please read them carefully before proceeding.
+
+1. Eligibility
+This service is primarily designed for construction and infrastructure companies. However, individuals may register and use the platform. By using the service, you confirm that you are at least 18 years old and authorized to represent your organization if applicable.
+
+2. Purpose of the Service
+Our platform provides tools to help estimate project costs, organize tasks, resources, and teams. Users can create folders, projects, tasks, and assign roles within their company structure.
+
+3. Trial and Paid Access
+The service may offer a trial period, after which access will require a paid subscription. Pricing and payment terms will be clearly communicated during registration or onboarding.
+
+4. Data Input and Usage
+Users may enter data such as employee names, tasks, resources, project information, and import tasks from Excel files. Uploaded files or documents are currently not supported. Atasoft is not responsible for the accuracy of data entered by users.
+
+5. Data Storage and Privacy
+Your data is stored securely on servers provided by IONOS.de in Germany. We do not share your data with third parties. Please refer to our Privacy Policy for more details.
+
+6. Intellectual Property
+All content and features of this platform are the intellectual property of Atasoft unless otherwise specified. You may not copy, modify, or reuse any part of the platform without permission.
+
+7. Acceptable Use
+You agree not to misuse the service. This includes but is not limited to:
+- Attempting unauthorized access
+- Entering false company information
+- Using the platform for unlawful purposes
+
+8. Support
+Basic support is available via email at: ataya@atayasoft.de. We aim to respond within a reasonable timeframe but do not guarantee availability.
+
+9. Service Availability
+The platform is under active development and may experience changes or temporary interruptions. We reserve the right to update, change, or discontinue any part of the service at any time.
+
+10. Limitation of Liability
+Atasoft is not liable for any direct or indirect damages arising from the use of the platform. All usage is at the user’s own risk.
+
+11. Governing Law
+These terms are governed by the laws of the Netherlands. Any disputes shall be settled under Dutch jurisdiction.
+
+Contact:
+If you have any questions regarding these Terms of Use, please contact us at: ataya@atayasoft.de
+</value>
+  </data>
+  <data name="PrivacyContent" xml:space="preserve">
+    <value>We respect your privacy. Your data is stored securely and not shared with third parties unless required by law.</value>
+  </data>
+  <data name="BusinessActivity" xml:space="preserve">
+    <value>Providing a web-based platform for construction and infrastructure companies to estimate project costs and manage project workflows efficiently.</value>
+  </data>
+  <data name="TabPrivacy" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
+  <data name="TabTerms" xml:space="preserve">
+    <value>Terms of Use</value>
+  </data>
+  <data name="TabLicenses" xml:space="preserve">
+    <value>Third-Party Licenses</value>
+  </data>
+  <data name="more" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Delete older from Month-Day" xml:space="preserve">
+    <value>Delete older from Month-Day</value>
+  </data>
+</root>

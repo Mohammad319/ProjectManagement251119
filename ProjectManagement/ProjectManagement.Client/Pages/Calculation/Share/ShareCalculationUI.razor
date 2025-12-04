@@ -1,0 +1,184 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Identity
+@using System.Security.Claims
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+
+<div class="@CssClasses.Modal.Body">
+    @if (Form != null)
+    {
+        <ShareCalculationFormUI ListShareCalc="Form" CalculationId="ListCalculation.Id" Callback="FormCallBack"></ShareCalculationFormUI>
+    }
+    else
+    {
+        <div class="@CssClasses.Layout.Container">
+            <div class="@($"{CssClasses.Layout.FlexWrap} {CssClasses.Spacing.M.Top(Size.S1)}")">
+                @if (Departments != null)
+                {
+                    @if (page == 0)
+                    {
+                        foreach (var item in Departments)
+                        {
+                            <div class="@CssClasses.Spacing.M.Bottom(Size.S1)">
+                                <div class="@CssClasses.Layout.FlexItemsCenter">
+                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                        <div class="@CssClasses.Layout.FlexItemsCenter">
+                                            <button class="@CssClasses.Btn.Outline.Primary"
+                                                    @onclick="async () => await GetUsersAsync(item)">
+                                                @ResourceIdentity.addUser
+                                            </button>
+
+                                            <div class="@CssClasses.Spacing.M.Left(Size.S1)">
+                                                <button disabled="@(list.Any(x => x.DepartmentId == item.Id))"
+                                                        class="@CssClasses.Btn.Outline.Primary"
+                                                        @onclick=" ()=> Form = new ListShareCalcDTO(){DepartmentId = item.Id, Department = item.Name}">
+                                                    @((MarkupString)Icons.Plus)
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </AuthorizeView>
+
+                                    <span class="@CssClasses.Spacing.M.Left(Size.S1) @CssClasses.Text.Secondary">
+                                        @item.Name
+                                    </span>
+                                </div>
+                            </div>
+                        }
+                    }
+
+                    @if (Users != null && page == 1)
+                    {
+                        <div class="@CssClasses.Spacing.M.Bottom(Size.S1)">
+                            <button class="@CssClasses.Btn.Solid.Warning" @onclick="() => page = 0">
+                                @ResourceApp.department
+                            </button>
+                        </div>
+
+                        @foreach (var user in Users)
+                        {
+                            <div class="@CssClasses.Spacing.M.Bottom(Size.S1)">
+                                <div class="@CssClasses.Layout.FlexItemsCenter">
+                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                        <button disabled="@(list.Any(x => x.UserId == user.Id))"
+                                                class="@CssClasses.Btn.Solid.Primary"
+                                                @onclick=" ()=> Form = new ListShareCalcDTO(){
+                                                DepartmentId = DepartmentSelected.Id,
+                                                                            Department = DepartmentSelected.Name,
+                                                                            UserId = user.Id,
+                                                                            User = user.Name
+                                                                        }">
+                                                                      @((MarkupString)Icons.Plus)
+                                                                  </button>
+                                                              </AuthorizeView>
+
+                                <span class="@CssClasses.Spacing.M.Left(Size.S1) @CssClasses.Text.Secondary">
+                                    @user.Name
+                                </span>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+
+
+        <table class="@CssClasses.Table.Tab">
+            <thead class ="@CssClasses.Table.Thead">
+                <tr>
+                    <th></th>
+                    <th class="@CssClasses.Table.TH">@ResourceApp.department</th>
+                    <th class="@CssClasses.Table.TH">@ResourceIdentity.User</th>
+                    <th class="@CssClasses.Table.TH">@CalcResource.netCal</th>
+                    <th class="@CssClasses.Table.TH">@CalcResource.overheadCosts</th>
+                    <th class="@CssClasses.Table.TH">@ResourceLoc.summarySheet</th>
+                    <th class="@CssClasses.Table.TH">@ResourceLoc.opportunitiesRisks</th>
+                    <th class="@CssClasses.Table.TH">@ResourceLoc.offer</th>
+                    <th class="@CssClasses.Table.TH">@ResourceLoc.selfInspection</th>
+                </tr>
+            </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                @if (list != null)
+                    foreach (var project in Enumerable.Reverse(list))
+                    {
+                        <tr>
+                            <td>
+                                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                    <button class="@CssClasses.Btn.Solid.Primary" @onclick="()=>Form = project">@Icons.Edit</button>
+                                    <button class="@CssClasses.Btn.Solid.Danger" @onclick="()=> Remove(project)">@((MarkupString)@Icons.DeleteSVG)</button>
+
+                                </AuthorizeView>
+                            </td>
+                            <td>@project.Department</td>
+                            <td>@project.User</td>
+                            <td><input type="checkbox" checked="@project.Tap1" disabled /></td>
+                            <td><input type="checkbox" checked="@project.Tap2" disabled /></td>
+                            <td><input type="checkbox" checked="@project.Tap3" disabled /></td>
+                            <td><input type="checkbox" checked="@project.Tap4" disabled /></td>
+                            <td><input type="checkbox" checked="@project.Tap5" disabled /></td>
+                            <td><input type="checkbox" checked="@project.Tap6" disabled /></td>
+                        </tr>
+                    }
+            </tbody>
+        </table>
+    }
+</div>
+@code {
+    List<ListShareCalcDTO> list;
+    ListShareCalcDTO Form;
+    [Parameter] public ListCalculationMVVM ListCalculation { get; set; }
+    int page = 0;
+    List<ListDTO> Departments;
+    List<ListDTO> Users;
+    ListDTO DepartmentSelected;
+    [Parameter] public EventCallback Callback { get; set; }
+    [Inject] AuthenticationStateProvider AuthStateProvider { get; set; }
+
+    async Task<int> GetUserDepartment()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.GroupSid);
+        if (claim == null) return 0;
+        return Convert.ToInt32(claim.Value);
+    }
+    void FormCallBack(ListShareCalcDTO obj)
+    {
+        if (obj != null)
+        {
+            list.Add(obj);
+        }
+        Form = null;
+    }
+
+    async Task GetUsersAsync(ListDTO department)
+    {
+        DepartmentSelected = department;
+        Users = null;
+        Users = await ExHandlers.RunCheckTokenAsync(() => Repo.Departments.GetUsersAsListAsync(department.Id));
+        page = 1;
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        Departments = await ExHandlers.RunCheckTokenAsync(() => Repo.Departments.GetDepartmentsAsListAsync());
+        int UserDepartment = await GetUserDepartment();
+        Departments.RemoveAll(x => x.Id == UserDepartment);
+        list = await ExHandlers.RunCheckTokenAsync(() => Repo.ShareCalc.GetAsync(ListCalculation.Id));
+    }
+    void Remove(ListShareCalcDTO project)
+    {
+         MHD.DeleteMessage(project.Department + project.User, EventCallback.Factory.Create(this,() => ConfirmRemoveAsync(project)));
+    }
+
+    async Task ConfirmRemoveAsync(ListShareCalcDTO project)
+    {
+        bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.ShareCalc.RemoveAsync(project.Id));
+        if (result)
+        {
+            list.Remove(project);
+        }
+         MHD.Notifications( ToastType.Delete, result);
+
+        StateHasChanged();
+    }
+}

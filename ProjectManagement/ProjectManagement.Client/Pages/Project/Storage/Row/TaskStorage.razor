@@ -1,0 +1,51 @@
+﻿@using ProjectManagement.Client.Constant;
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.Model.Project.Calculation;
+@using ProjectManagement.Shared.DTO.Calculation
+@TaskRow(Task)
+
+@code {
+    [Parameter] public TaskPostDTO Task { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public bool WithContent { get; set; }
+
+    RenderFragment TaskRow(TaskPostDTO task, bool IsParent = true, string color = UiStyles.ClassTask, int left = 0) => __builder =>
+    {
+        <tr class="@CssClasses.Table.Tr @color">
+            <td class="@CssClasses.Table.Td">
+                <div class="@CssClasses.Layout.ButtonGroup" role="group" aria-label="Basic example">
+                    <span role="button" style="margin-left:@(left + "px")"
+                          @onclick="() => task.Colspan = !task.Colspan">
+                    @((MarkupString)Icons.TopBottom(task.Colspan))</span>
+                    @if (IsParent)
+                    {
+                        @ChildContent
+                    }
+                </div>
+            </td>
+            <td class="@CssClasses.Table.Td">@task.Data.Code</td>
+            <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@task.Data.Active" /></td>
+            <td class="@CssClasses.Table.Td">@task.Name</td>
+            <td class="@CssClasses.Table.Td">@task.Data.Quantity</td>
+            <td class="@CssClasses.Table.Td"></td>
+            <td class="@CssClasses.Table.Td">@task.Data.Unit</td>
+            <td class="@CssClasses.Table.Td">@task.Data.ChangeFactor1 / @task.Data.ChangeFactor2</td>
+            <td class="@CssClasses.Table.Td">@task.Data.Cap</td>
+            <td class="@CssClasses.Table.Td"></td>
+            <td class="@CssClasses.Table.Td">@task.Data.Note</td>
+        </tr>
+        if (task.Colspan)
+        {
+            if (task.Resources != null) foreach (var resource in task.Resources)
+            {
+                 <ResourcesStorage Resource="resource"></ResourcesStorage>
+            }
+
+            if (task.Tasks != null) foreach (var item in task.Tasks.OrderByDescending(x => x.Order))
+                {
+                    @TaskRow(item, false, UiStyles.ClassSubTask, left + 7)
+                }
+        }
+
+    };
+}

@@ -1,0 +1,35 @@
+﻿@using ProjectManagement.Shared.DTO.Identity;
+@inject ProjectManagement.Client.Shared.Repositories.Identity.IDepartmentsRepository _usersGroupsRepo
+@inherits AppComponentBase
+@inject ICommandDispatcher MicroBus
+
+@if (DepartmentList != null)
+{
+    <div>
+        <h4>@DepartmentList.Name</h4>
+        <hr />
+        <dl class="@CssClasses.Grid.Col.MD3">
+            <dt>@CalcResource.name</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.Name</dd>
+            <dt>@ResourceLoc.description</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.Description</dd>
+            <dt>@ResourceApp.created </dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.Created</dd>
+                <dt>@ResourceApp.lastUpdate
+            </dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.LastModified</dd>
+            <dt>@ResourceIdentity.User</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.UsersCount</dd>
+            <dt>@ResourceLoc.folder</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.FoldersCount</dd>
+            <dt>@CalcResource.project</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.ProjectsCount</dd>
+        </dl>
+    </div>
+}
+
+@code {
+
+    [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
+    [Parameter] public DepartmentDetailsDTO? DepartmentList { get; set; }
+}

@@ -1,0 +1,59 @@
+﻿@page "/rt"
+@using Microsoft.JSInterop
+<button @onclick="async ()=> await Cl()">dfdg</button>
+@if(t){
+    <table class="resizable-table">
+        <thead>
+            <tr>
+                <th class="sticky">ID <span class="resize-handle"></span></th>
+                <th>Name <span class="resize-handle"></span></th>
+                <th>Position <span class="resize-handle"></span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var emp in Employees)
+            {
+                <tr>
+                    <td class="sticky">@emp.Id</td>
+                    <td>@emp.Name</td>
+                    <td>@emp.Position</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    bool t = false;
+    public List<Employee> Employees { get; set; } = new()
+    {
+        new Employee { Id = 1, Name = "John Doe", Position = "Developer" },
+        new Employee { Id = 2, Name = "Jane Smith", Position = "Manager" },
+        new Employee { Id = 3, Name = "Alice Brown", Position = "Designer" }
+    };
+
+    public class Employee
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Position { get; set; }
+    }
+    async Task Cl()
+    {
+        t = !t;
+        await Task.Delay(1000);
+        StateHasChanged();
+        if (t)
+        await JS.InvokeVoidAsync("initializeResizableColumns");
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initializeResizableColumns");
+        }
+    }
+
+    [Inject] IJSRuntime JS { get; set; }
+}

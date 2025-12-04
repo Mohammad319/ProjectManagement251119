@@ -1,0 +1,411 @@
+﻿@using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@inherits AppComponentBase
+@implements IDisposable
+
+<div>
+
+    <!-- Toolbar أعلى الجدول -->
+    <div class="flex items-center justify-between mt-1 px-1">
+        <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">
+            @* ممكن تضع عنوان مثل: @CalcResource.HourlyPriceList *@
+        </h2>
+
+        <div class="flex items-center gap-2">
+
+            <!-- زر Edit عام -->
+            <button class="@CssClasses.Btn.IconButton.Primary" @onclick="ToggleEditMode">
+                @((MarkupString)Icons.Edit)
+            </button>
+
+            <!-- زر الحفظ -->
+            <button class="@CssClasses.Btn.IconButton.Primary" @onclick="SaveAsync">
+                @((MarkupString)Icons.SaveCloud)
+            </button>
+
+            <!-- إضافة مجموعة -->
+            <button class="@CssClasses.Btn.IconButton.Success" @onclick="AddGroup">
+                @((MarkupString)Icons.Plus)
+            </button>
+        </div>
+    </div>
+
+    <!-- جدول قابل للتمرير أفقياً -->
+    <div class="overflow-x-auto rounded border border-gray-200 dark:border-gray-700 mt-1 px-1">
+        <table class="min-w-full text-sm text-left text-gray-800 dark:text-gray-100">
+            <thead class="bg-blue-50 dark:bg-blue-900/40 text-xs uppercase tracking-wide text-gray-700 dark:text-gray-200">
+                <tr>
+                    <th class="px-2 py-2 w-24"></th>
+                    <th class="px-2 py-2">@CalcResource.code</th>
+                    <th class="px-2 py-2">@CalcResource.name</th>
+                    <th class="px-2 py-2">@CalcResource.unit</th>
+                    <th class="px-2 py-2">@CalcResource.quantity</th>
+                    <th class="px-2 py-2 bg-blue-50 dark:bg-blue-900/50">
+                        @CalcResource.MarketPrices
+                    </th>
+                    <th class="px-2 py-1 bg-blue-50 dark:bg-blue-900/40">@CalcResource.total</th>
+                    <th class="px-2 py-2 bg-emerald-50 dark:bg-emerald-900/50">
+                        @CalcResource.SubmittedPrices
+                    </th>
+                    <th class="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/40">@CalcResource.total</th>
+                    <th class="px-2 py-2">@CalcResource.diff</th>
+                    <th class="px-2 py-2">@CalcResource.comment</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+
+                @if (Calc.HourlyPriceList != null)
+                {
+                    @foreach (var group in Calc.HourlyPriceList)
+                    {
+                        <!-- صف المجموعة -->
+                        <tr class="group bg-gray-50 dark:bg-gray-800/60">
+                            <td class="px-2 py-2 align-top">
+                                <div class="flex items-center gap-1 @(IsEditMode ? "" : "opacity-0 group-hover:opacity-100") transition">
+                                    <button class="@CssClasses.Btn.IconButton.Danger"
+                                            @onclick="() => DeleteGroup(group)">
+                                        @((MarkupString)@Icons.DeleteSVG)
+                                    </button>
+
+                                    <button class="@CssClasses.Btn.IconButton.Success"
+                                            @onclick="() => AddItem(group)">
+                                        @((MarkupString)Icons.Plus)
+                                    </button>
+
+                                    <button class="@CssClasses.Btn.IconButton.Primary"
+                                            @onclick="() => ToggleGroupVisibility(group)">
+                                        @((MarkupString)Icons.RightBottom(group.SubItemsVisible))
+                                    </button>
+                                </div>
+                            </td>
+
+                            <!-- Code المجموعة -->
+                            <td class="px-2 py-2 align-top">
+                                @if (IsEditMode)
+                                {
+                                    <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500" @bind="group.Code" />
+                                }
+                                else
+                                {
+                                    <span class="text-xs font-semibold">@group.Code</span>
+                                }
+                            </td>
+
+                            <!-- Name المجموعة -->
+                            <td class="px-2 py-2 align-top" colspan="5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">📁</span>
+                                    @if (IsEditMode)
+                                    {
+                                        <input
+                                            class="@CssClasses.Input.Text px-2 py-1 text-xs font-semibold focus:ring-1 focus:ring-blue-500"
+                                            @bind="group.Name" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs font-semibold">@group.Name</span>
+                                    }
+                                </div>
+                            </td>
+
+                            <!-- Comment المجموعة -->
+                            <td class="px-2 py-2 align-top" colspan="4">
+                                @if (IsEditMode)
+                                {
+                                    <input
+                                        class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                        @bind="group.Comment" />
+                                }
+                                else
+                                {
+                                    <span class="text-xs">@group.Comment</span>
+                                }
+                            </td>
+                        </tr>
+
+                        <!-- العناصر التابعة للمجموعة -->
+                        @if (group.SubItemsVisible && group.Items != null && group.Items.Any())
+                        {
+                            @foreach (var item in group.Items)
+                            {
+                                var isEditing = IsEditMode || editingItems.Contains(item);
+
+                                <tr class="group odd:bg-white odd:dark:bg-gray-900/40 even:bg-gray-50 even:dark:bg-gray-900/20
+                           hover:bg-blue-50 hover:dark:bg-blue-900/40 @(IsEditMode ? "cursor-default" : "cursor-pointer") transition"
+                                    @onclick="() => OnRowClick(item)">
+
+                                    <!-- حذف العنصر -->
+                                    <td class="px-1 py-0">
+                                        <div class="@(IsEditMode ? "" : "opacity-0 group-hover:opacity-100") transition">
+                                            <button class="@CssClasses.Btn.IconButton.Danger"
+                                                    @onclick="(e) => DeleteItem(e, group, item)"
+                                                    @onclick:stopPropagation="true">
+                                                @((MarkupString)@Icons.DeleteSVG)
+                                            </button>
+                                        </div>
+                                    </td>
+
+                                    <!-- Code -->
+                                    <td class="px-2 py-1">
+                                        @if (isEditing)
+                                        {
+                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                                   @bind="item.Code" @onclick:stopPropagation="true" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs">@item.Code</span>
+                                        }
+                                    </td>
+
+                                    <!-- Name -->
+                                    <td class="px-2 py-1">
+                                        @if (isEditing)
+                                        {
+                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                                   @bind="item.Name" @onclick:stopPropagation="true" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs">@item.Name</span>
+                                        }
+                                    </td>
+
+                                    <!-- Unit -->
+                                    <td class="px-2 py-1">
+                                        @if (isEditing)
+                                        {
+                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                                   @bind="item.Unit" @onclick:stopPropagation="true" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs">@item.Unit</span>
+                                        }
+                                    </td>
+
+                                    <!-- Quantity -->
+                                    <td class="px-2 py-1 text-right">
+                                        @if (isEditing)
+                                        {
+                                            <input type="number" step="0.01"
+                                                   class="@CssClasses.Input.Number px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
+                                                   @bind="item.Quantity" @onclick:stopPropagation="true" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs">@($"{item.Quantity:N2}")</span>
+                                        }
+                                    </td>
+
+                                    <!-- Cost Market -->
+                                    <td class="px-2 py-1 text-right bg-blue-50 dark:bg-blue-900/30">
+                                        @if (isEditing)
+                                        {
+                                            <input type="number" step="0.01"
+                                                   class="@CssClasses.Input.Number px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
+                                                   @bind="item.CostMarketPrices" @onclick:stopPropagation="true" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs">@($"{item.CostMarketPrices:N2}")</span>
+                                        }
+                                    </td>
+
+                                    <!-- Total Market -->
+                                    <td class="px-2 py-1 text-right bg-blue-50 dark:bg-blue-900/30">
+                                        <span class="text-xs">@($"{item.TotalMarketPrices:N2}")</span>
+                                    </td>
+
+                                    <!-- Cost Submitted -->
+                                    <td class="px-2 py-1 text-right bg-emerald-50 dark:bg-emerald-900/30">
+                                        @if (isEditing)
+                                        {
+                                            <input type="number" step="0.01"
+                                                   class="@CssClasses.Input.Number px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
+                                                   @bind="item.CostSubmittedPrices" @onclick:stopPropagation="true" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs">@($"{item.CostSubmittedPrices:N2}")</span>
+                                        }
+                                    </td>
+
+                                    <!-- Total Submitted -->
+                                    <td class="px-2 py-1 text-right bg-emerald-50 dark:bg-emerald-900/30">
+                                        <span class="text-xs">@($"{item.TotalSubmittedPrices:N2}")</span>
+                                    </td>
+
+                                    <!-- Difference -->
+                                    <td class="px-2 py-1 text-right align-middle">
+                                        <span class="@GetDifferenceBadgeClasses(item.Difference)">
+                                            @($"{item.Difference:N2}")
+                                        </span>
+                                    </td>
+
+                                    <!-- Comment -->
+                                    <td class="px-2 py-1">
+                                        @if (isEditing)
+                                        {
+                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                                   @bind="item.Comment" @onclick:stopPropagation="true" />
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs">@item.Comment</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+
+                            
+                                var groupMarketTotal = group.Items.Sum(i => i.TotalMarketPrices);
+                                var groupSubmittedTotal = group.Items.Sum(i => i.TotalSubmittedPrices);
+                                var groupDiff = groupSubmittedTotal - groupMarketTotal;
+                            
+
+                            <!-- صف تلخيص المجموعة -->
+                            <tr class="bg-gray-100 dark:bg-gray-900/60">
+                                <td class="px-2 py-2 text-right font-semibold text-xs" colspan="5">
+                                    GroupTotal
+                                </td>
+
+                                <td class="px-2 py-2 text-right font-semibold text-xs bg-blue-50 dark:bg-blue-900/40">
+                                    @($"{groupMarketTotal:N2}")
+                                </td>
+                                <td class="px-2 py-2 bg-blue-50 dark:bg-blue-900/40"></td>
+
+                                <td class="px-2 py-2 text-right font-semibold text-xs bg-emerald-50 dark:bg-emerald-900/40">
+                                    @($"{groupSubmittedTotal:N2}")
+                                </td>
+                                <td class="px-2 py-2 bg-emerald-50 dark:bg-emerald-900/40"></td>
+
+                                <td class="px-2 py-2 text-right">
+                                    <span class="@GetDifferenceBadgeClasses(groupDiff)">
+                                        @($"{groupDiff:N2}")
+                                    </span>
+                                </td>
+
+                                <td class="px-2 py-2"></td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private readonly HashSet<HourlyPriceListItemDTO> editingItems = new();
+    private bool IsEditMode;   // وضع التعديل العام
+
+    private void ToggleEditMode()
+    {
+        IsEditMode = !IsEditMode;
+    }
+
+    private void OnRowClick(HourlyPriceListItemDTO item)
+    {
+        // في وضع Edit لا نحتاج كليك خاص على الصف
+        if (!IsEditMode)
+        {
+            ToggleEdit(item);
+        }
+    }
+
+    private void AddGroup()
+    {
+        Calc.HourlyPriceList ??= new List<HourlyPriceListGroupDTO>();
+
+        Calc.HourlyPriceList.Add(new HourlyPriceListGroupDTO
+        {
+            Name = string.Empty,
+            Items = new List<HourlyPriceListItemDTO>(),
+            SubItemsVisible = true
+        });
+    }
+
+    private void DeleteGroup(HourlyPriceListGroupDTO group)
+    {
+        Calc.HourlyPriceList.Remove(group);
+    }
+
+    private void AddItem(HourlyPriceListGroupDTO group)
+    {
+        group.Items ??= new List<HourlyPriceListItemDTO>();
+
+        var item = new HourlyPriceListItemDTO
+        {
+            Name = string.Empty
+        };
+
+        group.Items.Add(item);
+        editingItems.Add(item);
+    }
+
+    private void DeleteItem(MouseEventArgs e, HourlyPriceListGroupDTO group, HourlyPriceListItemDTO item)
+    {
+        editingItems.Remove(item);
+        group.Items.Remove(item);
+    }
+
+    private void ToggleGroupVisibility(HourlyPriceListGroupDTO group)
+    {
+        group.SubItemsVisible = !group.SubItemsVisible;
+    }
+
+    private void ToggleEdit(HourlyPriceListItemDTO item)
+    {
+        if (!editingItems.Add(item))
+        {
+            editingItems.Remove(item);
+        }
+    }
+
+    private string GetDifferenceBadgeClasses(double diff)
+    {
+        if (diff > 0)
+        {
+            return "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold " +
+                   "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200";
+        }
+
+        if (diff < 0)
+        {
+            return "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold " +
+                   "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-200";
+        }
+
+        return "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium " +
+               "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-200";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Folder?.State?.Calculation?.OnChangeInCalculation += ChangeCalcultionItems;
+
+        if (Calc.HourlyPriceList == null || Calc.HourlyPriceList.Count == 0)
+        {
+            Calc.HourlyPriceList = await Repo.Calculation.GetHourlyPriceListAsync(Calc.Id);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        bool result = await Repo.Calculation.UpdateAsync(Calc.Id, Calc.HourlyPriceList);
+        MHD.Notifications(ToastType.Update, result);
+    }
+
+    public void Dispose()
+    {
+        if (Folder?.State?.Calculation != null)
+            Folder.State.Calculation.OnChangeInCalculation -= ChangeCalcultionItems;
+    }
+
+    private void ChangeCalcultionItems() => _ = InvokeAsync(StateHasChanged);
+}

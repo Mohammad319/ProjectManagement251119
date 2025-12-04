@@ -1,0 +1,126 @@
+﻿@using ProjectManagement.Shared.DTO.ProjectAppStorage
+@using ProjectManagement.Shared.Enums
+@using ProjectManagement.Shared.Helper.ProjectAppStorage
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<div class="flex flex-wrap items-end gap-1 md:gap-1.5 text-[11px]"
+     @key="@($"{Task.Id}:{Task.NewUnitCode ?? "-"}")">
+
+    <!-- Quantity -->
+    <div class="flex flex-col gap-0.5 w-[90px]">
+        <input id="@($"quantity-{Task.Id}")" placeholder="@CalcResource.quantity"
+               type="number" min="0" step="any"
+               class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+               @bind="Task.Quantity" />
+    </div>
+
+    <!-- Unit -->
+    @if (Task.UnitGroupId.HasValue)
+    {
+        <div class="flex flex-col gap-0.5 w-[110px]">
+            <label for="@($"unit-{Task.Id}")"
+                   class="text-[10px] text-gray-700 dark:text-gray-300">
+                @CalcResource.unit
+            </label>
+            <select id="@($"unit-{Task.Id}")"
+                    class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value="@Task.NewUnitCode"
+                    @onchange="OnUnitChanged">
+                <option value=""> --- </option>
+                @foreach (var to in Task.UnitGroup.Keys.Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    <option value="@to">@to</option>
+                }
+            </select>
+        </div>
+    }
+
+    @{
+        var inputs = new (string Label, ParamName Name, int Index)[]
+        {
+        ("Thickness (mm)", ParamName.Thickness, 0),
+        ("Width (mm)",     ParamName.Width,     1),
+        ("Length (mm)",    ParamName.Length,    2)
+        };
+    }
+
+    <!-- Dimensions -->
+    @foreach (var inp in inputs)
+    {
+        var maxVal = Task.WorkloadThresholds[inp.Index];
+        var show = (maxVal > 0) || Needs(Task, inp.Name);
+
+        if (show)
+        {
+            var has = Task.ParameterValues.TryGetValue(inp.Name, out var v);
+            <div class="flex flex-col gap-0.5 w-[120px]">
+                <input type="number" placeholder=" @inp.Label"
+                       min="0" step="any"
+                       class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                       value="@(has? v.ToString() : string.Empty)"
+                       @oninput="e => OnParamChangedInternal(inp.Name, e.Value)"
+                       @attributes="@((maxVal > 0 ? new Dictionary<string, object> { { "max", maxVal } } : null))" />
+            </div>
+        }
+    }
+
+    <!-- Apply button -->
+    @if (ShouldShowApply(Task))
+    {
+        <button class="@CsS.Btn.Outline.Primary @CsS.Btn.Size.Small @CsS.Spacing.M.Top(Size.S2) text-[11px] h-[26px] px-2"
+                @onclick="() => OnApply.InvokeAsync()">
+            @ResourceApp.Button_Apply
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public ProjectTaskDto Task { get; set; } = default!;
+    [Parameter] public EventCallback OnChanged { get; set; }
+    [Parameter] public EventCallback OnApply { get; set; }
+
+    // ========== تغيّر الوحدة ==========
+    private void OnUnitChanged(ChangeEventArgs e)
+    {
+        Task.NewUnitCode = e.Value?.ToString();
+        StateHasChanged();
+        if (OnChanged.HasDelegate)
+            OnChanged.InvokeAsync();
+    }
+
+    // ========== تحديث بارامتر ==========
+    private void OnParamChangedInternal(ParamName name, object? raw)
+    {
+        if (double.TryParse(Convert.ToString(raw), out var val))
+            Task.ParameterValues[name] = val;
+        else
+            Task.ParameterValues.Remove(name);
+
+        if (OnChanged.HasDelegate)
+            OnChanged.InvokeAsync();
+    }
+
+    // ========== منطق العرض ==========
+    private bool Needs(ProjectTaskDto t, ParamName p)
+    {
+        if (string.IsNullOrWhiteSpace(t.NewUnitCode) || string.IsNullOrWhiteSpace(t.UnitCode))
+            return false;
+
+        if (t.UnitCode.Equals(t.NewUnitCode, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (!UnitRulesCatalog.TryGet(t.NewUnitCode, t.UnitCode, out var rule))
+            return false;
+
+        return rule.Params.Any(param => param.Key == p);
+    }
+
+    private bool ShouldShowApply(ProjectTaskDto t)
+    {
+        var thresholds = t.WorkloadThresholds ?? new List<double>();
+        bool needsDims = Needs(t, ParamName.Thickness)
+                      || Needs(t, ParamName.Width)
+                      || Needs(t, ParamName.Length);
+        return thresholds.Any(x => x > 0) || needsDims;
+    }
+}

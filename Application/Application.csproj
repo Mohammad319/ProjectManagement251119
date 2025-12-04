@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+<TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Services\CalculationItems\CalcShare\**" />
+    <Compile Remove="Services\CalculationItems\Opportunity\**" />
+    <Compile Remove="Services\CalculationItems\StatusResource\**" />
+    <Compile Remove="Services\CalculationItems\Storage\**" />
+    <Compile Remove="Services\CalculationItems\TaskStatus\**" />
+    <Compile Remove="Services\CalculationItems\TemplateTable\**" />
+    <Compile Remove="Services\CalculationItems\Tender\**" />
+    <EmbeddedResource Remove="Services\CalculationItems\CalcShare\**" />
+    <EmbeddedResource Remove="Services\CalculationItems\Opportunity\**" />
+    <EmbeddedResource Remove="Services\CalculationItems\StatusResource\**" />
+    <EmbeddedResource Remove="Services\CalculationItems\Storage\**" />
+    <EmbeddedResource Remove="Services\CalculationItems\TaskStatus\**" />
+    <EmbeddedResource Remove="Services\CalculationItems\TemplateTable\**" />
+    <EmbeddedResource Remove="Services\CalculationItems\Tender\**" />
+    <None Remove="Services\CalculationItems\CalcShare\**" />
+    <None Remove="Services\CalculationItems\Opportunity\**" />
+    <None Remove="Services\CalculationItems\StatusResource\**" />
+    <None Remove="Services\CalculationItems\Storage\**" />
+    <None Remove="Services\CalculationItems\TaskStatus\**" />
+    <None Remove="Services\CalculationItems\TemplateTable\**" />
+    <None Remove="Services\CalculationItems\Tender\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="15.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+</Project>

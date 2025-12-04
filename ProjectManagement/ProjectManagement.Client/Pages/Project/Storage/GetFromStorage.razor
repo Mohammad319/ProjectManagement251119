@@ -1,0 +1,149 @@
+﻿@using ProjectManagement.Client.Pages.Project.Storage.Row
+@using ProjectManagement.Client.Pages.Project.Storage.Storages
+@using ProjectManagement.Shared.DTO.App.Dataloader
+@using ProjectManagement.Shared.DTO.Project
+@inherits AppComponentBase
+@if (Post.AuthoritySelected == AuthorityStorage.program)
+{
+    <ProjectManagement.Client.Pages.Project.Storage.App.TaskList
+    RefreshBack="StateHasChanged">
+    <Content>
+            <select style="max-width:300px" class="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-[2px] text-[12px]
+                   bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                    value="@((int)Post.AuthoritySelected)"
+                    @onchange="GetAuthorityStorage">
+                @foreach (AuthorityStorage level in Enum.GetValues(typeof(AuthorityStorage)))
+                {
+                    <option value="@((int)level)">@AppLoc[level.ToString()]</option>
+                }
+            </select>
+
+    </Content>
+</ProjectManagement.Client.Pages.Project.Storage.App.TaskList>
+}
+else
+{
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-1 mb-1 items-center">
+        <!-- اختيار نوع Authority -->
+        <select class="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-[2px] text-[12px]
+                       bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                @onchange="(e) => GetAuthorityStorage(e)">
+            @foreach (var level in Enum.GetValues(typeof(AuthorityStorage)))
+            {
+                <option value="@((int)level)">@AppLoc[level?.ToString()]</option>
+            }
+        </select>
+
+        <!-- اختيار نوع التخزين إن لم يكن ImportFromOtherCalc أو program -->
+        @if (Post.AuthoritySelected != AuthorityStorage.ImportFromOtherCalc)
+        {
+            <select class="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-[2px] text-[12px]
+                                   bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                    @onchange="(e) => GetStorageSort(e)">
+                @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
+                {
+                    <option value="@level">@ResourceLocalize.GetStorageSort(level)</option>
+                }
+            </select>
+        }
+
+        <!-- الأزرار -->
+        <div class="flex flex-wrap gap-1">
+            @if (BtnMore)
+            {
+                <button class="px-2 py-[2px] text-[12px] rounded border border-amber-500 text-amber-600
+                                       hover:bg-amber-500 hover:text-white dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-400"
+                        @onclick="GetAsync">
+                    @ResourceApp.import
+                </button>
+            }
+
+            <button class="px-2 py-[2px] text-[12px] rounded border border-amber-500 text-amber-600
+                           hover:bg-amber-500 hover:text-white dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-400"
+                    @onclick="GetAsync">
+                @ResourceApp.import
+            </button>
+
+            @if (SaveBtnVisivble())
+            {
+                <button class="px-2 py-[2px] text-[12px] rounded border border-green-500 text-green-600
+                                       hover:bg-green-500 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400"
+                        @onclick="SaveAsync">
+                    @ResourceApp.save
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc)
+    {
+        <CalcItemsFilter @ref="ImportOtherCalc" ItemType="Post.Type" Callback="StateHasChanged"></CalcItemsFilter>
+    }
+    else
+    {
+            <table class="@CssClasses.Table.Tab">
+                <HeaderStorageUI></HeaderStorageUI>
+                <tbody class="@CssClasses.Table.TBody">
+                    <UserStorage Type="Post.Type" ParentID="ParentID" @ref="UserStorage" Callback="StateHasChanged"></UserStorage>
+                </tbody>
+            </table>
+    }
+}
+       
+        @code {
+    [Parameter] public int ParentID { get; set; }
+    [Parameter] public CalculationItemType CalcType { get; set; }
+
+    CalcItemsFilter ImportOtherCalc;
+    UserStorage UserStorage;
+    bool BtnMore = false;
+    GetFilterDTO Post = new GetFilterDTO();
+    protected override void OnInitialized() => Post.Type = CalcType;
+
+    bool SaveBtnVisivble()
+    {
+        return ( UserStorage != null && UserStorage.SaveBtnVisible())
+        || (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc && Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc
+            && ImportOtherCalc != null && ImportOtherCalc.Post.Items != null
+            && ImportOtherCalc.Post.Items.Any());
+    }
+
+    async Task ChangeTypeAsync(ChangeEventArgs e)
+    {
+        Post.Type = (CalculationItemType)Enum.Parse(typeof(CalculationItemType), e.Value.ToString());
+        if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc){
+            await ImportOtherCalc.SetNewTypeAsync(Post.Type);
+        }
+    }
+
+    void ChangeItemCalcCategories(ChangeEventArgs e)
+    {
+        Post.ItemCalcCategory = e.Value.ToString();
+    }
+
+    async Task SaveAsync()
+    {
+        bool result = false;
+        if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc)
+            result = await ImportOtherCalc.SaveAsync(ParentID);
+
+        else result = await UserStorage.SaveAsync();
+        MHD.Notifications(ToastType.Info, result);
+        Modal.Close();
+    }
+
+    void GetStorageSort(ChangeEventArgs e) => Post.SortSelected = (StorageSort)Enum.Parse(typeof(StorageSort), e.Value.ToString());
+   void GetAuthorityStorage(ChangeEventArgs e)
+    {
+        AuthorityStorage n = (AuthorityStorage)Enum.Parse(typeof(AuthorityStorage), e.Value.ToString());
+        Post.AuthoritySelected = n;
+        StateHasChanged();
+    }
+
+    async Task GetAsync()
+    {
+        if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc)
+            await ImportOtherCalc.GetObjectTypeAsync(1);
+        else await UserStorage.GetAsync(Post);
+    }
+}

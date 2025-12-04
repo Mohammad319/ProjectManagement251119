@@ -1,0 +1,49 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Questions.Assignments
+@using ProjectImportHub.Infrastructure
+@using ProjectImportHub.Services.Resource
+@using ProjectManagement.Adminstrator.Components.ResourceUI
+@using ProjectManagement.Adminstrator.Helper
+@using ProjectManagement.Shared.DTO.App.TasksResource
+@using static ProjectImportHub.Services.Resource.TaskResourceService
+@inject ITaskResourceService TaskResourceService
+@inject MhdServices MHD
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<ResourcesBrowser EnableFolderContext="false" Folders="folders">
+    <RowActions Context="r">
+        @if (TaskResourceLink.Any(x => x.TaskId == TaskPM.Id && x.ResourceId == r.Id))
+                                {
+            <button class="@CsS.Btn.Outline.Danger" title="@ResourceApp.delete"
+                                            @onclick="async () => await OnCheckboxChanged(r.Id)">➖</button>
+                                }
+                                else
+                                {
+            <button class="@CsS.Btn.Outline.Success" title="@ResourceApp.newItem"
+                                            @onclick="async () => await OnCheckboxChanged(r.Id)">➕</button>
+        }
+    </RowActions>
+</ResourcesBrowser>
+
+@code {
+    async Task OnCheckboxChanged( int resId)
+    {
+        if (!TaskResourceLink.Any(x => x.TaskId == TaskPM.Id && x.ResourceId == resId))
+        {
+            await TaskResourceService.CreateAsync(new TaskResourceAssignmentEntity() { TaskId = TaskPM.Id, ResourceId = resId });
+            TaskResourceLink.Add(new TaskResourceLinkDto() { TaskId = TaskPM.Id, ResourceId = resId });
+        }
+        else
+        {
+            await TaskResourceService.DeletAsync(TaskPM.Id, resId);
+            TaskResourceLink.RemoveAll(x => x.TaskId == TaskPM.Id && x.ResourceId == resId);
+        }
+        StateHasChanged();
+    }
+
+    [Parameter] public ProjectTaskEntity TaskPM { get; set; }
+    [Parameter] public List<ResourceFolderEntity> folders  { get; set;}
+    [Parameter] public List<TaskResourceLinkDto> TaskResourceLink { get; set; }
+
+}

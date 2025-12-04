@@ -1,0 +1,216 @@
+﻿@* CalculationCharts.razor *@
+@using System
+@using System.Linq
+@using System.Collections.Generic
+@using pax.BlazorChartJs
+
+@using ProjectManagement.Client.Services.Calculation
+@using ProjectManagement.Client.Services.Folder
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+
+@inject FolderState Container
+@inject CalculationService CalcService
+
+<div class="@CssClasses.Layout.WideContainer">
+    <div class="@CssClasses.Grid.Col.MD4">
+        <div class="@CssClasses.Components.Card">
+            <div class="@CssClasses.Components.ChartWrap">
+                <ChartComponent ChartJsConfig="NetCostTotalyPieCfg" />
+            </div>
+        </div>
+
+        <div class="@CssClasses.Components.Card">
+            <div class="@CssClasses.Components.ChartWrap">
+                <ChartComponent ChartJsConfig="NetCostTotalyOHPieCfg" />
+            </div>
+        </div>
+
+        <div class="@CssClasses.Components.Card">
+            <div class="@CssClasses.Components.ChartWrap">
+                <ChartComponent ChartJsConfig="EVCfg" />
+            </div>
+        </div>
+
+        <div class="@CssClasses.Components.Card">
+            <div class="@CssClasses.Components.ChartWrap">
+                <ChartComponent ChartJsConfig="SumPieCfg" />
+            </div>
+        </div>
+    </div>
+
+    <div class="@CssClasses.Spacing.M.Top(ProjectManagement.Shared.Constant.Size.S1)">
+        <div class="@CssClasses.Components.Card">
+            <div class="@CssClasses.Components.ChartWrap">
+                <ChartComponent ChartJsConfig="BarCfg" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // للوصول إلى دوال التنسيق نفسها التي لديك
+    TemplateMVVM Template => Container.Calculation.Template;
+
+    // تكوينات الرسوم
+    private ChartJsConfig? NetCostTotalyPieCfg;
+    private ChartJsConfig? NetCostTotalyOHPieCfg;
+    private ChartJsConfig? EVCfg;
+    private ChartJsConfig? SumPieCfg;
+    private ChartJsConfig? BarCfg;
+
+    private readonly List<string> ColorsChart = new();
+
+    protected override void OnInitialized()
+    {
+        GenerateRandomColors();
+
+        var netCostTotaly = Container.Calculation.Factors.Select(x => (float)Template.Format(x.NetCostTotaly)).ToList();
+        var netCostTotalyOH = Container.Calculation.Factors.Select(x => (float)Template.Format(x.NetCostTotalyOH)).ToList();
+        var earningsValue = Container.Calculation.Factors.Select(x => (float)Template.Format(x.EarningsValue)).ToList();
+
+        NetCostTotalyPieCfg = CreatePieConfig(netCostTotaly, "NetCostTotaly");
+        NetCostTotalyOHPieCfg = CreatePieConfig(netCostTotalyOH, "NetCostTotalyOH");
+        EVCfg = CreatePieConfig(earningsValue, "EV");
+        SumPieCfg = CreateSumPieConfig();
+
+        BarCfg = CreateBarConfig(netCostTotaly, netCostTotalyOH, earningsValue);
+    }
+
+    // ===== Helpers =====
+    private void GenerateRandomColors()
+    {
+        var rng = new Random();
+        string Hex() => $"#{rng.Next(0x1000000):X6}";
+        ColorsChart.Clear();
+
+        // عدد ألوان يساوي عدد العوامل + ألوان إضافية للـ Bar
+        int needed = Math.Max(3, Container.Calculation.Factors.Count());
+        for (int i = 0; i < needed; i++) ColorsChart.Add(Hex());
+    }
+
+    private List<string> FactorLabels() =>
+        Container.Calculation.Factors
+            .Select(f => f.ResName + (string.IsNullOrWhiteSpace(f.Sort) ? "" : $" ({f.Sort})"))
+            .ToList();
+
+    private ChartJsConfig CreatePieConfig(IReadOnlyList<float> data, string title)
+    {
+        return new ChartJsConfig
+        {
+            Type = ChartType.pie,
+            Data = new ChartJsData
+            {
+                Labels = new List<string>(FactorLabels()),
+                Datasets = new List<ChartJsDataset>
+                {
+                    new PieDataset
+                    {
+                        // PieDataset لا يحتوي Label في pax.BlazorChartJs
+                        Data = data.Cast<object?>().ToList(),
+                        BackgroundColor = new List<string>(ColorsChart.Take(data.Count))
+                    }
+                }
+            },
+            Options = new()
+            {
+                Responsive = true,
+                Plugins = new()
+                {
+                    Title = new() { Display = true, Text = title }
+                }
+            }
+        };
+    }
+
+    private ChartJsConfig CreateSumPieConfig()
+    {
+        var sumNet = (float)Template.Format(Container.Calculation.Factors.Sum(x => x.NetCostTotaly));
+        var sumOH = (float)Template.Format(Container.Calculation.Factors.Sum(x => x.NetCostTotalyOH));
+        var sumEV = (float)Template.Format(Container.Calculation.Factors.Sum(x => x.EarningsValue));
+
+        return new ChartJsConfig
+        {
+            Type = ChartType.pie,
+            Data = new ChartJsData
+            {
+                Labels = new List<string> { "NetCostTotaly", "NetCostTotaly OH", "EV" },
+                Datasets = new List<ChartJsDataset>
+                {
+                    new PieDataset
+                    {
+                        Data = new List<object?> { sumNet, sumOH, sumEV },
+                        BackgroundColor = new List<string>(ColorsChart.Take(3))
+                    }
+                }
+            },
+            Options = new()
+            {
+                Responsive = true,
+                Plugins = new()
+                {
+                    Title = new() { Display = true, Text = "Sum" }
+                }
+            }
+        };
+    }
+
+    private ChartJsConfig CreateBarConfig(
+        IReadOnlyList<float> netCostTotaly,
+        IReadOnlyList<float> netCostTotalyOH,
+        IReadOnlyList<float> earningsValue)
+    {
+        var labels = new List<string>(FactorLabels())
+        {
+            "Sum"
+        };
+
+        var sumNet = netCostTotaly.Sum();
+        var sumOH = netCostTotalyOH.Sum();
+        var sumEV = earningsValue.Sum();
+
+        var dsNet = new BarDataset
+        {
+            Label = "NetCostTotaly",
+            Data = netCostTotaly.Concat(new[] { sumNet }).Cast<object?>().ToList(),
+            BackgroundColor = Enumerable.Repeat(ColorsChart[0], labels.Count).ToList()
+        };
+
+        var dsOH = new BarDataset
+        {
+            Label = "NetCostTotalyOH",
+            Data = netCostTotalyOH.Concat(new[] { sumOH }).Cast<object?>().ToList(),
+            BackgroundColor = Enumerable.Repeat(ColorsChart[1], labels.Count).ToList()
+        };
+
+        var dsEV = new BarDataset
+        {
+            Label = "EarningsValue",
+            Data = earningsValue.Concat(new[] { sumEV }).Cast<object?>().ToList(),
+            BackgroundColor = Enumerable.Repeat(ColorsChart[2], labels.Count).ToList()
+        };
+
+        return new ChartJsConfig
+        {
+            Type = ChartType.bar,
+            Data = new ChartJsData
+            {
+                Labels = labels,
+                Datasets = new List<ChartJsDataset> { dsNet, dsOH, dsEV }
+            },
+            Options = new()
+            {
+                Responsive = true,
+                Plugins = new()
+                {
+                    Title = new() { Display = true, Text = "Calculation Chart" },
+                    Tooltip = new() { Mode = "index", Intersect = false }
+                },
+                Scales = new()
+                {
+                    X = new() { Stacked = true },
+                    Y = new() { Stacked = true }
+                }
+            }
+        };
+    }
+}

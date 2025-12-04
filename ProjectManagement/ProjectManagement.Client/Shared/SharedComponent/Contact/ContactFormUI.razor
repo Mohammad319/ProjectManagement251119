@@ -1,0 +1,76 @@
+﻿@using ProjectManagement.Client.Pages
+@using ProjectManagement.Shared.DTO.Offer;
+@using ProjectManagement.Shared.DTO.Organisation
+@using ProjectManagement.Shared.Base.Organisation
+@inherits AppComponentBase
+
+    <EditForm id="UnderContactForm" class="@CssClasses.Modal.Body" Model="@underContact" OnValidSubmit=" ()=> SubmitAsync()">
+        <div>
+            <DataAnnotationsValidator />
+        </div>
+    <div class="@CssClasses.Grid.Col.MD4">
+        <div>
+                <label class="@CssClasses.Form.Label">@ResourceIdentity.firstname</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.FirstName" />
+                <ValidationMessage For=@(() => underContact.FirstName) />
+            </div>
+            <div>
+                <label class="@CssClasses.Form.Label">@ResourceIdentity.lastname</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.LastName" />
+                <ValidationMessage For=@(() => underContact.LastName) />
+            </div>
+            <div>
+                <label class="@CssClasses.Form.Label">@ResourceIdentity.mobile</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Mobile" />
+                <ValidationMessage For=@(() => underContact.Mobile) />
+            </div>
+            <div>
+                <label class="@CssClasses.Form.Label">@ResourceIdentity.phone</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Telefone" />
+                                <ValidationMessage For=@(() => underContact.Telefone) />
+            </div>
+            <div>
+                <label class="@CssClasses.Form.Label">@ResourceIdentity.email</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Email" />
+                <ValidationMessage For=@(() => underContact.Email) />
+            </div>
+
+            <div>
+                <label class="@CssClasses.Form.Label">@ResourceApp.department</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Department" />
+                <ValidationMessage For=@(() => underContact.Department) />
+            </div>
+
+            <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.status</label>
+                <InputSelect @bind-Value="@underContact.Status" class="@CssClasses.Input.Text">
+                    @foreach (var level in Enum.GetValues(typeof(UnderContactStatus)))
+                    {
+                        <option value="@level">@level.ToString()</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For=@(() => underContact.Status) />
+            </div>
+        <div class="@CssClasses.Grid.Span.MD3">
+                <label class="@CssClasses.Form.Label">@CalcResource.note</label>
+                <InputTextArea rows="2" class="@CssClasses.Input.Text" @bind-Value="@underContact.Note" />
+                <ValidationMessage For=@(() => underContact.Note) />
+            </div>
+        <div class="@CssClasses.Grid.Span.MD4">
+            <button type="submit" class="@CssClasses.Btn.Outline.Success" form="UnderContactForm">
+                @ResourceApp.save
+            </button>
+            <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick="async () => await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
+        </div>
+        </div>
+
+    </EditForm>
+
+@code {
+    [Parameter] public UnderContactOrganisationBase underContact { get; set; }
+    [Parameter] public EventCallback<UnderContactOrganisationBase> Callback { get; set; }
+    private async Task SubmitAsync()
+    {
+        await Callback.InvokeAsync(underContact);
+    }
+}

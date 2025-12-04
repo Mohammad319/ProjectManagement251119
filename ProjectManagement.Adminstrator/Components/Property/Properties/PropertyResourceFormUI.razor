@@ -1,0 +1,130 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using ProjectImportHub.Entities
+@using ProjectImportHub.Infrastructure
+@inherits AppComponentBase
+@inject IResourcePropertiesService ResourcePropertiesService
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using ProjectImportHub.Services.ResourceProperties
+@using ProjectManagement.Shared.DTO.ProjectAppStorage
+
+<EditForm id="myForm"
+          class="@CsS.Modal.Body"
+          Model="@ResourceProp"
+          OnValidSubmit="async () => await HandleSubmitAsync()">
+    <DataAnnotationsValidator />
+
+    <!-- شبكة: 3 أعمدة من md+ -->
+    <div class="@CsS.Grid.Col.MD3">
+
+        <!-- Name: صف كامل -->
+        <div class="@CsS.Form.Field">
+            <label class="@CsS.Form.Label" for="rp-name">@CalcResource.name:</label>
+            <InputText id="rp-name"
+                       class="@CsS.Input.Text"
+                       @bind-Value="@ResourceProp.DisplayName"
+                       aria-invalid="@(EditContext?.GetValidationMessages(() => ResourceProp.DisplayName).Any() == true)" />
+            <ValidationMessage For="@(() => ResourceProp.DisplayName)" class="@CsS.Text.Danger" />
+        </div>
+
+        <!-- IsEditable (Checkbox) -->
+        <div class="@CsS.Form.CheckWrapper">
+            <InputCheckbox id="rp-editable"
+                           class="@CsS.Input.Check"
+                           @bind-Value="ResourceProp.IsUserEditable" />
+            <label for="rp-editable" class="@CsS.Form.CheckLabel">IsEditable</label>
+        </div>
+
+        <!-- Kind -->
+        <div class="@CsS.Form.Field">
+            <label class="@CsS.Form.Label" for="rp-kind">Kind:</label>
+            <InputSelect id="rp-kind"
+                         class="@CsS.Input.Select"
+                         @bind-Value="@ResourceProp.DataType">
+                @foreach (var kind in Enum.GetValues<DataType>())
+                {
+                    <option value="@kind">@kind</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => ResourceProp.DataType)" class="@CsS.Text.Danger" />
+        </div>
+
+        @if (ResourceProp.DataType == DataType.Number)
+        {
+            <!-- MinValue -->
+            <div class="@CsS.Grid.Span.MD1 @CsS.Form.Field">
+                <label class="@CsS.Form.Label" for="rp-min">MinValue:</label>
+                <InputNumber id="rp-min"
+                             class="@CsS.Input.Number"
+                             @bind-Value="@ResourceProp.PropertyValues" />
+                <ValidationMessage For="@(() => ResourceProp.PropertyValues)" class="@CsS.Text.Danger" />
+            </div>
+
+            <!-- MaxValue -->
+            <div class="@CsS.Grid.Span.MD1 @CsS.Form.Field">
+                <label class="@CsS.Form.Label" for="rp-max">MaxValue:</label>
+                <InputNumber id="rp-max"
+                             class="@CsS.Input.Number"
+                             @bind-Value="@ResourceProp.MaxNumericValue" />
+                <ValidationMessage For="@(() => ResourceProp.MaxNumericValue)" class="@CsS.Text.Danger" />
+            </div>
+
+            <!-- NumberDefault -->
+            <div class="@CsS.Grid.Span.MD1 @CsS.Form.Field">
+                <label class="@CsS.Form.Label" for="rp-numdef">NumberDefault:</label>
+                <InputNumber id="rp-numdef"
+                             class="@CsS.Input.Number"
+                             @bind-Value="@ResourceProp.DefaultNumericValue" />
+                <ValidationMessage For="@(() => ResourceProp.DefaultNumericValue)" class="@CsS.Text.Danger" />
+            </div>
+        }
+        else
+        {
+            <!-- TextDefault: صف كامل -->
+            <div class="@CsS.Grid.Span.MD3 @CsS.Form.Field">
+                <label class="@CsS.Form.Label" for="rp-textdef">TextDefault:</label>
+                <InputText id="rp-textdef"
+                           class="@CsS.Input.Text"
+                           @bind-Value="@ResourceProp.DefaultTextValue" />
+                <ValidationMessage For="@(() => ResourceProp.DefaultTextValue)" class="@CsS.Text.Danger" />
+            </div>
+        }
+    </div>
+</EditForm>
+
+<div class="@CsS.Modal.Footer">
+    <button type="submit"
+            class="@CsS.Btn.Outline.Success"
+            form="myForm"
+            disabled="@IsLoading"
+            aria-busy="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button"
+            class="@CsS.Btn.Outline.Secondary"
+            @onclick="async () => await Callback.InvokeAsync(false)">
+        @ResourceApp.cancel
+    </button>
+</div>
+
+@code {
+    [CascadingParameter] private EditContext EditContext { get; set; }
+    [Parameter] public ResourcePropertyEntity ResourceProp { get; set; } = new();
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    [Parameter] public int GroupId { get; set; } = new();
+    bool IsLoading = false;
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        bool result = false;
+        ResourceProp.PropertySetId = GroupId;
+        if (ResourceProp.Id == 0)
+        {
+            await ResourcePropertiesService.AddAsync(ResourceProp);
+        }
+        else
+        {
+            await ResourcePropertiesService.UpdateAsync(ResourceProp);
+        }
+        await Callback.InvokeAsync(result);
+    }
+}

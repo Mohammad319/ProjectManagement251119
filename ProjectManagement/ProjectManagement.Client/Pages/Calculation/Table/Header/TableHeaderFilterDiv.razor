@@ -1,0 +1,431 @@
+﻿@using ProjectManagement.Client.Constant;
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.Repositories.Calculation;
+@using ProjectManagement.Client.Shared.Repositories.ResourceType;
+@using ProjectManagement.Client.Shared.ViewModel;
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.ResourceType;
+
+@inherits AppComponentBase
+
+<style>
+    .modalFilter {
+        display: block;
+        position: fixed;
+        z-index: 50;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        min-width: 220px;
+        width: 260px;
+        height: 260px;
+        background-color: #f9fafb;
+        padding: 8px;
+        text-align: left;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.35);
+        font-size: 12px;
+    }
+
+        .modalFilter > div:first-child {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .modalFilter select,
+        .modalFilter input[type="text"] {
+            font-size: 12px;
+        }
+
+        .modalFilter .closebtn {
+            cursor: pointer;
+            margin-left: auto;
+            font-size: 18px;
+            line-height: 1;
+            color: #ef4444;
+        }
+
+            .modalFilter .closebtn:hover {
+                color: #b91c1c;
+            }
+
+        .modalFilter > div:nth-child(2) {
+            margin-bottom: 6px;
+            margin-top: 4px;
+        }
+
+        .modalFilter .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            margin: 2px;
+            border-radius: 9999px;
+            background-color: #e5e7eb;
+            color: #111827;
+            font-size: 11px;
+            max-width: 100%;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+            .modalFilter .chip .closebtn {
+                font-size: 13px;
+                color: #6b7280;
+                margin-left: 2px;
+            }
+
+                .modalFilter .chip .closebtn:hover {
+                    color: #111827;
+                }
+</style>
+
+@if (display == "block")
+{
+    <div class="modalFilter" style="top:@(MouseEvent.ClientY)px;left:@(MouseEvent.ClientX)px;">
+        <div>
+            @if (FilterAttrStr == "resourceTypeSystem" || FilterAttrStr == "resourceType" || FilterAttrStr == "status")
+            {
+                <select class="@CssClasses.Input.Text" @onchange="EnterResource">
+                    <option></option>
+                    @if (FilterAttrStr == "status")
+                    {
+                        if (Statuses != null)
+                        {
+                            foreach (var status in Statuses)
+                                if (!Calc.FilterVM.Status.Any(x => x == status.Name))
+                                {
+                                    <option value="@status.Name">@status.Name</option>
+                                }
+                        }
+                    }
+                    else if (FilterAttrStr == "resourceType")
+                    {
+                        if (ResourceTypes != null)
+                        {
+                            foreach (var item in ResourceTypes)
+                                if (!Calc.FilterVM.Resource.Any(x => x == item.Name))
+                                {
+                                    <option value="@item.Name">@item.Name</option>
+                                }
+                        }
+                    }
+                    else if (FilterAttrStr == "resourceTypeSystem")
+                    {
+                        foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
+                            if (!Calc.FilterVM.ResourceTypeSystem.Any(x => x == level))
+                            {
+                                <option value="@level">@level</option>
+                            }
+                    }
+                </select>
+                <span role="button"
+                      class="closebtn float-right"
+                      @onclick="() => display = none">
+                    &times;
+                </span>
+            }
+            else
+            {
+                <input class="@CssClasses.Input.Text"
+                       style="width:70%;z-index:1000;font-size:12px;height:26px;"
+                       max="8"
+                       type="text"
+                       @bind="fff"
+                       @bind:event="oninput"
+                       @onkeydown="EnterFilter" />
+                <span role="button"
+                      class="closebtn float-right"
+                      @onclick="() => { fff = string.Empty; display = none; }">
+                    &times;
+                </span>
+            }
+        </div>
+
+        <div>
+            <select class="@CssClasses.Input.Text"
+                    style="font-size:12px;height:26px;"
+                    @onchange="FilterTypesFilter">
+                @foreach (FilterType level in FilterTypesList1)
+                {
+                    <option value="@level" selected="@(FilterType == level ? true : false)">@level</option>
+                }
+            </select>
+        </div>
+
+        <div style="overflow:auto;height:130px">
+            @if (FilterAttrStr == "resourceTypeSystem")
+            {
+                foreach (var item2 in Calc.FilterVM.ResourceTypeSystem)
+                {
+                    <div class="chip">
+                        @item2
+                        <span role="button"
+                              class="closebtn"
+                              @onclick="() => Calc.FilterVM.ResourceTypeSystem.Remove(item2)">
+                            &times;
+                        </span>
+                    </div>
+                }
+            }
+            else if (FilterAttrStr == "status")
+            {
+                foreach (var item2 in Calc.FilterVM.Status)
+                {
+                    <div class="chip">
+                        @item2
+                        <span role="button"
+                              class="closebtn"
+                              @onclick="() => Calc.FilterVM.Status.Remove(item2)">
+                            &times;
+                        </span>
+                    </div>
+                }
+            }
+            else if (FilterAttrStr == "resourceType")
+            {
+                foreach (var item2 in Calc.FilterVM.Resource)
+                {
+                    <div class="chip">
+                        @item2
+                        <span role="button"
+                              class="closebtn"
+                              @onclick="() => Calc.FilterVM.Resource.Remove(item2)">
+                            &times;
+                        </span>
+                    </div>
+                }
+            }
+            else
+            {
+                foreach (var item1 in FilterValues)
+                {
+                    <div class="chip">
+                        @item1
+                        <span role="button"
+                              class="closebtn"
+                              @onclick="() => FilterValues.Remove(item1)">
+                            &times;
+                        </span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+<tr style="@($"background-color:{Template.NetColor[3]};font-size:11px;font-weight:normal;height:30px;")"
+    id="headerFilter">
+    @if (TemplateConst.Col0 > PMValuesConst.MinWidthCol)
+    {
+        <td>
+            <span role="button"
+                  class="text-outline-success"
+                  style="font-size:20px;top:6px;"
+                  @onclick=" ()=> CalcService.GetFilter(Calc.FilterVM)">
+                @((MarkupString)Icons.SaveCloud)
+            </span>
+        </td>
+    }
+
+    @foreach (int i in Template.NetOrder)
+    {
+        int d = i;
+        string type = TemplateConst.NetTitle[d];
+
+        <td @onclick="(e) => EnterCodeClick(e, type)">
+            @if (type == "status")
+            {
+                foreach (var item1 in Calc.FilterVM.Status)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+            else if (type == "code")
+            {
+                foreach (var item1 in Calc.FilterVM.Code)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+            else if (type == "name")
+            {
+                foreach (var item1 in Calc.FilterVM.Name)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+            else if (type == "account")
+            {
+                foreach (var item1 in Calc.FilterVM.Account)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+            else if (type == "resourceType")
+            {
+                foreach (var item1 in Calc.FilterVM.Resource)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+            else if (type == "resourceTypeSystem")
+            {
+                foreach (var item1 in Calc.FilterVM.ResourceTypeSystem)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+            else if (type == "resourceSort")
+            {
+                foreach (var item1 in Calc.FilterVM.ResourceSort)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+            else if (type == "unit")
+            {
+                foreach (var item1 in Calc.FilterVM.Unit)
+                {
+                    <div class="chip">@item1</div>
+                }
+            }
+        </td>
+    }
+</tr>
+
+@code {
+    string? FilterAttrStr;
+    List<string> FilterValues = [];
+    FilterType FilterType = FilterType.equals;
+    List<FilterType> FilterTypesList1 = [];
+    List<ListResourceTypeDTO>? ResourceTypes;
+    List<ListOrderDTO>? Statuses;
+    string fff = string.Empty;
+    string display = "none";
+    string none = "none";
+    MouseEventArgs MouseEvent = new MouseEventArgs();
+
+    public void EnterFilter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            if (string.IsNullOrEmpty(fff)) return;
+            FilterValues.Add(fff);
+            fff = "";
+        }
+        else if (e.Code == "Esc")
+        {
+            fff = "";
+        }
+    }
+
+    void EnterResource(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty(e?.Value?.ToString())) return;
+
+        if (FilterAttrStr == "status")
+            Calc.FilterVM.Status.Add(e.Value.ToString());
+        else if (FilterAttrStr == "resourceType")
+            Calc.FilterVM.Resource.Add(e.Value.ToString());
+        else if (FilterAttrStr == "resourceTypeSystem")
+        {
+            ResourceTypesEnum f = (ResourceTypesEnum)Enum.Parse(typeof(ResourceTypesEnum), e?.Value?.ToString());
+            Calc.FilterVM.ResourceTypeSystem.Add(f);
+        }
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        Statuses = (await Repo.Task.GetAsync()).ToList();
+        ResourceTypes = await Repo.ResType.GetLocalAsync();
+    }
+
+    public async Task EnterCodeClick(MouseEventArgs e1, string i)
+    {
+        if (i == "status" || i == "code" ||
+            i == "name" || i == "unit" || i == "account" ||
+            i == "resourceType" || i == "resourceSort" || i == "resourceTypeSystem")
+        {
+            display = "none";
+
+            FilterAttrStr = i;
+            FilterTypesList1 = new List<FilterType>()
+            {
+                FilterType.equals,
+                FilterType.noEquals,
+                FilterType.contains,
+                FilterType.startsWith,
+                FilterType.endsWith,
+                FilterType.doesNotContains
+            };
+
+            fff = string.Empty;
+
+            if (FilterAttrStr == "code")
+            {
+                FilterValues = Calc.FilterVM.Code;
+                FilterType = Calc.FilterVM.CodeFilterType;
+            }
+            else if (FilterAttrStr == "account")
+            {
+                FilterValues = Calc.FilterVM.Account;
+                FilterType = Calc.FilterVM.AccountFilterType;
+            }
+            else if (FilterAttrStr == "name")
+            {
+                FilterValues = Calc.FilterVM.Name;
+                FilterType = Calc.FilterVM.NameFilterType;
+            }
+            else if (FilterAttrStr == "resourceSort")
+            {
+                FilterValues = Calc.FilterVM.ResourceSort;
+                FilterType = Calc.FilterVM.ResourceSortFilterType;
+            }
+            else if (FilterAttrStr == "unit")
+            {
+                FilterValues = Calc.FilterVM.Unit;
+                FilterType = Calc.FilterVM.UnitFilterType;
+            }
+
+            await Fixed(e1);
+        }
+    }
+
+    async Task Fixed(MouseEventArgs e)
+    {
+        MouseEvent = e;
+        await Task.Delay(1);
+
+        if (e.ClientX > 270)
+            MouseEvent.ClientX = MouseEvent.ClientX - 250;
+        else
+            MouseEvent.ClientX = -15;
+
+        MouseEvent.ClientY = MouseEvent.ClientY + 10;
+        display = "block";
+    }
+
+    public void FilterTypesFilter(ChangeEventArgs e)
+    {
+        FilterType f = (FilterType)Enum.Parse(typeof(FilterType), e?.Value?.ToString());
+
+        if (FilterAttrStr == "code")
+            Calc.FilterVM.CodeFilterType = f;
+        if (FilterAttrStr == "account")
+            Calc.FilterVM.AccountFilterType = f;
+        if (FilterAttrStr == "name")
+            Calc.FilterVM.NameFilterType = f;
+        if (FilterAttrStr == "status")
+            Calc.FilterVM.StatusFilterType = f;
+        if (FilterAttrStr == "resourceType")
+            Calc.FilterVM.ResourceFilterType = f;
+        if (FilterAttrStr == "resourceTypeSystem")
+            Calc.FilterVM.ResourceTypeFilterTypeSystem = f;
+        if (FilterAttrStr == "resourceSort")
+            Calc.FilterVM.ResourceSortFilterType = f;
+        if (FilterAttrStr == "unit")
+            Calc.FilterVM.UnitFilterType = f;
+    }
+}

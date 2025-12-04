@@ -1,0 +1,59 @@
+﻿@using Application.Feature.Identity.Department.Commands
+@using Microsoft.AspNetCore.Components.Forms
+@using ProjectManagement.Client.Shared.Constants
+@using ProjectManagement.Client.Shared.ResourceFiles
+@using ProjectManagement.Client.Shared.ResourceFiles.Calculation
+@using ProjectManagement.Shared.DTO.Identity;
+@using ProjectManagement.Shared.Base.Users
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+    @if (departmentPost != null)
+    {
+         <EditForm Model="@departmentPost" class="@CssClasses.Modal.Body" OnValidSubmit="async () => await HandleSubmitAsync()">
+         <DataAnnotationsValidator />
+        <ValidationSummary></ValidationSummary>
+         <div class="row align-items-center">
+             <div class="">
+                <label>name:</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@departmentPost.Name" />
+                <ValidationMessage For=@(() => departmentPost.Name) />
+            </div> 
+            <div class="col">
+                <label>@ResourceLoc.description:</label>
+                <InputTextArea class="@CssClasses.Input.Text" @bind-Value="@departmentPost.Description" />
+                <ValidationMessage For=@(() => departmentPost.Description) />
+            </div>
+            <div class="form-group">
+                <button type="submit" class="@CssClasses.Btn.Outline.Success" style="margin-right:5px;">@ResourceApp.save</button>
+                <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await OnClickCallback.InvokeAsync(false)">@ResourceApp.cancel</button>
+            </div>
+        </div>
+    </EditForm>
+    }
+
+@code {
+    [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
+    [Parameter] public DepartmentDetailsDTO? DepartmentList { get; set; }
+    DepartmentBase? departmentPost;
+    protected override void OnInitialized()
+    {
+        departmentPost = new()
+            {
+                Name = DepartmentList?.Name,
+                Description = DepartmentList?.Description,
+            };
+    }
+    private async Task HandleSubmitAsync()
+    {
+        if (DepartmentList?.Id > 0 && await MicroBus.Send(new UpdateDepartmentCommand(DepartmentList.Id,departmentPost)))
+            await OnClickCallback.InvokeAsync(true);
+
+        else if (DepartmentList?.Id == 0 && await MicroBus.Send(new CreateDepartmentCommand(departmentPost)) > 0)
+            await OnClickCallback.InvokeAsync(true);
+
+        await OnClickCallback.InvokeAsync(false);
+    }
+}

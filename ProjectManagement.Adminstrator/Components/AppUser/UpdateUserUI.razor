@@ -1,0 +1,179 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using ProjectManagement.Adminstrator.Services.Users
+@using ProjectManagement.Shared.DTO.General
+@using ProjectManagement.Shared.Models.Account
+@inherits AppComponentBase
+@inject IUsersService UsersService
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<div class="@CsS.Modal.Body">
+    @if (Form is not null)
+    {
+        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync2" class="">
+            <DataAnnotationsValidator />
+
+            <div class="@CsS.Grid.Col.MD4">
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.firstname:</label>
+                    <InputText id="firstname" class="@CsS.Input.Text" @bind-Value="Form.Firstname" />
+                    <ValidationMessage For="@(() => Form.Firstname)" class="@CsS.Text.Danger" />
+                </div>
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.lastname:</label>
+                    <InputText id="lastname" class="@CsS.Input.Text" @bind-Value="Form.Lastname" />
+                    <ValidationMessage For="@(() => Form.Lastname)" class="@CsS.Text.Danger" />
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="@CsS.Form.Label" for="email">@ResourceIdentity.email:</label>
+                    <InputText id="email" class="@CsS.Input.Text" @bind-Value="Form.Email" />
+                    <ValidationMessage For="@(() => Form.Email)" class="@CsS.Text.Danger" />
+                </div>
+
+                <!-- LockoutStart -->
+                <div>
+                    <label class="@CsS.Form.Label" for="lockoutStart">@ResourceIdentity.lockoutStart:</label>
+                    <div class="@CsS.Layout.Inline">
+                        <InputDate id="lockoutStart" class="@CsS.Input.Text" @bind-Value="Form.LockoutStart" />
+                        <button class="@CsS.Btn.Outline.Danger" type="button" @onclick="() => Form.LockoutStart = null">
+                            @Icons.Delete
+                        </button>
+                    </div>
+                    <ValidationMessage For="@(() => Form.LockoutStart)" class="@CsS.Text.Danger" />
+                </div>
+
+                <!-- LockoutEnd -->
+                <div>
+                    <label class="@CsS.Form.Label" for="lockoutEnd">@ResourceIdentity.lockoutEnd:</label>
+                    <div class="@CsS.Layout.Inline">
+                        <InputDate id="lockoutEnd" class="@CsS.Input.Text" @bind-Value="Form.LockoutEnd" />
+                        <button class="@CsS.Btn.Outline.Danger" type="button" @onclick="() => Form.LockoutEnd = null">
+                            @Icons.Delete
+                        </button>
+                    </div>
+                    <ValidationMessage For="@(() => Form.LockoutEnd)" class="@CsS.Text.Danger" />
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label class="@CsS.Form.Label" for="phone">@ResourceIdentity.phone:</label>
+                    <InputText id="phone" class="@CsS.Input.Text" @bind-Value="Form.PhoneNumber" />
+                    <ValidationMessage For="@(() => Form.PhoneNumber)" class="@CsS.Text.Danger" />
+                </div>
+
+                <!-- PhoneNumberConfirmed -->
+                <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Top(Size.S2)">
+                    <InputCheckbox class="@CsS.Input.Check" @bind-Value="Form.PhoneNumberConfirmed" id="phoneConfirmed" />
+                    <label for="phoneConfirmed" class="@CsS.Input.Text">@ResourceIdentity.phoneNumberConfirmed</label>
+                </div>
+
+                <!-- LockoutEnabled -->
+                <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Top(Size.S2)">
+                    <InputCheckbox class="@CsS.Input.Check" @bind-Value="Form.LockoutEnabled" id="lockoutEnabled" />
+                    <label for="lockoutEnabled" class="@CsS.Input.Text">@ResourceIdentity.logout</label>
+                </div>
+
+                <!-- Role -->
+                @if (Roles is not null && !TenantId.HasValue)
+                {
+                    <div>
+                        <label class="@CsS.Form.Label" for="role">@ResourceIdentity.role:</label>
+                        <select id="role" @bind="Form.Role" class="@CsS.Input.Select">
+                            <option value="@PMRolesConst.APP.Admin" selected="@(Roles.Any(x => x == PMRolesConst.APP.Admin))">@ResourceIdentity.Admin</option>
+                            <option value="@PMRolesConst.APP.SuperManger" selected="@(Roles.Any(x => x == PMRolesConst.APP.SuperManger))">@ResourceIdentity.SuperManger</option>
+                            <option value="@PMRolesConst.APP.Manger" selected="@(Roles.Any(x => x == PMRolesConst.APP.Manger))">@ResourceIdentity.Manger</option>
+                            <option value="@PMRolesConst.APP.User" selected="@(Roles.Any(x => x == PMRolesConst.APP.User))">@ResourceIdentity.User</option>
+                        </select>
+                    </div>
+                }
+                else if (Roles is not null)
+                {
+                    <div>
+                        <label class="@CsS.Form.Label" for="role">@ResourceIdentity.role:</label>
+                        <select id="role" @bind="Form.Role" class="@CsS.Input.Select">
+                            <option value="@PMRolesConst.Tenant.Admin" selected="@(Roles.Any(x => x == PMRolesConst.Tenant.Admin))">@ResourceIdentity.Admin</option>
+                            <option value="@PMRolesConst.Tenant.SuperManger" selected="@(Roles.Any(x => x == PMRolesConst.Tenant.SuperManger))">@ResourceIdentity.SuperManger</option>
+                            <option value="@PMRolesConst.Tenant.Manger" selected="@(Roles.Any(x => x == PMRolesConst.Tenant.Manger))">@ResourceIdentity.Manger</option>
+                            <option value="@PMRolesConst.Tenant.User" selected="@(Roles.Any(x => x == PMRolesConst.Tenant.User))">@ResourceIdentity.User</option>
+                        </select>
+                    </div>
+                }
+            </div>
+
+            <div class="@CsS.Modal.Footer">
+                <button type="submit" class="@CsS.Btn.Outline.Success" disabled="@IsLoading" aria-busy="@IsLoading">
+                    @ResourceApp.save
+                </button>
+                <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">
+                    @ResourceApp.cancel
+                </button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    [Parameter] public ApplicationUser? UserForm { get; set; }
+    [Parameter] public int? DepartmentId { get; set; }
+    [Parameter] public int? TenantId { get; set; }
+
+    UserPostDTO Form = new();
+    bool IsLoading = true;
+    IList<string> Roles = [];
+    List<ListDTO>? Departments;
+    [Inject] AuthenticationStateProvider? AuthStateProvider { get; set; }
+    async Task<int> GetUserTenant()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.Tentan);
+        if (claim == null) return 0;
+        return Convert.ToInt32(claim.Value);
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        if (UserForm != null)
+        {
+            Form = new UserPostDTO()
+                {
+                    Email = UserForm.Email,
+                    Firstname = UserForm.Firstname,
+                    Lastname = UserForm.Lastname,
+                    DepartmentId = DepartmentId,
+                    LockoutEnabled = UserForm.LockoutEnabled,
+                    Id = UserForm.Id,
+                    LockoutStart = UserForm.LockoutStart,
+                    LockoutEnd = UserForm.LockoutEnd,
+                    PhoneNumber = UserForm.PhoneNumber,
+                    PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
+                };
+            await IniUserApp();
+            Form.Role = Roles.FirstOrDefault();
+            IsLoading = false;
+        }
+    }
+
+    async Task IniUserApp()
+    {
+        if (!string.IsNullOrEmpty(UserForm?.Id))
+            Roles = await UsersService.GetRolesAsync(UserForm.UserName);
+        else
+            Roles.Add(PMRolesConst.APP.Manger);
+    }
+
+    async Task HandleSubmitAsync2()
+    {
+        if (string.IsNullOrEmpty(UserForm?.Id))
+        {
+            var result = await UsersService.RegisterAsync(Form, TenantId);
+            await Callback.InvokeAsync(result);
+        }
+        else
+        {
+            var result = await UsersService.UpdateUserAsync(Form, TenantId);
+            await Callback.InvokeAsync(result);
+        }
+    }
+}

@@ -1,0 +1,35 @@
+﻿@using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
+@using System.Globalization
+.APP
+@inject IStringLocalizer<ResourceApp> appLocalizer
+<div class="mb-3 row">
+    <div>
+        <select class="form-select" @bind="Culture">
+            @foreach (var culture in cultures)
+            {
+                <option value="@culture">@culture.DisplayName</option>
+            }
+        </select>
+    </div>
+</div>
+
+@code {
+    [Inject] public NavigationManager NavManager { get; set; }
+    [Inject] public IJSRuntime JSRuntime { get; set; }
+    readonly CultureInfo[] cultures = [new CultureInfo("en-US"), new CultureInfo("se-SE")];
+    CultureInfo Culture
+    {
+        get => CultureInfo.CurrentCulture;
+        set
+        {
+            if (CultureInfo.CurrentCulture != value)
+            {
+                var js = (IJSInProcessRuntime)JSRuntime;
+                js.InvokeVoid("blazorCulture.set", value.Name);
+
+                NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
+            }
+        }
+    }
+}

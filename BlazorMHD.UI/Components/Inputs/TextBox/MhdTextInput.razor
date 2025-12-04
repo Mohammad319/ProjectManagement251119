@@ -1,0 +1,85 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="flex flex-col gap-0.5">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="text-[0.70rem] text-slate-500 dark:text-slate-400">
+            @Label
+        </label>
+    }
+
+    <input @bind="Value"
+           @bind:event="oninput"
+           type="@InputType"
+           class="@BuildInputClass()"
+           placeholder="@Placeholder"
+           @onkeydown="OnKeyDown"
+           @attributes="AdditionalAttributes" />
+
+    @if (!string.IsNullOrEmpty(HelperText))
+    {
+        <span class="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5">
+            @HelperText
+        </span>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string? HelperText { get; set; }
+    [Parameter] public string InputType { get; set; } = "text";
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool ReadOnly { get; set; }
+
+    [Parameter] public MhdSize Size { get; set; } = MhdSize.Sm;
+
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string BuildInputClass()
+    {
+        var sizeClass = Size switch
+        {
+            MhdSize.Xs => "h-6 text-[0.70rem] px-1.5",
+            MhdSize.Sm => "h-7 text-xs px-2",
+            MhdSize.Md => "h-8 text-sm px-2.5",
+            _ => "h-7 text-xs px-2"
+        };
+
+        var cls = new List<string>
+        {
+            "block w-full",
+            "bg-white dark:bg-slate-950",
+            "text-slate-900 dark:text-slate-100",
+            "border border-slate-200 dark:border-slate-700",
+            "focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600",
+            "placeholder:text-slate-400 dark:placeholder:text-slate-500",
+            "rounded-md",
+            sizeClass,
+            "transition-all duration-150"
+        };
+
+        if (Disabled)
+            cls.Add("opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800");
+
+        if (ReadOnly)
+            cls.Add("bg-slate-50 dark:bg-slate-900");
+
+        if (AdditionalAttributes != null &&
+            AdditionalAttributes.TryGetValue("class", out var clsObj) &&
+            clsObj is string extra &&
+            !string.IsNullOrWhiteSpace(extra))
+        {
+            cls.Add(extra);
+        }
+
+        return string.Join(" ", cls);
+    }
+}

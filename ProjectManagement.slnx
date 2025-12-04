@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/Business/">
+    <Project Path="Application/Application.csproj" />
+    <Project Path="Domain/Domain.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="AuthPermissions/AuthPermissions.csproj" />
+    <Project Path="ExcelDataLoader/ProjectImportHub.csproj" />
+    <Project Path="Persistence/Persistence.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="ProjectManagement.Adminstrator/ProjectManagement.Adminstrator.csproj" />
+    <Project Path="ProjectManagement.AppHost/ProjectManagement.AppHost.csproj" />
+    <Project Path="ProjectManagement/ProjectManagement.Client/ProjectManagement.Client.csproj" />
+    <Project Path="ProjectManagement/ProjectManagement/ProjectManagement.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="ProjectManagement.Client.Shared/ProjectManagement.Client.Shared.csproj" />
+    <Project Path="ProjectManagement.ServiceDefaults/ProjectManagement.ServiceDefaults.csproj" />
+    <Project Path="ProjectManagement.Shared/ProjectManagement.Shared.csproj" />
+  </Folder>
+  <Project Path="BlazorMHD.UI/BlazorMHD.UI.csproj" />
+</Solution>

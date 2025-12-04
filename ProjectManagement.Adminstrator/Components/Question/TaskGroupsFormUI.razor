@@ -1,0 +1,364 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Questions.Groups
+@using ProjectImportHub.Infrastructure
+@using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
+@using ProjectManagement.Shared.Base.ProjectAppStorage
+@using ProjectManagement.Shared.Enums
+@inherits AppComponentBase
+@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@inject ProjectImportHub.Services.TaskGroups.ITaskGroupsQueryService TaskGroupsQuery
+@inject ProjectImportHub.Services.TaskGroups.ITaskGroupsCommandService TaskGroupsCommand
+
+@code {
+    ProjectTaskEntity Task { get; set; } = default!;
+    [Parameter] public int ID { get; set; } = default!;
+    List<ResourceFolderEntity> Folders { get; set; }
+    ResourceFolderEntity Selected;
+    [Parameter] public EventCallback<bool> OnSaved { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Task = await TaskGroupsQuery.GetTaskGraphAsync(ID, CancellationToken.None)
+               ?? new ProjectTaskEntity();
+
+        Folders = (await TaskGroupsQuery.GetVisibleFoldersAsync(Task.Id, CancellationToken.None)).ToList();
+    }
+
+    private async Task SaveAsync()
+    {
+        await TaskGroupsCommand.SaveGroupsAsync(Task, CancellationToken.None);
+        await OnSaved.InvokeAsync(true);
+        Close();
+    }
+
+    private void Close() => MHD.Modal.CloseLastModal();
+
+    // ====== Choice ======
+    private void AddChoiceGroup()
+        => Task.OptionGroups.Add(new OptionGroupEntity { TaskId = ID, DisplayName = "Group", SortOrder = Task.OptionGroups.Count });
+
+    private void RemoveChoiceGroup(OptionGroupEntity g)
+        => Task.OptionGroups.Remove(g);
+
+    private void AddChoiceOption(OptionGroupEntity g)
+        => g.Options.Add(new OptionItemEntity { OptionGroupId = g.Id, DisplayName = "Option" });
+
+    private void RemoveChoiceOption(OptionGroupEntity g, OptionItemEntity o)
+        => g.Options.Remove(o);
+
+    // ====== Numeric ======
+    private void AddNumericGroup()
+        => Task.NumericInputs.Add(new NumericInputEntity { TaskId = ID, DisplayName = "Numeric", SortOrder = Task.NumericInputs.Count });
+
+    private void RemoveNumericGroup(NumericInputEntity g)
+        => Task.NumericInputs.Remove(g);
+
+    // ====== Resource ======
+    private void AddResourceGroup()
+        => Task.ResourceOptionGroups.Add(new ResourceOptionGroupEntity { TaskId = ID, DisplayName = "Resources", SortOrder = Task.ResourceOptionGroups.Count });
+
+    private void RemoveResourceGroup(ResourceOptionGroupEntity g)
+        => Task.ResourceOptionGroups.Remove(g);
+
+    private void AddResourceItem(ResourceOptionGroupEntity g)
+        => g.Items.Add(new ResourceOptionItemEntity { ResourceChoiceGroupId = g.Id });
+
+    private void RemoveResourceItem(ResourceOptionGroupEntity g, ResourceOptionItemEntity it)
+        => g.Items.Remove(it);
+
+    void AddDelete(ResourceOptionGroupEntity group, ResourceEntity res)
+    {
+        if (group.Items.Any(x => x.ResourceId == res.Id))
+        {
+            var item = group.Items.FirstOrDefault(x => x.ResourceId == res.Id);
+            if (item != null) group.Items.Remove(item);
+        }
+        else
+        {
+            var toadd = new ResourceOptionItemEntity { ResourceChoiceGroupId = group.Id, ResourceId = res.Id, Resource = res };
+            group.Items.Add(toadd);
+        }
+    }
+
+    async Task LoadResourcesAsync(ResourceFolderEntity folders)
+    {
+        if (folders.Resources == null || folders.Resources.Count == 0)
+        {
+            Selected = null;
+            folders.Resources = (await TaskGroupsQuery.GetFolderResourcesAsync(folders.Id, CancellationToken.None)).ToList();
+        }
+        Selected = folders;
+        StateHasChanged();
+    }
+
+    // ====== Move helpers ======
+    private static void MoveUp<T>(IList<T> list, T item)
+    {
+        var i = list.IndexOf(item);
+        if (i > 0) (list[i - 1], list[i]) = (list[i], list[i - 1]);
+    }
+
+    private static void MoveDown<T>(IList<T> list, T item)
+    {
+        var i = list.IndexOf(item);
+        if (i >= 0 && i < list.Count - 1) (list[i + 1], list[i]) = (list[i], list[i + 1]);
+    }
+
+    // ====== Helpers: RevealSectionKeys ======
+    private static string GetRevealKeys(OptionItemEntity o)
+        => o?.RevealedSectionKeys is { Count: > 0 } ? string.Join(", ", o.RevealedSectionKeys) : string.Empty;
+
+    private static void SetRevealKeys(OptionItemEntity o, string? input)
+    {
+        if (o is null) return;
+        if (string.IsNullOrWhiteSpace(input)) { o.RevealedSectionKeys = new List<string>(); return; }
+
+        o.RevealedSectionKeys = input
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => x.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+}
+
+@if (Task == null)
+{
+    <div class="@NewCC.Text.MutedXs">Loading…</div>
+}
+else
+{
+    <EditForm Model="Task" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+            <!-- Header: Task name + actions -->
+            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom(Size.S1)">
+                <div class="@CsS.Layout.FlexMinWidth(280)">
+                    <label class="@CsS.Form.Label">@CalcResource.name</label>
+                    <input class="@CsS.Input.Text" value="@Task?.DisplayName" readonly />
+                </div>
+
+                <div class="@CsS.Layout.FlexWrap @CsS.Util.PlaceSelfEnd">
+                    <button type="submit" class="@CsS.Btn.Outline.Primary">@ResourceApp.save</button>
+                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="Close">@ResourceApp.cancel</button>
+                </div>
+            </div>
+
+            <!-- Choice Groups -->
+            <section class="@NewCC.Card.Panel">
+                <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
+                    <h4 class="@NewCC.Text.SemiBold">Choice Groups</h4>
+                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddChoiceGroup">Add Group</button>
+                </div>
+
+                @if (Task.OptionGroups?.Count > 0)
+                {
+                    @foreach (var g in Task.OptionGroups.OrderBy(x => x.SortOrder))
+                    {
+                        <div class="@NewCC.Card.SubPanel">
+                            <div class="@CsS.Grid.Col.MD12">
+                                <div class="@CsS.Grid.Span.MD3">
+                                    <label class="@CsS.Form.Label">@CalcResource.name</label>
+                                    <input class="@CsS.Input.Text" @bind="g.DisplayName" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD2">
+                                    <label class="@CsS.Form.Label">Order</label>
+                                    <input type="number" class="@CsS.Input.Number" @bind="g.SortOrder" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD3">
+                                    <label class="@CsS.Form.Label">Section Key</label>
+                                    <input class="@CsS.Input.Text" @bind="g.SectionKey" placeholder="(optional)" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD2">
+                                    <label class="@CsS.Form.Label">Selection</label>
+                                    <select class="@CsS.Input.Select" @bind="g.SelectionMode">
+                                        <option value="@SelectionMode.Multiple">Multiple</option>
+                                        <option value="@SelectionMode.Single">Single</option>
+                                    </select>
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
+                                    <div class="@CsS.Layout.Inline">
+                                        <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveChoiceGroup(g))">x</button>
+                                        <button type="button" class="@CsS.Btn.Outline.Primary" @onclick="(() => AddChoiceOption(g))">Add Option</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if (g.Options?.Count > 0)
+                            {
+                                <div class="@CsS.Spacing.M.Top(Size.S2)">
+                                    @foreach (var o in g.Options)
+                                    {
+                                        <div class="@NewCC.Card.SoftMuted @CsS.Spacing.P.All(Size.S2) @CsS.Spacing.M.Bottom(Size.S2)">
+                                            <div class="@CsS.Grid.Col.MD12">
+                                                <div class="@CsS.Grid.Span.MD4">
+                                                    <label class="@CsS.Form.Label">Option Label</label>
+                                                    <input class="@CsS.Input.Text" @bind="o.DisplayName" />
+                                                </div>
+
+                                                <div class="@CsS.Grid.Span.MD6">
+                                                    <label class="@NewCC.Text.LabelXs @CsS.Spacing.M.Bottom(Size.S1)">
+                                                        Reveal Section Keys (comma-separated)
+                                                    </label>
+                                                    <input class="@CsS.Input.Text"
+                                                           value="@GetRevealKeys(o)"
+                                                           @onchange="e => SetRevealKeys(o, e.Value?.ToString())"
+                                                           placeholder="e.g. details, advanced, extras" />
+                                                </div>
+
+                                                <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
+                                                    <div class="@CsS.Layout.Inline">
+                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveUp(g.Options, o))">Set Default</button>
+
+                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveUp(g.Options, o))">↑</button>
+                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveDown(g.Options, o))">↓</button>
+                                                        <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveChoiceOption(g, o))">x</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="@NewCC.Text.MutedXs">No choice groups.</div>
+                }
+            </section>
+
+            <!-- Numeric Groups -->
+            <section class="@NewCC.Card.Panel">
+                <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
+                    <h4 class="@NewCC.Text.SemiBold">Numeric Groups</h4>
+                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddNumericGroup">Add Group</button>
+                </div>
+
+                @if (Task.NumericInputs?.Count > 0)
+                {
+                    @foreach (var g in Task.NumericInputs.OrderBy(x => x.SortOrder))
+                    {
+                        <div class="@NewCC.Card.SubPanel">
+                            <!-- NOTE: this row is 8 columns; keep spans sum = 8 -->
+                            <div class="@CsS.Grid.Col.MD8">
+                                <div class="@CsS.Grid.Span.MD2">
+                                    <label class="@CsS.Form.Label">Name</label>
+                                    <input class="@CsS.Input.Text" @bind="g.DisplayName" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD1">
+                                    <label class="@CsS.Form.Label">Order</label>
+                                    <input type="number" class="@CsS.Input.Number" @bind="g.SortOrder" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD2">
+                                    <label class="@CsS.Form.Label">Section Key</label>
+                                    <input class="@CsS.Input.Text" @bind="g.SectionKey" placeholder="(optional)" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD1">
+                                    <label class="@CsS.Form.Label">Min</label>
+                                    <input type="number" class="@CsS.Input.Number" @bind="g.MinInputValue" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD1">
+                                    <label class="@CsS.Form.Label">Max</label>
+                                    <input type="number" class="@CsS.Input.Number" @bind="g.MaxInputValue" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD1 @CsS.Util.PlaceSelfEnd">
+                                    <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveNumericGroup(g))">x</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="@NewCC.Text.MutedXs">No numeric groups.</div>
+                }
+            </section>
+
+            <!-- Resource Choice Groups -->
+            <section class="@NewCC.Card.Panel">
+                <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
+                    <h4 class="@NewCC.Text.SemiBold">Resource Choice Groups</h4>
+                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddResourceGroup">Add Group</button>
+                </div>
+
+                @if (Task.ResourceOptionGroups?.Count > 0)
+                {
+                    @foreach (var g in Task.ResourceOptionGroups.OrderBy(x => x.SortOrder))
+                    {
+                        <div class="@NewCC.Card.SubPanel">
+                            <div class="@CsS.Grid.Col.MD12">
+                                <div class="@CsS.Grid.Span.MD4">
+                                    <label class="@CsS.Form.Label">Name</label>
+                                    <input class="@CsS.Input.Text" @bind="g.DisplayName" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD2">
+                                    <label class="@CsS.Form.Label">Order</label>
+                                    <input type="number" class="@CsS.Input.Number" @bind="g.SortOrder" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD4">
+                                    <label class="@CsS.Form.Label">Section Key</label>
+                                    <input class="@CsS.Input.Text" @bind="g.SectionKey" placeholder="(optional)" />
+                                </div>
+
+                                <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
+                                    <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveResourceGroup(g))">x</button>
+                                </div>
+                            </div>
+
+                            <div class="@CsS.Spacing.M.Top(Size.S2)">
+                                <FolderResourcesAddUI TaskId="Task.Id"
+                                                      ResIds="g.Items.Select(x => x.ResourceId).ToList()"
+                                                      OnSave="(e)=>AddDelete(g,e)" />
+
+                                @if (g.Items?.Count > 0)
+                                {
+                                    foreach (var it in g.Items)
+                                    {
+                                        <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)">
+                                            <div class="@CsS.Grid.Span.MD10">
+                                                <label class="@CsS.Form.Label">Resource</label>
+                                                <ResourceAutocomplete MinChars="2" PageSize="20"
+                                                                      InitialName="@it.Resource?.Name"
+                                                                      Value="it.ResourceId"
+                                                                      ValueChanged="@(v => it.ResourceId = v ?? 0)"
+                                                                      OnPicked="@(sel => { it.ResourceId = sel.id; StateHasChanged(); })" />
+                                            </div>
+
+                                            <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
+                                                <div class="@CsS.Layout.Inline">
+                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveUp(g.Items, it))">↑</button>
+                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveDown(g.Items, it))">↓</button>
+                                                    <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveResourceItem(g, it))">x</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="@NewCC.Text.MutedXs">No resource groups.</div>
+                }
+            </section>
+
+    </EditForm>
+}

@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="alignItems" xml:space="preserve">
+    <value>Align-Items</value>
+  </data>
+  <data name="background" xml:space="preserve">
+    <value>Bakgrund</value>
+  </data>
+  <data name="bold" xml:space="preserve">
+    <value>Djärv</value>
+  </data>
+  <data name="bolder" xml:space="preserve">
+    <value>Djärvare</value>
+  </data>
+  <data name="borderType" xml:space="preserve">
+    <value>Kanttyp</value>
+  </data>
+  <data name="cell" xml:space="preserve">
+    <value>Cell</value>
+  </data>
+  <data name="center" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="font" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="FontSize" xml:space="preserve">
+    <value>Textstorlek</value>
+  </data>
+  <data name="fontWeight" xml:space="preserve">
+    <value>Teckensnittsvikt</value>
+  </data>
+  <data name="marginBottom" xml:space="preserve">
+    <value>Marginal-botten</value>
+  </data>
+  <data name="marginLeft" xml:space="preserve">
+    <value>Margin-Left</value>
+  </data>
+  <data name="marginTop" xml:space="preserve">
+    <value>Margin-Top</value>
+  </data>
+  <data name="normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="paddingLeft" xml:space="preserve">
+    <value>Padding-Left</value>
+  </data>
+  <data name="paddingTop" xml:space="preserve">
+    <value>Padding-Top</value>
+  </data>
+  <data name="PrivacyContent" xml:space="preserve">
+    <value>Vi respekterar din integritet. Dina uppgifter lagras säkert och delas inte med tredje part om det inte krävs enligt lag.</value>
+  </data>
+  <data name="right" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="row" xml:space="preserve">
+    <value>Row</value>
+  </data>
+  <data name="TabLicenses" xml:space="preserve">
+    <value>Tredjepartslicenser</value>
+  </data>
+  <data name="TabPrivacy" xml:space="preserve">
+    <value>Integritetspolicy</value>
+  </data>
+  <data name="TabTerms" xml:space="preserve">
+    <value>Användarvillkor</value>
+  </data>
+  <data name="TermsContent" xml:space="preserve">
+    <value>Användarvillkor
+Giltigt från: juli 2025
+
+Välkommen till Atasoft. Genom att använda vår plattform godkänner du följande villkor. Läs dem noggrant innan du fortsätter.
+
+1. Behörighet
+Tjänsten är främst avsedd för bygg- och infrastrukturföretag. Dock kan även privatpersoner registrera sig. Genom att använda tjänsten intygar du att du är minst 18 år och har rätt att företräda ditt företag om tillämpligt.
+
+2. Syftet med tjänsten
+Plattformen erbjuder verktyg för att uppskatta projektkostnader, organisera uppgifter, resurser och team. Användare kan skapa mappar, projekt, uppgifter och tilldela roller inom sitt företagsstruktur.
+
+3. Testperiod och betalning
+En testperiod kan erbjudas, varefter tjänsten kräver betald prenumeration. Priser och betalningsvillkor anges vid registrering eller onboarding.
+
+4. Data och användning
+Användare kan lägga in data som namn på anställda, uppgifter, resurser och projekt samt importera uppgifter från Excel-filer. Det är för närvarande inte möjligt att ladda upp filer direkt. Atasoft ansvarar inte för korrektheten i användardata.
+
+5. Dataskydd och integritet
+Data lagras säkert på servrar från IONOS.de i Tyskland. Vi delar inte data med tredje part. Se vår integritetspolicy för mer information.
+
+6. Immateriella rättigheter
+Allt innehåll och alla funktioner tillhör Atasoft om inget annat anges. Det är inte tillåtet att kopiera, ändra eller återanvända delar av plattformen utan tillstånd.
+
+7. Acceptabel användning
+Du förbinder dig att inte missbruka tjänsten, t.ex. genom att:
+- Försöka få obehörig åtkomst
+- Ange falsk företagsinformation
+- Använda plattformen för olagliga syften
+
+8. Support
+Grundläggande support tillhandahålls via e-post: ataya@atayasoft.de
+Vi försöker svara inom rimlig tid men kan inte garantera tillgänglighet.
+
+9. Tjänstens tillgänglighet
+Plattformen är under utveckling och kan ändras eller tillfälligt vara otillgänglig. Vi förbehåller oss rätten att ändra eller avbryta tjänsten när som helst.
+
+10. Ansvarsbegränsning
+Atasoft är inte ansvarigt för några direkta eller indirekta skador som uppstår genom användning av plattformen. Användning sker på egen risk.
+
+11. Tillämplig lag
+Villkoren regleras enligt nederländsk lag. Tvister ska hanteras enligt nederländsk jurisdiktion.
+
+Kontakt:
+Vid frågor om användarvillkoren, kontakta oss via e-post: ataya@atayasoft.de
+</value>
+  </data>
+  <data name="width" xml:space="preserve">
+    <value>Width</value>
+  </data>
+</root>

@@ -1,0 +1,118 @@
+﻿@using Application.Feature.Calculation.TemplateTable.Commands
+@using Persistence.Factory
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Constant;
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using System.Security.Claims;
+@using ProjectManagement.Shared.DTO.Calculation.Template
+@using ProjectManagement.Shared.DTO.General
+@using ProjectManagement.Shared.DTO.Identity;
+@using global::Application.Feature.Calculation.TemplateTable.Queries
+@using global::Application.Feature.Identity.Department.Queries
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+@inject ICommandDispatcher MicroBus
+@inject IDbContextFactory factory
+<style>
+    input, td, th {
+    min-width: 40px;
+    max-width: 250px;
+    }
+</style>
+@if (Form != null)
+{
+    <TemplateForm TempForm="Form" Callback="CallBack"></TemplateForm>
+}
+else
+{
+    <table class="@CssClasses.Table.Tab">
+        <thead class="@CssClasses.Table.Thead">
+            <tr>
+                <th class="@CssClasses.Table.TH" style="width:260px;">
+                    <div class="@CssClasses.Layout.FlexItemsCenter">
+                            @if (Departments != null)
+                            {
+                            <select @onchange="async (e) => await GetAsync(e.Value.ToString())" class="@CssClasses.Input.Select">
+                                        <option value=""></option>
+                                        @foreach (var Template in Departments)
+                                        {
+                                            <option value="@Template.Id">@Template.Name</option>
+                                        }
+                                    </select>
+                            }
+                                <button @onclick="()=>Form = new()" class="@CssClasses.Btn.IconButton.Success">@((MarkupString)Icons.Plus2)</button>
+                        </div>
+                </th>
+                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+            </tr>
+        </thead>
+        <tbody class="@CssClasses.Table.TBody">
+            @if (List != null)
+                foreach (var item in List)
+                {
+                    <tr class="@CssClasses.Table.Tr">
+                        <td class="@CssClasses.Table.Td">
+                            <div class="@CssClasses.Layout.FlexItemsCenter">
+                                <button @onclick="async () => await FormUI(item.Id)" class="@CssClasses.Btn.IconButton.Warning" disabled="@Loading">@Icons.Edit</button>
+                                    <button @onclick="()=>Remove(item)" class="@CssClasses.Btn.IconButton.Danger" disabled="@Loading">@((MarkupString)Icons.DeleteSVG)</button>
+                            </div>
+                        </td>
+                        <td scope="row" class="@CssClasses.Table.Td">@item.Name</td>
+                    </tr>
+                }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    List<TemplateListDTO>? List;
+    TemplateModelDTO? Form;
+    bool Loading = true;
+    [CascadingParameter] private Task<AuthenticationState> _authentication { get; set; }
+    List<ListDTO>? Departments;
+    async Task FormUI(int id) {
+        Form = await MicroBus.Send(new GetTemplateByIdQuery(id,null));
+        //await Repo.Template.GetByIdAsync(id);
+        Form.Id = id;
+    }
+    async Task GetAsync(string idstr)
+    {
+        int? id = null;
+        if (int.TryParse(idstr, out int value))
+            id = value;
+        List = await MicroBus.Send(new GetTemplatesByUserQuery(null));
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        var role = (await _authentication).User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role);
+        if (role.Value == PMRolesConst.Tenant.Admin)
+            Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
+        await GetAsync(null);
+        Loading = false;
+        StateHasChanged();
+    }
+    void Remove(TemplateListDTO status) => MHD.DeleteMessage(status.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
+
+    async Task ConfirmRemoveAsync(TemplateListDTO st)
+    {
+        if (await MicroBus.Send(new RemoveTemplateCommands(st.Id,factory.DepartmentID)))
+        {
+            List.Remove(st);
+            StateHasChanged();
+            MHD.Notifications(ToastType.Delete, true);
+        }
+        else  MHD.Notifications(ToastType.Delete, false);
+    }
+
+    async Task CallBack(bool refrsh)
+    {
+        Loading = true;
+        if (refrsh)
+            List = await MicroBus.Send(new GetTemplatesByUserQuery(null));
+        
+        Form = null;
+        Loading = false;
+    }
+    }

@@ -1,0 +1,100 @@
+﻿@page "/Account/Manage/GenerateRecoveryCodes"
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<GenerateRecoveryCodes> Logger
+
+<PageTitle>Generate two-factor authentication (2FA) recovery codes</PageTitle>
+
+@if (recoveryCodes is not null)
+{
+    <ShowRecoveryCodes RecoveryCodes="recoveryCodes.ToArray()" StatusMessage="@message" />
+}
+else
+{
+    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        Generate two-factor authentication (2FA) recovery codes
+    </h3>
+
+    <div role="alert"
+         class="mt-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-900
+             dark:border-yellow-700/60 dark:bg-yellow-950 dark:text-yellow-100">
+        <p class="flex items-center gap-2">
+            <!-- Heroicon equivalent of a warning sign -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                 class="h-5 w-5 text-yellow-600 dark:text-yellow-400">
+                <path fill-rule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.72-1.36 3.485 0l6.518 11.6c.75 1.334-.213 3.001-1.742 3.001H3.48c-1.53 0-2.492-1.667-1.742-3.001l6.519-11.6zM11 13a1 1 0 10-2 0 1 1 0 002 0zm-.25-6.75a.75.75 0 00-1.5 0v4.5a.75.75 0 001.5 0v-4.5z"
+                      clip-rule="evenodd" />
+            </svg>
+            <strong>Put these codes in a safe place.</strong>
+        </p>
+
+        <p class="mt-2">
+            If you lose your device and don't have the recovery codes you will lose access to your account.
+        </p>
+
+        <p class="mt-2">
+            Generating new recovery codes does not change the keys used in authenticator apps.
+            If you wish to change the key used in an authenticator app you should
+            <a href="Account/Manage/ResetAuthenticator"
+               class="text-blue-700 underline underline-offset-2 hover:no-underline
+                  dark:text-blue-300">
+                reset your authenticator keys.
+            </a>
+        </p>
+    </div>
+
+    <div class="mt-4">
+        <form @formname="generate-recovery-codes" @onsubmit="OnSubmitAsync" method="post">
+            <AntiforgeryToken />
+            <button type="submit"
+                    class="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm
+                 transition-colors hover:bg-red-700 focus-visible:outline focus-visible:outline-2
+                 focus-visible:outline-offset-2 focus-visible:outline-red-600
+                 dark:bg-red-500 dark:hover:bg-red-400 dark:focus-visible:outline-red-400">
+                Generate Recovery Codes
+            </button>
+        </form>
+    </div>
+
+}
+@code {
+    private string? message;
+    private ApplicationUser? user;
+    private IEnumerable<string>? recoveryCodes;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserManager.GetUserAsync(HttpContext.User);
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
+
+        var isTwoFactorEnabled = await UserManager.GetTwoFactorEnabledAsync(user);
+        if (!isTwoFactorEnabled)
+        {
+            throw new InvalidOperationException("Cannot generate recovery codes for user because they do not have 2FA enabled.");
+        }
+    }
+
+    private async Task OnSubmitAsync()
+    {
+        if (user is null)
+        {
+            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        recoveryCodes = await UserManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+        message = "You have generated new recovery codes.";
+
+        Logger.LogInformation("User with ID '{UserId}' has generated new 2FA recovery codes.", userId);
+    }
+}

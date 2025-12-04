@@ -1,0 +1,74 @@
+@using BlazorMHD.UI.Core.Navigation
+
+<div class="flex items-center gap-3 text-[0.70rem] mb-2">
+    @for (int i = 0; i < Steps.Count; i++)
+    {
+        var step = Steps[i];
+        var index = i + 1;
+        var isActive = step.Key == ActiveKey;
+        var isCompleted = i < GetActiveIndex();
+
+        <div class="flex items-center gap-1">
+            <div class="@BuildCircleClass(isActive, isCompleted)">
+                @index
+            </div>
+            <div class="flex flex-col leading-tight">
+                <span class="@BuildTitleClass(isActive, isCompleted)">
+                    @step.Title
+                </span>
+                @if (!string.IsNullOrEmpty(step.Description))
+                {
+                    <span class="text-[0.65rem] text-slate-500 dark:text-slate-400">
+                        @step.Description
+                    </span>
+                }
+            </div>
+
+            @if (i < Steps.Count - 1)
+            {
+                <div class="w-8 h-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<StepItem> Steps { get; set; } = new();
+    [Parameter] public string? ActiveKey { get; set; }
+    [Parameter] public EventCallback<string?> ActiveKeyChanged { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(ActiveKey) && Steps.Any())
+        {
+            ActiveKey = Steps.First().Key;
+        }
+    }
+
+    private int GetActiveIndex()
+    {
+        if (string.IsNullOrEmpty(ActiveKey)) return 0;
+        var idx = Steps.FindIndex(s => s.Key == ActiveKey);
+        return idx < 0 ? 0 : idx;
+    }
+
+    private string BuildCircleClass(bool isActive, bool isCompleted)
+    {
+        var baseCls = "w-5 h-5 flex items-center justify-center rounded-full border text-[0.65rem]";
+
+        if (isCompleted)
+            return $"{baseCls} bg-green-600 text-white border-green-600";
+
+        if (isActive)
+            return $"{baseCls} bg-blue-600 text-white border-blue-600";
+
+        return $"{baseCls} bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700";
+    }
+
+    private string BuildTitleClass(bool isActive, bool isCompleted)
+    {
+        if (isCompleted) return "text-green-600 font-medium";
+        if (isActive) return "text-blue-700 dark:text-blue-400 font-medium";
+        return "text-slate-500 dark:text-slate-400";
+    }
+}

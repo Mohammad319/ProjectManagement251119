@@ -1,0 +1,472 @@
+﻿@using ProjectManagement.Shared.DTO.Account
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.ProjectAppStorage
+@using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
+@using ProjectManagement.Shared.DTO.ResourceType
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+@if (Rows is null || !Rows.Any())
+{
+    <div class="mt-2 rounded border p-1 md:p-2 bg-white/60 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+        لا توجد موارد حالياً. اختر من المجموعات أعلاه أو حدّث المدخلات.
+    </div>
+}
+else
+{
+    <!-- حاوية الجدول مع شريط تمرير أفقي وعمودي -->
+    <div class="w-full max-w-full"
+         style="
+                max-height: calc(100vh - 220px);
+                overflow-x: auto;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+             ">
+        <table class="text-[11px] leading-tight"
+               style="min-width: 1800px; white-space: nowrap;">
+            <thead class="bg-gray-100/80 dark:bg-gray-800/70">
+                <tr>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[60px]">@CalcResource.active</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.account</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[450px]">@ResourceLoc.resource</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.type</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.resourceSort</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.status</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.unit</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.baseCost</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cost</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.totalNetCost</th>
+
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.co2</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor1</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor2</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.quantity</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cap / @CalcResource.waste</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">Morning</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">M Cost</th>
+
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[85px]">Day</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">D Cost</th>
+
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">Evaning</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">E Cost</th>
+
+                    @if (_propColumns.Count > 0)
+                    {
+                        @foreach (var col in _propColumns)
+                        {
+                            <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[90px]">@col.DisplayName</th>
+                        }
+                    }
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">F</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                @foreach (var r in Rows)
+                {
+                    if (r is null)
+                        continue;
+
+                    // هل هذا المورد ضمن مجموعة MenuId فيها عنصرين أو أكثر؟
+                    var menuGroup = FindGroup(r);
+                    var isMenuRow = false;
+                    var current = r;
+
+                    if (menuGroup is not null)
+                    {
+                        // إذا سبق ورسمنا صف لهذه المجموعة فلا نعيد رسمها
+                        if (menuGroup.Rendered)
+                        {
+                            continue;
+                        }
+
+                        menuGroup.Rendered = true;
+                        // المورد الحالي = أول IsAdded = true, وإلا أول واحد في المجموعة
+                        current = menuGroup.Resources.FirstOrDefault(x => x.IsAdded)
+                        ?? menuGroup.Resources.First();
+                        menuGroup.SelectedResourceId = current.Id;
+                        isMenuRow = true;
+                    }
+
+                    current.Data ??= new ProjectManagement.Shared.Base.Calculation.ResourceData();
+
+                    var hasFormulas = current.Formulas is { Count: > 0 };
+                    var expanded = _expanded.Contains(current.Id);
+
+                    var group = (current.GroupId is int gid && gid > 0)
+                    ? Config?.AccountGroups?.FirstOrDefault(x => x.Id == gid)
+                    : null;
+
+                    var type = (current.ResourceTypeId is int tid)
+                    ? Config?.ResourceTypes?.FirstOrDefault(x => x.Id == tid)
+                    : null;
+
+                    <tr class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
+                        <!-- Active / Add -->
+                        <td class="px-1 py-0.5 text-[11px] text-gray-800 dark:text-gray-300">
+                            @if (AddBtnIsVisible)
+                            {
+                                <button @onclick="() => current.IsAdded = !current.IsAdded"
+                                        class="@((current.IsAdded ? CsS.Btn.IconButton.Danger : CsS.Btn.Outline.Success) + CsS.Btn.Size.XSmall)">
+                                    @((MarkupString)Icons.AddDelete(current.IsAdded))
+                                </button>
+                            }
+                            <input type="checkbox"
+                                   class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400"
+                                   checked="@current.Active" disabled />
+                        </td>
+
+                        <!-- Account -->
+                        <td>
+                            <select @bind="current.AccountId"
+                                    class="@SelectSt">
+                                <option value="">اختر حسابًا</option>
+
+                                @foreach (var g in (Config?.AccountGroups ?? Enumerable.Empty<AccountGroupsListDto>()))
+                                {
+                                    <optgroup label="@g.Name">
+                                        @foreach (var a in (g.Accounts ?? Enumerable.Empty<ListAccountDTO>()))
+                                        {
+                                            <option value="@a.Id">@a.Name</option>
+                                        }
+                                    </optgroup>
+                                }
+                            </select>
+                        </td>
+
+                        <!-- Resource + Dropdown حسب MenuId -->
+                        <td class="px-1 py-0.5 text-[11px] text-gray-800 dark:text-gray-300">
+                            <div class="@CsS.Layout.Inline">
+                                <!-- زر التعديل -->
+                                <span class="@($"{CssClasses.Btn.Link} text-[10px] leading-none px-0.5")"
+                                      @onclick="async () => await OnEdit.InvokeAsync(current)">
+                                    ✎
+                                </span>
+
+                                @if (isMenuRow && menuGroup is not null)
+                                {
+                                    <!-- القائمة المنسدلة للموارد التي لها نفس MenuId -->
+                                    <select class="@SelectSt mr-1"
+                                            value="@menuGroup.SelectedResourceId"
+                                            @onchange="e => OnMenuChanged(menuGroup, e)">
+                                        @foreach (var opt in menuGroup.Resources)
+                                        {
+                                            <option value="@opt.Id">@opt.Name</option>
+                                        }
+                                    </select>
+                                }
+
+                                <!-- اسم المورد / الاسم المخصص -->
+                                @if (!NameConfig || string.IsNullOrWhiteSpace(current.NameUserValue))
+                                {
+                                    <input type="text" @bind="current.Name"
+                                           class="w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px]
+                                                              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                                                              focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                }
+                                else
+                                {
+                                    <input type="text" @bind="current.NameUserValue"
+                                           class="w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px]
+                                                              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                                                              focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                }
+                            </div>
+                        </td>
+
+                        <!-- Type -->
+                        <td>
+                            <select class="@SelectSt"
+                                    @bind="current.ResourceTypeId">
+                                <option value=""></option>
+                                @if (Config?.ResourceTypes is not null)
+                                {
+                                    @foreach (var item in Config.ResourceTypes)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+
+                        <!-- Sort -->
+                        <td>
+                            @if (type?.ResourcesSort is not null)
+                            {
+                                <select class="@SelectSt"
+                                        @bind="current.ResourceSortId">
+                                    <option></option>
+                                    @foreach (var item in type.ResourcesSort)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            }
+                        </td>
+
+                        <!-- Status -->
+                        <td>
+                            <select @bind="current.StatusId"
+                                    class="@SelectSt">
+                                <option value=""></option>
+                                @if (Config?.Statues is not null)
+                                {
+                                    foreach (var status in Config.Statues)
+                                    {
+                                        <option value="@status.Id">@status.Name</option>
+                                    }
+                                }
+                            </select>
+                        </td>
+
+                        <!-- Unit / BaseCost / Cost / TotalCost -->
+                        <td class="px-1 py-0.5">
+                            <input type="text" @bind="current.Data.Unit" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="number" @bind="current.Data.BaseCost" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="number" @bind="current.Data.Cost" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            @if (current.Id < 0)
+                            {
+                                <span>*</span>
+                                <input type="number" value="@TotalCost" class="@St" disabled />
+                            }
+                            else
+                            {
+                                <input type="number" value="@current.TotalCost" class="@St" disabled />
+                            }
+                        </td>
+
+                        <!-- CO2 / ChangeFactors / Quantity / CapWaste -->
+                        <td class="px-1 py-0.5">
+                            <input type="number" @bind="current.Data.CO2" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="number" @bind="current.Data.ChangeFactor1" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="number" @bind="current.Data.ChangeFactor2" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="number" @bind="current.Data.Quantity" class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="number" @bind="current.Data.CapWaste" class="@St" />
+                        </td>
+
+                        <td class="px-1 py-0.5">
+                            @if (current.HasCap && current.CalcResCost != null)
+                            {
+                                <input type="number" @bind="current.CalcResCost.Morgen" class="@St" />
+                            }
+                        </td>
+                        <td class="px-1 py-0.5">
+                            @if (current.HasCap && current.CalcResCost != null)
+                            {
+                                <input type="number" @bind="current.CalcResCost.MorgenCost" class="@St" />
+                            }
+                        </td>
+                        <td class="px-1 py-0.5">
+                            @if (current.HasCap && current.CalcResCost != null)
+                            {
+                                <input type="number" @bind="current.CalcResCost.Day" class="@St" />
+                            }
+                        </td>
+                        <td class="px-1 py-0.5">
+                            @if (current.HasCap && current.CalcResCost != null)
+                            {
+                                <input type="number" @bind="current.CalcResCost.DayCost" class="@St" />
+                            }
+                        </td>
+                        <td class="px-1 py-0.5">
+                            @if (current.HasCap && current.CalcResCost != null)
+                            {
+                                <input type="number" @bind="current.CalcResCost.Evening" class="@St" />
+                            }
+                        </td>
+                        <td class="px-1 py-0.5">
+                            @if (current.HasCap && current.CalcResCost != null)
+                            {
+                                <input type="number" @bind="current.CalcResCost.EveningCost" class="@St" />
+                            }
+                        </td>
+
+                        <!-- Dynamic properties -->
+                        @if (_propColumns.Count > 0)
+                        {
+                            @foreach (var col in _propColumns)
+                            {
+                                var p = current.Properties?.FirstOrDefault(x => NormalizeName(x.DisplayName) == col.NameKey);
+                                <td class="px-1 py-0.5">
+                                    @if (p is null)
+                                    {
+                                        <span class="text-[11px] text-gray-400">—</span>
+                                    }
+                                    else if (p.DataType == DataType.Number)
+                                    {
+                                        <input type="number"
+                                               @bind="p.NumberDefault"
+                                               max="@p.MaxNumericValue"
+                                               class="@St"
+                                               disabled="@(!p.IsUserEditable)" />
+                                    }
+                                    else
+                                    {
+                                        <input type="text"
+                                               @bind="p.TextDefault"
+                                               class="@St"
+                                               disabled="@(!p.IsUserEditable)" />
+                                    }
+                                </td>
+                            }
+                        }
+
+                        <!-- Formulas toggle -->
+                        <td class="px-1 py-0.5">
+                            @if (hasFormulas)
+                            {
+                                <button type="button"
+                                        class="inline-flex items-center rounded border px-2 py-0.5 text-[11px]
+                                                           border-gray-500 text-gray-700 hover:bg-gray-500 hover:text-white
+                                                           dark:border-gray-400 dark:text-gray-300 dark:hover:bg-gray-400"
+                                        @onclick="() => Toggle(current.Id)">
+                                    @((expanded ? "H" : "S")) (@current.Formulas.Count)
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-[11px] text-gray-500 dark:text-gray-400">—</span>
+                            }
+                        </td>
+                    </tr>
+
+                    @if (hasFormulas && expanded)
+                    {
+                        <tr class="hover:bg-transparent">
+                            <td class="px-1 py-1" colspan="@(_staticColspan + _propColumns.Count)">
+                                <div class="mt-1 rounded border p-1.5 md:p-2 bg-white/60 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700">
+                                    <div class="text-[13px] font-semibold mb-1 text-gray-800 dark:text-gray-100">Formulas</div>
+                                    <ul class="list-disc ml-5">
+                                        @foreach (var f in current.Formulas)
+                                        {
+                                            <li class="text-[13px] text-gray-800 dark:text-gray-200">@f</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<ResourceDto> Rows { get; set; } = Array.Empty<ResourceDto>();
+    [Parameter] public bool AddBtnIsVisible { get; set; }
+    [Parameter] public ResourceFormDTO Config { get; set; } = default!;
+    [Parameter] public EventCallback<ResourceDto> OnEdit { get; set; }
+    [Parameter] public bool NameConfig { get; set; }
+    [Parameter] public bool CostConfig { get; set; }
+    [Parameter] public double TotalCost { get; set; }
+
+    // يُستدعى عند تغيير Dropdown أو أي تغيّر نريد أن نبلّغ به الأب (TaskCard مثلاً)
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    // ستايل المدخلات العادية
+    string St = "w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px] " +
+                "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 " +
+                "focus:outline-none focus:ring-1 focus:ring-yellow-400";
+
+    // ستايل القوائم المنسدلة (select)
+    string SelectSt = "w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px] " +
+                      "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 " +
+                      "focus:outline-none focus:ring-1 focus:ring-blue-500";
+
+    private HashSet<int> _expanded = new();
+
+    private sealed class PropColumn
+    {
+        public string NameKey { get; init; } = string.Empty;
+        public string DisplayName { get; init; } = string.Empty;
+    }
+
+    private sealed class ResourceMenuGroup
+    {
+        public int MenuId { get; set; }
+        public List<ResourceDto> Resources { get; set; } = new();
+        public int SelectedResourceId { get; set; }
+        public bool Rendered { get; set; }
+    }
+
+    private List<PropColumn> _propColumns = new();
+    private List<ResourceMenuGroup> _menuGroups = new();
+
+    private int _staticColspan = 17;
+
+    protected override void OnParametersSet()
+    {
+        // أعمدة الخصائص الديناميكية
+        _propColumns = Rows?
+            .SelectMany(r => r.Properties ?? Enumerable.Empty<ResourcePropertyBindDto>())
+            .Where(p => !string.IsNullOrWhiteSpace(p.DisplayName))
+            .GroupBy(p => NormalizeName(p.DisplayName))
+            .Select(g => new PropColumn
+            {
+                NameKey = g.Key,
+                DisplayName = g.First().DisplayName
+            })
+            .OrderBy(c => c.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList()
+            ?? [];
+
+        // تجميع الموارد حسب MenuId (فقط التي تحتوي على عنصرين أو أكثر)
+        _menuGroups = Rows?
+            .Where(r => r?.MenuId.HasValue == true)
+            .GroupBy(r => r!.MenuId!.Value)
+            .Where(g => g.Count() >= 2)
+            .Select(g => new ResourceMenuGroup
+            {
+                MenuId = g.Key,
+                Resources = g.ToList(),
+                SelectedResourceId = g.First().Id,
+                Rendered = false
+            })
+            .ToList()
+            ?? [];
+    }
+
+    private static string NormalizeName(string name)
+        => (name ?? string.Empty).Trim().ToLowerInvariant();
+
+    private void Toggle(int resourceId)
+    {
+        if (!_expanded.Add(resourceId))
+            _expanded.Remove(resourceId);
+    }
+
+    private ResourceMenuGroup? FindGroup(ResourceDto r)
+        => r.MenuId.HasValue
+            ? _menuGroups.FirstOrDefault(g => g.MenuId == r.MenuId.Value)
+            : null;
+
+    private async Task OnMenuChanged(ResourceMenuGroup group, ChangeEventArgs e)
+    {
+        if (!int.TryParse(e.Value?.ToString(), out var id))
+            return;
+
+        group.SelectedResourceId = id;
+        foreach (var res in group.Resources)
+        {
+            res.IsAdded = (res.Id == id);
+        }
+
+        if (OnChanged.HasDelegate)
+            await OnChanged.InvokeAsync();
+    }
+}

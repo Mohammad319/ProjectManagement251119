@@ -1,0 +1,95 @@
+﻿@page "/Account/ResendEmailConfirmation"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Encodings.Web
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using ProjectManagement.Shared
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Resend email confirmation</PageTitle>
+<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Resend email confirmation</h1>
+<h2 class="text-lg text-gray-700 dark:text-gray-300">Enter your email.</h2>
+<hr class="my-3 border-gray-300 dark:border-gray-700" />
+
+<StatusMessage Message="@message" />
+
+<div class="grid grid-cols-1">
+    <div class="max-w-md">
+        <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-5">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+
+            <!-- Email (floating label) -->
+            <div class="relative">
+                <InputText @bind-Value="Input.Email"
+                           id="Input.Email"
+                           autocomplete="username"
+                           aria-required="true"
+                           placeholder=" "
+                           class="peer block w-full rounded-md border border-gray-300 bg-white px-3 pt-6 pb-2 text-gray-900 shadow-sm
+                 placeholder-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
+                 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
+                <label for="Input.Email"
+                       class="pointer-events-none absolute left-3 top-2 text-sm text-gray-500 transition-all
+                 peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
+                 peer-focus:top-2 peer-focus:text-sm
+                 dark:text-gray-400">
+                    @PMResourceIdentity.email
+                </label>
+                <ValidationMessage For="() => Input.Email" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
+            </div>
+
+            <button type="submit"
+                    class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
+               transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
+               dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
+                Resend
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private string? message;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        Input ??= new();
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var user = await UserManager.FindByEmailAsync(Input.Email!);
+        if (user is null)
+        {
+            message = "Verification email sent. Please check your email.";
+            return;
+        }
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        message = "Verification email sent. Please check your email.";
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+    }
+}

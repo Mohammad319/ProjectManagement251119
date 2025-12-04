@@ -1,0 +1,76 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.Model.Application
+@using ProjectManagement.Shared.Base.Application
+@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
+@inherits AppComponentBase
+@inject ICommandDispatcher MicroBus
+
+        @if (RowForm == null)
+{
+        <EditForm id="appForm" Model="@ApplicationUpdate" OnValidSubmit="async () => await HandleSubmitAsync()">
+            <DataAnnotationsValidator />
+        <div class="@CssClasses.Grid.Col.MD4">
+                <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ApplicationUpdate.Name" />
+                    <ValidationMessage For=@(() => ApplicationUpdate.Name) />
+                </div>
+                <div>
+                <label class="@CssClasses.Form.Label">@ResourceApp.department:</label>
+                <InputSelect class="@CssClasses.Input.Select" @bind-Value="@ApplicationUpdate.DepartmentId">
+                        @if (Departments != null) foreach (var item in Departments)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => ApplicationUpdate.DepartmentId) />
+                </div>
+
+                <div class="@CssClasses.Form.CheckWrapperM">
+                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="ApplicationUpdate.IsVisible" />
+                        <label class="@CssClasses.Form.CheckLabel">@ResourceApp.isVisible</label>
+                </div>
+            <div>
+                <button class="@CssClasses.Btn.Outline.Success mt-3" @onclick="()=> RowForm = new()">@AppLoc[LocalizerConst.New, ResourceLoc.row]</button>
+            </div>
+            </div>
+
+        </EditForm>
+
+    <table class="@CssClasses.Table.Tab mt-2">
+        <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.lastUpdate</th>
+                    <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.isVisible</th>
+                    <th class="@CssClasses.Table.TH">@ResourceLoc.description</th>
+                </tr>
+            </thead>
+        <tbody class="@CssClasses.Table.TBody">
+                @if (ApplicationUpdate.Data.Row != null)
+                    foreach (var row in ApplicationUpdate.Data.Row)
+                    {
+                    <tr class="@CssClasses.Table.Tab">
+                        <td class="@CssClasses.Table.Td">
+                            <button @onclick="()=>Remove(row)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                            <button @onclick="()=> RowForm = row" class="@CssClasses.Btn.Link">@row.Name</button>
+                            </td>
+                        <td class="@CssClasses.Table.Td"></td>
+                        <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@row.IsVisible" /></td>
+                        <td class="@CssClasses.Table.Td">@row.Description</td>
+                        </tr>
+                    }
+            </tbody>
+        </table>
+
+        <div class="@CssClasses.Modal.Footer">
+        <button type="submit" form="appForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+                @ResourceApp.save
+            </button>
+            <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+        </div>
+        }
+   else
+    {
+    <RowFormUI RowParameter="@(RowForm)" Callback="CallBackRowForm"></RowFormUI>
+    }

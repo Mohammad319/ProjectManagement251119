@@ -1,0 +1,73 @@
+﻿@using ProjectManagement.Client.Handless
+@using ProjectManagement.Client.Shared.Repositories.Offer;
+@using ProjectManagement.Client.Shared.Repositories.Organisation
+@using ProjectManagement.Shared.Base.Organisation
+@using ProjectManagement.Shared.DTO.Offer
+@using ProjectManagement.Client.Shared.Repositories.Organisation.Implement;
+@using ProjectManagement.Shared.DTO.Organisation
+@inherits AppComponentBase
+
+@if (Form != null){
+    <ContactFormUI underContact="Form" Callback="CallBack"></ContactFormUI>
+}
+else if(Contacts != null){
+        <table class="@CssClasses.Table.Tab">
+            <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH">
+                        <button type="button" class="@CssClasses.Btn.Solid.Primary" @onclick="()=> SetForm(-1)"> @((MarkupString)Icons.Plus)</button>
+                        @CalcResource.name
+                    </th>
+                    <th class="@CssClasses.Table.TH" style="width:105px;">@ResourceIdentity.mobile </th>
+                    <th class="@CssClasses.Table.TH" style="width:105px;">@ResourceIdentity.phone </th>
+                    <th class="@CssClasses.Table.TH" style="width:120px;">@CalcResource.status </th>
+                </tr>
+            </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                @if (Contacts != null)
+                    for(int i = 0; i< Contacts.Count; i++)
+                    {
+                        int x = i;
+                        <tr class="@CssClasses.Table.Tr">
+                            <td class="@CssClasses.Table.Td">
+                                <button class="@CssClasses.Btn.Solid.Danger" @onclick="()=> Remove(Contacts[x])">@((MarkupString)@Icons.DeleteSVG)</button>
+                                <button class="@CssClasses.Btn.Solid.Primary" @onclick="()=> SetForm(x)">@Icons.Edit</button>
+                                @Contacts[x].FirstName @Contacts[x].LastName
+                            </td>
+                            <td class="@CssClasses.Table.Td">@Contacts[x].Mobile</td>
+                            <td class="@CssClasses.Table.Td">@Contacts[x].Telefone</td>
+                            <td class="@CssClasses.Table.Td">@Contacts[x].Status</td>
+                        </tr>
+                    }
+            </tbody>
+        </table>
+}
+
+@code {
+    [Parameter] public List<UnderContactOrganisationBase> Contacts { get; set; }
+    UnderContactOrganisationBase Form;
+    int IndexForm = -1;
+    void CallBack(UnderContactOrganisationBase f)
+    {
+        if (IndexForm == -1 && f != null) Contacts.Add(f);
+        Form = null;
+        StateHasChanged();
+    }
+    protected override void OnInitialized()
+    {
+        if (Contacts == null) Contacts = [];
+    }
+
+    void SetForm(int i = -1)
+    {
+        IndexForm = i;
+        if (i > -1)
+            Form = Contacts[i];
+        else Form = new UnderContactOrganisationBase();
+    }
+
+    void Remove(UnderContactOrganisationBase Company)
+    {
+        Contacts.Remove(Company);
+    }
+}

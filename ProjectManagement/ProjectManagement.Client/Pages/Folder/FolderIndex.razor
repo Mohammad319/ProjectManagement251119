@@ -1,0 +1,95 @@
+﻿@using BlazorMHD.UI.Components.Feedback.Splitter
+@using ContextMenuMHD
+@using ProjectManagement.Client.Helper.ProjectManagement.Client.Helper
+@using ProjectManagement.Client.Pages.Project.ProjectPages
+@using ProjectManagement.Client.Shared.SharedComponent
+@attribute [Authorize]
+@inherits AppComponentBase
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<HorizontalSplitter Class="h-[80vh] border border-zinc-200 dark:border-zinc-800 rounded-2xl"
+                    InitialLeftWidth="150"
+                    MinLeftWidth="25"
+                    MinRightWidth="260"
+                    SplitterThickness="6"
+                    LiveResize="true"
+                    StorageKey="folders-layout-horizontal-splitter">
+
+    <LeftContent>
+        <div class="flex justify-between items-center w-full">
+
+            <div class="@CssClasses.Layout.ButtonGroup">
+                <AuthorizeView Roles="@PMRolesConst.Tenant.Super_Manger">
+                    <span role="button" @onclick="ModalSeachForm" class="focus-ring focus-ring-primary">
+                        @((MarkupString)Icons.Search)
+                    </span>
+
+                    <span role="button" @onclick="GetDepartmentAsync">
+                        @((MarkupString)Icons.Department)
+                    </span>
+
+                    @if (!Folder.State.OtherDepartment)
+                    {
+                        <span role="button"
+                              @onclick="() => ModalForm(new() { IsVisible = UoWService.Folder.IsVisible })"
+                              class="mx-1">
+                            @((MarkupString)Icons.Plus)
+                        </span>
+
+                        <span role="button" @onclick="UoWService.Folder.LoadHiddenVisibleFoldersAsync">
+                            @((MarkupString)(Icons.GetVisibleIcon(UoWService.Folder.IsVisible)))
+                        </span>
+                    }
+                </AuthorizeView>
+            </div>
+
+            <div>
+                <span role="button" @onclick="() => SideBarVisible = !SideBarVisible">
+                    @((MarkupString)Icons.ChevronLeft)
+                </span>
+            </div>
+        </div>
+
+        @if (Folder.State.OtherDepartment)
+        {
+            <div style="border-top:1px solid #dee2e6">
+                <label style="font-size:13px">@ResourceApp.depSharedFolders</label>
+            </div>
+        }
+
+        @if (Folder.State.Departments != null && (Folder.State.OtherDepartment || Admin))
+        {
+            <div style="border-top:1px solid #dee2e6">
+                <select class="@CssClasses.Input.Text"
+                        @onchange="async e => await UoWService.Folder.LoadFoldersByDepartmentAsync(e.Value?.ToString() ?? string.Empty)">
+                    <option value="0"></option>
+                    @foreach (var department in Folder.State.Departments)
+                    {
+                        <option value="@department.Id">@department.Name</option>
+                    }
+                </select>
+            </div>
+        }
+
+        @if (UoWService.Folder.State.FoldersList != null && UoWService.Folder.State.FoldersList.Any())
+        {
+            <FoldersTree></FoldersTree>
+        }
+    </LeftContent>
+
+    <RightContent>
+            @if (Folder.State.Calculation != null)
+            {
+                <ProjectManagement.Client.Pages.Calculation.CalculationPageUI @key="Folder.State.Calculation.Id" />
+            }
+            else if (Folder.State.ProjectSelected != null)
+            {
+                <ProjectManagement.Client.Pages.Project.ProjectPages.ProjectsCalculationList @key="Folder.State.ProjectSelected.Id" />
+            }
+            else if (Folder.State.FolderSelected != null)
+            {
+                <ProjectsUI @key="Folder.State.FolderSelected.Id" />
+            }
+    </RightContent>
+</HorizontalSplitter>

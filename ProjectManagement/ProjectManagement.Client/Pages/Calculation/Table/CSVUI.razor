@@ -1,0 +1,168 @@
+﻿@using BlazorMHD.UI.Core.DesignSystem
+@using ClosedXML.Excel
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Client.Shared.Repositories.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using System.IO
+@inherits AppComponentBase
+
+<div class="@CssClasses.Modal.Body" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
+    <div class="@CssClasses.Grid.Col.MD4">
+        @if (SheetIsVisible)
+        {
+            <div>
+                <label for="floatingInputGrid">Sheet Nr:</label>
+                <input type="number" class="@CssClasses.Input.Number" @bind="SheetNr">
+            </div>   
+        }
+        <div>
+            <label for="floatingInputGrid">@ResourceApp.StartFromRow:</label>
+            <input type="number" class="@CssClasses.Input.Number" placeholder="@ResourceApp.StartFromRow" @bind="RowStart" />
+        </div>
+        <div>
+            <div class="@CssClasses.Layout.FlexItemsCenter @CssClasses.Spacing.M.All(Size.S5)">
+                <InputFile type="file"  OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)"></InputFile>
+                @if (workbook != null)
+                {
+                    <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="Import" disabled="@wait">@ResourceApp.import</button>
+                }
+                @if (Sections != null && Sections.Any())
+                {
+                    <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="Save" disabled="@wait">@ResourceApp.save</button>
+                }
+            </div>
+        </div>
+    </div>
+    <div>
+        <table class="@CssClasses.Table.Tab">
+            <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH" width="80"></th>
+                    <th class="@CssClasses.Table.TH">
+                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="CodeIndex" />
+                        <span>@CalcResource.code</span>
+                    </th>
+                    <th class="@CssClasses.Table.TH">
+                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="NameIndex" />
+                        @CalcResource.name
+                    </th>
+                    <th class="@CssClasses.Table.TH">
+                        <input class="@CssClasses.Input.Number" type="number" style="width:60px;" @bind="UnitIndex" />
+                        @CalcResource.unit
+                    </th>
+                    <th class="@CssClasses.Table.TH">
+                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="QuantityIndex" />
+                        @CalcResource.quantity
+                    </th>
+                    <th class="@CssClasses.Table.TH">
+                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="PriceIndex" />
+                        @CalcResource.price
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                @if (Sections != null && Sections.Any())
+                {
+                    @foreach (var Task in Sections)
+                    {
+                        @TaskRow(Task)
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    RenderFragment TaskRow(TaskPostDTO Task, int left = 0) => __builder =>
+    {
+        <tr class="@(left == 0 ? "task" : "subTask") @CssClasses.Table.Tr">
+            <td class="@CssClasses.Table.Td">
+                <span style="margin-left:@(left + "px")" @onclick="() => Sections!.Remove(Task)" role="button">@((MarkupString)Icons.Delete)</span>
+                @if (Task.Tasks.Any())
+                {
+                    <span role="button" @onclick="()=> Task.Colspan = !Task.Colspan" class="ps-2">
+                        @((MarkupString)(Icons.RightBottom(Task.Colspan)))
+                    </span>
+                    }
+            </td>
+            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number" type="text" @bind="@Task.Data.Code" /></td>
+            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number"  type="text" @bind="@Task.Name" /></td>
+            <td class="@CssClasses.Table.Td"><input  class="@CssClasses.Input.Number" type="text" @bind="@Task.Data.Unit" /></td>
+            <td class="@CssClasses.Table.Td"><input  class="@CssClasses.Input.Number" type="number" @bind="@Task.Data.Quantity" /></td>
+            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number"  type="number" @bind="@Task.Data.PriceSubDB" /></td>
+        </tr>
+        if (Task.Colspan)
+        {
+            if (Task.Tasks != null)
+            {
+                foreach (var item in Task.Tasks.OrderByDescending(x => x.Order))
+                {
+                    @TaskRow(item, left + 7)
+                }
+            }
+        }
+    };
+
+    void Save() =>
+         MHD.MessageYesNo(ResourceApp.save, ResourceApp.DoYouWanTtoSaveTheListInDatabase, 
+             MhdState.Primary, EventCallback.Factory.Create(this, () => SaveConfirm()));
+
+    int RowStart = 39;
+    string fileUrl = string.Empty;
+    List<TaskPostDTO>? Sections;
+    bool wait = false;
+    int CodeIndex = 1;
+    int NameIndex = 2;
+    int UnitIndex = 4;
+    int QuantityIndex = 5;
+    int PriceIndex = 6;
+    int SheetNr = 1;
+    List<ListOrderDTO>? Statuses;
+    bool SheetIsVisible = false;
+    async Task SaveConfirm()
+    {
+        wait = true;
+        bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Task.CreateAsync(Sections, Calc.Id));
+        MHD.Notifications(ToastType.Add, result);
+        workbook = null;
+        wait = false;
+        Close();
+    }
+    XLWorkbook? workbook;
+    async Task CheckedChanged(InputFileChangeEventArgs f)
+    {
+        IBrowserFile File = f.File;
+        using MemoryStream memStream = new();
+        await File.OpenReadStream(File.Size).CopyToAsync(memStream);
+        using XLWorkbook workbook1 = new(memStream);
+        workbook = workbook1;
+        int count = workbook.Worksheets.Count();
+        
+        if (count > 0)
+        {
+            SheetIsVisible = true;
+        }
+        else
+        {
+            SheetIsVisible = false;
+        }
+    }
+    private void Import()
+    {
+        if (workbook == null)
+            return;
+        wait = true;
+        Sections = null;
+        Sections = ExcelHelper.Import(SheetNr, workbook, RowStart, CodeIndex, NameIndex, UnitIndex, QuantityIndex, PriceIndex, Calc.OHFactors);
+        wait = false;
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        Statuses = await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync(null));
+    }
+
+    void Close() => Modal.Close();
+}

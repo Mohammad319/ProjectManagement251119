@@ -1,0 +1,373 @@
+﻿@using BlazorMHD.UI.Components.Data.Card
+@using BlazorMHD.UI.Components.Navigation.Tabs
+@using ProjectManagement.Client.Constant
+@using Calculation
+@using Calculation.Form
+@using Calculation.HourlyPriceList
+@using Calculation.Income
+@using Calculation.Share
+@using Calculation.Tender
+@using ProjectManagement.Client.Services.Folder
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Shared.DTO.Project
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+@using ProjectManagement.Shared.Enums
+
+@using BlazorMHD.UI.Core.Navigation
+@using BlazorMHD.UI.Core.DesignSystem
+@using NavTabItem = BlazorMHD.UI.Core.Navigation.TabItem
+
+@inherits AppComponentBase
+
+<div class="ml-1">
+    <!-- الهيدر: مسار المجلد + زر إضافة -->
+    <div class="flex justify-between items-center w-full p-1">
+        <div>
+            <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300 font-medium">
+                <span>📁 @Folder.State.FolderSelected?.Name</span>
+                <span>&gt;</span>
+                <span>📄 @Folder.State.ProjectSelected?.Name (@Folder.State.ProjectSelected?.Code)</span>
+            </div>
+        </div>
+        <div>
+            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                <button class="@CssClasses.Btn.IconButton.Success"
+                        disabled="@Folder.State.OtherDepartment"
+                        @onclick="() => UpdateForm(new ListCalculationMVVM())">
+                    @((MarkupString)Icons.Plus2)
+                </button>
+            </AuthorizeView>
+        </div>
+    </div>
+
+
+<div class="mt-1 space-y-1">
+    @if (FilteredCalculations is not null)
+    {
+        @foreach (var calu in FilteredCalculations)
+            {
+     
+                <div @key="calu.Id"
+                     class="cursor-pointer"
+                     @oncontextmenu:preventDefault
+                     @oncontextmenu="() => Context(calu)"
+                     @onclick="async () => await NewCalculation(calu.Id)"
+                     @ondrop="async _ => await HandleDrop(calu)"
+                     @ondragleave="() => calu.IsDragOver = false"
+                     @ondragover:preventDefault="true"
+                     @ondragover="() => calu.IsDragOver = calcDraging is not null"
+                     @ondragstart="() => calcDraging = calu"
+                     @ondragend="() => calcDraging = null"
+                     draggable="true">
+
+                    <MhdCard Compact="true"
+                             Elevated="true"
+                             Interaction="MhdCard.CardInteractionMode.HoverAndRipple"
+                             Class="@(calu.IsDragOver ? "ring-2 ring-blue-400" : string.Empty)">
+
+                        <div class="flex flex-col gap-1">
+                            <!-- الصف العلوي: كود ثابت العرض + اسم + حالة -->
+                            <div class="grid grid-cols-[90px,1fr] items-center gap-2">
+                                <div>
+                                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-[11px] font-mono rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                        @calu.Code
+                                    </span>
+                                </div>
+
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">
+                                        @calu.Name
+                                    </span>
+
+                                    <span class="text-xs px-2 py-0.5 rounded-full
+                                     @(calu.EndDate < DateTime.Today
+                                                                           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                                                           : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300")">
+                                        @(calu.EndDate < DateTime.Today ? "Finished" : "Active")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- الصف الثاني: التواريخ -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-1 text-[11px] text-gray-600 dark:text-gray-300">
+                                <div>
+                                    <span class="font-semibold">@CalcResource.tenderQA:</span>
+                                    <span class="ml-1">@calu.TenderQA.ToString(ConstValues.DateFormat)</span>
+                                </div>
+                                <div>
+                                    <span class="font-semibold">@CalcResource.tenderDeadline:</span>
+                                    <span class="ml-1">@calu.TenderDeadline.ToString(ConstValues.DateFormat)</span>
+                                </div>
+                                <div>
+                                    <span class="font-semibold">@CalcResource.startDate:</span>
+                                    <span class="ml-1">@calu.StartDate.ToString(ConstValues.DateFormat)</span>
+                                </div>
+                                <div>
+                                    <span class="font-semibold">@CalcResource.endDate:</span>
+                                    <span class="ml-1">@calu.EndDate.ToString(ConstValues.DateFormat)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </MhdCard>
+
+                </div>
+
+
+            }
+        }
+</div>
+
+</div>
+
+@code {
+    private ListCalculationMVVM? calcDraging;
+
+    // --- MhdTabs + Icons ---
+
+    // التاب الحالي (1 = الكل، 2 = جارية، 3 = منتهية)
+    private int Part { get; set; } = 1;
+
+    // ربط MhdTabs مع Part
+    private string _activeKey = "1";
+    private string ActiveKey
+    {
+        get => _activeKey;
+        set
+        {
+            _activeKey = value;
+            if (int.TryParse(value, out var p))
+            {
+                Part = p;
+            }
+        }
+    }
+
+    // التابات: نص + أيقونة (Unicode)
+    private List<NavTabItem> Tabs => new()
+    {
+        new NavTabItem
+        {
+            Key = "1",
+            Text = "All",
+            Icon = "📄"
+        },
+        new NavTabItem
+        {
+            Key = "2",
+            Text = "Active",
+            Icon = "▶️"
+        },
+        new NavTabItem
+        {
+            Key = "3",
+            Text = "Finished",
+            Icon = "✅"
+        }
+    };
+
+    // فلترة قائمة الحسابات حسب التاب
+    private IEnumerable<ListCalculationMVVM> FilteredCalculations
+    {
+        get
+        {
+            var list = Folder.State.ProjectSelected?.Calculations
+                       ?? Enumerable.Empty<ListCalculationMVVM>();
+
+            return Part switch
+            {
+                // جارية: لم تنتهِ بعد (EndDate >= اليوم)
+                2 => list.Where(c => c.EndDate >= DateTime.Today),
+                // منتهية: انتهت (EndDate < اليوم)
+                3 => list.Where(c => c.EndDate < DateTime.Today),
+                // الكل
+                _ => list
+            };
+        }
+    }
+
+    // --- Context Menu & Actions ---
+
+    async Task Context(ListCalculationMVVM item)
+    {
+        var list = new List<MenuItem>();
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        bool isInAnyRole = PMRolesConst.Tenant.AdminSuperManger.Split(',')
+            .Any(r => user.IsInRole(r));
+
+        if (user.Identity?.IsAuthenticated == true && isInAnyRole)
+        {
+            list.Add(new()
+            {
+                Label = $"{Icons.PermissionShield} {ResourceApp.share}",
+                OnClickAsync = () =>
+                {
+                    ShareForm(item);
+                    return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"{Icons.Tender} {ResourceLoc.tender}",
+                OnClickAsync = () =>
+                {
+                    TenderPage(item);
+                    return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"{Icons.Edit} {ResourceApp.edit}",
+                OnClickAsync = () =>
+                {
+                    UpdateForm(item);
+                    return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"{Icons.Delete} {ResourceApp.delete}",
+                OnClickAsync = () =>
+                {
+                    Remove(item);
+                    return Task.CompletedTask;
+                }
+            });
+        }
+
+        list.Add(new()
+        {
+            Label = $"{Icons.Details} {ResourceLoc.details}",
+            OnClickAsync = () =>
+            {
+                CalculationDetails(item);
+                return Task.CompletedTask;
+            }
+        });
+
+        await ContextService.ShowMenuAsync(list);
+    }
+
+    void ShareForm(ListCalculationMVVM model)
+    {
+        Modal.ShowComponent<ShareCalculationUI>(
+            AppLoc[LocalizerConst.New, ResourceApp.share],
+            new Dictionary<string, object>
+            {
+                [nameof(ShareCalculationUI.ListCalculation)] = model
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    void UpdateForm(ListCalculationMVVM model)
+    {
+        Modal.ShowComponent<CalculationFormUI>(
+            model.Id == 0
+                ? AppLoc[LocalizerConst.New, CalcResource.calculation]
+                : AppLoc[LocalizerConst.Update, model.Name],
+            new Dictionary<string, object>
+            {
+                [nameof(CalculationFormUI.Calculation)] = model,
+                [nameof(CalculationFormUI.Callback)] =
+                    EventCallback.Factory.Create<ListCalculationMVVM>(this, CalcFormAsync)
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    void CalculationDetails(ListCalculationMVVM model)
+    {
+        Modal.ShowComponent<CalculationDetailsUI>(
+            ResourceLoc.details,
+            new Dictionary<string, object>
+            {
+                [nameof(CalculationDetailsUI.Id)] = model.Id
+            });
+    }
+
+    void TenderPage(ListCalculationMVVM model)
+    {
+        Modal.ShowComponent<TenderListUI>(
+            ResourceLoc.tender,
+            new Dictionary<string, object>
+            {
+                [nameof(TenderListUI.Calculation)] = model
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    async Task NewCalculation(int id)
+    {
+        await CalcService.SetCalc(id);
+    }
+
+    void CalcFormAsync(ListCalculationMVVM calc)
+    {
+        if (calc != null)
+        {
+            if (Folder.State.ProjectSelected!.Calculations.Any())
+                calc.Order = Folder.State.ProjectSelected.Calculations.Max(x => x.Order) + 100;
+
+            if (!Folder.State.ProjectSelected.Calculations.Any(x => x.Id == calc.Id))
+                Folder.State.ProjectSelected.Calculations.Add(calc);
+
+            Folder.State.ProjectSelected.Calculations =
+                Folder.State.ProjectSelected.Calculations
+                    .OrderByDescending(x => x.Order)
+                    .ToList();
+        }
+
+        Modal.Close();
+        UoWService.Folder.State.Notify();
+    }
+
+    void Remove(ListCalculationMVVM calculation) =>
+        MHD.DeleteMessage(calculation.Name,
+            EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(calculation)));
+
+    async Task ConfirmRemoveAsync(ListCalculationMVVM calculation)
+    {
+        bool result = await ExHandlers.RunCheckTokenAsync(
+            () => Repo.Calculation.DeleteAsync(calculation.Id));
+
+        if (result)
+        {
+            Folder.State.ProjectSelected!.Calculations.Remove(calculation);
+            StateHasChanged();
+        }
+
+        MHD.Notifications(ToastType.Delete, result);
+    }
+
+    private async Task HandleDrop(ListCalculationMVVM calc)
+    {
+        if (calcDraging is null || Folder.State.ProjectSelected?.Calculations is null)
+            return;
+
+        calcDraging.IsDragOver = false;
+        calc.IsDragOver = false;
+
+        var list = Folder.State.ProjectSelected.Calculations;
+        int index = list.IndexOf(calc);
+
+        if (index == 0)
+            calcDraging.Order = calc.Order + 100;
+        else if (calcDraging.Order < calc.Order)
+            calcDraging.Order = (calc.Order + list[index - 1].Order) / 2;
+        else if (calcDraging.Order > calc.Order && (index + 1) < list.Count)
+            calcDraging.Order = (list[index + 1].Order + calc.Order) / 2;
+        else
+            calcDraging.Order = calc.Order - 100;
+
+        Folder.State.ProjectSelected.Calculations =
+            list.OrderByDescending(x => x.Order).ToList();
+
+        await Repo.Calculation.ReOrderAsync(calcDraging.Id, calcDraging.Order);
+
+        calcDraging = null;
+        StateHasChanged();
+    }
+}

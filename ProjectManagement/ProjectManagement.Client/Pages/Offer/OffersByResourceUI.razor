@@ -1,0 +1,346 @@
+﻿@using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Offer
+@using ProjectManagement.Shared.DTO.Offer
+@using BlazorMHD.UI.Components.Data.Card
+@using BlazorMHD.UI.Core.Services
+@inherits AppComponentBase
+
+<div class="px-1 py-1 space-y-1 mt-0.5">
+
+    <!-- الشريط العلوي: Tabs + أكشنات عامة -->
+    <div class="flex items-center justify-between gap-3">
+        <!-- Tabs -->
+        <div class="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 p-1 shadow-sm">
+            <button class="@GetTabClass(0)" @onclick="() => Component = 0">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                <span class="truncate">@ResourceLoc.ByResource</span>
+            </button>
+
+            <button class="@GetTabClass(1)" @onclick="() => Component = 1">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                <span class="truncate">@ResourceLoc.ByCompany</span>
+            </button>
+
+            <button class="@GetTabClass(2)" @onclick="() => Component = 2">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                <span class="truncate">@ResourceLoc.Comparison</span>
+            </button>
+        </div>
+
+        <!-- أزرار الأكشن العامة -->
+        <div class="flex items-center gap-1">
+            <span role="button" class="@CssClasses.Btn.Span"
+                    @onclick="ReCalcBaseCost">
+                @((MarkupString)Icons.ResetQuantity)
+            </span>
+
+            <span role="button" class="@CssClasses.Btn.Span"
+                    @onclick="OfferFilterUI">
+                @((MarkupString)Icons.Search)
+            </span>
+        </div>
+    </div>
+
+    @if (Component == 0)
+    {
+        <!-- PANEL: عروض حسب الموارد داخل كارد -->
+        <MhdCard Elevated="true"
+                 Compact="true"
+                 Interaction="MhdCard.CardInteractionMode.None"
+                 Class="mt-2">
+
+            <ChildContent>
+                <div class="@($"overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 {(Calc.Tap6 ? "" : "pointer-events-none opacity-60")}")">
+                    <table class="min-w-full text-xs leading-tight">
+                        <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10">
+                            <tr>
+                                <th class="px-2 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide text-left w-[260px]">
+                                </th>
+                                <th class="px-2 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide text-left">
+                                    @ResourceApp.organisation
+                                </th>
+                                <th class="px-2 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide text-right">
+                                    @CalcResource.quantity
+                                </th>
+                                <th class="px-2 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide text-right">
+                                    @CalcResource.cost
+                                </th>
+                                <th class="px-2 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide text-right">
+                                    @CalcResource.baseCost
+                                </th>
+                                <th class="px-2 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide text-center">
+                                    @ResourceApp.date
+                                </th>
+                                <th class="px-2 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide text-left">
+                                    @CalcResource.note
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @if (Calc.Tasks.SelectMany(t => t.Resources).Any(r => r.HasOffer))
+                            {
+                                @foreach (var task in Calc.Tasks)
+                                {
+                                    foreach (var res in task.Resources.Where(x => x.HasOffer))
+                                    {
+                                        <!-- صف عنوان الـ Resource -->
+                                        <tr class="bg-slate-100/80 dark:bg-slate-900/80 border-l-4 border-indigo-400 dark:border-indigo-500">
+                                            <td colspan="2" class="px-2 py-1">
+                                                <div class="flex justify-between items-center gap-3">
+                                                    <div class="flex items-center gap-2">
+
+                                                        <!-- زر إضافة عرض -->
+                                                        <button @onclick="() => EditOffer(new ListOfferMVVM() { Cost = res.Cost, BaseCost = res.BaseCost ?? 0 }, res)"
+                                                                class="@CssClasses.Btn.IconButton.Success">
+                                                            @((MarkupString)Icons.Plus)
+                                                        </button>
+
+                                                        <!-- زر طي/توسيع عروض هذا المورد -->
+                                                        <button @onclick="() => ToggleCollSpan(res.Id)"
+                                                                class="@CssClasses.Btn.IconButton.Secondary"
+                                                                title="@ResourceLoc.details">
+                                                            @((MarkupString)Icons.TopBottom(!CollSpanIds.Contains(res.Id)))
+                                                        </button>
+
+                                                        <!-- المسار: Task > Resource ... -->
+                                                        <div class="flex flex-wrap items-center gap-1 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                                            <span>@task.Name</span>
+                                                            <span class="text-slate-400 dark:text-slate-500">&gt;</span>
+                                                            <span>@res.Name</span>
+                                                            <span class="text-slate-400 dark:text-slate-500">&gt;</span>
+                                                            <span>@res.ResName</span>
+                                                            @if (!string.IsNullOrEmpty(res.Sort))
+                                                            {
+                                                                <span class="text-slate-400 dark:text-slate-500">&gt;</span>
+                                                                <span>@res.Sort</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <!-- الكمية -->
+                                            <td class="px-2 py-1 text-right text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">
+                                                <span title="@CalcResource.netCostQ: @Calc.Template.Format(res.NetCostQ)">
+                                                    @Calc.Template.Format(res.Quantity)
+                                                </span>
+                                            </td>
+
+                                            <!-- أعمدة فارغة للمحاذاة -->
+                                            <td colspan="4" class="px-2 py-1"></td>
+                                        </tr>
+
+                                        <!-- عروض المورد (تظهر فقط إن لم يكن Id ضمن CollSpanIds) -->
+                                        @if (!CollSpanIds.Contains(res.Id))
+                                        {
+                                            @foreach (var cat in res.Offers)
+                                            {
+                                                <tr role="button" class="@GetOfferRowClass(res, cat)">
+                                                    <td class="px-2 py-1 align-top">
+                                                        <div class="flex items-center gap-2">
+                                                            <!-- أزرار Edit/Delete تظهر فقط عند hover -->
+                                                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                                                                <button class="@CssClasses.Btn.IconButton.Danger"
+                                                                        @onclick="() => Delete(cat)">
+                                                                    @((MarkupString)@Icons.DeleteSVG)
+                                                                </button>
+
+                                                                <button class="@CssClasses.Btn.IconButton.Primary"
+                                                                        @onclick="() => EditOffer(cat, res)">
+                                                                    @Icons.Edit
+                                                                </button>
+                                                            </div>
+
+                                                            <!-- Switch اختيار العرض الافتراضي -->
+                                                            <div class="flex items-center pl-1">
+                                                                <label class="relative inline-flex cursor-pointer items-center">
+                                                                    <input type="checkbox"
+                                                                           class="peer sr-only"
+                                                                           checked="@(res.OfferId == cat.Id)"
+                                                                           @onclick="() => SetDefault(res, cat)">
+
+                                                                    <div class="peer h-5 w-10 rounded-full bg-slate-300 transition-all duration-300
+                                                                                                        peer-checked:bg-emerald-500 dark:bg-slate-600 dark:peer-checked:bg-emerald-400">
+                                                                    </div>
+
+                                                                    <span class="absolute left-0.5 top-0.5 flex h-4 w-4 items-center justify-center
+                                                                                                         rounded-full bg-white text-[10px] font-bold text-slate-500 transition-all duration-300
+                                                                                                         peer-checked:translate-x-5 peer-checked:text-emerald-600">
+                                                                        @(res.OfferId == cat.Id ? "✔" : "✖")
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    @RowOffer(cat)
+                                                </tr>
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="px-3 py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+                                        @ResourceApp.notFoundData
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </ChildContent>
+        </MhdCard>
+    }
+    else if (Component == 1)
+    {
+        <OffersByCompanyUI />
+    }
+    else if (Component == 2)
+    {
+        <CalcOffersByComponyUI />
+    }
+</div>
+
+@code {
+    int Component = 0;
+    HashSet<int> CollSpanIds { get; set; } = new();
+    private bool IsLoading { get; set; } = true;
+
+    string GetTabClass(int value)
+        => "relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm rounded-full font-medium transition " +
+           (Component == value
+                ? "bg-indigo-600 text-white shadow"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700");
+
+    // صف العرض الافتراضي + group للـ hover
+    string GetOfferRowClass(ResourceListMVVM res, ListOfferMVVM cat)
+    {
+        var isDefault = res.OfferId == cat.Id;
+
+        var baseClasses = "group cursor-pointer transition-colors";
+        var normal = " hover:bg-slate-50 dark:hover:bg-slate-800";
+        var selected = " bg-emerald-50 dark:bg-emerald-900/30";
+
+        return baseClasses + (isDefault ? selected : normal);
+    }
+
+    void ReCalcBaseCost() =>
+        Modal.ShowComponent<RecalcOfferBaseCost>("", ResourceLoc.offer);
+
+    void OfferFilterUI() =>
+        Modal.ShowComponent<OfferFilterUI>("", ResourceLoc.offer, null,
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+
+    private void ToggleCollSpan(int id)
+    {
+        if (CollSpanIds.Contains(id))
+            CollSpanIds.Remove(id);
+        else
+            CollSpanIds.Add(id);
+    }
+
+    async Task SetDefault(ResourceListMVVM res, ListOfferMVVM offerID)
+    {
+        int? offerid = offerID.Id;
+        if (res.OfferId == offerID.Id)
+        {
+            offerid = 0;
+        }
+
+        if (await Repo.Offer.SetOfferToResourceAsync(res.Id, offerid))
+            MHD.Notifications(ToastType.Info, true);
+        else
+            MHD.Notifications(ToastType.Info, false);
+    }
+
+    void EditOffer(ListOfferMVVM offer, ResourceListMVVM resource) =>
+        Modal.ShowComponent<OfferPostUI>(ResourceLoc.offer, new Dictionary<string, object>
+        {
+            [nameof(OfferPostUI.Offer)] = offer,
+            [nameof(OfferPostUI.Resource)] = resource,
+        }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+
+    protected override void OnInitialized()
+    {
+        Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
+        IsLoading = false;
+    }
+
+    public void Dispose()
+    {
+        if (Folder?.State?.Calculation != null)
+            Folder.State.Calculation.OnChangeInCalculation -= ChangeCalcultionItems;
+    }
+
+    void ChangeCalcultionItems() => _ = InvokeAsync(StateHasChanged);
+
+    void Delete(ListOfferMVVM offer) =>
+        MHD.DeleteMessage(offer.Organisation, EventCallback.Factory.Create(this, () => DeleteAsync(offer)));
+
+    async Task DeleteAsync(ListOfferMVVM offer)
+    {
+        if (await Repo.Offer.DeleteOfferAsync(offer.Id))
+        {
+            var r = Calc.Tasks.SelectMany(x => x.Resources)
+                              .FirstOrDefault(x => x.Offers.Any(o => o.Id == offer.Id));
+            r?.Offers.Remove(offer);
+            StateHasChanged();
+            MHD.Notifications(ToastType.Delete, true);
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Delete, false);
+        }
+    }
+
+    RenderFragment RowOffer(ListOfferMVVM cat) => __builder =>
+    {
+        <td colspan="2" class="px-2 py-1 align-top">
+            @if (!string.IsNullOrWhiteSpace(cat.Organisation))
+            {
+                <span role="button"
+                      class="text-sm text-slate-800 dark:text-slate-100 font-medium hover:underline decoration-dotted"
+                      title="@cat.SubCategory > @cat.Category @(string.IsNullOrEmpty(cat.UCFirstName) ? "" : $" > {cat.UCFirstName} {cat.UCLastName}, {ResourceApp.department}: {cat.UCDepartment} , {CalcResource.status}: {cat.UCStatus}, {ResourceIdentity.mobile}: {cat.UCMobile} , {ResourceIdentity.telefon}: {cat.UCTelefone}")">
+                    @cat.Organisation
+                </span>
+            }
+        </td>
+        <td class="px-2 py-1 text-right text-sm text-slate-700 dark:text-slate-100">
+            @Calc.Template.Format(cat.Cost)
+        </td>
+        <td class="px-2 py-1 text-right text-sm text-slate-700 dark:text-slate-100">
+            @Calc.Template.Format(cat.BaseCost)
+        </td>
+        <td class="px-2 py-1 text-center text-xs text-slate-600 dark:text-slate-300">
+            @cat.Date.ToString(ConstValues.DateFormat)
+        </td>
+        <td class="px-2 py-1 text-xs text-slate-500 dark:text-slate-400">
+            @if (string.IsNullOrWhiteSpace(cat.Comment))
+            {
+                <span class="text-slate-400 dark:text-slate-500 italic">
+                    —
+                </span>
+            }
+            else
+            {
+                <div class="flex items-center gap-1">
+                    @* أيقونة بسيطة للملاحظة (استخدم Icons.Note لو عندك) *@
+                    <span class="text-[11px]">
+                        📝
+                    </span>
+
+                    <span class="truncate max-w-[220px]"
+                          title="@cat.Comment">
+                        @cat.Comment
+                    </span>
+                </div>
+            }
+        </td>
+
+    };
+}

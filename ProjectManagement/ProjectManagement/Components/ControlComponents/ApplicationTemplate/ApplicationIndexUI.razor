@@ -1,0 +1,47 @@
+﻿@page "/Application"
+@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.Model.Application;
+@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
+@inherits AppComponentBase
+@inject ICommandDispatcher MicroBus
+
+@if (ApplicationForm != null)
+{
+    <ApplicationFormUI ApplicationUpdate="ApplicationForm" Callback="BtnUpdateAsync"></ApplicationFormUI>
+}
+else
+{
+    <table class="@CssClasses.Table.Tab">
+        <thead class="@CssClasses.Table.Thead">
+            <tr>
+                <th class="@CssClasses.Table.TH" style="width:250px;">
+                    @if (ApplicationForm == null)
+                    {
+                        <div class="@CssClasses.Layout.FlexItemsCenter">
+                            <button @onclick="() => NewApp()" class="@CssClasses.Btn.IconButton.Success">@((MarkupString)Icons.Plus2)</button>
+                            <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
+                        </div>
+                    }
+                </th>
+                <th class="@CssClasses.Table.TH" style="width:170px;">@ResourceApp.lastUpdate </th>
+                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+            </tr>
+        </thead>
+        <tbody class="@CssClasses.Table.TBody">
+            @if (Applications != null && Applications.Any(x => x.IsVisible == IsVisible))
+                foreach (var application in Applications)
+                {
+                    <tr class="@CssClasses.Table.Tr">
+                        <td class="@CssClasses.Table.Td">
+                            <div class="@CssClasses.Layout.FlexItemsCenter">
+                            <button @onclick="()=> ApplicationForm = application" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
+                            <button @onclick="()=>Remove(application)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                            </div>
+                        </td>
+                        <td class="@CssClasses.Table.Td">@application.LastUpdate.ToString("dd.MM.yyyy HH.mm")</td>
+                        <td class="@CssClasses.Table.Td">@application.Name</td>
+                    </tr>
+                }
+        </tbody>
+    </table>
+}

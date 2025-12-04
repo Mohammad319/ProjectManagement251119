@@ -1,0 +1,59 @@
+﻿@using ProjectManagement.Adminstrator.Components.TaskStatus.ActionTask
+@using ProjectManagement.Adminstrator.Components.TaskStatus.ActionType
+@using ProjectManagement.Adminstrator.Components.TaskStatus.Fall
+@using ProjectManagement.Adminstrator.Components.TaskStatus.Location
+@inherits AppComponentBase
+
+<div class="mb-1 border-b border-gray-300 dark:border-gray-700">
+    <nav aria-label="Tabs">
+        <ul class="@CssClasses.Tabs.UL" role="tablist">
+            @for (int i = 1; i <= 7; i++)
+            {
+                int u = i;
+                <li>
+                    <button class="@GetTabClass(u)" @onclick="() => page = u">
+                        @GetTabLabel(i)
+                    </button>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>
+
+<div class="bg-white dark:bg-gray-900 shadow rounded-md w-full">
+    @switch (page)
+    {
+        case 1:
+            <ActionIndexUI />
+            break;
+        case 2:
+            <LocationIndexUI />
+            break;
+        case 3:
+            <FallIndexUI />
+            break;
+        case 4:
+            <ActionTypeIndexUI />
+            break;
+    }
+</div>
+
+@code {
+    private int page = 1;
+
+    private string GetTabClass(int tabIndex)
+    {
+        return page == tabIndex
+            ? "px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded shadow"
+            : "px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded";
+    }
+
+    private string GetTabLabel(int index) => index switch
+    {
+        1 => "Action",
+        2 => "Location",
+        3 => "Fall",
+        4 => "Action Type",
+        _ => ""
+    };
+}

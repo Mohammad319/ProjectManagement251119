@@ -1,0 +1,71 @@
+﻿@using ProjectManagement.Shared.DTO.Organisation
+@inherits AppComponentBase
+
+<div class="@CssClasses.Modal.Body space-y-3">
+
+    @if (Organisations != null)
+    {
+        <div class="@CssClasses.Grid.Col.MD3">
+                <label class="@CssClasses.Form.Label">
+                    @ResourceApp.organisation
+                </label>
+
+                <select class="@CssClasses.Input.Select"
+                        @bind="OrgID">
+                    <option value="0"></option>
+                    @foreach (var cat in Organisations)
+                    {
+                        <option value="@cat.Id">@cat.Name</option>
+                    }
+                </select>
+
+        </div>
+    }
+
+    @if (OrgID > 0)
+    {
+        <div class="@CssClasses.Grid.Col.MD3  @CssClasses.Spacing.P.Top(Size.S3)">
+                <label class="@CssClasses.Form.Label">
+                    Basecost (AVG)
+                </label>
+
+                <input class="@($"{CssClasses.Input.Number} text-sm")"
+                       type="number"
+                       step="0.01"
+                       @bind="Basecost" />
+        </div>
+        <div class="@CssClasses.Form.Field @CssClasses.Spacing.P.Top(Size.S0_5)">
+            <span class="@CssClasses.Text.Secondary text-[11px]">
+                @ResourceLoc.Message_EnterNewAverageCost
+            </span>
+        </div>
+    }
+</div>
+
+<div class="@CssClasses.Modal.Footer">
+    <button class="@($"{CssClasses.Btn.Solid.Success} inline-flex items-center gap-1 text-sm")"
+            disabled="@(OrgID <= 0)"
+            @onclick="SaveAsync">
+        @((MarkupString)Icons.SaveCloud)
+        <span>@ResourceApp.save</span>
+    </button>
+</div>
+
+@code {
+    double Basecost = 0;
+    List<ListDTO>? Organisations;
+    int OrgID = 0;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Organisations = await ExHandlers.RunCheckTokenAsync(() => Repo.Org.GetVisibleOrIdAsync());
+    }
+
+    async Task SaveAsync()
+    {
+        if (OrgID <= 0) return;
+
+        if (await Repo.Offer.ReCalc(Calc.Id, OrgID, Basecost))
+            Modal.Close();
+    }
+}

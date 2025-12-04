@@ -1,0 +1,8 @@
+﻿@using Microsoft.Extensions.Localization
+@using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll
+.AppControll
+@inject IStringLocalizer<AppControll> L
+
+<p>@((MarkupString)L["TermsContent"].Value.Replace("\n", "<br />"))</p>
+
+@* <p>@((MarkupString)L["TermsContent"].Value.Replace(Environment.NewLine, "<br />"))</p> *@

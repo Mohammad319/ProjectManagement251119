@@ -1,0 +1,98 @@
+﻿@using Application.Feature.Identity.Department.Commands
+@using Application.Feature.Identity.Department.Queries
+@using BlazorMHD.UI.Core.Services
+@using ProjectManagement.Client.Shared.Constants
+@using ProjectManagement.Shared
+@using ProjectManagement.Shared.DTO.Identity
+@using ProjectManagement.Shared.Models.Account
+@inject ICommandDispatcher MicroBus
+
+@inherits AppComponentBase
+
+@if (Details != null)
+{
+    <DepartmentDetailsUI DepartmentList="Details" OnClickCallback="()=>Details = null"></DepartmentDetailsUI>
+}
+@if (DepartmentUsersId > -1)
+{
+    <UsersIndex DepartmentId="DepartmentUsersId" OnClickCallback="()=>DepartmentUsersId=-1"></UsersIndex>
+}
+else
+{
+    <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
+        <button class="@CssClasses.Btn.Outline.Success" @onclick="() => RegistrationForm(new UserAuthModel())">@PMResourceIdentity.register</button>
+        <button @onclick="() => NewDepartment(new DepartmentDetailsDTO())" class="@CssClasses.Btn.Outline.Success">@Icons.Plus2</button>
+    </div>
+
+    <table class="@CssClasses.Table.Tab">
+        <tbody class="@CssClasses.Table.TBody">
+            <tr class="@CssClasses.Table.Tr">
+                <td scope="row" class="@CssClasses.Table.Td">
+                    <div>
+                        <button class="@CssClasses.Btn.IconButton.Warning" disabled>@((MarkupString)Icons.Edit)</button>
+                        <button class="@CssClasses.Btn.IconButton.Danger" disabled>@((MarkupString)Icons.DeleteSVG)</button>
+                        <button class="@CssClasses.Btn.Link" @onclick="() => DepartmentUsersId = 0">@ResourceIdentity.Admin</button>
+                    </div>
+                </td>
+            </tr>
+            @if (Departments != null)
+                foreach (var departemetn in Departments)
+                {
+                    <tr class="@CssClasses.Table.Tr">
+                        <td scope="row" class="@CssClasses.Table.Td">
+                            <div>
+                                <button @onclick="() => NewDepartment(departemetn)" class="@CssClasses.Btn.IconButton.Warning">@((MarkupString)Icons.Edit)</button>
+                                <button @onclick="() => Remove(departemetn)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                            <button class="@CssClasses.Btn.Link" @onclick="() => DepartmentUsersId = departemetn.Id">
+                                @departemetn.Name
+                            </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+        </tbody>
+    </table>
+}
+@code {
+    List<DepartmentDetailsDTO>? Departments;
+    DepartmentDetailsDTO? Details;
+
+    int DepartmentUsersId = -1;
+    void RegistrationForm(UserAuthModel user) =>
+    Modal.ShowComponent<UpdateUserUI>(PMResourceIdentity.register, new Dictionary<string, object>
+            {
+                [nameof(UpdateUserUI.UserForm)] = user,
+                [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate),
+            });
+    void NewDepartment(DepartmentDetailsDTO department) =>
+        Modal.ShowComponent<CreateDepartment>((department.Id > 0 ? AppLoc[LocalizerConst.Update, department.Name] :
+            AppLoc[LocalizerConst.New, ResourceApp.department]), new Dictionary<string, object>
+            {
+                [nameof(CreateDepartment.DepartmentList)] = department,
+                [nameof(CreateDepartment.OnClickCallback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate),
+            }, DialogSize.ExtraLarge);
+    void Remove(DepartmentDetailsDTO department)
+    {
+        MHD.DeleteMessage(department.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(department)));
+    }
+    async Task ConfirmRemoveAsync(DepartmentDetailsDTO department)
+    {
+        if (await MicroBus.Send(new DeleteDepartmentCommand(department.Id)))
+        {
+            Departments?.Remove(department);
+        }
+        StateHasChanged();
+    }
+    async Task BtnUpdate(bool IsSuccess)
+    {
+        if (IsSuccess)
+            Departments = await MicroBus.Send(new GetDepartmentsQuery());
+        Modal.Close();
+        StateHasChanged();
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        Departments = await MicroBus.Send(new GetDepartmentsQuery());
+    }
+}

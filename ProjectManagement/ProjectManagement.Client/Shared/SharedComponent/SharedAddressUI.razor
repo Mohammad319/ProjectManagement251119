@@ -1,0 +1,49 @@
+﻿@using ProjectManagement.Shared.DTO.App
+@inherits AppComponentBase
+
+@if (Address != null)
+{
+    <table class="@CssClasses.Table.Tab">
+        <thead class="@CssClasses.Table.Thead">
+            <tr>
+                <th class="@CssClasses.Table.TH"><button type="button" class="@CssClasses.Btn.Solid.Primary" @onclick="() => Address.Add(new AddressDTO())"> @((MarkupString)Icons.Plus)</button></th>
+                <th class="@CssClasses.Table.TH">@ResourceIdentity.country</th>
+                <th class="@CssClasses.Table.TH">@ResourceIdentity.region</th>
+                <th class="@CssClasses.Table.TH">@ResourceIdentity.city</th>
+                <th class="@CssClasses.Table.TH">@ResourceIdentity.zipCode</th>
+                <th class="@CssClasses.Table.TH">@ResourceIdentity.street</th>
+                <th class="@CssClasses.Table.TH">@ResourceIdentity.build</th>
+            </tr>
+        </thead>
+        <tbody class="@CssClasses.Table.TBody">
+            @foreach (var add in Address)
+            {
+                <tr class="@CssClasses.Table.Tr">
+                    <td class="@CssClasses.Table.Td"><button type="button" class="@CssClasses.Btn.Solid.Danger" @onclick="() => Address.Remove(add)">@((MarkupString)@Icons.DeleteSVG)</button></td>
+                    <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Text" type="text" @bind="add.Country" /></td>
+                    <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Text" type="text" @bind="add.Region" /></td>
+                    <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Text" type="text" @bind="add.City" /></td>
+                    <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Text" type="text" @bind="add.ZIPCode" /></td>
+                    <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Text" type="text" @bind="add.Street" /></td>
+                    <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Text" type="text" @bind="add.Nr" /></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    [Parameter] public List<AddressDTO> Address { get; set; } = new List<AddressDTO>();
+    protected override void OnInitialized()
+    {
+        if (Address == null) Address = [];
+    }
+    void Remove(AddressDTO status)
+    {
+        MHD.DeleteMessage(string.Empty, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
+    }
+    bool ConfirmRemoveAsync(AddressDTO st)
+    {
+        Address.Remove(st);
+        return true;
+    }
+}

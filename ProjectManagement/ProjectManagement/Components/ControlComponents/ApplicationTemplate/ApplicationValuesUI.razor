@@ -1,0 +1,156 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.Model.Application
+@using ProjectManagement.Client.Shared.ViewModel
+@using ProjectManagement.Shared.Base.Application
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@inject ICommandDispatcher MicroBus
+
+<div class="d-flex justify-content-between mt-1">
+    <div>
+        <select @onchange="Change2" class="form-select">
+            @if (Applications != null)
+            {
+                <option></option>
+                foreach (var app in Applications)
+                {
+                    <option value="@app.Id">@app.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await CallbackUpdate.InvokeAsync(null)">@((MarkupString)Icons.Back)</button>
+    </div>
+</div>
+
+@if (Application != null)
+{
+    <EditForm Model="@ApplicationValues" OnValidSubmit="async () => await SaveAsync()">
+        <DataAnnotationsValidator />
+        <div class="@CssClasses.Grid.Col.MD6">
+            <div>
+                <label class="form-labe">@CalcResource.name:</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@ApplicationValues.Name" />
+            </div>
+            <div>
+                <label class="form-labe">@CalcResource.responsible:</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@ApplicationValues.Responsible" />
+            </div>
+        </div>
+
+        @foreach (var row in Application.Data.Row)
+        {
+            <div style="display:flex;@row.StyleRow">
+                <label style="@row.Style">@row.Name</label>
+                @if (row.Attributes != null) foreach (var attr in row.Attributes)
+                    {
+                        @if (attr.AttributeType == AttributeType.Text)
+                        {
+                            <input type="text" min="@attr.ValdTextVM.Max" maxlength="@attr.ValdTextVM.Min" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
+                        }
+                        else if (attr.AttributeType == AttributeType.Char)
+                        {
+                            <input maxlength="1" type="text" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
+                        }
+                        else if (attr.AttributeType == AttributeType.TextArea)
+                        {
+                            <textarea min="@attr.ValdTextVM.Max" maxlength="@attr.ValdTextVM.Min" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style"></textarea>
+                        }
+                        else if (attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.Time)
+                        {
+                            <input type="@ValidDateVM.GetHTMLFormat(attr.AttributeType)" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
+                        }
+                        else if (attr.AttributeType == AttributeType.Bool)
+                        {
+                            <input class="@CssClasses.Input.Check" type="checkbox" @bind="@attr.ValueBool" style="@attr.Style" />
+                        }
+                        else if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
+                        {
+                            <input type="number" class="@CssClasses.Input.Text" min="@attr.ValdNumberVM.Min" max="@attr.ValdNumberVM.Max" @bind="@attr.Value" style="@attr.Style" />
+                        }
+                        else if (attr.AttributeType == AttributeType.Select)
+                        {
+                            <select style="margin-left:10px;" @bind="@attr.Value" class="form-select">
+                                @foreach (var se in attr.ValdSelectVM.Values)
+                                {
+                                    <option value="@se">@se</option>
+                                }
+                            </select>
+                        }
+                    }
+            </div>
+        }
+
+        <button type="submit" class="@CssClasses.Btn.Outline.Success mt-1">@ResourceApp.save</button>
+    </EditForm>
+}
+@code {
+    List<ApplicationModel> Applications;
+    ApplicationModel Application { get; set; }
+    [Parameter] public ApplicationValuesModel ApplicationValues { get; set; }
+    [Parameter] public EventCallback<ApplicationValuesModel> CallbackUpdate { get; set; }
+    protected async override Task OnInitializedAsync()
+    {
+        Applications = await ExHandlers.RunCheckTokenAsync(() => Repo.Application.GetApplicationsAsync(true));
+        if (ApplicationValues.Application != null)
+        {
+            Application = ApplicationValues.Application;
+            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
+            {
+                if (attr.AttributeType == AttributeType.Bool)
+                    attr.ValueBool = bool.Parse(ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value);
+                else if (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Time)
+                    attr.Date = DateTime.Parse(ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value);
+                else attr.Value = ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value;
+            }
+        }
+    }
+
+    void Change2(ChangeEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(e.Value.ToString()))
+        {
+            int id = int.Parse(e.Value.ToString());
+
+            Application = Applications.FirstOrDefault(x => x.Id == id);
+            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
+            {
+                if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double))
+                    attr.Value = attr.ValdNumberVM.Default.ToString();
+                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Text || attr.AttributeType == AttributeType.TextArea))
+                    attr.Value = attr.ValdTextVM.Default;
+                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Select))
+                    attr.Value = attr.ValdSelectVM.Values[attr.ValdSelectVM.DefaultIndex];
+                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Bool))
+                    attr.ValueBool = attr.ValdBoolVM.Default.Value;
+                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime))
+                    attr.Date = attr.ValdDateVM.Default.Value;
+            }
+        }
+    }
+    async Task SaveAsync()
+    {
+        ApplicationValues.Data.Attributes = new Dictionary<Guid, string>();
+        foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
+        {
+            if (attr.AttributeType == AttributeType.Bool)
+                attr.Value = attr.ValueBool.ToString();
+            else if (attr.AttributeType == AttributeType.Time || attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime)
+                attr.Value = attr.Date.ToString();
+            ApplicationValues.Data.Attributes.Add(attr.ID, attr.Value);
+        }
+      ApplicationValues.ApplicationId = Application.Id; 
+        if (ApplicationValues.Id == 0)
+        {
+            ApplicationValues.Id = await ExHandlers.RunCheckTokenAsync(() => Repo.Application.CreateAsync(ApplicationValues));
+            ApplicationValues.Application = Application;
+            if (ApplicationValues.Id > 0)
+                await CallbackUpdate.InvokeAsync(ApplicationValues);
+        }
+        else if (await ExHandlers.RunCheckTokenAsync(() => Repo.Application.UpdateAsync(ApplicationValues)))
+            await CallbackUpdate.InvokeAsync(ApplicationValues);
+
+        await CallbackUpdate.InvokeAsync(null);
+    }
+} 

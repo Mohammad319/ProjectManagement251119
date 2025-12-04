@@ -1,0 +1,32 @@
+﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+{
+    var statusMessageClass = DisplayMessage.StartsWith("Error") || DisplayMessage.StartsWith("خطأ")
+        ? "border-red-300 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950 dark:text-red-100"
+        : "border-green-300 bg-green-50 text-green-900 dark:border-green-900/50 dark:bg-green-950 dark:text-green-100";
+
+    <div class="mt-3 rounded-lg border p-4 text-sm @statusMessageClass" role="alert">
+        @DisplayMessage
+    </div>
+}
+
+@code {
+    private string? messageFromCookie;
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private string? DisplayMessage => Message ?? messageFromCookie;
+
+    protected override void OnInitialized()
+    {
+        messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+
+        if (messageFromCookie is not null)
+        {
+            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+        }
+    }
+}

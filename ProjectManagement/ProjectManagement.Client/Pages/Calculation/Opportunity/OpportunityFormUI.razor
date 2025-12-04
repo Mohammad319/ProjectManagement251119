@@ -1,0 +1,98 @@
+﻿@using ProjectManagement.Client.Shared.Model.Project.Calculation;
+@using ProjectManagement.Shared.DTO.Calculation
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+
+<EditForm class="@CssClasses.Modal.Body" Model="@Post" OnValidSubmit="async () => await HandleSubmitAsync()" id="custForm">
+    <DataAnnotationsValidator />
+    <div class="@CssClasses.Grid.Col.MD4">
+
+        <div>
+            <label class="@CssClasses.Form.Label">@ResourceLoc.opportunitiesRisks:</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@Post.OpportunitiesRisks" />
+            <ValidationMessage For="@(() => Post.OpportunitiesRisks)" />
+        </div>
+
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.risk:</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@Post.Type" />
+            <ValidationMessage For="@(() => Post.Type)" />
+        </div>
+
+        <div>
+            <label class="@CssClasses.Form.Label">@ResourceLoc.probabilityWorth:</label>
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.ProbabilityWorth" />
+            <ValidationMessage For="@(() => Post.Data.ProbabilityWorth)" />
+        </div>
+
+        <div>
+            <label class="@CssClasses.Form.Label">@ResourceLoc.probability:</label>
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.ProbabilityPercent" />
+            <ValidationMessage For="@(() => Post.Data.ProbabilityPercent)" />
+        </div>
+
+        <div>
+            <label class="@CssClasses.Form.Label">@ResourceLoc.probabilityBest:</label>
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.ProbabilityBest" />
+            <ValidationMessage For="@(() => Post.Data.ProbabilityBest)" />
+        </div>
+
+        <div>
+            <label class="@CssClasses.Form.Label">@ResourceLoc.value:</label>
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.Value" />
+            <ValidationMessage For="@(() => Post.Data.Value)" />
+        </div>
+
+        <div class="@CssClasses.Grid.Span.MD2">
+            <label class="@CssClasses.Form.Label">@CalcResource.note:</label>
+            <InputTextArea class="@CssClasses.Input.Text" @bind-Value="@Post.Data.Comment" />
+            <ValidationMessage For="@(() => Post.Data.Comment)" />
+        </div>
+
+    </div>
+
+    </EditForm>
+<div class="@CssClasses.Modal.Footer">
+        <button type="submit" form="custForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+            @ResourceApp.save
+        </button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick=" Modal.Close">@ResourceApp.cancel</button>
+    </div>
+
+
+
+@code {
+    PostOpportunityDTO Post = new();
+    bool IsLoading = false;
+    [Parameter] public OpportunityModel Opportunity { get; set; }
+
+    protected override void OnInitialized()
+    {
+        PropertyCopier.CopyPropertiesTo<OpportunityModel, PostOpportunityDTO>(Opportunity, Post);
+        IsLoading = false;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            PropertyCopier.CopyPropertiesTo(Post, Opportunity);
+
+            if (Opportunity.Id == 0){
+                bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Opportunity.CreateAsync(Post, Calc.Id)) > 0;
+                 MHD.Notifications(ToastType.Add, result);
+            }
+            else {
+                bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Opportunity.UpdateAsync(Post, Opportunity.Id));
+                 MHD.Notifications(ToastType.Update, result);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        IsLoading = false;
+         Modal.Close();
+    }
+}

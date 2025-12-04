@@ -1,0 +1,13 @@
+﻿
+
+.calcPage {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.dynamicComp {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}

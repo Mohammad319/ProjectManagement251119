@@ -1,0 +1,53 @@
+﻿@using ProjectManagement.Client.Pages.Calculation.Table
+@using ProjectManagement.Client.Pages.Calculation.Table.SectionsList
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
+
+<div class="tableFixHead" style="height:calc(100vh - 106px)">
+    <div class="@CssClasses.Layout.FlexItemsCenter">
+        <div>
+            <input type="number" style="width:75px" value="100" maxlength="6" @onchange="(e)=> scaleX = double.Parse(e.Value.ToString())" />%
+        </div>
+        <div>
+            <button class="@CssClasses.Btn.Solid.Primary" id="print" onclick="window.print()">@ResourceApp.print</button>
+        </div>
+        <div>
+        </div>
+        <div class="mt-2">
+            <input type="checkbox" @bind="TemplateVisible[0]" />@CalcResource.netCal
+        </div>
+        <div class="mt-2">
+            <input type="checkbox" @bind="TemplateVisible[1]" />@ResourceLoc.summarySheet
+        </div>
+    </div>
+    <div id="section-to-print" style="transform:rotate(@(deg)deg);left:0px;top:150px;">
+    @if (TemplateVisible[0])
+    {
+            <div class="NettableDiv">
+                <CalcDataGrid></CalcDataGrid>
+            </div>
+    }
+    @if (TemplateVisible[1]){
+        <SummarySheet IsReport="true"></SummarySheet>
+    }</div>
+</div>
+
+@code {
+    int deg = 0;
+    bool[] TemplateVisible = new[] {true,true };
+    double scaleX = 100;
+    void Scale()
+    {
+        if (deg == 270)
+        {
+            deg = 0;
+            return;
+        }
+        deg = deg + 90;
+        if (deg == 0){ }
+    }
+    protected override void OnInitialized()
+    {
+        TemplateConst.Col0 = 0;
+    }
+}

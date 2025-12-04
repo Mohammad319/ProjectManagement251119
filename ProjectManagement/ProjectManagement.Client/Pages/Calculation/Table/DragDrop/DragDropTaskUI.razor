@@ -1,0 +1,138 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Constant
+@inherits AppComponentBase
+
+<div class="p-3 space-y-2" @ondragover:preventDefault>
+
+    @if (Task != null && Task.Resources != null && Task.Resources.Any())
+    {
+        <DragDropResourceUI Task="@Task" />
+    }
+    else if (Tasks != null && Tasks.Any())
+    {
+        @foreach (var task in Tasks)
+        {
+            <div class="@GetTaskItemClasses(task)"
+                 @ondrop="@(() => HandleDrop(task))"
+                 @ondragover="() => task.IsDragOver = true"
+                 @ondragover:preventDefault
+                 @ondragleave="@(() => task.IsDragOver = false)"
+                 @ondragstart="@(() => taskDraging = task)"
+                 @ondragend="@(() => taskDraging = null)"
+                 draggable="true">
+
+                <!-- Code + Grip -->
+                <div class="basis-[150px] shrink-0 flex items-center gap-1">
+                    <span class="inline-flex items-center justify-center w-4 h-6 text-[10px]
+                                         text-slate-400 dark:text-slate-500 select-none pointer-events-none">
+                        ⋮⋮
+                    </span>
+                    <span class="text-xs md:text-sm text-slate-700 dark:text-slate-100">
+                        @task.Data.Code
+                    </span>
+                </div>
+
+                <!-- Name -->
+                <div class="basis-[250px] min-w-[250px] grow text-xs md:text-sm text-slate-800 dark:text-slate-100">
+                    @task.Name
+                </div>
+
+                <!-- Active -->
+                <div class="basis-[120px] shrink-0 flex items-center justify-end">
+                    <input type="checkbox"
+                           disabled
+                           checked="@task.Data.Active"
+                           class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500
+                                          dark:border-gray-600 dark:bg-gray-800" />
+                </div>
+
+                <!-- Status -->
+                <div class="basis-[180px] shrink-0 flex items-center justify-end gap-1 text-xs md:text-sm">
+                    <span class="inline-block w-[10px] h-[10px] rounded-full"
+                          style="background-color:@task.StatusColor;"></span>
+                    <span class="text-slate-700 dark:text-slate-100 truncate">
+                        @task.Status
+                    </span>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <h3 class="text-center text-sm text-gray-500 dark:text-gray-400 py-4">
+            @ResourceApp.ThereAreNoItemsToDisplay
+        </h3>
+    }
+</div>
+
+@code {
+    [Parameter] public TaskListMVVM? Task { get; set; }
+    private List<TaskListMVVM>? Tasks;
+    private TaskListMVVM? taskDraging;
+
+    protected override void OnInitialized()
+    {
+        Tasks = Task != null
+            ? Task.Tasks.OrderByDescending(x => x.Order).ToList()
+            : Calc.Tasks.Where(x => x.TaskId == null)
+                        .OrderByDescending(x => x.Order)
+                        .ToList();
+    }
+
+    private string GetTaskItemClasses(TaskListMVVM task)
+    {
+        var baseClasses =
+            "group flex flex-wrap items-center gap-2 rounded-md border " +
+            "bg-white dark:bg-slate-900 " +
+            "border-slate-200 dark:border-slate-700 " +
+            "text-slate-900 dark:text-slate-100 " +
+            "px-2 py-1.5 mb-1.5 transition-colors duration-150 cursor-move " +
+            "hover:bg-slate-50 dark:hover:bg-slate-800";
+
+        var dragging = task == taskDraging
+            ? " opacity-60 border-2 border-dashed border-blue-500"
+            : string.Empty;
+
+        var dragOver = task.IsDragOver
+            ? " bg-blue-50 dark:bg-blue-900/40"
+            : string.Empty;
+
+        return baseClasses + dragging + dragOver;
+    }
+
+    private async void HandleDrop(TaskListMVVM landingModel)
+    {
+        if (taskDraging is null)
+            return;
+
+        taskDraging.IsDragOver = false;
+        landingModel.IsDragOver = false;
+        if (Tasks == null) return;
+        int index = Tasks.IndexOf(landingModel);
+
+        if (index == 0)
+        {
+            taskDraging.Order = landingModel.Order + 100;
+        }
+        else if (taskDraging.Order < landingModel.Order)
+        {
+            taskDraging.Order = (landingModel.Order + Tasks[index - 1].Order) / 2;
+        }
+        else if (taskDraging.Order > landingModel.Order && (index + 1) < Tasks.Count)
+        {
+            taskDraging.Order = (Tasks[index + 1].Order + landingModel.Order) / 2;
+        }
+        else
+        {
+            taskDraging.Order = landingModel.Order - 100;
+        }
+
+        await Repo.Task.ReOrderAsync(taskDraging.Id, taskDraging.Order);
+        Tasks = Tasks.Where(x => x.FilterVisible)
+                     .OrderByDescending(x => x.Order)
+                     .ToList();
+
+        taskDraging = null;
+        StateHasChanged();
+    }
+}

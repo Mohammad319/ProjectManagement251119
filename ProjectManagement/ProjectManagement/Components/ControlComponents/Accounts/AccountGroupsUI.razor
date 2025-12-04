@@ -1,0 +1,101 @@
+﻿@using ContextMenuMHD
+@using Domain.Entities.Calculation
+@using ProjectManagement.Client.Services.MHDBlazor
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+<div class="flex h-full gap-4">
+    <!-- Sidebar / Vertical Tabs -->
+    <div class="w-64 bg-white/80 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 shadow-sm rounded-xl">
+        <div class="flex flex-col h-full">
+            <!-- Header + Actions -->
+            <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-slate-700">
+                <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-100">
+                    Account Groups
+                </h2>
+                <div class="flex items-center gap-1">
+                    <button class="@CssClasses.Btn.IconButton.Success"
+                            @onclick="() => UpdateForm(new AccountGroupEntity())"
+                            title="Add group">
+                        @((MarkupString)Icons.Plus)
+                    </button>
+
+                    <button class="@CssClasses.Btn.IconButton.Primary"
+                            @onclick="ImportForm"
+                            title="Import from file">
+                        @((MarkupString)Icons.ImportFromFile)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs (Groups) -->
+            <nav class="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+                @if (Groups != null)
+                {
+                    foreach (var item in Groups)
+                    {
+                        var isSelected = GroupSelected != null && GroupSelected == item.Id;
+
+                        var baseClasses = "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer";
+                        var selectedClasses = "bg-blue-600 text-white shadow-sm";
+                        var defaultClasses = "bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800";
+                        var finalClass = $"{baseClasses} {(isSelected ? selectedClasses : defaultClasses)}";
+
+                        <button @onclick="async () => await ChangeAccountGroupSelectedAsync(item)"
+                                @oncontextmenu="() => GroupContextM(item)"
+                                @oncontextmenu:preventDefault
+                                class="@finalClass"
+                                aria-current="@(isSelected ? "page" : null)">
+                            <span class="truncate">@item.Name</span>
+
+                            @* مؤشر صغير للعنصر المحدد *@
+                            @if (isSelected)
+                            {
+                                <span class="ml-2 h-2 w-2 rounded-full bg-white/90"></span>
+                            }
+                        </button>
+                    }
+                }
+                else
+                {
+                    <p class="px-2 py-4 text-xs text-slate-400">
+                        لا توجد مجموعات بعد. قم بإضافة مجموعة جديدة من الزر أعلاه.
+                    </p>
+                }
+            </nav>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1">
+        @if (GroupSelected.HasValue)
+        {
+            <AccountUI GroupSelected="GroupSelected.Value"></AccountUI>
+        }
+        else
+        {
+            <div class="flex h-full items-center justify-center text-slate-400 text-sm">
+                اختر مجموعة من القائمة على اليسار.
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    async Task GroupContextM(AccountGroupEntity item)
+    {
+        await ContextService.ShowMenuAsync(new()
+            {
+                // new MenuItem {IconHtml = "➕", DisplayName = $"{AppLoc[LocalizerConst.New, CalcResource.account]}" , OnClickAsync = () => UpdateForm(new AccountEntity(){AccountGroupId = item.Id}) },
+                new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => {UpdateForm(item);
+            return Task.CompletedTask;
+        } },
+                new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => {Remove(item);
+            return Task.CompletedTask;
+        } }
+            });
+        GroupSelected = item.Id;
+    }
+}

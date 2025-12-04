@@ -1,0 +1,20 @@
+﻿@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+<EditForm class="@CssClasses.Modal.Body" id="accountGroupForm" Model="@PostDTO" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+        <InputText class="@CssClasses.Input.Text" @bind-Value="@PostDTO.Name" />
+        <ValidationMessage For="@(() => PostDTO.Name)" />
+    </div>
+</EditForm>
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" form="accountGroupForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick="CloseModal">
+        @ResourceApp.cancel
+    </button>
+</div>

@@ -1,0 +1,69 @@
+﻿@typeparam TItem
+@namespace ProjectManagement.Client.Shared.SharedComponent
+@using Microsoft.JSInterop
+@implements IDisposable
+@inject IJSRuntime JS
+
+<tbody id="@_containerId">
+    @if (Items != null)
+    {
+        for (int i = 0; i < Items.Count; i++)
+        {
+            var item = Items[i];   // عندك = رقم العمود 0..32
+
+            <tr @key="item"
+                class="@($"{RowClass} group")"
+                data-item="@item">
+                @RowTemplate(item)
+            </tr>
+        }
+    }
+</tbody>
+
+@code
+{
+    [Parameter] public IList<TItem> Items { get; set; } = new List<TItem>();
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+    [Parameter] public string RowClass { get; set; } = string.Empty;
+    [Parameter] public EventCallback<IList<TItem>> ItemsChanged { get; set; }
+    [Parameter] public EventCallback<IList<TItem>> OnOrderChanged { get; set; }
+
+    private readonly string _containerId = $"reorder-body-{Guid.NewGuid():N}";
+    private DotNetObjectReference<ReorderableTBody<TItem>>? _objRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // نستدعي init في كل Render لو فيه عناصر
+        if (Items != null && Items.Count > 0)
+        {
+            _objRef ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("reorderHelper.init", _containerId, _objRef);
+        }
+    }
+
+    // JS يرسل List<int> تمثل أرقام الأعمدة بالترتيب الجديد
+    [JSInvokable]
+    public async Task UpdateOrder(List<int> newOrder)
+    {
+        if (Items == null || newOrder == null)
+            return;
+
+        Items.Clear();
+        foreach (var colId in newOrder)
+            Items.Add((TItem)(object)colId); // لأن TItem = int
+
+        if (ItemsChanged.HasDelegate)
+            await ItemsChanged.InvokeAsync(Items);
+
+        if (OnOrderChanged.HasDelegate)
+            await OnOrderChanged.InvokeAsync(Items);
+
+        StateHasChanged();
+    }
+
+
+    public void Dispose()
+    {
+        _objRef?.Dispose();
+    }
+}

@@ -1,0 +1,171 @@
+﻿@using System
+@using System.Collections.Generic
+@using System.Linq
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using Microsoft.AspNetCore.Components
+@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using ProjectImportHub.Entities.Questions.Conditions
+@using ProjectImportHub.Entities.Questions.Groups
+
+@code {
+    [Parameter] public List<TaskConditionEntity> Conditions { get; set; } = new();
+    [Parameter] public EventCallback<int> OnEdit { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public List<OptionGroupEntity> ChoiceGroups { get; set; }// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
+    [Parameter] public List<ResourceOptionGroupEntity> ResourceGroups { get; set; }
+    [Parameter] public List<NumericInputEntity> NumericGroups { get; set; }
+
+    bool ResourceAssignments = false;
+    private static string RangeLabel(double? min, double? max)
+        => min.HasValue && max.HasValue ? $"[{min}..{max}]" :
+           min.HasValue ? $">= {min}" : max.HasValue ? $"<= {max}" : "(any)";
+
+    private static IEnumerable<IGrouping<int, T>> GroupBySetKey<T>(IEnumerable<T> rows, Func<T, int> keySelector)
+        => rows.GroupBy(keySelector).OrderBy(g => g.Key);
+
+    void ResourceAssignmentsFunf()
+    {
+        ResourceAssignments = !ResourceAssignments;
+    }
+}
+
+@if (Conditions.Count == 0)
+{
+    <div class="">No conditions yet.</div>
+}
+else
+{
+    @foreach (var c in Conditions)
+    {
+        <div class="@NewCC.Card.Panel">
+            <!-- Header: logic + actions -->
+            <div class="@CsS.Layout.FlexJustifyBetween @CsS.Spacing.M.Bottom(Size.S1)">
+                <div class="@NewCC.Text.Sm">
+                    <b>Logic:</b>
+                    C↔R=@c.OptionToResourceLogic,
+                    C↔N=@c.OptionToNumericLogic,
+                    N↔R=@c.NumericToResourceLogic
+                </div>
+                <div class="@CsS.Layout.FlexWrap">
+                    @if (c.ConditionResourceAssignments.Count > 0)
+                    {
+                        <button class="@CsS.Btn.Outline.Primary" @onclick="ResourceAssignmentsFunf">
+                            Resource Assignments
+                        </button>
+                    }
+                    <button class="@CsS.Btn.Outline.Primary" @onclick="() => OnEdit.InvokeAsync(c.Id)">Edit</button>
+                    <button class="@CsS.Btn.Outline.Danger" @onclick="() => OnDelete.InvokeAsync(c.Id)">Delete</button>
+                </div>
+            </div>
+
+            <!-- 3 columns summary -->
+            <div class="@CsS.Grid.Col.MD3 @NewCC.Text.Sm">
+                <!-- Choice Requirements -->
+                <div class="@NewCC.Card.SubPanel">
+                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Choice Requirements</div>
+                    @if (c.OptionRequirements.Count == 0)
+                    {
+                        <div class="@NewCC.Text.MutedXs">— none —</div>
+                    }
+                    else
+                    {
+                        @foreach (var set in GroupBySetKey(c.OptionRequirements, r => r.SetKey))
+                        {
+                            <div class="@CsS.Spacing.M.Bottom(Size.S1)">
+                                <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
+                                    SetKey=@set.Key (OR)
+                                </div>
+                                <div>
+                                    @foreach (var r in set)
+                                    {
+                                        var g = ChoiceGroups.FirstOrDefault(x => x.Id == r.OptionGroupId);
+                                        var o = g?.Options.FirstOrDefault(x => x.Id == r.OptionItemId);
+                                        <div>• @g?.DisplayName → @o?.DisplayName</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <!-- Resource Requirements -->
+                <div class="@NewCC.Card.SubPanel">
+                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Resource Requirements</div>
+                    @if (c.ResourceRequirements.Count == 0)
+                    {
+                        <div class="@NewCC.Text.MutedXs">— none —</div>
+                    }
+                    else
+                    {
+                        @foreach (var set in GroupBySetKey(c.ResourceRequirements, r => r.SetKey))
+                        {
+                            <div class="@CsS.Spacing.M.Bottom(Size.S1)">
+                                <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
+                                    SetKey=@set.Key (OR)
+                                </div>
+                                <div>
+                                    @foreach (var r in set)
+                                    {
+                                        var g = ResourceGroups.FirstOrDefault(x => x.Id == r.ResourceOptionGroupId);
+                                        var it = g?.Items.FirstOrDefault(x => x.Id == r.ResourceOptionItemId);
+                                        <div>• @g?.DisplayName → @it?.Resource?.Name</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <!-- Numeric Requirements -->
+                <div class="@NewCC.Card.SubPanel">
+                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Numeric Requirements</div>
+                    @if (c.NumericRequirements.Count == 0)
+                    {
+                        <div class="@NewCC.Text.MutedXs">— none —</div>
+                    }
+                    else
+                    {
+                        @foreach (var set in GroupBySetKey(c.NumericRequirements, r => r.SetKey))
+                        {
+                            <div class="@CsS.Spacing.M.Bottom(Size.S1)">
+                                <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
+                                    SetKey=@set.Key (OR)
+                                </div>
+                                <div>
+                                    @foreach (var r in set)
+                                    {
+                                        var g = NumericGroups.FirstOrDefault(x => x.Id == r.NumericInputId);
+                                        <div>• @g?.DisplayName — @RangeLabel(r.MaxAllowedValue, r.MinAllowedValue)</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Resource Assignments (optional block) -->
+            @if (ResourceAssignments)
+            {
+                @if (c.ConditionResourceAssignments.Count == 0)
+                {
+                    <div class="@NewCC.Card.SubPanel @NewCC.Text.MutedXs">
+                        Resource Assignments — none —
+                    </div>
+                }
+                else
+                {
+                    <div class="@NewCC.Card.SubPanel">
+                        <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Resource Assignments</div>
+                        <div class="@NewCC.Text.Sm">
+                            @foreach (var a in c.ConditionResourceAssignments)
+                            {
+                                <div>• @a.Resource?.Name, CF1=@a.ChangeFactor1, CF2=@a.ChangeFactor2, Cap/Waste=@a.CapWaste, Base=@a.BaseCost</div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+}

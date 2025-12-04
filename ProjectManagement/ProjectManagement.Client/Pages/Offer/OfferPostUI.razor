@@ -1,0 +1,99 @@
+﻿@inherits AppComponentBase
+<EditForm Model="PostOffer"
+          class="space-y-4"
+          OnValidSubmit="async () => await HandleSubmitAsync()"
+          id="myFormOffer">
+
+    <DataAnnotationsValidator />
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Cost -->
+        <div class="flex flex-col gap-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                @CalcResource.cost:
+            </label>
+            <InputNumber @bind-Value="@PostOffer.Cost"
+                         class="w-full rounded border border-gray-300 px-2 py-1 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-blue-500
+                                dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+            <ValidationMessage For="@(() => PostOffer.Cost)"
+                               class="text-xs text-red-600 dark:text-red-400" />
+        </div>
+
+        <!-- Base Cost -->
+        <div class="flex flex-col gap-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                @CalcResource.baseCost:
+            </label>
+            <InputNumber @bind-Value="@PostOffer.BaseCost"
+                         class="w-full rounded border border-gray-300 px-2 py-1 text-sm
+                                focus:outline-none focus:ring-2 focus:ring-blue-500
+                                dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+            <ValidationMessage For="@(() => PostOffer.BaseCost)"
+                               class="text-xs text-red-600 dark:text-red-400" />
+        </div>
+
+        @if (Organisations != null)
+        {
+            <!-- Organisation -->
+            <div class="flex flex-col gap-1">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                    @ResourceApp.organisation
+                </label>
+                <select class="w-full rounded border border-gray-300 px-2 py-1 text-sm bg-white
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500
+                                   dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                        @onchange="(e) => OnChangeCompany(e)">
+                    <option value=""></option>
+                    @foreach (var cat in Organisations)
+                    {
+                        <option value="@cat.Id" selected="@(cat.Id == PostOffer.OrganisationId)">
+                            @cat.Name
+                        </option>
+                    }
+                </select>
+            </div>
+
+            @if (Contacts != null)
+            {
+                <!-- Contact -->
+                <div class="flex flex-col gap-1">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                        @ResourceApp.UnderContactCompany
+                    </label>
+                    <InputSelect @bind-Value="PostOffer.Contact"
+                                 class="w-full rounded border border-gray-300 px-2 py-1 text-sm bg-white
+                                                focus:outline-none focus:ring-2 focus:ring-blue-500
+                                                dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                        <option value=""></option>
+                        @foreach (var cat in Contacts)
+                        {
+                            <option value="@cat.GetFullName()">@cat.GetFullName()</option>
+                        }
+                    </InputSelect>
+                </div>
+            }
+        }
+
+        <!-- Comment / Notes: صف مستقل وعريض -->
+        <div class="flex flex-col gap-1 md:col-span-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                @CalcResource.comment:
+            </label>
+
+            <InputTextArea @bind-Value="@PostOffer.Comment"
+                           class="w-full rounded border border-gray-300 px-2 py-2 text-sm
+                                  min-h-20 resize-y
+                                  focus:outline-none focus:ring-2 focus:ring-blue-500
+                                  dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+
+            <ValidationMessage For="@(() => PostOffer.Comment)"
+                               class="text-xs text-red-600 dark:text-red-400" />
+        </div>
+    </div>
+</EditForm>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" form="myFormOffer" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success mx-sm-2" style="margin-right:5px;">@ResourceApp.save</button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick=" Modal.Close">@ResourceApp.cancel</button>
+</div>

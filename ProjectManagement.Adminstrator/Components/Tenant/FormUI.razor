@@ -1,0 +1,170 @@
+﻿@using AuthPermissions.Entity
+@using Domain.Repository.AuthPermissions
+@using Domain.Settings
+@using Microsoft.EntityFrameworkCore
+@using Persistence.Factory
+@using ProjectManagement.Adminstrator.Services.Users
+.AppControll
+@using ProjectManagement.Shared.DTO.Tenant
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
+@inherits AppComponentBase
+@inject IUsersService sersService
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<div class="@CsS.Modal.Body">
+    @if (Put != null)
+    {
+        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm" class="">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="@CsS.Text.Danger" />
+            <div class="@CsS.Grid.Col.MD4">
+                @if (Id == 0)
+                {
+                    <div>
+                        <label class="@CsS.Form.Label">@AppControll.Db</label>
+                        <InputSelect @bind-Value="Put.TenantDBId" class="@CsS.Input.Select">
+                            @if (Databases != null)
+                            {
+                                foreach (var status in Databases)
+                                {
+                                    <option value="@status.Id">@status.Name</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+                }
+
+                <div>
+                    <label class="@CsS.Form.Label">@CalcResource.name:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Name" />
+                    <ValidationMessage For="@(() => Put.Name)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@AppControll.expire:</label>
+                    <InputDate class="@CsS.Input.Date" @bind-Value="@Put.DateExpire" />
+                    <ValidationMessage For="@(() => Put.DateExpire)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@AppControll.maxUsers:</label>
+                    <InputNumber class="@CsS.Input.Number" @bind-Value="@Put.MaxUsers" />
+                    <ValidationMessage For="@(() => Put.MaxUsers)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@AppControll.maxCalculations:</label>
+                    <InputNumber class="@CsS.Input.Number" @bind-Value="@Put.MaxCalculations" />
+                    <ValidationMessage For="@(() => Put.MaxCalculations)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.phone:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Phone" />
+                    <ValidationMessage For="@(() => Put.Phone)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.mobile:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Mobile" />
+                    <ValidationMessage For="@(() => Put.Mobile)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.fax:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Fax" />
+                    <ValidationMessage For="@(() => Put.Fax)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.email:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Email" />
+                    <ValidationMessage For="@(() => Put.Email)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.country:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Country" />
+                    <ValidationMessage For="@(() => Put.Country)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.city:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.City" />
+                    <ValidationMessage For="@(() => Put.City)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.zipCode:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.PostCode" />
+                    <ValidationMessage For="@(() => Put.PostCode)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@AppControll.street:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Street" />
+                    <ValidationMessage For="@(() => Put.Street)" class="@CsS.Text.Danger" />
+                </div>
+
+                <div>
+                    <label class="@CsS.Form.Label">@ResourceIdentity.build:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.BuildNumber" />
+                    <ValidationMessage For="@(() => Put.BuildNumber)" class="@CsS.Text.Danger" />
+                </div>
+
+                <!-- Note يمتد 4 أعمدة -->
+                <div class="@CsS.Grid.Span.MD4">
+                    <label class="@CsS.Form.Label">@CalcResource.note:</label>
+                    <InputTextArea class="@CsS.Input.Text" @bind-Value="@Put.Note" />
+                    <ValidationMessage For="@(() => Put.Note)" class="@CsS.Text.Danger" />
+                </div>
+            </div>
+        </EditForm>
+
+        <div class="@CsS.Modal.Footer">
+            <button type="submit" form="tenantForm" class="@CsS.Btn.Outline.Success" disabled="@IsLoading">
+                @ResourceApp.save
+            </button>
+            <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">
+                @ResourceApp.cancel
+            </button>
+        </div>
+    }
+</div>
+
+    @code{
+    [Parameter] public int Id { get; set; }
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    bool IsLoading = false;
+    public TenantEntity? Put;
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        if (Id == 0)
+        {
+            TenantEntity post = new TenantEntity();
+           PropertyCopier.CopyPropertiesTo(Put, post);
+            await Callback.InvokeAsync(await ExHandlers.RunCheckTokenAsync(() => sersService.CreateAsync(post)) > 0);
+        }
+        else
+            await Callback.InvokeAsync(await ExHandlers.RunCheckTokenAsync(() => sersService.UpdateAsync(Put)));
+        IsLoading = false;
+    }
+    List<TenantDatabaseEntity>? Databases;
+    protected async override Task OnInitializedAsync()
+    {
+        if (Id == 0)
+        {
+            Put = new TenantEntity();
+            // Databases =   Shardingsettings.GetList();
+           // if (Databases != null && Databases.Any())
+           //     Put.DB = Databases?.FirstOrDefault()?.Key;
+        }
+        if (Id > 0)
+            Put = await sersService.GetByIdAsync(Id);
+        using var _appContext = ContextFactory.CreateDbContext();
+        Databases = await _appContext.TenantDatabase.ToListAsync();
+    }
+    }

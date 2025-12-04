@@ -1,0 +1,16 @@
+﻿.inputNr {
+    max-width: 300px;
+    margin: 2px;
+}
+
+.inputColor {
+    /*max-width: 300px;*/
+    margin: 2px;
+    width: 250px;
+}
+
+.inputCheck {
+    /*max-width: 300px;*/
+    margin: 2px;
+    width: 190px;
+}

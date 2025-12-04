@@ -1,0 +1,110 @@
+@using Microsoft.AspNetCore.Components.Forms
+@inherits InputBase<decimal?>
+
+<div class="flex flex-col gap-0.5">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="text-[0.70rem] text-slate-500 dark:text-slate-400">
+            @Label
+        </label>
+    }
+
+    <div class="inline-flex items-center w-full">
+        <input type="number"
+               class="@BuildInputClass()"
+               value="@CurrentValueAsString"
+               @onchange="OnChangeHandler"
+               placeholder="@Placeholder"
+               step="@StepString"
+               min="@MinString"
+               max="@MaxString"
+               @attributes="AdditionalAttributes" />
+    </div>
+
+    @if (!string.IsNullOrEmpty(HelperText))
+    {
+        <span class="text-[0.65rem] text-slate-500 dark:text-slate-400 mt-0.5">
+            @HelperText
+        </span>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string? HelperText { get; set; }
+
+    [Parameter] public decimal? Min { get; set; }
+    [Parameter] public decimal? Max { get; set; }
+    [Parameter] public decimal Step { get; set; } = 1;
+
+    [Parameter] public MhdSize Size { get; set; } = MhdSize.Sm;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    protected override bool TryParseValueFromString(string? value, out decimal? result, out string? validationErrorMessage)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            result = null;
+            validationErrorMessage = null;
+            return true;
+        }
+
+        if (decimal.TryParse(value, out var parsed))
+        {
+            result = parsed;
+            validationErrorMessage = null;
+            return true;
+        }
+
+        result = null;
+        validationErrorMessage = "Invalid number.";
+        return false;
+    }
+
+    private Task OnChangeHandler(ChangeEventArgs e)
+    {
+        CurrentValueAsString = e.Value?.ToString();
+        return Task.CompletedTask;
+    }
+
+    private string StepString => Step.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private string? MinString => Min?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private string? MaxString => Max?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private string BuildInputClass()
+    {
+        var sizeClass = Size switch
+        {
+            MhdSize.Xs => "h-6 text-[0.70rem] px-1.5",
+            MhdSize.Sm => "h-7 text-xs px-2",
+            MhdSize.Md => "h-8 text-sm px-2.5",
+            _ => "h-7 text-xs px-2"
+        };
+
+        var cls = new List<string>
+        {
+            "block w-full",
+            "bg-white dark:bg-slate-950",
+            "text-slate-900 dark:text-slate-100",
+            "border border-slate-200 dark:border-slate-700",
+            "focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600",
+            "placeholder:text-slate-400 dark:placeholder:text-slate-500",
+            "rounded-md",
+            sizeClass,
+            "transition-all duration-150"
+        };
+
+        if (AdditionalAttributes != null &&
+            AdditionalAttributes.TryGetValue("class", out var clsObj) &&
+            clsObj is string extra &&
+            !string.IsNullOrWhiteSpace(extra))
+        {
+            cls.Add(extra);
+        }
+
+        return string.Join(" ", cls);
+    }
+}

@@ -1,0 +1,101 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation;
+@using ProjectManagement.Client.Shared.ResourceFiles
+@using ProjectManagement.Shared.DTO.Project;
+@using ProjectManagement.Client.Shared.Model.Project.Calculation;
+@using ProjectManagement.Client.Shared.ViewModel;
+@inherits AppComponentBase
+<div class="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex flex-wrap gap-4">
+            @foreach (AuthorityStorage gender in Enum.GetValues(typeof(AuthorityStorage)))
+            {
+                if (gender != AuthorityStorage.program && gender != AuthorityStorage.ImportFromOtherCalc)
+                {
+                    <div class="flex items-center gap-2">
+                        <input type="radio"
+                               name="authorityStorage"
+                               checked="@(StorageLevelValue == gender)"
+                               @onchange="(e) => GetStorage(e, gender)"
+                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600" />
+                        <label class="text-gray-900 dark:text-gray-200 text-sm">
+                            @AppLoc[gender.ToString()]
+                        </label>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Storage Sort Radio Buttons -->
+        <div class="flex flex-wrap gap-4">
+            @foreach (StorageSort gender in Enum.GetValues(typeof(StorageSort)))
+            {
+                <div class="flex items-center gap-2">
+                    <input type="radio"
+                           name="storageSort"
+                           checked="@(StorageSort == gender)"
+                           @onchange="(e) => GetStorageSort(e, gender)"
+                           class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 dark:bg-gray-700 dark:border-gray-600" />
+                    <label class="text-gray-900 dark:text-gray-200 text-sm">
+                        @ResourceLocalize.GetStorageSort(gender)
+                    </label>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="@CssClasses.Modal.Footer">
+    <button class="@CssClasses.Btn.Outline.Success" @onclick="SaveAPI">
+        @ResourceApp.save
+    </button>
+    <button class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">
+        @ResourceApp.cancel
+    </button>
+</div>
+
+@code {
+    AuthorityStorage StorageLevelValue = AuthorityStorage._private;
+    StorageSort StorageSort = StorageSort.Construction;
+    [Parameter] public object Parent { get; set; } = default!;
+    CalculationItemType StorageType;
+    string Name = string.Empty;
+    int Id;
+    private void GetParentType()
+    {
+        if (Parent.GetType() == typeof(TaskListMVVM))
+        {
+            StorageType = CalculationItemType.task;
+            TaskListMVVM taskListMVVM = (TaskListMVVM)Parent;
+            Id = taskListMVVM.Id;
+            Name = taskListMVVM.Name;
+        }
+        else
+        {
+            StorageType = CalculationItemType.resource;
+            ResourceListMVVM re = (ResourceListMVVM)Parent;
+            Id = re.Id;
+            Name = re.Name;
+        }
+    }
+    protected override void OnInitialized()
+    {
+        GetParentType();
+    }
+
+    async Task SaveAPI()
+    {
+        if (await Repo.Storage.SaveAsync(Id, StorageType, StorageLevelValue, StorageSort))
+            Close();
+    }
+
+    void GetStorage(ChangeEventArgs e, AuthorityStorage l)
+    {
+        StorageLevelValue = l;
+    }
+    void GetStorageSort(ChangeEventArgs e, StorageSort l)
+    {
+        StorageSort = l;
+    }
+
+    void Close() => Modal.Close();
+}

@@ -1,0 +1,215 @@
+﻿@using Application.Feature.Account.Commands
+@using BlazorMHD.UI.Core.DesignSystem
+@using ProjectManagement.Client.Shared.Repositories.Account
+@using ProjectManagement.Shared.DTO.Account
+@using System.IO
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+<div class="@CssClasses.Modal.Body">
+    <div class="@CssClasses.Grid.Col.MD4">
+        <div>
+            <label for="floatingInputGrid">@ResourceApp.StartFromRow:</label>
+            <input type="number" class="@CssClasses.Input.Text" placeholder="@ResourceApp.StartFromRow" @bind="RowStart">
+        </div>
+        <div>
+            <label for="floatingInputGrid">@CalcResource.accountGroups:</label>
+            <input type="number" class="@CssClasses.Input.Text" placeholder="@CalcResource.accountGroups" @bind="GroupName">
+        </div>
+        <div>
+            <label for="floatingInputGrid">@CalcResource.account:</label>
+            <input type="number" class="@CssClasses.Input.Text" placeholder="@CalcResource.name" @bind="Name">
+        </div>
+        <div>
+            <label>@CalcResource.code:</label>
+            <input type="number" class="@CssClasses.Input.Text" @bind="Code">
+        </div>
+        <div>
+            <label>@CalcResource.comment:</label>
+            <input type="number" class="@CssClasses.Input.Text" @bind="Comment1">
+        </div>
+        <div>
+            <label>@CalcResource.comment 2:</label>
+            <input type="number" class="@CssClasses.Input.Text" @bind="Comment2">
+        </div>
+        <div>
+            <label>Split:</label>
+            <input type="text" class="@CssClasses.Input.Text" @bind="Split">
+        </div>
+    
+    <div class="mt-5">
+    <InputFile OnChange="@OnFileSelection"></InputFile>
+    @if (File != null)
+    {
+        <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="ImportByFormatAsync" disabled="@wait">@ResourceApp.import</button>
+    }
+    @if (Groups != null && Groups.Any())
+    {
+        <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="Save" disabled="@wait">@ResourceApp.save</button>
+    }
+        </div>
+    </div>
+    <table class="@CssClasses.Table.Tab">
+        <thead class="@CssClasses.Table.Thead">
+            <tr>
+                <th class="@CssClasses.Table.TH">@CalcResource.accountGroups</th>
+                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+                <th class="@CssClasses.Table.TH" style="width:105px;">@CalcResource.code</th>
+                <th class="@CssClasses.Table.TH">@CalcResource.comment</th>
+            </tr>
+        </thead>
+        <tbody class="@CssClasses.Table.TBody">
+            @if (Groups != null) foreach (var group in Groups)
+                {
+                    <tr class="@CssClasses.Table.Tr">
+                        <td class="@CssClasses.Table.Td">
+                            <button class="@CssClasses.Btn.Solid.Danger" @onclick="() => Groups.Remove(group)">
+                                @((MarkupString)Icons.DeleteSVG)</button> </td>
+                        <td class="@CssClasses.Table.Td">@group.Name</td>
+                        <td class="@CssClasses.Table.Td"></td>
+                        <td class="@CssClasses.Table.Td"></td>
+
+                    </tr>
+                    @foreach (var account in group.Accounts)
+                    {
+                        <tr class="@CssClasses.Table.Tr">
+                            <td class="@CssClasses.Table.Td">
+                                <button class="@CssClasses.Btn.Solid.Danger" @onclick="()=> group.Accounts.Remove(account)">
+                                    @((MarkupString)Icons.DeleteSVG)
+                                </button>
+                            </td>
+                            <td class="@CssClasses.Table.Td">@account.Name</td>
+                            <td class="@CssClasses.Table.Td">@account.Account</td>
+                            <td class="@CssClasses.Table.Td">
+                                @if (account.Data != null && account.Data.Comments != null) foreach (var comment in account.Data.Comments)
+                                    {
+                                        <label>@comment</label><br />
+                                    }
+                            </td>
+                        </tr>
+                    }
+                }
+        </tbody>
+    </table>
+    </div>
+
+@code {
+    IBrowserFile? File;
+    bool wait = false;
+    List<PostAccountGroupWithAccountsDTO> Groups = [];
+    int GroupName = 3, Name = 4, Code = 5, Comment1 = 6, Comment2 = 7;
+
+    string Split = ",";
+
+    private void OnFileSelection(InputFileChangeEventArgs e)
+    {
+        File = e.File;
+    }
+    string fileUrl = string.Empty;
+    int RowStart = 1;
+
+    void Save()
+    {
+        MHD.MessageYesNo(ResourceApp.save,
+    ResourceApp.DoYouWanTtoSaveTheListInDatabase, MhdState.Primary,
+        EventCallback.Factory.Create(this, () => SaveConfirm()));
+    }
+    async Task ImportByFormatAsync()
+    {
+        if (File == null)
+            return;
+        Groups.Clear();
+        wait = true;
+        if (GroupName == Name)
+            await Import();
+        else
+            await Import2Async();
+
+        wait = false;
+    }
+    async Task Import2Async()
+    {
+        using (var stream = File.OpenReadStream(10485760))
+        {
+            StreamReader reader = new StreamReader(stream);
+            fileUrl = await reader.ReadToEndAsync();
+            var items = fileUrl.Split(Environment.NewLine).Skip(RowStart - 1);
+
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item))
+                    continue;
+                var list = item.Split(Split).ToList();
+                if (string.IsNullOrEmpty(list[GroupName - 1]) && 
+                string.IsNullOrEmpty(list[Name - 1]) && string.IsNullOrEmpty(list[Code - 1]))
+                    continue;
+                var group = Groups.FirstOrDefault(x => x.Name == list[GroupName - 1]);
+                if(group == null)
+                {
+                    group= new PostAccountGroupWithAccountsDTO()
+                        {
+                            Name = list[GroupName - 1],
+                        };
+                    Groups.Add(group);
+                }
+                var account = new PostAccountDTO()
+                    {
+                        Name = list[Name - 1],
+                        Account = list[Code - 1],
+                    };
+                if (!string.IsNullOrEmpty(list[Comment1 - 1]))
+                    account.Data.Comments.Add(list[Comment1 - 1]);
+                if (!string.IsNullOrEmpty(list[Comment2 - 1]))
+                    account.Data.Comments.Add(list[Comment2 - 1]);
+
+                group.Accounts.Add(account);
+            }
+        }
+    }
+    async Task Import()
+    {
+        using (var stream = File.OpenReadStream(10485760))
+        {
+            StreamReader reader = new StreamReader(stream);
+            fileUrl = await reader.ReadToEndAsync();
+            var items = fileUrl.Split(Environment.NewLine).Skip(RowStart - 1);
+
+            Groups.Add(new PostAccountGroupWithAccountsDTO()
+                {
+                    Name = "G1_",
+                    Accounts = []
+                });
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item))
+                    continue;
+                var list = item.Split(Split).ToList();
+                if (string.IsNullOrEmpty(list[Code - 1]))
+                {
+                    Groups.Add(new PostAccountGroupWithAccountsDTO()
+                        {
+                            Name = list[GroupName - 1],
+                            Accounts = []
+                        });
+                }
+                else
+                {
+                    Groups.LastOrDefault().Accounts.Add(new PostAccountDTO()
+                        {
+                            Name = list[Name - 1],
+                            Account = list[Code - 1],
+                        });
+                }
+            }
+            if (!Groups[0].Accounts.Any() && Groups[0].Name == "G1_")
+                Groups.RemoveAt(0);
+        }
+    }
+    async Task SaveConfirm()
+    {
+        var command = new CreateRangeAccountGroupCommand(Groups);
+        await MicroBus.Send(command);
+    }
+}

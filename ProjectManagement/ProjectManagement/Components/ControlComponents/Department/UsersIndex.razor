@@ -1,0 +1,55 @@
+﻿@using Application.Interfaces.Context
+@using BlazorMHD.UI.Components.Data.Table
+@using Microsoft.AspNetCore.Identity
+@using ProjectManagement.Client.Shared.Constants
+@using ProjectManagement.Services
+@using ProjectManagement.Shared
+@using ProjectManagement.Shared.Constant
+@using ProjectManagement.Shared.Models.Account
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+@inject IShardingSingleDbContext shContext
+@inject UserManager<ApplicationUser> _userManager
+@inject ITenantUserService TenantUserService
+
+@using Domain.Entities.Users
+        <div>
+        <button class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await OnClickCallback.InvokeAsync(false)">@((MarkupString)Icons.Back)</button>
+        </div>
+
+@if (Users != null)
+{
+    <div style="overflow:auto" class="overflow-auto">
+        <MhdTable TItem="TenantUserDto" Items="Users">
+            <MhdTableColumn>
+                <Template Context="User">
+                    <div class="@CssClasses.Layout.FlexItemsCenter">
+                        @if (User.IsInAuth)
+                        {
+                            <div>
+                                <select @bind="User.Role" class="@CssClasses.Input.Text">
+                                    <option value="@PMRolesConst.Tenant.Admin">@ResourceIdentity.Admin</option>
+                                    <option value="@PMRolesConst.Tenant.SuperManger">@PMResourceIdentity.SuperManger</option>
+                                    <option value="@PMRolesConst.Tenant.Manger">@ResourceIdentity.Manger</option>
+                                    <option value="@PMRolesConst.Tenant.User">@ResourceIdentity.User</option>
+                                </select>
+                            </div>
+
+                            <button class="@CssClasses.Btn.Outline.Warning" @onclick="async ()=> await TenantUserService.RecreateUserAsync(User)">Register</button>
+                        }
+                        <button class="@CssClasses.Btn.Outline.Warning" @onclick=" ()=> UserRoleDialog(User)">@Icons.Edit</button>
+                        <button class="@CssClasses.Btn.Outline.Danger" @onclick=" ()=> Delete_Click(User)">@((MarkupString)Icons.DeleteSVG)</button>
+                        <button class="@CssClasses.Btn.Outline.Danger" @onclick=" ()=> DeleteOnlyFRomRegister_Click(User)">remove only from register</button>
+                    </div>
+                </Template>
+            </MhdTableColumn>
+            <MhdTableColumn Title="@ResourceIdentity.email" ValueSelector="u => u.Email" Sortable="true" />
+            <MhdTableColumn Title="@CalcResource.name" ValueSelector="@(u => u.Firstname + " " + u.Lastname)" />
+            <MhdTableColumn Title="LockoutStart" ValueSelector="u => u.LockoutStart" />
+            <MhdTableColumn Title="LockoutEnd" ValueSelector="u => u.LockoutEnd" />
+            <MhdTableColumn Title="Lockout" ValueSelector="u => u.LockoutEnabled" />
+        </MhdTable> 
+    </div>
+}

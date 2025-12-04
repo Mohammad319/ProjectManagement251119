@@ -1,0 +1,80 @@
+﻿@using BlazorMHD.UI.Components.Data.Table
+@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Shared.DTO.ResourceType
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+@if (Sort != null)
+{
+    <ResourceSortUI ResourceTypeId="Sort.Id" Callback="() => Sort = null"></ResourceSortUI>
+}
+else
+{
+    <!-- شريط علوي للأكشنات -->
+    <div class="flex items-center justify-between pb-1">
+        <div class="inline-flex items-center gap-1 rounded-full px-1.5 py-1
+                        bg-slate-100/80 dark:bg-slate-800/80 shadow-sm">
+            <!-- إضافة نوع جديد -->
+            <button @onclick="() => UpdateForm(new ResourceTypeModel())"
+                    class="@CssClasses.Btn.IconButton.Success w-7 h-7 text-[11px]">
+                @((MarkupString)Icons.Plus)
+            </button>
+
+            <!-- إظهار/إخفاء العناصر -->
+            <button class="@CssClasses.Btn.IconButton.Secondary w-7 h-7 text-[11px]"
+                    @onclick="ReverseElements">
+                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+            </button>
+        </div>
+
+        <!-- عنوان بسيط / عداد (اختياري) -->
+        @if (Items != null)
+        {
+            <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                @Items.Count @AppLoc["resourceTypes"]
+            </span>
+        }
+    </div>
+    <MhdTable Items="Items?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.Order)"
+          ShowFilter="false">
+    <HeaderTemplate>
+        <th style="width:200px;" class="@CssClasses.Table.TH">
+        </th>
+        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+    </HeaderTemplate>
+    <ChildContent>
+        <MhdTableColumn>
+            <Template Context="item">
+                <div class="@($"{CssClasses.Layout.FlexItemsCenter} group")">
+                    <!-- الأزرار تظهر فقط عند مرور الماوس -->
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+
+                            <!-- تعديل -->
+                            <button @onclick="(e) => UpdateForm(item)"
+                                    class="@CssClasses.Btn.IconButton.Warning">
+                                @Icons.Edit
+                            </button>
+
+                            <!-- حذف -->
+                            <button @onclick="() => Remove(item)"
+                                    class="@CssClasses.Btn.IconButton.Danger">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+
+                            <!-- الترتيب -->
+                            <button @onclick="() => Sort = item"
+                                    class="@CssClasses.Btn.IconButton.Secondary">
+                                @((MarkupString)Icons.List)
+                            </button>
+
+                        </div>
+                    </div>
+                </Template>
+        </MhdTableColumn>
+        <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
+    </ChildContent>
+</MhdTable>
+}

@@ -1,0 +1,196 @@
+﻿@using ProjectManagement.Shared.Base.ProjectAppStorage
+@using ProjectManagement.Shared.DTO.ProjectAppStorage
+@using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
+@using ProjectManagement.Shared.Enums
+
+<div class="mt-1 flex flex-col gap-1">
+    @RenderGroupList(Task, Groups, 0)
+</div>
+
+@code {
+    [Parameter] public ProjectTaskDto Task { get; set; } = default!;
+    [Parameter] public UserAnswers Answers { get; set; } = default!;
+    [Parameter] public IEnumerable<GroupCardWasm> Groups { get; set; } = Enumerable.Empty<GroupCardWasm>();
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private RenderFragment RenderGroupList(ProjectTaskDto task, IEnumerable<GroupCardWasm> groups, int level) => builder =>
+    {
+        int seq = 0;
+
+        // شبكة ذكية: 1 / 2 / 3 أعمدة حسب حجم الشاشة
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class",
+            $"pl-{Math.Min(level, 6)} grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1");
+
+        foreach (var c in groups)
+        {
+            // بطاقة مضغوطة جدًا
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "class",
+                "rounded-md border border-slate-200 dark:border-slate-700 p-1 bg-white dark:bg-slate-900 flex flex-col gap-0.5");
+
+            // ====== نوع Choice ======
+            if (c.Kind == GroupKind.Choice)
+            {
+                var g = c.Choice!;
+
+                builder.OpenElement(seq++, "span");
+                builder.AddAttribute(seq++, "class", "text-[12px] font-medium text-slate-800 dark:text-slate-100 mb-0.5");
+                builder.AddContent(seq++, g.DisplayName);
+                builder.CloseElement();
+
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "class", "grid grid-cols-1 gap-0.5");
+
+                if (g.SelectionMode == SelectionMode.Single)
+                {
+                    foreach (var opt in g.Options)
+                    {
+                        var name = $"ch-{task.Id}-{g.Id}";
+                        builder.OpenElement(seq++, "label");
+                        builder.AddAttribute(seq++, "class",
+                            "inline-flex items-center gap-1 rounded-sm px-1.5 py-[2px] border border-slate-300 dark:border-slate-600 text-[12px] " +
+                            "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-amber-400");
+
+                        builder.OpenElement(seq++, "input");
+                        builder.AddAttribute(seq++, "type", "radio");
+                        builder.AddAttribute(seq++, "name", name);
+                        builder.AddAttribute(seq++, "class", "h-3.5 w-3.5");
+                        builder.AddAttribute(seq++, "checked", Answers.SelectedChoiceOptionIds.Contains(opt.Id));
+                        builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create(this, () => SelectChoiceSingle(g, opt.Id)));
+                        builder.CloseElement();
+
+                        builder.AddContent(seq++, opt.DisplayName);
+                        builder.CloseElement(); // label
+                    }
+                }
+                else
+                {
+                    foreach (var opt in g.Options)
+                    {
+                        builder.OpenElement(seq++, "label");
+                        builder.AddAttribute(seq++, "class",
+                            "inline-flex items-center gap-1 rounded-sm px-1.5 py-[2px] border border-slate-300 dark:border-slate-600 text-[12px] " +
+                            "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-amber-400");
+
+                        builder.OpenElement(seq++, "input");
+                        builder.AddAttribute(seq++, "type", "checkbox");
+                        builder.AddAttribute(seq++, "class", "h-3.5 w-3.5");
+                        builder.AddAttribute(seq++, "checked", Answers.SelectedChoiceOptionIds.Contains(opt.Id));
+                        builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => ToggleChoice(opt.Id, e)));
+                        builder.CloseElement();
+
+                        builder.AddContent(seq++, opt.DisplayName);
+                        builder.CloseElement(); // label
+                    }
+                }
+                builder.CloseElement(); // grid
+
+                // الأقسام الفرعية
+                var keys = GroupTreeHelpersWasm.RevealKeysFromSelected(g, Answers)
+                                               .Distinct(StringComparer.OrdinalIgnoreCase)
+                                               .ToList();
+                var childGroups = GroupTreeHelpersWasm.GetGroupsByKeys(task, keys).ToList();
+
+                if (childGroups.Count > 0)
+                {
+                    builder.OpenElement(seq++, "div");
+                    builder.AddAttribute(seq++, "class", "mt-1 border-t border-slate-200 dark:border-slate-700 pt-1");
+                    builder.AddContent(seq++, RenderGroupList(task, childGroups, level + 1));
+                    builder.CloseElement();
+                }
+            }
+
+            // ====== نوع Resource ======
+            else if (c.Kind == GroupKind.Resource)
+            {
+                var rg = c.Resource!;
+                builder.OpenElement(seq++, "span");
+                builder.AddAttribute(seq++, "class", "text-[12px] font-medium text-slate-800 dark:text-slate-100 mb-0.5");
+                builder.AddContent(seq++, rg.DisplayName);
+                builder.CloseElement();
+
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "class", "grid grid-cols-1 gap-0.5");
+
+                foreach (var it in rg.Items)
+                {
+                    builder.OpenElement(seq++, "label");
+                    builder.AddAttribute(seq++, "class",
+                        "inline-flex items-center gap-1 rounded-sm px-1.5 py-[2px] border border-slate-300 dark:border-slate-600 text-[12px] " +
+                        "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-amber-400");
+
+                    builder.OpenElement(seq++, "input");
+                    builder.AddAttribute(seq++, "type", "checkbox");
+                    builder.AddAttribute(seq++, "class", "h-3.5 w-3.5");
+                    builder.AddAttribute(seq++, "checked", Answers.SelectedResourceChoiceItemIds.Contains(it.Id));
+                    builder.AddAttribute(seq++, "onchange", EventCallback.Factory.Create<ChangeEventArgs>(this, e => ToggleResource(it.Id, e)));
+                    builder.CloseElement();
+
+                    builder.AddContent(seq++, it?.ResourceName);
+                    builder.CloseElement();
+                }
+
+                builder.CloseElement(); // grid
+            }
+
+            // ====== نوع Numeric ======
+            else if (c.Kind == GroupKind.Numeric)
+            {
+                var ng = c.Numeric!;
+
+                builder.OpenElement(seq++, "label");
+                builder.AddAttribute(seq++, "class", "block text-[11px] text-slate-600 dark:text-slate-300 mb-0.5");
+                builder.AddContent(seq++, $"{ng.DisplayName} {GroupTreeHelpersWasm.RangeLabel(ng.MinInputValue, ng.MaxInputValue)}");
+                builder.CloseElement();
+
+                builder.OpenElement(seq++, "input");
+                builder.AddAttribute(seq++, "type", "number");
+                builder.AddAttribute(seq++, "class",
+                    "h-7 w-full rounded border border-slate-300 bg-white px-1.5 text-[12px] " +
+                    "text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200 " +
+                    "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100");
+                builder.AddAttribute(seq++, "value", Answers.NumericValuesByGroupId.TryGetValue(ng.Id, out var v) ? v?.ToString() : null);
+                builder.AddAttribute(seq++, "oninput", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetNumeric(ng.Id, e)));
+                builder.CloseElement();
+            }
+
+            builder.CloseElement(); // card
+        }
+
+        builder.CloseElement(); // grid wrapper
+    };
+
+    private async Task ToggleChoice(int optionId, ChangeEventArgs e)
+    {
+        var check = e.Value is bool b && b;
+        if (check) Answers.SelectedChoiceOptionIds.Add(optionId);
+        else Answers.SelectedChoiceOptionIds.Remove(optionId);
+        if (OnChanged.HasDelegate) await OnChanged.InvokeAsync();
+    }
+
+    private async Task SelectChoiceSingle(OptionGroupDto g, int optionId)
+    {
+        foreach (var o in g.Options) Answers.SelectedChoiceOptionIds.Remove(o.Id);
+        Answers.SelectedChoiceOptionIds.Add(optionId);
+        if (OnChanged.HasDelegate) await OnChanged.InvokeAsync();
+    }
+
+    private async Task ToggleResource(int itemId, ChangeEventArgs e)
+    {
+        var check = e.Value is bool b && b;
+        if (check) Answers.SelectedResourceChoiceItemIds.Add(itemId);
+        else Answers.SelectedResourceChoiceItemIds.Remove(itemId);
+        if (OnChanged.HasDelegate) await OnChanged.InvokeAsync();
+    }
+
+    private async Task SetNumeric(int numericId, ChangeEventArgs e)
+    {
+        if (double.TryParse(Convert.ToString(e.Value), out var v))
+            Answers.NumericValuesByGroupId[numericId] = v;
+        else
+            Answers.NumericValuesByGroupId[numericId] = null;
+
+        if (OnChanged.HasDelegate) await OnChanged.InvokeAsync();
+    }
+}

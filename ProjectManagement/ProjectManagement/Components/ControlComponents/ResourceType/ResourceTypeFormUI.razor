@@ -1,0 +1,105 @@
+﻿@using ProjectManagement.Shared.Enums
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+            <EditForm EditContext="editContext" class="@CssClasses.Modal.Body" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <div class="@CssClasses.Grid.Col.MD4">
+        <div>
+                        <label>@CalcResource.name: </label>
+                        <InputText class="@CssClasses.Input.Text" @bind-Value="@ResourceTypeUpdate.Name" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.Name) />
+                    </div>
+                    @if (AccountGroups != null)
+                    {
+            <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
+                            <select @onchange="ChangeGroupAccount" class="@CssClasses.Input.Text">
+                                <option value="0"></option>
+                                @foreach (var item in AccountGroups)
+                                {
+                        <option value="@item.Id" selected="@(AccountGroupSelected != null && AccountGroupSelected.Id == item.Id)">@item.Name</option>
+                                }
+                            </select>
+                        </div>
+                        @if (AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
+                        {
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.account </label>
+                                <InputSelect @bind-Value="ResourceTypeUpdate.AccountId" class="@CssClasses.Input.Text">
+                                    <option></option>
+                                    @foreach (var item in AccountGroupSelected.Accounts)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For=@(() => ResourceTypeUpdate.AccountId) />
+                            </div>
+                        }
+                    }
+                    <div>
+                        <label>@CalcResource.resourceType: </label>
+                        <InputSelect @bind-Value="@ResourceTypeUpdate.Type" class="@CssClasses.Input.Text">
+                @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
+                {
+                    <option value="@level">@ResourceLocalize.GetResourceType(level)</option>
+                }
+                        </InputSelect>
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.Type) />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
+                        <InputText @bind-Value="ResourceTypeUpdate.Unit" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.Unit) />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.cost </label>
+                        <InputNumber @bind-Value="ResourceTypeUpdate.Cost" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.Cost) />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.fixedQ</label>
+                        <InputNumber @bind-Value="ResourceTypeUpdate.FixedQ" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.FixedQ) />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
+                        <InputNumber @bind-Value="ResourceTypeUpdate.ChangeFactor1" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.ChangeFactor1) />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.changeFactor2 </label>
+                        <InputNumber @bind-Value="ResourceTypeUpdate.ChangeFactor2" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.ChangeFactor2) />
+                    </div>
+                    <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.co2 </label>
+                        <InputNumber @bind-Value="ResourceTypeUpdate.CO2" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.CO2) />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.baseCost </label>
+                        <InputNumber @bind-Value="ResourceTypeUpdate.BaseCost" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For=@(() => ResourceTypeUpdate.BaseCost) />
+                    </div>
+                    @if (ResourceTypeUpdate.Type == ResourceTypesEnum.Materials || ResourceTypeUpdate.Type == ResourceTypesEnum.Worker || ResourceTypeUpdate.Type == ResourceTypesEnum.MachinesAndEquipments)
+                    {
+                        <div>
+                <label class="@CssClasses.Form.Label">@(ResourceTypeUpdate.Type == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
+                            <InputNumber @bind-Value="ResourceTypeUpdate.CapWaste" class="@CssClasses.Input.Text" />
+                            <ValidationMessage For=@(() => ResourceTypeUpdate.CapWaste) />
+                        </div>
+                    }
+            <div class="@CssClasses.Form.CheckWrapperM">
+                <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@ResourceTypeUpdate.IsVisible" />
+                <label class="@CssClasses.Form.CheckLabel">@ResourceApp.isVisible</label>
+                        </div>
+                </div>
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+            @ResourceApp.save
+        </button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+    </div>
+            </EditForm>

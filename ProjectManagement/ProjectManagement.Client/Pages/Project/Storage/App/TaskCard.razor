@@ -1,0 +1,281 @@
+﻿@using ProjectManagement.Client.Pages.Project.Storage.App.Config
+@using ProjectManagement.Client.Shared.Repositories.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.ProjectAppStorage
+@using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
+@using ProjectManagement.Shared.Enums
+@inject ITasksUserComputationServiceWasm Compute
+@inject IStorageRepository TaskService
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@inherits AppComponentBase
+@inject AppState AppState
+
+<div class="mb-2">
+    <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+        <div class="flex items-center gap-1 flex-shrink-0">
+            <button @onclick="CollspanTask"
+                    class="@CsS.Btn.IconButton.Success @CsS.Btn.Size.XSmall">
+                @((MarkupString)Icons.TopBottom(Task.Collspanded))
+            </button>
+            <button @onclick="OnClick"
+                    class="@((Task.Added ? CsS.Btn.IconButton.Danger : CsS.Btn.IconButton.Success) + CsS.Btn.Size.XSmall)">
+                @((MarkupString)Icons.AddDelete(Task.Added))
+            </button>
+            @if (Task.Uncontrollable)
+            {
+                <button @onclick="ToggleResources"
+                        class="@CsS.Btn.Outline.Secondary @CsS.Btn.Size.XSmall">
+                    @(_showResources? ResourceApp.hiddenItems: ResourceApp.visibleItems)
+                </button>
+            }
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
+                @Task.DisplayName  @Task.TotalCost<span class="opacity-70">/ Unit: @Task.UnitCode</span>
+            </h3>
+            <div class="@CssClasses.Layout.FlexWidth(160)">
+                <select @bind="Task.StatusId" class="@CsS.Input.Select @CsS.Btn.Size.XSmall">
+                    <option></option>
+                    @if (Statuses != null)
+                        foreach (var status in Statuses)
+                        {
+                            <option value="@status.Id">@status.Name</option>
+                        }
+                </select>
+            </div>
+        </div>
+
+        <!-- القسم الأيسر -->
+        <div class="flex items-center gap-2 flex-wrap justify-end text-[12px]">
+            @if (Task.Collspanded)
+            {
+                <div class="flex items-center gap-2">
+                    <DimensionInputs Task="Task" OnChanged="OnAnswersChanged" OnApply="Apply" />
+                    @if (!string.IsNullOrEmpty(_computeError))
+                    {
+                        <div class="inline-flex items-center rounded px-2 py-[2px] text-[11px] bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                            @_computeError
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(_resultText))
+                    {
+                        <div class="text-[12px]">
+                            <strong class="font-semibold">Result:</strong> @_resultText (@Task.NewUnitCode)
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (Task.Collspanded)
+    {
+        @if (_rootGroups.Count > 0)
+        {
+            <GroupTree Task="Task" Answers="_answers" Groups="_rootGroups" OnChanged="OnAnswersChanged" />
+        }
+
+        <div class="mt-2 min-w-0">
+           
+            <FinalResourcesTable2 Rows="GetVisibleRows()"
+                                  AddBtnIsVisible="Task.Added"
+                                  Config="Config"
+                                  OnEdit="GetResourceTEnant"
+                                  OnChanged="OnAnswersChanged"
+                                  CostConfig="CostConfig"
+                                  NameConfig="NameConfig"
+                                  TotalCost="Task.TotalCost" />
+
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ProjectTaskDto Task { get; set; } = default!;
+    [Parameter] public ResourceFormDTO Config { get; set; } = default!;
+    [Parameter] public List<ListOrderDTO> Statuses { get; set; } = default!;
+    [Parameter] public EventCallback ToAdded { get; set; }
+    [Parameter] public bool NameConfig { get; set; }
+    [Parameter] public bool CostConfig { get; set; }
+    [Parameter] public bool CO2Config { get; set; }
+
+    string St => "w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-[13px] " +
+                 "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400";
+    private bool _showResources = true;
+    private int SummaryId => -Task.Id;
+    private string _computeError;
+    private string _resultText;
+    private UserAnswers _answers = default!;
+    private List<GroupCardWasm> _rootGroups = new();
+    private void ToggleResources() => _showResources = !_showResources;
+    private bool IsSummary(ResourceDto r) => r?.Id == SummaryId;
+    private IEnumerable<ResourceDto> GetVisibleRows()
+    {
+        var all = Task?.Resources ?? Enumerable.Empty<ResourceDto>();
+        if (!Task?.Uncontrollable ?? true) return all;              // ليست Uncontrollable => اعرض الكل
+        if (_showResources) return all;                              // إظهار الموارد => اعرض الكل
+        return all.Where(IsSummary);                                 // إخفاء الموارد => اعرض الملخص فقط
+    }
+    void GetResourceTEnant(ResourceDto res)
+    {
+        if (res?.Id == SummaryId) return;
+
+        ResourceDto resource = null;
+        if (res.ResourceSource == ResourceSource.Base)
+            resource = Task.BaseResources.FirstOrDefault(r => r.Id == res.Id);
+        else resource = Task.ResultResources.FirstOrDefault(r => r.Id == res.Id);
+        if (resource != null)
+        {
+            Modal.ShowComponent<UpdateResourceDataUI>("Update",
+            new Dictionary<string, object>
+            {
+                [nameof(UpdateResourceDataUI.Resource)] = resource,
+                [nameof(UpdateResourceDataUI.Config)] = Config,
+                [nameof(UpdateResourceDataUI.OnChanged)] = EventCallback.Factory.Create(this, Modal.Close)
+            });
+        }
+    }
+    async Task OnClick()
+    {
+        Task.Added = !Task.Added;
+        await LoadingTask();
+        if (Task.Added)
+            Task.Collspanded = true;
+
+        foreach (var item in Task.Resources)
+            item.IsAdded = Task.Added;
+
+        var summary = Task.Resources?.FirstOrDefault(IsSummary);
+        if (summary is not null)
+            summary.IsAdded = Task.Added;
+
+        if (ToAdded.HasDelegate)
+            await ToAdded.InvokeAsync();
+    }
+    async Task CollspanTask()
+    {
+        await LoadingTask();
+        Task.Collspanded = !Task.Collspanded;
+    }
+    async Task LoadingTask()
+    {
+        if (!Task.IsLoading)
+        {
+            var task = await TaskService.GetTaskForUserDtoAsync(Task.Id);
+            if (task != null)
+            {
+                Task.OptionGroups = task.OptionGroups;
+                Task.ResourceOptionGroups = task.ResourceOptionGroups;
+                Task.NumericInputs = task.NumericInputs;
+                Task.Conditions = task.Conditions;
+                Task.ResultResources ??= new List<ResourceDto>();
+            }
+            Task.IsLoading = true;
+        }
+
+        _answers = Compute.A(Task.Id);
+        _rootGroups = GroupTreeHelpersWasm.RootCards(Task).ToList();
+
+        Compute.BuildFinalRows(Task);
+        EnsureUncontrollableSummary();
+        StateHasChanged();
+    }
+    protected override void OnInitialized()
+    {
+        Compute.ReCalcCostResources(Task.BaseResources);
+        Compute.CalcQuantityResource(Task.BaseResources, Task.Quantity);
+    }
+    private void OnAnswersChanged()
+    {
+        Compute.BuildFinalRows(Task);
+        EnsureUncontrollableSummary();   // بعد أي تغيير
+
+        StateHasChanged();
+    }
+
+    private void Apply()
+    {
+        _computeError = null;
+        _resultText = null;
+        try
+        {
+            var value = Compute.ComputeOrThrow(
+                toUnit: Task.NewUnitCode!,
+                fromUnit: Task.UnitCode!,
+                quantity: Task.Quantity ?? 0,
+                parameters: Task.ParameterValues);
+            _resultText = value.ToString("G");
+
+            Compute.ReCalcCostResources(Task.Resources);
+            Compute.ReCalcCapResources(Task.ResultResources);
+            Compute.CalcQuantityResource(Task.Resources, Task.Quantity);
+
+            ProjectManagement.Shared.Helper.ProjectAppStorage.ResourceFormulaApplier
+            .ApplyAll(Task.ResultResources, Task.ParameterValues);
+        }
+        catch (Exception ex)
+        {
+            _computeError = ex.Message;
+        }
+    }
+
+    /// <summary>
+    /// إنشاء/تحديث مورد ملخص:
+    /// - يُدرج داخل Resources و ResultResources.
+    /// - الاسم/الوحدة/الكمية من المهمة.
+    /// - BaseCost/Cost = مجموع باقي الموارد (عدا الملخص).
+    /// - دائماً أول صف ليظهر أعلى الجدول.
+    /// </summary>
+    private void EnsureUncontrollableSummary()
+    {
+        // عند التحول لقابلة للتحكم: إزالة الملخص من القوائم
+        if (Task is null || !Task.Uncontrollable)
+        {
+            if (Task is not null)
+            {
+                Task.BaseResources = (Task.Resources ?? new List<ResourceDto>())
+                                 .Where(r => !IsSummary(r)).ToList();
+            }
+            return;
+        }
+
+        Task.BaseResources ??= [];
+        // حساب المجاميع من بقية الموارد (عدا الملخص)
+        var others = Task.Resources.Where(r => r is not null && !IsSummary(r)).ToList();
+
+        var totalBaseCost = others.Sum(r => r?.Data?.BaseCost ?? 0);
+        var totalCost = others.Sum(r => r?.Data.Cost ?? 0);
+        var co2 = others.Sum(r => r?.Data.CO2 ?? 0);
+        var totalStorageCost = others.Sum(r => r?.CostStorageValue ?? 0);
+        var totalUserCost = others.Sum(r => r?.CostUserValue ?? r?.CostStorageValue);
+
+        // إيجاد/إنشاء الملخص في Resources
+        var summary = Task.BaseResources.FirstOrDefault(IsSummary);
+        //if (summary is not null) Task.BaseResources.Remove(summary);
+        if (summary is null)
+        {
+            summary = new ResourceDto
+            {
+                Id = SummaryId,
+                Active = true,
+                IsAdded = Task.Added,
+                Name = Task.DisplayName,
+                ResourceSource = ResourceSource.Base,
+                CostStorageValue = totalStorageCost,
+                CostUserValue = totalUserCost,
+                
+                Data = new ProjectManagement.Shared.Base.Calculation.ResourceData
+                {
+                    Unit = Task.UnitCode ?? Task.UnitCode,
+                    Quantity = Task.Quantity ?? 0,
+                    BaseCost = totalBaseCost,
+                    Cost = totalCost,
+                    CO2 = co2,
+                    ChangeFactor1 = Task.ChangeFactor1,
+                    ChangeFactor2 = Task.ChangeFactor2,
+                    Note = Task.Note
+                }
+            };
+            Task.BaseResources.Insert(0, summary);
+        }
+    }
+}

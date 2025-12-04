@@ -1,0 +1,59 @@
+﻿using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Offer;
+using ProjectManagement.Shared.DTO.ProjectAppStorage;
+using ProjectManagement.Shared.Enums;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+
+namespace ProjectManagement.Shared.DTO.Calculation
+{
+    public class ResourcePostDTO
+    {
+        public int Id { get; set; }
+        public ResourceTypesEnum ResType { get; set; }
+        public string Name { get; set; }
+        public double Order { get; set; }
+        public bool Active { get; set; } = true;
+        public ResourceData Data { get; set; } = new();
+        public int? OfferId { get; set; }
+        public int? AccountId { get; set; }
+        public int? StatusId { get; set; }
+        public int? ResourceSortId { get; set; }
+        public int? ResourceTypeId { get; set; }
+        public int? OpportunityId { get; set; }
+
+        [JsonIgnore]public List<string> Formulas { get; set; } = [];
+        [JsonIgnore] public bool IsAdded { get; set; }
+        [JsonIgnore] public int? GroupId { get; set; } = null;
+        [JsonIgnore] public List<ResourcePropertyBindDto> Properties { get; set; } = [];
+
+    }
+    public class ResourceStorageListDTO : ResourceBase
+    {
+        public int Id { get; set; }
+        public int GroupId { get; set; }
+
+        public ResourceData Data { get; set; } = new();
+        [JsonIgnore] public bool Colspan = false;
+    }
+    public class ResourceListDTO : ResourceBase
+    {
+        public ResourceData Data { get; set; } = new();
+        public int TaskId { get; set; }
+        public int? OfferId { get; set; }
+        public int? OpportunityId { get; set; }
+        public string Opportunity { get; set; }
+        public int Id { get; set; }
+        public int? AccountId { get; set; }
+        public string Account { get; set; }
+        public string AccountCode { get; set; }
+        public string Status { get; set; }
+        public string StatusColor { get; set; }
+        public int? StatusId { get; set; }
+        public int? ResourceSortId { get; set; }
+        public int? ResourceTypeId { get; set; }
+        public string ResName { get; set; }
+        public string Sort { get; set; }
+        public List<ListOfferDTO> Offers { get; set; }
+    }
+}

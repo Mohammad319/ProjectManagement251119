@@ -1,0 +1,91 @@
+﻿@using ProjectImportHub.Entities
+@using ProjectImportHub.Services.UnitGroups
+@using ProjectManagement.Adminstrator.Constants
+@inject IUnitGroupsService UnitGroupsService
+@inherits AppComponentBase
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<button @onclick="() => UpdateForm()"
+        class="@CsS.Btn.Outline.Success">
+    @((MarkupString)Icons.Plus)
+</button>
+
+<button @onclick="() => IsVisible = !IsVisible"
+        class="@CsS.Btn.Outline.Secondary"
+        title="@ResourceApp.hiddenItems / @ResourceApp.visibleItems"
+        aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
+    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+</button>
+<Grid TItem="UnitGroupEntity" Items="FallsList">
+    <HeaderTemplate>
+        <th style="width:200px;" class="@CssClasses.Table.TH">
+
+        </th>
+        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+    </HeaderTemplate>
+    <ChildContent>
+        <Column>
+            <Template Context="status">
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <button @onclick="() => UpdateForm(status)" class="@CsS.Btn.Outline.Warning"
+                            title="@ResourceApp.update" aria-label="@ResourceApp.update">
+                        @Icons.Edit
+                    </button>
+
+                    <button @onclick="() => Remove(status)" class="@CsS.Btn.Outline.Danger" title="@ResourceApp.delete"
+                            aria-label="@ResourceApp.delete">
+                        @Icons.Delete
+                    </button>
+                </div>
+            </Template>
+        </Column>
+        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+    </ChildContent>
+</Grid>
+@code {
+    bool IsVisible = true;
+    List<UnitGroupEntity>? FallsList;
+    void UpdateForm() => UpdateForm(new UnitGroupEntity() { DisplayName = "" });
+    void UpdateForm(UnitGroupEntity model)
+    {
+        UnitGroupEntity up = new() { DisplayName = "" };
+        PropertyCopier.CopyPropertiesTo(model, up);
+        Modal.AddModal<UnitsGroupFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New] :
+                    AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+                    {
+                        [nameof(UnitsGroupFormUI.GroupId)] = up.Id,
+                        [nameof(UnitsGroupFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+                    }
+                    , SizeMHD.XL);
+    }
+    void Remove(UnitGroupEntity model) =>
+    MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+
+    async Task ConfirmRemoveAsync(UnitGroupEntity model)
+    {
+        bool result = await ExHandlers.RunCheckTokenAsync(() => UnitGroupsService.DeleteAsync(model.Id));
+        if (result)
+        {
+            FallsList.Remove(model);
+        }
+        MHD.Notifications(ToastType.Delete, result);
+
+        StateHasChanged();
+    }
+    async Task BtnUpdate(bool IsSuccess)
+    {
+        if (IsSuccess)
+        {
+            FallsList = null;
+            FallsList = await ExHandlers.RunCheckTokenAsync(() => UnitGroupsService.GetAllAsync());
+            MHD.Modal.CloseLastModal();
+        }
+        StateHasChanged();
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        FallsList = await ExHandlers.RunCheckTokenAsync(() => UnitGroupsService.GetAllAsync());
+    }
+}

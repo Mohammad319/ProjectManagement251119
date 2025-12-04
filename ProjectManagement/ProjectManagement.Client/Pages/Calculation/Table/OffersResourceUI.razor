@@ -1,0 +1,27 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@inherits AppComponentBase
+<table class="@CssClasses.Table.Tab">
+    <thead class="@CssClasses.Table.Thead">
+        <tr>
+            <th class="@CssClasses.Table.TH"></th>
+            <th class="@CssClasses.Table.TH">@CalcResource.cost</th>
+            <th class="@CssClasses.Table.TH">@CalcResource.baseCost</th>
+            <th class="@CssClasses.Table.TH">@ResourceApp.date</th>
+            <th class="@CssClasses.Table.TH">@CalcResource.note</th>
+        </tr>
+    </thead>
+    <tbody class="@CssClasses.Table.TBody">
+        @foreach (var offer in Resource.Offers)
+        {
+            <tr class="@CssClasses.Table.Tr">
+                <td class="@CssClasses.Table.Td">@offer.BaseCost</td>
+                <td class="@CssClasses.Table.Td">@offer.Cost</td>
+                <td class="@CssClasses.Table.Td">@offer.Date</td>
+                <td class="@CssClasses.Table.Td">@offer.Comment</td>
+            </tr>
+        }
+    </tbody>
+</table>
+@code {
+    [Parameter] public ResourceListMVVM Resource { get; set; }
+}

@@ -1,0 +1,40 @@
+﻿@using Domain.Entities.Organisation
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@PostCustomerGroup" OnValidSubmit="async ()=> await OnValidSubmit.InvokeAsync(PostCustomerGroup)">
+            <DataAnnotationsValidator />
+    <div class="flex flex-wrap items-center gap-4">
+        <div class="flex flex-col">
+            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCustomerGroup.Name" />
+            <ValidationMessage For=@(() => PostCustomerGroup.Name) />
+        </div>
+        <div class="@CssClasses.Form.CheckWrapperM">
+            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@PostCustomerGroup.IsVisible" />
+            <label class="@CssClasses.Form.CheckLabel" for="inlineFormCheck">
+                @ResourceApp.isVisible
+            </label>
+        </div>
+    </div>
+    </EditForm>
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm">
+        @ResourceApp.save
+        </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick=" () => MHD.Modal.Close()">@ResourceApp.cancel</button>
+</div>
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    OrganisationTypeEntity PostCustomerGroup = new();
+    [Parameter] public OrganisationTypeEntity? CustomerGroup { get; set; }
+    [Parameter] public EventCallback<OrganisationTypeEntity> OnValidSubmit { get; set; }
+
+    protected override void OnInitialized()
+    {
+        PropertyCopier.CopyPropertiesTo(CustomerGroup, PostCustomerGroup);
+    }
+}

@@ -1,0 +1,61 @@
+﻿@using BlazorMHD.UI.Components.Navigation.Tabs
+@using BlazorMHD.UI.Core.Navigation
+
+<MhdTabs Items="@Tabs" @bind-ActiveKey="activeKey" Size="MhdSize.Md" />
+
+@code {
+    private string? activeKey;
+    private List<TabItem> Tabs = new();
+
+    protected override void OnInitialized()
+    {
+        Tabs =
+        [
+            new TabItem
+            {
+                Key = "1",
+                Text = CalcResource.type,
+                Content = @<ProjectManagement.Components.ControlComponents.Project.Type.IndexUI />
+            },
+            new TabItem
+            {
+                Key = "2",
+                Text = CalcResource.projectContract,
+                Content = @<ProjectManagement.Components.ControlComponents.Project.Contract.IndexUI />
+            },
+            new TabItem
+            {
+                Key = "3",
+                Text = CalcResource.projectCompensation,
+                Content = @<ProjectManagement.Components.ControlComponents.Project.Compensation.IndexUI />
+            },
+            new TabItem
+            {
+                Key = "4",
+                Text = CalcResource.procurementMethods,
+                Content = @<ProjectManagement.Components.ControlComponents.Project.ProcurementMethods.IndexUI />
+            },
+            new TabItem
+            {
+                Key = "5",
+                Text = CalcResource.status,
+                Content = @<ProjectManagement.Components.ControlComponents.Project.Status.IndexUI />
+            },
+            new TabItem
+            {
+                Key = "6",
+                Text = ResourceLoc.taskStatus,
+                Content = @<ProjectManagement.Components.ControlComponents.TaskStatus.IndexUI />
+            },
+            new TabItem
+            {
+                Key = "7",
+                Text = CalcResource.resourcesStatus,
+                Content = @<ProjectManagement.Components.ControlComponents.ResourceStatus.IndexUI />
+            }
+        ];
+
+        // اختيار أول تاب تلقائياً
+        activeKey = Tabs.First().Key;
+    }
+}

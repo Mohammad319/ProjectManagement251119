@@ -1,0 +1,194 @@
+﻿@page "/Account/Login"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@using ProjectManagement.Shared
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+
+<PageTitle>@PMResourceIdentity.login</PageTitle>
+
+<main class="w-full mx-auto p-6">
+    @* أزلنا max-w-md من الـ main *@
+    <StatusMessage Message="@errorMessage" />
+
+    <!-- Logo كبير ومتمركز، لا يقيّده عرض الفورم -->
+    <div class="flex justify-center mb-4">
+        <img src="Icons/BigLogo.png" alt="Logo"
+             class="w-full max-w-[600px] dark:opacity-90" /> @* كبّر كما تشاء *@
+    </div>
+
+    <!-- نقيّد عرض الفورم هنا فقط -->
+    <div class="mx-auto w-full max-w-md">
+        <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-6">
+
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+
+            <!-- Email -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    @ResourceIdentity.email:
+                </label>
+                <InputText id="email" type="email" @bind-Value="Input.Email" placeholder="@ResourceIdentity.email"
+                           autocomplete="username"
+                           class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm
+                          focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
+                          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
+                <ValidationMessage For="@(() => Input.Email)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="floatingPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    @PMResourceIdentity.password
+                </label>
+                <InputText id="floatingPassword" type="password" @bind-Value="Input.Password"
+                           placeholder="@PMResourceIdentity.password" autocomplete="current-password"
+                           class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm
+                          focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
+                          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
+                <ValidationMessage For="@(() => Input.Password)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+            </div>
+
+            <!-- Remember Me -->
+            <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
+                <InputCheckbox @bind-Value="Input.RememberMe"
+                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500
+                              dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400" />
+                <span>@PMResourceIdentity.rememberMe</span>
+            </div>
+
+            <!-- Login Button -->
+            <div>
+                <button type="submit"
+                        class="w-full rounded-lg bg-blue-600 px-4 py-3 text-lg font-medium text-white shadow-sm
+                       transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
+                       dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
+                    @PMResourceIdentity.login
+                </button>
+            </div>
+            <div>
+                <PasskeySubmit Operation="PasskeyOperation.Request"
+                               Name="Input.Passkey"
+                               EmailName="Input.Email"
+                               class="w-full rounded-lg bg-blue-600 px-4 py-3 text-lg font-medium text-white shadow-sm
+                       transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
+                       dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
+                    @PMResourceIdentity.Auth_LoginWithPasskey
+                </PasskeySubmit>
+            </div>
+
+            <!-- Error & Forgot Password -->
+            <div class="mt-4 text-center">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <p class="text-red-500 text-sm">@errorMessage</p>
+                }
+                <NavLink href="Account/ForgotPassword" class="inline-block mt-2 text-blue-600 hover:underline dark:text-blue-400">
+                    @PMResourceIdentity.passwordForget
+                </NavLink>
+            </div>
+
+        </EditForm>
+    </div>
+</main>
+
+@code {
+    private string? errorMessage;
+    private EditContext editContext = default!;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+
+        editContext = new EditContext(Input);
+
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        if (!string.IsNullOrEmpty(Input.Passkey?.Error))
+        {
+            errorMessage =  ResourceApp.error + " " + Input.Passkey.Error;
+            return;
+        }
+
+        SignInResult result;
+        if (!string.IsNullOrEmpty(Input.Passkey?.CredentialJson))
+        {
+            // When performing passkey sign-in, don't perform form validation.
+            result = await SignInManager.PasskeySignInAsync(Input.Passkey.CredentialJson);
+        }
+        else
+        {
+            // If doing a password sign-in, validate the form.
+            if (!editContext.Validate())
+            {
+                return;
+            }
+
+            // This doesn't count login failures towards account lockout
+            // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+            result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        }
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User logged in.");
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.RequiresTwoFactor)
+        {
+            RedirectManager.RedirectTo(
+                "Account/LoginWith2fa",
+                new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            errorMessage = PMResourceIdentity.Error_InvalidLoginAttempt;
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+
+        public PasskeyInputModel? Passkey { get; set; }
+    }
+}

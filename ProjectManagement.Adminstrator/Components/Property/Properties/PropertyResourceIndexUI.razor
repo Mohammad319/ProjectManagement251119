@@ -1,0 +1,88 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using ProjectImportHub.Entities
+@using ProjectImportHub.Infrastructure
+@using ProjectImportHub.Services.ResourceProperties
+@using ProjectManagement.Adminstrator.Constants
+@inherits AppComponentBase
+@inject IResourcePropertiesService ResourcePropertiesService
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<button @onclick="() => UpdateForm()" class="@CsS.Btn.Outline.Success" title="إضافة" aria-label="إضافة">
+                    @((MarkupString)Icons.Plus)
+                </button>
+<Grid TItem="ResourcePropertyEntity" Items="PropertiesList?.Where(x => SelectedGroupId == 0 || x.PropertySetId == SelectedGroupId)">
+    <HeaderTemplate>
+        <th style="width:200px;" class="@CssClasses.Table.TH"></th>
+        <th style="width:200px;" class="@CssClasses.Table.TH">@CalcResource.code</th>
+        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+    </HeaderTemplate>
+    <ChildContent>
+        <Column>
+            <Template Context="status">
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <button @onclick="() => UpdateForm(status)" class="@CsS.Btn.Outline.Warning"
+                            title="@ResourceApp.update" aria-label="@ResourceApp.update">
+                        @Icons.Edit
+                    </button>
+
+                    <button @onclick="() => Remove(status)" class="@CsS.Btn.Outline.Danger" title="@ResourceApp.delete"
+                            aria-label="@ResourceApp.delete">
+                        @Icons.Delete 
+                    </button>
+                </div>
+            </Template>
+        </Column>
+        <Column Title="" ValueSelector="@(c => "p" + c.Id)"></Column>
+        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+    </ChildContent>
+</Grid>
+@code {
+    [Parameter] public int GroupId { get; set; } = new();
+    List<ResourcePropertyEntity> PropertiesList = new(); 
+
+    void Remove(ResourcePropertyEntity model) =>
+MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+
+    async Task ConfirmRemoveAsync(ResourcePropertyEntity model)
+    {
+        if (await ResourcePropertiesService.DeleteAsync(model.Id))
+        {
+            PropertiesList.Remove(model);
+            MHD.Notifications(ToastType.Delete, true);
+            StateHasChanged();
+        }
+    }
+    void UpdateForm() => UpdateForm(new ResourcePropertyEntity() { DisplayName = "" });
+    void UpdateForm(ResourcePropertyEntity model)
+    {
+        ResourcePropertyEntity up = new() { DisplayName = "" };
+        PropertyCopier.CopyPropertiesTo(model, up);
+        up.PropertySetId = GroupId;
+        Modal.AddModal<PropertyResourceFormUI>(model.Id == 0 ? 
+            AppLoc[LocalizerConst.New, ""] :
+                    AppLoc[LocalizerConst.Update,"(p" + model.Id + ") ," + model.DisplayName], new Dictionary<string, object>
+                    {
+                        [nameof(PropertyResourceFormUI.GroupId)] = GroupId,
+                        [nameof(PropertyResourceFormUI.ResourceProp)] = up,
+                        [nameof(PropertyResourceFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+                    } , SizeMHD.Medium);
+    }
+
+    async Task BtnUpdate(bool IsSuccess)
+    {
+        if (IsSuccess)
+        {
+            PropertiesList = null;
+            PropertiesList = await ResourcePropertiesService.GetByGroupIdAsync(GroupId);
+        }
+        Modal.CloseLastModal();
+        StateHasChanged();
+    }
+    List<ResourcePropertySetEntity> Groups = new();
+    int SelectedGroupId = 0;
+    protected async override Task OnInitializedAsync()
+    {
+        PropertiesList = await ResourcePropertiesService.GetByGroupIdAsync(GroupId);
+    }
+}

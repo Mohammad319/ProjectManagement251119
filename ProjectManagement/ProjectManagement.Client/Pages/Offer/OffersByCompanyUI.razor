@@ -1,0 +1,295 @@
+﻿@using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Offer
+@using ProjectManagement.Shared.DTO.Offer
+@using BlazorMHD.UI.Components.Data.Card
+@implements IDisposable
+@inherits AppComponentBase
+
+<div class="px-2 space-y-1">
+
+    <!-- ملخص أعلى الكارد -->
+    <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+        <span>@($"{CompaniesList.Count} {ResourceApp.organisation}")</span>
+        <span>@($"{CompaniesList.Sum(c => c.Offers.Count)} {ResourceLoc.offer}")</span>
+    </div>
+
+    <MhdCard Elevated="true"
+             Compact="true"
+             Interaction="MhdCard.CardInteractionMode.None"
+             Class="mt-1">
+
+        <ChildContent>
+            <div class="@($"overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 {(Calc.Tap6 ? "" : "pointer-events-none opacity-60")}")">
+                <table class="@($"{CssClasses.Table.Tab} text-xs")">
+                    <thead class="@($"{CssClasses.Table.Thead} sticky top-0 z-10")">
+                        <tr>
+                            <th class="@($"{CssClasses.Table.TH} pl-20")">@ResourceLoc.resource</th>
+                            <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.quantity</th>
+                            <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.cost</th>
+                            <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.baseCost</th>
+                            <th class="@($"{CssClasses.Table.TH} text-center")">@ResourceApp.date</th>
+                            <th class="@CssClasses.Table.TH">@CalcResource.note</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="@CssClasses.Table.TBody">
+                        @if (CompaniesList.Any())
+                        {
+                            @foreach (var com in CompaniesList.OrderByDescending(x => x.Name))
+                            {
+                                <!-- صف عنوان الشركة -->
+                                <tr class="@($"{CssClasses.Table.Tr} bg-slate-50/80 dark:bg-slate-900/70 border-l-4 border-indigo-400 dark:border-indigo-500")">
+                                    <td colspan="6" class="@($"{CssClasses.Table.Td} pl-20 py-1.5")">
+                                        <div class="flex items-center justify-between gap-2">
+
+                                            <div class="flex items-center gap-2">
+                                                <!-- زر توسيع / إخفاء عروض الشركة -->
+                                                <button @onclick="() => ToggleCompany(com.ID ?? 0)"
+                                                        class="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 transition">
+                                                    @((MarkupString)Icons.TopBottom(ExpandedCompanies.Contains(com.ID ?? 0)))
+                                                </button>
+
+                                                <div class="flex flex-col">
+                                                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100"
+                                                          title="@(string.IsNullOrWhiteSpace(com.Name) ? "" : $"{com.Name} > {com.SubCategory} > {com.Category}")">
+                                                        @com.Name
+                                                    </span>
+                                                    <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                                                        @($"{com.SubCategory} · {com.Category}")
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            @if (com.Quantity.HasValue)
+                                            {
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px]
+                                                                         bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+                                                      title="@CalcResource.quantity">
+                                                    @Format(com.Quantity)
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- عروض الشركة (تظهر فقط إذا كانت الشركة موسّعة) -->
+                                @if (ExpandedCompanies.Contains(com.ID ?? 0))
+                                {
+                                    @foreach (var cat in com.Offers)
+                                    {
+                                        <tr role="button"
+                                            class="@($"{CssClasses.Table.Tr} group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800")">
+
+                                            <!-- العمود الأول: الأزرار + اسم الـ Resource -->
+                                            <td class="@CssClasses.Table.Td">
+                                                <div class="@CssClasses.Layout.FlexItemsCenter">
+                                                    <!-- أزرار Edit/Delete تظهر فقط عند hover -->
+                                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                                                        <button class="@CssClasses.Btn.IconButton.Danger"
+                                                                @onclick="() => Delete(cat.Item1)">
+                                                            @((MarkupString)@Icons.DeleteSVG)
+                                                        </button>
+
+                                                        <button class="@CssClasses.Btn.IconButton.Primary"
+                                                                @onclick="() => EditOffer(cat.Item1, cat.Item2)">
+                                                            @Icons.Edit
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- اسم الـ Resource المرتبط -->
+                                                    <span class="ms-2 text-xs sm:text-sm text-slate-700 dark:text-slate-200">
+                                                        @cat.Item3
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            <!-- الكمية (من الشركة) -->
+                                            <td class="@($"{CssClasses.Table.Td} text-right")">
+                                                @Format(com.Quantity)
+                                            </td>
+
+                                            <!-- التكلفة -->
+                                            <td class="@($"{CssClasses.Table.Td} text-right")">
+                                                @Format(cat.Item1.Cost)
+                                            </td>
+
+                                            <!-- Base Cost -->
+                                            <td class="@($"{CssClasses.Table.Td} text-right")">
+                                                @Format(cat.Item1.BaseCost)
+                                            </td>
+
+                                            <!-- التاريخ -->
+                                            <td class="@($"{CssClasses.Table.Td} text-center text-[11px] text-slate-600 dark:text-slate-300")">
+                                                @cat.Item1.Date.ToString(ConstValues.DateFormat)
+                                            </td>
+
+                                            <!-- الملاحظة -->
+                                            <td class="@($"{CssClasses.Table.Td} text-[11px] text-slate-500 dark:text-slate-400")">
+                                                @if (string.IsNullOrWhiteSpace(cat.Item1.Comment))
+                                                {
+                                                    <span class="text-slate-400 dark:text-slate-500 italic">
+                                                        —
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <div class="flex items-center gap-1">
+                                                        <span class="text-[11px]">
+                                                            📝
+                                                        </span>
+
+                                                        <span class="truncate max-w-[220px]"
+                                                              title="@cat.Item1.Comment">
+                                                            @cat.Item1.Comment
+                                                        </span>
+                                                    </div>
+                                                }
+                                            </td>
+
+                                        </tr>
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="px-3 py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+                                    @ResourceApp.notFoundData
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </ChildContent>
+    </MhdCard>
+</div>
+
+@code {
+    class CompanyList
+    {
+        public string? Name;
+        public string? Category;
+        public string? SubCategory;
+        public int? ID;
+        public double? Quantity;
+
+        public List<Tuple<ListOfferMVVM, int, string>> Offers = new();
+    }
+
+    List<CompanyList> CompaniesList { get; set; } = new();
+    HashSet<int> ExpandedCompanies { get; set; } = new();
+    private bool IsLoading { get; set; } = true;
+
+    private double Format(double? x) => Template.Format(x ?? 0);
+
+    void ToggleCompany(int id)
+    {
+        if (ExpandedCompanies.Contains(id))
+            ExpandedCompanies.Remove(id);
+        else
+            ExpandedCompanies.Add(id);
+    }
+
+    void EditOffer(ListOfferMVVM offer, int ResourceID)
+    {
+        ResourceListMVVM? res = Calc.Tasks.SelectMany(x => x.Resources).FirstOrDefault(x => x.Id == ResourceID);
+        Modal.ShowComponent<OfferPostUI>(ResourceLoc.offer, new Dictionary<string, object>()
+        {
+            [nameof(OfferPostUI.Offer)] = offer,
+            [nameof(OfferPostUI.Resource)] = res,
+        });
+    }
+
+    void Delete(ListOfferMVVM offer) =>
+        MHD.DeleteMessage(offer.Organisation, EventCallback.Factory.Create(this, () => DeleteAsync(offer)));
+
+    async Task DeleteAsync(ListOfferMVVM offer)
+    {
+        if (await Repo.Offer.DeleteOfferAsync(offer.Id))
+        {
+            var r = CompaniesList.FirstOrDefault(x => x.Offers.Any(o => o.Item1.Id == offer.Id));
+            r?.Offers.Remove(r?.Offers?.FirstOrDefault(c => c.Item1.Id == offer.Id));
+            MHD.Notifications(ToastType.Delete, true);
+            StateHasChanged();
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Delete, false);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (Folder?.State?.Calculation != null)
+            Folder.State.Calculation.OnChangeInCalculation -= ChangeCalcultionItems;
+    }
+
+    void ChangeCalcultionItems() => _ = InvokeAsync(StateHasChanged);
+
+    protected override void OnInitialized()
+    {
+        Folder?.State?.Calculation?.OnChangeInCalculation += ChangeCalcultionItems;
+
+        foreach (var task in Calc.Tasks)
+        {
+            foreach (var res in task.Resources)
+            {
+                if (res.Offers == null) continue;
+
+                foreach (var of in res.Offers)
+                {
+                    var com = CompaniesList.FirstOrDefault(x => x.ID == of.OrganisationId);
+                    if (com == null)
+                    {
+                        var tt = new CompanyList
+                        {
+                            ID = of.OrganisationId,
+                            Name = of.Organisation,
+                            Category = of.Category,
+                            SubCategory = of.SubCategory,
+                            Quantity = res.Quantity,
+                        };
+                        tt.Offers.Add(Tuple.Create(of, res.Id, res.Name));
+                        CompaniesList.Add(tt);
+                    }
+                    else
+                    {
+                        com.Offers.Add(Tuple.Create(of, res.Id, res.Name));
+                    }
+                }
+            }
+        }
+    }
+
+    // RowNote / RowContact كما هي لو حاب تستخدمهم لاحقاً
+    RenderFragment RowNote(ListOfferMVVM cat) => __builder =>
+    {
+        @if (cat.ShowComment && !string.IsNullOrEmpty(cat.Comment))
+        {
+            <tr>
+                <td colspan="7">
+                    <p class="text-start text-primary" style="padding: 0px;margin: 0px;">@cat.Comment</p>
+                </td>
+            </tr>
+        }
+    };
+
+    RenderFragment RowContact(ListOfferMVVM cat) => __builder =>
+    {
+        @if (!string.IsNullOrEmpty(cat.UCFirstName + cat.UCLastName))
+        {
+            <td colspan="7">
+                <p class="text-start text-success" style="margin:0px;">
+                    @ResourceIdentity.firstname: @cat.UCFirstName @cat.UCLastName -
+                    @ResourceIdentity.telefon: @cat.UCTelefone -
+                    @ResourceIdentity.mobile: @cat.UCMobile -
+                    @CalcResource.status: @cat.UCStatus -
+                    @ResourceApp.department: @cat.UCDepartment
+                </p>
+            </td>
+        }
+    };
+}

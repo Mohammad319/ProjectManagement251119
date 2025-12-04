@@ -1,0 +1,28 @@
+﻿@using ProjectManagement.Shared.DTO.Project
+@inherits AppComponentBase
+
+    <div class="@CssClasses.Modal.Body">
+        @if (ProjectDetails != null)
+        {
+        <dl class="@CssClasses.Grid.Col.MD3">
+                <dt>@CalcResource.name</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Name</dd>
+                <dt>@ResourceLoc.folder</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Folder</dd>
+                <dt>@CalcResource.status</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Status</dd>
+                <dt>@ResourceApp.isVisible</dt>
+            <dd class="@CssClasses.Grid.Span.MD2"><input type="checkbox" selected="@ProjectDetails.IsVisible" disabled /></dd>
+            </dl>
+        }
+    </div>
+
+@code {
+    ProjectDetailsDTO? ProjectDetails;
+    [Parameter]public Guid ProjectId { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        ProjectDetails = await ExHandlers.RunCheckTokenAsync(() => Repo.Project.DetailsAsync(ProjectId));
+    }
+}

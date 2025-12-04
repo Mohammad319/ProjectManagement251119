@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net10.0</TargetFramework>
+	  <UserSecretsId>96fa3fb3-b169-449c-87d3-f9169cae1187</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Update="Resource\ResLocalize.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ResLocalize.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resource\ResLocalize.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>ResLocalize.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resource\ResLocalize.se.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Base\ProjectAppStorage\Questionnaire\Assignments\" />
+    <Folder Include="Base\ProjectAppStorage\Questionnaire\Conditions\" />
+    <Folder Include="Base\ProjectAppStorage\Questionnaire\Groups\" />
+  </ItemGroup>
+
+</Project>

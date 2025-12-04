@@ -1,0 +1,224 @@
+﻿@using ProjectImportHub.Infrastructure
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
+
+@inject IDbContextFactory<ProjectImportHubContext> ContextFactory
+
+<div class="relative" @onkeydown="OnKeyDown">
+    <div class="flex gap-2">
+        <input class="@InputText"
+               placeholder="@Placeholder"
+               value="@text"
+               @oninput="OnInput"
+               @onfocus="() => open = true"
+               disabled="@Disabled" />
+        @if (!string.IsNullOrEmpty(text) && !Disabled)
+        {
+            <button type="button"
+                    class="px-2 text-sm border rounded bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    @onclick="Clear">
+                Clear
+            </button>
+        }
+    </div>
+
+    @if (open && suggestions.Count > 0)
+    {
+        <div class="absolute mt-1 w-full max-h-64 overflow-auto rounded border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-lg z-[9999]"
+             @onclick:stopPropagation="true">
+            @for (int i = 0; i < suggestions.Count; i++)
+            {
+                var s = suggestions[i];
+                var isActive = i == activeIndex;
+                <button type="button"
+                        class=@($"w-full text-left px-3 py-2 text-sm border-b last:border-b-0 " +
+                                        $"border-gray-100 dark:border-gray-800 " +
+                                        $"{(isActive ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800")} " +
+                                        $"text-gray-800 dark:text-gray-100")
+                @onclick="@(() => Pick(s.Id, s.Name ?? $"#{s.Id}"))">
+            @s.Name
+        </button>
+                }
+            @if (hasMore)
+            {
+                <div class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400">
+                    More results available… refine your search
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    // ========= Parameters =========
+    [Parameter] public EventCallback<(int id, string name)> OnPicked { get; set; }
+    [Parameter] public string? Placeholder { get; set; } = "Search resources…";
+    [Parameter] public int MinChars { get; set; } = 2;
+    [Parameter] public int PageSize { get; set; } = 20;
+    [Parameter] public bool Disabled { get; set; }
+
+    // ربط ثنائي اختياري (ResourceId)
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+
+    // تهيئة اسم المورد عند وجود قيمة مسبقة
+    [Parameter] public string? InitialName { get; set; }
+
+    // حلّ الاسم من المعرف عند الحاجة (بديل عن InitialName)
+    [Parameter] public Func<int, Task<string?>>? ResolveNameAsync { get; set; }
+
+    // ========= State =========
+    private string text = string.Empty;
+    private List<OptionVM> suggestions = new();
+    private bool open;
+    private bool hasMore;
+    private int activeIndex = -1; // للكيبورد
+
+    private System.Timers.Timer? debouncer;
+    private CancellationTokenSource? cts;
+    private int? lastPrefilledId; // لمنع إعادة التهيئة أكثر من مرة
+
+    private sealed class OptionVM { public int Id; public string? Name; }
+
+    // ========= Styles =========
+    private const string InputText =
+        "w-full h-9 rounded px-2 border bg-white text-gray-900 border-gray-300 " +
+        "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 " +
+        "dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700 " +
+        "dark:focus:ring-blue-400 dark:focus:border-blue-400";
+
+    // ========= Lifecycle =========
+    protected override void OnParametersSet()
+    {
+        if (Value > 0 && string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(InitialName))
+        {
+            text = InitialName; // عرض اسم المورد الموجود مسبقًا
+        }
+    }
+
+    // ========= Events =========
+    private void OnInput(ChangeEventArgs e)
+    {
+        if (Disabled) return;
+
+        text = e?.Value?.ToString() ?? string.Empty;
+        open = true;
+
+        debouncer?.Stop();
+        debouncer?.Dispose();
+        debouncer = new System.Timers.Timer(250) { AutoReset = false };
+        debouncer.Elapsed += async (_, __) => await InvokeAsync(SearchAsync);
+        debouncer.Start();
+    }
+
+    private async Task SearchAsync()
+    {
+        cts?.Cancel();
+        cts = new CancellationTokenSource();
+        var token = cts.Token;
+
+        if (string.IsNullOrWhiteSpace(text) || text.Trim().Length < MinChars)
+        {
+            suggestions.Clear();
+            hasMore = false;
+            activeIndex = -1;
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            var s = text.Trim();
+
+            await using var db = ContextFactory.CreateDbContext();
+
+            // أولوية: يبدأ بـ (S%) ثم يحتوي (%S%)
+            var starts = db.Resources.AsNoTracking()
+                .Where(r => r.Name != null && EF.Functions.Like(r.Name, s + "%"))
+                .Select(r => new OptionVM { Id = r.Id, Name = r.Name });
+
+            var contains = db.Resources.AsNoTracking()
+                .Where(r => r.Name != null && EF.Functions.Like(r.Name, "%" + s + "%"))
+                .Select(r => new OptionVM { Id = r.Id, Name = r.Name });
+
+            var items = await starts
+                .Union(contains)                 // دمج بدون تكرار
+                .OrderBy(x => x.Name)           // ترتيب أبجدي
+                .Take(PageSize + 1)
+                .ToListAsync(token);
+
+            hasMore = items.Count > PageSize;
+            suggestions = items.Take(PageSize).ToList();
+            activeIndex = suggestions.Count > 0 ? 0 : -1;
+
+            StateHasChanged();
+        }
+        catch (OperationCanceledException)
+        {
+            // تم إلغاء البحث السابق — تجاهل
+        }
+    }
+
+    private async Task Pick(int id, string name)
+    {
+        open = false;
+        text = name;
+        suggestions.Clear();
+        hasMore = false;
+        activeIndex = -1;
+
+        if (Value != id)
+            await ValueChanged.InvokeAsync(id);
+
+        await OnPicked.InvokeAsync((id, name));
+    }
+
+    private async Task Clear()
+    {
+        text = string.Empty;
+        suggestions.Clear();
+        hasMore = false;
+        open = false;
+        activeIndex = -1;
+
+        await ValueChanged.InvokeAsync(null);
+        StateHasChanged();
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (!open || suggestions.Count == 0 || Disabled) return;
+
+        if (e.Key == "ArrowDown")
+        {
+            activeIndex = (activeIndex + 1) % suggestions.Count;
+            StateHasChanged();
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            activeIndex = (activeIndex - 1 + suggestions.Count) % suggestions.Count;
+            StateHasChanged();
+        }
+        else if (e.Key == "Enter")
+        {
+            if (activeIndex >= 0 && activeIndex < suggestions.Count)
+            {
+                var s = suggestions[activeIndex];
+                _ = Pick(s.Id, s.Name ?? $"#{s.Id}");
+            }
+        }
+        else if (e.Key == "Escape")
+        {
+            open = false;
+            StateHasChanged();
+        }
+    }
+
+    // ========= Cleanup =========
+    public void Dispose()
+    {
+        debouncer?.Dispose();
+        cts?.Dispose();
+    }
+}

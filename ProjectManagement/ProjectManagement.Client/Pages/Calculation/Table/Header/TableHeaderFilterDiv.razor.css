@@ -1,0 +1,55 @@
+﻿
+/* width */
+.tdHeaderFilter::-webkit-scrollbar {
+    width: 1px;
+}
+
+/* Track */
+.tdHeaderFilter::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 2px grey;
+    border-radius: 10px;
+}
+
+/* Handle */
+.tdHeaderFilter::-webkit-scrollbar-thumb {
+    background-color:darkgreen;
+    border-radius: 0px;
+}
+
+    /* Handle on hover */
+/*    .tdHeaderFilter::-webkit-scrollbar-thumb:hover {
+        background: #b30000;
+    }*/
+.chip {
+    display: inline-block;
+    margin: 0px 1px;
+    padding: 0px 2px;
+    height: 13px;
+    font-size: 12px;
+    border-radius: 2px;
+    background-color:aquamarine;
+}
+
+.closebtn {
+    padding-left: 2px;
+    color: #888;
+    font-weight: bold;
+    float: right;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.closebtn:hover {
+        color: #000;
+}
+
+.tdHeaderFilter {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: table-cell;
+    margin-left: 0px;
+    /*background-color: white;*/
+    overflow: auto;
+    transition: 1s;
+}

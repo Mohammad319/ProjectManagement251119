@@ -1,0 +1,314 @@
+﻿@using Microsoft.Extensions.Localization
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.SharedComponent
+@using ProjectManagement.Shared.DTO.Calculation.Template
+@inherits AppComponentBase
+
+@inject IStringLocalizer<ResourceLoc> Localizer
+@inject IStringLocalizer<CalcResource> CalcLoc
+
+@if (Temp != null)
+{
+    <style>
+        #netTable .inputNr {
+            max-width: 300px;
+            margin: 2px;
+        }
+
+        #netTable table {
+            border-top: 1px @Temp.NetColor[0] @Temp.NetColor[1];
+            border-left: 1px @Temp.NetColor[0] @Temp.NetColor[1];
+            border-collapse: collapse;
+        }
+
+        #netTable td,
+        #netTable th {
+            border-right: 1px @Temp.NetColor[0] @Temp.NetColor[1];
+            padding: 4px 6px;
+        }
+
+        #netTable tr {
+            border-bottom: 1px @Temp.NetColor[0] @Temp.NetColor[1];
+        }
+    </style>
+
+    <form id="netTable"
+          class="pr-2 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+
+        <!-- جدول العناصر المرئية -->
+        <div class="flex-1 min-w-[260px] max-w-xl max-h-[60vh] overflow-y-auto overflow-x-auto
+                            bg-white dark:bg-slate-900/60
+                            border border-slate-200 dark:border-slate-700
+                            rounded-lg shadow-sm p-2">
+
+            <table class="w-full text-xs">
+                <thead>
+                    <tr>
+                        <td colspan="5"
+                            class="bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-800 dark:text-slate-100">
+                            @ResourceApp.visibleItems
+                        </td>
+                    </tr>
+                    <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px] text-slate-700 dark:text-slate-200">
+                        <td class="w-[70px] text-center">#</td>
+                        <th class="w-[260px] text-start font-medium">Name</th>
+                        <td class="w-[100px] text-center">Width</td>
+                        <td class="w-[55px] text-center">Freez</td>
+                        <td class="w-[55px] text-center"></td>
+                    </tr>
+                </thead>
+
+                <ReorderableTBody TItem="int"
+                                  Items="Temp.NetOrder"
+                                  RowClass="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                    <RowTemplate Context="colId">
+                        @{
+                            rowIndex ??= -1;
+                            rowIndex++;
+                        }
+
+                        <td class="text-center align-middle">
+                            <span class="mr-1 cursor-move opacity-40 group-hover:opacity-90 select-none">
+                                ⋮⋮
+                            </span>
+                             @(rowIndex + 1)
+                        </td>
+
+                        <td class="align-middle">
+                            @CalcLoc[TemplateConst.NetTitle[colId]]
+                        </td>
+
+                        <!-- العرض -->
+                        <td class="align-middle">
+                            <div class="flex items-center justify-between gap-1">
+                                <input class="@CssClasses.Input.Number w-[60px] text-center"
+                                       type="number"
+                                       @bind="Temp.NetWidth[colId]" />
+                            </div>
+                        </td>
+
+                        <!-- Freez -->
+                        <td class="text-center align-middle">
+                            @if (Temp.FreezList.Any(x => x == colId))
+                            {
+                                <button type="button"
+                                        class="@CssClasses.Btn.IconButton.Danger !px-2 !py-1 text-[11px]"
+                                        @onclick="() => Temp.FreezList.Remove(colId)">
+                                    📍
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button"
+                                        class="@CssClasses.Btn.IconButton.Success !px-2 !py-1 text-[11px]"
+                                        @onclick="() => Temp.FreezList.Add(colId)">
+                                    📌
+                                </button>
+                            }
+                    </td>
+
+                        <!-- نقل للجدول المخفي -->
+                        <td class="text-center align-middle">
+                            <button type="button"
+                                    class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
+                                    @onclick="async () => await RemoveAsync(Temp.NetOrder.IndexOf(colId))">
+                                <span>@((MarkupString)Icons.ChevronRight)</span>
+                            </button>
+                        </td>
+                    </RowTemplate>
+                </ReorderableTBody>
+
+            @code {
+                private int? rowIndex;
+                protected override void OnParametersSet()
+                {
+                    // نعيد ضبط العداد في كل Render
+                    rowIndex = null;
+                }
+            }
+
+
+            </table>
+        </div>
+
+        <!-- جدول العناصر المخفية -->
+        <div class="flex-1 min-w-[230px] max-h-[60vh] max-w-md overflow-auto
+                            bg-white dark:bg-slate-900/60
+                            border border-slate-200 dark:border-slate-700
+                            rounded-lg shadow-sm p-2">
+
+            <table class="w-full text-xs">
+                <thead>
+                    <tr>
+                        <td colspan="2"
+                            class="bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold
+                                           text-slate-800 dark:text-slate-100">
+                            @ResourceApp.hiddenItems
+                        </td>
+                    </tr>
+                    <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px]
+                                       text-slate-700 dark:text-slate-200">
+                        <th class="w-[50px] text-center"></th>
+                        <th class="w-[260px] text-start font-medium">
+                            Name
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (TableVisible)
+                    {
+                        for (int i = 0; i < Temp.NetWidth.Count; i++)
+                        {
+                            int d = i;
+                            if (!Temp.NetOrder.Any(x => x == d))
+                            {
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                                    <td class="text-center align-middle">
+                                        <button type="button"
+                                                class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
+                                                @onclick="async () => await AddAsync(d)">
+                                            <span>@((MarkupString)Icons.ChevronLeft)</span>
+                                        </button>
+                                    </td>
+                                    <td class="align-middle">
+                                        @CalcLoc[TemplateConst.NetTitle[i]]
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- إعدادات الألوان والحدود -->
+        <div class="w-full md:w-64 lg:w-72 overflow-auto
+                            bg-white dark:bg-slate-900/60
+                            border border-slate-200 dark:border-slate-700
+                            rounded-lg shadow-sm p-3">
+
+            <table class="w-full text-xs">
+                <tbody class="align-middle">
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                        @AppFormatResource.borderType
+                        </td>
+                        <td class="py-1 align-middle">
+                            <select @bind="Temp.NetColor[0]"
+                                    class="@CssClasses.Input.Select w-full text-[11px]">
+                                @foreach (var item in TemplateConst.BorderStyles)
+                                {
+                                    <option value="@item">
+                                        <p class="hidden">@Localizer[item]</p>
+                                        @item
+                                    </option>
+                                }
+                            </select>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                        @AppFormatResource.bolder
+                        </td>
+                        <td class="py-1 align-middle">
+                            <input type="color"
+                                   class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
+                                   @bind="Temp.NetColor[1]" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                        @AppFormatResource.font
+                        </td>
+                        <td class="py-1 align-middle">
+                            <input type="color"
+                                   class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
+                                   @bind="Temp.NetColor[2]" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                            @ResourceApp.header
+                        </td>
+                        <td class="py-1 align-middle">
+                            <input type="color"
+                                   class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
+                                   @bind="Temp.NetColor[3]" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                            @ResourceLoc.task
+                        </td>
+                        <td class="py-1 align-middle">
+                            <input type="color"
+                                   class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
+                                   @bind="Temp.NetColor[4]" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                            @ResourceLoc.SubTask
+                        </td>
+                        <td class="py-1 align-middle">
+                            <input type="color"
+                                   class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
+                                   @bind="Temp.NetColor[5]" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                            @ResourceLoc.resource
+                        </td>
+                        <td class="py-1 align-middle">
+                            <input type="color"
+                                   class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
+                                   @bind="Temp.NetColor[6]" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="py-1 pr-2 align-middle">
+                            @CalcResource.note
+                        </td>
+                        <td class="py-1 align-middle">
+                            <input type="color"
+                                   class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
+                                   @bind="Temp.NetColor[7]" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </form>
+}
+
+@code {
+    [Parameter] public TemplateListPostDTO Temp { get; set; } = new TemplateListPostDTO();
+
+    private bool TableVisible = true;
+
+    async Task AddAsync(int i)
+    {
+        TableVisible = false;
+        await Task.Delay(1);
+        Temp.NetOrder.Insert(0, i);
+        TableVisible = true;
+    }
+
+    async Task RemoveAsync(int i)
+    {
+        TableVisible = false;
+        await Task.Delay(1);
+        Temp.FreezList.Remove(Temp.NetOrder[i]);
+        Temp.NetOrder.RemoveAt(i);
+        await Task.Delay(1);
+        TableVisible = true;
+    }
+}

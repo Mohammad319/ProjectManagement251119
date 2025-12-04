@@ -1,0 +1,71 @@
+﻿@using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Shared.DTO.Folder
+@inherits AppComponentBase
+
+@inject ProjectManagement.Client.Shared.Repositories.Folder.IFolderRepository _folderRepo
+ <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@PostFolder" OnValidSubmit="async()=> await HandleSubmitAsync()">
+    <DataAnnotationsValidator />
+    <div class="flex flex-wrap items-center gap-4">
+        <div class="flex flex-col">
+            <label for="folderName" class="@CssClasses.Form.Label">@CalcResource.name: &nbsp;</label>
+            <InputText class="@CssClasses.Input.Text" id="folderName" @bind-Value="PostFolder.Name" />
+            <ValidationMessage For=@(() => PostFolder.Name) />
+            </div>
+        <div class="@CssClasses.Form.CheckWrapperM">
+            <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@PostFolder.IsVisible" />
+            <label class="@CssClasses.Form.CheckLabel">@ResourceApp.isVisible</label>
+            </div>
+        <div class="flex flex-col">
+            <InputText type="color" class="@CssClasses.Input.Color" @bind-value="PostFolder.Color" />
+                <ValidationMessage For=@(() => PostFolder.Color) />
+            </div>
+    </div>
+</EditForm>
+    <div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" style="margin-right:5px;" form="myForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Modal.Close">@ResourceApp.cancel</button>
+    </div>
+
+@code {
+    [Parameter] public EventCallback<FolderModel> OnClickCallback { get; set; }
+    bool btnSubmitDisabled;
+    [Parameter] public FolderModel FolderForm { get; set; } = default!;
+    PostFolderDTO PostFolder = new PostFolderDTO();
+
+    protected override void OnInitialized()
+    {
+        PostFolder.Color = FolderForm.Color;
+        PostFolder.Name = FolderForm.Name;
+        PostFolder.IsVisible = FolderForm.IsVisible;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        btnSubmitDisabled = true;
+        if (FolderForm.Id != Guid.Empty)
+        {
+            if (await ExHandlers.RunCheckTokenAsync(() => _folderRepo.UpdateAsync(FolderForm.Id, PostFolder)))
+            {
+                FolderForm.Color = PostFolder.Color;
+                FolderForm.Name = PostFolder.Name;
+                FolderForm.IsVisible = PostFolder.IsVisible;
+                await OnClickCallback.InvokeAsync(FolderForm);
+                MHD.Notifications(ToastType.Update, true);
+            }
+           else MHD.Notifications(ToastType.Update);
+        }
+        else
+        {
+            FolderForm.Id = await ExHandlers.RunCheckTokenAsync(() => _folderRepo.CreateAsync(PostFolder));
+            if (FolderForm.Id != Guid.Empty)
+            {
+                FolderForm.Color = PostFolder.Color;
+                FolderForm.Name = PostFolder.Name;
+                FolderForm.IsVisible = PostFolder.IsVisible;
+                await OnClickCallback.InvokeAsync(FolderForm);
+            }
+            MHD.Notifications(ToastType.Add, FolderForm.Id != Guid.Empty);
+        }
+        await OnClickCallback.InvokeAsync(null);
+    }
+}

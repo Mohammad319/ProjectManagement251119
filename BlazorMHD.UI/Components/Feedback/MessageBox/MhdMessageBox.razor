@@ -1,0 +1,64 @@
+﻿@using BlazorMHD.UI.Core.DesignSystem
+@using BlazorMHD.UI.Core.Services
+@inject MessageBoxService Msg
+@inject IDesignSystemService Design
+
+@if (Msg.Current is not null)
+{
+    <div class="@GetBoxClass()">
+        @Msg.Current.Message
+    </div>
+}
+
+@code {
+    private System.Timers.Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        Msg.OnChange += OnChanged;
+
+        _timer = new System.Timers.Timer(500);
+        _timer.Elapsed += (_, _) =>
+        {
+            Msg.Tick();
+        };
+        _timer.Start();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    private string GetBoxClass()
+    {
+        var state = Msg.Current?.State ?? MhdState.Info;
+        var color = Variants.Build(MhdVariant.Ghost, state);
+
+        return string.Join(" ", new[]
+        {
+        // layout
+        "inline-flex items-center gap-1",
+        "px-3 py-1.5 rounded-md mb-2",
+
+        // الخلفية + النص (خفيفة مع دعم dark)
+        "bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100",
+        "backdrop-blur-sm",
+
+        // الإطار
+        "border border-slate-200 dark:border-slate-700",
+
+        // اللون حسب الحالة (يأتي من Variants + Colors)
+        color
+    });
+    }
+
+
+
+    public void Dispose()
+    {
+        Msg.OnChange -= OnChanged;
+        if (_timer is not null)
+        {
+            _timer.Stop();
+            _timer.Dispose();
+        }
+    }
+}

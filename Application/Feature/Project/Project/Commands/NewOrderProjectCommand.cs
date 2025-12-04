@@ -1,0 +1,21 @@
+﻿using Application.Interfaces;
+using System;
+
+namespace Application.Feature.Project.Project.Commands
+{
+    public sealed record NewOrderProjectCommand(Guid Id, double NewOrder) : IRequest<bool>;
+    public class NewOrderProjectCommandHandler(IShardingSingleDbContext dataAccess) : IRequestHandler<NewOrderProjectCommand, bool>
+    {
+        public async Task<bool> Handle(NewOrderProjectCommand request, CancellationToken cancellationToken)
+        {
+            var project = await dataAccess.Project.FindAsync(request.Id, cancellationToken);
+            if (project == null)
+                return false;
+
+            project.Order = request.NewOrder;
+            await dataAccess.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
+    }
+}

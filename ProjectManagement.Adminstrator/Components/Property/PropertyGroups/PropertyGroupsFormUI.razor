@@ -1,0 +1,59 @@
+﻿@using ProjectImportHub.Entities
+@inherits AppComponentBase
+@inject IGroupPropertiesService GroupPropertiesService
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using ProjectImportHub.Services.ResourceProperties
+
+<EditForm id="myForm" class="@CsS.Modal.Body" Model="@Model"
+          OnValidSubmit="async () => await HandleSubmitAsync()">
+    <DataAnnotationsValidator />
+
+    <div>
+        <div class="">
+            <label class="@CsS.Form.Label" for="name-input">@CalcResource.name:</label>
+            <InputText id="name-input" class="@CsS.Input.Text"
+                       @bind-Value="Model.DisplayName"
+                       aria-invalid="@(EditContext?.GetValidationMessages(() => Model.DisplayName).Any() == true)" />
+
+            <ValidationMessage For="() => Model.DisplayName" class="@CsS.Text.Danger" />
+        </div>
+    </div>
+</EditForm>
+
+<div class="@CsS.Modal.Footer">
+    <button type="submit"
+            class="@CsS.Btn.Outline.Success"
+            form="myForm"
+            disabled="@IsLoading"
+            aria-busy="@IsLoading">
+        @ResourceApp.save
+    </button>
+
+    <button type="button"
+            class="@CsS.Btn.Outline.Secondary"
+            @onclick="async () => await Callback.InvokeAsync(false)">
+        @ResourceApp.cancel
+    </button>
+</div>
+
+@code {
+    [CascadingParameter] private EditContext? EditContext { get; set; }
+    [Parameter] public ResourcePropertySetEntity Model { get; set; } = new () { DisplayName = "name" };
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    bool IsLoading = false;
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        bool result = false;
+        if (Model.Id == 0)
+        {
+            var id = await GroupPropertiesService.AddAsync(Model);
+            result = id > 0;
+        }
+        else result = await GroupPropertiesService.UpdateAsync(Model);
+
+        MHD.Notifications(Model.Id == 0 ? ToastType.Add : ToastType.update, result);
+        await Callback.InvokeAsync(result);
+    }
+}

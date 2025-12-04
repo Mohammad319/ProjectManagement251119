@@ -1,0 +1,17 @@
+﻿@using Microsoft.Extensions.Localization
+@using ProjectManagement.Client.Shared.ResourceFiles.APP
+@using ProjectManagement.Shared
+@inject IStringLocalizer<ResourceApp> L
+@page "/Account/Manage/Impressum"
+
+<h1>@L["WelcomeText"]</h1>
+<h3>@L["TermsTitle"]</h3>
+<p>@L["BusinessActivity"]</p>
+<p>@L["ImpressumTxt"]</p>
+<h3>@PMAppFormatResource.TabPrivacy</h3>
+<p>@PMAppFormatResource.PrivacyContent</p>
+<footer>
+    <p>@L["CompanyAddress"]</p>
+    <p>@L["ContactEmail"]</p>
+    <p>@L["FooterCopyright"]</p>
+</footer>

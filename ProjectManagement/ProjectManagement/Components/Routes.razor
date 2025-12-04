@@ -1,0 +1,37 @@
+﻿@using BlazorMHD.UI.Components.Feedback.Dialog
+@using BlazorMHD.UI.Components.Feedback.MessageBox
+@using BlazorMHD.UI.Components.Feedback.Toast
+@using ContextMenuMHD
+
+<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Client._Imports).Assembly }">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <h1 class="text-xl font-semibold">Page not found</h1>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+
+<ContextMenu @rendermode="InteractiveServer" />
+<ContextMenu @rendermode="InteractiveWebAssembly" />
+<MhdDialog @rendermode="InteractiveServer" />
+<MhdDialog @rendermode="InteractiveWebAssembly" />
+
+<MhdMessageBox @rendermode="InteractiveServer" />
+<MhdToastContainer @rendermode="InteractiveServer" />
+<MhdMessageBox @rendermode="InteractiveWebAssembly" />
+<MhdToastContainer @rendermode="InteractiveWebAssembly" />
+
+<BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveServer"></BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay>
+<BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveWebAssembly"></BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay>
+
+@* <BlazorMHD.MHDUI @rendermode="InteractiveServer" />
+<BlazorMHD.MHDUI @rendermode="InteractiveWebAssembly" /> *@

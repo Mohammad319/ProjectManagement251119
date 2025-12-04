@@ -1,0 +1,16 @@
+﻿@using Microsoft.Extensions.Localization
+@using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll
+.AppControll
+@inject IStringLocalizer<AppControll> L
+
+<h1>@L["WelcomeText"]</h1>
+<h3>@L["TermsTitle"]</h3>
+<p>@L["BusinessActivity"]</p>
+<p>@L["ImpressumTxt"]</p>
+<h3>@L["PrivacyTitle"]</h3>
+<p>@L["PrivacyContent"]</p>
+<footer>
+    <p>@L["CompanyAddress"]</p>
+    <p>@L["ContactEmail"]</p>
+    <p>@L["FooterCopyright"]</p>
+</footer>

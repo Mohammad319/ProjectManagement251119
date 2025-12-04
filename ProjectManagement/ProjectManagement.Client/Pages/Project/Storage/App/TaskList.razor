@@ -1,0 +1,191 @@
+﻿@using ProjectManagement.Client.Pages.Project.Storage.App.Config
+@using ProjectManagement.Client.Shared.Repositories.Calculation
+@using ProjectManagement.Shared.Base.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.ProjectAppStorage
+@using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
+@using ProjectManagement.Shared.Enums
+@inject IStorageRepository TaskService
+@inject ITasksUserComputationServiceWasm Compute
+@inherits AppComponentBase
+@inject AppState AppState
+
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using ProjectManagement.Shared.Helper.ProjectAppStorage
+<div class="@CsS.Layout.FlexItemsCenter">
+    @Content
+    @if (_tasks != null && _tasks.Any(x => x.Added))
+    {
+        <button class="@CsS.Btn.Outline.Success @CsS.Btn.Size.XSmall" @onclick="SaveAsync">
+            @ResourceApp.save
+        </button>
+    }
+
+    <div>
+
+        <input type="text"
+               class="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-0.5 text-[13px]
+                              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                              focus:outline-none focus:ring-2 focus:ring-blue-500"
+               @bind="filterDto.NameOrCode"
+               placeholder="@ResourceLoc.EnterPartOfCodeOrName" />
+    </div>
+
+    <div>
+        <button class="@CsS.Btn.IconButton.Primary  @CsS.Btn.Size.XSmall"
+                @onclick="Refresh">
+            @((MarkupString)Icons.Refresh)
+        </button>
+        <button class="@CsS.Btn.IconButton.Primary @CsS.Btn.Size.XSmall"
+                @onclick="StorageStateModal">
+            @((MarkupString)Icons.Machines)
+        </button>
+    </div>
+</div>
+@if (_loading)
+{
+    <div style="@CsS.Spacing.P.Top(Size.S5)">
+        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+    </div>
+ 
+}
+else if (_tasks != null)
+    foreach (var task in _tasks)
+    {
+        <TaskCard @key="task.Id" Task="task" ToAdded="TaskToAdd" Config="Config"
+                  Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
+                  CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name" />
+    }
+
+@code {
+    void StorageStateModal()
+    {
+        Modal.ShowComponent<StorageDataSourceConfigUI>(ResourceLoc.Description_SystemOrUserValues,
+        new Dictionary<string, object>
+        {
+            [nameof(UpdateResourceDataUI.OnChanged)] = EventCallback.Factory.Create<bool>(this, Refresh1)
+        });
+    }
+
+    void Refresh1(bool refr)
+    {
+        if (refr)
+        {
+            InvokeAsync(StateHasChanged);
+            foreach (var item in _tasks)
+            {
+                           foreach (var res in item.Resources)
+                {
+                    if (AppState.StorageApp.Cost && res.CostUserValue.HasValue)
+                        res.Data.Cost = res.CostUserValue.Value;
+                    else if (res.CostStorageValue.HasValue)
+                        res.Data.Cost = res.CostStorageValue.Value;
+                }
+            }
+
+        }
+        Modal.Close();
+
+    }
+    private bool _loading = true;
+    public List<ProjectTaskDto> _tasks = new();
+    ProjectTaskFilterDto filterDto = new();
+    [Parameter] public EventCallback RefreshBack { get; set; }
+    [Parameter] public RenderFragment? Content { get; set; }
+    ResourceFormDTO Config = new();
+    List<ListOrderDTO>? Statuses;
+
+    async Task TaskToAdd()
+    {
+        await RefreshBack.InvokeAsync();
+    }
+
+    async Task Refresh()
+    {
+        _loading = true;
+        _tasks = await TaskService.GetTasksForUserDtoAsync(filterDto);
+        if (AppState.StorageApp.Cost) foreach (var item in _tasks)
+            foreach (var res in item.Resources)
+            {
+                if (res.CostUserValue.HasValue)
+                    res.Data.Cost = res.CostUserValue.Value;
+            }
+        _loading = false;
+    }
+
+    public async Task<bool> SaveAsync()
+    {
+        List<TaskPostDTO> Tasks = new();
+        Tasks = _tasks.Where(x => x.Added).Select(Task => new TaskPostDTO
+            {
+                Id = Task.Id,
+                Name =  Task.DisplayName,
+                Order = Task.SortOrder,
+                StatusId = Task.StatusId,
+                
+                Data = new ProjectManagement.Shared.Base.Calculation.TaskData
+                {
+                    QuantityParam = ConstValues.FixedQ,
+                    Quantity = Task.Quantity ?? 0,
+                    ChangeFactor1 = Task.ChangeFactor1,
+                    ChangeFactor2 = Task.ChangeFactor2,
+                    Active = Task.IsActive,
+                    Type = ProjectManagement.Shared.Base.Calculation.TaskType.Task,
+                    Code = Task.Code,
+                    UpperNote = Task.UpperNote,
+                    Unit = Task.UnitCode,
+                    Note = Task.Note,
+                    IsOH = Calc.OHFactors,
+                },
+            Resources = Task.BaseResources.Concat(Task.ResultResources).Where(r => r.IsAdded).Select(res => new ResourcePostDTO
+                {
+                    Id = res.Id,
+                    ResourceTypeId = res.ResourceTypeId,
+                    ResourceSortId = res.ResourceSortId,
+                    AccountId = res.AccountId,
+                    Active = res.Active,
+                    StatusId = res.StatusId,
+                // Data = res.Data,
+                    Data = new ResourceData()
+                    {
+                    Note = res.Data.Note,
+                    ChangeFactor1= res.Data.ChangeFactor1,
+                    ChangeFactor2 = res.Data.ChangeFactor2,
+                    CapWaste = res.Data.CapWaste,
+                    CO2 = res.Data.CO2,
+                    Cost = res.Data.Cost,
+                    BaseCost = res.Data.BaseCost,
+                    Unit = res.Data.Unit,
+
+                    },
+                    ResType = res.ResType,
+                Name = AppState.StorageApp.Name ? res.NameUserValue : res.Name,
+                }).ToList()
+            }).ToList();
+        foreach (var ts in Tasks)
+        {
+            ts.Id = 0;
+            ts.Data.IsOH = Calc.OHFactors;
+            ts.TaskId = null;
+            if (ts.StatusId == 0) ts.StatusId = null;
+        }
+
+        await Repo.Task.CreateAsync(Tasks, Calc.Id);
+
+        foreach (var ts in _tasks)
+        {
+            ts.Added = false;
+            foreach (var res in ts.Resources)
+                ts.Added = false;
+        }
+        return true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Refresh();
+        Config = await ExHandlers.RunCheckTokenAsync(Repo.Resource.GetConfigForm);
+        Statuses = (await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync())).ToList();
+        _loading = false;
+    }
+}

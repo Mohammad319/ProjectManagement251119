@@ -1,0 +1,227 @@
+﻿@using ProjectImportHub.Dto.ProjectTask
+@using ProjectImportHub.Services.ProjectTask
+@using ProjectImportHub.Services.Resource
+@using ProjectManagement.Adminstrator.Components.Question
+@using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList
+@using ProjectManagement.Adminstrator.Constants
+@using ProjectManagement.Client.Adminstrator.Services.MHDBlazor
+@inject IProjectTaskQueryService TaskQueries
+@inject IProjectTaskService TaskCommands
+@inject ITaskFoldersService FoldersService
+
+@inject MhdServices MHD
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+
+@if (errorMessage is not null)
+{
+    <div class="@CC.Card.Panel @CsS.Text.Danger">@errorMessage</div>
+}
+else if (tasks is null)
+{
+    <div class="@CC.Card.Panel">Loading …</div>
+}
+else if (tasks.Count == 0)
+{
+    <button @onclick="() => OpenEditor(0)"
+            class="@CsS.Btn.Outline.Primary">
+        @((MarkupString)Icons.Plus)
+    </button>
+    <div class="@CC.Card.Panel">@ResourceApp.thereIsNoElements …</div>
+}
+else
+{
+    <table class="@CsS.Table.Tab">
+        <thead class="@CsS.Table.Thead">
+            <tr>
+                <th class="@CsS.Table.TH" style="width:370px;">
+                    <button @onclick="() => OpenEditor(0)"
+                            class="@CsS.Btn.Outline.Primary">
+                        @((MarkupString)Icons.Plus)
+                    </button>
+                </th>
+                <th class="@CsS.Table.TH">@CalcResource.code</th>
+                <th class="@CsS.Table.TH">@CalcResource.name</th>
+                <th class="@CsS.Table.TH">@CalcResource.unit</th>
+                <th class="@CsS.Table.TH">@CalcResource.quantity</th>
+                <th class="@CsS.Table.TH">Aktiv</th>
+            </tr>
+        </thead>
+
+        <tbody class="@CsS.Table.TBody">
+            @foreach (var item in tasks)
+            {
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">
+                        <div class="@CsS.Layout.FlexItemsCenter">
+                            <button @onclick="() => OpenEditor(item.Id)" class="@CsS.Btn.Outline.Warning" title="Edit">
+                                @Icons.Edit
+                            </button>
+                            <button @onclick="() => ConfirmDelete(item.Id, item.DisplayName)" class="@CsS.Btn.Outline.Danger" title="Delete">
+                                @Icons.Delete
+                            </button>
+                            <button @onclick="() => OpenConditions(item.Id, item.DisplayName)" class="@CsS.Btn.Outline.Primary">
+                                @ResourceLoc.Conditions
+                            </button>
+                            <button @onclick="() => OpenGroups(item.Id, item.DisplayName)" class="@CsS.Btn.Outline.Primary">
+                                @ResourceLoc.group
+                            </button>
+                            <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="@CsS.Btn.Outline.Primary">
+                                @ResourceLoc.resource
+                            </button>
+                            @if(ColspanTaskIDs.Any(x => x == item.Id))
+                            {
+                                <button @onclick="async () => await Collspan(item)" class="@CssClasses.Btn.Outline.Info">^</button>
+                            }
+                            else
+                            {
+                                <button @onclick="async  () => await Collspan(item)" class="@CssClasses.Btn.Outline.Info">v</button>
+                            }
+                        </div>
+                    </td>
+
+                    <td class="@CsS.Table.Td">@item.Code</td>
+                    <td class="@CsS.Table.Td">@item.DisplayName</td>
+                    <td class="@CsS.Table.Td">@item.UnitCode</td>
+                    <td class="@CsS.Table.Td">@item.Quantity</td>
+                    <td class="@CsS.Table.Td">
+                        @if (item.IsActive)
+                        {
+                            <span class="@CsS.Background.Info">ON</span>
+                        }
+                        else
+                        {
+                            <span class="@CsS.Background.Base">OFF</span>
+                        }
+                    </td>
+                </tr>
+                @if (ColspanTaskIDs.Any(x => x == item.Id) && item.ResourceTasks != null)
+                    {
+                        foreach(var res in item.ResourceTasks)
+                {
+                   
+                <tr class="@CsS.Table.Tr">
+                            <td class="@CsS.Table.Td">
+                                <button class="@CsS.Btn.Outline.Primary" @onclick="() => TaskChoiceResourceBin(item,res)">
+                                    @((MarkupString)Icons.Machines)
+                                </button>
+                                <button class="@CsS.Btn.Outline.Danger" @onclick="() => RemoveAsync(item, res)">
+                                    @((MarkupString)Icons.Delete)
+                                </button>
+                                @res.DisplayName</td>
+                            <td class="@CsS.Table.Td">@res.Unit</td>
+                            <td class="@CsS.Table.Td">@res.Chf1</td>
+                            <td class="@CsS.Table.Td">@res.Chf2</td>
+                            <td class="@CsS.Table.Td">@res.Unit</td>
+                            <td class="@CsS.Table.Td">
+                                @if (res.IsActive)
+                                {
+                                    <span class="@CsS.Background.Info">ON</span>
+                                }
+                                else
+                                {
+                                    <span class="@CsS.Background.Base">OFF</span>
+                                }
+                            </td>
+                        </tr>
+                }
+            }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    void TaskChoiceResourceBin(ProjectTaskListItemDto model,ResourceTaskIndexDto resourceId) => MHD.Modal.AddModal<TaskResourceUI>
+    (model.DisplayName + " Resource",
+new Dictionary<string, object>
+{
+    [nameof(TaskResourceUI.Task)] = model,
+    [nameof(TaskResourceUI.Resource)] = resourceId,
+});
+    private List<ProjectTaskListItemDto> tasks;
+    private string errorMessage;
+    List<int> ColspanTaskIDs = [];
+    private void ConfirmDelete(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
+    => MHD.DeleteMessage(res.DisplayName, () => RemoveAsync(task,res));
+
+    async Task RemoveAsync(ProjectTaskListItemDto task,ResourceTaskIndexDto res)
+    {
+        if (await FoldersService.RemoveAssignmentAsync(res.Id))
+            task.ResourceTasks?.RemoveAll(x => x.Id == res.Id);
+            StateHasChanged();
+        }
+
+    
+    async Task Collspan(ProjectTaskListItemDto task)
+    {
+        if(ColspanTaskIDs.Any(x => x == task.Id))
+        {
+            ColspanTaskIDs.Remove(task.Id);
+        }
+        else
+        {
+                task.ResourceTasks = (await TaskQueries.GetTaskResourcesAsync(task.Id, CancellationToken.None)).ToList();
+            
+            ColspanTaskIDs.Add(task.Id);
+        }
+        StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task ReloadAsync()
+    {
+        try
+        {
+            errorMessage = null;
+            tasks = null;
+            tasks = (await TaskQueries.GetListAsync(CancellationToken.None)).ToList();
+                    StateHasChanged();
+
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private void OpenEditor(int id)
+    {
+        var title = id == 0 ? ResourceApp.newItem : ResourceApp.update;
+        MHD.Modal.AddModal<TaskDLFormUI>(title, new Dictionary<string, object>
+        {
+            [nameof(TaskDLFormUI.TaskId)] = id,
+            [nameof(TaskDLFormUI.Saved)] = EventCallback.Factory.Create<bool>(this, ReloadAsync),
+        });
+    }
+
+    private void OpenConditions(int id, string name)
+    {
+        MHD.Modal.AddModal<QuestionConditionListUI>($"Questions for Task {name}",
+            new Dictionary<string, object> { [nameof(QuestionConditionListUI.TaskId)] = id });
+    }
+
+    private void OpenGroups(int id, string name)
+    {
+        MHD.Modal.AddModal<TaskGroupsFormUI>($"Questions for Task {name}",
+            new Dictionary<string, object> { [nameof(TaskGroupsFormUI.ID)] = id });
+    }
+
+    private void OpenTaskFolders(int id, string name)
+    {
+        // Wichtig: TaskId an Child übergeben (Child erwartet TaskId, nicht ProjectTask)
+        MHD.Modal.AddModal<TaskFolders>(ResourceLoc.resource, new Dictionary<string, object>
+        {
+            [nameof(TaskFolders.TaskId)] = id
+        });
+    }
+
+    private void ConfirmDelete(int id, string name)
+        => MHD.DeleteMessage(name, () => DeleteAsync(id));
+
+    private async Task DeleteAsync(int id)
+    {
+        await TaskCommands.DeleteAsync(id, CancellationToken.None);
+        await ReloadAsync();
+    }
+}

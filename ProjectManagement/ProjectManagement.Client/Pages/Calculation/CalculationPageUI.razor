@@ -1,0 +1,138 @@
+﻿@using BlazorMHD.UI.Components.Navigation.Tabs
+@using BlazorMHD.UI.Core.DesignSystem
+@using Calculation.HourlyPriceList
+@using Calculation.Opportunity
+@using Offer
+@using Project.ProjectPages
+@using Calculation.Table
+@using ProjectManagement.Client.Pages.Calculation.Chart
+@using ProjectManagement.Client.Services.Calculation.CalculationItems
+@using ProjectManagement.Client.Shared.Repositories.Calculation
+@using BlazorMHD.UI.Core.Navigation
+@inherits AppComponentBase
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+
+<style>
+    .nav-link.active {
+        background-color: var(--bs-primary-bg);
+        color: var(--bs-primary-text);
+    }
+</style>
+
+<div class="calcPage h-full flex flex-col">
+    @if (HeaderVisible)
+    {
+        <div class="mb-0 px-2">
+            <MhdTabs Items="@Tabs"
+                     Mode="MhdTabMode.Horizontal"
+                     Size="MhdSize.Sm"
+                     @bind-ActiveKey="ActiveKey">
+
+                <RightContent>
+                    <div class="flex items-center gap-2">
+
+                        <!-- Toggle Header Button -->
+                        <button type="button"
+                                class="inline-flex items-center justify-center
+                       w-7 h-7 rounded-md
+                       text-gray-600 dark:text-gray-300
+                       hover:bg-gray-200 dark:hover:bg-gray-700
+                       hover:text-gray-900 dark:hover:text-white
+                       transition-colors duration-150"
+                                @onclick="() => HeaderVisible = !HeaderVisible">
+
+                            @((MarkupString)(HeaderVisible ? Icons.ChevronTop : Icons.ChevronBottom))
+                        </button>
+
+                        <!-- Clear Button -->
+                        <button type="button"
+                                class="inline-flex items-center justify-center
+                       w-7 h-7 rounded-md
+                       text-gray-600 dark:text-gray-300
+                       hover:bg-red-600 hover:text-white
+                       dark:hover:bg-red-500
+                       transition-colors duration-150"
+                                @onclick="Folder.State.ClearCalculation">
+
+                            &times;
+                        </button>
+
+                    </div>
+                </RightContent>
+
+            </MhdTabs>
+        </div>
+    }
+
+    <div class="dynamicComp flex-1" style="height:100%">
+        <DynamicComponent Type="Tab"></DynamicComponent>
+    </div>
+</div>
+
+@code {
+    // private bool HeaderVisible { get; set; } = true;
+
+    // المفتاح النشط في MhdTabs
+    private string ActiveKey
+    {
+        get => _activeKey;
+        set
+        {
+            if (_activeKey == value)
+                return;
+
+            _activeKey = value;
+            Tab = value switch
+            {
+                "netCal"       => typeof(NelCalculationPage),
+                "offers"       => typeof(OffersByResourceUI),
+                "hourlyPrice"  => typeof(HourlyPriceListUI),
+                "summary"      => typeof(SummarySheet),
+                "opportunity"  => typeof(OpportunityUI),
+                "chart"        => typeof(ChartCalcUI),
+                _              => typeof(NelCalculationPage)
+            };
+        }
+    }
+
+    private string _activeKey = "netCal";
+
+    // Type الخاص بالتبويب الحالي (DynamicComponent)
+    private Type Tab { get; set; } = typeof(NelCalculationPage);
+
+    // قائمة التابات المستخدمة في MhdTabs (نستخدم Text فقط – Content نتركه null)
+    private List<BlazorMHD.UI.Core.Navigation.TabItem> Tabs => new()
+    {
+        new ()
+        {
+            Key = "netCal",
+            Text = CalcResource.netCal
+        },
+        new ()
+        {
+            Key = "offers",
+            Text = ResourceLoc.offer
+        },
+        new ()
+        {
+            Key = "hourlyPrice",
+            Text = CalcResource.hourlyPriceList
+        },
+        new ()
+        {
+            Key = "summary",
+            Text = ResourceLoc.summarySheet
+        },
+        new ()
+        {
+            Key = "opportunity",
+            Text = ResourceLoc.opportunitiesRisks
+        },
+        new ()
+        {
+            Key = "chart",
+            Text = "Chart"
+        }
+    };
+}

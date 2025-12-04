@@ -1,0 +1,144 @@
+﻿@* Components/HorizontalSplitter.razor *@
+@using BlazorMHD.UI.Shared
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+<div @ref="_containerRef"
+     class="w-full h-full overflow-hidden select-none @Class"
+     style="--left-w:@($"{LeftWidth}px"); --splitter-w:@($"{SplitterThickness}px");">
+    <div class="h-full w-full flex items-stretch">
+        <!-- يسار -->
+        <div class="overflow-auto min-w-[1px]" style="width:var(--left-w);">
+            @LeftContent
+        </div>
+
+        <!-- الفاصل -->
+        <div class="relative"
+             @ref="_splitterRef"
+             style="width:var(--splitter-w);"
+             @onmousedown="StartResize"
+             title="@Localiztion.Instruction_DragToResize">
+            <div class="absolute inset-0 cursor-col-resize
+                        bg-transparent hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 transition">
+            </div>
+            <div class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2
+                        w-0.5 h-12 rounded bg-zinc-400 dark:bg-zinc-500 pointer-events-none">
+            </div>
+        </div>
+
+        <!-- يمين -->
+        <div class="flex-1 min-w-0 overflow-auto">
+            @RightContent
+        </div>
+    </div>
+</div>
+
+@code {
+    // ===== Parameters =====
+    [Parameter] public RenderFragment? LeftContent { get; set; }
+    [Parameter] public RenderFragment? RightContent { get; set; }
+
+    /// <summary>عرض الجزء الأيسر عند أول تحميل (إن لم تكن هناك قيمة محفوظة).</summary>
+    [Parameter] public double InitialLeftWidth { get; set; } = 360;
+
+    /// <summary>أقل عرض مسموح للجزء الأيسر.</summary>
+    [Parameter] public double MinLeftWidth { get; set; } = 180;
+
+    /// <summary>أقل عرض مسموح للجزء الأيمن.</summary>
+    [Parameter] public double MinRightWidth { get; set; } = 220;
+
+    /// <summary>أقصى عرض مسموح للجزء الأيسر (اختياري).</summary>
+    [Parameter] public double? MaxLeftWidth { get; set; } = null;
+
+    [Parameter] public int SplitterThickness { get; set; } = 6;
+
+    /// <summary>تحديث فوري أثناء السحب.</summary>
+    [Parameter] public bool LiveResize { get; set; } = true;
+
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>
+    /// مفتاح التخزين في localStorage.
+    /// إذا تُرك فارغًا، لن يتم حفظ أو استرجاع أي قيمة.
+    /// </summary>
+    [Parameter] public string? StorageKey { get; set; }
+
+    // ===== State =====
+    private double LeftWidth;
+    private ElementReference _containerRef;
+    private ElementReference _splitterRef;
+    private DotNetObjectReference<HorizontalSplitter>? _objRef;
+
+    // ===== Lifecycle =====
+
+    protected override void OnInitialized()
+    {
+        // تعيين القيمة الابتدائية (سيتم تعديلها من localStorage لاحقاً إن وُجدت)
+        LeftWidth = Math.Max(InitialLeftWidth, MinLeftWidth);
+    }
+
+    // ===== Resize Logic =====
+
+    private async Task StartResize(MouseEventArgs e)
+    {
+        var containerWidth = await JS.InvokeAsync<double>("resizableDiv.getWidth", _containerRef);
+        var maxLeftByContainer = Math.Max(
+            MinLeftWidth,
+            containerWidth - SplitterThickness - MinRightWidth
+        );
+
+        var effectiveMaxLeft = MaxLeftWidth.HasValue
+            ? Math.Min(MaxLeftWidth.Value, maxLeftByContainer)
+            : maxLeftByContainer;
+
+        // تأكد من بقاء القيمة الحالية ضمن الحدود
+        LeftWidth = Math.Clamp(LeftWidth, MinLeftWidth, effectiveMaxLeft);
+
+        _objRef ??= DotNetObjectReference.Create(this);
+
+        await JS.InvokeVoidAsync(
+            "resizableDiv.startHorizontalGhostDrag",
+            _containerRef,
+            _splitterRef,
+            _objRef,
+            new
+            {
+                startX = e.ClientX,
+                initialLeft = LeftWidth,
+                minLeft = MinLeftWidth,
+                maxLeft = effectiveMaxLeft,
+                splitterWidth = SplitterThickness,
+                live = LiveResize
+            }
+        );
+    }
+
+    [JSInvokable]
+    public async Task OnHorizontalDragEnd(double finalLeftWidth)
+    {
+        LeftWidth = finalLeftWidth; // تثبيت القيمة النهائية
+
+        if (!string.IsNullOrWhiteSpace(StorageKey))
+        {
+            try
+            {
+                await JS.InvokeVoidAsync(
+                    "localStorage.setItem",
+                    StorageKey,
+                    LeftWidth.ToString(CultureInfo.InvariantCulture)
+                );
+            }
+            catch
+            {
+                // تجاهل أي خطأ في التخزين
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    public void Dispose() => _objRef?.Dispose();
+}

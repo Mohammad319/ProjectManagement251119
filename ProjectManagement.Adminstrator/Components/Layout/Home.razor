@@ -1,0 +1,118 @@
+﻿@page "/"
+@using ProjectManagement.Adminstrator.Components.AppUser
+@using ProjectManagement.Adminstrator.Components.Folder
+@using ProjectManagement.Adminstrator.Components.Property.PropertyGroups
+@using ProjectManagement.Adminstrator.Components.Question
+@using ProjectManagement.Adminstrator.Components.TaskStatus
+@using ProjectManagement.Adminstrator.Components.TaskUI
+@using ProjectManagement.Adminstrator.Components.Units
+@rendermode InteractiveServer
+@attribute [Authorize]
+<style>
+    .mainContainer {
+    }
+
+    .flex-container {
+        display: flex;
+        height: calc(100vh - 37px);
+        overflow: auto;
+    }
+
+    .b {
+        flex-grow: 0;
+        flex-shrink: 0;
+        flex-basis: 3px;
+        background-color: lightgray;
+        cursor: ew-resize;
+        transition: background-color 1s,width 2s;
+    }
+
+        .b:hover {
+            background-color: darkgray;
+        }
+
+    .contentContainer {
+        overflow: auto;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+
+    <div class="w-full p-2 dark:bg-gray-900 overflow-hidden">
+        <div class="flex items-start">
+            <div class="flex flex-col w-56 space-y-2 pr-2">
+                <button type="button" class="@ButtonClasses(null)" @onclick="() => Component = null">
+                    @AppControll.index
+                </button>
+                <button type="button" class="@ButtonClasses(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">
+                    Folders
+                </button>
+                <button type="button" class="@ButtonClasses(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">
+                    @AppControll.appUsers
+                </button>
+
+                <button type="button" class="@ButtonClasses(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">
+                    @AppControll.tenant
+                </button>
+
+                <button type="button" class="@ButtonClasses(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">
+                    Logs
+                </button>
+                <button type="button" class="@ButtonClasses(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">
+                    Actions
+                </button>
+                <button type="button" class="@ButtonClasses(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">
+                Task & Qusation
+                </button>
+            @*    <button type="button" 
+                class="@ButtonClasses(typeof(TaskUI.TaskUser_Client.TaskList))"
+                    @onclick="() => Component = typeof(TaskUI.TaskUser_Client.TaskList)">
+                Tasks for users
+            </button>
+          <button type="button"
+                    class="@ButtonClasses(typeof(TaskList))"
+                    @onclick="() => Component = typeof(TaskList)">
+                Tasks for users
+            </button> *@
+@*             <button type="button" class="@ButtonClasses(typeof(TasksUserUI))" @onclick="() => Component = typeof(TasksUserUI)">
+                TasksUserUI
+            </button> *@
+            <button type="button" class="@ButtonClasses(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">
+                Units
+            </button>
+            <button type="button" class="@ButtonClasses(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">
+                Property
+            </button>
+            </div>
+
+            <div class="flex-1">
+                @if (Component != null)
+                {
+                    <DynamicComponent Type="Component" />
+                }
+                else
+                {
+                    <img src="Icons/BigLogo.png" class="w-full" />
+                }
+            </div>
+        </div>
+    </div>
+
+
+@code {
+    private string? currentUrl;
+
+    private string ButtonClasses(Type? cmp)
+    {
+        const string common = "text-left px-4 py-2 rounded-md transition-colors";
+        const string active = "bg-blue-600 text-white dark:bg-blue-500";
+        const string inactive = "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700";
+        return $"{common} {(Component == cmp ? active : inactive)}";
+    }
+    Type? Component;
+    private bool collapseNavMenu = true;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private bool IsDark;
+
+}
+

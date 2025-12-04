@@ -1,0 +1,33 @@
+﻿
+@using BlazorMHD.UI.Components.Data.Table
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Shared.DTO.ResourceType
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+<div class="@CssClasses.Layout.FlexItemsCenter p-1">
+    <button @onclick="() => UpdateForm(new ResourceSortModel())" class="@CssClasses.Btn.IconButton.Success">@((MarkupString)Icons.Plus)</button>
+    <button @onclick="async ()=>await Callback.InvokeAsync()" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.Back)</button>
+        </div>
+
+    @if (ResourceSorts != null)
+    {
+    <MhdTable TItem="ResourceSortModel" Items="ResourceSorts">
+        <MhdTableColumn Title="@string.Empty">
+            <Template Context="item">
+                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
+                        <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <button @onclick="() => UpdateForm(item)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
+                        <button @onclick="() => Remove(item)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                        </div>
+                    </AuthorizeView>
+            </Template>
+        </MhdTableColumn>
+        <MhdTableColumn Title="@CalcResource.name" ValueSelector="u => u.Name" Sortable="true" />
+        <MhdTableColumn Title="@CalcResource.cost" ValueSelector="u => u.Cost"></MhdTableColumn>
+        <MhdTableColumn Title="@CalcResource.baseCost" ValueSelector="u => u.BaseCost"></MhdTableColumn>
+
+        </MhdTable>
+    }

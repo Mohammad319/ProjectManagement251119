@@ -1,0 +1,255 @@
+﻿@using BlazorMHD.UI.Components.Navigation.Tabs
+@using Microsoft.AspNetCore.Components.Forms
+@using ProjectManagement.Client.Shared.SharedComponent.Contact
+@using ProjectManagement.Shared.Base.Project
+@using BlazorMHD.UI.Core.Navigation
+@using BlazorMHD.UI.Core.DesignSystem
+@using NavTabItem = BlazorMHD.UI.Core.Navigation.TabItem
+
+@inherits AppComponentBase
+
+@if (IsLoading)
+{
+    <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+}
+else if (ProjectUpdate is not null)
+{
+    <EditForm id="projectForm" class="@CssClasses.Modal.Body" Model="@ProjectUpdate"
+              OnValidSubmit="HandleSubmitAsync">
+
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-red-600 mb-2" />
+
+        <!-- التابات -->
+        <MhdTabs Items="@TabItems"
+                 Mode="MhdTabMode.Horizontal"
+                 Size="MhdSize.Sm"
+                 @bind-ActiveKey="ActiveKey" />
+
+        <!-- محتوى كل تبويب -->
+        @if (Part == 1)
+        {
+            <div class="@CssClasses.Grid.Col.MD3">
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.code</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Code" />
+                    <ValidationMessage For=@(() => ProjectUpdate.Code) />
+                </div>
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <label class="@CssClasses.Form.Label">@CalcResource.name</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Name" />
+                    <ValidationMessage For=@(() => ProjectUpdate.Name) />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.projectType</label>
+                    <InputSelect @bind-Value="ProjectUpdate.TypeId" class="@CssClasses.Input.Text">
+                        <option></option>
+                        @if (Config?.Types != null)
+                        {
+                            foreach (var t in Config.Types)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => ProjectUpdate.TypeId) />
+                </div>
+            </div>
+        }
+        else if (Part == 2)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.projectContract</label>
+                    <InputSelect @bind-Value="ProjectUpdate.ContractId" class="@CssClasses.Input.Text">
+                        <option></option>
+                        @if (Config?.Contracts != null)
+                        {
+                            foreach (var t in Config.Contracts)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.projectCompensation</label>
+                    <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="@CssClasses.Input.Text">
+                        <option></option>
+                        @if (Config?.Compensations != null)
+                        {
+                            foreach (var t in Config.Compensations)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => ProjectUpdate.CompensationId) />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.procurement</label>
+                    <InputSelect @bind-Value="ProjectUpdate.Procurement" class="@CssClasses.Input.Text">
+                        <option value="@Procurement.A">@Procurement.A</option>
+                        <option value="@Procurement.B">@Procurement.B</option>
+                    </InputSelect>
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.procurementMethods</label>
+                    <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="@CssClasses.Input.Text">
+                        <option></option>
+                        @if (Config?.Methods != null)
+                        {
+                            foreach (var t in Config.Methods)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        }
+        else if (Part == 3)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                @for (int i = 0; i < ProjectUpdate.Responsibles.Count; i++)
+                {
+                    <div>
+                        <label>@CalcResource.responsible</label>
+                        <InputText class="@CssClasses.Input.Text"
+                                   @bind-Value="@ProjectUpdate.Responsibles[i]" />
+                    </div>
+                }
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.inspector</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Inspector" />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Supervisor" />
+                </div>
+            </div>
+        }
+        else if (Part == 4)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                @if (Config?.Organisation != null)
+                {
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
+                        <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="@CssClasses.Input.Text">
+                            <option></option>
+                            @foreach (var t in Config.Organisation)
+                            {
+                                <option value="@t.Id">@t.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.developer</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Developer" />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceLoc.clientsProjectmanager</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.ClientsManager" />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceLoc.designer</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Designer" />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.overviewInfoProject</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.OverviewInfoProject" />
+                </div>
+            </div>
+        }
+        else if (Part == 5)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.startDate</label>
+                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.StartDate" />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.endDate</label>
+                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.EndDate" />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.tenderDeadline</label>
+                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.TenderDeadline" />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.tenderQA</label>
+                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.TenderQA" />
+                </div>
+            </div>
+        }
+        else if (Part == 6)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                <div class="@CssClasses.Form.CheckWrapper">
+                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@ProjectUpdate.IsVisible" />
+                    <label class="@CssClasses.Form.CheckLabel">@ResourceApp.visible</label>
+                </div>
+
+                <div class="@CssClasses.Grid.Span.MD3">
+                    <button type="button" class="@CssClasses.Btn.Outline.Success"
+                            @onclick="()=>ProjectUpdate.Notes.Add(string.Empty)">
+                        @AppLoc[LocalizerConst.New, ResourceLoc.description]
+                    </button>
+                </div>
+
+                @for (int i = 0; i < ProjectUpdate.Notes.Count; i++)
+                {
+                    var index = i;
+
+                    <div class="grid grid-cols-12 gap-2 items-start">
+                        <!-- Delete Button -->
+                        <button type="button" class="col-span-1 mt-2
+                                   inline-flex items-center justify-center rounded-md
+                                   px-2 py-1 border border-red-500 text-red-500 text-sm
+                                   hover:bg-red-500 hover:text-white transition"
+                                @onclick="() => ProjectUpdate.Notes.RemoveAt(index)">
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
+
+                        <!-- Note TextArea -->
+                        <div class="col-span-11">
+                            <textarea class="w-full rounded border border-gray-300 px-2 py-2 text-sm
+                                         min-h-28 resize-y
+                                         focus:outline-none focus:ring-2 focus:ring-blue-500
+                                         dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                      @bind="ProjectUpdate.Notes[index]">
+                        </textarea>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        }
+        else if (Part == 7)
+        {
+            <div class="@CssClasses.Grid.Span.MD4">
+                <ContactsUI Contacts="ProjectUpdate.Contacts" />
+            </div>
+        }
+    </EditForm>
+
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit"
+                class="@CssClasses.Btn.Outline.Success"
+                style="margin-right:5px;"
+                form="projectForm"
+                disabled="@IsLoading">
+            @ResourceApp.save
+        </button>
+
+        <button type="button"
+                class="@CssClasses.Btn.Outline.Secondary"
+                @onclick="CancelAsync">
+            @ResourceApp.cancel
+        </button>
+    </div>
+}

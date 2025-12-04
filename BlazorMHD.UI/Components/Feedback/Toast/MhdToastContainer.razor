@@ -1,0 +1,102 @@
+@using BlazorMHD.UI.Core.Services
+@inject ToastService Toasts
+
+<div class="fixed bottom-4 right-4 flex flex-col gap-2 pointer-events-none z-[9999]">
+    @foreach (var t in Toasts.GetToasts())
+    {
+        <div class="@GetToastClass(t)"
+             @onclick="() => Dismiss(t.Id)">
+
+            <div class="flex items-start gap-2.5">
+                <!-- النص -->
+                <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-[0.8rem] text-slate-900 dark:text-slate-50 truncate">
+                        @t.Title
+                    </div>
+                    <div class="mt-0.5 text-[0.72rem] leading-snug text-slate-600 dark:text-slate-300">
+                        @t.Message
+                    </div>
+                </div>
+                <button type="button"
+                        class="mt-0.5 text-[0.7rem] text-slate-400 dark:text-slate-500
+                                   hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+                        @onclick:stopPropagation="true"
+                        @onclick="() => Dismiss(t.Id)">
+                    ✕
+                </button>
+            </div>
+
+            <!-- شريط التقدم -->
+            <div class="@GetProgressBarClass(t)" style="@GetProgressStyle(t)"></div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Toasts.OnChange += OnToastsChange;
+    }
+
+    private void OnToastsChange() => InvokeAsync(StateHasChanged);
+
+    private void Dismiss(Guid id) => Toasts.Dismiss(id);
+
+    // ------------------------------
+    // Progress Bar (Built from ExpireAt)
+    // ------------------------------
+    private string GetProgressStyle(ToastModel toast)
+    {
+        var remaining = toast.ExpireAt - DateTimeOffset.UtcNow;
+        var ms = Math.Max(100, (int)remaining.TotalMilliseconds);
+        return $"animation-duration:{ms}ms;";
+    }
+
+    private string GetProgressBarClass(ToastModel toast)
+    {
+        var color = toast.State switch
+        {
+            MhdState.Success => "bg-emerald-500",
+            MhdState.Danger => "bg-red-500",
+            MhdState.Warning => "bg-amber-500",
+            MhdState.Info => "bg-sky-500",
+            MhdState.Primary => "bg-blue-500",
+            _ => "bg-slate-500"
+        };
+
+        return $"absolute bottom-0 left-0 h-0.5 {color} animate-toast-progress";
+    }
+
+    // ------------------------------
+    // Toast container styling
+    // ------------------------------
+    private string GetToastClass(ToastModel toast)
+    {
+        var stateAccent = toast.State switch
+        {
+            MhdState.Success => "border-l-4 border-l-emerald-500  dark:border-l-emerald-400",
+            MhdState.Danger => "border-l-4 border-l-red-500      dark:border-l-red-400",
+            MhdState.Warning => "border-l-4 border-l-amber-500    dark:border-l-amber-400",
+            MhdState.Info => "border-l-4 border-l-sky-500      dark:border-l-sky-400",
+            MhdState.Primary => "border-l-4 border-l-blue-500     dark:border-l-blue-400",
+            _ => "border-l-4 border-l-slate-400    dark:border-l-slate-500"
+        };
+
+        return string.Join(" ", new[]
+        {
+            "relative pointer-events-auto select-none",
+            "w-72 md:w-80 px-4 py-3",
+            "rounded-xl shadow-lg text-[0.78rem]",
+            "bg-white/95 dark:bg-slate-900/95 backdrop-blur-md",
+            "border border-slate-200/80 dark:border-slate-700/80",
+            stateAccent,
+            "overflow-hidden",
+            "animate-slide-in"
+        });
+    }
+
+    public void Dispose()
+    {
+        Toasts.OnChange -= OnToastsChange;
+    }
+}

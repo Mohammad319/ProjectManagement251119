@@ -1,0 +1,99 @@
+﻿@using ProjectImportHub.Entities
+@using ProjectImportHub.Infrastructure
+@inject IResourceFolderService IResourceFolderService
+@* ثبّت الأسماء: CsS = CssClasses الأساسية، NewCC = CssClassesV3 (للنصوص/الألواح) *@
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using ProjectImportHub.Services.Resource
+
+<EditForm Model="folder" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="@CsS.Text.Error" />
+
+    <!-- شبكة مرنة: عمود واحد على الشاشات الصغيرة، و ColumnsMd على md+ -->
+    <div class="@CsS.Grid.Make(mdCols: ColumnsMd, gap: 2)">
+
+        <!-- Name -->
+        <div>
+            <label class="@CsS.Form.Label">Name</label>
+            <InputText class="@CsS.Input.Text" @bind-Value="folder.DisplayName" />
+        </div>
+
+        <!-- Order -->
+        <div>
+            <label class="@CsS.Form.Label">Order</label>
+            <InputNumber class="@CsS.Input.Number" @bind-Value="folder.SortOrder" />
+        </div>
+
+        <!-- Is Visible -->
+        <div class="@CsS.Form.CheckWrapper">
+            <InputCheckbox class="@CsS.Input.Check" @bind-Value="folder.IsVisible" />
+            <span class="@CsS.Form.CheckLabel">Is Visible</span>
+        </div>
+
+        <!-- Note: يمتد كامل السطر -->
+        <div class="@CsS.Grid.ColSpans(("md", ColumnsMd))">
+            <label class="@CsS.Form.Label">Note</label>
+            <InputTextArea class="@CsS.Input.Text" @bind-Value="folder.Note" />
+        </div>
+
+        <!-- الأزرار: تمتد كامل السطر، ومصطفة يسار (بدّل لـ يمين بإضافة ml-auto) -->
+        <div class="@CsS.Grid.ColSpans(("md", ColumnsMd)) @CsS.Layout.FlexWrap">
+            <button type="submit" class="@CsS.Btn.Outline.Primary">💾 Save</button>
+            <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="Cancel">↩ Cancel</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    // باراميترات المكوّن
+    [Parameter] public int? FolderId { get; set; }
+    [Parameter] public ResourceFolderEntity? Form { get; set; }
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    // تحكم بعدد الحقول في السطر من شاشة md وما فوق
+    [Parameter] public int ColumnsMd { get; set; } = 2;
+
+    // نموذج التحرير
+    private ResourceFolderEntity folder = new() { DisplayName = "" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // لو أُرسل كائن Form (نسخ قيمته فقط حتى لا نعدل مرجع خارجي)
+        if (Form is not null)
+        {
+            folder = new ResourceFolderEntity
+            {
+                Id = Form.Id,
+                DisplayName = Form.DisplayName,
+                Note = Form.Note,
+                IsVisible = Form.IsVisible,
+                SortOrder = Form.SortOrder,
+                ParentFolderId = Form.ParentFolderId,
+            };
+        }
+
+        // لو أُرسل FolderId نحمل الموجود من قاعدة البيانات (يتجاوز Form إن وُجد)
+        if (FolderId.HasValue)
+        {
+            var existing = await IResourceFolderService.GetByIdAsync(FolderId.Value);
+            if (existing is not null)
+                folder = existing;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (folder.Id == 0)
+            await IResourceFolderService.AddAsync(folder);
+        else
+            IResourceFolderService.UpdateAsync(folder);
+
+        await Callback.InvokeAsync(true);
+    }
+
+    private async Task Cancel()
+    {
+        await Callback.InvokeAsync(false);
+    }
+}

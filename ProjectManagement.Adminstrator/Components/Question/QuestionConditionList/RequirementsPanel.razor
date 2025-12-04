@@ -1,0 +1,269 @@
+﻿@using System
+@using System.Collections.Generic
+@using System.Linq
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using Microsoft.AspNetCore.Components
+@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using ProjectImportHub.Entities.Questions.Conditions
+@using ProjectImportHub.Entities.Questions.Groups
+@using ProjectManagement.Shared.Helper.ProjectAppStorage
+
+@code {
+    [Parameter] public TaskConditionEntity Condition { get; set; } = null!;
+    [Parameter] public IEnumerable<OptionGroupEntity> ChoiceGroups { get; set; }// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
+    [Parameter] public IEnumerable<ResourceOptionGroupEntity> ResourceGroups { get; set; }
+    [Parameter] public IEnumerable<NumericInputEntity> NumericGroups { get; set; }
+
+    private IEnumerable<OptionItemEntity> GetLocalChoiceOptions(int groupId)
+        => ChoiceGroups.FirstOrDefault(g => g.Id == groupId)?.Options ?? Enumerable.Empty<OptionItemEntity>();
+    private IEnumerable<ResourceOptionItemEntity> GetResourceItems(int groupId)
+    => ResourceGroups.FirstOrDefault(g => g.Id == groupId)?.Items ?? Enumerable.Empty<ResourceOptionItemEntity>();
+    
+
+    private void AddChoiceReq() => Condition?.OptionRequirements.Add(new ConditionOptionRequirementEntity { QuestionConditionId = Condition.Id, SetKey = 1 });
+    private void RemoveChoiceReq(ConditionOptionRequirementEntity r) => Condition?.OptionRequirements.Remove(r);
+    private void AddResReq() => Condition?.ResourceRequirements.Add(new ConditionResourceRequirementEntity { QuestionConditionId = Condition.Id, SetKey = 1 });
+    private void RemoveResReq(ConditionResourceRequirementEntity r) => Condition?.ResourceRequirements.Remove(r);
+    private void AddNumReq() => Condition?.NumericRequirements.Add(new ConditionNumericRequirementEntity { QuestionConditionId = Condition.Id, SetKey = 1 });
+    private void RemoveNumReq(ConditionNumericRequirementEntity r) => Condition?.NumericRequirements.Remove(r);
+
+    private void OnChoiceGroupChanged(ConditionOptionRequirementEntity r, ChangeEventArgs e)
+    { if (int.TryParse(Convert.ToString(e.Value), out var id)) { r.OptionGroupId = id; r.OptionItemId = 0; } }
+    private void OnResGroupChanged(ConditionResourceRequirementEntity r, ChangeEventArgs e)
+    { 
+        if (int.TryParse(Convert.ToString(e.Value), out var id)) 
+        { r.ResourceOptionGroupId = id; r.ResourceOptionItemId = 0; }
+    }
+    private void OnNumericGroupChanged(ConditionNumericRequirementEntity r, ChangeEventArgs e)
+    { if (int.TryParse(Convert.ToString(e.Value), out var id)) r.NumericInputId = id; }
+
+    // --- Variable requirements helpers ---
+    private void AddVarReq()
+        => Condition?.VariableRequirements.Add(new ConditionVariableRequirementEntity
+        {
+            QuestionConditionId = Condition.Id,
+            SetKey = 1
+        });
+
+    private void RemoveVarReq(ConditionVariableRequirementEntity r)
+        => Condition?.VariableRequirements.Remove(r);
+
+
+    // تسمية لطيفة للعرض (اختياري)
+    private static string GetVarLabel(ParamName v) => v switch
+    {
+        ParamName.Thickness => "Thickness (t)",
+        ParamName.Width => "Width (w)",
+        ParamName.Length => "Length (l)",
+        ParamName.Density => "Density (ρ)",
+        _ => v.ToString()
+    };
+}
+<div class="">
+
+    <!-- Choice -->
+    <div class="@NewCC.Card.Panel">
+        <div class="@CsS.Layout.FlexItemsCenter">
+            <h5 class="@NewCC.Text.H5">Choice Requirements</h5>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddChoiceReq">Add</button>
+        </div>
+
+        @if (Condition?.OptionRequirements == null || Condition.OptionRequirements.Count == 0)
+        {
+            <div class="@CsS.Text.Secondary">None</div>
+        }
+        else
+        {
+            @foreach (var r in Condition.OptionRequirements)
+            {
+                <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
+                    <div class="@CsS.Grid.Span.MD4">
+                        <label class="@CsS.Form.Label">Group</label>
+                        <select class="@CsS.Input.Select" value="@r.OptionGroupId" @onchange="e => OnChoiceGroupChanged(r, e)">
+                            <option value="0">-- select --</option>
+                            @foreach (var g in ChoiceGroups)
+                            {
+                                <option value="@g.Id">@g.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="@CsS.Grid.Span.MD5">
+                        <label class="@CsS.Form.Label">Option</label>
+                        <select class="@CsS.Input.Select" @bind="r.OptionItemId">
+                            <option value="0">-- select --</option>
+                            @foreach (var opt in GetLocalChoiceOptions(r.OptionGroupId))
+                            {
+                                <option value="@opt.Id">@opt.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="@CsS.Grid.Span.MD2">
+                        <label class="@CsS.Form.Label">SetKey</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.SetKey" />
+                    </div>
+
+                    <div class="@CsS.Util.PlaceSelfEnd">
+                        <button class="@CsS.Btn.Outline.Danger" title="Remove" @onclick="() => RemoveChoiceReq(r)">x</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Resource -->
+    <div class="@NewCC.Card.Panel">
+        <div class="@CsS.Layout.FlexItemsCenter">
+            <h5 class="@NewCC.Text.H5">Resource Requirements</h5>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddResReq">Add</button>
+        </div>
+
+        @if (Condition?.ResourceRequirements == null || Condition.ResourceRequirements.Count == 0)
+        {
+            <div class="@CsS.Text.Secondary">None</div>
+        }
+        else
+        {
+            @foreach (var r in Condition.ResourceRequirements)
+            {
+                <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)">
+                    <div class="@CsS.Grid.Span.MD4">
+                        <label class="@CsS.Form.Label">Group</label>
+                        <select class="@CsS.Input.Select" value="@r.ResourceOptionGroupId" @onchange="e => OnResGroupChanged(r, e)">
+                            <option value="0">-- select --</option>
+                            @foreach (var g in ResourceGroups)
+                            {
+                                <option value="@g.Id">@g.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="@CsS.Grid.Span.MD5">
+                        <label class="@CsS.Form.Label">Item</label>
+                        <select class="@CsS.Input.Select" @bind="r.ResourceOptionItemId">
+                            <option value="0">-- select --</option>
+                            @foreach (var it in GetResourceItems(r.ResourceOptionGroupId))
+                            {
+                                <option value="@it.Id">@it?.Resource?.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="@CsS.Grid.Span.MD2">
+                        <label class="@CsS.Form.Label">SetKey</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.SetKey" />
+                    </div>
+
+                    <div class="@CsS.Util.PlaceSelfEnd">
+                        <button class="@CsS.Btn.Outline.Danger" title="Remove" @onclick="() => RemoveResReq(r)">x</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Numeric -->
+    <div class="@NewCC.Card.Panel">
+        <div class="@CsS.Layout.FlexItemsCenter">
+            <h5 class="@NewCC.Text.H5">Numeric Requirements</h5>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddNumReq">Add</button>
+        </div>
+
+        @if (Condition?.NumericRequirements == null || Condition.NumericRequirements.Count == 0)
+        {
+            <div class="@CsS.Text.Secondary">None</div>
+        }
+        else
+        {
+            @foreach (var r in Condition.NumericRequirements)
+            {
+                <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom(Size.S2)">
+                    <div class="@CsS.Grid.Span.MD2">
+                        <label class="@CsS.Form.Label">Group</label>
+                        <select class="@CsS.Input.Select" value="@r.NumericInputId" @onchange="e => OnNumericGroupChanged(r, e)">
+                            <option value="0">-- select --</option>
+                            @foreach (var g in NumericGroups)
+                            {
+                                <option value="@g.Id">@g.DisplayName (@g.Id)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="@CsS.Form.Label">Min</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.MinAllowedValue" />
+                    </div>
+
+                    <div>
+                        <label class="@CsS.Form.Label">Max</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.MaxAllowedValue" />
+                    </div>
+
+                    <div>
+                        <label class="@CsS.Form.Label">SetKey</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.SetKey" />
+                    </div>
+
+                    <div class="@CsS.Util.PlaceSelfEnd">
+                        <button class="@CsS.Btn.Outline.Danger" title="Remove" @onclick="() => RemoveNumReq(r)">x</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Variable -->
+    <div class="@NewCC.Card.Panel">
+        <div class="@CsS.Layout.FlexItemsCenter">
+            <h5 class="@NewCC.Text.H5">Variable Requirements</h5>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddVarReq">Add</button>
+        </div>
+
+        @if (Condition?.VariableRequirements == null || Condition.VariableRequirements.Count == 0)
+        {
+            <div class="@CsS.Text.Secondary">None</div>
+        }
+        else
+        {
+            @foreach (var r in Condition.VariableRequirements)
+            {
+                <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom(Size.S2)" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
+                    <div class="@CsS.Grid.Span.MD2">
+                        <label class="@CsS.Form.Label">Variable</label>
+                        <select class="@CsS.Input.Select" value="@r.VariableName"
+                                @onchange="e => r.VariableName = Convert.ToString(e.Value) ?? string.Empty">
+                            <option value="">-- select --</option>
+                            <option value="Thickness">Thickness</option>
+                            <option value="Width">Width</option>
+                            <option value="Length">Length</option>
+                            <option value="quantity">Quantity</option>
+                            <option value="cost">Cost</option>
+                            <option value="basecost">@CalcResource.baseCost</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="@CsS.Form.Label">Min</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.MinAllowedValue" />
+                    </div>
+
+                    <div>
+                        <label class="@CsS.Form.Label">Max</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.MaxAllowedValue" />
+                    </div>
+
+                    <div>
+                        <label>SetKey</label>
+                        <input type="number" class="@CsS.Input.Number" @bind="r.SetKey" />
+                    </div>
+
+                    <div class="@CsS.Util.PlaceSelfEnd">
+                        <button class="@CsS.Btn.Outline.Danger" title="Remove" @onclick="() => RemoveVarReq(r)">x</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+</div>

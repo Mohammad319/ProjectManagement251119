@@ -1,0 +1,307 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.Model.Application
+@using ProjectManagement.Client.Shared.ViewModel
+@using ProjectManagement.Shared
+@using ProjectManagement.Shared.Base.Application
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@inject ICommandDispatcher MicroBus
+@inject IStringLocalizer<AppFormatResource> FormatResource
+
+<nav>
+    <div class="flex space-x-2 border-b border-gray-300" role="tablist">
+        <button type="button"
+                class="px-4 py-2 font-medium text-sm rounded-t-md focus:outline-none transition-all duration-200
+                       @(PartPage == 0 ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-600 hover:text-blue-500")"
+                @onclick="() => PartPage = 0">
+            @ResourceApp.attribute
+        </button>
+        <button type="button"
+                class="px-4 py-2 font-medium text-sm rounded-t-md focus:outline-none transition-all duration-200
+                       @(PartPage == 1 ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-600 hover:text-blue-500")"
+                @onclick="() => PartPage = 1">
+            @ResourceApp.text
+        </button>
+        <button type="button"
+                class="px-4 py-2 font-medium text-sm rounded-t-md focus:outline-none transition-all duration-200
+                       @(PartPage == 3 ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-600 hover:text-blue-500")"
+                @onclick="() => PartPage = 3">
+            @PMAppFormatResource.background
+        </button>
+    </div>
+</nav>
+
+<div style="padding-top:20px;">
+    <div>
+        <label style="@StyleStr">Test</label>
+    </div>
+</div>
+<EditForm Model="@AttributeUpdate" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <DataAnnotationsValidator />
+
+        @if (PartPage == 0)
+        {
+    <div class="@CssClasses.Layout.FlexItemsCenter">
+
+            <div>
+                <label class="@CssClasses.Form.Label">@ResourceApp.attributeType: </label>
+                <InputSelect @bind-Value="@AttributeUpdate.AttributeType" class="@CssClasses.Input.Select">
+                    @foreach (var level in Enum.GetValues(typeof(AttributeType)))
+                    {
+                        <option value="@level">@level</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For=@(() => AttributeUpdate.AttributeType) />
+            </div>
+            
+        <div>
+            <label class="@CssClasses.Form.Label">@ResourceApp.order</label>
+            <InputNumber @bind-Value="@AttributeUpdate.Order" class="@CssClasses.Input.Text"></InputNumber>
+        </div>
+                <div class="@CssClasses.Form.CheckWrapperM">
+                    <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@AttributeUpdate.Required" />
+                    <label class="@CssClasses.Form.CheckLabel">@ResourceApp.required</label>
+                </div>
+                   </div>
+        <div class="@CssClasses.Layout.FlexItemsCenter">
+            @if (AttributeUpdate.AttributeType == AttributeType.Select)
+                {
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.newItem</label>
+                        <input type="text" class="@CssClasses.Input.Text" @bind-value="@SelectV">
+                    </div>
+
+                    <div>
+                        <div class="">
+                        <span role="button" @onclick="() => { ValidSelectVM.Values.Add(SelectV); SelectV = string.Empty; }">@((MarkupString)Icons.Plus)</span>
+                        </div>
+                    </div>
+                    <ul>
+                @if (ShowSelect) for (var i = 0; i < ValidSelectVM.Values.Count; i++)
+                    {
+                        <li>
+                            <span style="visibility:@(ValidSelectVM.DefaultIndex != i?"hidden":"visible")">
+                                @Icons.List
+                            </span>
+                            <button class="btn" @onclick="() => RemoveSelect(i)">@((MarkupString)Icons.DeleteSVG)</button>
+                            @ValidSelectVM.Values[i]
+                        </li>
+                    }
+                    </ul>
+                }
+                else if (AttributeUpdate.AttributeType == AttributeType.Text || AttributeUpdate.AttributeType == AttributeType.TextArea)
+                {
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <div >
+                        <label class="@CssClasses.Form.Label">@ResourceApp.minValue</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidTextVM.Min">
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.maxValue</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidTextVM.Max">
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
+                        <input type="text" class="@CssClasses.Input.Text" @bind="@ValidTextVM.Default">
+                    </div>
+                </div>
+                }
+                else if (AttributeUpdate.AttributeType == AttributeType.Int || AttributeUpdate.AttributeType == AttributeType.Double)
+                {
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.minValue</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidNumberVM.Min">
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.maxValue</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidNumberVM.Max">
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidNumberVM.Default">
+                    </div>
+                </div>
+                }
+                else if (AttributeUpdate.AttributeType == AttributeType.Bool)
+                {
+                    <div>
+                    <div class="@CssClasses.Form.Equals">
+                            <input class="@CssClasses.Input.Check" type="checkbox" @bind="@ValidBoolVM.Default" />
+                            <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
+                        </div>
+                    </div>
+                }
+                else if (AttributeUpdate.AttributeType == AttributeType.DateTime || AttributeUpdate.AttributeType == AttributeType.Date
+                || AttributeUpdate.AttributeType == AttributeType.Time)
+                {
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.minValue</label>
+                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="@CssClasses.Input.Text" @bind="@ValidDateVM.Min">
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.maxValue</label>
+                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="@CssClasses.Input.Text" @bind="@ValidDateVM.Max">
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
+                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="@CssClasses.Input.Text" @bind="@ValidDateVM.Default">
+                    </div>
+                </div>
+                }
+            </div>
+
+        }
+        @if (PartPage == 1)
+        {
+        <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <div>
+            <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
+            <input type="color"  class="@CssClasses.Input.Color" @bind="@Style.Color"
+             @bind:after="Refresh"/>
+        </div>
+            @if (AttributeUpdate.AttributeType != AttributeType.Bool)
+            {
+                <div>
+                    <label class="@CssClasses.Form.Label">@PMAppFormatResource.fontWeight: </label>
+                    <select @bind="@Style.FontWeight" class="@CssClasses.Input.Text" @bind:after="Refresh">
+                        <option value=""></option>
+                        <option value="bold">@PMAppFormatResource.bold </option>
+                        <option value="normal">@PMAppFormatResource.normal </option>
+                        <option value="bolder">@AppFormatResource.bolder </option>
+                    </select>
+                    <ValidationMessage For=@(() => Style.FontWeight) />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@PMAppFormatResource.alignItems: </label>
+                <select @bind="@Style.TextAlign" class="@CssClasses.Input.Text" @bind:after="Refresh">
+                        <option value=""></option>
+                        <option value="center">@PMAppFormatResource.center </option>
+                        <option value="right">@PMAppFormatResource.right </option>
+                        <option value="left">@ResourceApp.left </option>
+                    </select>
+                    <ValidationMessage For=@(() => Style.TextAlign) />
+                </div>
+                <div>
+                    <label class="@CssClasses.Form.Label">@PMAppFormatResource.FontSize:</label>
+                    <input type="number" class="@CssClasses.Input.Text" @bind="@Style.FontSize" @bind:after="Refresh" />
+                    <ValidationMessage For=@(() => Style.FontSize) />
+                </div>
+            }
+            <div>
+                <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingTop:</label>
+                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.PaddingTop" @bind:after="Refresh" />
+                <ValidationMessage For=@(() => Style.PaddingTop) />
+            </div>   </div>
+        }
+        else if (PartPage == 3)
+        {
+                        <div class="@CssClasses.Layout.FlexItemsCenter">
+            <div>
+                <label class="@CssClasses.Form.Label">@PMAppFormatResource.marginLeft:</label>
+                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.MarginLeft" @bind:after="Refresh" />
+                <ValidationMessage For=@(() => Style.MarginLeft) />
+            </div>
+        <div>
+                <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
+                <input type="color" class="@CssClasses.Input.Color" @bind:after="Refresh" @bind="@Style.BackgroundColor" />
+        </div>
+        <div>
+                <label class="@CssClasses.Form.Label">@PMAppFormatResource.width:</label>
+                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.Width" @bind:after="Refresh" />
+            <ValidationMessage For=@(() => Style.Width) />
+        </div>
+        <div>
+                <label class="@CssClasses.Form.Label">@ResourceApp.height:</label>
+                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.Height" @bind:after="Refresh" />
+
+            <ValidationMessage For=@(() => Style.Height) />
+        </div>
+        </div>
+
+        }
+
+ 
+    <div>
+        <button type="submit" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success" style="margin-right:5px;">@ResourceApp.save</button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
+    </div>
+</EditForm>
+@code {
+    void Refresh()
+    {
+        StyleStr = Style.GetString();
+    }
+    int PartPage = 0;
+    [Parameter] public AttributeBase Attribute { get; set; } = new();
+    AttributeBase AttributeUpdate { get; set; } = new();
+    StyleVM Style { get; set; } = new StyleVM();
+    string StyleStr = "";
+    [Parameter] public EventCallback<AttributeBase> Callback { get; set; }
+    bool IsLoading = false;
+    ValidSelectVM ValidSelectVM = new ValidSelectVM();
+    string SelectV;
+    ValidTextVM ValidTextVM = new ValidTextVM();
+    ValidNumberVM ValidNumberVM = new ValidNumberVM();
+    ValidBoolVM ValidBoolVM = new ValidBoolVM();
+    ValidDateVM ValidDateVM = new ValidDateVM();
+    protected override void OnInitialized()
+    {
+            Style.Set(Attribute.Style);
+        StyleStr = Attribute.Style;
+        PropertyCopier.CopyPropertiesTo(Attribute, AttributeUpdate);
+        if (AttributeUpdate.ID != Guid.Empty)
+        {
+            PartPage = 1;
+            if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Int || AttributeUpdate.AttributeType == AttributeType.Double))
+                ValidNumberVM = System.Text.Json.JsonSerializer.Deserialize<ValidNumberVM>(AttributeUpdate.Validation);
+            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Text || AttributeUpdate.AttributeType == AttributeType.TextArea))
+                ValidTextVM = System.Text.Json.JsonSerializer.Deserialize<ValidTextVM>(AttributeUpdate.Validation);
+            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Select))
+                ValidSelectVM = System.Text.Json.JsonSerializer.Deserialize<ValidSelectVM>(AttributeUpdate.Validation);
+            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Bool))
+                ValidBoolVM = System.Text.Json.JsonSerializer.Deserialize<ValidBoolVM>(AttributeUpdate.Validation);
+            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.DateTime 
+            || AttributeUpdate.AttributeType == AttributeType.Date || AttributeUpdate.AttributeType == AttributeType.Time))
+                ValidDateVM = System.Text.Json.JsonSerializer.Deserialize<ValidDateVM>(AttributeUpdate.Validation);
+
+        }
+        else PartPage = 0;
+    }
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        AttributeUpdate.Style = System.Text.Json.JsonSerializer.Serialize(Style);
+        AttributeUpdate.Style = Style.GetString();
+
+        if (AttributeUpdate.AttributeType == AttributeType.Select)
+        {
+            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidSelectVM);
+            string SelectV = string.Empty;
+        }
+        else if (AttributeUpdate.AttributeType == AttributeType.Text || AttributeUpdate.AttributeType == AttributeType.TextArea)
+            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidTextVM);
+
+        else if (AttributeUpdate.AttributeType == AttributeType.Int || AttributeUpdate.AttributeType == AttributeType.Double)
+            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidNumberVM);
+
+        else if (AttributeUpdate.AttributeType == AttributeType.Bool)
+            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidBoolVM);
+
+        else if (AttributeUpdate.AttributeType == AttributeType.DateTime || AttributeUpdate.AttributeType == AttributeType.Date
+        || AttributeUpdate.AttributeType == AttributeType.Time)
+            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidDateVM);
+
+        await Callback.InvokeAsync(AttributeUpdate);
+    }
+
+    bool ShowSelect = true;
+    async Task RemoveSelect(int i)
+    {
+        ShowSelect = false;
+        await Task.Delay(1);
+        ValidSelectVM.Values.RemoveAt(i - 1);
+        ShowSelect = true;
+    }
+}

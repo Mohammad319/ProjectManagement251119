@@ -1,0 +1,138 @@
+﻿@using Application.Feature.Calculation.Storage.Commands
+@using Application.Feature.Calculation.Storage.Queries
+@using Application.Interfaces.Context
+@using Microsoft.EntityFrameworkCore
+@using ProjectManagement.Client.Pages.Project.Storage.Row
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Project;
+@using ProjectManagement.Shared.Enums
+@using System.Text.Json
+@inherits AppComponentBase
+@inject ICommandDispatcher MicroBus
+@inject  IShardingSingleDbContext _context
+<div class="@CssClasses.Layout.FlexItemsCenter pb-1">
+    <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            @onchange="(e) => GetAuthorityStorage(e)">
+        <option value="@(AuthorityStorage._private)" selected>@ResourceApp._private</option>
+        <option value="@(AuthorityStorage.department)">@ResourceApp.department</option>
+        <option value="@(AuthorityStorage._public)">@ResourceApp._public</option>
+    </select>
+
+    <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            @onchange="(e) => GetStorageSort(e)">
+        @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
+        {
+            <option value="@level">@ResourceLocalize.GetStorageSort(level)</option>
+        }
+    </select>
+
+    <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            @onchange="StorageTypeSet">
+        <option value="@(CalculationItemType.task)">@ResourceLoc.task</option>
+        <option value="@(CalculationItemType.resource)">@ResourceLoc.resource</option>
+    </select>
+
+    @if (BtnImportIsVisible)
+    {
+        <button class="@CssClasses.Btn.IconButton.Primary"
+                @onclick="async () => await GetAsync()">
+            @((MarkupString)Icons.ImportFromCloud)
+        </button>
+    }
+</div>
+
+
+<table class="@CssClasses.Table.Tab">
+    <HeaderStorageUI></HeaderStorageUI>
+    <tbody class="@CssClasses.Table.TBody">
+        @if (Post.Type == CalculationItemType.task && Tasks != null) foreach (var Storage in Tasks)
+            {
+                <TaskStorage Task="Storage.StorageValue" WithContent="true">
+                    <span role="button" @onclick="() => Remove(Storage.Id, Storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
+                </TaskStorage>
+            }
+        @if (Post.Type == CalculationItemType.resource && Resources != null) foreach (var Storage in Resources)
+            {
+                <ResourcesStorage Resource="Storage.StorageValue">
+                    <span role="button" @onclick="() => Remove(Storage.Id, Storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
+                </ResourcesStorage>
+            }
+    </tbody>
+</table>
+
+@code {
+        bool BtnImportIsVisible = true;
+        void Remove(int id, string name)  => MHD.DeleteMessage(name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(id)));
+        async Task ConfirmRemoveAsync(int id)
+    {
+        bool result = await MicroBus.Send(new DeleteStorageCommand(id));
+        if (result)
+        {
+            if (Post.Type == CalculationItemType.task)
+                Tasks.RemoveAll(x => x.Id == id);
+            else if (Post.Type == CalculationItemType.resource) Resources.RemoveAll(x => x.Id == id);
+            StateHasChanged();
+        }
+        MHD.Notifications(ToastType.Delete, result);
+    }
+    List<StorageDTO<TaskPostDTO>>? Tasks;
+    List<StorageDTO<ResourcePostDTO>>? Resources;
+    GetFilterDTO Post = new GetFilterDTO();
+
+    async Task StorageTypeSet(ChangeEventArgs e)
+    {
+        Reset();
+        Post.Type = (CalculationItemType)Enum.Parse(typeof(CalculationItemType), e.Value.ToString());
+        await GetAsync();
+    }
+    void Reset(){
+        Resources = null;
+        Tasks = null;
+    }
+    async Task GetAsync()
+    {
+        BtnImportIsVisible = false;
+        var data = await _context.Storage.Where(x =>
+        x.StorageType == Post.Type &&
+        x.StorageLevel == Post.AuthoritySelected &&
+        x.StorageSort == Post.SortSelected).ToListAsync();
+
+        await MicroBus.Send(new GetStorageQuery(Post.Type, Post.AuthoritySelected, Post.SortSelected));
+        if (Post.Type == CalculationItemType.task)
+        {
+            Tasks = data.Select(x => new StorageDTO<TaskPostDTO>
+            {
+                Id = x.Id,
+                StorageValue = JsonSerializer.Deserialize<TaskPostDTO>(x.StorageValue),
+                StorageLevel = x.StorageLevel,
+                StorageSort = x.StorageSort,
+                StorageType = x.StorageType
+            }).ToList();
+        }
+
+        else if (Post.Type == CalculationItemType.resource)
+        {
+            Resources = data.Select(x => new StorageDTO<ResourcePostDTO>
+            {
+                Id = x.Id,
+                StorageValue = JsonSerializer.Deserialize<ResourcePostDTO>(x.StorageValue),
+                StorageLevel = x.StorageLevel,
+                StorageSort = x.StorageSort,
+                StorageType = x.StorageType
+            }).ToList();
+        }
+    }
+
+    async Task GetStorageSort(ChangeEventArgs e)
+    {
+        Reset();
+        Post.SortSelected = (StorageSort)Enum.Parse(typeof(StorageSort), e.Value.ToString());
+        await GetAsync();
+    }
+    async Task GetAuthorityStorage(ChangeEventArgs e)
+    {
+        Reset();
+        Post.AuthoritySelected = (AuthorityStorage)Enum.Parse(typeof(AuthorityStorage), e.Value.ToString());
+        await GetAsync();
+    }
+}

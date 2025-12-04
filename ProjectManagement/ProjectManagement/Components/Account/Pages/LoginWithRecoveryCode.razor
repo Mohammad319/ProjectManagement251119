@@ -1,0 +1,108 @@
+﻿@page "/Account/LoginWithRecoveryCode"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<LoginWithRecoveryCode> Logger
+
+<PageTitle>Recovery code verification</PageTitle>
+<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recovery code verification</h1>
+<hr class="my-3 border-gray-300 dark:border-gray-700" />
+
+<StatusMessage Message="@message" />
+
+<p class="mb-4 text-gray-700 dark:text-gray-300">
+    You have requested to log in with a recovery code. This login will not be remembered until you provide
+    an authenticator app code at log in or disable 2FA and log in again.
+</p>
+
+<div class="grid grid-cols-1">
+    <div class="max-w-md">
+        <EditForm Model="Input" FormName="login-with-recovery-code" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-5">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+
+            <!-- Recovery Code (floating label) -->
+            <div class="relative">
+                <InputText @bind-Value="Input.RecoveryCode"
+                           id="Input.RecoveryCode"
+                           autocomplete="one-time-code"
+                           placeholder=" "
+                           class="peer block w-full rounded-md border border-gray-300 bg-white px-3 pt-6 pb-2 text-gray-900 shadow-sm
+                 placeholder-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
+                 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
+                <label for="Input.RecoveryCode"
+                       class="pointer-events-none absolute left-3 top-2 text-sm text-gray-500 transition-all
+                 peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
+                 peer-focus:top-2 peer-focus:text-sm
+                 dark:text-gray-400">
+                    Recovery Code
+                </label>
+                <ValidationMessage For="() => Input.RecoveryCode" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
+            </div>
+
+            <button type="submit"
+                    class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
+               transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
+               dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
+                Log in
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private string? message;
+    private ApplicationUser user = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+
+        // Ensure the user has gone through the username & password screen first
+        user = await SignInManager.GetTwoFactorAuthenticationUserAsync() ??
+            throw new InvalidOperationException("Unable to load two-factor authentication user.");
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var recoveryCode = Input.RecoveryCode.Replace(" ", string.Empty);
+
+        var result = await SignInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
+
+        var userId = await UserManager.GetUserIdAsync(user);
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User with ID '{UserId}' logged in with a recovery code.", userId);
+            RedirectManager.RedirectTo(ReturnUrl);
+        }
+        else if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else
+        {
+            Logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", userId);
+            message = "Error: Invalid recovery code entered.";
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [DataType(DataType.Text)]
+        [Display(Name = "Recovery Code")]
+        public string RecoveryCode { get; set; } = "";
+    }
+}

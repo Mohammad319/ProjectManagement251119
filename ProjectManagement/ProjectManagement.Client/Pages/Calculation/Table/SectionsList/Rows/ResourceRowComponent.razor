@@ -1,0 +1,51 @@
+﻿@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@inherits AppComponentBase
+
+<tr @onclick="Click" @oncontextmenu="Context" @oncontextmenu:preventDefault
+    style="@Resource.Style(Template.NetColor[6], Resource.Active)">
+    <td>
+    </td>
+    @foreach (int i in Template.NetOrder)
+    {
+        @Colmuns[i].ResRender(Resource)
+    }
+</tr>
+
+@if (Resource.Data.UpperNote != null && CalcService.ShowComments)
+{
+    @Note(Resource.Data.UpperNote, 3, Template.NetOrder.Count)
+}
+
+@code {
+    [Parameter] public ResourceListMVVM Resource { get; set; } = default!;
+    [Parameter] public int Left { get; set; } = 0;
+    [Parameter] public List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = default!;
+
+    void Click() =>
+        TableRenderHelpers.HandleItemSelected(Resource.Id, Resource.Quantity, CalculationItemType.resource);
+
+    protected override void OnInitialized()
+    {
+        Resource.OfferClick = async () => await UoWService.Resource.HandleOfferAsync(Resource);
+    }
+
+    async Task Context()
+    {
+        int tasid = Calc.Tasks.FirstOrDefault(t => t.Resources.Any(r => r.Id == Resource.Id))?.Id ?? 0;
+        await UoWService.Resource.Context(Resource, tasid);
+    }
+
+    public static RenderFragment Note(List<string> notes, int col1, int col2) => __builder =>
+    {
+        foreach (var note in notes)
+        {
+            <tr class="netNote">
+                <td class="NettdDiv  bg-white dark:bg-black" colspan="@col1" style="width:@(TemplateConst.Col0)px;"></td>
+                <td colspan="@col2">
+                    @note
+                </td>
+            </tr>
+        }
+    };
+}

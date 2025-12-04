@@ -1,0 +1,223 @@
+﻿@using AuthPermissions.Entity
+@using Domain.Repository.AuthPermissions
+@using Microsoft.EntityFrameworkCore
+@using ProjectManagement.Adminstrator.Services.Users
+@using ProjectManagement.Client.Adminstrator.Services.MHDBlazor
+@using ProjectManagement.Shared.DTO.Tenant
+@using ProjectManagement.Shared.DTO.Tenant.Logs
+@attribute [Authorize(Roles = PMRolesConst.APP.Users)]
+@inherits AppComponentBase
+@inject ApplicationDbContext context
+@inject IUsersService TenantRepo
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+
+<EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
+    <!-- شبكة: 5 أعمدة من md+ مع gap=1 -->
+    <div class="@CsS.Grid.Make(mdCols: 5, gap: 1)">
+
+        <!-- Date 1 -->
+        <div class="@CsS.Form.Field">
+            <label class="@CsS.Form.Label">@ResourceApp.date 1</label>
+            <InputDate class="@CsS.Input.Date" @bind-Value="Filter.Date1" />
+        </div>
+
+        <!-- Date 2 -->
+        <div class="@CsS.Form.Field">
+            <label class="@CsS.Form.Label">@ResourceApp.date 2</label>
+            <InputDate class="@CsS.Input.Date" @bind-Value="Filter.Date2" />
+        </div>
+
+        <!-- Tenant -->
+        <div class="@CsS.Form.Field">
+            <label class="@CsS.Form.Label">@AppControll.tenant</label>
+            <InputSelect class="@CsS.Input.Select" @bind-Value="Filter.TenantID">
+                <option></option>
+                @if (Tenants is not null)
+                {
+                    foreach (var tenant in Tenants)
+                    {
+                        <option value="@tenant.Id">@tenant.Name</option>
+                    }
+                }
+            </InputSelect>
+        </div>
+
+        <!-- Level -->
+        <div class="@CsS.Form.Field">
+            <label class="@CsS.Form.Label">Level</label>
+            <InputSelect class="@CsS.Input.Select" @bind-Value="Filter.Level">
+                <option></option>
+                <option value="Debug">Debug</option>
+                <option value="Information">Information</option>
+                <option value="Warning">Warning</option>
+                <option value="Error">Error</option>
+                <option value="Critical">Critical</option>
+            </InputSelect>
+        </div>
+
+        <!-- Tools -->
+        <div>
+            <label class="@CC.Text.LabelXs">@AppControll.Delete_older_from_Month_Day</label>
+            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Y(Size.S1)">
+                <input type="number" placeholder="MM" class="@CsS.Input.Text" @bind="month" />
+                <input type="number" placeholder="DD" class="@CsS.Input.Text @CsS.Spacing.M.Left(Size.S1)" @bind="day" />
+
+                <div class="@CsS.Layout.Inline @CsS.Spacing.M.Left(Size.S2)">
+                    <button type="button"
+                            class="@CsS.Btn.Outline.Danger"
+                            title="Delete older"
+                            @onclick="DeleteAsync"
+                            disabled="@IsLoading">
+                        @Icons.Delete
+                    </button>
+
+                    <button type="submit"
+                            class="@CsS.Btn.Outline.Secondary"
+                            form="versionForm"
+                            disabled="@IsLoading">
+                        @ResourceApp.send
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</EditForm>
+
+<!-- جدول ضمن بطاقة -->
+<div class="@CsS.Spacing.M.Top(Size.S2) @CC.Card.Panel overflow-hidden">
+    <div class="overflow-x-auto min-w-0">
+        <table class="table-fixed w-full text-sm">
+            <!-- عدّل النسب هنا عند الحاجة -->
+            <colgroup>
+                <col class="w-[222px]" />   @* TimeStamp/Level ثابت *@
+                <col class="w-1/3" />       @* Message *@
+                <col class="w-2/3" />       @* Properties *@
+            </colgroup>
+
+            <thead class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                <tr>
+                    <th class="@CsS.Table.TH text-start">TimeStamp / Level</th>
+                    <th class="@CsS.Table.TH text-start">Message</th>
+                    <th class="@CsS.Table.TH text-start">Properties</th>
+                </tr>
+            </thead>
+
+            <tbody class="@CsS.Table.TBody">
+                @if (IsLoading)
+                {
+                    <tr class="@CsS.Table.Tr">
+                        <td class="@CsS.Table.Td @CsS.Text.Secondary" colspan="3">Loading…</td>
+                    </tr>
+                }
+                else if (Logs is null || !Logs.Any())
+                {
+                    <tr class="@CsS.Table.Tr">
+                        <td class="@CsS.Table.Td @CsS.Text.Secondary" colspan="3">No data.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var log in Logs)
+                    {
+                        <tr class="@CsS.Table.Tr">
+                            <!-- TimeStamp / Level -->
+                            <td class="@CsS.Table.Td whitespace-nowrap">
+                                <div>@log.TimeStamp.ToString("dd.MM.yyyy HH:mm")</div>
+                                <div class="@CC.Text.MutedXs">@log.Level</div>
+                            </td>
+
+                            <!-- Message: يلتف داخل العرض -->
+                            <td class="@CsS.Table.Td whitespace-normal break-words">
+                                @log.Message
+                            </td>
+
+                            <!-- Properties: يلتف داخل العرض -->
+                            <td class="@CsS.Table.Td whitespace-normal break-words">
+                                @log.Properties
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+<div class="@CsS.Spacing.M.Top(Size.S2) @CsS.Layout.FlexItemsCenter">
+    <button class="@CsS.Btn.Outline.Info"
+            disabled="@(NectBtnActive || IsLoading)"
+            @onclick="async () => { Filter.PageNr = Filter.PageNr + 1; await GetTaskAsync(); }">
+        @AppControll.more
+    </button>
+</div>
+
+@code {
+    LogsFilter Filter = new();
+    List<LogEntity> Logs;
+
+    bool IsLoading;
+    bool NectBtnActive;
+    List<GetTenantsDTO> Tenants;
+    int day = 7;
+    int month = 0;
+    async Task DeleteAsync()
+    {
+        IsLoading = true;   
+        DateTime date = DateTime.Now.AddMonths(month * -1).AddDays((day) * -1);
+        var i = await context.Logs.Where(x => x.TimeStamp < date).ToListAsync();
+        context.Logs.RemoveRange(i);
+        await context.SaveChangesAsync();
+        await GetTenants();
+        IsLoading = false;
+    }
+    async Task DeleteAsync(LogEntity log)
+    {
+        context.Logs.Remove(log);
+        await context.SaveChangesAsync();
+        await GetTenants();
+    }
+    public async Task<List<LogEntity>> GetAsync(LogsFilter filter)
+    {
+        var query = context.Logs.AsNoTracking().AsQueryable();
+        if (Filter.Date1.HasValue)
+            query = query.Where(x => x.TimeStamp > Filter.Date1.Value);
+        if (Filter.Date2.HasValue)
+            query = query.Where(x => x.TimeStamp < Filter.Date2.Value.AddDays(1));
+        if (!string.IsNullOrWhiteSpace(Filter.Level))
+            query = query.Where(x => x.Level == Filter.Level);
+        if (Filter.TenantID.HasValue)
+            query = query.Where(x => x.TenantID == Filter.TenantID);
+
+        return await query.OrderByDescending(x => x).Skip((Filter.PageNr - 1) * (Filter.Count))
+                .Take(Filter.Count).ToListAsync();
+    }
+
+    async Task GetTaskAsync(bool isNewRequest = false)
+    {
+        IsLoading = true;
+        var Logs2 = await GetAsync(Filter);
+
+        if (Logs2 == null || Logs2.Count < Filter.Count)
+            NectBtnActive = true;
+        if (!isNewRequest)
+            Logs.AddRange(Logs2);
+        else Logs = Logs2;
+        IsLoading = false;
+    }
+    async Task GetTenants()
+    {
+        IsLoading = true;
+        Tenants = null;
+        Tenants = await ExHandlers.RunCheckTokenAsync(() => TenantRepo.GetAsync());
+        IsLoading = false;
+        StateHasChanged();
+    }
+    protected async override Task OnInitializedAsync()
+    {
+        Logs = await  GetAsync(Filter);
+        await GetTenants();
+    }
+}

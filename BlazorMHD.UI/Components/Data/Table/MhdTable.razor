@@ -1,0 +1,260 @@
+﻿@using System.Text
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@attribute [CascadingTypeParameter(nameof(TItem))]
+@typeparam TItem
+
+@if (ShowFilter)
+{
+    <input @bind="filterText"
+           placeholder="@Localization["SearchPlaceholder"]"
+           class="block w-full px-1 py-1 border border-gray-300 dark:border-gray-600
+                      rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500
+                      bg-white text-gray-800 dark:bg-gray-800 dark:text-gray-100
+                      placeholder-gray-400 dark:placeholder-gray-500 mb-2" />
+}
+
+
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+@if (IsLoading)
+{
+    <div>@Localization["Loading"]...</div>
+}
+else if (Items == null || !Items.Any())
+{
+    <div>@Localization["NoData"]</div>
+}
+else
+{
+    <table class="@TableClass">
+        <thead class="@(Thead)">
+            <tr>
+                @if (HeaderTemplate != null)
+                {
+                    @HeaderTemplate
+                }
+                else
+                {
+                    @foreach (var col in Columns.Where(c => c.Visible).OrderBy(c => c.Order))
+                    {
+                        <th class="@(TH)" @onclick="() => ToggleSort(col)" style="cursor:@(col.Sortable ? "pointer" : "default")">
+                            @col.Title
+                            @if (col.Sortable && _currentSortColumn == col)
+                            {
+                                <span>@(_sortAscending ? "↑" : "↓")</span>
+                            }
+                        </th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody class="@TBody">
+            @if (EnableVirtualization && FilteredAndSortedItemsList != null)
+            {
+                <Virtualize Items="FilteredAndSortedItemsList" Context="item" ItemSize="30">
+                    <tr class="@GetRowClass(item) hover:bg-gray-50">
+                        @foreach (var col in Columns.Where(c => c.Visible).OrderBy(c => c.Order))
+                        {
+                            <td class="@GetCellClass(item, col)">
+                                @if (col.Template != null)
+                                {
+                                    @col.Template(item)
+                                }
+                                else if (col.ValueSelector != null)
+                                {
+                                    @col.ValueSelector(item)
+                                }
+                            </td>
+                        }
+                    </tr>
+                </Virtualize>
+            }
+            else
+            {
+                @foreach (var item in PagedItems)
+                {
+                    <tr @onclick="() => OnRowClick.InvokeAsync(item)" @key="item" class="@GetRowClass(item)">
+                        @foreach (var col in Columns.Where(c => c.Visible).OrderBy(c => c.Order))
+                        {
+                            <td class="@GetCellClass(item, col)">
+                                @if (col.Template != null)
+                                {
+                                    @col.Template(item)
+                                }
+                                else if (col.ValueSelector != null)
+                                {
+                                    @col.ValueSelector(item)
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@if (FooterTemplate != null)
+{
+    @FooterTemplate
+}
+
+@if (EnablePaging && !EnableVirtualization)
+{
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <div>
+            <button class="btn btn-sm btn-secondary" @onclick="PrevPage" disabled="@(_currentPage == 1)">@Localization["Prev"]</button>
+            <button class="btn btn-sm btn-secondary" @onclick="NextPage" disabled="@(_currentPage >= TotalPages)">@Localization["Next"]</button>
+        </div>
+        <div>
+            @Localization["Page"] @_currentPage @Localization["Of"] @TotalPages
+        </div>
+        <div>
+            <select @bind="PageSize" class="form-select form-select-sm w-auto">
+                @foreach (var size in PageSizes)
+                {
+                    <option value="@size">@size</option>
+                }
+            </select>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter] public EventCallback<TItem> OnRowClick { get; set; }
+    [Parameter] public string TableClass { get; set; } = "min-w-full divide-y divide-gray-200 dark:divide-gray-600";
+    public const string Thead = "bg-gray-100 dark:bg-gray-700";
+    public const string TH = "p-1 text-left text-sm font-semibold text-gray-700 dark:text-gray-200";
+    public const string TBody = "divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool ShowFilter { get; set; } = false;
+    [Parameter] public bool EnablePaging { get; set; } = false;
+    [Parameter] public bool EnableVirtualization { get; set; } = false;
+    [Parameter] public int InitialPageSize { get; set; } = 10;
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment? FooterTemplate { get; set; }
+    [Parameter]
+    public Dictionary<string, string> Localization { get; set; } = new()
+    {
+        ["SearchPlaceholder"] = "Search...",
+        ["NoData"] = "No data available.",
+        ["Loading"] = "Loading",
+        ["Prev"] = "Prev",
+        ["Next"] = "Next",
+        ["Page"] = "Page",
+        ["Of"] = "of"
+    };
+    [Parameter] public Func<TItem, string>? RowClassSelector { get; set; }
+    [Parameter] public Func<TItem, ColumnDefinition<TItem>, string>? CellClassSelector { get; set; }
+    [Parameter] public bool IsLoading { get; set; } = false;
+    [Parameter] public List<int> PageSizes { get; set; } = new() { 10, 25, 50 };
+
+    private string filterText = "";
+    private bool _sortAscending = true;
+    private ColumnDefinition<TItem>? _currentSortColumn;
+    private int _currentPage = 1;
+    private int PageSize;
+
+    internal List<ColumnDefinition<TItem>> Columns { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        PageSize = InitialPageSize;
+    }
+
+    internal void RegisterColumn(ColumnDefinition<TItem> column)
+    {
+        column.SortKeySelector ??= column.ValueSelector;
+        Columns.Add(column);
+        StateHasChanged();
+    }
+
+    private void ToggleSort(ColumnDefinition<TItem> col)
+    {
+        if (!col.Sortable || col.SortKeySelector == null) return;
+
+        if (_currentSortColumn == col)
+            _sortAscending = !_sortAscending;
+        else
+        {
+            _currentSortColumn = col;
+            _sortAscending = true;
+        }
+    }
+
+    private IEnumerable<TItem> FilteredAndSortedItems => ApplyFilteringAndSorting();
+
+    // **هذه القائمة يتم تمريرها لـ Virtualize**
+    private List<TItem> FilteredAndSortedItemsList => ApplyFilteringAndSorting().ToList();
+
+    private IEnumerable<TItem> ApplyFilteringAndSorting()
+    {
+        if (Items == null) return Enumerable.Empty<TItem>();
+
+        IEnumerable<TItem> query = Items;
+
+        if (!string.IsNullOrWhiteSpace(filterText))
+        {
+            query = query.Where(item =>
+                Columns.Any(col =>
+                    col.ValueSelector?.Invoke(item)?.ToString()?.Contains(filterText, StringComparison.OrdinalIgnoreCase) == true));
+        }
+
+        if (_currentSortColumn?.SortKeySelector != null)
+        {
+            query = _sortAscending
+                ? query.OrderBy(_currentSortColumn.SortKeySelector)
+                : query.OrderByDescending(_currentSortColumn.SortKeySelector);
+        }
+
+        return query;
+    }
+
+    private IEnumerable<TItem> PagedItems
+    {
+        get
+        {
+            if (!EnablePaging) return FilteredAndSortedItems;
+
+            return FilteredAndSortedItems
+                .Skip((_currentPage - 1) * PageSize)
+                .Take(PageSize);
+        }
+    }
+
+    private int TotalPages =>
+        (int)Math.Ceiling((FilteredAndSortedItems.Count() / (double)PageSize));
+
+    private void PrevPage()
+    {
+        if (_currentPage > 1)
+        {
+            _currentPage--;
+        }
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage < TotalPages)
+        {
+            _currentPage++;
+        }
+    }
+
+    private string GetRowClass(TItem item) => RowClassSelector?.Invoke(item) ?? "p-1 hover:bg-gray-100 dark:hover:bg-gray-800";
+    private string GetCellClass(TItem item, ColumnDefinition<TItem> col) => CellClassSelector?.Invoke(item, col) ?? "p-1 text-sm text-gray-800 dark:text-gray-300";
+
+    public class ColumnDefinition<T>
+    {
+        public string? Title { get; set; }
+        public Func<T, object?>? ValueSelector { get; set; }
+        public RenderFragment<T>? Template { get; set; }
+        public bool Sortable { get; set; }
+        public Func<T, object?>? SortKeySelector { get; set; }
+        public bool Visible { get; set; } = true;
+        public int Order { get; set; } = int.MaxValue;
+    }
+}

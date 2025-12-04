@@ -1,0 +1,112 @@
+﻿@using Application.Feature.Organisation.OrganisationCategory.Commands
+@using Application.Feature.Organisation.OrganisationType.Commands
+@using Application.Feature.Organisation.OrganisationType.Queries
+@using Domain.Entities.Organisation
+@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.Repositories.Organisation
+@using ProjectManagement.Shared.DTO.Organisation
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+<div>
+    <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
+        <button class="@CssClasses.Btn.IconButton.Success" @onclick="() => UpdateForm(new OrganisationTypeEntity())"> @((MarkupString)Icons.Plus)</button>
+@*             <button class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => { CustomerByGroupID = 0; IsVisible = !IsVisible; CustomerGroupsAPI = await Repo.OrgType.GetAsync(IsVisible); }">
+                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+            </button> *@
+        </div>
+</div>
+        <div>
+        @if (CustomerGroupsAPI != null)
+        {
+@*         <Grid TItem="OrganisationTypeEntity" Items="CustomerGroupsAPI" ShowFilter="false">
+                    <Column>
+                        <Template Context="status">
+                            <div class="@CssClasses.Layout.FlexItemsCenter">
+                                <button @onclick="() => UpdateForm(status)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
+                               <button @onclick="() => Remove(status)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                            </div>
+                        </Template>
+                    </Column>
+                <Column Title="@CalcResource.name" ValueSelector="c => c.Name"></Column>
+            </Grid> *@
+        }
+</div>
+@code {
+    List<OrganisationTypeEntity>? CustomerGroupsAPI;
+
+    int CustomerByGroupID;
+    private bool IsLoading = false;
+    bool IsVisible = true;
+
+    void UpdateForm(OrganisationTypeEntity group) =>
+    MHD.Modal.ShowComponent<OrganisationTypeFormUI>(AppLoc[LocalizerConst.New, ResourceIdentity.customerGroup],
+    new Dictionary<string, object> { [nameof(OrganisationTypeFormUI.IsLoading)] = IsLoading,[nameof(OrganisationTypeFormUI.CustomerGroup)] = group,
+            [nameof(OrganisationTypeFormUI.OnValidSubmit)] = EventCallback.Factory.Create<OrganisationTypeEntity>(this, HandleSubmitAsync)});
+
+    async Task AddEditCustomerCallBack(int groupId)
+    {
+        MHD.Modal.Close();
+        if (groupId == CustomerByGroupID)
+        {
+            CustomerByGroupID = 0;
+            await Task.Delay(1);
+            CustomerByGroupID = groupId;
+        }
+    }
+    async Task GetCustomers(OrganisationTypeEntity g)
+    {
+        CustomerByGroupID = 0;
+        await Task.Delay(1);
+        CustomerByGroupID = g.Id;
+    }
+
+    private async Task HandleSubmitAsync(OrganisationTypeEntity _customerGroup)
+    {
+        if (_customerGroup != null)
+        {
+            PostOrganisationTypeDTO entity = new();
+            PropertyCopier.CopyPropertiesTo(_customerGroup, entity);
+
+            bool result = false;
+            if (_customerGroup.Id == 0)
+                result = await MicroBus.Send(new CreateOrganisationTypeCommand(entity)) > 0;
+            else result = await MicroBus.Send(new UpdateOrganisationTypeCommand(entity,_customerGroup.Id));
+             
+            if (result) await GetAsync();
+            MHD.Notifications(ToastType.Delete, result);
+        }
+        MHD.Modal.Close();
+    }
+
+    void Remove(OrganisationTypeEntity customerGroup)
+    {
+        MHD.DeleteMessage(customerGroup.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(customerGroup)));
+    }
+
+    async Task ConfirmRemoveAsync(OrganisationTypeEntity customerGroup)
+    {
+
+        bool result = await MicroBus.Send(new DeleteOrganisationTypeCommand(customerGroup.Id));
+        if (result)
+        {
+            CustomerGroupsAPI.Remove(customerGroup);
+            StateHasChanged();
+        }
+        MHD.Notifications(ToastType.Delete, result);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await GetAsync();
+    }
+
+    async Task GetAsync()
+    {
+        IsLoading = true;
+        CustomerGroupsAPI = await MicroBus.Send(new GetAllOrganisationsTypeQuery(IsVisible));
+        IsLoading = false;
+    }
+}

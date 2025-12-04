@@ -1,0 +1,214 @@
+﻿@using ExcelDataLoader.Services
+@using Microsoft.EntityFrameworkCore
+@using ProjectImportHub.Entities
+@using ProjectImportHub.Infrastructure
+@using ProjectImportHub.Services.Resource
+@using ProjectManagement.Client.Adminstrator.Shared.ResourceFiles
+@using ProjectManagement.Shared.DTO.App.Dataloader
+@using ProjectManagement.Shared.Enums
+@inject IResourceService ResourceService
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@inherits AppComponentBase
+
+<div class="@CsS.Modal.Body">
+    <EditForm Model="@model" OnValidSubmit="HandleValidSubmit" class="">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="@CsS.Text.Error" />
+
+        <!-- الحقول الأساسية -->
+        <div class="@CsS.Grid.Col.MD4">
+            <div>
+                <label class="@CsS.Form.Label" for="name">@CalcResource.name</label>
+                <InputText id="name"
+                           @bind-Value="model.Name"
+                           class="@CsS.Input.Text"
+                           aria-invalid="@(EditContext?.GetValidationMessages(() => model.Name).Any() == true)" />
+                <ValidationMessage For="@(() => model.Name)" class="@CsS.Text.Danger" />
+            </div>
+
+            <div>
+                <label class="@CsS.Form.Label" for="unit">@CalcResource.unit</label>
+                <InputText id="unit"
+                           @bind-Value="model.Data.Unit"
+                           class="@CsS.Input.Text" />
+                <ValidationMessage For="@(() => model.Data.Unit)" class="@CsS.Text.Danger" />
+            </div>
+
+            <div>
+                <label class="@CsS.Form.Label" for="cost">@CalcResource.cost</label>
+                <InputNumber id="cost"
+                             @bind-Value="model.Data.Cost"
+                             class="@CsS.Input.Number" />
+                <ValidationMessage For="@(() => model.Data.Cost)" class="@CsS.Text.Danger" />
+            </div>
+
+            <div>
+                <label class="@CsS.Form.Label" for="cf1">@CalcResource.changeFactor1</label>
+                <InputNumber id="cf1"
+                             @bind-Value="model.Data.ChangeFactor1"
+                             class="@CsS.Input.Number" />
+                <ValidationMessage For="@(() => model.Data.ChangeFactor1)" class="@CsS.Text.Danger" />
+            </div>
+
+            <div>
+                <label class="@CsS.Form.Label" for="cf2">@CalcResource.changeFactor2</label>
+                <InputNumber id="cf2"
+                             @bind-Value="model.Data.ChangeFactor2"
+                             class="@CsS.Input.Number" />
+                <ValidationMessage For="@(() => model.Data.ChangeFactor2)" class="@CsS.Text.Danger" />
+            </div>
+
+            <div>
+                <label class="@CsS.Form.Label" for="co2">@CalcResource.co2</label>
+                <InputNumber id="co2"
+                             @bind-Value="model.Data.CO2"
+                             class="@CsS.Input.Number" />
+                <ValidationMessage For="@(() => model.Data.CO2)" class="@CsS.Text.Danger" />
+            </div>
+
+            <div>
+                <label class="@CsS.Form.Label" for="baseCost">@CalcResource.baseCost</label>
+                <InputNumber id="baseCost"
+                             @bind-Value="model.Data.BaseCost"
+                             class="@CsS.Input.Number" />
+                <ValidationMessage For="@(() => model.Data.BaseCost)" class="@CsS.Text.Danger" />
+            </div>
+
+            <div>
+                <label class="@CsS.Form.Label" for="resType">@CalcResource.resourceType</label>
+                <InputSelect id="resType"
+                             @bind-Value="model.ResType"
+                             class="@CsS.Input.Select">
+                    @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
+                    {
+                        <option value="@level">@ResourceLocalize.GetResourceType(level)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => model.ResType)" class="@CsS.Text.Danger" />
+            </div>
+
+            @if (model.ResType == ResourceTypesEnum.Materials || model.ResType == ResourceTypesEnum.Worker || model.ResType == ResourceTypesEnum.MachinesAndEquipments)
+            {
+                <div>
+                    <label class="@CsS.Form.Label" for="waste">@(model.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
+                    <InputNumber id="waste"
+                                 @bind-Value="model.Data.CapWaste"
+                                 class="@CsS.Input.Number" />
+                    <ValidationMessage For="@(() => model.Data.CapWaste)" class="@CsS.Text.Danger" />
+                </div>
+            }
+
+            <div>
+                <label class="@CsS.Form.Label" for="qty">@CalcResource.quantity</label>
+                <InputNumber id="qty" @bind-Value="model.Data.Quantity" class="@CsS.Input.Number" />
+                <ValidationMessage For="@(() => model.Data.Quantity)" class="@CsS.Text.Danger" />
+            </div>
+            <div>
+                <button type="button" class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole())">Add Role</button>
+            </div>
+            @if (model.CostRole != null && model.CostRole.Any())
+            {
+                <div class="@CsS.Grid.Span.MD6">
+                    <div class="@CsS.Layout.Inline">
+                        <div></div>
+                        <div>@AppControll.min</div>
+                        <div>@AppControll.max</div>
+                        <div>@CalcResource.cost</div>
+                        <div class=" ">#</div>
+                    </div>
+                    <br />
+                    @if (model.CostRole is not null && model.CostRole.Count > 0)
+                    {
+                        @for (int i = 0; i < model.CostRole.Count; i++)
+                        {
+                            int d = i;
+                            var role = model.CostRole[d];
+                            <div class="@CsS.Layout.Inline">
+                                <div class="flex items-center ">
+                                    <button type="button" title="Remove"
+                                            class="@CsS.Btn.Outline.Danger h-6 w-6 p-0 flex items-center justify-center"
+                                            @onclick="() => model.CostRole.Remove(role)">
+                                        x
+                                    </button>
+                                </div>
+                                <input type="number" class="@CsS.Input.Number" @bind="role.Min" />
+                                <input type="number" class="@CsS.Input.Number" @bind="role.Max" />
+                                <input type="number" class="@CsS.Input.Number" @bind="role.Value" />
+                                <div class="@CC.Text.MutedXs">@(d + 1)</div>
+                            </div>
+                        }
+                    }
+
+                </div>
+            }
+            <div class="@CsS.Grid.Span.MD6">
+                <label class="@CsS.Form.Label" for="note">Note</label>
+                <InputTextArea id="note"
+                           @bind-Value="model.Data.Note"
+                           class="@CsS.Input.Text" />
+                <ValidationMessage For="@(() => model.Data.Note)" class="@CsS.Text.Danger" />
+            </div>
+            <div class="@CsS.Grid.Span.MD6">
+                <label class="@CsS.Form.Label" for="note">Admin Note</label>
+                <InputTextArea id="note"
+                               @bind-Value="model.AdminNote"
+                               class="@CsS.Input.Text" />
+                <ValidationMessage For="@(() => model.AdminNote)" class="@CsS.Text.Danger" />
+            </div>
+        </div>
+
+
+        <div class="@CsS.Modal.Footer @CsS.Spacing.M.Top(Size.S3)">
+            <button type="submit" class="@CsS.Btn.Outline.Success">
+                @ResourceApp.save
+            </button>
+            <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="GoBack">
+                @ResourceApp.cancel
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [CascadingParameter] private EditContext EditContext { get; set; }
+    [Parameter] public ResourceEntity model { get; set; } = new();
+    bool IsEditMode => model.Id > 0;
+    [Parameter] public EventCallback<bool> CallBack { get; set; }
+
+    async Task HandleValidSubmit()
+    {
+        if (IsEditMode)
+            await ResourceService.UpdateAsync(model);
+        else
+            await ResourceService.CreateAsync(model);
+
+        await CallBack.InvokeAsync(true);
+        MHD.Modal.CloseLastModal();
+    }
+
+    void GoBack() => MHD.Modal.CloseLastModal();
+    void CalcResourceForm(ResourceEXDto Resource)
+    {
+        MHD.Modal.AddModal<CalcResCostUI>(Resource.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
+            new Dictionary<string, object>
+            {
+                [nameof(CalcResCostUI.Resource)] = Resource,
+                [nameof(CalcResCostUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshCalcAsync),
+            });
+    }
+    void RefreshCalcAsync(bool refre)
+    {
+        
+    }
+    void AddRole()
+    {
+        if (model.CostRole == null) model.CostRole = [];
+        if (model.CostRole.Count != 0)
+            model.CostRole.Add(new() { Min = model.CostRole.Last().Max,
+                Max = model.CostRole.Last().Max + 10, 
+                Value = model.CostRole.Last().Value + 1 });
+        else model.CostRole.Add(new() { Min = 0, Max = 10, Value = 5 });
+        StateHasChanged();
+    }
+}

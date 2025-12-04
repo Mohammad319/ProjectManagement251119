@@ -1,0 +1,95 @@
+﻿@using ProjectManagement.Shared.DTO.Calculation
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+
+<h3>@(ResourceApp.department + ": " + ListShareCalc.Department + (string.IsNullOrEmpty(ListShareCalc.User) ? "" : " - " + ListShareCalc.User))</h3>
+
+<EditForm id="myForm"  class="" Model="@form" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <div class="@CssClasses.Grid.Col.MD3">
+        <div>
+            <div class="@CssClasses.Form.CheckWrapper">
+                <InputCheckbox @bind-Value="form.Tap1" class="@CssClasses.Input.Check" />
+                <label class="@CssClasses.Form.Label">@CalcResource.netCal</label>
+            </div>
+        </div>
+        <div>
+            <div class="@CssClasses.Form.CheckWrapper">
+                <InputCheckbox @bind-Value="form.Tap2" class="@CssClasses.Input.Check" />
+                <label class="@CssClasses.Form.Label">@CalcResource.overheadCosts</label>
+            </div>
+        </div>
+        <div>
+            <div class="@CssClasses.Form.CheckWrapper">
+                <InputCheckbox @bind-Value="form.Tap3" class="@CssClasses.Input.Check" />
+                <label class="@CssClasses.Form.Label">@ResourceLoc.summarySheet</label>
+            </div>
+        </div>
+        <div>
+            <div class="@CssClasses.Form.CheckWrapper">
+                <InputCheckbox @bind-Value="form.Tap4" class="@CssClasses.Input.Check" />
+                <label class="@CssClasses.Form.Label">@ResourceLoc.opportunitiesRisks </label>
+            </div>
+        </div>
+        <div>
+            <div class="@CssClasses.Form.CheckWrapper">
+                <InputCheckbox @bind-Value="form.Tap5" class="@CssClasses.Input.Check" />
+                <label class="@CssClasses.Form.Label">@ResourceLoc.offer </label>
+            </div>
+        </div>
+        <div>
+            <div class="@CssClasses.Form.CheckWrapper">
+                <InputCheckbox @bind-Value="form.Tap6" class="@CssClasses.Input.Check" />
+                <label class="@CssClasses.Form.Label">@ResourceLoc.selfInspection </label>
+            </div>
+        </div>
+    </div>
+
+</EditForm>
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
+</div>
+@code {
+    PostShareCalcDTO form = new();
+    bool IsLoading = false;
+    [Parameter] public EventCallback<ListShareCalcDTO> Callback { get; set; }
+    [Parameter] public ListShareCalcDTO ListShareCalc { get; set; }
+    [Parameter] public int CalculationId { get; set; }
+
+    protected override void OnInitialized()
+    {
+        PropertyCopier.CopyPropertiesTo(ListShareCalc, form);
+        form.CalculationId = CalculationId;
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        bool result = false;
+        if (ListShareCalc.Id == 0)
+        {
+            int id = await Repo.ShareCalc.CreateAsync(form);
+            PropertyCopier.CopyPropertiesTo(form, ListShareCalc);
+            if (id > 0)
+            {
+                result = true;
+                ListShareCalc.Id = id;
+                await Callback.InvokeAsync(ListShareCalc);
+            }
+        }
+        else if (ListShareCalc.Id > 0)
+        {
+            UpdateShareCalcDTO update = new UpdateShareCalcDTO() { Id = ListShareCalc.Id};
+            PropertyCopier.CopyPropertiesTo(form, update);
+            PropertyCopier.CopyPropertiesTo(update, ListShareCalc);
+
+            if (await Repo.ShareCalc.UpdateAsync(update))
+            {
+                result = true;
+                await Callback.InvokeAsync(null);
+            }
+        }
+         MHD.Notifications(ToastType.Delete, result);
+    }
+}

@@ -1,0 +1,156 @@
+﻿@using ProjectImportHub.Dto.ProjectTask
+@using ProjectImportHub.Dto.Resource
+@using ProjectImportHub.Services.Resource
+@inject ITaskFoldersService FoldersService
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<div class="@CsS.Layout.FlexWrap">
+    <!-- Seitenleiste: Ordner -->
+    <div class="@CsS.Layout.FlexWidth(208)">
+        @if (Folders is null)
+        {
+            <div>Lädt Ordner …</div>
+        }
+        else if (Folders.Count == 0)
+        {
+            <div class="@CsS.Text.Secondary">Keine Ordner verfügbar.</div>
+        }
+        else
+        {
+            @foreach (var f in Folders)
+            {
+                <div role="button">
+                    <button class="@CsS.Multi([CsS.Btn.Outline.Primary, CsS.Spacing.M.Bottom(Size.S2)])"
+                            style="width:100%; text-align:left;"
+                            @onclick="() => LoadResourcesAsync(f.Id, f.DisplayName)">
+                        @f.DisplayName
+                    </button>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Ressourcen-Tabelle -->
+    <div class="@CsS.Multi([CsS.Layout.FlexMinWidth(360), CsS.Spacing.P.All(Size.S2)])">
+        <table class="@CsS.Table.Tab">
+            <thead class="@CsS.Table.Thead">
+                <tr>
+                    <th class="@CsS.Table.TH">@CalcResource.name</th>
+                    <th class="@CsS.Table.TH">@CalcResource.active</th>
+                    <th class="@CsS.Table.TH">@CalcResource.resourceType</th>
+                    <th class="@CsS.Table.TH">@CalcResource.unit</th>
+                    <th class="@CsS.Table.TH">@CalcResource.quantity</th>
+                    <th class="@CsS.Table.TH">@CalcResource.changeFactor1 / 2</th>
+                    <th class="@CsS.Table.TH">@CalcResource.cap / @CalcResource.waste</th>
+                    <th class="@CsS.Table.TH">@CalcResource.baseCost</th>
+                </tr>
+            </thead>
+            <tbody class="@CsS.Table.TBody">
+                @if (SelectedFolderName is null)
+                {
+                    <tr class="@CsS.Table.Tr">
+                        <td class="@CsS.Table.Td @CsS.Text.Secondary @CsS.Text.Center" colspan="8">
+                            Bitte wählen Sie einen Ordner.
+                        </td>
+                    </tr>
+                }
+                else if (Rows is null)
+                {
+                    <tr class="@CsS.Table.Tr">
+                        <td class="@CsS.Table.Td @CsS.Text.Secondary @CsS.Text.Center" colspan="8">
+                            Lädt Ressourcen in „@SelectedFolderName“…
+                        </td>
+                    </tr>
+                }
+                else if (Rows.Count == 0)
+                {
+                    <tr class="@CsS.Table.Tr">
+                        <td class="@CsS.Table.Td @CsS.Text.Secondary @CsS.Text.Center" colspan="8">
+                            Keine Ressourcen in diesem Ordner.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var r in Rows)
+                    {
+                        <tr class="@CsS.Table.Tr">
+                            <!-- Name + Add/Remove -->
+                            <td class="@CsS.Table.Td">
+                                <div class="@CsS.Layout.FlexItemsCenter">
+                                    <button class="@CsS.Btn.Outline.Primary"
+                                            @onclick="() => ToggleAssignAsync(r)">
+                                        @(r.IsAssigned ? "-" : "+")
+                                    </button>
+                                    <span class="@CsS.Spacing.M.Left(Size.S2)">@r.Name</span>
+                                </div>
+                            </td>
+
+                            <!-- Aktiv (falls nicht im DTO enthalten: Platzhalter) -->
+                            <td class="@CsS.Table.Td"><span>—</span></td>
+
+                            <!-- Typ -->
+                            <td class="@CsS.Table.Td">@r.ResourceType</td>
+
+                            <!-- Einheit -->
+                            <td class="@CsS.Table.Td">@r.UnitCode</td>
+
+                            <!-- Menge -->
+                            <td class="@CsS.Table.Td">@r.Quantity</td>
+
+                            <!-- Faktoren -->
+                            <td class="@CsS.Table.Td">@r.ChangeFactor1 / @r.ChangeFactor2</td>
+
+                            <!-- Waste (CapWaste) -->
+                            <td class="@CsS.Table.Td">@r.WasteFactor</td>
+
+                            <!-- BaseCost -->
+                            <td class="@CsS.Table.Td">@r.BaseCost</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    // Nur TaskId verwenden (saubere Entkopplung vom Domain-Entity)
+    [Parameter] public int TaskId { get; set; }
+
+    private List<FolderDto> Folders;
+    private List<ResourceRowDto> Rows;
+    private string SelectedFolderName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Deutsch: sichtbare Ordner für die Aufgabe laden (Überladung ohne visibleIds & mit optionalem Token)
+        Folders = (await FoldersService.GetVisibleFoldersAsync(TaskId)).ToList();
+    }
+
+    private async Task LoadResourcesAsync(int folderId, string folderName)
+    {
+        SelectedFolderName = folderName;
+        Rows = null;
+        StateHasChanged();
+
+        var (rows, _) = await FoldersService.GetFolderResourcesAsync(TaskId, folderId);
+        Rows = rows.ToList();
+    }
+
+    private async Task ToggleAssignAsync(ResourceRowDto r)
+    {
+        if (!r.IsAssigned)
+            await FoldersService.AddAssignmentAsync(TaskId, r.Id);
+        else
+            await FoldersService.RemoveAssignmentAsync(TaskId, r.Id);
+
+        // Deutsch: aktuelle Ordneransicht neu laden
+        var current = Folders?.FirstOrDefault(f => f.DisplayName == SelectedFolderName);
+        if (current is not null)
+        {
+            var (rows, _) = await FoldersService.GetFolderResourcesAsync(TaskId, current.Id);
+            Rows = rows.ToList();
+        }
+    }
+}

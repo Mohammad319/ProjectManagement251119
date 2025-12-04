@@ -1,0 +1,59 @@
+﻿﻿@using ProjectManagement.Client.Shared.MVVM.Calculation;
+@using ProjectManagement.Shared.Base.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@inherits AppComponentBase
+<div class="@CssClasses.Modal.Body">
+
+        @if (Incomes != null)
+        {
+        <table class="@CssClasses.Table.Tab">
+            <thead class="@CssClasses.Table.Thead">
+                    <tr>
+                        <th class="@CssClasses.Table.TH" width="120">
+                            <button type="button" class="@CssClasses.Btn.Outline.Success" @onclick="()=>Incomes.Add(new IncomeListDTO())"> @((MarkupString)Icons.Plus)</button>
+                        </th>
+                    <th class="@CssClasses.Table.TH">@ResourceLoc.year</th>
+                        <th class="@CssClasses.Table.TH">Q1</th>
+                        <th class="@CssClasses.Table.TH">Q2</th>
+                        <th class="@CssClasses.Table.TH">Q3</th>
+                        <th class="@CssClasses.Table.TH">Q4</th>
+                    </tr>
+                </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                    @foreach (var Income in Incomes)
+                    {
+                    <tr class="@CssClasses.Table.Tr">
+                        <td class="@CssClasses.Table.Td">
+                                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                    <button type="button" class="@CssClasses.Btn.Outline.Danger" @onclick="()=> Remove(Income)">@((MarkupString)Icons.DeleteSVG)</button>
+                                </AuthorizeView>
+                            </td>
+                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Year" class="@CssClasses.Input.Text" /></td>
+                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q1" class="@CssClasses.Input.Text" /></td>
+                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q2" class="@CssClasses.Input.Text" /></td>
+                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q3" class="@CssClasses.Input.Text" /></td>
+                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q4" class="@CssClasses.Input.Text" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    
+</div>
+@code {
+    [Parameter] public List<IncomeBase>? Incomes { get; set; }
+    protected override void OnInitialized()
+    {
+        if (Incomes == null) Incomes = [];
+    }
+
+    void Remove(IncomeBase status)
+    {
+        MHD.DeleteMessage(string.Empty, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
+    }
+    bool ConfirmRemoveAsync(IncomeBase st)
+    {
+            Incomes?.Remove(st);
+            return true;
+    }
+}

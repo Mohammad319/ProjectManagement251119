@@ -1,0 +1,62 @@
+﻿@page "/Account/Manage/legal"
+@using ProjectManagement.Client.Shared.Constants
+@using ProjectManagement.Client.Shared.ResourceFiles.APP
+@using ProjectManagement.Shared
+@using ProjectManagement.Shared.Constant
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ResourceApp> L
+
+<div class="@CssClasses.Layout.ButtonGroup mb-3" role="group" aria-label="Legal tabs">
+    <button class="btn @(activeTab == "impressum" ? "btn-primary" : "btn-outline-primary")"
+            @onclick="@(() => SelectTab("impressum"))">
+        Impressum
+    </button>
+    <button class="btn @(activeTab == "privacy" ? "btn-primary" : "btn-outline-primary")"
+            @onclick="@(() => SelectTab("privacy"))">
+        @PMAppFormatResource.TabPrivacy
+    </button>
+    <button class="btn @(activeTab == "terms" ? "btn-primary" : "btn-outline-primary")"
+            @onclick="@(() => SelectTab("terms"))">
+        @PMAppFormatResource.TabTerms
+    </button>
+    <button class="btn @(activeTab == "licenses" ? "btn-primary" : "btn-outline-primary")"
+            @onclick="@(() => SelectTab("licenses"))">
+        @PMAppFormatResource.TabLicenses
+    </button>
+</div>
+
+<div>
+    @if (activeTab == "impressum")
+    {
+        <div>
+            <ImpressumUI></ImpressumUI>
+        </div>
+    }
+    else if (activeTab == "privacy")
+    {
+        <div>
+            <h2>@PMAppFormatResource.TabPrivacy</h2>
+            <p>@PMAppFormatResource.PrivacyContent</p>
+        </div>
+    }
+    else if (activeTab == "terms")
+    {
+        <div>
+            <p>@((MarkupString)PMAppFormatResource.TermsContent.Replace("\n", "<br />"))</p>
+        </div>
+    }
+    else if (activeTab == "licenses")
+    {
+        <div>
+            <ThirdPartyLicenses></ThirdPartyLicenses>
+        </div>
+    }
+</div>
+
+@code {
+    private string activeTab = "impressum";
+
+    void SelectTab(string tabName)
+    {
+        activeTab = tabName;
+    }
+}

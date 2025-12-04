@@ -1,0 +1,472 @@
+﻿@using BlazorMHD.UI.Components.Navigation.Tabs
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.SharedComponent.Contact
+@using ProjectManagement.Shared.Base.Project
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Organisation
+@using ProjectManagement.Client.Constant
+
+@using BlazorMHD.UI.Core.Navigation
+@using BlazorMHD.UI.Core.DesignSystem
+@using NavTabItem = BlazorMHD.UI.Core.Navigation.TabItem
+
+@inherits AppComponentBase
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+
+@if (CalculationUpdate != null)
+{
+    <EditForm id="calcForm"
+              class="@CssClasses.Modal.Body"
+              Model="@CalculationUpdate"
+              OnValidSubmit="async () => await HandleSubmitAsync()">
+
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-red-600 mb-2" />
+
+        <!-- التابات مع الأيقونات -->
+        <MhdTabs Items="Tabs"
+                 Mode="MhdTabMode.Horizontal"
+                 Size="MhdSize.Sm"
+                 @bind-ActiveKey="ActiveKey" />
+
+        @* محتوى التاب 1 *@
+        @if (Part == 1)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.code</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Code" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Code) />
+                </div>
+
+                <div class="@CssClasses.Grid.Span.MD3">
+                    <label class="@CssClasses.Form.Label">@CalcResource.name</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Name" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Name) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.tax</label>
+                    <InputNumber class="@CssClasses.Input.Number" @bind-Value="@CalculationUpdate.Tax" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Tax) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.timeMonth</label>
+                    <InputNumber class="@CssClasses.Input.Number" @bind-Value="@CalculationUpdate.TimeMonth" />
+                    <ValidationMessage For=@(() => CalculationUpdate.TimeMonth) />
+                </div>
+
+                <div class="@($"{CssClasses.Layout.FlexItemsCenter} {CssClasses.Util.JustifyCenter}")">
+                    <div>
+                        <label class="@CssClasses.Form.Label">
+                            @CalcResource.priority (@CalculationUpdate.Priority %)
+                        </label>
+                        <input type="range"
+                               min="0" max="100" step="1"
+                               class="@CssClasses.Input.Range"
+                               value="@CalculationUpdate.Priority"
+                               @oninput="@((args) => CalculationUpdate.Priority = Convert.ToInt16(args.Value))" />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceLoc.maps</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Maps" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Maps) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.status</label>
+                    <InputSelect @bind-Value="CalculationUpdate.StatusId" class="@CssClasses.Input.Select">
+                        <option></option>
+                        @if (Config?.Statuses != null)
+                        {
+                            foreach (var status in Config.Statuses)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => CalculationUpdate.StatusId) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.projectType</label>
+                    <InputSelect @bind-Value="CalculationUpdate.TypeId" class="@CssClasses.Input.Select">
+                        <option></option>
+                        @if (Config?.Types != null)
+                        {
+                            foreach (var status in Config.Types)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => CalculationUpdate.TypeId) />
+                </div>
+            </div>
+        }
+        else if (Part == 2)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.projectContract</label>
+                    <InputSelect @bind-Value="CalculationUpdate.ContractId" class="@CssClasses.Input.Select">
+                        <option></option>
+                        @if (Config?.Contracts != null)
+                        {
+                            foreach (var status in Config.Contracts)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.projectCompensation</label>
+                    <InputSelect @bind-Value="CalculationUpdate.CompensationId" class="@CssClasses.Input.Select">
+                        <option></option>
+                        @if (Config?.Compensations != null)
+                        {
+                            foreach (var status in Config.Compensations)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => CalculationUpdate.CompensationId) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.procurement</label>
+                    <InputSelect @bind-Value="CalculationUpdate.Procurement" class="@CssClasses.Input.Select">
+                        <option value="@Procurement.A">@Procurement.A.ToString()</option>
+                        <option value="@Procurement.B">@Procurement.B.ToString()</option>
+                    </InputSelect>
+                    <ValidationMessage For=@(() => CalculationUpdate.Procurement) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.procurementMethods</label>
+                    <InputSelect @bind-Value="CalculationUpdate.ProcurementMethodsId" class="@CssClasses.Input.Select">
+                        <option></option>
+                        @if (Config?.Methods != null)
+                        {
+                            foreach (var status in Config.Methods)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => CalculationUpdate.ProcurementMethodsId) />
+                </div>
+            </div>
+        }
+        else if (Part == 3)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                @for (int i = 0; i < CalculationUpdate.Responsibles.Count; i++)
+                {
+                    <div class="@CssClasses.Grid.Col.MD6">
+                        <label class="@CssClasses.Form.Label">@CalcResource.responsible</label>
+                        <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Responsibles[i]" />
+                        <ValidationMessage For=@(() => CalculationUpdate.Responsibles[i]) />
+                    </div>
+                }
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.inspector</label>
+                    <InputText class="@CssClasses.Input.Text"
+                               @bind-Value="@CalculationUpdate.Inspector"
+                               placeholder="@(CalcResource.inspector)" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Inspector) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
+                    <InputText class="@CssClasses.Input.Text"
+                               @bind-Value="@CalculationUpdate.Supervisor"
+                               placeholder="@(ResourceApp.organisation)" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Supervisor) />
+                </div>
+            </div>
+        }
+        else if (Part == 4)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                @if (Config?.Organisation != null)
+                {
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
+                        <InputSelect @bind-Value="CalculationUpdate.OrganisationId" class="@CssClasses.Input.Select">
+                            <option></option>
+                            @foreach (var status in Config.Organisation)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For=@(() => CalculationUpdate.OrganisationId) />
+                    </div>
+                }
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.developer</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Developer" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Developer) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceLoc.clientsProjectmanager</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.ClientsManager" />
+                    <ValidationMessage For=@(() => CalculationUpdate.ClientsManager) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceLoc.designer</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Designer" />
+                    <ValidationMessage For=@(() => CalculationUpdate.Designer) />
+                </div>
+
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <label class="@CssClasses.Form.Label">@CalcResource.theClientsContactPersonTender</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.ContactPerson" />
+                    <ValidationMessage For=@(() => CalculationUpdate.ContactPerson) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.overviewInfoProject</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.OverviewInfo" />
+                    <ValidationMessage For=@(() => CalculationUpdate.OverviewInfo) />
+                </div>
+            </div>
+        }
+        else if (Part == 5)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.startDate</label>
+                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.StartDate" />
+                    <ValidationMessage For=@(() => CalculationUpdate.StartDate) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.endDate</label>
+                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.EndDate" />
+                    <ValidationMessage For=@(() => CalculationUpdate.EndDate) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.tenderDeadline</label>
+                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.TenderDeadline" />
+                    <ValidationMessage For=@(() => CalculationUpdate.TenderDeadline) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.publicationDate</label>
+                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.PublicationDate" />
+                    <ValidationMessage For=@(() => CalculationUpdate.PublicationDate) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.decisionDate</label>
+                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.DecisionDate" />
+                    <ValidationMessage For=@(() => CalculationUpdate.DecisionDate) />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.tenderQA</label>
+                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.TenderQA" />
+                    <ValidationMessage For=@(() => CalculationUpdate.TenderQA) />
+                </div>
+            </div>
+        }
+        else if (Part == 6)
+        {
+            <div class="@CssClasses.Grid.Col.MD4">
+
+                @if (Calculation.Id == 0 || CalculationUpdate.IsPrivate)
+                {
+                    <div class="@CssClasses.Form.CheckWrapper">
+                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@CalculationUpdate.IsPrivate" />
+                        <label class="@CssClasses.Form.CheckLabel">@ResourceApp._private</label>
+                    </div>
+                }
+
+                <div class="@CssClasses.Form.CheckWrapper">
+                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@CalculationUpdate.IsVisible" />
+                    <label class="@CssClasses.Form.CheckLabel">@ResourceApp.visible</label>
+                </div>
+
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <button type="button"
+                            class="@CssClasses.Btn.Solid.Primary"
+                            @onclick="() => CalculationUpdate.Notes.Add(string.Empty)">
+                        @ResourceLoc.description
+                    </button>
+                </div>
+
+                @if (CalculationUpdate.Notes != null)
+                {
+                    @for (int i = 0; i < CalculationUpdate.Notes.Count; i++)
+                    {
+                        var index = i;
+
+                        <div class="grid grid-cols-12 gap-2 items-start">
+                            <!-- Delete Button -->
+                            <button type="button"
+                                    class="col-span-1 mt-2
+                                       inline-flex items-center justify-center rounded-md
+                                       px-2 py-1 border border-red-500 text-red-500 text-sm
+                                       hover:bg-red-500 hover:text-white transition"
+                                    @onclick="() => CalculationUpdate.Notes.RemoveAt(index)">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+
+                            <!-- Note TextArea -->
+                            <div class="col-span-11">
+                                <textarea class="w-full rounded border border-gray-300 px-2 py-2 text-sm
+                                             min-h-28 resize-y
+                                             focus:outline-none focus:ring-2 focus:ring-blue-500
+                                             dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                          @bind="CalculationUpdate.Notes[index]">
+                            </textarea>
+                            </div>
+                        </div>
+                    }
+
+                }
+            </div>
+        }
+        else if (Part == 7)
+        {
+            <div>
+                <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI
+                    Incomes="CalculationUpdate.Income" />
+            </div>
+        }
+        else if (Part == 8)
+        {
+            <div>
+                <ContactsUI Contacts="CalculationUpdate.Contacts" />
+            </div>
+        }
+    </EditForm>
+
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit"
+                class="@CssClasses.Btn.Outline.Success"
+                form="calcForm"
+                disabled="@btnSubmitDisabled">
+            @ResourceApp.save
+        </button>
+
+        <button type="button"
+                class="@CssClasses.Btn.Outline.Secondary"
+                @onclick="async () => await Callback.InvokeAsync(null)">
+            @ResourceApp.cancel
+        </button>
+    </div>
+}
+
+@code {
+    bool btnSubmitDisabled = false;
+
+    [Parameter] public EventCallback<ListCalculationMVVM?> Callback { get; set; }
+    [Parameter] public required ListCalculationMVVM Calculation { get; set; }
+
+    PostCalculationDTO CalculationUpdate = new();
+    GetProjectCalcConfigDTO? Config;
+
+    private int Part { get; set; } = 1;
+
+    // ربط Part مع MhdTabs
+    private string ActiveKey
+    {
+        get => Part.ToString();
+        set
+        {
+            if (int.TryParse(value, out var p))
+                Part = p;
+        }
+    }
+
+    // تعريف مبسط للتاب (Id + Label + Icon)
+    private record CalcTab(int Id, string Label, string Icon);
+
+    private List<NavTabItem> Tabs => new()
+    {
+        new(){Key = 1.ToString(), Text = CalcResource.calculation,Icon = "🧮" },
+        new(){Key = 2.ToString(), Text = CalcResource.procurement,Icon =  "📑" },
+        new(){Key = 3.ToString(), Text = ResourceApp.organisation,Icon =  "👤" },
+        new(){Key = 4.ToString(), Text = ResourceIdentity.customerGroup,Icon =  "🏢" },
+        new(){Key = 5.ToString(), Text = ResourceApp.date,Icon =  "📅" },
+        new(){Key = 6.ToString(), Text = CalcResource.note,Icon =  "📝" },
+        new(){Key = 7.ToString(), Text = ResourceLoc.income,Icon =  "💰" },
+        new(){Key = 8.ToString(), Text = ResourceIdentity.contact,Icon =  "📞" },
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Calculation.Id > 0)
+        {
+            CalculationUpdate = await ExHandlers.RunCheckTokenAsync(
+                () => Repo.Calculation.GetPostAsync(Calculation.Id)
+            ) ?? new PostCalculationDTO();
+        }
+
+        CalculationUpdate.Notes ??= [];
+        CalculationUpdate.Responsibles ??= [];
+        CalculationUpdate.Contacts ??= [];
+        CalculationUpdate.Income ??= [];
+
+        Config = await ExHandlers.RunCheckTokenAsync(
+            () => Repo.Calculation.GetConfig(
+                CalculationUpdate.ProcurementMethodsId,
+                CalculationUpdate.ContractId,
+                CalculationUpdate.CompensationId,
+                CalculationUpdate.TypeId,
+                CalculationUpdate.StatusId
+            ));
+    }
+
+    async Task HandleSubmitAsync()
+    {
+        btnSubmitDisabled = true;
+
+        try
+        {
+            if (Calculation.Id > 0)
+            {
+                if (await Repo.Calculation.UpdateAsync(CalculationUpdate, Calculation.Id))
+                {
+                    MHD.Notifications(ToastType.Update, true);
+                    PropertyCopier.CopyPropertiesTo(CalculationUpdate, Calculation);
+                }
+
+                await Callback.InvokeAsync(Calculation);
+            }
+            else
+            {
+                Calculation.Id = await Repo.Calculation.CreateAsync(
+                    Folder.State.ProjectSelected.Id,
+                    CalculationUpdate
+                );
+
+                PropertyCopier.CopyPropertiesTo(CalculationUpdate, Calculation);
+                MHD.Notifications(ToastType.Add, true);
+
+                await Callback.InvokeAsync(Calculation);
+            }
+        }
+        catch (Exception ex)
+        {
+            MHD.Notifications(ToastType.Info);
+            Console.WriteLine(ex.Message);
+        }
+
+        await Callback.InvokeAsync(null);
+    }
+}

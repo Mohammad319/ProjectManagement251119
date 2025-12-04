@@ -1,0 +1,228 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using Calculation.Tender.Attribute
+@inherits AppComponentBase
+
+@if (FormAttr != null && result != null)
+{
+    <ProjectManagement.Client.Pages.Calculation.Tender.Attribute.TenderAttributeFormUI TenderAttribute="FormAttr"
+                                                                                       CalcId="Calculation.Id"
+                                                                                       Tenders="result.Tenders"
+                                                                                       Callback="CallbackForm">
+    </ProjectManagement.Client.Pages.Calculation.Tender.Attribute.TenderAttributeFormUI>
+}
+else if (Form != null && result != null)
+{
+    <TenderFormUI TenderList="Form"
+                  CalcId="Calculation.Id"
+                  Callback="CallbackForm"
+                  Attributes="result.Attributes">
+    </TenderFormUI>
+}
+else
+{
+    <div class="@CssClasses.Modal.Body">
+        @if (result != null)
+        {
+            <!-- شريط علوي يحتوي على العنوان والأزرار -->
+            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                           @ResourceLoc.tender
+                        </h3>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <!-- زر إنشاء خاصية -->
+                        <button @onclick="() => FormAttr = new TenderAttributeListDTO()"
+                                class="@CssClasses.Btn.Outline.Success">
+
+                            @((MarkupString)Icons.Plus)
+                           @AppLoc[LocalizerConst.New, ResourceApp.attribute]
+                        </button>
+
+                        <!-- زر إنشاء عطاء -->
+                        <button @onclick="() => Form = new TenderListDTO()" class="@CssClasses.Btn.Outline.Success">
+
+                            @((MarkupString)Icons.Plus)
+                            @AppLoc[LocalizerConst.New, ResourceLoc.tender]
+                        </button>
+                    </div>
+                </div>
+            </AuthorizeView>
+
+            <!-- بطاقة الجدول -->
+            <div class="rounded-xl border border-slate-200 dark:border-slate-700
+                                bg-white dark:bg-slate-900 shadow-sm">
+
+                <!-- Scroll أفقي + رأس جدول ثابت -->
+                <div class="max-h-[60vh] overflow-auto">
+                    <table class="min-w-full border-collapse text-xs">
+                        <thead class="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                            <tr class="border-b border-slate-200 dark:border-slate-700">
+                                <th class="w-60 px-3 py-2 text-start text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                    @ResourceLoc.company
+                                </th>
+
+                                @foreach (var attr in result.Attributes)
+                                {
+                                    <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                                <button class="@CssClasses.Btn.IconButton.Primary" title="@ResourceApp.edit"
+                                                      @onclick="() => FormAttr = attr">
+                                                    @((MarkupString)Icons.Edit)
+                                                </button>
+
+                                                <button class="@CssClasses.Btn.IconButton.Danger"
+                                                        title="@ResourceApp.delete"
+                                                      @onclick="() => Remove(attr)">
+                                                    @((MarkupString)Icons.DeleteSVG)
+                                                </button>
+                                            </AuthorizeView>
+
+                                            <span class="inline-flex max-w-[120px] items-center justify-center rounded-full
+                                                                     bg-slate-200/70 dark:bg-slate-700/70 px-2 py-0.5 text-[11px] text-slate-800 dark:text-slate-100">
+                                                @attr.Name
+                                            </span>
+                                        </div>
+                                    </th>
+                                }
+
+                                <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                                    @CalcResource.sum
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach (var tender in result.Tenders)
+                            {
+                                <tr class="hover:bg-emerald-50/80 dark:hover:bg-emerald-900/40 transition-colors">
+                                    <!-- اسم الشركة + أكشن الحذف -->
+                                    <td class="whitespace-nowrap px-3 py-2 text-[11px] md:text-xs font-medium text-slate-800 dark:text-slate-100">
+                                        <div class="flex items-center justify-between gap-1.5">
+                                            <span class="truncate">
+                                                @tender.Company
+                                            </span>
+
+                                            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                                <button class="@CssClasses.Btn.IconButton.Danger"
+                                                        title="@ResourceApp.delete"
+                                                      @onclick="() => Remove(tender)">
+                                                    @((MarkupString)Icons.DeleteSVG)
+                                                </button>
+                                            </AuthorizeView>
+                                        </div>
+                                    </td>
+
+                                    <!-- قيم الخصائص -->
+                                    @foreach (var attr in result.Attributes)
+                                    {
+                                        <td class="px-2 py-1.5 text-center align-middle">
+                                            @{
+                                                var zz = tender.Values.FirstOrDefault(r => r.AttributeID == attr.Id);
+                                                var value = zz?.Values ?? 0;
+                                            }
+
+                                            <input type="number"
+                                                   value="@value"
+                                                   min="0"
+                                                   step="0.01"
+                                                   class="w-24 rounded-md border border-slate-300 dark:border-slate-600
+                                                                          bg-white dark:bg-slate-800 px-2 py-0.5
+                                                                          text-right text-[11px] text-slate-800 dark:text-slate-100 shadow-sm
+                                                                          focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                   @onchange="async (e) => await OnChangeAsync(tender.Id, attr.Id, e)" />
+                                        </td>
+                                    }
+
+                                    <!-- مجموع العطاء -->
+                                    <td class="px-3 py-2 text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                                        <span class="inline-flex items-center justify-center rounded-full
+                                                                 bg-emerald-100 dark:bg-emerald-900 px-3 py-1 text-[11px] font-semibold">
+                                            @(tender.Values.Sum(x => x.Values))
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    Dictionary<int, double> TendersValues = new Dictionary<int, double>();
+
+    async Task OnChangeAsync(int tenderID, int attrID, ChangeEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(e.Value?.ToString()))
+            await Repo.Tender.UpdateBindAsync(tenderID, attrID, Convert.ToDouble(e.Value.ToString()));
+    }
+
+    [Parameter] public EventCallback<bool> CallBack { get; set; }
+    [Parameter] public ListCalculationMVVM Calculation { get; set; } = default!;
+
+    TenderListDTO? Form;
+    TenderAttributeListDTO? FormAttr;
+    TenderAttributeValuesListDTO? result;
+
+    async Task CallbackForm(bool isSuccess)
+    {
+        if (isSuccess)
+        {
+            result = null;
+            await Get();
+        }
+        Form = null;
+        FormAttr = null;
+    }
+
+    async Task Get()
+    {
+        result = await Repo.Tender.GetAllAsync(Calculation.Id);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Get();
+    }
+
+    void Remove(TenderAttributeListDTO tender)
+    {
+        MHD.DeleteMessage(tender.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(tender)));
+    }
+
+    async Task ConfirmRemoveAsync(TenderAttributeListDTO tender)
+    {
+        if (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.DeleteAttributeAsync(tender.Id, Calculation.Id)))
+        {
+            result?.Attributes.Remove(tender);
+            StateHasChanged();
+            MHD.Notifications(ToastType.Delete, true);
+        }
+        else
+            MHD.Notifications(ToastType.Delete, false);
+    }
+
+    void Remove(TenderListDTO tender)
+    {
+        MHD.DeleteMessage(tender.Company, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(tender)));
+    }
+
+    async Task ConfirmRemoveAsync(TenderListDTO tender)
+    {
+        if (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.DeleteAsync(tender.Id, Calculation.Id)))
+        {
+            result?.Tenders.Remove(tender);
+            StateHasChanged();
+            MHD.Notifications(ToastType.Delete, true);
+        }
+        else
+            MHD.Notifications(ToastType.Delete, false);
+    }
+}

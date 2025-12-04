@@ -1,0 +1,87 @@
+﻿@using AuthPermissions.Entity
+@using ContextMenuMHD
+@using Domain.Repository.AuthPermissions
+@using Microsoft.EntityFrameworkCore
+@using ProjectManagement.Adminstrator.Constants
+@using ProjectManagement.Adminstrator.Services.Users
+
+@using ProjectManagement.Shared.DTO.Tenant;
+@attribute [Authorize(Roles = PMRolesConst.APP.Users)]
+@inherits AppComponentBase
+@inject IUsersService sersService
+@inject ApplicationDbContext context
+
+    <button class="@CssClasses.Btn.Outline.Success" @onclick="() => UpdateForm(new())">@ResourceApp._new</button>
+    <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
+    </AuthorizeView>
+    <div>
+        <table class="@CssClasses.Table.Tab">
+            <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH" style="width:105px;">@CalcResource.name</th>
+                    <th class="@CssClasses.Table.TH">@AppControll.Db</th>
+                </tr>
+            </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                @if (Tenants != null) foreach (var tenant in Tenants)
+                    {
+                        <tr class="@CssClasses.Table.Tr" @oncontextmenu:preventDefault @oncontextmenu="() => Context(tenant)">
+                            <td class="@CssClasses.Table.Td">@tenant.Name</td>
+                        <td class="@CssClasses.Table.Td">@tenant.ConnectionString</td>
+
+                        </tr>
+                    }
+            </tbody>
+        </table>
+    </div>
+
+
+@code{
+    List<TenantDatabaseEntity>? Tenants;
+    GetTenantsDTO? DetailsPage;
+    void UpdateForm(TenantDatabaseEntity model) 
+    {
+            TenantDatabaseEntity post = new TenantDatabaseEntity();
+        PropertyCopier.CopyPropertiesTo(model, post);
+
+        Modal.AddModal<IndexTDBFormUI>(model.Id == 0 ?
+        AppLoc[LocalizerConst.New, AppControll.tenant] : ResourceApp.update,
+            new Dictionary<string, object>
+            {
+                [nameof(IndexTDBFormUI.Put)] = post,
+                [nameof(IndexTDBFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack)
+            });
+    }
+    async Task CallBack(bool newLoading)
+    {
+        Modal.CloseLastModal();
+        if (newLoading)
+            Tenants = await context.TenantDatabase.ToListAsync();
+    }
+    void Remove(TenantDatabaseEntity obj)
+    {
+        MHD.DeleteMessage(obj.Name, () => RemoveAsync(obj));
+    }
+    async Task RemoveAsync(TenantDatabaseEntity obj)
+    {
+         context.TenantDatabase.Remove(obj);
+        await context.SaveChangesAsync();
+            Tenants?.Remove(obj);
+        MHD.ToastMessage(ResourceApp.delete, ToastType.Delete, true);
+    }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+       Tenants = await context.TenantDatabase.ToListAsync();
+    }
+    async Task Context(TenantDatabaseEntity item)
+    {
+        var list = new List<MenuItem>()
+            {
+                        new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => {UpdateForm(item); return Task.CompletedTask; } },
+                        new() { Label = $" {ResourceApp.delete}", OnClickAsync = () => {Remove(item); return Task.CompletedTask; } },
+            };
+        await ContextService.ShowMenuAsync(list);
+    }
+}

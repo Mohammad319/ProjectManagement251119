@@ -1,0 +1,285 @@
+﻿@using Application.Feature.Organisation.Organisation.Commands
+@using Application.Feature.Organisation.Organisation.Queries
+@using Application.Feature.Organisation.OrganisationCategory.Queries
+@using Application.Feature.Organisation.OrganisationType.Queries
+@using Domain.Entities.Organisation
+@using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Client.Shared.SharedComponent
+@using ProjectManagement.Client.Shared.SharedComponent.Contact
+@using ProjectManagement.Shared.DTO.App
+@using ProjectManagement.Shared.DTO.App.List
+@using ProjectManagement.Shared.DTO.General
+@using ProjectManagement.Shared.DTO.Offer
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
+@using ProjectManagement.Shared.DTO.Organisation
+@using ProjectManagement.Shared.Base.Organisation
+@using System.Text.Json
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+@if (PostCompany != null)
+{
+    <div class="@CssClasses.Modal.Body">
+        <EditForm Model="@PostCompany" OnValidSubmit="async () => await HandleSubmitAsync()" id="custForm">
+            <div>
+                <DataAnnotationsValidator />
+            </div>
+            <div class="flex justify-between">
+                <ul class="@CssClasses.Tabs.UL" role="tablist">
+                    @foreach (var tab in Tabs)
+                    {
+                        <li class="mr-2" role="presentation">
+                            <button type="button" class="@(CssClasses.Tabs.Btn(Part == tab.Id))"
+                                    @onclick="() => Part = tab.Id">
+                                @tab.Label
+                            </button>
+                        </li>
+                    }
+                        </ul>
+                    </div>
+
+                    @if (Part == 1)
+                    {
+                <div class="@CssClasses.Grid.Col.MD4">
+                    <div class="@CssClasses.Grid.Span.MD2">
+                            <label class="@CssClasses.Form.Label">@CalcResource.name</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.Name" />
+                            <ValidationMessage For=@(() => PostCompany.Name) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceIdentity.IDNumber</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.IDNumber" />
+                            <ValidationMessage For=@(() => PostCompany.IDNumber) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceIdentity.PersonOrganisationNr</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.PIDNumber" />
+                            <ValidationMessage For=@(() => PostCompany.PIDNumber) />
+                        </div>
+                        @if (CustomerGroups != null)
+                        {
+                            <div>
+                                <label class="@CssClasses.Form.Label">@ResourceIdentity.PersonOrganisationType</label>
+                                <InputSelect class="@CssClasses.Input.Text" @bind-Value="@PostCompany.OrganisationTypeID">
+                                    <option value="0"></option>
+                                    @foreach (var group in CustomerGroups)
+                                    {
+                                        <option value="@group.Id" selected="@(group.Id == PostCompany.OrganisationTypeID)">@group.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        }
+                        <div>
+                            <label class="@CssClasses.Form.Label">@CalcResource.status</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.Status" />
+                            <ValidationMessage For=@(() => PostCompany.Status) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceIdentity.website</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.URL" />
+                            <ValidationMessage For=@(() => PostCompany.URL) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceIdentity.email</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.Email" />
+                            <ValidationMessage For=@(() => PostCompany.Email) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceIdentity.phone</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.Phone" />
+                            <ValidationMessage For=@(() => PostCompany.Phone) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceIdentity.mobile</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCompany.Mobile" />
+                            <ValidationMessage For=@(() => PostCompany.Mobile) />
+                        </div>
+                        <div>
+                            <button type="button" class="@CssClasses.Btn.Solid.Primary mt-6" @onclick="()=> PostCompany.Notes.Add(string.Empty)">New Note</button>
+                        </div>
+
+                </div>
+                                                        <div>
+                @for (int o = 0; o < PostCompany.Notes.Count; o++)
+                {
+                    int ii = o;
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.note @(ii + 1)</label>
+                        <input type="text" class="@CssClasses.Input.Text" @bind="@PostCompany.Notes[ii]" />
+                    </div>
+                    }
+                </div>
+                    }
+                    else if (Part == 2)
+                    {
+                                        <div class="@CssClasses.Grid.Col.MD4">
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceLoc.rating</label>
+                            <InputNumber class="@CssClasses.Input.Text" @bind-Value="@PostCompany.Rating" />
+                            <ValidationMessage For=@(() => PostCompany.Rating) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceIdentity.numberIDCards</label>
+                            <InputNumber class="@CssClasses.Input.Text" @bind-Value="@PostCompany.NumberOfWorkersCards" />
+                            <ValidationMessage For=@(() => PostCompany.NumberOfWorkersCards) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceLoc.collectiveLabourAgreement</label>
+                            <InputSelect @bind-Value="@PostCompany.SocialLaborAgreement" class="@CssClasses.Input.Text">
+                                <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
+                                <option value="@YesNoUnkown.no">@ResourceApp.no</option>
+                                <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
+                            </InputSelect>
+                            <ValidationMessage For=@(() => PostCompany.SocialLaborAgreement) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceLoc.dateInvoiceControl</label>
+                            <InputDate class="@CssClasses.Input.Date" @bind-Value="@PostCompany.InvoiceVerificationDate" />
+                            <ValidationMessage For=@(() => PostCompany.InvoiceVerificationDate) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceLoc.dateOfControl</label>
+                            <InputDate class="@CssClasses.Input.Date" @bind-Value="@PostCompany.VerificationDate" />
+                            <ValidationMessage For=@(() => PostCompany.VerificationDate) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">Quality systems</label>
+                            <InputSelect @bind-Value="@PostCompany.QualitySystems" class="@CssClasses.Input.Text">
+                                <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
+                                <option value="@YesNoUnkown.no">@ResourceApp.no</option>
+                                <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
+                            </InputSelect>
+                            <ValidationMessage For=@(() => PostCompany.QualitySystems) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">Environmental systems </label>
+                            <InputSelect @bind-Value="@PostCompany.EnvironmentalSystems" class="@CssClasses.Input.Text">
+                                <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
+                                <option value="@YesNoUnkown.no">@ResourceApp.no</option>
+                                <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
+                            </InputSelect>
+                            <ValidationMessage For=@(() => PostCompany.QualitySystems) />
+                    </div>
+                </div>
+                    }
+                    else if (Part == 3)
+                    {
+                <div class="@CssClasses.Grid.Col.MD4 mb-1">
+                    <div class="@CssClasses.Form.CheckWrapperM">
+                                <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@PostCompany.IsVisible" />
+                                <label class="@CssClasses.Form.CheckLabel">@ResourceApp.isVisible</label>
+                            </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceLoc.baseCategory</label>
+                            <select class="@CssClasses.Input.Text" @onchange="CategoryChange">
+                                <option value="0" selected></option>
+                                @if (Categories != null)
+                                    foreach (var category in Categories.Where(x => x.CategoryId == null))
+                                    {
+                                        <option selected="@(CategorySelected!=null&& CategorySelected.Id == category.Id)" value="@category.Id">@category.Name</option>
+                                    }
+                            </select>
+                        </div>
+                        @if (CategorySelected != null)
+                        {
+                            <div>
+                                <label class="@CssClasses.Form.Label">@ResourceLoc.category</label>
+                                <InputSelect class="@CssClasses.Input.Text" @bind-Value="@PostCompany.CategoryId">
+                                    <option value="0" selected></option>
+                                    @if (Categories.Any(x => x.CategoryId == CategorySelected.Id)) foreach (var category in Categories.Where(x => x.CategoryId == CategorySelected.Id))
+                                        {
+                                            <option value="@category.Id">@category.Name</option>
+                                        }
+                                </InputSelect>
+                                <ValidationMessage For=@(() => PostCompany.CategoryId) />
+                            </div>
+                        }
+</div>
+                        @if (PostCompany.Address != null)
+                        {
+                        <div>
+                            <SharedAddressUI Address="PostCompany.Address"></SharedAddressUI>
+                        </div>
+                        }
+                
+                    }
+        </EditForm>
+        @if (Part == 4)
+        {
+            <ContactsUI Contacts="PostCompany.Contacts"></ContactsUI>
+        }
+    </div>
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="custForm" disabled="@IsLoading">
+            @ResourceApp.save
+        </button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+    </div>
+}
+
+@code {
+    int Part = 1;
+    PostOrganisationDTO PostCompany { get; set; }
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    [Parameter] public int ID { get; set; }
+    [Parameter] public int CategoryID { get; set; }
+    bool IsLoading = false;
+    List<OrganisationCategoryEntity> Categories;
+    OrganisationCategoryEntity CategorySelected;
+
+    async Task CategoryChange(ChangeEventArgs e)
+    {
+        if (e.Value == null) return;
+        int i = int.Parse(e.Value.ToString());
+        CategorySelected = null;
+        await Task.Delay(1);
+        if (i > 0)
+            CategorySelected = Categories.FirstOrDefault(x => x.Id == i);
+    }
+    private List<TabItem> Tabs => new()
+    {
+        new(1, "Basic information"),
+        new(2, ResourceApp.Assessment),
+        new(3, "Category"),
+        new(4, ResourceIdentity.contact),
+    };
+    IEnumerable<ListDTO> CustomerGroups;
+    protected async override Task OnInitializedAsync()
+    {
+        Categories = await MicroBus.Send(new GetOrganisationCategoryQuery());
+        var SubCat = Categories.FirstOrDefault(x => x.Id == CategoryID);
+        CategorySelected = Categories.FirstOrDefault(x => x.Id == SubCat.CategoryId);
+
+        if (ID > 0)
+        {
+            PostCompany = await MicroBus.Send(new GetOrganisationToPostQuery(ID));
+        }
+        else { PostCompany = new PostOrganisationDTO() { CategoryId = CategoryID }; }
+        CustomerGroups = await MicroBus.Send(new GetListOrganisationsTypeQuery(PostCompany.OrganisationTypeID, ID > 0 ? ID : null));
+    }
+    UnderContactOrganisationBase underContact;
+
+    void Add( ){
+        PostCompany.Contacts.Add(underContact);
+        underContact = null;
+    }
+    void Remove(UnderContactOrganisationBase contact)
+    {
+        PostCompany.Contacts.Remove(contact);
+    }
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        PostOrganisationDTO PostOrganisationDTO = new();
+        PropertyCopier.CopyPropertiesTo(PostCompany, PostOrganisationDTO);
+
+        var result = 
+        (ID > 0 && await MicroBus.Send(new UpdateOrganisationCommand(PostOrganisationDTO, ID))) ||
+            (ID == 0 && await MicroBus.Send(new CreateOrganisationCommand(PostOrganisationDTO)) > 0);
+        MHD.Notifications(ID > 0 ?ToastType.Update : ToastType.Add, result);
+        await Callback.InvokeAsync(result);
+    }
+}

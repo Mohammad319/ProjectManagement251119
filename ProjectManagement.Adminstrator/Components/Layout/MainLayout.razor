@@ -1,0 +1,15 @@
+﻿@inherits LayoutComponentBase
+@using BlazorMHD.Component.Dialog.DynamicCustomModal
+@using BlazorMHD.Component.Error
+@using BlazorMHD.Component.Loading
+@using BlazorMHD.Component.Toasts
+@using ContextMenuMHD
+@using Microsoft.JSInterop
+@using ProjectManagement.Client.Adminstrator.Shared.Error
+<div class ="mainContainer">
+    <NavbarUI @rendermode="InteractiveServer"></NavbarUI>
+@Body
+</div>
+<BlazorMHD.MHDUI @rendermode="InteractiveServer" />
+<ContextMenu @rendermode="InteractiveServer" />
+

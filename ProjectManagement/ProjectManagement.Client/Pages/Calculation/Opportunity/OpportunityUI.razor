@@ -1,0 +1,219 @@
+﻿@using BlazorMHD.UI.Components.Data.Card
+@using BlazorMHD.UI.Core.Services
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Client.Constant
+@inherits AppComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="pl-1.5 @(Calc.Tap4 ? "" : "pointer-events-none opacity-60")">
+    <div class="overflow-x-auto max-h-[420px] overflow-y-auto rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+        <table id="tableOpportunity"
+               class="min-w-full text-[13px] leading-4 table-auto border-collapse">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                @if (Calc != null && Calc.Opportunities != null)
+                {
+                    <tr class="bg-cyan-50 dark:bg-cyan-900/60 text-xs font-semibold">
+                        <!-- عمود الإجراءات / التعليق -->
+                        <th class="px-2 py-2 text-center align-middle w-[80px] sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60"></th>
+                        <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60"></th>
+                        <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60"></th>
+                        <th class="px-2 py-2 text-center align-middle font-bold text-emerald-600 dark:text-emerald-400 sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60">
+                            @Calc.Opportunities.Sum(x => x.Data.ProbabilityWorth)
+                        </th>
+                        <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60"></th>
+                        <th class="px-2 py-2 text-center align-middle font-bold text-blue-600 dark:text-blue-400 sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60">
+                            @Template.Format(Calc.Opportunities.Sum(x => (x.Data.ProbabilityPercent * x.Data.Value) / 100))
+                        </th>
+                        <th class="px-2 py-2 text-center align-middle font-bold text-amber-600 dark:text-amber-400 sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60">
+                            @Calc.Opportunities.Sum(x => x.Data.ProbabilityBest)
+                        </th>
+                        <th class="px-2 py-2 text-center align-middle font-bold text-slate-700 dark:text-slate-100 sticky top-0 z-10 bg-cyan-50 dark:bg-cyan-900/60">
+                            @Calc.Opportunities.Sum(x => x.Data.Value)
+                        </th>
+                    </tr>
+                }
+
+                <!-- صف العناوين (Sticky Header) -->
+                <tr class="text-xs uppercase tracking-wide">
+                    <th class="px-2 py-2 text-center align-middle w-[80px] sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @* عمود التعليق + أزرار *@
+                    </th>
+                    <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @ResourceLoc.opportunitiesRisks
+                    </th>
+                    <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @CalcResource.risk
+                    </th>
+                    <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @ResourceLoc.probabilityWorth
+                    </th>
+                    <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @ResourceLoc.probability
+                    </th>
+                    <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @ResourceLoc.probabilityValue
+                    </th>
+                    <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @ResourceLoc.probabilityBest
+                    </th>
+                    <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
+                        @ResourceLoc.value
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody class="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-100">
+                @if (Calc?.Opportunities != null)
+                {
+                    foreach (var status in Calc.Opportunities)
+                    {
+                        <tr class="group border-b border-slate-100 dark:border-slate-800
+                                   hover:bg-slate-50 dark:hover:bg-slate-800/60
+                                   cursor-pointer transition-colors"
+                            @oncontextmenu:preventDefault
+                            @oncontextmenu="async () => await Context(status)">
+
+                            <!-- عمود: تعليق + تعديل + حذف -->
+                            <td class="px-2 py-1 text-center align-middle">
+                                <div class="inline-flex items-center gap-1">
+                                    @if (!string.IsNullOrEmpty(status.Data.Comment))
+                                    {
+                                        <button type="button"
+                                                class="inline-flex items-center justify-center w-5 h-5 rounded-full
+                                                       border border-slate-300 dark:border-slate-600 text-[11px]
+                                                       hover:bg-slate-100 dark:hover:bg-slate-700"
+                                                @onclick="() => status.ShowComment = !status.ShowComment"
+                                                title="@CalcResource.comment">
+                                            @((MarkupString)Icons.TopBottom(status.ShowComment))
+                                        </button>
+                                    }
+
+                                    <button type="button"
+                                            class="@CssClasses.Btn.IconButton.Primary"
+                                            title="@ResourceApp.edit"
+                                            @onclick="() => UpdateForm(status)">
+                                        @((MarkupString)Icons.Edit)
+                                    </button>
+
+                                    <button type="button"
+                                            class="@CssClasses.Btn.IconButton.Danger"
+                                            title="@ResourceApp.delete"
+                                            @onclick="() => Remove(status)">
+                                        @((MarkupString)Icons.Delete)
+                                    </button>
+                                </div>
+                            </td>
+
+                            <td class="px-2 py-2 text-center align-middle">
+                                <span class="truncate" title="@status.OpportunitiesRisks">@status.OpportunitiesRisks</span>
+                            </td>
+
+                            <td class="px-2 py-2 text-center align-middle">
+                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px]
+                                             bg-slate-100 dark:bg-slate-800
+                                             text-slate-700 dark:text-slate-200">
+                                    @status.Type
+                                </span>
+                            </td>
+
+                            <td class="px-2 py-2 text-center align-middle">
+                                @status.Data.ProbabilityWorth
+                            </td>
+
+                            <td class="px-2 py-2 text-center align-middle">
+                                @(status.Data.ProbabilityPercent)%
+                            </td>
+
+                            <td class="px-2 py-2 text-center align-middle">
+                                @Template.Format((status.Data.ProbabilityPercent * status.Data.Value) / 100)
+                            </td>
+
+                            <td class="px-2 py-2 text-center align-middle">
+                                @status.Data.ProbabilityBest
+                            </td>
+
+                            <td class="px-2 py-2 text-center align-middle">
+                                @status.Data.Value
+                            </td>
+                        </tr>
+
+                        @if (status.ShowComment)
+                        {
+                            <tr class="commment @CssClasses.Table.Tr">
+                                <td></td>
+                                <td colspan="7" class="@CssClasses.Table.Td">
+                                    <label>@status.Data.Comment</label>
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    async Task Context(OpportunityModel item)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
+
+        if (!(user.Identity?.IsAuthenticated == true && isInAnyRole)) return;
+
+        var list = new List<MenuItem>()
+        {
+            new() {
+                Label = ResourceApp.edit,
+                OnClickAsync = () =>
+                {
+                    UpdateForm(item);
+                    return Task.CompletedTask;
+                }
+            },
+            new() {
+                Label = ResourceApp.delete,
+                OnClickAsync = () =>
+                {
+                    Remove(item);
+                    return Task.CompletedTask;
+                }
+            },
+        };
+
+        await ContextService.ShowMenuAsync(list);
+    }
+
+    void UpdateForm(OpportunityModel model) =>
+        Modal.ShowComponent<OpportunityFormUI>(
+            model.Id == 0
+                ? AppLoc[LocalizerConst.New, CalcResource.opportunity]
+                : AppLoc[LocalizerConst.Update, model.OpportunitiesRisks],
+            new Dictionary<string, object>
+            {
+                [nameof(OpportunityFormUI.Opportunity)] = model,
+                // [nameof(OpportunityFormUI.Callback)] = EventCallback.Factory.Create<OpportunityModel>(this, HandleSubmitAsync)
+            }, DialogSize.ExtraLarge);
+
+    protected override void OnInitialized()
+    {
+        Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
+    }
+
+    public void Dispose()
+    {
+        Folder.State.Calculation.OnChangeInCalculation -= ChangeCalcultionItems;
+    }
+
+    void ChangeCalcultionItems() => _ = InvokeAsync(StateHasChanged);
+
+    void Remove(OpportunityModel status) =>
+        MHD.DeleteMessage(string.Empty, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
+
+    async Task ConfirmRemoveAsync(OpportunityModel st)
+    {
+        bool result = await Repo.Opportunity.DeleteAsync(st.Id);
+        MHD.Notifications(ToastType.Delete, result);
+    }
+}

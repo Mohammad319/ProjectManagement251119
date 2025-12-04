@@ -1,0 +1,77 @@
+﻿@using ProjectManagement.Client.Pages.Project.Storage.Row
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Shared.Enums
+@inherits AppComponentBase
+
+@if (Type == CalculationItemType.task)
+{
+    @if (Tasks != null) foreach (var Storage in Tasks)
+        {
+            <TaskStorage Task="Storage.StorageValue" WithContent="true">
+                <span role="button" @onclick="() => AddRemove(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
+                    @((MarkupString)(IDs.Any(x => x == Storage.Id) ? Icons.Minus : Icons.Plus))
+                </span>
+            </TaskStorage>
+        }
+}
+else
+{
+    if (Resources != null) foreach (var Storage in Resources)
+        {
+            <ResourcesStorage Resource="Storage.StorageValue">
+                <span role="button" @onclick="() => AddRemove(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
+                    @((MarkupString)(IDs.Any(x => x == Storage.Id) ? Icons.Minus : Icons.Plus))
+                </span>
+            </ResourcesStorage>
+        }
+}
+@code {
+    List<StorageDTO<TaskPostDTO>>? Tasks;
+    List<StorageDTO<ResourcePostDTO>>? Resources;
+    [Parameter] public CalculationItemType Type { get; set; }
+    [Parameter] public int ParentID { get; set; }
+    [Parameter] public EventCallback Callback { get; set; }
+    List<int> IDs = [];
+    public bool SaveBtnVisible() => (IDs != null && IDs.Count != 0);
+    void AddRemove(int id)
+    {
+        int oldCount = IDs.Count;
+        if (IDs.Any(x => x == id)) IDs.Remove(id);
+        else IDs.Add(id);
+        int newCount = IDs.Count;  
+        Callback.InvokeAsync().Wait();
+    }
+    public async Task GetAsync(GetFilterDTO Post)
+    {
+        IDs = [];
+        Tasks = null;
+        Resources = null;
+        if (Type == CalculationItemType.task)
+            Tasks = await Repo.Storage.GetStorageAsync<TaskPostDTO>(Post);
+        else if (Type == CalculationItemType.resource)
+            Resources = await Repo.Storage.GetStorageAsync<ResourcePostDTO>(Post);
+        StateHasChanged();
+        }
+       public async Task<bool> SaveAsync()
+           {
+                if (Type == CalculationItemType.task)
+                {
+                    List<TaskPostDTO> tasks = Tasks.Where(x => IDs.Any(r => r == x.Id)).Select(x => x.StorageValue).ToList();
+                    if (tasks != null)
+                    {
+                tasks.ForEach(x => x.Data.IsOH = Calc.OHFactors);
+                        if(ParentID>0)
+                        tasks.ForEach(x => x.TaskId = ParentID);
+                return await Repo.Task.CreateAsync(tasks, Calc.Id);
+                    }
+                }
+                else
+                {
+                    List<ResourcePostDTO> resources = Resources.Where(x => IDs.Any(r => r == x.Id)).Select(x => x.StorageValue).ToList();
+                    if (resources != null)
+                        return await Repo.Resource.CreateAsync(resources, ParentID);
+                }
+                return false;
+           }
+}

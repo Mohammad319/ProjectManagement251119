@@ -1,0 +1,124 @@
+﻿@using Domain.Repository.AuthPermissions
+@using Microsoft.EntityFrameworkCore
+@using ProjectManagement.Shared.DTO.Tenant
+@using ProjectManagement.Shared.Models.Account
+@using ProjectManagement.Adminstrator.Services.Users
+@attribute [Authorize(Roles = PMRolesConst.APP.Users)]
+@inherits AppComponentBase
+@inject IUsersService UsersService
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<h3 class="CsS.Spacing.M.Bottom(Size.S2)">
+    <button class="@CsS.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync()">
+        @ResourceApp.back
+    </button>
+</h3>
+
+@if (TenantPut != null)
+{
+    <!-- بطاقة تفاصيل التينانت -->
+    <div class="@CC.Card.Panel @CsS.Spacing.M.Bottom(Size.S3)">
+        <table class="@CsS.Table.Tab">
+            <tbody class="@CsS.Table.TBody">
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@CalcResource.name</td>
+                    <td class="@CsS.Table.Td">@TenantPut.Name</td>
+                </tr>
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@AppControll.Db</td>
+                    <td class="@CsS.Table.Td">@TenantPut?.TenantDB?.Name</td>
+                </tr>
+                @if (TenantPut.DateExpire.HasValue)
+                {
+                    <tr class="@CsS.Table.Tr">
+                        <td class="@CsS.Table.Td">@AppControll.expire</td>
+                        <td class="@CsS.Table.Td">@TenantPut.DateExpire.Value.ToString("dd.MM.yyyy")</td>
+                    </tr>
+                }
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@AppControll.maxUsers</td>
+                    <td class="@CsS.Table.Td">@TenantPut.MaxUsers</td>
+                </tr>
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@AppControll.maxCalculations</td>
+                    <td class="@CsS.Table.Td">@TenantPut.MaxCalculations</td>
+                </tr>
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@ResourceIdentity.email</td>
+                    <td class="@CsS.Table.Td">@TenantPut.Email</td>
+                </tr>
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@ResourceIdentity.fax</td>
+                    <td class="@CsS.Table.Td">@TenantPut?.Fax</td>
+                </tr>
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@ResourceIdentity.phone</td>
+                    <td class="@CsS.Table.Td">@TenantPut?.Phone</td>
+                </tr>
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@ResourceIdentity.mobile</td>
+                    <td class="@CsS.Table.Td">@TenantPut?.Mobile @TenantPut?.BuildNumber</td>
+                </tr>
+                <tr class="@CsS.Table.Tr">
+                    <td class="@CsS.Table.Td">@ResourceIdentity.country</td>
+                    <td class="@CsS.Table.Td">@TenantPut.Country</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- أزرار إدارية -->
+    <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
+        <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom(Size.S2)" @onclick="(e) => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
+            New User
+        </button>
+    </AuthorizeView>
+
+    @if (Users == null || !Users.Any())
+    {
+        <button class="@CsS.Btn.Outline.Secondary" @onclick="async () => await GetUsersAsync()">
+            @ResourceIdentity.users
+        </button>
+    }
+    else
+    {
+        <!-- جدول المستخدمين -->
+        <div class="@CC.Card.Panel">
+            <table class="@CsS.Table.Tab">
+                <thead class="@CsS.Table.Thead">
+                    <tr>
+                        <th class="@CsS.Table.TH">@ResourceIdentity.email</th>
+                        <th class="@CsS.Table.TH">@CalcResource.code</th> <!-- حقل ثانٍ للاسم/الاسم المستخدم -->
+                        <th class="@CsS.Table.TH">@CalcResource.name</th>
+                        <th class="@CsS.Table.TH">@ResourceIdentity.lockoutEnd</th>
+                        <th class="@CsS.Table.TH">@ResourceIdentity.lockoutStart</th>
+                        <th class="@CsS.Table.TH">@ResourceApp.department</th>
+                    </tr>
+                </thead>
+                <tbody class="@CsS.Table.TBody">
+                    @foreach (var user in Users)
+                    {
+                        <tr class="@CsS.Table.Tr"
+                            @oncontextmenu:preventDefault
+                            @oncontextmenu="() => Context(user)">
+                            <td class="@CsS.Table.Td">@user.Email</td>
+                            <td class="@CsS.Table.Td">@user.UserName</td>
+                            <td class="@CsS.Table.Td">@user.Firstname @user.Lastname</td>
+                            <td class="@CsS.Table.Td">
+                                <input type="checkbox" class="@CsS.Input.Check" disabled value="@user.LockoutEnabled" />
+                                @(user.LockoutEnd.HasValue? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : string.Empty)
+                            </td>
+                            <td class="@CsS.Table.Td">
+                                @(user.LockoutStart.HasValue? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)
+                            </td>
+                            <td class="@CsS.Table.Td">@user.DepartmentId</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+

@@ -1,0 +1,21 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 px-2 py-1 text-[0.75rem]">
+    <span class="text-slate-500 dark:text-slate-400">🔍</span>
+    <input @bind="Value"
+           @bind:event="oninput"
+           class="bg-transparent focus:outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-[0.75rem] w-full"
+           placeholder="@Placeholder"
+           @onkeydown="OnKeyDown"
+           @attributes="AdditionalAttributes" />
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Search...";
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}

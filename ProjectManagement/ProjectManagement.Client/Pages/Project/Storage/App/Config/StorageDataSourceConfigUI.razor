@@ -1,0 +1,68 @@
+﻿@inject AppState AppState
+
+<EditForm id="resForm" Model="StorageApp" class="@($"{CssClasses.Modal.Body} bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100")" OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-red-600 dark:text-red-400" />
+
+    <fieldset class="space-y-2">
+        <legend class="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200"></legend>
+
+        <div class="@Grid3">
+            <!-- Name -->
+            <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <InputCheckbox @bind-Value="StorageApp.Name"
+                               id="metric-name"
+                               class="@($"{CssClasses.Input.Switch} dark:accent-indigo-400")" />
+                <label for="metric-name" class="@($"{CssClasses.Form.CheckLabel} text-gray-800 dark:text-gray-200")">
+                    @CalcResource.name
+                </label>
+            </div>
+
+            <!-- Cost -->
+            <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <InputCheckbox @bind-Value="StorageApp.Cost"
+                               id="metric-cost"
+                               class="@($"{CssClasses.Input.Switch} dark:accent-indigo-400")" />
+                <label for="metric-cost" class="@($"{CssClasses.Form.CheckLabel} text-gray-800 dark:text-gray-200")">
+                    @CalcResource.cost
+                </label>
+            </div>
+
+        </div>
+    </fieldset>
+
+    <div class="mt-4 flex gap-2 justify-end">
+        <button type="submit" class="@($"{CssClasses.Btn.Outline.Primary} border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-800")">
+            Save
+        </button>
+        <button type="button" class="@($"{CssClasses.Btn.Outline.Secondary} border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800")"
+                @onclick="async () => await OnChanged.InvokeAsync(false)">
+            Close
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public EventCallback<bool> OnChanged { get; set; }
+    public const string Grid3 = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3";
+
+    // تأكد أن الخصائص Bool في StorageState (Name/Cost/CO2) لأنها مربوطة بـ InputCheckbox
+    private StorageState StorageApp = new();
+
+    protected override void OnParametersSet()
+    {
+        StorageApp = new StorageState
+        {
+            Name = AppState.StorageApp.Name,
+            Cost = AppState.StorageApp.Cost,
+        };
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        AppState.StorageApp.Name = StorageApp.Name;
+        AppState.StorageApp.Cost = StorageApp.Cost;
+
+        await OnChanged.InvokeAsync(true);
+    }
+}

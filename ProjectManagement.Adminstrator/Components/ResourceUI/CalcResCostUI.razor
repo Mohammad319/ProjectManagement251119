@@ -1,0 +1,113 @@
+﻿@using ProjectImportHub.Entities
+@using ProjectManagement.Client.Adminstrator.Services.MHDBlazor
+@using ProjectManagement.Shared.DTO.App.Dataloader
+@inject MhdServices MHD
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@inject ProjectImportHub.Services.Resource.IResourceService ResourceService
+
+<div class="@CsS.Modal.Body">
+    <EditForm Model="CalcResCost" OnValidSubmit="HandleSubmit" class="">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="@CsS.Text.Danger" />
+        <div class="@CsS.Grid.Col.MD4">
+            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">Period</div>
+            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@CalcResource.quantity</div>
+            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">%</div>
+            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@CalcResource.cost</div>
+            <div class="@CC.Text.Sm @CsS.Text.Secondary">Morning</div>
+            <div>
+                <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
+            </div>
+            <div class="@CC.Text.Sm @CsS.Text.Secondary">
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+            </div>
+            <div>
+                <InputNumber @bind-Value="CalcResCost.MorgenCost" class="@CsS.Input.Number" />
+            </div>
+
+            <!-- Day -->
+            <div class="@CC.Text.Sm @CsS.Text.Secondary">Day</div>
+            <div>
+                <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
+            </div>
+            <div class="@CC.Text.Sm @CsS.Text.Secondary">
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+            </div>
+            <div>
+                <InputNumber @bind-Value="CalcResCost.DayCost" class="@CsS.Input.Number" />
+            </div>
+            @{
+                var totalQty = Resource?.Data?.Quantity ?? 0;
+                var used = (CalcResCost.Morgen + CalcResCost.Day);
+                var eveningQty = (used > totalQty) ? 0 : (totalQty - used);
+                CalcResCost.Evening = Convert.ToInt32(eveningQty);
+                var eveningPct = totalQty > 0 ? Math.Round((eveningQty * 100.0) / totalQty, 2) : 0;
+            }
+            <div class="@CC.Text.Sm @CsS.Text.Secondary">Evening</div>
+            <div>
+                <input disabled value="@eveningQty" class="@CsS.Input.Number" />
+            </div>
+            <div class="@CC.Text.Sm @CsS.Text.Secondary">@eveningPct%</div>
+            <div>
+                <InputNumber @bind-Value="CalcResCost.EveningCost" class="@CsS.Input.Number" />
+            </div>
+        </div>
+
+        <div class="@CsS.Modal.Footer">
+            <button type="submit" class="@CsS.Btn.Outline.Success">@ResourceApp.save</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public ResourceEntity Resource { get; set; }
+
+    CalcResCost CalcResCost = new();
+    [Parameter] public EventCallback<bool> CallBack { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Resource.CalcResCost != null)
+            CalcResCost = new()
+                {
+                    DayCost = Resource.CalcResCost.DayCost,
+                    Day = Resource.CalcResCost.Day,
+                    Evening = Resource.CalcResCost.Evening,
+                    EveningCost = Resource.CalcResCost.EveningCost,
+                    Morgen = Resource.CalcResCost.Morgen,
+                    MorgenCost = Resource.CalcResCost.MorgenCost,
+                    IsPercent = Resource.CalcResCost.IsPercent,
+                    Quantity = Resource.CalcResCost.Quantity,
+                };
+        else
+        {
+            CalcResCost.Day = (int)Resource.Data.Quantity.Value;
+            CalcResCost.DayCost = Resource.Data.Cost;
+        }
+    }
+    public void IsPercent()
+    {
+        CalcResCost.IsPercent = true;
+        CalcResCost.Quantity = null;
+    }
+    public void IsNotPercent()
+    {
+        CalcResCost.IsPercent = false;
+        CalcResCost.Quantity = CalcResCost.Quantity.Value;
+    }
+    async Task HandleSubmit()
+    {
+        Resource.CalcResCost = CalcResCost;
+        Resource.Data.Cost = CalcResCost.CalcCost();
+        if(await ResourceService.UpdateAsync(Resource))
+        {
+            MHD.Modal.CloseLastModal();
+            await CallBack.InvokeAsync(true);  
+        }
+    }
+    async Task HandleValidSubmit()
+    {
+        await ResourceService.UpdateAsync(Resource);
+    }
+}

@@ -1,0 +1,164 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@inherits AppComponentBase
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div id="folderTable" class="space-y-0.5 select-none">
+    @foreach (var folder in UoWService.Folder.State.FoldersList ?? Enumerable.Empty<FolderMVVM>())
+    {
+        var isFolderSelected = Folder.State.FolderSelected?.Id == folder.Id;
+
+        var folderClasses = new List<string>
+        {
+            "group",
+            "flex items-center gap-1 px-1 py-0.5 rounded-md cursor-pointer",
+            "transition-colors duration-150",
+            "bg-gray-50 dark:bg-gray-900",
+            "hover:bg-gray-100 dark:hover:bg-gray-800",
+            "active:scale-95"
+        };
+
+        if (folder.IsDragOver)
+            folderClasses.Add("ring-1 ring-slate-500 bg-slate-100 dark:bg-slate-800");
+
+        if (isFolderSelected)
+            folderClasses.Add("bg-slate-200 dark:bg-slate-700/40 border-l-4 border-slate-500");
+
+        <div @key="folder.Id"
+             @oncontextmenu:preventDefault
+             @oncontextmenu="() => Context(folder)"
+             @ondrop="async _ => await HandleDrop(folder)"
+             @ondragenter="() => OnDragEnterFolder(folder)"
+             @ondragleave="() => OnDragLeaveFolder(folder)"
+             @ondragover:preventDefault
+             @ondragstart="() => CalcDraging = folder"
+             draggable="true"
+             @onclick="async () => await SeFolder(folder)"
+             role="button"
+             tabindex="0"
+             class="@string.Join(" ", folderClasses)">
+
+            <!-- Arrow -->
+            <button @onclick:stopPropagation="true"
+                    @onclick="async () => await CollapseFolder(folder)"
+                    class="shrink-0 text-slate-500 dark:text-slate-400 group-hover:text-slate-600 transition-transform duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="@($"w-4 h-4 transform transition-transform duration-200 {(folder.ShowProjects ? "rotate-90" : "rotate-0")}")"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+
+            <!-- Folder Icon -->
+            <span class="shrink-0 text-[16px]">
+                @(folder.ShowProjects ? "📂" : "📁")
+            </span>
+
+            <!-- Folder Name + Count -->
+            <div class="flex-1 flex items-center justify-between gap-2">
+                <span title="@folder.Name"
+                      class="truncate text-[15px] font-medium
+                               text-gray-800 dark:text-gray-200
+                               group-hover:text-slate-700 dark:group-hover:text-slate-300
+                               @(isFolderSelected ? " text-slate-700 dark:text-slate-200" : "")">
+                    @folder.Name
+                </span>
+            </div>
+        </div>
+
+        <!-- Projects -->
+        @if (folder.ShowProjects && folder.Projects is not null)
+        {
+            <div class="ml-3 border-l border-gray-200 dark:border-gray-700 pl-2 space-y-0.5">
+                @foreach (var project in folder.Projects ?? Enumerable.Empty<ListProjectMVVM>())
+                {
+                    var isProjectSelected = Folder.State.ProjectSelected?.Id == project.Id;
+
+                    var projectClasses = new List<string>
+                    {
+                        "group",
+                        "flex items-center gap-1 px-1 py-0 rounded-md cursor-pointer",
+                        "transition-colors duration-150",
+                        "bg-gray-50 dark:bg-gray-900",
+                        "hover:bg-gray-100 dark:hover:bg-gray-800",
+                        "active:scale-95"
+                    };
+
+                    if (project.IsDragOver)
+                        projectClasses.Add("ring-1 ring-slate-500 bg-slate-100 dark:bg-slate-800");
+
+                    if (isProjectSelected)
+                        projectClasses.Add("bg-slate-200 dark:bg-slate-700/40 border-l-4 border-slate-500");
+
+                    <div @key="project.Id"
+                         @oncontextmenu:preventDefault
+                         @ondrop="async _ => await HandleDrop(project)"
+                         @ondragleave="() => project.IsDragOver = false"
+                         @ondragover="() => project.IsDragOver = CalcDraging is ListProjectMVVM"
+                         @ondragstart="() => CalcDraging = project"
+                         draggable="true"
+                         @onclick="async () => await SetProject(folder, project)"
+                         role="button"
+                         tabindex="0"
+                         class="@string.Join(" ", projectClasses)">
+
+                        <!-- Arrow -->
+                        <button @onclick:stopPropagation="true"
+                                @onclick="async () => await CollapseProject(project)"
+                                class="shrink-0 text-slate-500 dark:text-slate-400 group-hover:text-slate-600 transition-transform duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 class="w-4 h-4 transform transition-transform duration-200 @( project.ShowCalculations ? "rotate-90" : "rotate-0")"
+                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+
+                        <!-- Project Icon -->
+                        <span class="shrink-0 text-[14px] text-slate-500">
+                            📄
+                        </span>
+
+                        <div class="flex-1 flex items-center justify-between gap-2">
+                            <span title="@project.Name"
+                                  class="truncate text-[14px]
+                                           text-gray-700 dark:text-gray-300
+                                           group-hover:text-slate-700 dark:group-hover:text-slate-300
+                                           @(isProjectSelected ? " text-slate-700 dark:text-slate-200 font-semibold" : "")">
+                                @project.Name
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Calculations -->
+                    <div class="ml-5 border-l border-gray-200 dark:border-gray-700 pl-2 space-y-0.5
+                                   overflow-hidden transition-all duration-200 ease-in-out
+                                   @(project.ShowCalculations ? " max-h-[800px] opacity-100" : "max-h-0 opacity-0")">
+                        @foreach (var cal in project.Calculations ?? Enumerable.Empty<ListCalculationMVVM>())
+                        {
+                            var calcSelected = Calc?.Id == cal.Id;
+                            var calcClasses = new List<string>
+                            {
+                                "px-1 py-0 rounded-md cursor-pointer transition-colors duration-150",
+                                "bg-gray-50 dark:bg-gray-900",
+                                "hover:bg-gray-100 dark:hover:bg-gray-800",
+                                "active:scale-95"
+                            };
+
+                            if (calcSelected)
+                                calcClasses.Add("bg-slate-200 dark:bg-slate-700/40 border-l-4 border-slate-500");
+
+                            <div @key="cal.Id"
+                                 @onclick="async () => await NewCalculations(folder, project, cal)"
+                                 class="@string.Join(" ", calcClasses)">
+                                <span title="@cal.Name"
+                                      class="truncate text-[12px] text-gray-600 dark:text-gray-400 hover:text-slate-700 dark:hover:text-slate-300 @(calcSelected ? "text-slate-700 dark:text-slate-200 font-semibold" : "")">
+                                    • @cal.Name
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>

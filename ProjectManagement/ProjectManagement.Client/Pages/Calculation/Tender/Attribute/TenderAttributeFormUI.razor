@@ -1,0 +1,100 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation;
+@using ProjectManagement.Client.Shared.Model.Project;
+@using ProjectManagement.Client.Shared.Repositories.Calculation;
+@using ProjectManagement.Client.Shared.Repositories.Offer;
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Offer;
+@using ProjectManagement.Shared.Base.Calculation;
+@using System.Text.Json;
+@inherits AppComponentBase
+<EditForm id="myFormAttr" class="@CssClasses.Modal.Body" Model="@Post" OnValidSubmit="async()=> await HandleSubmitAsync()">
+        <div class="@CssClasses.Grid.Col.MD4">
+        <div class="@CssClasses.Grid.Span.MD2">
+        <label class="@CssClasses.Form.Label">@CalcResource.name </label>
+        <InputText @bind-Value="Post.Name" class="@CssClasses.Input.Text" />
+        <ValidationMessage For=@(() => Post.Name) />
+    </div>
+        <div class="@CssClasses.Grid.Span.MD2">
+        <label class="@CssClasses.Form.Label">@CalcResource.note </label>
+        <InputTextArea @bind-Value="Post.Note" class="@CssClasses.Input.Text" />
+        <ValidationMessage For=@(() => Post.Note) />
+    </div>
+    @if (TenderAttribute.Id == 0) for (int i = 0; i < TendersValues.Count; i++)
+        {
+            var buttonNumber = i;
+            <div>
+                <label class="@CssClasses.Form.Label">@Tenders[i].Company </label>
+                <input type="number" class="@CssClasses.Input.Text" @onchange="(e)=> OnChange(e,TendersValues.ElementAt(buttonNumber).Key)" />
+            </div>
+        }
+    </div>
+</EditForm>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myFormAttr" disabled="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+</div>
+@code {
+    void OnChange(ChangeEventArgs ev,int i)
+    {
+        if (string.IsNullOrEmpty(ev.Value.ToString()))
+        {
+            TendersValues[i] = 0;
+        }
+        else
+        {
+            string s = ev.Value.ToString();
+            var t = Convert.ToDouble(s);
+            TendersValues[i] = t;
+        }
+    }
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    bool IsLoading = false;
+    [Parameter] public List<TenderListDTO> Tenders { get; set; } = new();
+    [Parameter] public int CalcId { get; set; }
+
+    [Parameter] public TenderAttributeListDTO TenderAttribute { get; set; }
+    TenderAttributeListPostDTO Post;
+    Dictionary<int, double> TendersValues = new Dictionary<int, double>();
+    protected override void OnInitialized()
+    {
+        if (TenderAttribute.Id ==0)
+            foreach (var item in Tenders)
+            {
+                TendersValues.Add(item.Id,0);
+            }
+        Post = new TenderAttributeListPostDTO()
+        {
+                Name = TenderAttribute.Name,
+                Note = TenderAttribute.Note,
+        };
+    }
+    async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            bool isSuccess;
+            if (TenderAttribute.Id == 0)
+            {
+                Post.TendersValues = TendersValues;
+                isSuccess = (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.CreateAsync(CalcId, Post))) > 0;
+            }
+            else
+            {
+                isSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.UpdateAsync(TenderAttribute.Id, CalcId, Post));
+            }
+             MHD.Notifications(TenderAttribute.Id == 0 ? ToastType.Add : ToastType.Update, isSuccess);
+            await Callback.InvokeAsync(isSuccess);
+        }
+        catch
+        {
+             MHD.Notifications(TenderAttribute.Id == 0 ? ToastType.Add : ToastType.Update, false);
+           // Console.WriteLine(ex.Message);
+        }
+        await Callback.InvokeAsync(false);
+        IsLoading = false;
+    }
+}

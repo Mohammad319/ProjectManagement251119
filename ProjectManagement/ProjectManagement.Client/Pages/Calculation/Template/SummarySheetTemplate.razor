@@ -1,0 +1,294 @@
+﻿@using Microsoft.Extensions.Localization
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Shared.DTO.Calculation.Template
+@inherits AppComponentBase
+
+@inject IStringLocalizer<ResourceLoc> Localizer
+@inject IStringLocalizer<CalcResource> CalcLoc
+
+@if (Temp != null)
+{
+    <style>
+        /* نفس الحدود الخاصة بالـ SummarySheet بناءً على الألوان المختارة */
+        #summarySheet table {
+            border-top: 1px @Temp.SSColor[0] @Temp.SSColor[1];
+            border-left: 1px @Temp.SSColor[0] @Temp.SSColor[1];
+            border-collapse: collapse;
+        }
+
+        #summarySheet td,
+        #summarySheet th {
+            border-right: 1px @Temp.SSColor[0] @Temp.SSColor[1];
+        }
+
+        #summarySheet tr {
+            border-bottom: 1px @Temp.SSColor[0] @Temp.SSColor[1];
+        }
+    </style>
+
+    <div id="summarySheet"
+         class="text-xs md:text-sm text-slate-900 dark:text-slate-100">
+
+        <div class="bg-white dark:bg-slate-900/90
+                        border border-slate-200 dark:border-slate-700
+                        rounded-lg shadow-sm p-3 space-y-4">
+
+            <!-- عنوان بسيط -->
+            <div class="flex items-center justify-between gap-2">
+                <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    .summarySheet
+                </h3>
+
+                <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                    @* نص بسيط فوق *@
+                    Layout / Design
+                </span>
+            </div>
+
+            <!-- إعداد عرض الأعمدة -->
+            <div>
+                <div class="mb-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    .columnsWidth
+                </div>
+
+                <div class="overflow-x-auto rounded border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60">
+                    <table class="min-w-max text-[11px]">
+                        <thead class="bg-slate-100 dark:bg-slate-800/80">
+                            <tr>
+                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                {
+                                    <th class="px-2 py-1 font-semibold whitespace-nowrap text-left">
+                                        @CalcLoc[TemplateConst.SSCTitles[i]]
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white dark:bg-slate-900/80">
+                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                {
+                                    <td class="px-2 py-1">
+                                        <div class="flex items-center gap-1">
+                                            <input type="number"
+                                                   class="w-16 border border-slate-300 dark:border-slate-600 rounded
+                                                                  bg-white dark:bg-slate-900
+                                                                  px-1 py-0 text-[11px] text-right
+                                                                  focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                   @bind="Temp.SSWidth[i]" />
+
+                                            <span class="text-[10px] text-slate-400">
+                                                px
+                                            </span>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- إعداد الألوان -->
+            <div class="pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
+                <div class="mb-2 text-[11px] text-slate-500 dark:text-slate-400">
+                    .colorsAndBorders
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+                    <!-- نوع الإطار -->
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                            @AppFormatResource.borderType
+                        </label>
+                        <select @bind="Temp.SSColor[0]"
+                                class="w-full border border-slate-300 dark:border-slate-600 rounded
+                                           bg-white dark:bg-slate-900
+                                           px-2 py-1 text-[11px]
+                                           text-slate-900 dark:text-slate-100
+                                           focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            @foreach (var item in TemplateConst.BorderStyles)
+                            {
+                                <option value="@item">
+                                    @Localizer[item]
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- لون الإطار -->
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                            @AppFormatResource.bolder
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="color"
+                                   class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
+                                              bg-transparent cursor-pointer"
+                                   @bind="Temp.SSColor[1]" />
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                @Temp.SSColor[1]
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- لون الخط -->
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                            @AppFormatResource.font
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="color"
+                                   class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
+                                              bg-transparent cursor-pointer"
+                                   @bind="Temp.SSColor[2]" />
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                @Temp.SSColor[2]
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- لون الهيدر -->
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                            @ResourceApp.header
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="color"
+                                   class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
+                                              bg-transparent cursor-pointer"
+                                   @bind="Temp.SSColor[3]" />
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                @Temp.SSColor[3]
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- لون سطر الفاكتور -->
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                            @CalcResource.factor
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="color"
+                                   class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
+                                              bg-transparent cursor-pointer"
+                                   @bind="Temp.SSColor[4]" />
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                @Temp.SSColor[4]
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- لون سطر المجموع -->
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                            @CalcResource.sum
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="color"
+                                   class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
+                                              bg-transparent cursor-pointer"
+                                   @bind="Temp.SSColor[5]" />
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                @Temp.SSColor[5]
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معاينة الشكل النهائي -->
+            <div class="pt-3 border-t border-dashed border-slate-200 dark:border-slate-700">
+                <div class="mb-2 flex items-center justify-between gap-2">
+                    <span class="text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                        Preview
+                    </span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400">
+                        .summarySheet (@Localizer["preview"])
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto rounded bg-slate-50/70 dark:bg-slate-900/70 p-2">
+                    <table class="min-w-max text-[11px]"
+                           style="color:@Temp.SSColor[2];">
+                        <thead style="background-color:@Temp.SSColor[3];">
+                            <tr>
+                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                {
+                                    <th style="width:@(Temp.SSWidth[i])px"
+                                        class="px-2 py-1 font-semibold whitespace-nowrap text-left">
+                                        @CalcLoc[TemplateConst.SSCTitles[i]]
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- سطر مثال للفكتور -->
+                            <tr style="background-color:@Temp.SSColor[4];">
+                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                {
+                                    <td class="px-2 py-1 whitespace-nowrap">
+                                        @GetPreviewCellContent(i, isSumRow: false)
+                                    </td>
+                                }
+                            </tr>
+
+                            <!-- سطر مثال للمجموع -->
+                            <tr style="background-color:@Temp.SSColor[5]; font-weight:600;">
+                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                {
+                                    <td class="px-2 py-1 whitespace-nowrap">
+                                        @GetPreviewCellContent(i, isSumRow: true)
+                                    </td>
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public TemplateListPostDTO Temp { get; set; } = new TemplateListPostDTO();
+
+    /// <summary>
+    /// نص بسيط لكل خلية في المعاينة، حسب رقم العمود ونوع الصف (فكتور / مجموع)
+    /// حتى تعطي إحساس حقيقي بشكل الورقة
+    /// </summary>
+    private string GetPreviewCellContent(int colIndex, bool isSumRow)
+    {
+        // حسب العناوين القياسية، نعرض محتوى مناسب
+        var titleKey = TemplateConst.SSCTitles[colIndex];
+        var title = CalcLoc[titleKey];
+
+        if (isSumRow)
+        {
+            // صف المجموع
+            if (titleKey.Contains("Name", StringComparison.OrdinalIgnoreCase))
+                return $"{title} (Total)";
+            if (titleKey.Contains("Cost", StringComparison.OrdinalIgnoreCase))
+                return "123 456.00";
+            if (titleKey.Contains("Factor", StringComparison.OrdinalIgnoreCase))
+                return "1.23";
+
+            return "…";
+        }
+        else
+        {
+            // صف فكتور واحد
+            if (titleKey.Contains("Name", StringComparison.OrdinalIgnoreCase))
+                return $"{title} A";
+            if (titleKey.Contains("Cost", StringComparison.OrdinalIgnoreCase))
+                return "12 345.00";
+            if (titleKey.Contains("Factor", StringComparison.OrdinalIgnoreCase))
+                return "1.10";
+
+            return "Sample";
+        }
+    }
+}

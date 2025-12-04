@@ -1,0 +1,131 @@
+﻿@using Application.Feature.Account.Queries.AccountGroup
+@using Application.Feature.Calculation.ResourceType.Commands
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Shared.DTO.Account
+@using ProjectManagement.Shared.DTO.ResourceType
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+<EditForm class="@CssClasses.Modal.Body" Model="ResourceSort" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <div class="@CssClasses.Grid.Col.MD4">
+        <div class="@CssClasses.Grid.Span.MD2">
+            <label>@CalcResource.name: </label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@ResourceSort.Name" />
+            <ValidationMessage For=@(() => ResourceSort.Name) />
+        </div>
+        @if (AccountGroups != null)
+        {
+            <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
+                <select @onchange="ChangeGroupAccount" class="@CssClasses.Input.Text">
+                    <option value="0"></option>
+                    @foreach (var item in AccountGroups)
+                    {
+                        <option value="@item.Id" selected="@(AccountGroupSelected != null && AccountGroupSelected.Id == item.Id)">@item.Name</option>
+                    }
+                </select>
+            </div>
+            @if (AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
+            {
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.account </label>
+                    <InputSelect @bind-Value="ResourceSort.AccountId" class="@CssClasses.Input.Text">
+                        <option></option>
+                        @foreach (var item in AccountGroupSelected.Accounts)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For=@(() => ResourceSort.AccountId) />
+                </div>
+            }
+        }
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
+            <InputText @bind-Value="ResourceSort.Unit" class="@CssClasses.Input.Text" />
+            <ValidationMessage For=@(() => ResourceSort.Unit) />
+        </div>
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.cost </label>
+            <InputNumber @bind-Value="ResourceSort.Cost" class="@CssClasses.Input.Text" />
+            <ValidationMessage For=@(() => ResourceSort.Cost) />
+        </div>
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.fixedQ</label>
+            <InputNumber @bind-Value="ResourceSort.FixedQ" class="@CssClasses.Input.Text" />
+            <ValidationMessage For=@(() => ResourceSort.FixedQ) />
+        </div>
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
+            <InputNumber @bind-Value="ResourceSort.ChangeFactor1" class="@CssClasses.Input.Text" />
+            <ValidationMessage For=@(() => ResourceSort.ChangeFactor1) />
+        </div>
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.changeFactor2 </label>
+            <InputNumber @bind-Value="ResourceSort.ChangeFactor2" class="@CssClasses.Input.Text" />
+            <ValidationMessage For=@(() => ResourceSort.ChangeFactor2) />
+        </div>
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.co2 </label>
+            <InputNumber @bind-Value="ResourceSort.CO2" class="@CssClasses.Input.Text" />
+            <ValidationMessage For=@(() => ResourceSort.CO2) />
+        </div>
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.baseCost </label>
+            <InputNumber @bind-Value="ResourceSort.BaseCost" class="@CssClasses.Input.Text" />
+            <ValidationMessage For=@(() => ResourceSort.BaseCost) />
+        </div>
+            <div class="@CssClasses.Form.CheckWrapperM">
+                <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@ResourceSort.IsVisible" />&nbsp;
+                <label class="@CssClasses.Form.CheckLabel">@ResourceApp.isVisible</label>
+            </div>
+    </div>
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+            @ResourceApp.save
+        </button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="() => MHD.Modal.Close()">
+            @ResourceApp.cancel
+        </button>
+    </div>
+</EditForm>
+@code{
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    [Parameter] public ResourceSortModel? ResourceSort { get; set; }
+    bool IsLoading = false;
+    List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
+    ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
+
+    async Task ChangeGroupAccount(ChangeEventArgs e)
+    {
+        AccountGroupSelected = null;
+        int id = int.Parse(e.Value.ToString());
+        await Task.Delay(1);
+        if (id == 0) return;
+        SelectedGroup(id);
+    }
+    void SelectedGroup(int id) => AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Id == id);
+    protected async override Task OnInitializedAsync()
+    {
+        AccountGroups = await MicroBus.Send(new GetAccountGroupsAsListQuery());
+        if (ResourceSort?.Id > 0)
+        {
+            AccountGroupSelected = AccountGroups.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceSort.AccountId));
+        }
+    }
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        PostResourceSortDTO PostResourceSort = new();
+        PropertyCopier.CopyPropertiesTo(ResourceSort, PostResourceSort);
+        bool result = false;
+        if (ResourceSort?.Id == 0)
+            result = await MicroBus.Send(new CreateResourceSortCommand(PostResourceSort)) > 0;
+        else result = await MicroBus.Send(new UpdateResourceSortCommand(PostResourceSort,ResourceSort.Id));
+        await Callback.InvokeAsync(result);
+        MHD.Notifications(ResourceSort.Id == 0 ? ToastType.Add : ToastType.Update, result);
+        MHD.Modal.Close();
+    }
+}

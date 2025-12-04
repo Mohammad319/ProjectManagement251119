@@ -1,0 +1,82 @@
+﻿@using ProjectImportHub.Entities
+@using ProjectImportHub.Entities
+@inject ProjectImportHub.Services.TaskGroups.ITaskGroupsQueryService TaskGroupsQuery
+@using CC = ProjectManagement.Shared.Constant.CssClasses
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+
+<div class="@CsS.Layout.FlexWrap">
+    <div class="@CC.Layout.FlexWidth(208)">
+        @if (Folders != null) foreach (var r in Folders)
+            {
+                <div role="button">
+                    <button type="button" class="@CC.Multi([CC.Btn.Outline.Primary, CC.Spacing.M.Bottom(Size.S2)])" style="width:100%; text-align:left;"
+                            @onclick="async () => { await LoadResourcesAsync(r); }">
+                        @r.DisplayName
+                    </button>
+                </div>
+            }
+    </div>
+
+    <div class="@CC.Multi([CsS.Layout.FlexMinWidth(360), CC.Spacing.P.All(Size.S2)])">
+        <table class="@CsS.Table.Tab">
+            <thead class="@CsS.Table.Thead">
+                <tr><th class="@CsS.Table.TH">@CalcResource.name</th></tr>
+            </thead>
+            <tbody class="@CC.Table.TBody">
+                @if (Selected != null && Selected.Resources != null && Selected.Resources.Count > 0)
+                {
+                    foreach (var r in Selected.Resources)
+                    {
+                        <tr class="@CsS.Table.Tr">
+                            <td class="@CsS.Table.Td">
+                                <div class="@CsS.Layout.FlexItemsCenter">
+
+                                    <button type="button" class="@CC.Btn.Outline.Primary"
+                                            @onclick="async ()=> await AddDelete(r)">
+                                        @(ResIds.Any(x => x == r.Id) ? "-" : "+")
+                                    </button>
+                                    <span class="@CC.Spacing.M.Left(Size.S2)">@r.Name</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+    </div>
+</div>
+@code {
+    [Parameter] public int TaskId { get; set; }
+    [Parameter] public EventCallback<ResourceEntity> OnSave { get; set; }
+    [Parameter] public List<int> ResIds { get; set; }
+
+    List<ResourceFolderEntity> Folders { get; set; }
+    ResourceFolderEntity Selected;
+    protected override async Task OnInitializedAsync()
+    {
+        Folders = (await TaskGroupsQuery.GetVisibleFoldersAsync(TaskId, CancellationToken.None)).ToList();
+    }
+    async Task AddDelete( ResourceEntity res)
+    {
+        if (ResIds.Any(x => x == res.Id))
+        {
+            ResIds.Remove(res.Id);
+        }
+        else
+        {
+            ResIds.Add(res.Id);
+        }
+        await OnSave.InvokeAsync(res);
+    }
+    async Task LoadResourcesAsync(ResourceFolderEntity folders)
+    {
+        if (folders.Resources == null || folders.Resources.Count == 0)
+        {
+            Selected = null;
+            folders.Resources = (await TaskGroupsQuery.GetFolderResourcesAsync(folders.Id, CancellationToken.None)).ToList();
+        }
+        Selected = folders;
+        StateHasChanged();
+    }
+}

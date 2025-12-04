@@ -1,0 +1,306 @@
+﻿@implements IDisposable
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@using BlazorMHD.UI.Components.Data.Card
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Offer
+@using ProjectManagement.Shared.DTO.ResourceType
+@using ProjectManagement.Shared.Enums
+
+@inherits AppComponentBase
+<EditForm id="resForm" Model="ResourceUpdate"
+          OnValidSubmit="async()=> await HandleSubmitAsync()">
+
+    @if (Resource.Id == 0 && PostList.Count > 1)
+    {
+        <div>
+            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                @for (int i = 0; i < PostList.Count; i++)
+                {
+                    int x = i;
+                    <li class="nav-item" role="presentation">
+                        <button @onclick="()=> ChangePos(x)" class="nav-link active" type="button" role="tab">@(i + 1)</button>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    <DataAnnotationsValidator />
+
+    @* PANEL 1: الاسم + مجموعة الحساب + الحساب *@
+    <MhdCard Elevated="true" Compact="true" Class="mb-2">
+        <div class="@CssClasses.Layout.FlexWrap">
+            <div class="@CssClasses.Layout.FlexMinWidth(400)">
+                <label class="@CssClasses.Form.Label">@CalcResource.name </label>
+                <InputText @bind-Value="ResourceUpdate.Name" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => ResourceUpdate.Name)" />
+            </div>
+
+            @if (!Refresh && Config.AccountGroups != null)
+            {
+                <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                    <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
+                    <select @onchange="ChangeGroupAccount"
+                            value="@AccountGroupSelected.Id"
+                            class="@CssClasses.Input.Select">
+                        <option></option>
+                        @foreach (var item in Config.AccountGroups)
+                        {
+                            <option selected="@(AccountGroupSelected != null && item.Id == AccountGroupSelected.Id)"
+                                    value="@item.Id">
+                                @item.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                @if (ResourceUpdate != null && AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
+                {
+                    <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                        <label class="@CssClasses.Form.Label">@CalcResource.account </label>
+                        <InputSelect @bind-Value="ResourceUpdate.AccountId"
+                                     class="@CssClasses.Input.Select">
+                            <option></option>
+                            @if (AccountGroupSelected.Accounts != null)
+                                foreach (var item in AccountGroupSelected.Accounts)
+                                {
+                                    <option selected="@(item.Id == ResourceUpdate.AccountId)"
+                                            value="@item.Id">
+                                        @($"{item.Account} ({item.Name})")
+                                    </option>
+                                }
+                        </InputSelect>
+                    </div>
+                }
+            }
+        </div>
+    </MhdCard>
+
+    @* PANEL 2: الكمية + الوحدة + التكاليف + عوامل التغيير + Waste/Cap + Active *@
+    <MhdCard Elevated="true" Compact="true" Class="mb-2">
+        <div class="@CssClasses.Layout.FlexWrap">
+            <div class="@CssClasses.Layout.FlexWidth(InputNumber + (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? 130 : 0))">
+                <label class="@CssClasses.Form.Label">@CalcResource.quantity</label>
+                <div class="w-full @CssClasses.Layout.ButtonGroup">
+                    <InputSelect class="@CssClasses.Input.Select"
+                                 @bind-Value:get="ResourceUpdate.Data.QuantityParam"
+                                 @bind-Value:set="(value) => ChangeQuantityParam(value)">
+                        <option></option>
+                        <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
+                        @if (Calc.QuanityList != null)
+                            foreach (var status in Calc.QuanityList)
+                            {
+                                <option value="@status.Name">@status.Name (@status.Quantity)</option>
+                            }
+                    </InputSelect>
+
+                    @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
+                    {
+                        <InputNumber @bind-Value="ResourceUpdate.Data.Quantity"
+                                     class="@CssClasses.Input.Text" />
+                    }
+                </div>
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+                <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
+                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+                <label class="@CssClasses.Form.Label">@CalcResource.cost </label>
+                @if (Resource.OfferId.HasValue && Resource.OfferId > 0)
+                {
+                    <input class="@CssClasses.Input.Text" type="number" disabled value="@Resource.Data.Cost" />
+                }
+                else
+                {
+                    <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
+                }
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+                <label class="@CssClasses.Form.Label">@CalcResource.baseCost </label>
+                @if (Resource.OfferId.HasValue && Resource.OfferId > 0)
+                {
+                    <input type="number" disabled value="@Resource.Data.BaseCost" />
+                }
+                else
+                {
+                    <InputNumber @bind-Value="ResourceUpdate.Data.BaseCost" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => ResourceUpdate.Data.BaseCost)" />
+                }
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(130)">
+                <label class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(130)">
+                <label class="@CssClasses.Form.Label">@CalcResource.changeFactor2 </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(130)">
+                <div class="@CssClasses.Form.CheckWrapperM">
+                    <InputCheckbox @bind-Value="ResourceUpdate.Active" class="@CssClasses.Input.Check" />
+                    <label class="@CssClasses.Form.CheckLabel">@CalcResource.active </label>
+                </div>
+            </div>
+
+            @if (ResourceUpdate.ResType == ResourceTypesEnum.Materials
+              || ResourceUpdate.ResType == ResourceTypesEnum.Worker
+              || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
+            {
+                <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+                    <label class="@CssClasses.Form.Label" for="waste">
+                        @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
+                    </label>
+                    <InputNumber id="waste"
+                                 @bind-Value="ResourceUpdate.Data.CapWaste"
+                                 class="@CssClasses.Input.Number" />
+                    <ValidationMessage For="@(() => ResourceUpdate.Data.CapWaste)"
+                                       class="@CssClasses.Text.Danger" />
+                </div>
+            }
+        </div>
+    </MhdCard>
+
+    @* PANEL 3: النوع / التصنيف / الحالة / CO2 / الفرصة *@
+    <MhdCard Elevated="true" Compact="true" Class="mb-2">
+        <div class="@CssClasses.Layout.FlexWrap">
+            @if (Config.ResourceTypes != null)
+            {
+                <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                    <label class="@CssClasses.Form.Label">@CalcResource.resourceType</label>
+                    <InputSelect class="@CssClasses.Input.Select"
+                                 @bind-Value:get="ResourceUpdate.ResourceTypeId"
+                                 @bind-Value:set="async (value) => await ChangeResType(value)">
+                        <option value=""></option>
+                        @foreach (var item in Config.ResourceTypes)
+                        {
+                            <option value="@item.Id"
+                                    selected="@(ResourceUpdate.ResourceTypeId == item.Id)">
+                                @item.Name
+                            </option>
+                        }
+                    </InputSelect>
+                </div>
+            }
+
+            @if (ResTypeSelected != null && ResTypeSelected.ResourcesSort != null && ResTypeSelected.ResourcesSort.Any())
+            {
+                <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                    <label class="@CssClasses.Form.Label">@CalcResource.resourceSort </label>
+                    <InputSelect class="@CssClasses.Input.Select"
+                                 @bind-Value:get="ResourceUpdate.ResourceSortId"
+                                 @bind-Value:set="async (value) => await ChangeResSort2(value)">
+                        <option></option>
+                        @foreach (var item in ResTypeSelected.ResourcesSort)
+                        {
+                            <option value="@item.Id"
+                                    selected="@(ResourceUpdate.ResourceSortId.HasValue && ResourceUpdate.ResourceSortId == item.Id)">
+                                @item.Name
+                            </option>
+                        }
+                    </InputSelect>
+                </div>
+            }
+
+            <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                <label class="@CssClasses.Form.Label">@CalcResource.status</label>
+                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="@CssClasses.Input.Select">
+                    @if (Config.Statues != null)
+                    {
+                        <option value=""></option>
+                        @foreach (var status in Config.Statues)
+                        {
+                            <option value="@status.Id">@status.Name</option>
+                        }
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+                <label class="@CssClasses.Form.Label">@CalcResource.co2 </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => ResourceUpdate.Data.CO2)" />
+            </div>
+
+            <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                <label class="@CssClasses.Form.Label">@CalcResource.opportunity</label>
+                <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="@CssClasses.Input.Select">
+                    <option></option>
+                    @if (Calc.Opportunities != null)
+                        foreach (var opportunity in Calc.Opportunities)
+                        {
+                            <option value="@opportunity.Id">
+                                @opportunity.OpportunitiesRisks @opportunity.Type
+                            </option>
+                        }
+                </InputSelect>
+                <ValidationMessage For="@(() => ResourceUpdate.OpportunityId)" />
+            </div>
+        </div>
+    </MhdCard>
+
+    @* PANEL 4: الملاحظات *@
+    <MhdCard Elevated="true" Compact="true" Class="mb-2">
+        <div class="@CssClasses.Layout.FlexWrap">
+            <div class="flex-grow">
+                <label class="@CssClasses.Form.Label">@CalcResource.note </label>
+                <InputTextArea @bind-Value="ResourceUpdate.Data.Note" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => ResourceUpdate.Data.Note)" />
+            </div>
+
+            <div class="w-[100px]">
+                <button type="button"
+                        class="@CssClasses.Btn.Solid.Primary mt-7"
+                        @onclick="() => ResourceUpdate.Data.UpperNote.Add(string.Empty)">
+                    @CalcResource.UpperNote
+                </button>
+            </div>
+        </div>
+
+        @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
+        {
+            int d = i;
+            <div class="@CssClasses.Layout.FlexWrap mt-1">
+                <div class="flex-grow">
+                    <textarea lang="3"
+                              @bind="ResourceUpdate.Data.UpperNote[d]"
+                              class="@CssClasses.Input.Text w-full">
+                    </textarea>
+                </div>
+                <div class="w-[100px]">
+                    <button type="button"
+                            class="@CssClasses.Btn.Solid.Danger"
+                            @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
+                        @((MarkupString)@Icons.DeleteSVG)
+                    </button>
+                </div>
+            </div>
+        }
+    </MhdCard>
+</EditForm>
+
+    <div class="@CssClasses.Modal.Footer">
+    @if (Resource.Id == 0)
+    {
+        if (PostList.Count > 1)
+        {
+            <button type="button" class="@CssClasses.Btn.Outline.Danger" @onclick="()=> PostList.Remove(ResourceUpdate)">@ResourceApp.delete</button>
+        }
+        <button type="button" class="@CssClasses.Btn.Outline.Primary" @onclick="NewSP">@ResourceApp.newItem</button>
+    }
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="resForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">@ResourceApp.cancel</button>
+    </div>

@@ -1,0 +1,164 @@
+﻿@using Application.Feature.Organisation.Organisation.Queries
+@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Shared.DTO.App.List
+@using ProjectManagement.Shared.DTO.Offer;
+@attribute [Authorize]
+@using ProjectManagement.Shared.DTO.Organisation
+@using System.Text.Json
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+<div class="@CssClasses.Modal.Body">
+    @if (Company != null)
+    {
+        <div class="flex justify-between">
+            <ul class="@CssClasses.Tabs.UL" role="tablist">
+                @foreach (var tab in Tabs)
+                {
+                    <li class="mr-2" role="presentation">
+                        <button type="button" class="@(CssClasses.Tabs.Btn(Part == tab.Id))"
+                                @onclick="() => Part = tab.Id">
+                            @tab.Label
+                        </button>
+                    </li>
+                }
+            </ul>
+        </div>
+                    @if (Part == 1)
+        {
+            <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 p-2 text-sm">
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.name</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.Name</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.IDNumber</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.IDNumber</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.PersonOrganisationNr</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.PIDNumber</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.PersonOrganisationType</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.Type</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.status</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.Status</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.website</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.URL</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.email</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.Email</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.mobile</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.Mobile</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.phone</dt>
+        <dd class="text-gray-900 dark:text-gray-100">@Company.Phone</dd>
+
+                @if (Company.Notes != null)
+                {
+                    foreach (var note in Company.Notes)
+                    {
+                        <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.note</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@note</dd>
+                    }
+                }
+            </dl>
+        }
+        else if (Part == 2)
+                    {
+            <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 p-2 text-sm">
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.rating</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.Rating</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceIdentity.numberIDCards</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.NumberOfWorkersCards</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.collectiveLabourAgreement</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.SocialLaborAgreement</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.InvoiceVerificationDate</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.InvoiceVerificationDate</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.dateOfControl</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.VerificationDate</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">Quality systems</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.QualitySystems</dd>
+
+                <dt class="font-medium text-gray-700 dark:text-gray-300">Environmental systems</dt>
+                <dd class="text-gray-900 dark:text-gray-100">@Company.EnvironmentalSystems</dd>
+            </dl>
+                    }
+                    else if (Part == 3)
+                    {
+                        <dl>
+                            <dt class="@CssClasses.Grid.Col.MD4">@ResourceLoc.baseCategory</dt>
+                            <dd class="@CssClasses.Grid.Col.MD8">@Company.Category</dd>
+                        </dl>
+                        }
+                else if (Part == 4)
+                {
+                    @if (Company != null && Company.Contacts.Any())
+                    {
+                        <div>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th class="@CssClasses.Table.TH">@CalcResource.name </th>
+                                        <th class="@CssClasses.Table.TH">@ResourceIdentity.mobile / @ResourceIdentity.telefon </th>
+                                        <th class="@CssClasses.Table.TH">@CalcResource.status </th>
+                                        <th class="@CssClasses.Table.TH">@ResourceIdentity.email </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Company.Contacts)
+                                    {
+                                        <tr>
+                                            <th>
+                                                @if (!string.IsNullOrEmpty(item.Note))
+                                                {
+                                                    <span @onclick="() => item.CommentIsVisible = !item.CommentIsVisible">@((MarkupString)Icons.TopBottom(item.CommentIsVisible))</span>
+                                                }
+                                                @item.GetFullName()
+                                            </th>
+                                            <td>@item.Mobile / @item.Telefone</td>
+                                            <td>@item.Status</td>
+                                            <td>@item.Email</td>
+                                        </tr>
+                                        @if (item.CommentIsVisible)
+                                        {
+                                            <tr>
+                                                <td colspan="5">@CalcResource.note: @item.Note</td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                }
+                    
+    }
+</div>
+
+@code {
+    int Part = 1;
+
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public OrganisationDetailsDTO? Company { get; set; }
+    [Parameter] public int CompanyId { get; set; }
+    [Parameter] public EventCallback Callback { get; set; }
+    private List<TabItem> Tabs => new()
+    {
+        new(1, "Basic information"),
+        new(2, ResourceApp.Assessment),
+        new(3, "Category"),
+        new(4, ResourceIdentity.contact),
+    };
+    protected async override Task OnInitializedAsync()
+    {
+        Company = await MicroBus.Send(new GetOrganisationByIdQuery(CompanyId));
+    }
+}

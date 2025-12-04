@@ -1,0 +1,55 @@
+﻿@using Application.Interfaces
+@inject ICommandDispatcher MicroBus
+@inject MhdServices MHD
+    <EditForm class="@CssClasses.Modal.Body" Model="@PostAccountDTO" OnValidSubmit="async () => await HandleSubmitAsync()" id="accountForm">
+        <DataAnnotationsValidator />
+    <div class="@CssClasses.Grid.Col.MD4">
+        <div>
+                <label class="text-right">@CalcResource.account:</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@PostAccountDTO.Account" />
+                <ValidationMessage For=@(() => PostAccountDTO.Account) />
+            </div>
+        <div>
+                <label class="text-right">@CalcResource.name:</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="@PostAccountDTO.Name" />
+                <ValidationMessage For=@(() => PostAccountDTO.Name) />
+            </div>
+        <div class="@CssClasses.Grid.Span.MD2">
+            <div class="@CssClasses.Grid.Col.MD3">
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
+                    <InputSelect @bind-Value="PostAccountDTO.AccountGroupId" class="@CssClasses.Input.Select">
+                        <option value="0"></option>
+                    @if (GroupsAPI != null) foreach (var item in GroupsAPI)
+                    {
+                        <option value="@item.Id">@item.Name</option>
+                    }
+            </InputSelect>
+            <ValidationMessage For=@(() => PostAccountDTO.AccountGroupId) />
+        </div>
+        <div class="@CssClasses.Form.CheckWrapperM">
+                <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@PostAccountDTO.IsVisible" />
+                <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
+        </div>
+        <div>
+            <button type="button" class="mt-5 inline-flex items-center gap-1 @CssClasses.Btn.Solid.Primary" @onclick="() => PostAccountDTO.Data.Comments.Add(string.Empty)">@((MarkupString)Icons.Plus) @CalcResource.comment</button>
+        </div>
+        </div>
+        </div>
+    </div>
+</EditForm>
+@if (PostAccountDTO.Data.Comments != null) for (int i = 0; i < PostAccountDTO.Data.Comments.Count; i++)
+    {
+        int u = i;
+        <div>
+            <label class="text-right">@CalcResource.comment:</label>
+        <input type="text" class="@CssClasses.Input.Text" @bind="PostAccountDTO.Data.Comments[u]" />
+        </div>
+    }
+    <div class="@CssClasses.Modal.Footer">
+    <button type="submit" form="accountForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+        @ResourceApp.save
+        </button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick="CloseModal">@ResourceApp.cancel</button>
+    </div>
+

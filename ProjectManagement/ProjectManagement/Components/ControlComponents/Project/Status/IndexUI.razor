@@ -1,0 +1,35 @@
+﻿@using BlazorMHD.UI.Components.Data.Table
+@using Domain.Entities.Project
+@using ProjectManagement.Client.Shared.Model.Project
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+    <MhdTable Items="Status?
+                                            .Where(x => x.IsVisible == IsVisible)?
+                                            .OrderByDescending(x => x.Order)"
+              ShowFilter="false">
+        <HeaderTemplate>
+            <th style="width:200px;" class="@CssClasses.Table.TH">
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <button @onclick="() => UpdateForm(new StatusEntity())" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
+                    <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
+                </div>
+            </th>
+            <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+        </HeaderTemplate>
+        <ChildContent>
+            <MhdTableColumn>
+                <Template Context="status">
+                    <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <button @onclick="() => UpdateForm(status)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
+                        <button @onclick="() => Remove(status)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                    </div>
+                </Template>
+            </MhdTableColumn>
+            <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
+        </ChildContent>
+    </MhdTable>

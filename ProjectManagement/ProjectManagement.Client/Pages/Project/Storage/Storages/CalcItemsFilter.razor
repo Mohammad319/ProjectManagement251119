@@ -1,0 +1,179 @@
+﻿@using ProjectManagement.Client.Pages.Project.Storage.Row
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@inherits AppComponentBase
+    <EditForm id="filterForm" Model="@Filter" class="@CssClasses.Grid.Col.MD4">
+            @if (FoldersList != null && FoldersList.Count> 0)
+            {
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceLoc.folder</label>
+                <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.FolderID" @bind-Value:set="(value) => FolderChanged(value)">
+                        <option></option>
+                        @foreach (var status in FoldersList)
+                        {
+                            <option value="@status.Id">@status.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                @if (Projects != null && Projects.Count > 0)
+                {
+                <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.project</label>
+                    <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.ProjectID" @bind-Value:set="(value) => ProjectChanged(value)">
+                            <option></option>
+                            @foreach (var status in Projects)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    @if (Calcs != null && Calcs.Count > 0)
+                    {
+                        <div>
+                            <label class="@CssClasses.Form.Label">@CalcResource.calculation</label>
+                        <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.CalculationID" @bind-Value:set="(value) => CalcChanged(value)">
+                                <option value="0"></option>
+                                @foreach (var status in Calcs)
+                                {
+                                    <option value="@status.Id">@status.Name</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    }
+                }
+            }
+            <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.code </label>
+                <InputText @bind-Value="Filter.Code" class="@CssClasses.Input.Text" />
+            </div>
+            <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.name </label>
+                <InputText @bind-Value="Filter.Name" class="@CssClasses.Input.Text" />
+            </div>
+        <div>
+            <label class="@CssClasses.Form.Label">@CalcResource.unit </label>
+            <InputText @bind-Value="Filter.Unit" class="@CssClasses.Input.Text" />
+        </div>
+        @if (Post.Type == CalculationItemType.task)
+            {
+                @if (TGSStatuses != null)
+                {
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.status</label>
+                        <InputSelect @bind-Value="Filter.Status" class="@CssClasses.Input.Text">
+                            <option value="0"></option>
+                            @foreach (var status in TGSStatuses)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+            }
+            else
+            {
+            <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.accountGroups</label>
+                <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="AccountGroupSelected.Id" @bind-Value:set="(value) => ChangeGroupAccount(value)">
+                    <option></option>
+                    @if (Config.AccountGroups != null) foreach (var status in Config.AccountGroups)
+                    {
+                        <option value="@status.Id">@status.Name</option>
+                    }
+                </InputSelect>
+            </div>
+                @if (Accounts != null && Accounts.Count > 0)
+                {
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.account</label>
+                    <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.Account" @bind-Value:set="(value) => Filter.Account = value">
+                        <option></option>
+                        @foreach (var status in Projects)
+                        {
+                            <option value="@status.Id">@status.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+                }
+                @if (Config.Statues != null)
+                {
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.status</label>
+                        <InputSelect @bind-Value="Filter.Status" class="@CssClasses.Input.Text">
+                            <option value=""></option>
+                        @foreach (var status in Config.Statues)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+                <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.resourceType: </label>
+                    <InputSelect @bind-Value="@Filter.ResType" class="@CssClasses.Input.Text">
+                    @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
+                    {
+                        <option value="@level">@ResourceLocalize.GetResourceType(level)</option>
+                    }
+                    </InputSelect>
+                </div>
+            @if (Config.ResourceTypes != null)
+                {
+                    <div>
+                        <label class="@CssClasses.Form.Label">@CalcResource.resourceType</label>
+                        <InputSelect class="@CssClasses.Input.Text"
+                                     @bind-Value:get="Filter.ResourceTypeId" @bind-Value:set="(value) =>ChangeResType(value)">
+                            <option value=""></option>
+                        @foreach (var item in Config.ResourceTypes)
+                            {
+                                <option value="@item.Id" selected="@(Filter.ResourceTypeId == item.Id)">@item.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+            }
+        </EditForm>
+    <table class="@CssClasses.Table.Tab">
+            <HeaderStorageUI></HeaderStorageUI>
+        <tbody class="@CssClasses.Table.TBody">
+                @if (List != null)
+                {
+                    @if (Post.Type == CalculationItemType.task){
+                        foreach (var task in (List as List<TaskListMVVM>)) {
+                        <tr class="@UiStyles.ClassTask">
+                                <td><span @onclick="()=> Add(task.Id,task.Data.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
+                                    @((MarkupString)(Post.Items.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus))
+                    </span>
+                </td>
+                                <td>@task.Data.Code</td>
+                                <td><input type="checkbox" disabled checked="@task.Data.Active" /></td>
+                                <td>@task.Name</td>
+                                <td>@task.Data.Quantity / @task.BaseCost</td>
+                                <td>@task.Data.Unit</td>
+                                <td>@task.Data.ChangeFactor1</td>
+                                <td>@task.Data.ChangeFactor2</td>
+                                <td>@task.Data.Cap</td>
+                                <td></td>
+                            </tr>
+                                    }
+                                    }
+                    else if (Post.Type == CalculationItemType.resource)
+                        foreach (var Resource in (List as List<ResourceListMVVM>))
+                        {
+                        <tr class="@UiStyles.ClassResource">
+                                <td><span @onclick="()=> Add(Resource.Id,Resource.Quantity)" class="@(Post.Items.Any(x => x.Id == Resource.Id) ? "text-danger" : "text-primary")">
+                                    @((MarkupString)(Post.Items.Any(x => x.Id == Resource.Id) ? Icons.Minus : Icons.Plus))
+                    </span></td>
+                                <td></td>
+                                <td><input type="checkbox" disabled checked="@Resource.Active" /></td>
+                                <td>@Resource.Name</td>
+                                <td>@String.Format("{0:0.##}", Resource.BaseCost)</td>
+                                <td>@Resource.Cost / @Resource.Unit</td>
+                                <td>@Resource.ChangeFactor1</td>
+                                <td>@Resource.ChangeFactor2</td>
+                                <td>@Resource.CapWaste</td>
+                                <td>@Resource.CO2</td>
+                            </tr>
+                        }
+                }
+            </tbody>
+        </table>

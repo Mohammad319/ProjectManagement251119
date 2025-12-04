@@ -1,0 +1,94 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+
+  </PropertyGroup>
+	<ItemGroup>
+		<Compile Remove="**\node_modules\**" />
+		<Content Remove="**\node_modules\**" />
+		<EmbeddedResource Remove="**\node_modules\**" />
+		<None Remove="**\node_modules\**" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="ContextMenuMHD" Version="1.4.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="10.0.0" />
+    <PackageReference Include="pax.BlazorChartJs" Version="0.8.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\BlazorMHD.UI\BlazorMHD.UI.csproj" />
+    <ProjectReference Include="..\..\ProjectManagement.Client.Shared\ProjectManagement.Client.Shared.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Update="Shared\ResourceFiles\APP\ResourceApp.Designer.cs">
+      <DependentUpon>ResourceApp.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Shared\ResourceFiles\Calculation\AppFormatResource.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppFormatResource.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Shared\ResourceFiles\Calculation\CalcResource.Designer.cs">
+      <DependentUpon>CalcResource.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Shared\ResourceFiles\Identity\ResourceIdentity.Designer.cs">
+      <DependentUpon>ResourceIdentity.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Shared\ResourceFiles\ResourceLoc.Designer.cs">
+      <DependentUpon>ResourceLoc.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Shared\ResourceFiles\APP\ResourceApp.resx">
+      <LastGenOutput>ResourceApp.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Shared\ResourceFiles\Calculation\AppFormatResource.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>AppFormatResource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Shared\ResourceFiles\Calculation\CalcResource.resx">
+      <LastGenOutput>CalcResource.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Shared\ResourceFiles\Identity\ResourceIdentity.resx">
+      <LastGenOutput>ResourceIdentity.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Shared\ResourceFiles\ResourceLoc.resx">
+      <LastGenOutput>ResourceLoc.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

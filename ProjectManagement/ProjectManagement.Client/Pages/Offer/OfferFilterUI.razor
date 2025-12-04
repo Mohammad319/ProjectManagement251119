@@ -1,0 +1,292 @@
+﻿@using ProjectManagement.Client.Services.Calculation.CalculationItems
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.Enums
+@inherits AppComponentBase
+
+<div class="@($"{CssClasses.Modal.Body} space-y-3")">
+
+    <!-- نموذج الفلترة -->
+    <EditForm id="filterForm" Model="@Filter">
+        <div class="@CssClasses.Grid.Col.MD4">
+            @* Folder *@
+            @if (FoldersList != null && FoldersList.Count > 0)
+            {
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <div class="@CssClasses.Form.Field">
+                        <label class="@CssClasses.Form.Label">
+                            @ResourceLoc.folder
+                        </label>
+
+                        <InputSelect class="@CssClasses.Input.Select"
+                                     @bind-Value:get="Filter.FolderID"
+                                     @bind-Value:set="(value) => FolderChanged(value)">
+                            <option value=""></option>
+                            @foreach (var status in FoldersList)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            }
+
+            @* Project *@
+            @if (Projects != null && Projects.Count > 0)
+            {
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <div class="@CssClasses.Form.Field">
+                        <label class="@CssClasses.Form.Label">
+                            @CalcResource.project
+                        </label>
+
+                        <InputSelect class="@CssClasses.Input.Select"
+                                     @bind-Value:get="Filter.ProjectID"
+                                     @bind-Value:set="(value) => ProjectChanged(value)">
+                            <option value=""></option>
+                            @foreach (var status in Projects)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            }
+
+            @* Calculation *@
+            @if (Calcs != null && Calcs.Count > 0)
+            {
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <div class="@CssClasses.Form.Field">
+                        <label class="@CssClasses.Form.Label">
+                            @CalcResource.calculation
+                        </label>
+
+                        <InputSelect class="@CssClasses.Input.Select"
+                                     @bind-Value:get="Filter.CalculationID"
+                                     @bind-Value:set="(value) => CalcChanged(value)">
+                            <option value="0"></option>
+                            @foreach (var status in Calcs)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            }
+
+            @* Resource Type Enum *@
+            <div class="@CssClasses.Grid.Span.MD2">
+                <div class="@CssClasses.Form.Field">
+                    <label class="@CssClasses.Form.Label">
+                        @CalcResource.resourceType
+                    </label>
+
+                    <InputSelect class="@CssClasses.Input.Select"
+                                 @bind-Value="Filter.ResType">
+                        <option></option>
+                        @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
+                        {
+                            <option value="@level">@ResourceLocalize.GetResourceType(level)</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+
+            @* Resource Type from DB *@
+            @if (ResourceTypes != null)
+            {
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <div class="@CssClasses.Form.Field">
+                        <label class="@CssClasses.Form.Label">
+                            @CalcResource.resourceType
+                        </label>
+
+                        <InputSelect class="@CssClasses.Input.Select"
+                                     @bind-Value:get="Filter.ResourceTypeId"
+                                     @bind-Value:set="(value) => ChangeResType(value)">
+                            <option></option>
+                            @foreach (var item in ResourceTypes)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            }
+
+            @* Organisation (datalist) *@
+            @if (Organisations != null)
+            {
+                <div class="@CssClasses.Grid.Span.MD2">
+                    <div class="@CssClasses.Form.Field">
+                        <label class="@CssClasses.Form.Label">
+                            @ResourceApp.organisation
+                        </label>
+
+                        <input list="orgList"
+                               id="orgInput"
+                               class="@CssClasses.Input.Text"
+                               @oninput="OnInputOrgChanged" />
+
+                        <datalist id="orgList">
+                            <option></option>
+                            @foreach (var cat in Organisations)
+                            {
+                                <option data-id="@cat.Id" value="@cat.Name"></option>
+                            }
+                        </datalist>
+                    </div>
+                </div>
+            }
+
+            @* زر الفلترة *@
+            <div class="@CssClasses.Grid.Span.MD2 flex items-end">
+                <button type="submit"
+                        form="filterForm"
+                        class="@($"{CssClasses.Btn.Solid.Primary} inline-flex items-center gap-1 text-sm")"
+                        @onclick="GetOffersAsync">
+                    @((MarkupString)Icons.Search)
+                    <span>@ResourceApp.filter</span>
+                </button>
+            </div>
+        </div>
+    </EditForm>
+
+<!-- نتائج الفلترة -->
+<div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
+    @if (Offers is null || Offers.Count == 0)
+    {
+        <div class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+        noData
+        </div>
+    }
+    else
+    {
+        <div class="max-h-[55vh] overflow-y-auto overflow-x-auto rounded-lg">
+            <table class="@CssClasses.Table.Tab text-xs sm:text-sm">
+                <thead class="@($"{CssClasses.Table.Thead} sticky top-0 z-10")">
+                    <tr>
+                        <th class="@CssClasses.Table.TH">@ResourceApp.organisation</th>
+                        <th class="@CssClasses.Table.TH">@ResourceLoc.resource</th>
+                        <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.cost</th>
+                        <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.baseCost</th>
+                        <th class="@($"{CssClasses.Table.TH} text-center")">@ResourceApp.date</th>
+                    </tr>
+                </thead>
+                <tbody class="@CssClasses.Table.TBody">
+                    @for (var index = 0; index < Offers.Count; index++)
+                    {
+                        var cat = Offers[index];
+                        var isSelected = SelectedOfferIndex == index;
+                        var isExpanded = ExpandedOfferIndex == index;
+
+                        <tr class="@($"{CssClasses.Table.Tr} {(isSelected ? "bg-blue-50 dark:bg-blue-950/40" : "")}")">
+
+                            <td class="@CssClasses.Table.Td">
+                                <span class="block text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 truncate max-w-xs sm:max-w-sm">
+                                    @(string.IsNullOrEmpty(cat.Organisation)
+                                          ? ""
+                                          : $"{cat.Organisation} > {cat.SubCategory} > {cat.Category}")
+                                </span>
+                            </td>
+
+                            <td class="@CssClasses.Table.Td">
+                                <span class="block text-[11px] sm:text-xs text-slate-700 dark:text-slate-200 truncate max-w-lg">
+                                    @cat.CalcName (@cat.CalcCode)
+                                    &nbsp;&gt;&nbsp;
+                                    @cat.TaskName (@cat.TaskCode)
+                                    &nbsp;&gt;&nbsp;
+                                    @cat.ResName
+                                </span>
+                            </td>
+
+                            <td class="@($"{CssClasses.Table.Td} text-right align-middle")">
+                                <span class="tabular-nums">@cat.Cost</span>
+                            </td>
+
+                            <td class="@($"{CssClasses.Table.Td} text-right align-middle")">
+                                <span class="tabular-nums">@cat.BaseCost</span>
+                            </td>
+
+                            <td class="@($"{CssClasses.Table.Td} text-center align-middle text-[11px] text-slate-600 dark:text-slate-300")">
+                                @cat.Date
+                            </td>
+                        </tr>
+
+                        @* صف التفاصيل الموسّعة *@
+                        @if (isExpanded)
+                        {
+                            <tr class="bg-slate-50 dark:bg-slate-900/70">
+                                <td></td>
+                                <td colspan="6" class="px-2 py-2 text-[11px] sm:text-xs text-slate-700 dark:text-slate-200">
+                                    <div class="flex flex-col gap-1">
+                                        <div>
+                                            <span class="font-semibold">@ResourceApp.organisation:</span>
+                                            <span class="ms-1">
+                                                @(string.IsNullOrEmpty(cat.Organisation)
+                                                      ? "-"
+                                                      : $"{cat.Organisation} > {cat.SubCategory} > {cat.Category}")
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold">@ResourceLoc.resource:</span>
+                                            <span class="ms-1">
+                                                @cat.CalcName (@cat.CalcCode) &gt; @cat.TaskName (@cat.TaskCode) &gt; @cat.ResName
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span class="font-semibold">@CalcResource.cost:</span>
+                                            <span class="ms-1 tabular-nums">@cat.Cost</span>
+                                            <span class="mx-1 text-slate-400">/</span>
+                                            <span class="font-semibold">@CalcResource.baseCost:</span>
+                                            <span class="ms-1 tabular-nums">@cat.BaseCost</span>
+                                        </div>
+                                        @* لو فيه حقل تعليق في DTO تقدر تضيفه هنا *@
+                                        @* <div>
+                                            <span class="font-semibold">@CalcResource.comment:</span>
+                                            <span class="ms-1">@cat.Comment</span>
+                                           </div> *@
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+
+</div>
+@code {
+    [Parameter] public EventCallback<int> OnOfferSelected { get; set; }
+
+    private async Task SelectOfferAsync(int index)
+    {
+        SelectedOfferIndex = index;
+        if (OnOfferSelected.HasDelegate)
+        {
+            await OnOfferSelected.InvokeAsync(index);
+        }
+    }
+
+    private int? SelectedOfferIndex { get; set; }
+    private int? ExpandedOfferIndex { get; set; }
+
+    // يُنادى عند الضغط على زر الاختيار
+    private void SelectOffer2(int index)
+    {
+        SelectedOfferIndex = index;
+
+        // هنا تقدر تضيف أي منطق إضافي
+        // مثل استدعاء Callback للأب، أو حفظ الـ Offer المختار في متغير
+        // SelectedOffer = Offers[index];
+    }
+
+    // يُنادى عند الضغط على زر السهم
+    private void ToggleExpand(int index)
+    {
+        ExpandedOfferIndex = ExpandedOfferIndex == index ? null : index;
+    }
+}

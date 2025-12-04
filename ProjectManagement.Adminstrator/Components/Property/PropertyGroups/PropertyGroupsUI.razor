@@ -1,0 +1,89 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using ProjectImportHub.Entities
+@using ProjectImportHub.Infrastructure
+@using ProjectImportHub.Services.ResourceProperties
+@using ProjectImportHub.Services.UnitGroups
+@using ProjectManagement.Adminstrator.Components.Property.Properties
+@using ProjectManagement.Adminstrator.Constants
+@inherits AppComponentBase
+@inject IGroupPropertiesService GroupPropertiesService
+@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+<button @onclick="UpdateForm" class="@CsS.Btn.Outline.Success" title="إضافة">
+    @((MarkupString)Icons.Plus)
+</button>
+<Grid TItem="ResourcePropertySetEntity" Items="ActionsTasks">
+    <HeaderTemplate>
+        <th style="width:200px;" class="@CssClasses.Table.TH"></th>
+        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+    </HeaderTemplate>
+    <ChildContent>
+        <Column>
+            <Template Context="status">
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <button @onclick="() => Properties(status)" class="@CsS.Btn.Outline.Primary" title="Property" aria-label="Property">
+                        Property
+                    </button>
+                    <button @onclick="() => UpdateForm(status)" class="@CsS.Btn.Outline.Warning" title="@ResourceApp.update" aria-label="@ResourceApp.update">
+                        @Icons.Edit
+                    </button>
+                    <button @onclick="() => Remove(status)" class="@CsS.Btn.Outline.Danger" title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
+                        @Icons.Delete
+                    </button>
+                </div>
+            </Template>
+        </Column>
+        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+    </ChildContent>
+</Grid>
+@code {
+    List<ResourcePropertySetEntity> ActionsTasks;
+    void UpdateForm() => UpdateForm(new ResourcePropertySetEntity() { DisplayName = "name" });
+    void UpdateForm(ResourcePropertySetEntity model)
+    {
+        ResourcePropertySetEntity up = new() { DisplayName = "" };
+        PropertyCopier.CopyPropertiesTo(model, up);
+
+        Modal.AddModal<PropertyGroupsFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+            AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+                {
+                [nameof(PropertyGroupsFormUI.Model)] = up,
+                [nameof(PropertyGroupsFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+                }
+            , SizeMHD.Medium);
+    }
+    void Properties(ResourcePropertySetEntity model)
+    {
+        Modal.AddModal<PropertyResourceIndexUI>("Property", new Dictionary<string, object>
+            {
+            [nameof(PropertyResourceIndexUI.GroupId)] = model.Id,
+            } , SizeMHD.Medium);
+    }
+    void Remove(ResourcePropertySetEntity model) =>
+    MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+
+    async Task ConfirmRemoveAsync(ResourcePropertySetEntity model)
+    {
+        bool result = await GroupPropertiesService.DeleteAsync(model.Id);
+        if (result)
+        {
+            ActionsTasks.Remove(model);
+        }
+        MHD.Notifications(ToastType.Delete, result);
+        StateHasChanged();
+    }
+    async Task BtnUpdate(bool IsSuccess)
+    {
+        Modal.ClearModal();
+        if (IsSuccess)
+        {
+            ActionsTasks = await GroupPropertiesService.GetAllAsync();
+        }
+        StateHasChanged();
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        ActionsTasks = await GroupPropertiesService.GetAllAsync();
+    }
+}

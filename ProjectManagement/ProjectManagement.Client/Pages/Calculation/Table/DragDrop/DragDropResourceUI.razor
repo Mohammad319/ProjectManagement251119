@@ -1,0 +1,112 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Constant
+@inherits AppComponentBase
+
+@if (Task?.Resources != null && Task.Resources.Any())
+{
+    @foreach (var resource in Task.Resources.Where(x => x.FilterVisible)
+                                                .OrderByDescending(x => x.Order))
+    {
+        <div class="@GetResourceItemClasses(resource)"
+             @ondrop="@(() => HandleDrop(resource))"
+             @ondragover="() => resource.IsDragOver = true"
+             @ondragover:preventDefault
+             @ondragleave="@(() => resource.IsDragOver = false)"
+             @ondragstart="@(() => resourceDraging = resource)"
+             @ondragend="@(() => resourceDraging = null)"
+             draggable="true">
+
+            <!-- Account -->
+            <div class="@CssClasses.Layout.FlexWidth(150) text-xs md:text-sm truncate">
+                @resource.Account
+            </div>
+
+            <!-- Account Code -->
+            <div class="@CssClasses.Layout.FlexWidth(150) text-xs md:text-sm truncate">
+                @resource.AccountCode
+            </div>
+
+            <!-- Name -->
+            <div class="@CssClasses.Layout.FlexMinWidth(250) text-xs md:text-sm truncate">
+                @resource.Name
+            </div>
+
+            <!-- Resource Name -->
+            <div class="@CssClasses.Layout.FlexWidth(150) text-xs md:text-sm truncate">
+                @resource.ResName
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="text-xs text-slate-500 dark:text-slate-400">
+        @ResourceApp.ThereAreNoItemsToDisplay
+    </div>
+}
+
+@code {
+    private ResourceListMVVM? resourceDraging;
+
+    [Parameter] public TaskListMVVM Task { get; set; } = default!;
+
+    private string GetResourceItemClasses(ResourceListMVVM resource)
+    {
+        var baseClasses =
+            $"{CssClasses.Layout.FlexWrap} items-center rounded-md border " +
+            "bg-white dark:bg-slate-900 " +
+            "border-slate-200 dark:border-slate-700 " +
+            "px-2 py-1.5 mb-1.5 cursor-move text-slate-900 dark:text-slate-100 " +
+            "transition-colors duration-150 hover:bg-slate-50 dark:hover:bg-slate-800";
+
+        var dragging = resource == resourceDraging
+            ? " opacity-60 border-2 border-dashed border-sky-500"
+            : string.Empty;
+
+        var dragOver = resource.IsDragOver
+            ? " bg-sky-50 dark:bg-sky-900/50"
+            : string.Empty;
+
+        return baseClasses + dragging + dragOver;
+    }
+
+    private async void HandleDrop(ResourceListMVVM landingModel)
+    {
+        resourceDraging?.IsDragOver = false;
+        landingModel.IsDragOver = false;
+
+        if (resourceDraging is not null)
+        {
+            int index = Task.Resources.IndexOf(landingModel);
+
+            if (index == 0)
+            {
+                resourceDraging.Order = landingModel.Order + 100;
+            }
+            else if (resourceDraging.Order < landingModel.Order)
+            {
+                resourceDraging.Order =
+                    (landingModel.Order + Task.Resources[index - 1].Order) / 2;
+            }
+            else if (resourceDraging.Order > landingModel.Order && (index + 1) < Task.Resources.Count)
+            {
+                resourceDraging.Order =
+                    (Task.Resources[index + 1].Order + landingModel.Order) / 2;
+            }
+            else
+            {
+                resourceDraging.Order = landingModel.Order - 100;
+            }
+
+            Task.Resources = Task.Resources
+                .Where(x => x.FilterVisible)
+                .OrderByDescending(x => x.Order)
+                .ToList();
+
+            await Repo.Resource.ReOrderAsync(resourceDraging.Id, resourceDraging.Order);
+        }
+
+        resourceDraging = null;
+        StateHasChanged();
+    }
+}

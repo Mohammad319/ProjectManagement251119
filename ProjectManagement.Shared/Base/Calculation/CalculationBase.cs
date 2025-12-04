@@ -1,0 +1,58 @@
+﻿using ProjectManagement.Shared.Base.Project;
+using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.Enums;
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace ProjectManagement.Shared.Base.Calculation
+{
+    public class QuanityListDTO
+    {
+        public string Name { get; set; }
+        public double? Quantity { get; set; }
+    }
+    public class OHFactors
+    {
+        public ResourceTypesEnum ResourceType { get; set; }
+        public int? SortId { get; set; }
+        public int? ResId { get; set; }
+        public bool IsLocked { get; set; } = true;
+        public double Earnings { get; set; } = 20;
+        public double Key { get; set; } = 0;
+        public string Unit { get; set; }
+        public int DivisionKey { get; set; } = 0;
+        public string Selected { get; set; } = "all";
+    }
+    public class CalculationBase
+    {
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Code { get; set; }
+
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Name { get; set; }
+        [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+
+        public double Tax { get; set; } = 25;
+
+
+        //public bool AdditionalCostLock { get; set; }
+        public Procurement Procurement { get; set; }
+
+        public DateTime TenderDeadline { get; set; } = DateTime.Now;
+        public DateTime TenderQA { get; set; } = DateTime.Now;
+        public DateTime StartDate { get; set; } = DateTime.Now;
+        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
+        public double Order { get; set; }
+        public DateTime? PublicationDate { get; set; } = DateTime.Now;
+        public DateTime? DecisionDate { get; set; } = DateTime.Now;
+
+        //public List<HourlyPriceListGroupDTO> HourlyPrice;
+        //public List<OHFactors> Factors;
+
+        //profit decision OHFactors
+        //learned experience
+        //Income Income         Year Q1, Q2, Q3 and Q4
+    }
+}

@@ -1,0 +1,406 @@
+@page "/demo-admin"
+
+@using System
+@using System.Linq
+@using System.Collections.Generic
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+@using BlazorMHD.UI.Core.DesignSystem
+@using BlazorMHD.UI.Core.Services
+@using BlazorMHD.UI.Core.Navigation
+@using BlazorMHD.UI.Core.Data
+@using BlazorMHD.UI.Models
+
+@using BlazorMHD.UI.Components.Navigation.Drawer
+@using BlazorMHD.UI.Components.Navigation.Tabs
+@using BlazorMHD.UI.Components.Navigation.Breadcrumb
+
+@using BlazorMHD.UI.Components.Feedback.Dialog
+@using BlazorMHD.UI.Components.Feedback.Toast
+@using BlazorMHD.UI.Components.Feedback.MessageBox
+@using BlazorMHD.UI.Components.Feedback.Loading
+
+@using BlazorMHD.UI.Components.Inputs.Button
+@using BlazorMHD.UI.Components.Inputs.Search
+@using BlazorMHD.UI.Components.Inputs.Toggle
+@using BlazorMHD.UI.Components.Inputs.AutoComplete
+
+@using BlazorMHD.UI.Components.Data.Card
+@using BlazorMHD.UI.Components.Data.StatusDot
+@using BlazorMHD.UI.Components.Data.Table
+@using BlazorMHD.UI.Components.Data.TreeView
+@using BlazorMHD.UI.Components.Data.Filter
+
+@inject DialogService Dialog
+@inject ToastService Toasts
+@inject MessageBoxService Msg
+@inject LoadingService Loading
+
+
+<h3 class="text-sm font-semibold mb-2 text-mhd-foreground">Demo Admin Dashboard</h3>
+
+<MhdDrawer Items="@_drawerItems"
+           Collapsed="@_drawerCollapsed"
+           CollapsedChanged="v => _drawerCollapsed = v">
+
+    <Brand>
+        <span class="text-xs font-bold text-mhd-primary-700">BlazorMHD Admin</span>
+    </Brand>
+
+    <ChildContent>
+
+        <div class="p-2 space-y-2">
+
+            <MhdToastContainer />
+            <MhdDialog />
+            <MhdMessageBox />
+            <MhdLoadingOverlay />
+
+            <MhdBreadcrumb Items="@_breadcrumb" />
+
+            <!-- MAIN CARD -->
+            <MhdCard Elevated="true" Compact="false">
+
+                <MhdCardHeader>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-[0.80rem] font-semibold text-mhd-foreground">Customers Management</div>
+                            <div class="text-[0.70rem] text-mhd-muted">Example page showing components working together.</div>
+                        </div>
+
+                        <MhdButton Size="MhdSize.Sm" State="MhdState.Primary" Variant="MhdVariant.Filled"
+                                   OnClick="CreateCustomerAsync">
+                            Add Customer
+                        </MhdButton>
+                    </div>
+                </MhdCardHeader>
+
+                <MhdCardBody>
+
+                    <div class="grid grid-cols-1 md:grid-cols-[220px,minmax(0,1fr)] gap-2">
+
+                        <!-- LEFT FILTERS + TREE -->
+                        <div>
+
+                            <MhdFilterPanel Title="Filters"
+                                            OnApply="ApplyFilters"
+                                            OnReset="ResetFilters">
+
+                                <MhdSearchBox @bind-Value="_searchText"
+                                              Placeholder="Search by name or email..." />
+
+                                <MhdAutoComplete TItem="CustomerDto"
+                                                 Label="Customer search"
+                                                 MinSearchLength="2"
+                                                 SearchMethod="SearchCustomersAsync"
+                                                 ItemTextSelector="@(c => c.Name)"
+                                                 SelectedItem="@_selectedCustomer"
+                                                 SelectedItemChanged="OnAutoCompleteSelected" />
+
+                                <div class="flex items-center gap-1 mt-1">
+                                    <MhdToggle @bind-Value="_onlyActive" />
+                                    <span class="text-[0.70rem] text-mhd-muted">Only active customers</span>
+                                </div>
+
+                            </MhdFilterPanel>
+
+                            <div class="mt-2">
+
+                                <MhdCard Compact="true">
+
+                                    <MhdCardHeader>
+                                        <div class="text-[0.75rem] font-semibold text-mhd-foreground mb-1">
+                                            Regions / Tree
+                                        </div>
+                                    </MhdCardHeader>
+
+                                    <MhdCardBody>
+                                        <MhdTreeView TItem="string"
+                                                     Nodes="@_treeNodes"
+                                                     OnNodeSelected="OnTreeNodeSelected" />
+                                    </MhdCardBody>
+
+                                </MhdCard>
+
+                            </div>
+
+                        </div>
+
+                        <!-- RIGHT TABLE -->
+                        <div class="flex flex-col gap-2">
+
+                            <MhdTabs Items="@_tabs"
+                                     ActiveKey="@_activeTabKey"
+                                     ActiveKeyChanged="k => _activeTabKey = k" />
+
+                            @if (_activeTabKey == _tabs[0].Key)
+                            {
+                                <MhdCard Compact="true">
+
+                                    <MhdCardBody>
+
+                                        <MhdTable TItem="CustomerDto"
+                                                  Items="@_filteredCustomers"
+                                                  EnablePaging="true"
+                                                  PageSize="10"
+                                                  PageSizeOptions="@_pageSizes">
+
+                                            <HeaderTemplate>
+                                                <tr>
+                                                    <th class="px-2 py-1 text-left text-[0.70rem] text-mhd-muted border-b">#</th>
+                                                    <th class="px-2 py-1 text-left text-[0.70rem] text-mhd-muted border-b">Name</th>
+                                                    <th class="px-2 py-1 text-left text-[0.70rem] text-mhd-muted border-b">Email</th>
+                                                    <th class="px-2 py-1 text-left text-[0.70rem] text-mhd-muted border-b">City</th>
+                                                    <th class="px-2 py-1 text-left text-[0.70rem] text-mhd-muted border-b">Status</th>
+                                                    <th class="px-2 py-1 text-left text-[0.70rem] text-mhd-muted border-b"></th>
+                                                </tr>
+                                            </HeaderTemplate>
+
+                                            <ChildContent>
+
+                                                <MhdTableColumn TItem="CustomerDto" Title="#">
+                                                    <Template Context="c">@c.Id</Template>
+                                                </MhdTableColumn>
+
+                                                <MhdTableColumn TItem="CustomerDto"
+                                                                Title="Name"
+                                                                Sortable="true"
+                                                                ValueSelector="@(c => (object)c.Name)" />
+
+                                                <MhdTableColumn TItem="CustomerDto"
+                                                                Title="Email"
+                                                                Sortable="true"
+                                                                ValueSelector="@(c => (object)c.Email)" />
+
+                                                <MhdTableColumn TItem="CustomerDto"
+                                                                Title="City"
+                                                                Sortable="true"
+                                                                ValueSelector="@(c => (object)c.City)" />
+
+                                                <MhdTableColumn TItem="CustomerDto"
+                                                                Title="Status">
+                                                    <Template Context="c">
+                                                        <MhdStatusDot State="@(c.IsActive? MhdState.Success: MhdState.Danger)"
+                                                                      Text="@(c.IsActive ? "Active" : "Disabled")" />
+                                                    </Template>
+                                                </MhdTableColumn>
+
+                                                <MhdTableColumn TItem="CustomerDto" Title="">
+                                                    <Template Context="c">
+                                                        <MhdButton Size="MhdSize.Xs"
+                                                                   State="MhdState.Danger"
+                                                                   Variant="MhdVariant.Outline"
+                                                                   OnClick="@(() => ConfirmDelete(c))">
+                                                            Delete
+                                                        </MhdButton>
+                                                    </Template>
+                                                </MhdTableColumn>
+
+                                            </ChildContent>
+
+                                        </MhdTable>
+
+                                    </MhdCardBody>
+
+                                </MhdCard>
+                            }
+                            else
+                            {
+                                <MhdCard Compact="true">
+                                    <MhdCardHeader>
+                                        <div class="text-[0.75rem] font-semibold">Extra tab</div>
+                                    </MhdCardHeader>
+                                    <MhdCardBody>
+                                        <p class="text-[0.75rem] text-mhd-muted">
+                                            This is a placeholder for extra content.
+                                        </p>
+                                    </MhdCardBody>
+                                </MhdCard>
+                            }
+
+                        </div>
+
+                    </div>
+
+                </MhdCardBody>
+
+            </MhdCard>
+
+        </div>
+
+    </ChildContent>
+</MhdDrawer>
+
+
+@code {
+    private bool _drawerCollapsed;
+
+    private List<DrawerItem> _drawerItems = new();
+    private List<BreadcrumbItem> _breadcrumb = new();
+    private List<TabItem> _tabs = new();
+    private string? _activeTabKey;
+
+    private List<CustomerDto> _allCustomers = new();
+    private IEnumerable<CustomerDto> _filteredCustomers => ApplyFilterLogic();
+
+    private string? _searchText;
+    private bool _onlyActive;
+    private CustomerDto? _selectedCustomer;
+    private List<int> _pageSizes = new() { 10, 25, 50 };
+
+    private List<TreeNode<string>> _treeNodes = new();
+
+    protected override void OnInitialized()
+    {
+        _drawerItems = new()
+        {
+            new DrawerItem { Text = "Home", Icon = "🏠", IsActive = true },
+            new DrawerItem { Text = "Customers", Icon = "👥" }
+        };
+
+        _breadcrumb = new()
+        {
+            new BreadcrumbItem { Text = "Home", Href = "/" },
+            new BreadcrumbItem { Text = "Customers", IsCurrent = true }
+        };
+
+        var tab1 = new TabItem { Text = "Customers" };
+        var tab2 = new TabItem { Text = "Extra" };
+
+        _tabs = new() { tab1, tab2 };
+        _activeTabKey = tab1.Key;
+
+        _allCustomers = CreateFakeCustomers();
+
+        _treeNodes = new()
+        {
+            new TreeNode<string>
+            {
+                Text = "All Regions",
+                IsExpanded = true,
+                Children =
+                {
+                    new TreeNode<string>
+                    {
+                        Text = "Riyadh",
+                        Children =
+                        {
+                            new TreeNode<string>{Text="North"},
+                            new TreeNode<string>{Text="South"}
+                        }
+                    },
+
+                    new TreeNode<string>{Text="Jeddah"}
+                }
+            }
+        };
+    }
+
+    private List<CustomerDto> CreateFakeCustomers()
+    {
+        var rnd = new Random();
+        var cities = new[] { "Riyadh", "Jeddah", "Dammam", "Makkah", "Madinah" };
+
+        return Enumerable.Range(1, 40)
+            .Select(i => new CustomerDto
+            {
+                Id = i,
+                Name = $"Customer {i}",
+                Email = $"c{i}@mail.com",
+                City = cities[rnd.Next(cities.Length)],
+                IsActive = rnd.Next(2) == 0
+            })
+            .ToList();
+    }
+
+    private IEnumerable<CustomerDto> ApplyFilterLogic()
+    {
+        var q = _allCustomers.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            q = q.Where(c => c.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (_onlyActive)
+            q = q.Where(c => c.IsActive);
+
+        if (_selectedCustomer != null)
+            q = q.Where(c => c.Id == _selectedCustomer.Id);
+
+        return q;
+    }
+
+    private Task ApplyFilters()
+    {
+        StateHasChanged();
+        Toasts.Show("Filters applied", "Customer list updated.", MhdState.Success);
+        return Task.CompletedTask;
+    }
+
+    private Task ResetFilters()
+    {
+        _searchText = null;
+        _onlyActive = false;
+        _selectedCustomer = null;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task<IEnumerable<CustomerDto>> SearchCustomersAsync(string text)
+    {
+        await Task.Delay(200);
+        return _allCustomers.Where(c => c.Name.Contains(text, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private Task OnAutoCompleteSelected(CustomerDto? c)
+    {
+        _selectedCustomer = c;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnTreeNodeSelected(TreeNode<string> node)
+    {
+        Toasts.Show("Node selected", node.Text ?? "Unknown");
+        return Task.CompletedTask;
+    }
+
+    private async Task CreateCustomerAsync()
+    {
+        using (Loading.Scope())
+        {
+            await Task.Delay(600);
+            Toasts.Show("Created", "New customer created.", MhdState.Success);
+        }
+    }
+
+    private void ConfirmDelete(CustomerDto customer)
+    {
+        Dialog.Show(new DialogModel
+        {
+            Title = "Confirm Delete",
+            Content = b => b.AddContent(0, $"Delete {customer.Name}?"),
+            Buttons =
+            {
+                new DialogButtonModel { Text="Cancel" },
+                new DialogButtonModel {
+                    Text="Delete",
+                    IsPrimary=true,
+                    State=MhdState.Danger,
+                    OnClick = EventCallback.Factory.Create(this, () => DeleteCustomer(customer))
+                }
+            }
+        });
+    }
+
+    private Task DeleteCustomer(CustomerDto c)
+    {
+        _allCustomers.Remove(c);
+        StateHasChanged();
+        Toasts.Show("Deleted", $"{c.Name} removed.", MhdState.Danger);
+        return Task.CompletedTask;
+    }
+}

@@ -1,0 +1,57 @@
+﻿@using ProjectImportHub.Entities
+@using ProjectImportHub.Services
+@using ProjectManagement.Client.Adminstrator.Services.MHDBlazor
+@inherits AppComponentBase
+@inject IEntityService<FallEntity> service
+
+<EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@Model" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <div class="flex flex-wrap items-center gap-4">
+        <div class="flex flex-col">
+            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@Model.DisplayName" />
+            <ValidationMessage For=@(() => Model.DisplayName) />
+        </div>
+        <div class="flex flex-col">
+            <label class="@CssClasses.Form.Label">@ResourceApp.order:</label>
+            <InputNumber class="@CssClasses.Input.Text" @bind-Value="@Model.SortOrder" />
+            <ValidationMessage For=@(() => Model.SortOrder) />
+        </div>
+        <div class="@CssClasses.Form.CheckWrapperM">
+            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@Model.IsVisible" />
+            <label class="@CssClasses.Form.Label" for="inlineFormCheck">
+                @ResourceApp.visible
+            </label>
+        </div>
+    </div>
+</EditForm>
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+</div>
+@code {
+    [Parameter] public FallEntity Model { get; set; } = new FallEntity() { DisplayName = "" };
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    bool IsLoading = false;
+    protected override void OnInitialized()
+    {
+    }
+
+
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        bool result = false;
+        if (Model.Id == 0)
+        {
+            var obj = await ExHandlers.RunCheckTokenAsync(() => service.AddAsync(Model));
+            result = obj != null && obj.Id > 0;
+        }
+        else result = await ExHandlers.RunCheckTokenAsync(() => service.UpdateAsync(Model));
+
+        MHD.Notifications(Model.Id == 0 ? ToastType.Add : ToastType.update, result);
+        await Callback.InvokeAsync(result);
+    }
+}

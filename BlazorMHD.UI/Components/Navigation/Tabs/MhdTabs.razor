@@ -1,0 +1,222 @@
+﻿@using Microsoft.AspNetCore.Components
+@using BlazorMHD.UI.Core.Navigation
+
+<div class="@($"w-full h-full {Class}")">
+
+    @if (Mode == MhdTabMode.Horizontal)
+    {
+        <!-- Tabs أفقية -->
+        <div class="border-b border-slate-200 dark:border-slate-800 mb-0-5 flex items-center gap-1">
+            <div class="flex gap-1">
+                @foreach (var tab in Items)
+                {
+                    <button type="button"
+                            class="@BuildTabClass(tab)"
+                            @onclick="() => Activate(tab)">
+                        @if (!string.IsNullOrWhiteSpace(tab.Icon))
+                        {
+                            <span class="mr-1">@tab.Icon</span>
+                        }
+
+
+                        @if (!string.IsNullOrWhiteSpace(tab.Text))
+                        {
+                            <span>@tab.Text</span>
+                        }
+                    </button>
+                }
+            </div>
+
+            @if (RightContent is not null)
+            {
+                <div class="flex items-center gap-1 ml-auto">
+                    @RightContent
+                </div>
+            }
+        </div>
+
+        @if (ActiveTab?.Content is not null)
+        {
+            <div class="@($"mt-1 bg-white dark:bg-gray-900 shadow rounded-md p-2 {ContentClass}")">
+                @ActiveTab.Content
+            </div>
+        }
+    }
+    else
+    {
+        <!-- Layout عمودي (Sidebar + Content) -->
+        <div class="flex h-full w-full">
+
+            <!-- Sidebar -->
+            <div class="@GetSidebarClass()">
+
+                @if (Collapsible)
+                {
+                    <div class="flex items-center justify-between mb-2">
+                    
+                            <span class="text-lg font-bold" @onclick="ToggleCollapse">
+                                @(EffectiveCollapsed ? "▶" : "◀")
+                            </span>
+
+                        @if (!EffectiveCollapsed && RightContent is not null)
+                        {
+                            <div class="ml-2 flex-1">
+                                @RightContent
+                            </div>
+                        }
+                    </div>
+                }
+                else if (RightContent is not null)
+                {
+                    <div class="mb-2">
+                        @RightContent
+                    </div>
+                }
+
+                <div class="flex flex-col gap-1">
+                    @foreach (var tab in Items)
+                    {
+                        <button type="button"
+                                class="@BuildTabClass(tab)"
+                                title="@tab.Text"
+                                @onclick="() => Activate(tab)">
+                            @if (!string.IsNullOrEmpty(tab.Icon))
+                            {
+                                <i class="@tab.Icon"></i>
+                            }
+
+                            @if (!EffectiveCollapsed && !string.IsNullOrWhiteSpace(tab.Text))
+                            {
+                                <span>@tab.Text</span>
+                            }
+                        </button>
+                    }
+                </div>
+
+            </div>
+
+            <!-- Content -->
+            <div class="@GetVerticalContentClass()">
+                @if (ActiveTab?.Content is not null)
+                {
+                    @ActiveTab.Content
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<TabItem> Items { get; set; } = new();
+
+    [Parameter] public string? ActiveKey { get; set; }
+    [Parameter] public EventCallback<string?> ActiveKeyChanged { get; set; }
+
+    [Parameter] public RenderFragment? RightContent { get; set; }
+
+    [Parameter] public MhdSize Size { get; set; } = MhdSize.Md;
+    [Parameter] public MhdTabMode Mode { get; set; } = MhdTabMode.Horizontal;
+
+    // Sidebar collapse
+    [Parameter] public bool Collapsible { get; set; } = false;
+    [Parameter] public bool IsCollapsed { get; set; }
+    [Parameter] public EventCallback<bool> IsCollapsedChanged { get; set; }
+
+    // كلاس إضافي للحاوية و المحتوى
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? ContentClass { get; set; }
+    [Parameter] public string? TabClass { get; set; }
+
+    private TabItem? ActiveTab =>
+        Items.FirstOrDefault(t => t.Key == ActiveKey) ?? Items.FirstOrDefault();
+
+    private bool EffectiveCollapsed => Collapsible && IsCollapsed;
+
+    protected override void OnParametersSet()
+    {
+        if ((ActiveKey is null || !Items.Any(t => t.Key == ActiveKey)) && Items.Any())
+        {
+            ActiveKey = Items.First().Key;
+        }
+    }
+
+    private async Task Activate(TabItem tab)
+    {
+        if (tab.Key == ActiveKey)
+            return;
+
+        ActiveKey = tab.Key;
+        await ActiveKeyChanged.InvokeAsync(ActiveKey);
+    }
+
+    private async Task ToggleCollapse()
+    {
+        if (!Collapsible)
+            return;
+
+        IsCollapsed = !IsCollapsed;
+        await IsCollapsedChanged.InvokeAsync(IsCollapsed);
+    }
+
+    private string GetSidebarClass()
+    {
+        var width = EffectiveCollapsed ? "w-14" : "w-60";
+        return $"{width} flex flex-col bg-gray-100 dark:bg-gray-800 p-2 overflow-auto transition-[width] duration-200 ease-in-out";
+    }
+
+    private string GetVerticalContentClass()
+    {
+        return $"flex-1 overflow-auto p-3 bg-white dark:bg-gray-950 {ContentClass}";
+    }
+
+    private string BuildTabClass(TabItem tab)
+    {
+        var isActive = tab.Key == ActiveKey;
+        var sizeCls = GetSizeClass();
+
+        if (Mode == MhdTabMode.Horizontal)
+        {
+            var baseCls =
+                $"inline-flex items-center gap-1 rounded-t-md border-b-2 transition-colors duration-150 {sizeCls} {TabClass}";
+            var activeCls =
+                "border-blue-600 text-blue-700 dark:text-blue-400 bg-slate-50 dark:bg-slate-900";
+            var inactiveCls =
+                "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50/50 dark:hover:bg-slate-900/40";
+
+            return $"{baseCls} {(isActive ? activeCls : inactiveCls)}";
+        }
+        else
+        {
+            // Vertical
+            var baseCls =
+                $"flex items-center gap-2 rounded-md transition-colors duration-150 w-full text-left {sizeCls} {TabClass}";
+
+            if (EffectiveCollapsed)
+            {
+                baseCls =
+                    $"flex items-center justify-center rounded-md transition-colors duration-150 w-full text-xs {TabClass}";
+            }
+
+            var activeCls =
+                "bg-blue-500 text-white dark:bg-blue-600";
+            var inactiveCls =
+                "bg-white text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600";
+
+            return $"{baseCls} {(isActive ? activeCls : inactiveCls)}";
+        }
+    }
+
+    private string GetSizeClass()
+    {
+        return Size switch
+        {
+            MhdSize.Xs => "px-2 py-0.5 text-[0.7rem]",
+            MhdSize.Sm => "px-2.5 py-1 text-xs",
+            MhdSize.Md => "px-3 py-1.5 text-sm",
+            MhdSize.LG => "px-3.5 py-2 text-base",
+            MhdSize.XL => "px-4 py-2.5 text-lg",
+            _ => "px-3 py-1.5 text-sm"
+        };
+    }
+
+}

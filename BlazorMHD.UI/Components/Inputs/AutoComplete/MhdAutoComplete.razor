@@ -1,0 +1,219 @@
+@using Microsoft.AspNetCore.Components.Web
+@typeparam TItem
+
+<div class="relative text-[0.75rem]" @onclick:stopPropagation="true">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="text-[0.70rem] text-slate-500 dark:text-slate-400 mb-0.5 block">
+            @Label
+        </label>
+    }
+
+    <div class="inline-flex items-center w-full border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 px-2 py-0.5">
+        <input class="flex-1 bg-transparent focus:outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-[0.75rem]"
+               value="@_searchText"
+               @oninput="OnInputChanged"
+               placeholder="@Placeholder"
+               @onkeydown="OnKeyDown"
+               @onblur="OnBlur" />
+
+        @if (IsBusy)
+        {
+            <span class="ml-1 text-[0.65rem] text-slate-400 dark:text-slate-500">…</span>
+        }
+    </div>
+
+    @if (_isOpen && _results.Any())
+    {
+        <div class="absolute mt-1 left-0 right-0 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm max-h-48 overflow-auto text-[0.75rem] animate-slide-in"
+             style="z-index:9999;">
+            @foreach (var (item, index) in _results.Select((v, i) => (v, i)))
+            {
+                <div class="@GetItemClass(index)"
+                     @onmousedown="() => SelectItem(item)">
+                    @if (ItemTemplate != null)
+                    {
+                        @ItemTemplate(item)
+                    }
+                    else
+                    {
+                        @GetItemText(item)
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(HelperText))
+    {
+        <div class="mt-0.5 text-[0.65rem] text-slate-500 dark:text-slate-400">
+            @HelperText
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Placeholder { get; set; } = "Search...";
+    [Parameter] public string? HelperText { get; set; }
+
+    [Parameter] public Func<string, Task<IEnumerable<TItem>>>? SearchMethod { get; set; }
+
+    [Parameter] public RenderFragment<TItem>? ItemTemplate { get; set; }
+    [Parameter] public Func<TItem, string>? ItemTextSelector { get; set; }
+
+    [Parameter] public TItem? SelectedItem { get; set; }
+    [Parameter] public EventCallback<TItem?> SelectedItemChanged { get; set; }
+
+    [Parameter] public int MinSearchLength { get; set; } = 2;
+    [Parameter] public int DebounceMilliseconds { get; set; } = 250;
+
+    private string _searchText = string.Empty;
+    private bool _isOpen;
+    private bool IsBusy;
+    private List<TItem> _results = new();
+    private int _highlightIndex = -1;
+
+    private System.Timers.Timer? _debounceTimer;
+
+    protected override void OnInitialized()
+    {
+        _debounceTimer = new System.Timers.Timer
+        {
+            AutoReset = false,
+            Interval = DebounceMilliseconds
+        };
+        _debounceTimer.Elapsed += async (_, _) =>
+        {
+            await InvokeAsync(SearchNow);
+        };
+    }
+
+    private void RestartDebounce()
+    {
+        if (_debounceTimer == null) return;
+        _debounceTimer.Stop();
+        _debounceTimer.Interval = DebounceMilliseconds;
+        _debounceTimer.Start();
+    }
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        _searchText = e.Value?.ToString() ?? string.Empty;
+        if (_searchText.Length >= MinSearchLength)
+        {
+            RestartDebounce();
+        }
+        else
+        {
+            _results.Clear();
+            _isOpen = false;
+        }
+    }
+
+    private async Task SearchNow()
+    {
+        if (SearchMethod == null || _searchText.Length < MinSearchLength)
+            return;
+
+        IsBusy = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await SearchMethod(_searchText);
+            _results = result?.ToList() ?? new List<TItem>();
+            _isOpen = _results.Any();
+            _highlightIndex = _results.Any() ? 0 : -1;
+        }
+        finally
+        {
+            IsBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SelectItem(TItem item)
+    {
+        SelectedItem = item;
+        _searchText = GetItemText(item);
+        _isOpen = false;
+        _results.Clear();
+        await SelectedItemChanged.InvokeAsync(SelectedItem);
+        StateHasChanged();
+    }
+
+    private string GetItemText(TItem item)
+    {
+        if (ItemTextSelector != null)
+            return ItemTextSelector(item);
+
+        return item?.ToString() ?? string.Empty;
+    }
+
+    private string GetItemClass(int index)
+    {
+        var baseCls = "px-2 py-1 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800";
+        var active = index == _highlightIndex ? "bg-slate-50 dark:bg-slate-800" : "";
+        return $"{baseCls} {active}";
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (!_isOpen && (e.Key == "ArrowDown" || e.Key == "Enter"))
+        {
+            if (_searchText.Length >= MinSearchLength)
+            {
+                await SearchNow();
+            }
+            return;
+        }
+
+        if (e.Key == "Escape")
+        {
+            _isOpen = false;
+            StateHasChanged();
+        }
+        else if (e.Key == "ArrowDown")
+        {
+            if (_results.Any())
+            {
+                _highlightIndex = Math.Min(_highlightIndex + 1, _results.Count - 1);
+                StateHasChanged();
+            }
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            if (_results.Any())
+            {
+                _highlightIndex = Math.Max(_highlightIndex - 1, 0);
+                StateHasChanged();
+            }
+        }
+        else if (e.Key == "Enter")
+        {
+            if (_isOpen && _highlightIndex >= 0 && _highlightIndex < _results.Count)
+            {
+                await SelectItem(_results[_highlightIndex]);
+            }
+        }
+    }
+
+    private void OnBlur(FocusEventArgs e)
+    {
+        _ = Task.Delay(150).ContinueWith(_ =>
+        {
+            _isOpen = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    public void Dispose()
+    {
+        if (_debounceTimer != null)
+        {
+            _debounceTimer.Stop();
+            _debounceTimer.Dispose();
+        }
+    }
+}

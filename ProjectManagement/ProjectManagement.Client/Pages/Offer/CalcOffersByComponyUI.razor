@@ -1,0 +1,333 @@
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Offer
+@inherits AppComponentBase
+
+<div class="space-y-10">
+    @foreach (var group in CompaniesList)
+    {
+        var offerCount = group.Resources[0].Offers
+        .Where(x => x.OrganisationId.HasValue)
+        .OrderBy(x => x.OrganisationId)
+        .Count();
+
+        var gridStyle = $"grid-template-columns: 150px 100px repeat({offerCount}, 210px);";
+
+        <div class="rounded-md shadow-sm bg-white dark:bg-slate-900 p-2 text-xs text-slate-800 dark:text-slate-100 space-y-1">
+            <!-- Header row -->
+            <div class="grid gap-x-0.5 mb-1" style="@gridStyle">
+                <div class="px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-semibold text-[11px]">
+                    #
+                </div>
+                <div class="px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-semibold text-[11px]">
+                    @CalcResource.quantity
+                </div>
+
+                @foreach (var id in group.IDs)
+                {
+                    var org = group.Resources[0].Offers.FirstOrDefault(x => x.OrganisationId == id)?.Organisation;
+                    <div class="px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-semibold text-[11px] truncate">
+                        @org
+                    </div>
+                }
+            </div>
+
+            <!-- Sum row -->
+            <div class="grid gap-x-0.5 mb-1" style="@gridStyle">
+                <div class="px-2 py-1 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 italic">
+                    @CalcResource.sum:
+                </div>
+                <div class="px-2 py-1 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"></div>
+
+                @for (int i = 0; i < group.NetQ.Count; i++)
+                {
+                    var value = group.NetQ[i];
+                    <div class="px-2 py-1 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60">
+                        @Format(value)
+                        <span class="ml-1 text-[10px] font-medium text-orange-500 dark:text-orange-300">
+                            @(value > group.Min ? $" +{Format(value - group.Min)}" : string.Empty)
+                        </span>
+                    </div>
+                }
+            </div>
+
+            <!-- Rows per resource -->
+            @foreach (var res in group.Resources)
+            {
+                <div class="grid gap-x-0.5 mb-0.5" style="@gridStyle">
+                    <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70 truncate">
+                        @res.Name
+                    </div>
+                    <div class="px-2 py-1 text-center border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70">
+                        @Format(res.Quantity)
+                    </div>
+
+                    @foreach (var id in group.IDs)
+                    {
+                        var off = res.Offers.FirstOrDefault(x => x.OrganisationId == id);
+                        if (off is null)
+                        {
+                            <div class="px-2 py-1 text-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60">
+                            </div>
+                            continue;
+                        }
+
+                        var isChecked = res.OfferId == off.Id;
+                        var price = (res.Quantity * off.Cost) + off.BaseCost;
+
+                        <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"
+                             title="@($"({res.Quantity} x {off.Cost}) + {off.BaseCost}")">
+                            <div class="flex flex-col items-start gap-0.5">
+
+                                <div class="flex items-center gap-2">
+                                    <!-- السويتش -->
+                                    <label class="relative inline-flex cursor-pointer items-center">
+                                        <input type="checkbox"
+                                               class="peer sr-only"
+                                               checked="@isChecked"
+                                               @onclick="() => SetDefaultAsync(res, off)" />
+
+                                        <!-- الخلفية -->
+                                        <div class="h-4 w-8 rounded-full bg-slate-300 transition-all duration-300
+                                                                peer-checked:bg-emerald-500
+                                                                dark:bg-slate-600 dark:peer-checked:bg-emerald-400">
+                                        </div>
+
+                                        <!-- الأيقونة -->
+                                        <span class="absolute left-0.5 top-0.5 flex h-3 w-3 items-center justify-center
+                                                                 rounded-full bg-white text-[8px] font-bold text-slate-500 transition-all duration-300
+                                                                 peer-checked:translate-x-4 peer-checked:text-emerald-700">
+                                            @(isChecked ? "✔" : "✖")
+                                        </span>
+                                    </label>
+
+                                    <span class="font-medium">
+                                        @Format(price)
+                                    </span>
+                                </div>
+
+                                @* الملاحظة (اختيارية) *@
+                                @if (!string.IsNullOrWhiteSpace(off.Comment))
+                                {
+                                    <div class="flex items-start gap-1">
+                                        <span class="text-[10px]">📝</span>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[180px]"
+                                              title="@off.Comment">
+                                            @off.Comment
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @* ======================= عروض بدون شركات (Resources) ======================= *@
+    @if (Resources != null && Resources.Count > 0)
+    {
+        var gridStyleWithoutCompanies = $"grid-template-columns: 150px 100px repeat({MaxOffersWithoutCompanies}, 210px);";
+
+        <div class="mt-6 rounded-md shadow-sm bg-white dark:bg-slate-900 p-2 text-xs text-slate-800 dark:text-slate-100 space-y-1">
+            <!-- Header row -->
+            <div class="grid gap-x-0.5 mb-1" style="@gridStyleWithoutCompanies">
+                <div class="px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-semibold text-[11px]">
+                    #
+                </div>
+                <div class="px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-semibold text-[11px]">
+                    @CalcResource.quantity
+                </div>
+
+                @for (int i = 0; i < MaxOffersWithoutCompanies; i++)
+                {
+                    <div class="px-2 py-1 text-center border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 font-semibold text-[11px]">
+                        @ResourceLoc.offer @(i + 1)
+                    </div>
+                }
+            </div>
+
+            <!-- Rows per resource without companies -->
+            @foreach (var res in Resources)
+            {
+                var offers = res.Offers?
+                .Where(x => !x.OrganisationId.HasValue || x.OrganisationId == 0)
+                .OrderBy(off => ((res.Quantity * off.Cost) + off.BaseCost))
+                .ToList();
+
+                var offersCount = offers?.Count ?? 0;
+                var rowStyle = $"grid-template-columns: 150px 100px repeat({offersCount}, 210px);";
+
+                <div class="grid gap-x-0.5 mb-0.5" style="@rowStyle">
+                    <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70 truncate">
+                        @res.Name
+                    </div>
+                    <div class="px-2 py-1 text-center border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70">
+                        @Format(res.Quantity)
+                    </div>
+
+                    @if (offers != null)
+                    {
+                        @foreach (var off in offers)
+                        {
+                            var isChecked = res.OfferId == off.Id;
+                            var price = (res.Quantity * off.Cost) + off.BaseCost;
+
+                            <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"
+                                 title="@($"({res.Quantity} x {off.Cost}) + {off.BaseCost}")">
+                                <div class="flex flex-col items-start gap-0.5">
+
+                                    <div class="flex items-center gap-2">
+                                        <label class="relative inline-flex cursor-pointer items-center">
+                                            <input type="checkbox"
+                                                   class="peer sr-only"
+                                                   checked="@isChecked"
+                                                   @onclick="() => SetDefaultAsync(res, off)" />
+
+                                            <div class="h-4 w-8 rounded-full bg-slate-300 transition-all duration-300
+                                                                        peer-checked:bg-emerald-500
+                                                                        dark:bg-slate-600 dark:peer-checked:bg-emerald-400">
+                                            </div>
+
+                                            <span class="absolute left-0.5 top-0.5 flex h-3 w-3 items-center justify-center
+                                                                         rounded-full bg-white text-[8px] font-bold text-slate-500 transition-all duration-300
+                                                                         peer-checked:translate-x-4 peer-checked:text-emerald-700">
+                                                @(isChecked ? "✔" : "✖")
+                                            </span>
+                                        </label>
+
+                                        <span class="font-medium">
+                                            @Format(price)
+                                        </span>
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(off.Comment))
+                                    {
+                                        <div class="flex items-start gap-1">
+                                            <span class="text-[10px]">📝</span>
+                                            <span class="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[180px]"
+                                                  title="@off.Comment">
+                                                @off.Comment
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    public class Group
+    {
+        public List<ResourceListMVVM> Resources { get; set; } = new();
+        public string? Key { get; set; }
+        public List<double> NetQ { get; set; } = new();
+        public List<int> IDs { get; set; } = new();
+
+        public double Min => NetQ.Min();
+
+        public void OrderByMin()
+        {
+            IDs = Key!.Split('|').Select(int.Parse).ToList();
+            if (IDs.Count == NetQ.Count)
+            {
+                var combined = IDs
+                    .Zip(NetQ, (id, value) => new { Id = id, Value = value })
+                    .OrderBy(x => x.Value)
+                    .ToList();
+
+                IDs = combined.Select(x => x.Id).ToList();
+                NetQ = combined.Select(x => x.Value).ToList();
+            }
+        }
+    }
+
+    int max = 0;
+    int MaxOffersWithoutCompanies = 0;
+    List<Group> CompaniesList { get; set; } = new();
+    List<ResourceListMVVM> Resources { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        foreach (var ts in Calc.Tasks)
+        {
+            foreach (var res in ts.Resources)
+            {
+                // عروض بدون شركة
+                if (res.Offers.Count > 0 && res.Offers.Any(x => !x.OrganisationId.HasValue || x.OrganisationId == 0))
+                    Resources.Add(res);
+
+                // عروض مع شركات
+                var orgs = res.Offers.Where(x => x.OrganisationId.HasValue && x.OrganisationId > 0);
+                if (orgs.Any())
+                {
+                    var companies = orgs.OrderBy(x => x.OrganisationId).ToList();
+                    if (companies.Count > max)
+                        max = companies.Count;
+
+                    string key = string.Join("|", companies.Select(x => x.OrganisationId!.Value));
+                    var group = CompaniesList.FirstOrDefault(x => x.Key == key);
+
+                    if (group != null)
+                    {
+                        group.Resources.Add(res);
+                        for (int i = 0; i < companies.Count; i++)
+                        {
+                            group.NetQ[i] += (companies[i].Cost * (res.Quantity ?? 0)) + companies[i].BaseCost;
+                        }
+                    }
+                    else
+                    {
+                        CompaniesList.Add(new Group
+                        {
+                            Key = key,
+                            Resources = new List<ResourceListMVVM> { res },
+                            NetQ = companies.Select(x => (x.Cost * (res.Quantity ?? 0)) + x.BaseCost).ToList(),
+                        });
+                    }
+                }
+
+                // حساب أكبر عدد عروض بدون شركة
+                if (res.Offers.Any(x => !x.OrganisationId.HasValue || x.OrganisationId == 0))
+                {
+                    int maxO = res.Offers.Count(x => !x.OrganisationId.HasValue || x.OrganisationId == 0);
+                    if (maxO > MaxOffersWithoutCompanies)
+                        MaxOffersWithoutCompanies = maxO;
+                }
+            }
+        }
+
+        // ترتيب المجموعات
+        CompaniesList = CompaniesList
+            .OrderByDescending(x => x?.Key?.Count())
+            .ToList();
+
+        foreach (var item in CompaniesList)
+        {
+            item.OrderByMin();
+        }
+    }
+
+    private double Format(double? x) => Template.Format(x ?? 0);
+
+    async Task SetDefaultAsync(ResourceListMVVM res, ListOfferMVVM offer)
+    {
+        int? offerId = offer.Id;
+        if (res.OfferId == offer.Id)
+            offerId = 0;
+
+        if (await Repo.Offer.SetOfferToResourceAsync(res.Id, offerId))
+        {
+            MHD.Notifications(ToastType.Info, true);
+        }
+        else
+        {
+            MHD.Notifications(ToastType.Info, false);
+        }
+    }
+}

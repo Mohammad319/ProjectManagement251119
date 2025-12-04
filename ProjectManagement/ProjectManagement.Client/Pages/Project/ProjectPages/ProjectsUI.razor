@@ -1,0 +1,311 @@
+﻿@inject HttpClient Http
+@using BlazorMHD.UI.Components.Data.Card
+@using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Helper
+@using Microsoft.Extensions.Logging
+@using ProjectManagement.Client.Services.Folder
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Client.Shared.Model.Project
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@using ProjectManagement.Shared.DTO.Project
+@using System.Net.Http
+@inherits AppComponentBase
+@implements IDisposable
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="ml-1">
+    @if (!Folder.State.OtherDepartment)
+    {
+        <div class="flex justify-between items-center w-full p-1">
+            <div>
+                <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <span>
+                        @if (Folder.State.FolderSelected != null)
+                        {
+                            <span>@Folder.State.FolderSelected.Name</span>
+                        }
+                    </span>
+                </div>
+            </div>
+            <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
+                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                    <button class="@CssClasses.Btn.IconButton.Success"
+                    @onclick="() => UpdateForm(new ListProjectMVVM())">@((MarkupString)Icons.Plus2)
+                    </button>
+                </AuthorizeView>
+                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                    <button @onclick="async () => { IaVisible = !IaVisible; await GetAsync(); }"
+                            class="@CssClasses.Btn.IconButton.Secondary">
+                        @((MarkupString)Icons.GetVisibleIcon(IaVisible))
+                    </button>
+                </AuthorizeView>
+            </div>
+        </div>
+    }
+<div class="mt-1 space-y-1">
+    @if (Folder.State.FolderSelected?.Projects is not null &&
+         Folder.State.FolderSelected.Projects.Any())
+    {
+        foreach (var project in Folder.State.FolderSelected.Projects)
+        {
+                <div @key="project.Id"
+                     class="cursor-pointer"
+                     @oncontextmenu:preventDefault
+                     @oncontextmenu="() => Context(project)"
+                     @onclick="async () => await SetProject(project)"
+                     @ondrop="async _ => await HandleDrop(project)"
+                     @ondragleave="() => project.IsDragOver = false"
+                     @ondragover:preventDefault="true"
+                     @ondragover="() => project.IsDragOver = draggingProject is not null"
+                     @ondragstart="() => draggingProject = project"
+                     @ondragend="() => draggingProject = null"
+                     draggable="true">
+
+
+                <MhdCard Compact="true"
+                         Elevated="true"
+                         Interaction="MhdCard.CardInteractionMode.HoverAndRipple"
+                         Class="@(project.IsDragOver ? "ring-2 ring-blue-400" : string.Empty)">
+
+                    <Header>
+                        <div class="grid grid-cols-[90px,1fr] items-center gap-2">
+                            <!-- اللون + الكود -->
+                            <div class="flex items-center gap-2">
+                                <span class="inline-block w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
+                                      style="background-color:@project.Color"></span>
+
+                                <span class="text-[12px] font-mono text-gray-700 dark:text-gray-200">
+                                    @project.Code
+                                </span>
+                            </div>
+
+                            <!-- الاسم -->
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                                    @project.Name
+                                </span>
+                            </div>
+                        </div>
+                    </Header>
+
+                    <ChildContent>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-1 text-[11px] text-gray-600 dark:text-gray-300">
+                            <div>
+                                <span class="font-semibold">@CalcResource.tenderQA:</span>
+                                <span class="ml-1">@project.TenderQA.ToString(ConstValues.DateFormat)</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold">@CalcResource.tenderDeadline:</span>
+                                <span class="ml-1">@project.TenderDeadline.ToString(ConstValues.DateFormat)</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold">@CalcResource.startDate:</span>
+                                <span class="ml-1">@project.StartDate.ToString(ConstValues.DateFormat)</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold">@CalcResource.endDate:</span>
+                                <span class="ml-1">@project.EndDate.ToString(ConstValues.DateFormat)</span>
+                            </div>
+                        </div>
+                    </ChildContent>
+
+                </MhdCard>
+           
+            </div>
+        }
+    }
+</div>
+
+</div>
+
+@code {
+
+    Guid UpdateProject = Guid.Empty;
+    bool IaVisible { get; set; } = true;
+    private ListProjectMVVM? draggingProject;
+
+    protected override void OnInitialized()
+    {
+        CalcService.PageChanged += ToastChanged;
+    }
+
+    public void Dispose()
+    {
+        CalcService.PageChanged -= ToastChanged;
+    }
+
+    private void ToastChanged(object? sender, EventArgs e) => InvokeAsync(StateHasChanged);
+
+    async Task Context(ListProjectMVVM item)
+    {
+        if (Folder.State.OtherDepartment) return;
+        var list = new List<MenuItem>();
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        bool isInAnyRole = PMRolesConst.Tenant.AdminManger.Split(',').Any(r => user.IsInRole(r));
+
+        if (user.Identity?.IsAuthenticated == true && isInAnyRole)
+        {
+            list.Add(new()
+            {
+                Label = $"✏️ {ResourceApp.edit}",
+                OnClickAsync = () =>
+                {
+                    UpdateForm(item); return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"🗑️ {ResourceApp.delete}",
+                OnClickAsync = () =>
+                {
+                    Remove(item); return Task.CompletedTask;
+                }
+            });
+        }
+        list.Add(new()
+        {
+            Label = $"📄 {ResourceLoc.details}",
+            OnClickAsync = () =>
+            {
+                ProjectDetailsDialog(item); return Task.CompletedTask;
+            }
+        });
+        await ContextService.ShowMenuAsync(list);
+    }
+
+    void ProjectDetailsDialog(ListProjectMVVM model) =>
+        Modal.ShowComponent<ProjectDetailsUI>(
+            model.Name,
+            new Dictionary<string, object>
+            {
+                [nameof(ProjectDetailsUI.ProjectId)] = model.Id,
+            });
+
+    void UpdateForm(ListProjectMVVM model)
+    {
+        UpdateProject = model.Id;
+        Modal.ShowComponent<ProjectForm>(
+            model.Id == Guid.Empty ? AppLoc[LocalizerConst.New, CalcResource.project] : AppLoc[LocalizerConst.Update, model.Name],
+            new Dictionary<string, object>
+            {
+                [nameof(ProjectForm.Project)] = model,
+                [nameof(ProjectForm.FolderId)] = Folder.State.FolderSelected!.Id,
+                [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this, AddProjectAsync)
+            }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+    }
+
+    async Task SetProject(ListProjectMVVM pro)
+    {
+        await Folder.NewProject(pro);
+        Folder.State.SetCalculation(null, pro, Folder.State.FolderSelected!);
+    }
+
+    async Task GetAsync(bool refresh = true)
+    {
+        if (refresh && Folder.State.FolderSelected is not null)
+        {
+            Folder.State.FolderSelected.Projects =
+                await ExHandlers.RunCheckTokenAsync(
+                    () => Repo.Project.GetByFolderIdAsync(Folder.State.FolderSelected.Id, IaVisible)
+                );
+
+            if (Folder.State.FolderSelected.Projects != null)
+                Folder.State.FolderSelected.Projects =
+                    Folder.State.FolderSelected.Projects
+                        .OrderByDescending(x => x.Order)
+                        .ToList();
+        }
+
+        Modal.Close();
+    }
+
+    void AddProjectAsync(Tuple<bool, ListProjectMVVM> callBack)
+    {
+        if (callBack == null)
+        {
+            Modal.Close();
+            return;
+        }
+
+        var project = callBack.Item2;
+        bool isVisibleMatches = callBack.Item1 == IaVisible;
+
+        if (UpdateProject == Guid.Empty)
+        {
+            if (project.Id != Guid.Empty && isVisibleMatches)
+            {
+                Folder.State.FolderSelected!.Projects.Insert(0, project);
+            }
+        }
+        else
+        {
+            var existing = Folder.State.FolderSelected!.Projects.FirstOrDefault(x => x.Id == UpdateProject);
+            if (existing != null)
+            {
+                if (!isVisibleMatches)
+                {
+                    Folder.State.FolderSelected.Projects.Remove(existing);
+                }
+                else
+                {
+                    PropertyCopier.CopyPropertiesTo(project, existing);
+                    existing.Id = UpdateProject;
+                }
+            }
+        }
+
+        Folder.State.FolderSelected!.Projects =
+            Folder.State.FolderSelected.Projects
+                .OrderByDescending(x => x.Order)
+                .ToList();
+
+        UoWService.Folder.State.Notify();
+        Modal.Close();
+    }
+
+    void Remove(ListProjectMVVM project) =>
+        MHD.DeleteMessage(project.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(project)));
+
+    async Task ConfirmRemoveAsync(ListProjectMVVM project)
+    {
+        bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Project.DeleteAsync(project.Id));
+        if (result)
+        {
+            Folder.State.FolderSelected!.Projects.Remove(project);
+        }
+        MHD.Notifications(ToastType.Delete, result);
+        UoWService.Folder.State.Notify();
+    }
+
+    private async Task HandleDrop(ListProjectMVVM project)
+    {
+        if (draggingProject is null || Folder.State.FolderSelected?.Projects is null)
+            return;
+
+        draggingProject.IsDragOver = false;
+        project.IsDragOver = false;
+
+        var list = Folder.State.FolderSelected.Projects;
+        int index = list.IndexOf(project);
+
+        if (index == 0)
+            draggingProject.Order = project.Order + 100;
+        else if (draggingProject.Order < project.Order)
+            draggingProject.Order = (project.Order + list[index - 1].Order) / 2;
+        else if (draggingProject.Order > project.Order && (index + 1) < list.Count)
+            draggingProject.Order = (list[index + 1].Order + project.Order) / 2;
+        else
+            draggingProject.Order = project.Order - 100;
+
+        Folder.State.FolderSelected.Projects =
+            list.OrderByDescending(x => x.Order).ToList();
+
+        await Repo.Project.ReOrderAsync(draggingProject.Id, draggingProject.Order);
+
+        draggingProject = null;
+        StateHasChanged();
+    }
+}

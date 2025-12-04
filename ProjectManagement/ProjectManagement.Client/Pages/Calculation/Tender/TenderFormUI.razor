@@ -1,0 +1,122 @@
+﻿﻿@using ProjectManagement.Client.Shared.MVVM.Calculation;
+@using ProjectManagement.Client.Shared.Model.Project;
+@using ProjectManagement.Client.Shared.Repositories.Calculation;
+@using ProjectManagement.Client.Shared.Repositories.Organisation
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Offer;
+@using ProjectManagement.Shared.DTO.Organisation
+@using ProjectManagement.Shared.Base.Calculation;
+@using System.Text.Json;
+@inherits AppComponentBase
+
+@if (Income != null)
+{
+    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@Income" OnValidSubmit="async()=> await HandleSubmitAsync()">
+        <div class="@CssClasses.Grid.Col.MD3">
+                @if (Companies != null)
+                {
+                <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
+                        <select class="@CssClasses.Input.Text" @onchange=" (e)=>  OnChangeCompany(e)">
+                            <option value="" selected></option>
+                            @foreach (var cat in Companies)
+                            {
+                                <option value="@cat.Id">@cat.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+            <div class="@CssClasses.Grid.Span.MD2">
+                <label class="@CssClasses.Form.Label">@CalcResource.note </label>
+                <InputTextArea @bind-Value="Income.Note" class="@CssClasses.Input.Text" />
+                <ValidationMessage For=@(() => Income.Note) />
+            </div>
+        </div>
+    </EditForm>
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@Loading">
+            @ResourceApp.save
+        </button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+    </div>
+}
+@code {
+    [Parameter] public List<TenderAttributeListDTO> Attributes { get; set; }
+    int CompanyId;
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    bool Loading = false;
+    List<ListDTO> Companies;
+    [Parameter] public TenderListDTO TenderList { get; set; }
+    [Parameter] public int CalcId { get; set; }
+
+    TenderPostDTO Income { get; set; }
+
+    Dictionary<int, double> AttributesValue = new Dictionary<int, double>();
+    void OnChange(ChangeEventArgs ev, int i)
+    {
+        if (string.IsNullOrEmpty(ev.Value.ToString()))
+        {
+            AttributesValue[i] = 0;
+        }
+        else
+        {
+            AttributesValue[i] = Convert.ToDouble(ev.Value.ToString());
+        }
+    }
+
+    void OnChangeCompany(ChangeEventArgs e)
+    {
+        Income.CompanyId = CompanyId;
+        CompanyId = 0;
+        if (e == null || string.IsNullOrEmpty(e.Value.ToString())) return;
+        CompanyId = int.Parse(e.Value.ToString());
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (TenderList.Id == 0)
+            foreach (var item in Attributes)
+            {
+                AttributesValue.Add(item.Id, 0);
+            }
+        Companies = await ExHandlers.RunCheckTokenAsync(() => Repo.Org.GetVisibleOrIdAsync());
+        if (TenderList.Id > 0)
+        {
+            var t = await Repo.Tender.DetailsAsync(TenderList.Id, CalcId);
+            Income = new TenderPostDTO()
+                {
+                    CompanyId = TenderList.CompanyId,
+                    Note = t.Note,
+                };
+        }
+        else Income = new TenderPostDTO();
+        Loading = false;
+        StateHasChanged();
+    }
+    async Task HandleSubmitAsync()
+    {
+        Loading = true;
+        try
+        {
+            bool isSuccess;
+            if (TenderList.CompanyId == 0)
+            {
+                Income.AttributesValue = AttributesValue;
+                isSuccess = (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.CreateAsync(
+                    CalcId, CompanyId, Income))) > 0;
+            }
+            else
+            {
+                isSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.UpdateAsync(0, CalcId, Income));
+            }
+             MHD.Notifications(TenderList.CompanyId == 0 ? ToastType.Add : ToastType.Update, isSuccess);
+            await Callback.InvokeAsync(isSuccess);
+        }
+        catch
+        {
+             MHD.Notifications(TenderList.CompanyId == 0 ? ToastType.Add : ToastType.Update, false);
+            // Console.WriteLine(ex.Message);
+        }
+        await Callback.InvokeAsync(false);
+    }
+}

@@ -1,0 +1,31 @@
+﻿@using ProjectManagement.Client.Shared.Repositories.Calculation
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@PostStatus" OnValidSubmit="async () => await HandleSubmitAsync()">
+        <DataAnnotationsValidator />
+    <div class="flex flex-wrap items-center gap-4">
+        <div class="flex flex-col">
+            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostStatus.Name" />
+            <ValidationMessage For=@(() => PostStatus.Name) />
+        </div>
+        <div class="@CssClasses.Form.CheckWrapperM">
+            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@PostStatus.IsVisible" />
+            <label class="@CssClasses.Form.CheckLabel" for="inlineFormCheck">
+                    @ResourceApp.isVisible
+                </label>
+        </div>
+        <div class="flex flex-col">
+            <InputText type="color" class="@CssClasses.Input.Color" @bind-Value="@PostStatus.Color" />
+        </div>
+
+        </div>
+    </EditForm>
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
+            @ResourceApp.save
+        </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick=" () => MHD.Modal.Close()">@ResourceApp.cancel</button>
+    </div>

@@ -1,0 +1,228 @@
+@using System.Linq
+@using BlazorMHD.UI.Core.Services
+@using BlazorMHD.UI.Core.DesignSystem
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+@inject DialogService DialogService
+@implements IDisposable
+
+@if (DialogService.Dialogs?.Any() == true)
+{
+    var dialogs = DialogService.Dialogs;
+
+    <!-- حاوية لكل النوافذ، تستمع لزر Esc بدون ما تاخذ الفوكس -->
+    <div @onkeydown="OnKeyDown">
+        <!-- Overlay واحد -->
+        <div class="fixed inset-0 z-40 bg-black/50 dialog-overlay-animate-in"
+             @onclick="OnOverlayClick">
+        </div>
+
+        @foreach (var item in dialogs.Select((m, i) => new { Model = m, Index = i }))
+        {
+            var model = item.Model;
+            var zIndex = 50 + item.Index * 10;
+
+            <!-- الحاوية الخارجية: تثبيت في أعلى الشاشة -->
+            <div class="fixed inset-0 flex items-start justify-center pt-8"
+                 style="z-index:@zIndex;">
+
+                <!-- الحاوية الداخلية: تتحرك فقط بالـ transform (للسحب) -->
+                <div class="relative dialog-animate-in"
+                     style="@GetDialogStyle(model)"
+                     @onmousemove="e => OnMouseMove(model, e)"
+                     @onmouseup="e => OnMouseUp(model, e)"
+                     @onmouseleave="e => OnMouseUp(model, e)">
+
+                    <!-- اللوحة -->
+                    <div class="@($"{DialogStyles.GetPanelClasses(model)} flex flex-col")"
+                         style="@GetPanelStyle(model)">
+
+                        <!-- الهيدر -->
+                        <div class="px-4 py-3
+                                            flex items-center justify-between
+                                            select-none cursor-move
+                                            border-b border-slate-200/80 dark:border-slate-800/80
+                                            shadow-sm dark:shadow-[0_1px_0_rgba(15,23,42,0.9)]
+                                            @DialogStyles.GetHeaderBackground(model.State)"
+                             @onmousedown="e => OnHeaderMouseDown(model, e)">
+
+                            <div class="flex flex-col gap-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex w-2.5 h-2.5 rounded-full shadow-sm @DialogStyles.GetHeaderAccent(model.State)"></span>
+                                    @if (string.IsNullOrWhiteSpace(model.Icon))
+                                    {
+                                        @((MarkupString)model.Icon)
+                                    }
+                                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate">
+                                        @model.Title
+                                    </span>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(model.Description))
+                                {
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                        @model.Description
+                                    </p>
+                                }
+                            </div>
+
+                            <button class="inline-flex items-center justify-center rounded-full px-2 py-1 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                    @onclick="@(() => Close(model))">
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- الجسم (يتمدد ويكون قابل للتمرير فقط هو) -->
+                        <div class="px-4 py-4 overflow-auto flex-1">
+                            @model.Content
+                        </div>
+
+                        <!-- الأزرار -->
+                        @if (model.Buttons?.Any() == true)
+                        {
+                            <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
+                                @foreach (var btn in model.Buttons)
+                                {
+                                    <button type="button"
+                                            class="@GetButtonClasses(btn)"
+                                            @onclick="() => OnButtonClick(btn, model)">
+                                        @btn.Text
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    // --- أبعاد اللوحة حسب الحجم ---
+    private string GetPanelStyle(DialogModel model)
+    {
+        if (model.Size == DialogSize.FullScreen)
+            return "width: 100vw; height: 100vh;";
+
+        // نستخدم max-height مع flex-col حتى يبقى الهيدر ثابت والسكول داخل الجسم فقط
+        return model.Size switch
+        {
+            DialogSize.Small => "width: 360px; max-height: 80vh;",
+            DialogSize.Medium => "width: 480px; max-height: 80vh;",
+            DialogSize.Large => "width: 640px; max-height: 80vh;",
+            DialogSize.ExtraLarge => "width: min(90vw, 1100px); max-height: 80vh;",
+            _ => "width: 480px; max-height: 80vh;"
+        };
+    }
+
+    protected override void OnInitialized()
+    {
+        DialogService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        DialogService.OnChange -= StateHasChanged;
+    }
+
+    // إغلاق أعلى نافذة (للتوافق مع كود قديم)
+    private void Close()
+    {
+        DialogService.Close();
+    }
+
+    private void Close(DialogModel model)
+    {
+        DialogService.Close(model);
+    }
+
+    private async Task OnButtonClick(DialogButtonModel button, DialogModel model)
+    {
+        if (button.OnClick is { HasDelegate: true })
+        {
+            await button.OnClick.Value.InvokeAsync();
+        }
+
+        DialogService.Close(model);
+    }
+
+    private string GetButtonClasses(DialogButtonModel button)
+    {
+        return ButtonStyles.Get(button.State, button.IsPrimary, MhdSize.Md);
+    }
+
+    // --- السحب ---
+    private bool _isDragging;
+    private DialogModel? _draggingModel;
+    private double _dragStartMouseX;
+    private double _dragStartMouseY;
+    private double _startOffsetX;
+    private double _startOffsetY;
+
+    private void OnHeaderMouseDown(DialogModel model, MouseEventArgs e)
+    {
+        if (!model.IsDraggable)
+            return;
+
+        _isDragging = true;
+        _draggingModel = model;
+        _dragStartMouseX = e.ClientX;
+        _dragStartMouseY = e.ClientY;
+        _startOffsetX = model.OffsetX;
+        _startOffsetY = model.OffsetY;
+    }
+
+    private void OnMouseMove(DialogModel model, MouseEventArgs e)
+    {
+        if (!_isDragging || _draggingModel != model)
+            return;
+
+        var deltaX = e.ClientX - _dragStartMouseX;
+        var deltaY = e.ClientY - _dragStartMouseY;
+
+        model.OffsetX = _startOffsetX + deltaX;
+        model.OffsetY = _startOffsetY + deltaY;
+
+        StateHasChanged();
+    }
+
+    private void OnMouseUp(DialogModel model, MouseEventArgs e)
+    {
+        if (_draggingModel == model)
+        {
+            _isDragging = false;
+            _draggingModel = null;
+        }
+    }
+
+    // الآن التحويل فقط بالسحب، بدون -50% وبدون center
+    private string GetDialogStyle(DialogModel model)
+    {
+        return $"transform: translate({model.OffsetX}px, {model.OffsetY}px);";
+    }
+
+    // إغلاق أعلى نافذة عند الضغط على الـ Overlay (لو مسموح)
+    private void OnOverlayClick(MouseEventArgs e)
+    {
+        var top = DialogService.Dialogs.LastOrDefault();
+        if (top is not null && top.CloseOnOverlayClick)
+        {
+            DialogService.Close(top);
+        }
+    }
+
+    // إغلاق أعلى نافذة عند الضغط على زر Esc
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape" || e.Key == "Esc")
+        {
+            var top = DialogService.Dialogs?.LastOrDefault();
+            if (top is not null)
+            {
+                DialogService.Close(top);
+            }
+        }
+    }
+}

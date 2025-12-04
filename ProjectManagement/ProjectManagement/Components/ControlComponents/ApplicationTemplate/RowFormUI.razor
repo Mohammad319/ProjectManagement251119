@@ -1,0 +1,325 @@
+﻿@using Domain.Entities.Application
+@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.Model.Application
+@using ProjectManagement.Shared
+@using ProjectManagement.Shared.Base.Application
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@using ProjectManagement.Client.Shared.ViewModel
+@inherits AppComponentBase
+@inject ICommandDispatcher MicroBus
+
+<div class="container">
+    @if (AttributeForm == null)
+    {
+        <nav>
+            <div class="flex space-x-2 border-b border-gray-300" role="tablist">
+                <button class="px-4 py-2 text-sm font-medium border-b-2 transition duration-150 ease-in-out
+                       @(PartPage == 0 ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300")"
+                        @onclick="() => PartPage = 0">
+                    @PMAppFormatResource.row
+                </button>
+                <button class="px-4 py-2 text-sm font-medium border-b-2 transition duration-150 ease-in-out
+                       @(PartPage == 1 ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300")"
+                        @onclick="() => PartPage = 1">
+                    @ResourceApp.text
+                </button>
+                <button class="px-4 py-2 text-sm font-medium border-b-2 transition duration-150 ease-in-out
+                       @(PartPage == 2 ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300")"
+                        @onclick="() => PartPage = 2">
+                    @PMAppFormatResource.cell
+                </button>
+                <button class="px-4 py-2 text-sm font-medium border-b-2 transition duration-150 ease-in-out
+                       @(PartPage == 3 ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300")"
+                        @onclick="() => PartPage = 3">
+                    @PMAppFormatResource.background
+                </button>
+                <button class="px-4 py-2 text-sm font-medium border-b-2 transition duration-150 ease-in-out
+                       @(PartPage == 4 ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300")"
+                        @onclick="() => PartPage = 4">
+                    @ResourceApp.parameter
+                </button>
+            </div>
+        </nav>
+
+        @if (Part == 0)
+        {
+            @if (PartPage == 0)
+            {
+                <EditForm id="rowForm" Model="@RowUpdate" OnValidSubmit="async () => await HandleSubmitAsync()">
+                    <DataAnnotationsValidator />
+                    <div class="@CssClasses.Grid.Col.MD3">
+                        <div>
+                            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@RowUpdate.Name" />
+                            <ValidationMessage For=@(() => RowUpdate.Name) />
+                        </div>
+                        <div>
+                            <label class="@CssClasses.Form.Label">@ResourceLoc.description:</label>
+                            <InputText class="@CssClasses.Input.Text" @bind-Value="@RowUpdate.Description" />
+                            <ValidationMessage For=@(() => RowUpdate.Description) />
+                        </div>
+                        <div class="@CssClasses.Form.CheckWrapperM">
+                            <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="RowUpdate.IsVisible" />
+                                <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
+                                <ValidationMessage For=@(() => RowUpdate.IsVisible) />
+                        </div>
+                        <div>
+                            <button type="submit" form="rowForm" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success">@ResourceApp.save</button>
+                            <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
+                        </div>
+                    </div>
+                </EditForm>
+            }
+            @if (PartPage == 1)
+            {
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <div>
+                        <input type="color" class="@CssClasses.Input.Color" @bind="@Style.Color" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingTop</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@Style.PaddingTop" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.FontSize</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@Style.FontSize" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.alignItems </label>
+                        <select @bind="@Style.TextAlign" class="@CssClasses.Input.Select" @bind:after="updateStyle">
+                            <option value=""></option>
+                            <option value="center">@PMAppFormatResource.center </option>
+                            <option value="end">@PMAppFormatResource.right </option>
+                            <option value="start">@ResourceApp.left </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.fontWeight </label>
+                        <select @bind="@Style.FontWeight" class="@CssClasses.Input.Select" @bind:after="updateStyle">
+                            <option value=""></option>
+                            <option value="bold">@PMAppFormatResource.bold </option>
+                            <option value="normal">@PMAppFormatResource.normal </option>
+                            <option value="bolder">@AppFormatResource.bolder </option>
+                        </select>
+                    </div>
+                </div>
+            }
+            else if (PartPage == 2)
+            {
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <div>
+                        <input type="color" class="@CssClasses.Input.Color"
+                        @bind="@Style.BackgroundColor" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.width</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="Style.Width" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.height</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@Style.Height" @bind:after="updateStyle" />
+                    </div>
+                </div>
+            }
+            else if (PartPage == 3)
+            {
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.height:</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@StyleRow.Height" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
+                        <input type="color" class="form-control form-control-color" @bind="StyleRow.BackgroundColor" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.marginTop:</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="StyleRow.MarginTop" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.marginBottom:</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="StyleRow.MarginBottom" @bind:after="updateStyle" />
+                    </div>
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingLeft:</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@StyleRow.PaddingLeft" @bind:after="updateStyle" />
+                    </div>
+
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingTop:</label>
+                        <input type="number" class="@CssClasses.Input.Text" @bind="@StyleRow.PaddingTop" @bind:after="updateStyle" />
+                    </div>
+                </div>
+
+            }
+            else if (PartPage == 4)
+            {
+                <div>
+                    <button class="@CssClasses.Btn.Solid.Primary" @onclick="()=> AttributeForm=new AttributeModel()">
+                        @AppLoc[LocalizerConst.New, nameof(ResourceApp.attribute)]
+                    </button>
+                </div>
+                <div>
+                    <table class="@CssClasses.Table.Tab mt-1">
+                        <thead class="@CssClasses.Table.Thead">
+                            <tr>
+                                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.attributeType</th>
+                                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.order </th>
+                                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.required</th>
+                                <th class="@CssClasses.Table.TH"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="@CssClasses.Table.TBody">
+                            @if (RowUpdate.Attributes != null)
+                                foreach (var field in RowUpdate.Attributes)
+                                {
+                                    <tr class="@CssClasses.Table.Tr">
+                                        <td scope="row" class="@CssClasses.Table.Td"><button @onclick="() => AttributeForm = field" class="@CssClasses.Btn.Link">@field.AttributeType</button> </td>
+                                        <td scope="row" class="@CssClasses.Table.Td">@field.Order</td>
+                                        <td class ="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@field.Required" /></td>
+                                        <td class="@CssClasses.Table.Td">
+                                            <button @onclick="()=>Remove(field)" class="@CssClasses.Btn.Outline.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                                        </td>
+                                    </tr>
+                                }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+        @if (PartPage == 1 || PartPage == 2 || PartPage == 3)
+        {
+            <div style="padding-top:10px;">
+                @if (Part == 1 || Part == 2)
+                {
+                    <button class="@CssClasses.Btn.Outline.Primary" @onclick="updateStyle">Preview Style</button>
+                    <button class="@CssClasses.Btn.Outline.Secondary" @onclick="() => Part = 0">@((MarkupString)Icons.Back)</button>
+                }
+                <div style="display:flex;@StyleRowStr">
+                    <label style="@StyleStr z-index:100;">@RowUpdate.Name</label>
+                    @if (RowUpdate.Attributes != null) foreach (var attr in RowUpdate.Attributes)
+                        {
+                            if (attr.AttributeType == AttributeType.Bool)
+                            {
+                                <input class="@CssClasses.Input.Check" type="checkbox" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
+                            {
+                                <label style="@attr.Style">123</label>
+                            }
+                            else
+                            {
+                                <label style="@attr.Style">Attribute Value</label>
+                            }
+                        }
+                </div>
+            </div>
+            <div style="padding-top:0px;">
+                <div style="display:flex;@StyleRowStr">
+                    <label style="@StyleStr">@RowUpdate.Name</label>
+                    @if (RowUpdate.Attributes != null) foreach (var attr in RowParameter.Attributes)
+                        {
+                            @if (attr.AttributeType == AttributeType.Text)
+                            {
+                                <input type="text" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.Char)
+                            {
+                                <input maxlength="1" type="text" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.TextArea)
+                            {
+                                <textarea class="@CssClasses.Input.Text" style="@attr.Style"></textarea>
+                            }
+                            else if (attr.AttributeType == AttributeType.DateTime)
+                            {
+                                <input type="datetime-local" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.Date)
+                            {
+                                <input type="date" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.Time)
+                            {
+                                <input type="time" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.Bool)
+                            {
+                                <input class="@CssClasses.Input.Check" type="checkbox" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
+                            {
+                                <input type="number" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            }
+                            else if (attr.AttributeType == AttributeType.Select)
+                            {
+                                <select style="@attr.Style" class="form-select"></select>
+                            }
+                        }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <AttributeFormUI Attribute="@AttributeForm" Callback="CallBackField"></AttributeFormUI>
+    }
+</div>
+@code {
+    [Parameter] public RowEntity RowParameter { get; set; } = new();
+    [Parameter] public int PartPage { get; set; } = 0;
+
+    RowEntity RowUpdate { get; set; } = new();
+    AttributeBase AttributeForm;
+    StyleVM Style { get; set; } = new StyleVM();
+    StyleVM StyleRow { get; set; } = new StyleVM();
+    [Parameter] public EventCallback<RowEntity> Callback { get; set; }
+    bool IsLoading = false;
+
+    string StyleStr;
+    string StyleRowStr;
+    int Part = 0;
+    void updateStyle()
+    {
+        StyleStr = Style.GetString();
+        StyleRowStr = StyleRow.GetString();
+    }
+
+    protected override void OnInitialized()
+    {
+        Style.Set(RowParameter.Style);
+        StyleRow.Set(RowParameter.StyleRow);
+        StyleStr = Style.GetString();
+        StyleRowStr = StyleRow.GetString();
+        PropertyCopier.CopyPropertiesTo(RowParameter, RowUpdate);
+    }
+    private async Task HandleSubmitAsync()
+    {
+        RowUpdate.Style = Style.GetString();
+        RowUpdate.StyleRow = StyleRow.GetString();
+        await Callback.InvokeAsync(RowUpdate);
+    }
+    void CallBackField(AttributeBase attr)
+    {
+        AttributeForm = null;
+        if (attr == null) return;
+        if (attr.ID == Guid.Empty){
+            attr.ID = Guid.NewGuid();
+            RowUpdate.Attributes.Add(attr);
+        }
+        else{
+            var oldAttr = RowUpdate.Attributes.FirstOrDefault(x=>x.ID == attr.ID);
+            if (oldAttr != null) attr.CopyPropertiesTo(oldAttr);
+        }
+    }
+    void Remove(AttributeBase attr)
+    {
+        @* MHD.DeleteMessage(attr.AttributeType.ToString(), () => RemoveAsync(attr)); *@
+    }
+    bool RemoveAsync(AttributeBase st)
+    {
+        RowUpdate.Attributes.Remove(st);
+        StateHasChanged();
+        return true;
+    }
+}

@@ -1,0 +1,66 @@
+﻿@using Domain.Entities.Organisation
+@using ProjectManagement.Components.ControlComponents.Organisation.OrganisationsType
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+<div class="flex flex-row gap-1">
+    <div class="flex flex-col">
+        <div class="flex flex-row gap-1">
+            <AuthorizeView Roles="@PMRolesConst.Tenant.Admin">
+                <button @onclick="() => ModalForm(new OrganisationCategoryEntity())"
+                        class="@CssClasses.Btn.IconButton.Success">
+                    @((MarkupString)Icons.Plus)
+                </button>
+                <button @onclick="() => PageNr = 1"
+                        class="@CssClasses.Btn.Outline.Secondary">
+                    Category Type
+                </button>
+            </AuthorizeView>
+        </div>
+
+        <div class="mt-2 w-40 min-w-[200px] bg-white dark:bg-gray-900 rounded shadow">
+            @if (Categories != null)
+            {
+                foreach (var cat in Categories.Where(x => x.CategoryId == null))
+                {
+                    <div role="button"
+                         @oncontextmenu:preventDefault
+                         @oncontextmenu="() => Context(cat)"
+                         class="bg-gray-200 dark:bg-gray-700 text-black dark:text-white px-4 py-2 rounded-t-md cursor-pointer select-none font-semibold">
+                        <strong>@cat.Name</strong>
+                    </div>
+
+                    @if (Categories.Any(x => x.CategoryId == cat.Id))
+                    {
+                        foreach (var cat2 in Categories.Where(x => x.CategoryId == cat.Id))
+                        {
+                            <div role="button"
+                                 @oncontextmenu:preventDefault
+                                 @oncontextmenu="() => Context(cat2)"
+                                 @onclick="async () => await GetCompaniesAsync(cat2)"
+                                 class="@($"px-4 py-2 pl-8 cursor-pointer select-none transition {(SelectedCategory == cat2 ? "bg-gray-800 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")} ")">
+                                
+                                <label role="button">@cat2.Name</label>
+                            </div>
+                        }
+                    }
+                }
+            }
+        </div>
+    </div>
+
+    <div class="flex-1">
+        @if (PageNr == 1)
+        {
+            <OrganisationsTypeUI></OrganisationsTypeUI>
+        }
+        else if (SelectedCategory != null)
+        {
+            <OrganisationsUI Callback="() => SelectedCategory = null"
+                             Category="SelectedCategory"></OrganisationsUI>
+        }
+    </div>
+</div>

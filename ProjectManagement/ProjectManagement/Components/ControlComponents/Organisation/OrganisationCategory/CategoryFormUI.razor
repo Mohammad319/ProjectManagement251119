@@ -1,0 +1,20 @@
+﻿@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@PostOffer" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <DataAnnotationsValidator />
+        <div class="mb-0">
+            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostOffer.Name" />
+            <ValidationMessage For=@(() => PostOffer.Name) />
+        </div>
+
+</EditForm>
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
+            @ResourceApp.save
+        </button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+    </div>

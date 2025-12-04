@@ -1,0 +1,104 @@
+﻿
+public class GetCalculationPageQueryHandler(IShardingSingleDbContext _context) 
+    : IRequestHandler<GetCalculationPageQuery, CalculationPageDTO>
+{
+    public async Task<CalculationPageDTO> Handle(GetCalculationPageQuery query, CancellationToken cancellationToken)
+    {
+        // 1️⃣ تحميل البيانات الأساسية فقط
+        var calculation = await _context.Calculation
+            .AsNoTracking()
+            .Where(x => x.Id == query.Id &&
+                        (!query.DepartmentId.HasValue || x.Project.Folder.DepartmentId == query.DepartmentId) &&
+                        (!x.IsPrivate || x.UserId == query.UserId))
+            .Select(x => new CalculationPageDTO
+            {
+                Tax = x.Tax,
+                Name = x.Name,
+                OrganisationId = x.OrganisationId,
+                Code = x.Code,
+                TemplateId = x.TemplateId,
+                Factors = x.HourlyPriceFactorData.Factors,
+                QuanityList = x.Data.QuanityList,
+                Compensation = x.Compensation?.Name ?? string.Empty,
+                Customer = x.Organisation?.Name ?? string.Empty,
+                Contract = x.Contract?.Name ?? string.Empty,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (calculation == null)
+            return null;
+
+        // 2️⃣ تحميل المهام المرتبطة
+        var tasks = await _context.Tasks
+            .AsNoTracking()
+            .Where(t => t.CalculationId == query.Id)
+            .Select(t => new 
+            {
+                Task = new TaskListDTO
+                {
+                    TaskId = t.TaskId,
+                    Id = t.Id,
+                    Name = t.Name,
+                    OpportunityId = t.OpportunityId,
+                    Order = t.Order,
+                    StatusId = t.StatusId,
+                    Status = t.Status?.Name ?? string.Empty,
+                    StatusColor = t.Status?.Color ?? string.Empty,
+                    Opportunity = t.Opportunity?.Type ?? string.Empty,
+                    Data = t.Data
+                },
+                ResourceList = t.Resources.Select(r => new 
+                {
+                    Resource = new ResourceListDTO
+                    {
+                        Name = r.Name,
+                        Active = r.Active,
+                        Id = r.Id,
+                        ResType = r.ResType,
+                        ResourceSortId = r.ResourceSortId,
+                        ResourceTypeId = r.ResourceTypeId,
+                        AccountId = r.AccountId,
+                        StatusId = r.StatusId,
+                        OfferId = r.OfferId,
+                        Order = r.Order,
+                        OpportunityId = r.OpportunityId,
+                        Data = r.Data,
+                        Opportunity = r.Opportunity?.Type ?? string.Empty,
+                        StatusColor = r.Status?.Color ?? string.Empty,
+                        Status = r.Status?.Name ?? string.Empty,
+                        Sort = r.ResourceSort?.Name ?? string.Empty,
+                        ResName = r.ResourceType?.Name ?? string.Empty,
+                        Account = r.Account?.Name ?? string.Empty,
+                        AccountCode = r.Account?.Account ?? string.Empty
+                    },
+                    OfferList = r.Offers.Select(of => new ListOfferDTO
+                    {
+                        Id = of.Id,
+                        BaseCost = of.Data.BaseCost,
+                        Cost = of.Data.Cost,
+                        Comment = of.Data.Comment,
+                        Date = of.Date,
+                        OrganisationId = of.OrganisationId,
+                        Organisation = of.Organisation?.Name ?? string.Empty,
+                        SubCategory = of.Organisation?.Category?.Name ?? string.Empty,
+                        Category = of.Organisation?.Category?.Category?.Name ?? string.Empty
+                    }).ToList()
+                }).ToList()
+            })
+            .ToListAsync(cancellationToken);
+
+        // 3️⃣ تجميع البيانات يدويًا
+        foreach (var taskItem in tasks)
+        {
+            foreach (var resourceItem in taskItem.ResourceList)
+            {
+                resourceItem.Resource.Offers = resourceItem.OfferList;
+            }
+            taskItem.Task.Resources = taskItem.ResourceList.Select(r => r.Resource).ToList();
+        }
+
+        calculation.Tasks = tasks.Select(t => t.Task).ToList();
+
+        return calculation;
+    }
+}

@@ -1,0 +1,502 @@
+﻿@using Calculation.Table.SectionsList
+@using Microsoft.Extensions.Localization
+@using Project.Component.Calculation.Table
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Folder
+@using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Project
+
+@implements IDisposable
+@inherits BaseFactors
+@inject IStringLocalizer<CalcResource> CalcLoc
+
+<div class="pl-1 text-xs md:text-sm text-slate-900 dark:text-slate-100 space-y-3">
+
+    <!-- قفل الكومبوننت عند عدم السماح -->
+    <div class="@(Calc.Tap3 ? "" : "pointer-events-none opacity-60")">
+        @if (!IsReport)
+        {
+            <!-- شريط الأزرار العلوي -->
+            <div class="mt-0 mb-2">
+                <div class="inline-flex items-center gap-1 rounded-full px-2 py-1
+                                bg-slate-100/80 dark:bg-slate-800/80 shadow-sm
+                                border border-slate-200/60 dark:border-slate-700/60">
+
+                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+
+                        @* زر حفظ – يظهر فقط عند وجود تغييرات *@
+                        @if (!IsLoading && EarningOnChange)
+                        {
+                            <button type="button"
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full
+                                                   bg-emerald-500 hover:bg-emerald-600
+                                                   text-white text-xs font-medium
+                                                   shadow-sm transition
+                                                   disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="@ResourceApp.save"
+                                    @onclick="async () => await SaveAsync()">
+                                @((MarkupString)Icons.SaveCloud)
+                            </button>
+                        }
+
+                        @* زر Template *@
+                        <button type="button"
+                                class="inline-flex items-center justify-center w-8 h-8 rounded-full
+                                           bg-slate-200 hover:bg-slate-300 text-slate-800
+                                           dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-100
+                                           text-xs shadow-sm transition"
+                                title="@ResourceLoc.template"
+                                @onclick="TemplateDialog">
+                            @((MarkupString)Icons.Template)
+                        </button>
+                    </AuthorizeView>
+
+                    @* تبديل وضع ShowAllSort *@
+                    <button type="button"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-full
+                                       bg-slate-100 hover:bg-slate-200 text-slate-700
+                                       dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100
+                                       text-xs transition"
+                            title="@ResourceApp.edit"
+                            @onclick="() => ShowAllSort = !ShowAllSort">
+                        @((MarkupString)Icons.Edit)
+                    </button>
+
+                    @* إظهار/إخفاء المعادلات *@
+                    <button type="button"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-full
+                                       bg-slate-100 hover:bg-slate-200 text-slate-700
+                                       dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100
+                                       text-xs transition"
+                            @onclick="() => DiscrptionShow = !DiscrptionShow">
+                        @((MarkupString)Icons.Search)
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- الهيدر الخاص بالـ Summary -->
+    <ProjectManagement.Client.Pages.Calculation.Table.SectionsList.SummarySheetHeader />
+
+    <!-- غلاف الجدول داخل بطاقة مع Scroll -->
+    <div class="mt-2 w-full">
+        <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/80 shadow-sm">
+            <div class="max-h-[70vh] overflow-auto w-full">
+                <div class="inline-block min-w-full align-middle">
+                    <table id="tableFactor"
+                           class="border-collapse text-[11px] md:text-[11px] w-full"
+                           style="min-width:1200px;color:@Template.SSColor[2];">
+                        <thead class="sticky top-0 z-10 shadow-sm"
+                               style="background-color:@Template.SSColor[3];">
+                            <tr class="h-6">
+                                @for (int i = 0; i < Template.SSWidth.Count; i++)
+                                {
+                                    <th style="width:@(Template.SSWidth[i])px"
+                                        class="px-2 py-0.5 font-semibold whitespace-nowrap border-b border-slate-200/70 dark:border-slate-700/70 text-left align-middle">
+                                        @CalcLoc[TemplateConst.SSCTitles[i]]
+                                    </th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Calc.Factors.Count != 0)
+                            {
+                                @foreach (var factors in Calc.Factors)
+                                {
+                                    <tr @key="factors.ResId"
+                                        style="background-color:@Template.SSColor[4];"
+                                        class="h-5 align-middle hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors">
+                                        <!-- اسم المورد -->
+                                        <td class="px-2 py-0 align-middle whitespace-nowrap">
+                                            @factors.ResName
+                                        </td>
+
+                                        <!-- Sort -->
+                                        <td class="px-2 py-0 align-middle whitespace-nowrap">
+                                            @factors.Sort
+                                        </td>
+
+                                        <!-- NetCostTotaly -->
+                                        <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                            @Format(factors.NetCostTotaly)
+                                        </td>
+
+                                        <!-- NetCostTotalyOH -->
+                                        <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                            @Format(factors.NetCostTotalyOH)
+                                        </td>
+
+                                        <!-- Sum -->
+                                        <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                            @Format(factors.Sum)
+                                        </td>
+
+                                        @if (ShowAllSort)
+                                        {
+                                            <!-- Earnings + Lock -->
+                                            <td class="px-2 py-0 align-middle">
+                                                <div class="flex items-center gap-1">
+                                                    <button type="button"
+                                                            class="inline-flex items-center justify-center rounded p-0.5 transition"
+                                                            title="@ResourceApp._lock"
+                                                            @onclick="() => { EarningOnChange = true; factors.IsLocked = !factors.IsLocked; }">
+                                                        <span class="text-[10px] @CssClasses.Btn.Span" style="color:@Template.SSColor[2];">
+                                                            @((MarkupString)Icons.IsLocked(factors.IsLocked))
+                                                        </span>
+                                                    </button>
+
+                                                    <input type="number"
+                                                           value="@Format(factors.Earnings)"
+                                                           class="h-4 w-20 border border-slate-300 dark:border-slate-600 rounded
+                                                                              bg-transparent dark:bg-transparent
+                                                                              px-1 text-[11px] leading-none
+                                                                              focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
+                                                           style="color:@Template.SSColor[2];"
+                                                           @onchange="(e) =>
+                                                           {
+                                                               if (double.TryParse(e.Value?.ToString(), out var v))
+                                                               {
+                                                                   factors.Earnings = v;
+                                                                   SomeHasChanged();
+                                                               }
+                                                           }" />
+                                                </div>
+                                            </td>
+
+                                            <!-- EarningsValue -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                <span>@Format(factors.EarningsValue)</span>
+                                            </td>
+
+                                            <!-- Price -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                <span>@Format(factors.Price)</span>
+                                            </td>
+
+                                            <!-- PriceOG -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                @Format(factors.PriceOG)
+                                            </td>
+
+                                            <!-- Select OH target -->
+                                            <td class="px-2 py-0 align-middle">
+                                                @if (factors.NetCostTotalyOH > 0)
+                                                {
+                                                    <select class="h-4 w-full min-w-[90px] border bg-transparent dark:bg-transparent rounded pl-1 pr-5 text-[11px] leading-none focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
+                                                            style="color:@Template.SSColor[2];"
+                                                            @bind:get="factors.Selected"
+                                                            @bind:set="(value) => { factors.Selected = value; SomeHasChanged(); }">
+                                                        <option value="all">All</option>
+                                                        @foreach (var item in Calc.Factors.Where(x => x.NetCostTotaly > 0))
+                                                        {
+                                                            <option value="@(item.ResId + "," + item.SortId)">
+                                                                @item.ResName @(string.IsNullOrEmpty(item.Sort) ? "" : item.Sort)
+                                                            </option>
+                                                        }
+                                                    </select>
+                                                }
+                                            </td>
+
+                                            <!-- Key -->
+                                            <td class="px-2 py-0 align-middle">
+                                                <input type="number"
+                                                       value="@factors.Key"
+                                                       class="h-4 w-20 border border-slate-300 dark:border-slate-600 rounded
+                                                                          bg-transparent dark:bg-transparent
+                                                                          px-1 text-[11px] leading-none
+                                                                          focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
+                                                       style="color:@Template.SSColor[2];"
+                                                       @onchange="(e) =>
+                                                       {
+                                                           if (double.TryParse(e.Value?.ToString(), out var v))
+                                                           {
+                                                               factors.Key = v;
+                                                               SomeHasChanged();
+                                                           }
+                                                       }" />
+                                            </td>
+
+                                            <!-- DivisionKey -->
+                                            <td class="px-2 py-0 align-middle">
+                                                <select class="h-4 w-full min-w-[80px] border border-slate-300 dark:border-slate-600 rounded
+                                                                                       bg-transparent dark:bg-transparent
+                                                                           pl-1 pr-5 text-[11px] leading-none
+                                                                          
+                                                                           focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
+                                                        style="color:@Template.SSColor[2];"
+                                                        @bind:get="factors.DivisionKey"
+                                                        @bind:set="(value) => { factors.DivisionKey = value; SomeHasChanged(); }">
+                                                    @for (int i = 0; i < factors.KVName.Count; i++)
+                                                    {
+                                                        <option value="@(i)">@factors.KVName[i]</option>
+                                                    }
+                                                </select>
+                                            </td>
+
+                                            <!-- KV + Unit -->
+                                            <td class="px-2 py-0 align-middle">
+                                                <div class="flex items-center gap-1">
+                                                    <span class="w-14 text-[10px] leading-none tabular-nums">
+                                                        @Format(factors.KV())
+                                                    </span>
+                                                    <input type="text"
+                                                           maxlength="15"
+                                                           class="h-4 flex-1 border border-slate-300 dark:border-slate-600 rounded
+                                                                              bg-transparent dark:bg-transparent
+                                                                              px-1 text-[11px] leading-none
+                                                                              focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
+                                                           style="color:@Template.SSColor[2];"
+                                                           value="@factors.Unit"
+                                                           @onchange="@((e) =>
+                                                           {
+                                                               factors.Unit = e.Value?.ToString() ?? string.Empty;
+                                                               EarningOnChange = true;
+                                                           })" />
+                                                </div>
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <!-- Earnings -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                <span>@Format(factors.Earnings)</span>
+                                            </td>
+
+                                            <!-- EarningsValue -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                <span>@Format(factors.EarningsValue)</span>
+                                            </td>
+
+                                            <!-- Price -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                <span>@Format(factors.Price)</span>
+                                            </td>
+
+                                            <!-- PriceOG -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                @Format(factors.PriceOG)
+                                            </td>
+
+                                            <!-- Selected -->
+                                            <td class="px-2 py-0 align-middle whitespace-nowrap">
+                                                <span>@SelectedFactor(factors.Selected)</span>
+                                            </td>
+
+                                            <!-- Key -->
+                                            <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                                <span>@factors.Key</span>
+                                            </td>
+
+                                            <!-- DivisionKey name -->
+                                            <td class="px-2 py-0 align-middle whitespace-nowrap">
+                                                @factors.KVName[factors.DivisionKey]
+                                            </td>
+
+                                            <!-- KV + Unit -->
+                                            <td class="px-2 py-0 align-middle whitespace-nowrap">
+                                                <span class="mr-1 tabular-nums">@Format(factors.KV())</span>
+                                                <span>@factors.Unit</span>
+                                            </td>
+                                        }
+
+                                        <!-- OHF -->
+                                        <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                            @Format(factors.OHF(Calc.Factors))
+                                        </td>
+
+                                        <!-- Factor -->
+                                        <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                            @(factors.Factor > 0 ? Format(factors.Factor) : 0)
+                                        </td>
+                                    </tr>
+                                }
+                            }
+
+                            @if (Calc.Factors.Count != 0)
+                            {
+                                <tr style="background-color:@Template.SSColor[5];"
+                                    class="h-5 align-middle font-semibold">
+                                    <td class="px-2 py-0 align-middle" colspan="2">@CalcResource.sum</td>
+
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Factors.Sum(x => x.NetCostTotaly))
+                                    </td>
+
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Factors.Sum(x => x.NetCostTotalyOH))
+                                    </td>
+
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Sum)
+                                    </td>
+
+                                    <!-- ProfitDecision -->
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @if (Calc.Factors.Any(x => !x.IsLocked && x.EarningsValue > 0))
+                                        {
+                                            <input type="number"
+                                                   class="h-4 w-28 border border-slate-300 dark:border-slate-600 rounded
+                                                                  bg-transparent dark:bg-transparent
+                                                                  px-1 text-[11px] leading-none
+                                                                  focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
+                                                   style="color:@Template.SSColor[2];"
+                                                   value="@Format(Calc.ProfitDecision)"
+                                                   @onchange="(e) =>
+                                                   {
+                                                       if (double.TryParse(e.Value?.ToString(), out var v))
+                                                       {
+                                                           ChangeProfit(v);
+                                                       }
+                                                   }" />
+                                        }
+                                        else
+                                        {
+                                            @Format(Calc.ProfitDecision)
+                                        }
+                                    </td>
+
+                                    <!-- SumFactorsEV -->
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.SumFactorsEV)
+                                    </td>
+
+                                    <!-- Sum Price -->
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Factors.Sum(x => x.Price))
+                                    </td>
+
+                                    <!-- Sum PriceOG -->
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Factors.Sum(x => x.PriceOG))
+                                    </td>
+
+                                    <!-- Skip Selected summary -->
+                                    <td class="px-2 py-0 align-middle"></td>
+
+                                    <!-- Sum Key -->
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Factors.Sum(x => x.Key))
+                                    </td>
+
+                                    <!-- DivisionKey summary empty -->
+                                    <td class="px-2 py-0 align-middle"></td>
+
+                                    <!-- Sum KV -->
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Factors.Sum(x => x.KV()))
+                                    </td>
+
+                                    <!-- Sum OHF -->
+                                    <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
+                                        @Format(Calc.Factors.Sum(x => x.OHF(Calc.Factors)))
+                                    </td>
+
+                                    <!-- last column empty -->
+                                    <td class="px-2 py-0 align-middle"></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tender sum (excl. tax) -->
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+        <span class="text-xs md:text-sm font-medium">
+            @CalcResource.tenderSumExclTax
+        </span>
+
+        <input type="number"
+               value="@Format(Calc.TenderExcelTax)"
+               @onchange="TenderExcelTaxChanged"
+               class="w-32 h-7 border border-slate-300 dark:border-slate-600 rounded
+                      bg-white dark:bg-slate-900
+                      px-2 py-0 text-xs md:text-sm text-right
+                      focus:outline-none focus:ring-[0.5px] focus:ring-blue-400" />
+
+        <span class="text-xs md:text-sm text-slate-700 dark:text-slate-300">
+            @Template.Currency
+        </span>
+    </div>
+
+    <!-- Tender sum (incl. tax) -->
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+        <span class="text-xs md:text-sm font-medium">
+            @CalcResource.tenderSumInclTax:
+        </span>
+
+        <input type="number"
+               value="@Format(Calc.TenderInclTax)"
+               @onchange="TenderInclTaxChanged"
+               class="w-32 h-7 border border-slate-300 dark:border-slate-600 rounded
+                      bg-white dark:bg-slate-900
+                      px-2 py-0 text-xs md:text-sm text-right
+                      focus:outline-none focus:ring-[0.5px] focus:ring-blue-400" />
+
+        <span class="text-xs md:text-sm text-slate-700 dark:text-slate-300">
+            @Template.Currency
+        </span>
+    </div>
+
+    @if (DiscrptionShow)
+    {
+        <div class="mt-6 w-full overflow-x-auto">
+            <table class="min-w-[600px] border-collapse text-left text-[11px] md:text-xs bg-white dark:bg-slate-900 rounded-lg">
+                <thead>
+                    <tr class="bg-slate-100 dark:bg-slate-800">
+                        <th class="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">
+                            Name, Sort
+                        </th>
+                        <th class="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">
+                            OH
+                        </th>
+                        <th class="px-3 py-2 font-semibold border-b border-slate-200 dark:border-slate-700">
+                            Factor
+                        </th>
+                    </tr>
+                    <tr class="text-[10px] bg-slate-50 dark:bg-slate-900/70">
+                        <th class="px-3 py-1 border-b border-slate-200 dark:border-slate-700"></th>
+                        <th class="px-3 py-1 border-b border-slate-200 dark:border-slate-700">
+                            (NetCostTotaly * AllFactors.Where(x => x.Selected == "all")
+                            .Sum(x => x.NetCostTotalyOH * (1 + (x.Earnings / 100)))) /
+                            AllFactors.Sum(x => x.NetCostTotaly)
+                        </th>
+                        <th class="px-3 py-1 border-b border-slate-200 dark:border-slate-700">
+                            (((NetCostTotaly * (1 + (Earnings / 100))) +
+                            AllFactors.Where(x => x.Selected == ResId + "," + SortId)
+                            .Sum(x => x.NetCostTotalyOH * (1 + (x.Earnings / 100)))) + OH)
+                            / NetCostTotaly
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var factor in Calc.Factors)
+                    {
+                        if (factor.NetCostTotaly > 0)
+                        {
+                            <tr class="border-t border-slate-100 dark:border-slate-700">
+                                <th scope="row" class="px-3 py-1.5 font-medium">
+                                    @factor.ResName @factor.Sort
+                                </th>
+                                <td class="px-3 py-1.5">
+                                    @("(" + Format(factor.NetCostTotaly) + " * " +
+                                                            Format(Calc.Factors.Where(x => x.Selected == "all")
+                                                            .Sum(x => x.NetCostTotalyOH * (1 + (x.Earnings / 100)))) +
+                                                            ") / " + Format(Calc.Factors.Sum(x => x.NetCostTotaly)))
+                                </td>
+                                <td class="px-3 py-1.5">
+                                    @(factor.FactorStr(Calc.Factors))
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

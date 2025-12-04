@@ -1,0 +1,29 @@
+﻿@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Project
+@inherits AppComponentBase
+
+    <div class="@CssClasses.Modal.Body">
+        @if (ProjectDetails != null)
+        {
+        <dl class="@CssClasses.Grid.Col.MD3">
+            <dt>@CalcResource.name</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Name</dd>
+                <dt>@CalcResource.procurement</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Procurement</dd>
+                <dt>@CalcResource.procurementMethods</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.ProcurementMethods</dd>
+                <dt>@CalcResource.projectContract</dt>
+                <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Contract</dd>
+            </dl>
+        }
+    </div>
+
+@code {
+    CalculationDetailsDTO? ProjectDetails;
+    [Parameter] public int Id { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        ProjectDetails = await ExHandlers.RunCheckTokenAsync(() => Repo.Calculation.DetailsAsync(Id));
+    }
+}

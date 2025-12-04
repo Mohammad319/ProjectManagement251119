@@ -1,0 +1,405 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="alignItems" xml:space="preserve">
+    <value>Align-Item</value>
+  </data>
+  <data name="AnUnexpectedErrorHasOccurred" xml:space="preserve">
+    <value>An unexpected error has occurred. Please try again later.</value>
+  </data>
+  <data name="attribute" xml:space="preserve">
+    <value>Attribute</value>
+  </data>
+  <data name="attributeType" xml:space="preserve">
+    <value>Attribute Type</value>
+  </data>
+  <data name="back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="background" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="bold" xml:space="preserve">
+    <value>Bold</value>
+  </data>
+  <data name="bolder" xml:space="preserve">
+    <value>Bolder</value>
+  </data>
+  <data name="border" xml:space="preserve">
+    <value>Border</value>
+  </data>
+  <data name="borderType" xml:space="preserve">
+    <value>Border Type</value>
+  </data>
+  <data name="cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="cell" xml:space="preserve">
+    <value>Cell</value>
+  </data>
+  <data name="center" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="completedSuccessfully" xml:space="preserve">
+    <value>The operation completed successfully!</value>
+  </data>
+  <data name="copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="cut" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="defaultValue" xml:space="preserve">
+    <value>Default Value</value>
+  </data>
+  <data name="delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="deleteConfirmMsg" xml:space="preserve">
+    <value>Do you want to Delete this?</value>
+  </data>
+  <data name="department" xml:space="preserve">
+    <value>Department</value>
+  </data>
+  <data name="depSharedFolders" xml:space="preserve">
+    <value>Department folders</value>
+  </data>
+  <data name="DoYouWanTtoSaveTheListInDatabase" xml:space="preserve">
+    <value>Do you want to save the list in database?</value>
+  </data>
+  <data name="duplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="earning" xml:space="preserve">
+    <value>Earning</value>
+  </data>
+  <data name="edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="font" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="FontSize" xml:space="preserve">
+    <value>Font-Size</value>
+  </data>
+  <data name="fontWeight" xml:space="preserve">
+    <value>Font Weight</value>
+  </data>
+  <data name="HasBeedUpdated" xml:space="preserve">
+    <value>The item has been Updated</value>
+  </data>
+  <data name="hasBeenAddedSuccessfully {0}" xml:space="preserve">
+    <value>{0} has been added successfully</value>
+  </data>
+  <data name="hasBeenDeletedSuccessfully {0}" xml:space="preserve">
+    <value>{0} has been deleted successfully</value>
+  </data>
+  <data name="hasBeenUpdatedSuccessfully {0}" xml:space="preserve">
+    <value>{0} has been updated successfully</value>
+  </data>
+  <data name="header" xml:space="preserve">
+    <value>Header</value>
+  </data>
+  <data name="height" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="hiddenItems" xml:space="preserve">
+    <value>Hidden items</value>
+  </data>
+  <data name="import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="import {0}" xml:space="preserve">
+    <value>Import {0}</value>
+  </data>
+  <data name="importFromFile" xml:space="preserve">
+    <value>Import from File</value>
+  </data>
+  <data name="isVisible" xml:space="preserve">
+    <value>Is Visible?</value>
+  </data>
+  <data name="ItemIsCurrentlyInUseCannotBeDeleted." xml:space="preserve">
+    <value>The item is currently in use and cannot be deleted.</value>
+  </data>
+  <data name="language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="lastUpdate" xml:space="preserve">
+    <value>Last update</value>
+  </data>
+  <data name="left" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="marginBottom" xml:space="preserve">
+    <value>Margin-Bottom</value>
+  </data>
+  <data name="marginLeft" xml:space="preserve">
+    <value>Margin-Left</value>
+  </data>
+  <data name="marginTop" xml:space="preserve">
+    <value>Margin-Top</value>
+  </data>
+  <data name="maxValue" xml:space="preserve">
+    <value>Max Value</value>
+  </data>
+  <data name="minValue" xml:space="preserve">
+    <value>Min Value</value>
+  </data>
+  <data name="new {0}" xml:space="preserve">
+    <value>New {0}</value>
+  </data>
+  <data name="newItem" xml:space="preserve">
+    <value>New Item</value>
+  </data>
+  <data name="no" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="order" xml:space="preserve">
+    <value>Order</value>
+  </data>
+  <data name="organisation" xml:space="preserve">
+    <value>Organisation</value>
+  </data>
+  <data name="paddingLeft" xml:space="preserve">
+    <value>Padding-Left</value>
+  </data>
+  <data name="paddingTop" xml:space="preserve">
+    <value>Padding-Top</value>
+  </data>
+  <data name="parameter" xml:space="preserve">
+    <value>Parameter</value>
+  </data>
+  <data name="paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="print" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="rangeErrors" xml:space="preserve">
+    <value>There are some errors</value>
+  </data>
+  <data name="reOrder" xml:space="preserve">
+    <value>Reorder</value>
+  </data>
+  <data name="required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="right" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="row" xml:space="preserve">
+    <value>Row</value>
+  </data>
+  <data name="save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="setAsDefault" xml:space="preserve">
+    <value>Set as Default</value>
+  </data>
+  <data name="share" xml:space="preserve">
+    <value>Share and permissions</value>
+  </data>
+  <data name="StartFromRow" xml:space="preserve">
+    <value>Start from row</value>
+  </data>
+  <data name="supervisor" xml:space="preserve">
+    <value>Supervisor</value>
+  </data>
+  <data name="text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="HasBeenRemoved" xml:space="preserve">
+    <value>The item has been removed</value>
+  </data>
+  <data name="ThereAreNoItemsToDisplay" xml:space="preserve">
+    <value>There Are No Items To Display</value>
+  </data>
+  <data name="thereIsNoElements" xml:space="preserve">
+    <value>There is no elements</value>
+  </data>
+  <data name="typeOfCompensation" xml:space="preserve">
+    <value>Type of Compensation</value>
+  </data>
+  <data name="UnderContactCompany" xml:space="preserve">
+    <value>Under Contact Company</value>
+  </data>
+  <data name="unkown" xml:space="preserve">
+    <value>Unkown</value>
+  </data>
+  <data name="update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="update {0}" xml:space="preserve">
+    <value>Update {0}</value>
+  </data>
+  <data name="visible" xml:space="preserve">
+    <value>Visible</value>
+  </data>
+  <data name="visibleItems" xml:space="preserve">
+    <value>Visible items</value>
+  </data>
+  <data name="width" xml:space="preserve">
+    <value>Width</value>
+  </data>
+  <data name="yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="_default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="_new" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="_private" xml:space="preserve">
+    <value>Private</value>
+  </data>
+  <data name="_public" xml:space="preserve">
+    <value>Public</value>
+  </data>
+  <data name="HasBeenAdded" xml:space="preserve">
+    <value>The item has been added</value>
+  </data>
+  <data name="deleteConfirmMsg {0}" xml:space="preserve">
+    <value>Do you want to Delete {0}?</value>
+  </data>
+  <data name="Assessment" xml:space="preserve">
+    <value>Assessment</value>
+  </data>
+  <data name="CapWasteValid {0}" xml:space="preserve">
+    <value>The value of {0} must be between 0 and 999.</value>
+  </data>
+  <data name="send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+</root>

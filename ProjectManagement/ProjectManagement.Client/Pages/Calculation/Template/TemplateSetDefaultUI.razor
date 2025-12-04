@@ -1,0 +1,180 @@
+﻿@using BlazorMHD.UI.Core.Services
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.DTO.Calculation.Template
+@inherits AppComponentBase
+@inject DialogService dialogService
+<style>
+    input, td, th {
+        min-width: 40px;
+        max-width: 250px;
+    }
+</style>
+@if (Form != null)
+{
+    @RenderForm()
+    @if(Calc.TemplateId > 0)
+    {
+        <div class="@CssClasses.Modal.Footer">
+            <button type="button" @onclick="HandleSubmitAsync" class="@CssClasses.Btn.Solid.Primary" style="margin-right:5px;" form="netTable" disabled="@btnSubmitDisabled">
+                @ResourceApp.save
+            </button>
+            <button type="button" @onclick="()=>Form = null" class="@CssClasses.Btn.Solid.Primary">
+                @ResourceLoc.templates
+            </button>
+        </div>
+    }
+}
+else
+{
+    <div class="mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm
+                dark:border-slate-700 dark:bg-slate-900">
+
+        <table class="min-w-full border-collapse text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800">
+                <tr class="border-b border-slate-200 dark:border-slate-700">
+                    <!-- الهيدر للعمود الأول بعرض 200px -->
+                    <th class="w-[120px] px-3 py-2 text-start text-[11px] font-semibold uppercase tracking-wide
+                               text-slate-600 dark:text-slate-300">
+                     
+                    </th>
+
+                    <!-- الهيدر للعمود الثاني -->
+                    <th class="px-3 py-2 text-start text-[11px] font-semibold uppercase tracking-wide
+                               text-slate-600 dark:text-slate-300">
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+
+                <!-- الصف الخاص بـ "الافتراضي العام" -->
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors">
+                    <td class="w-[200px] px-3 py-2">
+                        <button disabled="@(Calc.TemplateId == 0 || Calc.TemplateId == null || Loading)"
+                                @onclick="async () => await SetDefaultAsync(new TemplateMVVM())"
+                                class="inline-flex items-center gap-1 rounded-md border border-slate-300
+                                   bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700
+                                   hover:bg-slate-50 hover:text-slate-900
+                                   dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200
+                                   dark:hover:bg-slate-800 dark:hover:text-white
+                                   disabled:cursor-not-allowed disabled:opacity-50">
+                            @ResourceApp.setAsDefault
+                        </button>
+                    </td>
+
+                    <td scope="row" class="px-3 py-2 text-[11px] font-medium text-slate-800 dark:text-slate-100">
+                        <div class="flex items-center gap-2">
+                            <span>@ResourceApp._default</span>
+
+                            @if (Calc.TemplateId == 0 || Calc.TemplateId == null)
+                            {
+                                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5
+                                                   text-[10px] font-semibold text-emerald-700
+                                                   dark:bg-emerald-900 dark:text-emerald-200">
+                                    @ResourceApp._default
+                                </span>
+                            }
+                        </div>
+                    </td>
+                </tr>
+
+                @if (List != null)
+                {
+                    foreach (var item in List)
+                    {
+                        var isCurrent = Calc.TemplateId == item.Id;
+
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors">
+                            <!-- أول عمود بنفس عرض 200px -->
+                            <td class="w-[200px] px-3 py-2">
+                                <button disabled="@(isCurrent || Loading)"
+                                        @onclick="async () => await SetDefaultAsync(item)"
+                                        class="inline-flex items-center gap-1 rounded-md border border-slate-300
+                                                   bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700
+                                                   hover:bg-slate-50 hover:text-slate-900
+                                                   dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200
+                                                   dark:hover:bg-slate-800 dark:hover:text-white
+                                                   disabled:cursor-not-allowed disabled:opacity-50">
+                                    @ResourceApp.setAsDefault
+                                </button>
+                            </td>
+
+                            <td scope="row" class="px-3 py-2 text-[11px] font-medium text-slate-800 dark:text-slate-100">
+                                <div class="flex items-center gap-2">
+                                    <span>@item.Name</span>
+
+                                    @if (isCurrent)
+                                    {
+                                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5
+                                                                   text-[10px] font-semibold text-emerald-700
+                                                                   dark:bg-emerald-900 dark:text-emerald-200">
+                                            @ResourceApp._default
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+}
+@code {
+    [Parameter] public int Tab { get; set; } = 0;
+    TemplateListPostDTO Form;
+    void CallBack(bool refrsh){
+        Refresh();
+        Form = null;
+    }
+RenderFragment RenderForm() => __builder =>
+{
+        if (Tab == 1) __builder.AddContent(0, (RenderFragment)(b => b.AddContent(0,@<NelCalculationTemplate2 Temp="Form" />)));
+        else if (Tab == 3) __builder.AddContent(1,@<SummarySheetTemplate Temp="Form" />);
+};
+    List<TemplateMVVM> List;
+    bool btnSubmitDisabled = false;
+    bool Loading = true;
+    void Refresh() => Calc.RefreshCalculation();
+    protected async override Task OnInitializedAsync()
+    {
+        List = await ExHandlers.RunCheckTokenAsync(() => Repo.Template.GetAsync());
+        if ( (List == null || !List.Any()))
+        {
+            MHD.MessageOk(ResourceApp.thereIsNoElements,
+            ResourceApp.thereIsNoElements);
+        }
+        else if (Calc.TemplateId>0)
+        {
+            TemplateListPostDTO zzz = new();
+            Calc.Template.CopyPropertiesTo(zzz);
+            Form = zzz;
+        }
+        Loading = false;
+    }
+    async Task SetDefaultAsync(TemplateMVVM newTemplate)
+    {
+        var tempNew = await ExHandlers.RunCheckTokenAsync(() => Repo.Template.SetDefaultAsync(Calc.Id, newTemplate.Id));
+        Calc.Template = tempNew != null ? tempNew : new TemplateMVVM();
+        Calc.TemplateId = newTemplate.Id;
+        Template.FreezCol();
+        Refresh();
+        Modal.Close();
+    }
+    async Task HandleSubmitAsync()
+    {
+        btnSubmitDisabled = true;
+        try
+        {
+            if (await ExHandlers.RunCheckTokenAsync(() => Repo.Template.UpdateAsync(Form, Calc.TemplateId.Value)))
+                Form.CopyPropertiesTo(Calc.Template);
+            Refresh();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+}

@@ -1,0 +1,11 @@
+﻿.task, .task input {
+    background-color: var(--net-task);
+    margin-bottom: 1px;
+    color: black;
+}
+
+.subTask, .subTask input {
+    background-color: var(--net-subtask);
+    margin-bottom: 1px;
+    color: black;
+}

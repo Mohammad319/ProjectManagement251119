@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Repositories\UnitOfWork\**" />
+    <EmbeddedResource Remove="Repositories\UnitOfWork\**" />
+    <None Remove="Repositories\UnitOfWork\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProjectManagement.Shared\ProjectManagement.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

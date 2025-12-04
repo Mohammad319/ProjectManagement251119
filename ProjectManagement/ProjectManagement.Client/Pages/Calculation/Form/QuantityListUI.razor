@@ -1,0 +1,78 @@
+﻿@using ProjectManagement.Client.Services.Calculation.CalculationItems
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Client.Shared.Repositories.Calculation
+@using ProjectManagement.Shared.Base.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+@inherits AppComponentBase
+
+<div class="space-y-2">
+
+    <!-- Toolbar أعلى الجدول -->
+    <div class="flex items-center justify-between mb-1">
+        <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+            @CalcResource.quantity
+        </h2>
+
+        <div class="flex items-center gap-2">
+            <!-- زر إضافة عنصر -->
+            <button class="@($"{CssClasses.Btn.Solid.Success} inline-flex items-center gap-1")"
+                    @onclick="NewItem">
+                @((MarkupString)Icons.Plus)
+            </button>
+
+            <!-- زر حفظ -->
+            <button class="@($"{CssClasses.Btn.Solid.Primary} inline-flex items-center gap-1")"
+                    @onclick="UpdateAsync">
+                @((MarkupString)Icons.SaveCloud)
+            </button>
+        </div>
+    </div>
+
+    <!-- الجدول -->
+    <div class="overflow-x-auto rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <table class="@CssClasses.Table.Tab text-xs">
+            <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH">Name</th>
+                    <th class="@CssClasses.Table.TH text-right">@CalcResource.quantity</th>
+                </tr>
+            </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                @if (Calc.QuanityList != null)
+                {
+                    @foreach (var item in Calc.QuanityList)
+                    {
+                        <tr class="@CssClasses.Table.Tr">
+                            <td class="@CssClasses.Table.Td">
+                                <input type="text"
+                                       class="@($"{CssClasses.Input.Text}")"
+                                       @bind="item.Name" />
+                            </td>
+                            <td class="@($"{CssClasses.Table.Td} text-right")">
+                                <input type="number"
+                                       class="@($"{CssClasses.Input.Number} text-right")"
+                                       @bind="item.Quantity" />
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    void NewItem()
+    {
+        Calc.QuanityList ??= new List<QuanityListDTO>();
+        Calc.QuanityList.Add(new QuanityListDTO { Quantity = 1 });
+    }
+
+    async Task UpdateAsync()
+    {
+        await Repo.Calculation.UpdateAsync(Calc.QuanityList, Calc.Id);
+        Modal.Close();
+    }
+}

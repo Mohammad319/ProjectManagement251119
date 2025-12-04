@@ -1,0 +1,122 @@
+@using BlazorMHD.UI.Core.Data
+@using Microsoft.AspNetCore.Components.Web
+@typeparam TItem
+
+<div class="text-[0.75rem] text-slate-900 dark:text-slate-100">
+    @if (Nodes != null)
+    {
+        <ul class="space-y-0.5">
+            @foreach (var node in Nodes)
+            {
+                @RenderNode(node, 0)
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<TreeNode<TItem>> Nodes { get; set; } = Array.Empty<TreeNode<TItem>>();
+    [Parameter] public RenderFragment<TreeNode<TItem>>? NodeTemplate { get; set; }
+    [Parameter] public EventCallback<TreeNode<TItem>> OnNodeSelected { get; set; }
+
+    private RenderFragment RenderNode(TreeNode<TItem> node, int level) => builder =>
+    {
+        var seq = 0;
+        builder.OpenElement(seq++, "li");
+        builder.AddAttribute(seq++, "class", "flex flex-col");
+
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", BuildRowClass(node));
+        builder.AddAttribute(seq++, "style", $"padding-left:{level * 0.75}rem");
+        builder.AddAttribute(seq++, "onclick",
+            EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectNode(node)));
+
+        builder.OpenElement(seq++, "button");
+        builder.AddAttribute(seq++, "type", "button");
+        builder.AddAttribute(seq++, "class", "w-4 h-4 mr-1 inline-flex items-center justify-center text-[0.65rem] text-slate-500 dark:text-slate-400");
+
+        builder.AddAttribute(seq++, "onclick",
+            EventCallback.Factory.Create<MouseEventArgs>(this, (MouseEventArgs e) =>
+            {
+                ToggleNode(node);
+            }));
+
+        builder.AddEventPreventDefaultAttribute(seq++, "onclick", true);
+        builder.AddEventStopPropagationAttribute(seq++, "onclick", true);
+
+        if (node.HasChildren)
+        {
+            builder.AddContent(seq++, node.IsExpanded ? "▾" : "▸");
+        }
+        else
+        {
+            builder.AddContent(seq++, "•");
+        }
+        builder.CloseElement(); // button
+
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", "flex-1 truncate");
+        if (NodeTemplate != null)
+        {
+            builder.AddContent(seq++, NodeTemplate(node));
+        }
+        else
+        {
+            builder.AddContent(seq++, node.Text);
+        }
+        builder.CloseElement(); // div (text)
+
+        builder.CloseElement(); // row div
+
+        if (node.IsExpanded && node.HasChildren)
+        {
+            builder.OpenElement(seq++, "ul");
+            builder.AddAttribute(seq++, "class", "mt-0.5 space-y-0.5");
+            foreach (var child in node.Children)
+            {
+                builder.AddContent(seq++, RenderNode(child, level + 1));
+            }
+            builder.CloseElement();
+        }
+
+        builder.CloseElement(); // li
+    };
+
+    private string BuildRowClass(TreeNode<TItem> node)
+    {
+        var baseCls = "flex items-center rounded-md px-1 py-0.5 cursor-pointer select-none transition-colors duration-150";
+
+        if (node.IsSelected)
+        {
+            // حالة الـ selected
+            return $"{baseCls} bg-blue-50 text-blue-700 dark:bg-slate-700 dark:text-slate-100";
+        }
+
+        // الحالة العادية
+        return $"{baseCls} hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-100";
+    }
+
+    private void ToggleNode(TreeNode<TItem> node)
+    {
+        node.IsExpanded = !node.IsExpanded;
+        StateHasChanged();
+    }
+
+    private async Task SelectNode(TreeNode<TItem> node)
+    {
+        ClearSelection(Nodes);
+        node.IsSelected = true;
+        await OnNodeSelected.InvokeAsync(node);
+        StateHasChanged();
+    }
+
+    private void ClearSelection(IEnumerable<TreeNode<TItem>> nodes)
+    {
+        foreach (var n in nodes)
+        {
+            n.IsSelected = false;
+            if (n.HasChildren)
+                ClearSelection(n.Children);
+        }
+    }
+}

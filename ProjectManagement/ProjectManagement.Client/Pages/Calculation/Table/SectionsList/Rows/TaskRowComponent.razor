@@ -1,0 +1,65 @@
+﻿@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@inherits AppComponentBase
+
+<tr @onclick="@(() => OnClick.InvokeAsync(Task))" @oncontextmenu:preventDefault
+    @oncontextmenu="@(() => OnContextClick.InvokeAsync(Task))"
+    style="@Task.Style(Template.NetColor[ColorIndex], ActiveParent)">
+    <td>
+        @if ((Task.Resources?.Any() ?? false) || (Task.Tasks?.Any() ?? false))
+        {
+            <span class="
+        inline-flex items-center justify-center rounded-full
+        border border-slate-400 dark:border-slate-600
+        bg-transparent dark:bg-transparent
+        w-5 h-5 cursor-pointer
+        transition-all duration-200 ease-out
+        hover:opacity-70
+        hover:scale-110
+        hover:shadow-sm
+    "
+                  style="margin-left:@(Left + "px;")"
+                  @onclick="@(() => OnCollapseToggle.InvokeAsync(Task))"
+                  @onclick:stopPropagation="true">
+
+                @((MarkupString)Icons.TopBottom(Task.CollSpan))
+
+            </span>
+        }
+    </td>
+
+    @foreach (int i in Template.NetOrder)
+    {
+        @Colmuns[i].TaskRender(Task)
+    }
+</tr>
+
+@if (Task.Data.UpperNote != null && CalcService.ShowComments)
+{
+    @Note(Task.Data.UpperNote, 3, Template.NetOrder.Count)
+}
+
+@code {
+    [Parameter] public EventCallback<TaskListMVVM> OnCollapseToggle { get; set; }
+    [Parameter] public EventCallback<TaskListMVVM> OnContextClick { get; set; }
+    [Parameter] public EventCallback<TaskListMVVM> OnClick { get; set; }
+
+    [Parameter] public TaskListMVVM Task { get; set; } = default!;
+    [Parameter] public bool ActiveParent { get; set; }
+    [Parameter] public int ColorIndex { get; set; } = 5;
+    [Parameter] public int Left { get; set; } = 0;
+    [Parameter] public List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = default!;
+
+    public static RenderFragment Note(List<string> notes, int col1, int col2) => __builder =>
+    {
+        foreach (var note in notes)
+        {
+            <tr class="netNote">
+                <td class="NettdDiv bg-white dark:bg-black" colspan="@col1" style="width:@(TemplateConst.Col0)px;"></td>
+                <td colspan="@col2">
+                    @note
+                </td>
+            </tr>
+        }
+    };
+}

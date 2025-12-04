@@ -1,0 +1,145 @@
+﻿@using Application.Feature.Organisation.Organisation.Commands
+@using Application.Feature.Organisation.Organisation.Queries
+
+@using Domain.Entities.Organisation
+@using Microsoft.AspNetCore.Authorization
+@using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Shared.DTO.Offer
+@using ProjectManagement.Shared.DTO.Organisation
+@attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+
+@if (Organistion != null)
+{
+
+    <div class="@CssClasses.Layout.FlexItemsCenter  pb-1">
+        <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger" Context="auth">
+            <button class="@CssClasses.Btn.IconButton.Success" @onclick="() => UpdateForm(new ShortListOrganisationDTO())"> @((MarkupString)Icons.Plus)</button>
+        </AuthorizeView>
+        <button class="@CssClasses.Btn.IconButton.Secondary" @onclick="ReverseElements">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
+    </div>
+    <br />
+        <table class="@CssClasses.Table.Tab">
+            <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+                    <th class="@CssClasses.Table.TH" style="width:150px;">@CalcResource.status</th>
+                    <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.category</th>
+                    <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.baseCategory</th>
+
+                </tr>
+            </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                @foreach (var organistion in Organistion)
+                {
+                    <tr class="@CssClasses.Table.Tr">
+                        <td class="@CssClasses.Table.Td" @oncontextmenu:preventDefault @oncontextmenu="() => Context(organistion)">
+                            <button class="@CssClasses.Btn.Link" @onclick="() => OrganisationDetails(organistion)">@organistion.Name</button>
+                        </td>
+                        <td class="@CssClasses.Table.Td">@organistion.Type</td>
+                        <td class="@CssClasses.Table.Td">@organistion.SubCategory</td>
+                        <td class="@CssClasses.Table.Td">@organistion.Category</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+}
+
+@code
+{
+    async Task Context(ShortListOrganisationDTO item)
+    {
+        var list = new List<MenuItem>()
+            {
+                        new() { Label = $"ℹ️ {ResourceLoc.details}", OnClickAsync = () => {OrganisationDetails(item);
+            return Task.CompletedTask;
+        } },
+            };
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        bool isInAnyRole = PMRolesConst.Tenant.AdminSuperManger.Split(',').Any(r => user.IsInRole(r));
+
+        if (user.Identity?.IsAuthenticated == true && isInAnyRole)
+        {
+            list.Add(new()
+            {
+                Label = $"✏️ {ResourceApp.edit}",
+                OnClickAsync = () =>
+                {
+                    UpdateForm(item);
+                    return Task.CompletedTask;
+                }
+            });
+            list.Add(new()
+            {
+                Label = $"🗑️ {ResourceApp.delete}",
+                OnClickAsync = () =>
+                {
+                    Remove(item);
+                    return Task.CompletedTask;
+                }
+            });
+        }
+        await ContextService.ShowMenuAsync(list);
+    }
+    [Parameter] public OrganisationCategoryEntity? Category { get; set; }
+    [Parameter] public EventCallback Callback { get; set; }
+
+    bool IsVisible = true;
+    List<ShortListOrganisationDTO>? Organistion;
+    void OrganisationDetails(ShortListOrganisationDTO obj)
+    { }
+    // => MHD.Modal.AddModal<OrganisationDetailsUI>(ResourceLoc.details + " " + obj.Name, Icons.Company, new Dictionary<string, object>
+    //     { [nameof(OrganisationDetailsUI.CompanyId)] = obj.Id });
+
+    void TableLoading() { }// => MHD.Modal.AddModal<TableLoading>("", "", null);
+
+    void UpdateForm(ShortListOrganisationDTO model) {}
+    // MHD.Modal.AddModal<OrganisationFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, ResourceApp.organisation] :
+    //             AppLoc[LocalizerConst.Update, model.Name], Icons.Company,
+    // new Dictionary<string, object>
+    // {
+    //     [nameof(OrganisationFormUI.ID)] = model.Id,
+    //     [nameof(OrganisationFormUI.CategoryID)] = Category.Id,
+    //     [nameof(OrganisationFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, RefreshAsync)
+    // });
+
+    void Remove(ShortListOrganisationDTO Organisation) =>
+        MHD.DeleteMessage(Organisation.Name,EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(Organisation)));
+    async Task ConfirmRemoveAsync(ShortListOrganisationDTO Organisation)
+    {
+        var reault = await MicroBus.Send(new DeleteOrganisationCommand(Organisation.Id));
+        if (reault)
+        {
+            Organistion.Remove(Organisation);
+            StateHasChanged();
+        }
+        MHD.Notifications(ToastType.Delete, reault);
+    }
+    async Task ReverseElements()
+    {
+        IsVisible = !IsVisible;
+        await GetAsync();
+    }
+    async Task RefreshAsync(bool load)
+    {
+        if (load) await GetAsync();
+        // MHD.Modal.CloseLastModal();
+    }
+    protected async override Task OnInitializedAsync()
+    {
+         await GetAsync();
+    }
+
+    async Task GetAsync()
+    {
+        // TableLoading();
+         Organistion = await MicroBus.Send(new GetOrganisationsQuery(Category.Id, IsVisible));
+        // Modal.ClearModal();
+    }
+}

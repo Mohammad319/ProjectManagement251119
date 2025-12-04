@@ -1,0 +1,193 @@
+﻿@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
+@using ContextMenuMHD
+@using Microsoft.EntityFrameworkCore
+@using ProjectImportHub.Entities
+@using ProjectImportHub.Infrastructure
+@using ProjectImportHub.Services.Resource
+@using ProjectManagement.Adminstrator.Components.Folder
+@using ProjectManagement.Adminstrator.Helper
+@inherits AppComponentBase
+@using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using ProjectManagement.Shared.Enums
+@inject IResourceFolderService ResourceFolderService
+
+<div class="@CsS.Layout.FlexWrap">
+    <div class="@CsS.Layout.FlexWidth(208) @CC.Card.Panel">
+        @if (EnableFolderContext)
+        {
+            <div class="@CsS.Layout.FlexItemsCenter CsS.Spacing.M.Bottom(Size.S2)">
+                <button class="@CsS.Btn.Outline.Primary" @onclick="() => AddFolder(null)">
+                    @((MarkupString)Icons.Plus)
+                </button>
+            </div>
+        }
+        @FolderTreeHelper.RenderFolderTreeRecursive(
+                this,
+                Folders,
+                expanded,
+                selectedFolderIds,
+                EventCallback.Factory.Create<ResourceFolderEntity>(this, ToggleSelectionAsync),
+                EnableFolderContext
+                ? EventCallback.Factory.Create<ResourceFolderEntity>(this, ContextF)
+                : EventCallback<ResourceFolderEntity>.Empty)
+    </div>
+
+    <div class="@CsS.Layout.FlexMinWidth(360) @CsS.Spacing.M.All(Size.S2)">
+        @if (!selectedFolderIds.Any())
+                {
+        <p class="@CC.Text.MutedXs">Select one or more folders to see resources.</p>
+                }
+                else if (!resourcesToShow.Any())
+        {
+            <p class="@CC.Text.MutedXs">No resources in the selected folders.</p>
+        }
+        else
+        {
+            <table class="@CsS.Table.Tab">
+                <thead class="@CsS.Table.Thead">
+                    <tr>
+                        <th class="@CsS.Table.TH">@CalcResource.name</th>
+                        <th class="@CsS.Table.TH">@CalcResource.active</th>
+                        <th class="@CsS.Table.TH">@CalcResource.resourceType</th>
+                        <th class="@CsS.Table.TH">@CalcResource.unit</th>
+                        <th class="@CsS.Table.TH">@CalcResource.quantity</th>
+                        <th class="@CsS.Table.TH">@CalcResource.changeFactor1 / 2</th>
+                        <th class="@CsS.Table.TH">@CalcResource.cap / @CalcResource.waste</th>
+                        <th class="@CsS.Table.TH">@CalcResource.cap</th>
+                        <th class="@CsS.Table.TH">@CalcResource.cost</th>
+                    </tr>
+                </thead>
+                <tbody class="@CsS.Table.TH">
+                    @foreach (var r in resourcesToShow)
+                    {
+                        <tr class="@CsS.Table.Tr">
+                            <td class="@CsS.Table.Td">
+                                <div class="@CssClasses.Layout.FlexItemsCenter">
+
+                                @if (RowActions is not null)
+                                {
+                                        @if (r.ResType == ResourceTypesEnum.MachinesAndEquipments || r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.Managers)
+                                        {
+                                            <button type="button" class="@CsS.Btn.Outline.Info" @onclick="() => CalcModeal(r)">Calc</button>
+                                        }
+                                        @RowActions(r)
+                                }
+                                @r.Name
+                                    </div>
+                            </td>
+                            <td class="@CsS.Table.Td">
+                                <input type="checkbox" class="@CsS.Input.Check" checked="@r.Active" disabled />
+                            </td>
+                            <td class="@CsS.Table.Td">@r.ResType</td>
+                            <td class="@CsS.Table.Td">@r.Data.Unit</td>
+                            <td class="@CsS.Table.Td">@r.Data.Quantity</td>
+                            <td class="@CsS.Table.Td">@r.Data.ChangeFactor1 / @r.Data.ChangeFactor2</td>
+                            <td class="@CsS.Table.Td">@r.Data.CapWaste</td>
+                            <td class="@CsS.Table.Td">@r.Data.Cost</td>
+                            <td class="@CsS.Table.Td">@r.Data.BaseCost</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment<ResourceEntity>? RowActions { get; set; }
+    [Parameter] public bool EnableFolderContext { get; set; } = true;
+
+    [Parameter] public List<ResourceFolderEntity> Folders { get; set; } = new();
+    private List<ResourceEntity> resourcesToShow = new();
+    private HashSet<int> expanded = new();
+    private HashSet<int> selectedFolderIds = new();
+    void CalcModeal(ResourceEntity model) => MHD.Modal.AddModal<CalcResCostUI>(model.Name,
+    new Dictionary<string, object>
+    {
+        [nameof(CalcResCostUI.Resource)] = model,
+        [nameof(CalcResCostUI.CallBack)] = EventCallback.Factory.Create<bool>(this, StateHasChanged),
+    });
+    protected override async Task OnInitializedAsync()
+    {
+        if (Folders.Count == 0)
+        {
+            Folders = await ResourceFolderService.GetAllAsync();
+        }
+    }
+
+    private async Task ToggleSelectionAsync(ResourceFolderEntity folder)
+    {
+        selectedFolderIds.Clear();
+        selectedFolderIds.Add(folder.Id);
+        await UpdateResourcesAsync();
+        StateHasChanged();
+    }
+
+    private async Task UpdateResourcesAsync()=>
+        resourcesToShow = await ResourceFolderService.UpdateResourcesAsync(selectedFolderIds);
+
+    async Task ContextF(ResourceFolderEntity item)
+    {
+        var list = new List<MenuItem>()
+            {
+                new() { Label = $"➕ Resource", OnClickAsync = () => {UpdateForm(new ResourceEntity(){FolderId = item.Id}); return Task.CompletedTask; } },
+                new() { Label = $"➕ Subfolder", OnClickAsync = () => {AddFolder(item.Id); return Task.CompletedTask; } },
+                new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => {UpdateForm(item); return Task.CompletedTask; } },
+                new() { Label = $"🗑 {ResourceApp.delete}", OnClickAsync = () => {Remove(item); return Task.CompletedTask; } },
+            };
+        await ContextService.ShowMenuAsync(list);
+    }
+    void UpdateForm(ResourceEntity model) => MHD.Modal.AddModal<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
+new Dictionary<string, object>
+{
+[nameof(ResourceFormDLUI.model)] = model,
+    [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
+});
+    async Task RefreshAsync()
+    {
+        await UpdateResourcesAsync();
+        StateHasChanged();
+    }
+
+    private void AddFolder(int? parentID) => UpdateForm(new ResourceFolderEntity() { DisplayName = "", ParentFolderId = parentID });
+    void UpdateForm(ResourceFolderEntity model) =>
+    Modal.AddModal<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+        AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+        {
+            [nameof(FolderFormUI.Form)] = model,
+            [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+        }, SizeMHD.Medium);
+    void Remove(ResourceFolderEntity model) => MHD.DeleteMessage(model.DisplayName, () => DeleteFolder(model.Id));
+    private async Task DeleteFolder(int id)
+    {
+        try
+        {
+            if(!await ResourceFolderService.DeleteAsync(id))return;
+
+            var toRemove = Folders.FirstOrDefault(f => f.Id == id);
+            if (toRemove is not null) Folders.Remove(toRemove);
+
+            // نظّف الاختيار إن كان المجلد المحذوف محددًا
+            if (selectedFolderIds.Remove(id))
+                resourcesToShow.Clear();
+
+            StateHasChanged();
+        }
+        catch (DbUpdateException)
+        {
+            // هنا غالبًا المجلد لديه أبناء/موارد مرتبطة
+            // MHD.ToastMessage.Error("Delete folder", "Cannot delete: folder has children or linked resources.");
+        }
+    }
+
+    async Task BtnUpdate(bool IsSuccess)
+    {
+        Modal.ClearModal();
+        if (IsSuccess)
+        {
+            Folders = await ResourceFolderService.GetAllAsync();
+        }
+        StateHasChanged();
+    }
+
+}

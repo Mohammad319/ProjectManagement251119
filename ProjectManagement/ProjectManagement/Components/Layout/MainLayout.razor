@@ -1,0 +1,61 @@
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Routing
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="mainContainer">
+    <AuthorizeView>
+        <Authorized>
+            <NavMenu @rendermode="InteractiveServer"></NavMenu>
+        </Authorized>
+    </AuthorizeView>
+    @Body
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // كل ما يتغير الرابط (URL)، Blazor ينادي هذا الحدث
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        try
+        {
+            // نعيد تطبيق الثيم من localStorage بعد التنقل
+            await JS.InvokeVoidAsync("applyThemeFromStorage");
+        }
+        catch
+        {
+            // تجاهل أي أخطاء JS بسيطة
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("applyThemeFromStorage");
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}
