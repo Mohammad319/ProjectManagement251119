@@ -11,8 +11,8 @@ public class QuestionGroupConfiguration : IEntityTypeConfiguration<QuestionGroup
     public void Configure(EntityTypeBuilder<QuestionGroupDefinition> b)
     {
         b.HasMany(g => g.Options)
-         .WithOne(o => o.OptionGroup)
-         .HasForeignKey(o => o.OptionGroupId)
+         .WithOne(o => o.QuestionGroup)
+         .HasForeignKey(o => o.QuestionGroupId)
          .OnDelete(DeleteBehavior.Cascade);
 
         b.Property(x => x.SelectionMode).HasConversion<int>();
@@ -30,8 +30,8 @@ public class ResourceSelectorConfiguration : IEntityTypeConfiguration<ResourceSe
     public void Configure(EntityTypeBuilder<ResourceSelectorDefinition> b)
     {
         b.HasMany(g => g.Items)
-         .WithOne(i => i.ResourceOptionGroup)
-         .HasForeignKey(i => i.ResourceChoiceGroupId)
+         .WithOne(i => i.Selector)
+         .HasForeignKey(i => i.SelectorId)
          .OnDelete(DeleteBehavior.Cascade);
 
         b.Property(x => x.SectionKey).HasMaxLength(Lengths.SectionKey);
@@ -58,17 +58,17 @@ public class QuestionOptionConfiguration : IEntityTypeConfiguration<QuestionOpti
 {
     public void Configure(EntityTypeBuilder<QuestionOptionDefinition> b)
     {
-        b.HasIndex(o => o.OptionGroupId);
+        b.HasIndex(o => o.QuestionGroupId);
 
         b.Property(x => x.RevealedSectionKeys)
             .HasJsonListComparer();
     }
 }
 
-public class ResourceChoiceOptionConfiguration : IEntityTypeConfiguration<ResourceChoiceOptionDefinition>
+public class ResourceChoiceOptionConfiguration : IEntityTypeConfiguration<ResourceOptionItem>
 {
-    public void Configure(EntityTypeBuilder<ResourceChoiceOptionDefinition> b)
+    public void Configure(EntityTypeBuilder<ResourceOptionItem> b)
     {
-        b.HasIndex(i => new { i.ResourceChoiceGroupId, i.ResourceId });
+        b.HasIndex(i => new { i.SelectorId, i.ResourceId });
     }
 }

@@ -149,7 +149,7 @@ new Dictionary<string, object>
         StateHasChanged();
     }
 
-    private void AddFolder(int? parentID) => UpdateForm(new ResourceCategory() { DisplayName = "", ParentFolderId = parentID });
+    private void AddFolder(int? parentID) => UpdateForm(new ResourceCategory() { DisplayName = "", ParentCategoryId = parentID });
     void UpdateForm(ResourceCategory model) =>
     Modal.AddModal<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
         AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>

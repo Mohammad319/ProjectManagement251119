@@ -44,7 +44,7 @@
         => Task.QuestionGroups.Remove(g);
 
     private void AddChoiceOption(QuestionGroupDefinition g)
-        => g.Options.Add(new QuestionOptionDefinition { OptionGroupId = g.Id, DisplayName = "Option" });
+        => g.Options.Add(new QuestionOptionDefinition { QuestionGroupId = g.Id, DisplayName = "Option" });
 
     private void RemoveChoiceOption(QuestionGroupDefinition g, QuestionOptionDefinition o)
         => g.Options.Remove(o);
@@ -64,9 +64,9 @@
         => Task.ResourceSelectors.Remove(g);
 
     private void AddResourceItem(ResourceSelectorDefinition g)
-        => g.Items.Add(new ResourceChoiceOptionDefinition { ResourceChoiceGroupId = g.Id });
+        => g.Items.Add(new ResourceOptionItem { SelectorId = g.Id });
 
-    private void RemoveResourceItem(ResourceSelectorDefinition g, ResourceChoiceOptionDefinition it)
+    private void RemoveResourceItem(ResourceSelectorDefinition g, ResourceOptionItem it)
         => g.Items.Remove(it);
 
     void AddDelete(ResourceSelectorDefinition group, ResourceDefinition res)
@@ -78,7 +78,7 @@
         }
         else
         {
-            var toadd = new ResourceChoiceOptionDefinition { ResourceChoiceGroupId = group.Id, ResourceId = res.Id, Resource = res };
+            var toadd = new ResourceOptionItem { SelectorId = group.Id, ResourceId = res.Id, Resource = res };
             group.Items.Add(toadd);
         }
     }

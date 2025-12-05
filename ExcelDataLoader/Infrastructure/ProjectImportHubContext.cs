@@ -38,7 +38,7 @@ public class ProjectImportHubContext : DbContext
     public DbSet<QuestionGroupDefinition> QuestionGroups { get; set; }
     public DbSet<QuestionOptionDefinition> QuestionOptions { get; set; }
     public DbSet<ResourceSelectorDefinition> ResourceSelectors { get; set; }
-    public DbSet<ResourceChoiceOptionDefinition> ResourceChoiceOptions { get; set; }
+    public DbSet<ResourceOptionItem> ResourceChoiceOptions { get; set; }
     public DbSet<NumericQuestionDefinition> NumericQuestions { get; set; }
 
     // === Conditions & Requirements ===

@@ -19,7 +19,7 @@ namespace ProjectManagement.Adminstrator.Helper
             EventCallback<ResourceCategory> onContextMenu = default
         ) => builder =>
         {
-            foreach (var parent in folders.Where(f => f.ParentFolderId == null).OrderBy(f => f.SortOrder))
+            foreach (var parent in folders.Where(f => f.ParentCategoryId == null).OrderBy(f => f.SortOrder))
             {
                 builder.AddContent(0, RenderFolderTreeItem(receiver, folders, parent, 0, expanded, selectedFolderIds, onClick, onContextMenu));
             }
@@ -36,7 +36,7 @@ namespace ProjectManagement.Adminstrator.Helper
             EventCallback<ResourceCategory> onContextMenu
         ) => builder =>
         {
-            bool hasChildren = folders.Any(c => c.ParentFolderId == folder.Id);
+            bool hasChildren = folders.Any(c => c.ParentCategoryId == folder.Id);
 
             // div الخارجي لكل مجلد
             builder.OpenElement(0, "div");
@@ -78,7 +78,7 @@ namespace ProjectManagement.Adminstrator.Helper
             // رسم الأبناء بشكل تكراري إذا المجلد موسع
             if (hasChildren && expanded.Contains(folder.Id))
             {
-                foreach (var child in folders.Where(f => f.ParentFolderId == folder.Id).OrderBy(f => f.SortOrder))
+                foreach (var child in folders.Where(f => f.ParentCategoryId == folder.Id).OrderBy(f => f.SortOrder))
                 {
                     builder.AddContent(12, RenderFolderTreeItem(receiver, folders, child, level + 1, expanded, selectedFolderIds, onClick, onContextMenu));
                 }

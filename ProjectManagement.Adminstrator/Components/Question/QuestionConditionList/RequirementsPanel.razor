@@ -16,8 +16,8 @@
 
     private IEnumerable<QuestionOptionDefinition> GetLocalChoiceOptions(int groupId)
         => ChoiceGroups.FirstOrDefault(g => g.Id == groupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>();
-    private IEnumerable<ResourceChoiceOptionDefinition> GetResourceItems(int groupId)
-    => ResourceGroups.FirstOrDefault(g => g.Id == groupId)?.Items ?? Enumerable.Empty<ResourceChoiceOptionDefinition>();
+    private IEnumerable<ResourceOptionItem> GetResourceItems(int groupId)
+    => ResourceGroups.FirstOrDefault(g => g.Id == groupId)?.Items ?? Enumerable.Empty<ResourceOptionItem>();
 
 
     private void AddChoiceReq() => Condition?.OptionRules.Add(new OptionConditionRule { ConditionId = Condition.Id, GroupKey = 1 });

@@ -25,7 +25,7 @@ namespace ProjectImportHub.Entities.Questions.Conditions
         /// The specific resource option within the selector that must be matched.
         /// </summary>
         public int SelectorItemId { get; set; }
-        public ResourceChoiceOptionDefinition SelectorItem { get; set; } = null!;
+        public ResourceOptionItem SelectorItem { get; set; } = null!;
 
         /// <summary>
         /// Grouping key that allows multiple rules to belong to the same logical rule group.

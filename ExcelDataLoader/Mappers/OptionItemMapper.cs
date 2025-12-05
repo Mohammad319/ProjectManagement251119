@@ -17,7 +17,7 @@ public static class OptionItemMapper
         return new OptionItemDto
         {
             Id = e.Id,
-            OptionGroupId = e.OptionGroupId
+            OptionGroupId = e.QuestionGroupId
         };
     }
 }

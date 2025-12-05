@@ -34,10 +34,10 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
                 DisplayName = g.DisplayName,
                 SortOrder = g.SortOrder,
                 TaskId = g.TaskId,
-                Items = g.Items.Select(o => new ResourceChoiceOptionDefinition
+                Items = g.Items.Select(o => new ResourceOptionItem
                 {
                     Id = o.Id,
-                    ResourceChoiceGroupId = o.ResourceChoiceGroupId,
+                    SelectorId = o.SelectorId,
                     ResourceId = o.ResourceId,
                     Resource = o.Resource
                 }).ToList()
@@ -61,7 +61,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
                     {
                         Id = o.Id,
                         DisplayName = o.DisplayName,
-                        OptionGroupId = o.OptionGroupId
+                        QuestionGroupId = o.QuestionGroupId
                     }).ToList()
             }).ToListAsync(ct);
     }
@@ -95,7 +95,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
                 b.Id,
                 b.AssignmentId,
                 b.OptionId,
-                ChoiceGroupId = b.Option.OptionGroupId,
+                ChoiceGroupId = b.Option.QuestionGroupId,
                 b.Expressions
             }).ToListAsync(ct);
 

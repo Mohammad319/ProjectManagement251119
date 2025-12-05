@@ -43,7 +43,7 @@ public sealed class TaskGroupsCommandService(IDbContextFactory<ProjectImportHubC
 
             foreach (var o in g.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
             {
-                o.OptionGroupId = g.Id;
+                o.QuestionGroupId = g.Id;
                 db.Entry(o).State = (o.Id == 0) ? EntityState.Added : EntityState.Modified;
             }
         }
@@ -58,14 +58,14 @@ public sealed class TaskGroupsCommandService(IDbContextFactory<ProjectImportHubC
             g.TaskId = task.Id;
             db.Entry(g).State = (g.Id == 0) ? EntityState.Added : EntityState.Modified;
 
-            var snapItems = snap.ResourceSelectors.FirstOrDefault(x => x.Id == g.Id)?.Items ?? new List<ResourceChoiceOptionDefinition>();
+            var snapItems = snap.ResourceSelectors.FirstOrDefault(x => x.Id == g.Id)?.Items ?? new List<ResourceOptionItem>();
             var incomingItemIds = (g.Items ?? []).Select(i => i.Id).ToHashSet();
             var deleteItems = snapItems.Where(i => !incomingItemIds.Contains(i.Id)).ToList();
             if (deleteItems.Count > 0) db.RemoveRange(deleteItems);
 
-            foreach (var it in g.Items ?? Enumerable.Empty<ResourceChoiceOptionDefinition>())
+            foreach (var it in g.Items ?? Enumerable.Empty<ResourceOptionItem>())
             {
-                it.ResourceChoiceGroupId = g.Id;
+                it.SelectorId = g.Id;
                 db.Entry(it).State = (it.Id == 0) ? EntityState.Added : EntityState.Modified;
             }
         }

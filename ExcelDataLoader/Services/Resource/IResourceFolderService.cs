@@ -74,7 +74,7 @@ namespace ProjectImportHub.Services.Resource
         }
         private async Task<List<int>> GetAllChildFolderIds(ProjectImportHubContext db, int parentId)
         {
-            var childIds = await db.ResourceCategories.Where(f => f.ParentFolderId == parentId)
+            var childIds = await db.ResourceCategories.Where(f => f.ParentCategoryId == parentId)
                                    .Select(f => f.Id).ToListAsync();
             var allIds = new List<int>(childIds);
             foreach (var id in childIds)

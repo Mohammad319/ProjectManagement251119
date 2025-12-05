@@ -141,7 +141,7 @@ public static class ProjectTaskProjection
                         Id = o.Id,
                         DisplayName = o.DisplayName,
                         RevealedSectionKeys = o.RevealedSectionKeys,
-                        OptionGroupId = o.OptionGroupId,
+                        OptionGroupId = o.QuestionGroupId,
                     }).ToList()
                 }).ToList(),
                 ResourceOptionGroups = t.ResourceSelectors.Select(g => new ResourceOptionGroupDto

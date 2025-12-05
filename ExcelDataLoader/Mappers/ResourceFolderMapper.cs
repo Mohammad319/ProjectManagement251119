@@ -20,8 +20,8 @@ public static class ResourceFolderMapper
             DisplayName = e.DisplayName,
             Note = e.Note,
             SortOrder = e.SortOrder,
-            ParentFolder = e.ParentFolder?.ToDto(),
-            ParentFolderId = e.ParentFolderId
+            ParentFolder = e.ParentCategory?.ToDto(),
+            ParentFolderId = e.ParentCategoryId
         };
     }
 }
