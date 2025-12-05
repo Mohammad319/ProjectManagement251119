@@ -1,4 +1,4 @@
-﻿//namespace ExcelDataLoader.Helper
+﻿//namespace TaskResourceBlueprints.Helper
 //{
 //    public enum ParamSource { User, Resource }
 //    public enum ParamName { Thickness, Width, Length, Density }

@@ -4,7 +4,7 @@ using AuthPermissions.Context;
 using BlazorMHD.UI.Core.DesignSystem;
 using BlazorMHD.UI.Core.Services;
 using Domain.Settings;
-using ExcelDataLoader;
+using TaskResourceBlueprints;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -26,18 +26,18 @@ builder.AddServiceDefaults();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
-var ExcelDataLoaderDb = builder.Configuration.GetConnectionString("ExcelDataLoaderDb") ?? throw new InvalidOperationException("Connection string 'ExcelDataLoaderDb' not found.");
+var TaskResourceBlueprintsDb = builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb") ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsDb' not found.");
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddCustomAuthentication(connectionString);
 builder.Services.AddApplicationLayer();
 builder.Services.AddPersistenceServices();
 builder.Services.AddAuthPermissionsLayer();
-builder.Services.AddExcelDataLoader();
+builder.Services.AddTaskResourceBlueprints();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
-    options.UseSqlServer(ExcelDataLoaderDb, sqlOptions =>
+    options.UseSqlServer(TaskResourceBlueprintsDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     }));

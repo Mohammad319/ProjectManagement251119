@@ -1,4 +1,4 @@
-﻿using ExcelDataLoader.Services;
+﻿using TaskResourceBlueprints.Services;
 using Microsoft.Extensions.DependencyInjection;
 using TaskResourceBlueprints.Dto.ProjectTask;
 using TaskResourceBlueprints.Infrastructure;
@@ -11,13 +11,13 @@ using TaskResourceBlueprints.Services.TaskGroups;
 using TaskResourceBlueprints.Services.UnitGroups;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 
-namespace ExcelDataLoader
+namespace TaskResourceBlueprints
 {
     public static class ServiceRegistration
     {
-        public static void AddExcelDataLoader(this IServiceCollection services)
+        public static void AddTaskResourceBlueprints(this IServiceCollection services)
         {
-            //services.AddDbContext<ExcelDataLoaderContext>(options => options.UseSqlServer(ExcelDataLoaderDb));
+            //services.AddDbContext<TaskResourceBlueprintsContext>(options => options.UseSqlServer(TaskResourceBlueprintsDb));
 
             services.AddScoped(typeof(IEntityService<>), typeof(EntityService<>));
             services.AddScoped<ITaskResourceService, TaskResourceService>();

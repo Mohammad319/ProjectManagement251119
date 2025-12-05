@@ -4,7 +4,7 @@
 .QuestionMapping
 @using Microsoft.EntityFrameworkCore
 
-@inject IDbContextFactory<ExcelDataLoaderContext> ContextFactory
+@inject IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory
 
 
 <div class="mx-auto max-w-6xl p-4">

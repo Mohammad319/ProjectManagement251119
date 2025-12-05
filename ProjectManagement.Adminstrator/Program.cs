@@ -1,5 +1,5 @@
 using AuthPermissions;
-using ExcelDataLoader;
+using TaskResourceBlueprints;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
@@ -18,10 +18,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-var ExcelDataLoaderDb = builder.Configuration.GetConnectionString("ExcelDataLoaderDb") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddExcelDataLoader();
+var TaskResourceBlueprintsDb = builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddTaskResourceBlueprints();
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
-    options.UseSqlServer(ExcelDataLoaderDb, sqlOptions =>
+    options.UseSqlServer(TaskResourceBlueprintsDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     }));

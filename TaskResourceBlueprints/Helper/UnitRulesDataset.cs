@@ -1,4 +1,4 @@
-﻿//namespace ExcelDataLoader.Helper
+﻿//namespace TaskResourceBlueprints.Helper
 //{
 //    file static class TupleComparer
 //    {

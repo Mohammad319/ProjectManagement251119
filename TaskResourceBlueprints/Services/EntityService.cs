@@ -2,7 +2,7 @@
 using TaskResourceBlueprints.Infrastructure;
 using TaskResourceBlueprints.Services;
 
-namespace ExcelDataLoader.Services
+namespace TaskResourceBlueprints.Services
 {
     public abstract class BaseService(IDbContextFactory<TaskResourceBlueprintsContext> contextFactory)
     {

@@ -5,8 +5,8 @@
   </Folder>
   <Folder Name="/Infrastructure/">
     <Project Path="AuthPermissions/AuthPermissions.csproj" />
-    <Project Path="ExcelDataLoader/TaskResourceBlueprints.csproj" />
     <Project Path="Persistence/Persistence.csproj" />
+    <Project Path="TaskResourceBlueprints/TaskResourceBlueprints.csproj" />
   </Folder>
   <Folder Name="/Presentation/">
     <Project Path="ProjectManagement.Adminstrator/ProjectManagement.Adminstrator.csproj" />
