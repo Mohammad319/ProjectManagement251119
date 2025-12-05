@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities.Resources;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities.Resources;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.ResourceProperties
+namespace TaskResourceBlueprints.Services.ResourceProperties
 {
     public interface IResourcePropertiesService
     {
@@ -11,7 +11,7 @@ namespace ProjectImportHub.Services.ResourceProperties
         Task<int> AddAsync(ResourceAttribute obj);
         Task<bool> DeleteAsync(int id);
     }
-    public class ResourcePropertiesService(IDbContextFactory<ProjectImportHubContext> ContextFactory) : IResourcePropertiesService
+    public class ResourcePropertiesService(IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory) : IResourcePropertiesService
     {
         public async Task<int> AddAsync(ResourceAttribute obj)
         {

@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Infrastructure.ConfigurationConstants;
-using ProjectImportHub.Infrastructure.Extensions;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
+using TaskResourceBlueprints.Infrastructure.Extensions;
 using ProjectManagement.Shared.Base.AppTenant;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Assignments;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Assignments;
 
 public class ConditionResourceAssignmentConfiguration : IEntityTypeConfiguration<ConditionResourceAssignment>
 {

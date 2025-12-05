@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Entities.Questions.Conditions;
-using ProjectImportHub.Entities.Questions.Groups;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Questions.Conditions;
+using TaskResourceBlueprints.Entities.Questions.Groups;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.QuestionConditions;
+namespace TaskResourceBlueprints.Services.QuestionConditions;
 
-public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubContext> _factory) : ITaskConditionsService
+public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprintsContext> _factory) : ITaskConditionsService
 {
     // ===== تحميل الصفحة =====
     public async Task<List<ConditionDefinition>> GetConditionsAsync(int taskId, CancellationToken ct)

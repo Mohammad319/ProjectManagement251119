@@ -1,7 +1,7 @@
-﻿using ProjectImportHub.Entities.Tasks;
+﻿using TaskResourceBlueprints.Entities.Tasks;
 using ProjectManagement.Shared.Base.ProjectAppStorage;
 
-namespace ProjectImportHub.Entities.Questions.Groups
+namespace TaskResourceBlueprints.Entities.Questions.Groups
 {
     public class QuestionGroupDefinition
     {

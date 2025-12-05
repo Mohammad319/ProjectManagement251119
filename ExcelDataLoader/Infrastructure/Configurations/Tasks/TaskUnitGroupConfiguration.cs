@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities;
+using TaskResourceBlueprints.Entities;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Tasks;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Tasks;
 
 public class TaskUnitGroupConfiguration : IEntityTypeConfiguration<TaskUnitGroup>
 {

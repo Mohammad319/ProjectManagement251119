@@ -1,4 +1,4 @@
-﻿namespace ProjectImportHub.Entities
+﻿namespace TaskResourceBlueprints.Entities.Resources
 {
     /// <summary>
     /// Represents a hierarchical category used to organize resources.

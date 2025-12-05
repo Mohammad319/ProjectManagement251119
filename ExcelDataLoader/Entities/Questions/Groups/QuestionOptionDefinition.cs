@@ -1,6 +1,6 @@
-﻿using ProjectImportHub.Entities.Questions.Assignments;
+﻿using TaskResourceBlueprints.Entities.Questions.Assignments;
 
-namespace ProjectImportHub.Entities.Questions.Groups
+namespace TaskResourceBlueprints.Entities.Questions.Groups
 {
     public class QuestionOptionDefinition
     {

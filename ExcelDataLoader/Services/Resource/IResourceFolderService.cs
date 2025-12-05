@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Resources;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.Resource
+namespace TaskResourceBlueprints.Services.Resource
 {
     public interface IResourceFolderService
     {
@@ -14,7 +15,7 @@ namespace ProjectImportHub.Services.Resource
         Task<int> AddAsync(ResourceCategory obj);
         Task<bool> DeleteAsync(int id);
     }
-    public class ResourceFolderService(IDbContextFactory<ProjectImportHubContext> ContextFactory) : IResourceFolderService
+    public class ResourceFolderService(IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory) : IResourceFolderService
     {
         public async Task<int> AddAsync(ResourceCategory obj)
         {
@@ -72,7 +73,7 @@ namespace ProjectImportHub.Services.Resource
             }
             return resourcesToShow;
         }
-        private async Task<List<int>> GetAllChildFolderIds(ProjectImportHubContext db, int parentId)
+        private async Task<List<int>> GetAllChildFolderIds(TaskResourceBlueprintsContext db, int parentId)
         {
             var childIds = await db.ResourceCategories.Where(f => f.ParentCategoryId == parentId)
                                    .Select(f => f.Id).ToListAsync();

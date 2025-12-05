@@ -3,14 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Infrastructure;
 
 #nullable disable
 
-namespace ProjectImportHub.Migrations
+namespace TaskResourceBlueprints.Migrations
 {
-    [DbContext(typeof(ProjectImportHubContext))]
-    partial class ProjectImportHubContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(TaskResourceBlueprintsContext))]
+    partial class TaskResourceBlueprintsContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -21,7 +21,7 @@ namespace ProjectImportHub.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ActionEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ActionEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -43,7 +43,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("Actions");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ActionTypeEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ActionTypeEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -65,7 +65,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ActionTypes");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Assignments.ResourcePropertyBindEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Assignments.ResourcePropertyBindEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -94,7 +94,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ResourceProperty");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Assignments.ResourceTenantLinkEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Assignments.ResourceTenantLinkEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -142,7 +142,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ResourceTenant");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.FallEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.FallEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -164,7 +164,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("Falls");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.LocationEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.LocationEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -186,7 +186,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("Locations");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ProjectTaskEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ProjectTaskEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -284,7 +284,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.NumericResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.NumericResourceAssignmentEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -318,7 +318,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("NumericGroupResourceAssignments");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.OptionResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.OptionResourceAssignmentEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -346,7 +346,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("OptionResourceAssignments");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.ResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.ResourceAssignmentEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -401,7 +401,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ConditionResourceAssignments");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.TaskResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.TaskResourceAssignmentEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -452,7 +452,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("TaskResourceAssignments");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionNumericRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionNumericRequirementEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -487,7 +487,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("NumericRequirements");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionOptionRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionOptionRequirementEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -519,7 +519,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ChoiceRequirements");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionResourceRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionResourceRequirementEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -551,7 +551,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ResourceRequirements");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionVariableRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionVariableRequirementEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -581,7 +581,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ConditionVariableRequirement");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -618,7 +618,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("QuestionConditions");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.NumericInputEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.NumericInputEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -656,7 +656,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("NumericInputGroups");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.OptionGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.OptionGroupEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -691,7 +691,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("OptionGroups");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.OptionItemEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.OptionItemEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -717,7 +717,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("OptionItems");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.ResourceOptionGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionGroupEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -749,7 +749,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ResourceOptionGroups");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.ResourceOptionItemEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionItemEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -772,7 +772,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ResourceOptionItems");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourceEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourceEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -817,7 +817,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("Resources");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourceFolderEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourceFolderEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -848,7 +848,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("Folders");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourcePropertyEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourcePropertyEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -888,7 +888,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ResourceProperties");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourcePropertySetEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourcePropertySetEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -905,7 +905,7 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("ResourcePropertySets");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.UnitGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.UnitGroupEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -925,15 +925,15 @@ namespace ProjectImportHub.Migrations
                     b.ToTable("UnitGroups");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Assignments.ResourcePropertyBindEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Assignments.ResourcePropertyBindEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ResourcePropertyEntity", "Property")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourcePropertyEntity", "Property")
                         .WithMany("PropertiesBind")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.ResourceEntity", "Resource")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourceEntity", "Resource")
                         .WithMany("PropertiesBind")
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -944,9 +944,9 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Resource");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Assignments.ResourceTenantLinkEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Assignments.ResourceTenantLinkEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ResourceEntity", "Resource")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourceEntity", "Resource")
                         .WithMany("ResourcesTenant")
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -955,25 +955,25 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Resource");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ProjectTaskEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ProjectTaskEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ActionEntity", "Action")
+                    b.HasOne("TaskResourceBlueprints.Entities.ActionEntity", "Action")
                         .WithMany()
                         .HasForeignKey("ActionId");
 
-                    b.HasOne("ProjectImportHub.Entities.ActionTypeEntity", "ActionType")
+                    b.HasOne("TaskResourceBlueprints.Entities.ActionTypeEntity", "ActionType")
                         .WithMany()
                         .HasForeignKey("ActionTypeId");
 
-                    b.HasOne("ProjectImportHub.Entities.FallEntity", "Fall")
+                    b.HasOne("TaskResourceBlueprints.Entities.FallEntity", "Fall")
                         .WithMany()
                         .HasForeignKey("FallId");
 
-                    b.HasOne("ProjectImportHub.Entities.LocationEntity", "Location")
+                    b.HasOne("TaskResourceBlueprints.Entities.LocationEntity", "Location")
                         .WithMany()
                         .HasForeignKey("LocationId");
 
-                    b.HasOne("ProjectImportHub.Entities.UnitGroupEntity", "UnitGroup")
+                    b.HasOne("TaskResourceBlueprints.Entities.UnitGroupEntity", "UnitGroup")
                         .WithMany("Tasks")
                         .HasForeignKey("UnitGroupId");
 
@@ -988,15 +988,15 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("UnitGroup");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.NumericResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.NumericResourceAssignmentEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.NumericInputEntity", "Numeric")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.NumericInputEntity", "Numeric")
                         .WithMany("ResourceAssignments")
                         .HasForeignKey("NumericId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Assignments.ResourceAssignmentEntity", "ResourceAssignment")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Assignments.ResourceAssignmentEntity", "ResourceAssignment")
                         .WithMany("NumericResourceFormulas")
                         .HasForeignKey("ResourceAssignmentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1007,15 +1007,15 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("ResourceAssignment");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.OptionResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.OptionResourceAssignmentEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.OptionItemEntity", "ChoiceOption")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.OptionItemEntity", "ChoiceOption")
                         .WithMany("OptionResourceAssignments")
                         .HasForeignKey("ChoiceOptionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Assignments.ResourceAssignmentEntity", "ResourceAssignment")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Assignments.ResourceAssignmentEntity", "ResourceAssignment")
                         .WithMany("OptionResourceFormulas")
                         .HasForeignKey("ResourceAssignmentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1026,15 +1026,15 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("ResourceAssignment");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.ResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.ResourceAssignmentEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
                         .WithMany("ConditionResourceAssignments")
                         .HasForeignKey("QuestionConditionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.ResourceEntity", "Resource")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourceEntity", "Resource")
                         .WithMany()
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1045,15 +1045,15 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Resource");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.TaskResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.TaskResourceAssignmentEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ResourceEntity", "Resource")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourceEntity", "Resource")
                         .WithMany()
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.ProjectTaskEntity", "Task")
+                    b.HasOne("TaskResourceBlueprints.Entities.ProjectTaskEntity", "Task")
                         .WithMany("TaskResourceAssignments")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1064,15 +1064,15 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionNumericRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionNumericRequirementEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.NumericInputEntity", "NumericInput")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.NumericInputEntity", "NumericInput")
                         .WithMany()
                         .HasForeignKey("NumericInputId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
                         .WithMany("NumericRequirements")
                         .HasForeignKey("QuestionConditionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1083,21 +1083,21 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("QuestionCondition");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionOptionRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionOptionRequirementEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.OptionGroupEntity", "OptionGroup")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.OptionGroupEntity", "OptionGroup")
                         .WithMany()
                         .HasForeignKey("OptionGroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.OptionItemEntity", "OptionItem")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.OptionItemEntity", "OptionItem")
                         .WithMany()
                         .HasForeignKey("OptionItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
                         .WithMany("OptionRequirements")
                         .HasForeignKey("QuestionConditionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1110,21 +1110,21 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("QuestionCondition");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionResourceRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionResourceRequirementEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
                         .WithMany("ResourceRequirements")
                         .HasForeignKey("QuestionConditionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.ResourceOptionGroupEntity", "ResourceOptionGroup")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionGroupEntity", "ResourceOptionGroup")
                         .WithMany()
                         .HasForeignKey("ResourceOptionGroupId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.ResourceOptionItemEntity", "ResourceOptionItem")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionItemEntity", "ResourceOptionItem")
                         .WithMany()
                         .HasForeignKey("ResourceOptionItemId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1137,9 +1137,9 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("ResourceOptionItem");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.ConditionVariableRequirementEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionVariableRequirementEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", "QuestionCondition")
                         .WithMany("VariableRequirements")
                         .HasForeignKey("QuestionConditionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1148,17 +1148,17 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("QuestionCondition");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Conditions.ConditionOptionRequirementEntity", "DefaultOptionRequirement")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionOptionRequirementEntity", "DefaultOptionRequirement")
                         .WithMany()
                         .HasForeignKey("DefaultOptionRequirementId");
 
-                    b.HasOne("ProjectImportHub.Entities.Questions.Conditions.ConditionResourceRequirementEntity", "DefaultResourceRequirement")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Conditions.ConditionResourceRequirementEntity", "DefaultResourceRequirement")
                         .WithMany()
                         .HasForeignKey("DefaultResourceRequirementId");
 
-                    b.HasOne("ProjectImportHub.Entities.ProjectTaskEntity", "Task")
+                    b.HasOne("TaskResourceBlueprints.Entities.ProjectTaskEntity", "Task")
                         .WithMany("Conditions")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1171,9 +1171,9 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.NumericInputEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.NumericInputEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ProjectTaskEntity", "Task")
+                    b.HasOne("TaskResourceBlueprints.Entities.ProjectTaskEntity", "Task")
                         .WithMany("NumericInputs")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1182,9 +1182,9 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.OptionGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.OptionGroupEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ProjectTaskEntity", "Task")
+                    b.HasOne("TaskResourceBlueprints.Entities.ProjectTaskEntity", "Task")
                         .WithMany("OptionGroups")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1193,9 +1193,9 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.OptionItemEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.OptionItemEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.OptionGroupEntity", "OptionGroup")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.OptionGroupEntity", "OptionGroup")
                         .WithMany("Options")
                         .HasForeignKey("OptionGroupId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1204,9 +1204,9 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("OptionGroup");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.ResourceOptionGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionGroupEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ProjectTaskEntity", "Task")
+                    b.HasOne("TaskResourceBlueprints.Entities.ProjectTaskEntity", "Task")
                         .WithMany("ResourceOptionGroups")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1215,15 +1215,15 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.ResourceOptionItemEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionItemEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.Questions.Groups.ResourceOptionGroupEntity", "ResourceOptionGroup")
+                    b.HasOne("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionGroupEntity", "ResourceOptionGroup")
                         .WithMany("Items")
                         .HasForeignKey("ResourceChoiceGroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProjectImportHub.Entities.ResourceEntity", "Resource")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourceEntity", "Resource")
                         .WithMany()
                         .HasForeignKey("ResourceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1234,27 +1234,27 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("ResourceOptionGroup");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourceEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourceEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ResourceFolderEntity", "Folder")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourceFolderEntity", "Folder")
                         .WithMany("Resources")
                         .HasForeignKey("FolderId");
 
                     b.Navigation("Folder");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourceFolderEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourceFolderEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ResourceFolderEntity", "ParentFolder")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourceFolderEntity", "ParentFolder")
                         .WithMany()
                         .HasForeignKey("ParentFolderId");
 
                     b.Navigation("ParentFolder");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourcePropertyEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourcePropertyEntity", b =>
                 {
-                    b.HasOne("ProjectImportHub.Entities.ResourcePropertySetEntity", "PropertySet")
+                    b.HasOne("TaskResourceBlueprints.Entities.ResourcePropertySetEntity", "PropertySet")
                         .WithMany("Properties")
                         .HasForeignKey("PropertySetId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1263,7 +1263,7 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("PropertySet");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ProjectTaskEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ProjectTaskEntity", b =>
                 {
                     b.Navigation("Conditions");
 
@@ -1276,14 +1276,14 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("TaskResourceAssignments");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Assignments.ResourceAssignmentEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Assignments.ResourceAssignmentEntity", b =>
                 {
                     b.Navigation("NumericResourceFormulas");
 
                     b.Navigation("OptionResourceFormulas");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Conditions.TaskConditionEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Conditions.TaskConditionEntity", b =>
                 {
                     b.Navigation("ConditionResourceAssignments");
 
@@ -1296,49 +1296,49 @@ namespace ProjectImportHub.Migrations
                     b.Navigation("VariableRequirements");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.NumericInputEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.NumericInputEntity", b =>
                 {
                     b.Navigation("ResourceAssignments");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.OptionGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.OptionGroupEntity", b =>
                 {
                     b.Navigation("Options");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.OptionItemEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.OptionItemEntity", b =>
                 {
                     b.Navigation("OptionResourceAssignments");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.Questions.Groups.ResourceOptionGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.Questions.Groups.ResourceOptionGroupEntity", b =>
                 {
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourceEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourceEntity", b =>
                 {
                     b.Navigation("PropertiesBind");
 
                     b.Navigation("ResourcesTenant");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourceFolderEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourceFolderEntity", b =>
                 {
                     b.Navigation("Resources");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourcePropertyEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourcePropertyEntity", b =>
                 {
                     b.Navigation("PropertiesBind");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.ResourcePropertySetEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.ResourcePropertySetEntity", b =>
                 {
                     b.Navigation("Properties");
                 });
 
-            modelBuilder.Entity("ProjectImportHub.Entities.UnitGroupEntity", b =>
+            modelBuilder.Entity("TaskResourceBlueprints.Entities.UnitGroupEntity", b =>
                 {
                     b.Navigation("Tasks");
                 });

@@ -1,7 +1,7 @@
-﻿using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Entities.Tasks;
+﻿using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Tasks;
 
-namespace ProjectImportHub.Entities.Questions.Groups
+namespace TaskResourceBlueprints.Entities.Questions.Groups
 {
     public class NumericQuestionDefinition
     {

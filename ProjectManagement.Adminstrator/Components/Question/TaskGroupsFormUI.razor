@@ -1,16 +1,17 @@
 ﻿@using Microsoft.EntityFrameworkCore
-@using ProjectImportHub.Entities
-@using ProjectImportHub.Entities.Questions.Groups
-@using ProjectImportHub.Entities.Tasks
-@using ProjectImportHub.Infrastructure
+@using TaskResourceBlueprints.Entities
+@using TaskResourceBlueprints.Entities.Questions.Groups
+@using TaskResourceBlueprints.Entities.Resources
+@using TaskResourceBlueprints.Entities.Tasks
+@using TaskResourceBlueprints.Infrastructure
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
 @using ProjectManagement.Shared.Base.ProjectAppStorage
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 @using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
-@inject ProjectImportHub.Services.TaskGroups.ITaskGroupsQueryService TaskGroupsQuery
-@inject ProjectImportHub.Services.TaskGroups.ITaskGroupsCommandService TaskGroupsCommand
+@inject TaskResourceBlueprints.Services.TaskGroups.ITaskGroupsQueryService TaskGroupsQuery
+@inject TaskResourceBlueprints.Services.TaskGroups.ITaskGroupsCommandService TaskGroupsCommand
 
 @code {
     TaskDefinition Task { get; set; } = default!;

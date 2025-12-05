@@ -1,10 +1,10 @@
-﻿@using ProjectImportHub.Entities
-@using ProjectImportHub.Entities.Resources
+﻿@using TaskResourceBlueprints.Entities
+@using TaskResourceBlueprints.Entities.Resources
 @inherits AppComponentBase
 @inject IGroupPropertiesService GroupPropertiesService
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
-@using ProjectImportHub.Services.ResourceProperties
+@using TaskResourceBlueprints.Services.ResourceProperties
 
 <EditForm id="myForm" class="@CsS.Modal.Body" Model="@Model"
           OnValidSubmit="async () => await HandleSubmitAsync()">

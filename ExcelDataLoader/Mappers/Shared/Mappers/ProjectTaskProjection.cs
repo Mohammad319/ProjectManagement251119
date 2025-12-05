@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities;
-using ProjectImportHub.Entities.Tasks;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Tasks;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;

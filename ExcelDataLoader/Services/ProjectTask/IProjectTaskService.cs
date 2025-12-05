@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
-using ProjectImportHub.Dto.ProjectTask;
-using ProjectImportHub.Entities;
-using ProjectImportHub.Entities.Lookups;
-using ProjectImportHub.Entities.Resources;
-using ProjectImportHub.Entities.Tasks;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Dto.ProjectTask;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Lookups;
+using TaskResourceBlueprints.Entities.Resources;
+using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
@@ -14,7 +14,7 @@ using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Mappers;
 using System.Linq.Expressions;
 using System.Text.Json.Serialization;
-namespace ProjectImportHub.Services.ProjectTask
+namespace TaskResourceBlueprints.Services.ProjectTask
 {
     public static class TaskSelectors
     {
@@ -81,13 +81,13 @@ namespace ProjectImportHub.Services.ProjectTask
       IReadOnlyList<ResourceCategory> folders)> GetLookupsAsync(CancellationToken ct);
     }
 
-    public sealed class ProjectTaskService(IDbContextFactory<ProjectImportHubContext> factory) : IProjectTaskService
+    public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : IProjectTaskService
     {
         public async Task<(IReadOnlyList<ActionEntity>, IReadOnlyList<ActionTypeEntity>,
                    IReadOnlyList<FallEntity>, IReadOnlyList<LocationEntity>, IReadOnlyList<TaskUnitGroup>,
                    IReadOnlyList<ResourceCategory>)> GetLookupsAsync(CancellationToken ct)
         {
-            async Task<List<T>> Run<T>(Func<ProjectImportHubContext, IQueryable<T>> query) where T : class
+            async Task<List<T>> Run<T>(Func<TaskResourceBlueprintsContext, IQueryable<T>> query) where T : class
             {
                 await using var db = await factory.CreateDbContextAsync(ct);
                 return await query(db).AsNoTracking().ToListAsync(ct);

@@ -1,12 +1,12 @@
 ﻿
 using ExcelDataLoader.Services;
 using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Infrastructure;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.App.List;
 using System.Linq.Expressions;
 
-namespace ProjectImportHub.Services.Resource
+namespace TaskResourceBlueprints.Services.Resource
 {
     public static class ResourceSelectors
     {
@@ -29,7 +29,7 @@ namespace ProjectImportHub.Services.Resource
         Task<bool> DeleteAsync(int id);
         Task<List<TabItem>> GetTabItems();
     }
-    public class ResourceService(IDbContextFactory<ProjectImportHubContext> contextFactory) : 
+    public class ResourceService(IDbContextFactory<TaskResourceBlueprintsContext> contextFactory) : 
         BaseService(contextFactory) , IResourceService
     {
         public async Task<List<Entities.ResourceDefinition>> GetAllAsync()

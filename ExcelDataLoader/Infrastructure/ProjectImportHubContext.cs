@@ -1,20 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities;
-using ProjectImportHub.Entities.Lookups;
-using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Entities.Questions.Conditions;
-using ProjectImportHub.Entities.Questions.Groups;
-using ProjectImportHub.Entities.Resources;
-using ProjectImportHub.Entities.Tasks;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Lookups;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Questions.Conditions;
+using TaskResourceBlueprints.Entities.Questions.Groups;
+using TaskResourceBlueprints.Entities.Resources;
+using TaskResourceBlueprints.Entities.Tasks;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 
-namespace ProjectImportHub.Infrastructure;
+namespace TaskResourceBlueprints.Infrastructure;
 
-public class ProjectImportHubContext : DbContext
+public class TaskResourceBlueprintsContext : DbContext
 {
-    public ProjectImportHubContext(DbContextOptions<ProjectImportHubContext> options)
+    public TaskResourceBlueprintsContext(DbContextOptions<TaskResourceBlueprintsContext> options)
         : base(options)
     {
     }
@@ -66,6 +66,6 @@ public class ProjectImportHubContext : DbContext
         modelBuilder.Ignore<Equation>();
 
         // Apply all IEntityTypeConfiguration<T> in this assembly
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProjectImportHubContext).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(TaskResourceBlueprintsContext).Assembly);
     }
 }

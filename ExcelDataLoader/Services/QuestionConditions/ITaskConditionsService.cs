@@ -1,7 +1,7 @@
-﻿using ProjectImportHub.Entities.Questions.Conditions;
-using ProjectImportHub.Entities.Questions.Groups;
+﻿using TaskResourceBlueprints.Entities.Questions.Conditions;
+using TaskResourceBlueprints.Entities.Questions.Groups;
 
-namespace ProjectImportHub.Services.QuestionConditions;
+namespace TaskResourceBlueprints.Services.QuestionConditions;
 
 public interface ITaskConditionsService
 {

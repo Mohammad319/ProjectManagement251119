@@ -1,6 +1,6 @@
-﻿using ProjectImportHub.Entities.Questions.Groups;
+﻿using TaskResourceBlueprints.Entities.Questions.Groups;
 
-namespace ProjectImportHub.Entities.Questions.Assignments
+namespace TaskResourceBlueprints.Entities.Questions.Assignments
 {
     public class NumericResourceAssignment
     {

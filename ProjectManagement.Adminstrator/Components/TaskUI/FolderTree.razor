@@ -1,13 +1,14 @@
 ﻿@using Microsoft.EntityFrameworkCore
-@using ProjectImportHub.Entities
-@using ProjectImportHub.Entities.Questions.Assignments
-@using ProjectImportHub.Entities.Tasks
-@using ProjectImportHub.Infrastructure
-@using ProjectImportHub.Services.Resource
+@using TaskResourceBlueprints.Entities
+@using TaskResourceBlueprints.Entities.Questions.Assignments
+@using TaskResourceBlueprints.Entities.Resources
+@using TaskResourceBlueprints.Entities.Tasks
+@using TaskResourceBlueprints.Infrastructure
+@using TaskResourceBlueprints.Services.Resource
 @using ProjectManagement.Adminstrator.Components.ResourceUI
 @using ProjectManagement.Adminstrator.Helper
 @using ProjectManagement.Shared.DTO.App.TasksResource
-@using static ProjectImportHub.Services.Resource.TaskResourceService
+@using static TaskResourceBlueprints.Services.Resource.TaskResourceService
 @inject ITaskResourceService TaskResourceService
 @inject MhdServices MHD
 @using CsS = ProjectManagement.Shared.Constant.CssClasses

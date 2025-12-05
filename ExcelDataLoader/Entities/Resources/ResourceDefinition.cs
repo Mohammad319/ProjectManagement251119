@@ -1,4 +1,4 @@
-﻿using ProjectImportHub.Entities.Resources;
+﻿using TaskResourceBlueprints.Entities.Resources;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
@@ -6,7 +6,7 @@ using ProjectManagement.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace ProjectImportHub.Entities
+namespace TaskResourceBlueprints.Entities
 {
     public class ResourceDefinition
     {

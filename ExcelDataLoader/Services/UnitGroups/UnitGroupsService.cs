@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.UnitGroups
+namespace TaskResourceBlueprints.Services.UnitGroups
 {
-    public class UnitGroupsService(IDbContextFactory<ProjectImportHubContext> ContextFactory) : IUnitGroupsService
+    public class UnitGroupsService(IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory) : IUnitGroupsService
     {
         public async Task<int> AddAsync(TaskUnitGroup obj)
         {

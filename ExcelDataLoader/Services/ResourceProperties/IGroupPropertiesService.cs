@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities.Resources;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities.Resources;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.ResourceProperties
+namespace TaskResourceBlueprints.Services.ResourceProperties
 {
     public interface IGroupPropertiesService
     {
@@ -12,7 +12,7 @@ namespace ProjectImportHub.Services.ResourceProperties
         Task<int> AddAsync(ResourceAttributeSet obj);
         Task<bool> DeleteAsync(int id);
     }
-    public class GroupPropertiesService(IDbContextFactory<ProjectImportHubContext> ContextFactory) : IGroupPropertiesService
+    public class GroupPropertiesService(IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory) : IGroupPropertiesService
     {
         public async Task<int> AddAsync(ResourceAttributeSet obj)
         {

@@ -1,5 +1,5 @@
-﻿using ProjectImportHub.Entities.Tasks;
-namespace ProjectImportHub.Entities.Lookups;
+﻿using TaskResourceBlueprints.Entities.Tasks;
+namespace TaskResourceBlueprints.Entities.Lookups;
 
     public class ActionEntity : TaskLookupBase { }
     public class LocationEntity : TaskLookupBase { }

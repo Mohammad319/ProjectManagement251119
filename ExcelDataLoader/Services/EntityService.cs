@@ -1,17 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Infrastructure;
-using ProjectImportHub.Services;
+using TaskResourceBlueprints.Infrastructure;
+using TaskResourceBlueprints.Services;
 
 namespace ExcelDataLoader.Services
 {
-    public abstract class BaseService(IDbContextFactory<ProjectImportHubContext> contextFactory)
+    public abstract class BaseService(IDbContextFactory<TaskResourceBlueprintsContext> contextFactory)
     {
-        protected readonly IDbContextFactory<ProjectImportHubContext> _contextFactory = contextFactory;
+        protected readonly IDbContextFactory<TaskResourceBlueprintsContext> _contextFactory = contextFactory;
 
-        protected ProjectImportHubContext CreateContext() => _contextFactory.CreateDbContext();
+        protected TaskResourceBlueprintsContext CreateContext() => _contextFactory.CreateDbContext();
     }
 
-    public class EntityService<T>(IDbContextFactory<ProjectImportHubContext> contextFactory) : BaseService(contextFactory),IEntityService<T> where T : class
+    public class EntityService<T>(IDbContextFactory<TaskResourceBlueprintsContext> contextFactory) : BaseService(contextFactory),IEntityService<T> where T : class
     {
         public async Task<List<T>> GetAllAsync()
         {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities.Resources;
+using TaskResourceBlueprints.Entities.Resources;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Resources;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Resources;
 
 public class ResourceAttributeConfiguration : IEntityTypeConfiguration<ResourceAttribute>
 {

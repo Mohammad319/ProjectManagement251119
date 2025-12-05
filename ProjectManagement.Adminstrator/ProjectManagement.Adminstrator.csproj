@@ -30,7 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AuthPermissions\AuthPermissions.csproj" />
-    <ProjectReference Include="..\ExcelDataLoader\ProjectImportHub.csproj" />
+    <ProjectReference Include="..\ExcelDataLoader\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
   </ItemGroup>
 

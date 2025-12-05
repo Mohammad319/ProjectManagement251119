@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using ProjectImportHub.Entities;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Resources;
 using static ProjectManagement.Shared.Constant.URLConst;
 
 namespace ProjectManagement.Adminstrator.Helper

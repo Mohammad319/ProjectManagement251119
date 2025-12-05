@@ -1,4 +1,4 @@
-﻿namespace ProjectImportHub.Dto.ProjectTask
+﻿namespace TaskResourceBlueprints.Dto.ProjectTask
 {
     public sealed record ProjectTaskListItemDto(
         int Id,

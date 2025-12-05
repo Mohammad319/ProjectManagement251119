@@ -1,6 +1,6 @@
-﻿using ProjectImportHub.Entities.Questions.Groups;
+﻿using TaskResourceBlueprints.Entities.Questions.Groups;
 
-namespace ProjectImportHub.Entities.Questions.Conditions
+namespace TaskResourceBlueprints.Entities.Questions.Conditions
 {
     public class ResourceConditionRule
     {

@@ -1,4 +1,4 @@
-﻿namespace ProjectImportHub.Dto.Resource
+﻿namespace TaskResourceBlueprints.Dto.Resource
 {
     public sealed record ResourceRowDto(
         int Id,

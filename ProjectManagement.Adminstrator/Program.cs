@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Infrastructure;
 using ProjectManagement.Adminstrator.Components;
 using ProjectManagement.Adminstrator.Components.Account;
 using ProjectManagement.Adminstrator.Factory;
@@ -20,7 +20,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 var ExcelDataLoaderDb = builder.Configuration.GetConnectionString("ExcelDataLoaderDb") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddExcelDataLoader();
-builder.Services.AddDbContextFactory<ProjectImportHubContext>(options =>
+builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
     options.UseSqlServer(ExcelDataLoaderDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);

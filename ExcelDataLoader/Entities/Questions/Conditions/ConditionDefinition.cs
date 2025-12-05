@@ -1,8 +1,8 @@
-﻿using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Entities.Tasks;
+﻿using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Tasks;
 using ProjectManagement.Shared.Base.ProjectAppStorage;
 
-namespace ProjectImportHub.Entities.Questions.Conditions
+namespace TaskResourceBlueprints.Entities.Questions.Conditions
 {
     /// <summary>
     /// Represents a logical condition attached to a task.

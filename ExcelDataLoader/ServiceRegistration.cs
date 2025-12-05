@@ -1,14 +1,14 @@
 ﻿using ExcelDataLoader.Services;
 using Microsoft.Extensions.DependencyInjection;
-using ProjectImportHub.Dto.ProjectTask;
-using ProjectImportHub.Infrastructure;
-using ProjectImportHub.Services;
-using ProjectImportHub.Services.ProjectTask;
-using ProjectImportHub.Services.QuestionConditions;
-using ProjectImportHub.Services.Resource;
-using ProjectImportHub.Services.ResourceProperties;
-using ProjectImportHub.Services.TaskGroups;
-using ProjectImportHub.Services.UnitGroups;
+using TaskResourceBlueprints.Dto.ProjectTask;
+using TaskResourceBlueprints.Infrastructure;
+using TaskResourceBlueprints.Services;
+using TaskResourceBlueprints.Services.ProjectTask;
+using TaskResourceBlueprints.Services.QuestionConditions;
+using TaskResourceBlueprints.Services.Resource;
+using TaskResourceBlueprints.Services.ResourceProperties;
+using TaskResourceBlueprints.Services.TaskGroups;
+using TaskResourceBlueprints.Services.UnitGroups;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 
 namespace ExcelDataLoader

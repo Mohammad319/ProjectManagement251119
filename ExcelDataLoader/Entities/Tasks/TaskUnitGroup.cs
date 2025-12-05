@@ -1,11 +1,11 @@
-﻿using ProjectImportHub.Entities.Tasks;
+﻿using TaskResourceBlueprints.Entities.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectImportHub.Entities
+namespace TaskResourceBlueprints.Entities
 {
     public class TaskUnitGroup
     {

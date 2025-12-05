@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Infrastructure;
 using ProjectManagement.Components;
 using ProjectManagement.Components.Account;
 using ProjectManagement.Components.Account.Pages;
@@ -36,7 +36,7 @@ builder.Services.AddExcelDataLoader();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDbContextFactory<ProjectImportHubContext>(options =>
+builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
     options.UseSqlServer(ExcelDataLoaderDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);

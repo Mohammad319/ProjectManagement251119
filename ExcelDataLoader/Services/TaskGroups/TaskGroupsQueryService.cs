@@ -1,16 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities;
-using ProjectImportHub.Entities.Tasks;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Resources;
+using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.TaskGroups;
+namespace TaskResourceBlueprints.Services.TaskGroups;
 public interface ITaskGroupsQueryService
 {
     Task<TaskDefinition?> GetTaskGraphAsync(int id, CancellationToken ct);
     Task<IReadOnlyList<ResourceCategory>> GetVisibleFoldersAsync(int taskId, CancellationToken ct);
     Task<IReadOnlyList<ResourceDefinition>> GetFolderResourcesAsync(int folderId, CancellationToken ct);
 }
-public sealed class TaskGroupsQueryService(IDbContextFactory<ProjectImportHubContext> _factory) : ITaskGroupsQueryService
+public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBlueprintsContext> _factory) : ITaskGroupsQueryService
 {
     public async Task<TaskDefinition?> GetTaskGraphAsync(int id, CancellationToken ct)
     {

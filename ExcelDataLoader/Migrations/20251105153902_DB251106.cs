@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace ProjectImportHub.Migrations
+namespace TaskResourceBlueprints.Migrations
 {
     /// <inheritdoc />
     public partial class DB251106 : Migration

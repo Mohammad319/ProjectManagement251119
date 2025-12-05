@@ -1,8 +1,8 @@
-﻿using ProjectImportHub.Entities.Tasks;
+﻿using TaskResourceBlueprints.Entities.Tasks;
 using ProjectManagement.Shared.Base.AppTenant;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ProjectImportHub.Entities.Questions.Assignments
+namespace TaskResourceBlueprints.Entities.Questions.Assignments
 {
     public class TaskResourceAssignment
     {

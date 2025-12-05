@@ -1,4 +1,4 @@
-﻿namespace ProjectImportHub.Entities.Questions.Groups
+﻿namespace TaskResourceBlueprints.Entities.Questions.Groups
 {
     public class ResourceOptionItem
     {

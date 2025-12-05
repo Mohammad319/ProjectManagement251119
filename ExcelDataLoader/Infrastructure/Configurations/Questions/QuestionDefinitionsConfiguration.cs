@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities.Questions.Groups;
-using ProjectImportHub.Infrastructure.ConfigurationConstants;
-using ProjectImportHub.Infrastructure.Extensions;
+using TaskResourceBlueprints.Entities.Questions.Groups;
+using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
+using TaskResourceBlueprints.Infrastructure.Extensions;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Questions;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Questions;
 
 public class QuestionGroupConfiguration : IEntityTypeConfiguration<QuestionGroupDefinition>
 {

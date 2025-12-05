@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities.Questions.Conditions;
+using TaskResourceBlueprints.Entities.Questions.Conditions;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Conditions;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Conditions;
 
 public class ConditionDefinitionConfiguration : IEntityTypeConfiguration<ConditionDefinition>
 {

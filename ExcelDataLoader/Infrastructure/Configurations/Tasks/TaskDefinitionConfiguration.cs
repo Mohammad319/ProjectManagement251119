@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities.Tasks;
+using TaskResourceBlueprints.Entities.Tasks;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Tasks;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Tasks;
 
 public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefinition>
 {

@@ -1,15 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities.Questions.Groups;
-using ProjectImportHub.Entities.Tasks;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities.Questions.Groups;
+using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.TaskGroups;
+namespace TaskResourceBlueprints.Services.TaskGroups;
 
 public interface ITaskGroupsCommandService
 {
     Task SaveGroupsAsync(TaskDefinition task, CancellationToken ct);
 }
-public sealed class TaskGroupsCommandService(IDbContextFactory<ProjectImportHubContext> _factory) : ITaskGroupsCommandService
+public sealed class TaskGroupsCommandService(IDbContextFactory<TaskResourceBlueprintsContext> _factory) : ITaskGroupsCommandService
 {
     public async Task SaveGroupsAsync(TaskDefinition task, CancellationToken ct)
     {

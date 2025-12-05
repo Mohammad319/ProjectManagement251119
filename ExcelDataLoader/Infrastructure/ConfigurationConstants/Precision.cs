@@ -1,4 +1,4 @@
-﻿namespace ProjectImportHub.Infrastructure.ConfigurationConstants;
+﻿namespace TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
 
 public static class Precision
 {

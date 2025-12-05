@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProjectImportHub.Services
+namespace TaskResourceBlueprints.Services
 {
     public interface IEntityService<T> where T : class
     {

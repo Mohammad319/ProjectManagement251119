@@ -1,11 +1,11 @@
-﻿using ProjectImportHub.Entities.Lookups;
-using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Entities.Questions.Conditions;
-using ProjectImportHub.Entities.Questions.Groups;
+﻿using TaskResourceBlueprints.Entities.Lookups;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Questions.Conditions;
+using TaskResourceBlueprints.Entities.Questions.Groups;
 using ProjectManagement.Shared.Helper.ProjectAppStorage;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ProjectImportHub.Entities.Tasks
+namespace TaskResourceBlueprints.Entities.Tasks
 {
     public class TaskLookupBase
     {

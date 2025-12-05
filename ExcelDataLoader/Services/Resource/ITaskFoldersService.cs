@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Dto.ProjectTask;
-using ProjectImportHub.Dto.Resource;
-using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Dto.ProjectTask;
+using TaskResourceBlueprints.Dto.Resource;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.Resource
+namespace TaskResourceBlueprints.Services.Resource
 {
     public interface ITaskFoldersService
     {
@@ -21,7 +21,7 @@ namespace ProjectImportHub.Services.Resource
         Task<bool> RemoveAssignmentAsync(int id, CancellationToken ct = default);
     }
 
-    public sealed class TaskFoldersService(IDbContextFactory<ProjectImportHubContext> factory)
+    public sealed class TaskFoldersService(IDbContextFactory<TaskResourceBlueprintsContext> factory)
         : ITaskFoldersService
     {
         public async Task<IReadOnlyList<FolderDto>> GetVisibleFoldersAsync(int projectTaskId, CancellationToken ct = default)

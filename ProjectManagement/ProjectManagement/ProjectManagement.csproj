@@ -25,7 +25,7 @@
 	<ItemGroup>
     <ProjectReference Include="..\..\Application\Application.csproj" />
     <ProjectReference Include="..\..\AuthPermissions\AuthPermissions.csproj" />
-    <ProjectReference Include="..\..\ExcelDataLoader\ProjectImportHub.csproj" />
+    <ProjectReference Include="..\..\ExcelDataLoader\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\..\Persistence\Persistence.csproj" />
     <ProjectReference Include="..\..\ProjectManagement.ServiceDefaults\ProjectManagement.ServiceDefaults.csproj" />
     <ProjectReference Include="..\ProjectManagement.Client\ProjectManagement.Client.csproj" />

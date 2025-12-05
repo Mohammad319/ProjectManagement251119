@@ -1,7 +1,7 @@
-﻿using ProjectImportHub.Entities;
-using ProjectImportHub.Entities.Tasks;
+﻿using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Tasks;
 
-namespace ProjectImportHub.Dto.ProjectTask
+namespace TaskResourceBlueprints.Dto.ProjectTask
 {
     public sealed class ProjectTaskEditDto
     {

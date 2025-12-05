@@ -1,7 +1,7 @@
-﻿using ProjectImportHub.Entities.Questions.Conditions;
+﻿using TaskResourceBlueprints.Entities.Questions.Conditions;
 using ProjectManagement.Shared.Base.AppTenant;
 
-namespace ProjectImportHub.Entities.Questions.Assignments
+namespace TaskResourceBlueprints.Entities.Questions.Assignments
 {
     public class ConditionResourceAssignment
     {

@@ -1,4 +1,4 @@
-﻿namespace ProjectImportHub.Entities.Resources
+﻿namespace TaskResourceBlueprints.Entities.Resources
 {
 
     public class ResourceAttributeSet

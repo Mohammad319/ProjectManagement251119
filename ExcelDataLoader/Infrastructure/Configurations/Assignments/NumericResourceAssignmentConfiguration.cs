@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Infrastructure.Extensions;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Infrastructure.Extensions;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Assignments;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Assignments;
 
 public class NumericResourceAssignmentConfiguration : IEntityTypeConfiguration<NumericResourceAssignment>
 {

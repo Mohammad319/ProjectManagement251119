@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json;
 
-namespace ProjectImportHub.Infrastructure.Extensions;
+namespace TaskResourceBlueprints.Infrastructure.Extensions;
 
 public static class PropertyBuilderJsonExtensions
 {

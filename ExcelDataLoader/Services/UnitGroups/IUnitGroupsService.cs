@@ -1,6 +1,6 @@
-﻿using ProjectImportHub.Entities;
+﻿using TaskResourceBlueprints.Entities;
 
-namespace ProjectImportHub.Services.UnitGroups
+namespace TaskResourceBlueprints.Services.UnitGroups
 {
     public interface IUnitGroupsService
     {

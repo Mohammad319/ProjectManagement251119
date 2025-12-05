@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ProjectImportHub.Entities.Questions.Conditions
+namespace TaskResourceBlueprints.Entities.Questions.Conditions
 {
     public class VariableConditionRule
     {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ProjectImportHub.Entities.Resources
+namespace TaskResourceBlueprints.Entities.Resources
 {
     public class ResourceAttribute
     {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Dto.ProjectTask;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Dto.ProjectTask;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.ProjectTask
+namespace TaskResourceBlueprints.Services.ProjectTask
 {
     public interface IProjectTaskQueryService
     {
@@ -12,7 +12,7 @@ namespace ProjectImportHub.Services.ProjectTask
 
     }
 
-    public sealed class ProjectTaskQueryService(IDbContextFactory<ProjectImportHubContext> factory)
+    public sealed class ProjectTaskQueryService(IDbContextFactory<TaskResourceBlueprintsContext> factory)
         : IProjectTaskQueryService
     {
         // Deutsch: Liste für Index-Grid (leichtgewichtig, ohne Includes)

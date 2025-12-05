@@ -1,16 +1,16 @@
 ﻿using ExcelDataLoader.Services;
 using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities.Questions.Assignments;
-using ProjectImportHub.Infrastructure;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Infrastructure;
 
-namespace ProjectImportHub.Services.Resource
+namespace TaskResourceBlueprints.Services.Resource
 {
     public interface ITaskResourceService
     {
         Task<bool> CreateAsync(TaskResourceAssignment conditions);
         Task<bool> DeletAsync(int taskid, int resId);
     }
-    public class TaskResourceService(IDbContextFactory<ProjectImportHubContext> contextFactory) : BaseService(contextFactory), ITaskResourceService
+    public class TaskResourceService(IDbContextFactory<TaskResourceBlueprintsContext> contextFactory) : BaseService(contextFactory), ITaskResourceService
     {
         public async Task<bool> CreateAsync(TaskResourceAssignment conditions)
         {

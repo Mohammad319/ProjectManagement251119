@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectImportHub.Entities;
-using ProjectImportHub.Infrastructure.ConfigurationConstants;
-using ProjectImportHub.Infrastructure.Extensions;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
+using TaskResourceBlueprints.Infrastructure.Extensions;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 
-namespace ProjectImportHub.Infrastructure.Configurations.Resources;
+namespace TaskResourceBlueprints.Infrastructure.Configurations.Resources;
 
 /// <summary>
 /// Configuration for resource templates (metadata, cost, roles, etc.).
