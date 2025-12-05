@@ -295,7 +295,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Formulas.
+        ///   Looks up a localized string similar to Expressions.
         /// </summary>
         public static string Formulas {
             get {

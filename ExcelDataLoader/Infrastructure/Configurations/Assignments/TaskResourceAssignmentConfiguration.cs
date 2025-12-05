@@ -9,7 +9,7 @@ public class TaskResourceAssignmentConfiguration : IEntityTypeConfiguration<Task
 {
     public void Configure(EntityTypeBuilder<TaskResourceAssignment> b)
     {
-        b.Property(e => e.CapRole)
+        b.Property(e => e.CapacityRoles)
             .HasJsonListComparer();
     }
 }

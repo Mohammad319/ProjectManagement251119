@@ -18,7 +18,7 @@ public static class NumericResourceAssignmentMapper
         {
             //Id = e.Id,
             NumericId = e.NumericId,
-            //ResourceAssignmentId = e.ResourceAssignmentId,
+            //AssignmentId = e.AssignmentId,
             MinInputValue = e.MinInputValue,
             MaxInputValue = e.MaxInputValue
         };

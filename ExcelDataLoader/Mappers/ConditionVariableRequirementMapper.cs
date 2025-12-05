@@ -17,7 +17,7 @@ public static class ConditionVariableRequirementMapper
         return new ConditionVariableRequirementDto
         {
             Id = e.Id,
-            QuestionConditionId = e.QuestionConditionId,
+            QuestionConditionId = e.ConditionId,
             VariableName = e.VariableName,
             MinAllowedValue = e.MinAllowedValue,
             MaxAllowedValue = e.MaxAllowedValue

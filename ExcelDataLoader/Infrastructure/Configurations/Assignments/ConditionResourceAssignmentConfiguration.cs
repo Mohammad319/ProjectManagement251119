@@ -11,7 +11,7 @@ public class ConditionResourceAssignmentConfiguration : IEntityTypeConfiguration
 {
     public void Configure(EntityTypeBuilder<ConditionResourceAssignment> b)
     {
-        b.Property(e => e.CapRole)
+        b.Property(e => e.CapacityRoles)
             .HasJsonListComparer<RoleDTO>();
 
         b.Property(x => x.BaseCost).HasPrecision(Precision.MoneyPrecision, Precision.MoneyScale);

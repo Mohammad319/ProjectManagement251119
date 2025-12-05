@@ -31,7 +31,7 @@ namespace ProjectImportHub.Services.ProjectTask
             Unit = x.UnitCode,
             Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
             {
-                CapRole = res.CapRole,
+                CapRole = res.CapacityRoles,
                 Id = res.Resource.Id,
                 Name = res.Resource.Name,
                 Data = new ResourceData()
@@ -245,11 +245,11 @@ namespace ProjectImportHub.Services.ProjectTask
                     Active = x.Resource == null ? false : x.Resource.IsActive,
                     MenuId = x.MenuId,
                     BaseCost = x.BaseCost,
-                    CapRole = x.CapRole,
+                    CapRole = x.CapacityRoles,
                     CapWaste = x.CapWaste,
                     ChangeFactor1 = x.ChangeFactor1,
                     ChangeFactor2 = x.ChangeFactor2,
-                    Formulas = x.Formulas,
+                    Formulas = x.Expressions,
                     ResType = x.Resource == null ? ResourceTypesEnum.Adjustment : x.Resource.ResType,
                     Uncontrollable = x.Uncontrollable,
                 })
@@ -271,8 +271,8 @@ namespace ProjectImportHub.Services.ProjectTask
                 zz.CapWaste = taskResourceDto.CapWaste;
                 zz.BaseCost = taskResourceDto.BaseCost;
                 zz.Uncontrollable = taskResourceDto.Uncontrollable;
-                zz.Formulas = taskResourceDto.Formulas;
-                zz.CapRole = taskResourceDto.CapRole;
+                zz.Expressions = taskResourceDto.Formulas;
+                zz.CapacityRoles = taskResourceDto.CapRole;
                 await db.SaveChangesAsync(ct);
                 return true;
             }

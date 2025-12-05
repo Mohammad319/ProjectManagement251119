@@ -18,8 +18,8 @@ public static class ConditionResourceRequirementMapper
         {
             //Id = e.Id,
             //ConditionId = e.ConditionId,
-            //ResourceOptionGroupId = e.ResourceOptionGroupId,
-            ResourceOptionItemId = e.ResourceOptionItemId
+            //SelectorId = e.SelectorId,
+            ResourceOptionItemId = e.SelectorItemId
         };
     }
 }

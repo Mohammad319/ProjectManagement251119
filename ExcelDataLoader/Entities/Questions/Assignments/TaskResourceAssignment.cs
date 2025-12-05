@@ -13,8 +13,8 @@ namespace ProjectImportHub.Entities.Questions.Assignments
         public double CapWaste { get; set; } = 1;
         public double? BaseCost { get; set; } = 0;
         public bool Uncontrollable { get; set; } = false;
-        public List<RoleDTO> CapRole { get; set; } = [];
-        public List<string> Formulas { get; set; } = [];
+        public List<RoleDTO> CapacityRoles { get; set; } = [];
+        public List<string> Expressions { get; set; } = [];
 
 
         public int? MenuId { get; set; }

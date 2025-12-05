@@ -11,21 +11,21 @@ public class ResourceConditionRuleConfiguration : IEntityTypeConfiguration<Resou
         b.HasKey(x => x.Id);
         b.Property(x => x.Id).ValueGeneratedOnAdd();
 
-        b.HasOne(x => x.QuestionCondition)
+        b.HasOne(x => x.Condition)
          .WithMany(c => c.ResourceRules)
-         .HasForeignKey(x => x.QuestionConditionId)
+         .HasForeignKey(x => x.ConditionId)
          .OnDelete(DeleteBehavior.Cascade);
 
-        b.HasOne(x => x.ResourceOptionGroup)
+        b.HasOne(x => x.Selector)
          .WithMany()
-         .HasForeignKey(x => x.ResourceOptionGroupId)
+         .HasForeignKey(x => x.SelectorId)
          .OnDelete(DeleteBehavior.Restrict);
 
-        b.HasOne(x => x.ResourceOptionItem)
+        b.HasOne(x => x.SelectorItem)
          .WithMany()
-         .HasForeignKey(x => x.ResourceOptionItemId)
+         .HasForeignKey(x => x.SelectorItemId)
          .OnDelete(DeleteBehavior.Restrict);
 
-        b.HasIndex(x => new { x.QuestionConditionId, x.ResourceOptionGroupId, x.ResourceOptionItemId, x.SetKey }).IsUnique();
+        b.HasIndex(x => new { x.ConditionId, x.SelectorId, x.SelectorItemId, x.GroupKey }).IsUnique();
     }
 }

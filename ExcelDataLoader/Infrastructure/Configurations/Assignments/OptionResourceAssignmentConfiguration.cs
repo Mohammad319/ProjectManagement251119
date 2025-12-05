@@ -11,19 +11,19 @@ public class OptionResourceAssignmentConfiguration : IEntityTypeConfiguration<Op
     {
         b.HasKey(x => x.Id);
 
-        b.HasOne(x => x.ChoiceOption)
+        b.HasOne(x => x.Option)
          .WithMany(o => o.OptionResourceAssignments)
-         .HasForeignKey(x => x.ChoiceOptionId)
+         .HasForeignKey(x => x.OptionId)
          .OnDelete(DeleteBehavior.Cascade);
 
-        b.HasOne(x => x.ResourceAssignment)
-         .WithMany(r => r.OptionResourceFormulas)
-         .HasForeignKey(x => x.ResourceAssignmentId)
+        b.HasOne(x => x.Assignment)
+         .WithMany(r => r.OptionAssignments)
+         .HasForeignKey(x => x.AssignmentId)
          .OnDelete(DeleteBehavior.Restrict);
 
-        b.HasIndex(x => new { x.ChoiceOptionId, x.ResourceAssignmentId }).IsUnique();
+        b.HasIndex(x => new { x.OptionId, x.AssignmentId }).IsUnique();
 
-        b.Property(x => x.Formulas)
+        b.Property(x => x.Expressions)
             .HasJsonListComparer();
     }
 }

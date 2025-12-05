@@ -9,10 +9,10 @@ namespace ProjectImportHub.Entities.Questions.Assignments
         public int NumericId { get; set; }
         public NumericQuestionDefinition Numeric { get; set; } = null!;
 
-        public int ResourceAssignmentId { get; set; }
-        public ConditionResourceAssignment ResourceAssignment { get; set; } = null!;
+        public int AssignmentId { get; set; }
+        public ConditionResourceAssignment Assignment { get; set; } = null!;
         public double? MinInputValue { get; set; }
         public double? MaxInputValue { get; set; }
-        public List<string> Formulas { get; set; } = [];
+        public List<string> Expressions { get; set; } = [];
     }
 }

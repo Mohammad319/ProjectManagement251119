@@ -60,7 +60,7 @@ public static class ProjectTaskProjection
                         FolderId = z.a.Resource.FolderId,
                         ResType = z.a.Resource.ResType,
                         SortOrder = z.a.Resource.SortOrder,
-                        CostRole = z.a.CapRole,
+                        CostRole = z.a.CapacityRoles,
                         CostStorageValue = z.a.Resource.Data.Cost,
                         CostUserValue = z.Link == null ? null : z.Link.Cost,
                         NameUserValue = z.Link == null ? null : z.Link.Name,
@@ -186,20 +186,20 @@ public static class ProjectTaskProjection
                     ResourceRequirements = c.ResourceRules
                         .Select(r => new ConditionResourceRequirementDto
                         {
-                            SetKey = r.SetKey,
-                            ResourceOptionItemId = r.ResourceOptionItemId,
+                            SetKey = r.GroupKey,
+                            ResourceOptionItemId = r.SelectorItemId,
                         }).ToList(),
 
                     NumericRequirements = c.NumericRules
                         .Select(r => new ConditionNumericRequirementDto
                         {
-                            SetKey = r.SetKey,
+                            SetKey = r.GroupKey,
                             MaxAllowedValue = r.MaxAllowedValue,
                             MinAllowedValue = r.MinAllowedValue,
-                            NumericInputId = r.NumericInputId
+                            NumericInputId = r.NumericQuestionId
                         }).ToList(),
 
-                    // نحسب رابط المستأجر مرة واحدة لكل ResourceAssignment ثم نُسقِط
+                    // نحسب رابط المستأجر مرة واحدة لكل Assignment ثم نُسقِط
                     ConditionResourceAssignments = c.Assignments
                         .Select(a => new
                         {
@@ -220,17 +220,17 @@ public static class ProjectTaskProjection
                         })
                         .Select(z => new ResourceAssignmentDto
                         {
-                            Formulas = z.a.Formulas,
-                            CapRole = z.a.CapRole,
-                            QuestionConditionId = z.a.QuestionConditionId,
+                            Formulas = z.a.Expressions,
+                            CapRole = z.a.CapacityRoles,
+                            QuestionConditionId = z.a.ConditionId,
                             
                             Resource = z.a.Resource == null ? null : new ResourceDto
                             {
                                 Id = z.a.ResourceId,
                                 Name = z.a.Resource.Name,
                                 Active = z.a.IsActive,
-                                CostRole = z.a.CapRole,
-                                CapRole = z.a.CapRole,
+                                CostRole = z.a.CapacityRoles,
+                                CapRole = z.a.CapacityRoles,
                                 CalcResCost = z.a.Resource.CalcResCost ?? new(),
                                 MenuId = z.a.MenuId,
                                 Data = new ResourceData
@@ -273,20 +273,20 @@ public static class ProjectTaskProjection
                                 }).ToList(),
                             },
 
-                            NumericResourceFormulas = z.a.NumericResourceFormulas
+                            NumericResourceFormulas = z.a.NumericAssignments
                                 .Select(f => new NumericResourceAssignmentDto
                                 {
-                                    Formulas = f.Formulas,
+                                    Formulas = f.Expressions,
                                     MaxInputValue = f.MaxInputValue,
                                     MinInputValue = f.MinInputValue,
                                     NumericId = f.NumericId
                                 }).ToList(),
 
-                            OptionResourceFormulas = z.a.OptionResourceFormulas
+                            OptionResourceFormulas = z.a.OptionAssignments
                                 .Select(f => new OptionResourceAssignmentDto
                                 {
-                                    Formulas = f.Formulas,
-                                    ChoiceOptionId = f.ChoiceOptionId
+                                    Formulas = f.Expressions,
+                                    ChoiceOptionId = f.OptionId
                                 }).ToList()
                         })
                         .ToList()

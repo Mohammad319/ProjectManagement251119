@@ -17,8 +17,8 @@ public static class OptionResourceAssignmentMapper
         return new OptionResourceAssignmentDto
         {
             //Id = e.Id,
-            ChoiceOptionId = e.ChoiceOptionId,
-            //ResourceAssignmentId = e.ResourceAssignmentId
+            ChoiceOptionId = e.OptionId,
+            //AssignmentId = e.AssignmentId
         };
     }
 }

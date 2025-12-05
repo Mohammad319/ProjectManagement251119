@@ -17,14 +17,14 @@ public class NumericResourceAssignmentConfiguration : IEntityTypeConfiguration<N
          .HasForeignKey(x => x.NumericId)
          .OnDelete(DeleteBehavior.Cascade);
 
-        b.HasOne(x => x.ResourceAssignment)
-         .WithMany(r => r.NumericResourceFormulas)
-         .HasForeignKey(x => x.ResourceAssignmentId)
+        b.HasOne(x => x.Assignment)
+         .WithMany(r => r.NumericAssignments)
+         .HasForeignKey(x => x.AssignmentId)
          .OnDelete(DeleteBehavior.Restrict);
 
-        b.HasIndex(x => new { x.NumericId, x.ResourceAssignmentId }).IsUnique();
+        b.HasIndex(x => new { x.NumericId, x.AssignmentId }).IsUnique();
 
-        b.Property(x => x.Formulas)
+        b.Property(x => x.Expressions)
             .HasJsonListComparer();
     }
 }

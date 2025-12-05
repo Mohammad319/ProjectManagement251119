@@ -11,7 +11,7 @@ public interface ITaskConditionsService
     Task<List<QuestionGroupDefinition>> GetChoiceGroupsAsync(int taskId, CancellationToken ct);
     Task<List<NumericQuestionDefinition>> GetNumericGroupsAsync(int taskId, CancellationToken ct);
 
-    // تحميل Bindings حسب ResourceAssignment Ids
+    // تحميل Bindings حسب Assignment Ids
     Task<Dictionary<int, List<OptionBindVM>>> GetOptionBindsByResourceAssignmentsAsync(int[] raIds, CancellationToken ct);
     Task<Dictionary<int, List<NumericBindVM>>> GetNumericBindsByResourceAssignmentsAsync(int[] raIds, CancellationToken ct);
 
@@ -20,7 +20,7 @@ public interface ITaskConditionsService
     Task<int> UpsertConditionAsync(ConditionDefinition editing, CancellationToken ct);
     Task DeleteConditionAsync(int id, CancellationToken ct);
 
-    // حفظ ربطات Option/Numeric لِـ ResourceAssignment محدد
+    // حفظ ربطات Option/Numeric لِـ Assignment محدد
     Task<int> UpsertOptionBindingAsync(int raId, OptionBindVM vm, CancellationToken ct);
     Task<int> UpsertNumericBindingAsync(int raId, NumericBindVM vm, CancellationToken ct);
 }

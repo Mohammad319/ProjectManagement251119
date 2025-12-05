@@ -10,8 +10,8 @@ namespace ProjectImportHub.Entities.Questions.Assignments
         public int ResourceId { get; set; }
         public ResourceDefinition Resource { get; set; } = null!;
 
-        public int QuestionConditionId { get; set; }
-        public ConditionDefinition QuestionCondition { get; set; } = null!;
+        public int ConditionId { get; set; }
+        public ConditionDefinition Condition { get; set; } = null!;
         public int? MenuId { get; set; }
 
         public double ChangeFactor1 { get; set; } = 1;
@@ -21,11 +21,14 @@ namespace ProjectImportHub.Entities.Questions.Assignments
         public bool Uncontrollable { get; set; } = false;
         public bool IsActive { get; set; } = true;
 
-        public List<RoleDTO> CapRole { get; set; } = [];
-        public List<string> Formulas { get; set; } = [];
+        public List<RoleDTO> CapacityRoles { get; set; } = [];
+        /// <summary>
+        /// Expressions used to compute the final cost or quantity.
+        /// </summary>
+        public List<string> Expressions { get; set; } = [];
 
-        public List<NumericResourceAssignment> NumericResourceFormulas { get; set; } = [];
-        public List<OptionResourceAssignment> OptionResourceFormulas { get; set; } = [];
+        public List<NumericResourceAssignment> NumericAssignments { get; set; } = [];
+        public List<OptionResourceAssignment> OptionAssignments { get; set; } = [];
 
     }
 }

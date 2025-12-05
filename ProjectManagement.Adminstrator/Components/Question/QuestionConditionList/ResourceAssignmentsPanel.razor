@@ -36,7 +36,7 @@
                 {
                     Data = new () // تأكد من النوع الصحيح لجدول Data لديك
                 },
-                CapRole = [] // أو النوع الفعلي لقائمة CapRole
+                CapacityRoles = [] // أو النوع الفعلي لقائمة CapacityRoles
             }); private void RemoveAssignment(ConditionResourceAssignment a) => Condition.Assignments.Remove(a);
     private void RemoveAssignment(ResourceDefinition resource)
     {
@@ -106,11 +106,11 @@
 
     void AddRole(ConditionResourceAssignment a)
     {
-        a.CapRole ??= new();  // ← مهم
-        if (a.CapRole.Count != 0)
-            a.CapRole.Add(new() { Min = a.CapRole.Last().Max, Max = a.CapRole.Last().Max + 10, Value = a.CapRole.Last().Value + 1 });
+        a.CapacityRoles ??= new();  // ← مهم
+        if (a.CapacityRoles.Count != 0)
+            a.CapacityRoles.Add(new() { Min = a.CapacityRoles.Last().Max, Max = a.CapacityRoles.Last().Max + 10, Value = a.CapacityRoles.Last().Value + 1 });
         else
-            a.CapRole.Add(new() { Min = 0, Max = 10, Value = 5 });
+            a.CapacityRoles.Add(new() { Min = 0, Max = 10, Value = 5 });
         StateHasChanged();
     }
 
@@ -184,7 +184,7 @@
                         {
                             <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole(a))">Add Role</button>
                         }
-                        <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => a.Formulas.Add(string.Empty))">+</button>
+                        <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => a.Expressions.Add(string.Empty))">+</button>
                         <button class="@CsS.Btn.Outline.Danger" @onclick="() => RemoveAssignment(a)">x</button>
                     </div>
                 </div>
@@ -201,18 +201,18 @@
                             <div class=" ">#</div>
                         </div>
 
-                        @if (a.CapRole is not null && a.CapRole.Count > 0)
+                        @if (a.CapacityRoles is not null && a.CapacityRoles.Count > 0)
                         {
-                            @for (int i = 0; i < a.CapRole.Count; i++)
+                            @for (int i = 0; i < a.CapacityRoles.Count; i++)
                             {
                                 int d = i;
-                                var role = a.CapRole[d];
+                                var role = a.CapacityRoles[d];
 
                                 <div class="@CsS.Layout.Inline">
                                     <div class="flex items-center ">
                                         <button type="button" title="Remove"
                                                 class="@CsS.Btn.Outline.Danger h-6 w-6 p-0 flex items-center justify-center"
-                                                @onclick="() => a.CapRole.Remove(role)">
+                                                @onclick="() => a.CapacityRoles.Remove(role)">
                                             x
                                         </button>
                                     </div>
@@ -230,16 +230,16 @@
                     </div>
                 }
 
-                @if (a.Formulas is not null && a.Formulas.Count > 0)
+                @if (a.Expressions is not null && a.Expressions.Count > 0)
                 {
                     <div class="@NewCC.Text.H5 @CsS.Spacing.M.Top(Size.S2)">Formulas</div>
                     <div class="@CsS.Grid.Col.MD4  @CsS.Spacing.M.Bottom(Size.S2)">
-                        @for (int i = 0; i < a.Formulas.Count; i++)
+                        @for (int i = 0; i < a.Expressions.Count; i++)
                         {
                             int d = i;
                             <div class="@CsS.Layout.FlexItemsCenter">
-                                <button class="@CsS.Btn.Outline.Danger" @onclick="() => a.Formulas.RemoveAt(d)">x</button>
-                                <input type="text" class="@CsS.Input.Text" @bind="a.Formulas[d]" />
+                                <button class="@CsS.Btn.Outline.Danger" @onclick="() => a.Expressions.RemoveAt(d)">x</button>
+                                <input type="text" class="@CsS.Input.Text" @bind="a.Expressions[d]" />
                             </div>
                         }
                     </div>

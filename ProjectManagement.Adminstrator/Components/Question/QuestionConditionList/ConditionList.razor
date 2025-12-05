@@ -97,7 +97,7 @@ else
                     }
                     else
                     {
-                        @foreach (var set in GroupBySetKey(c.ResourceRules, r => r.SetKey))
+                        @foreach (var set in GroupBySetKey(c.ResourceRules, r => r.GroupKey))
                         {
                             <div class="@CsS.Spacing.M.Bottom(Size.S1)">
                                 <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
@@ -106,8 +106,8 @@ else
                                 <div>
                                     @foreach (var r in set)
                                     {
-                                        var g = ResourceGroups.FirstOrDefault(x => x.Id == r.ResourceOptionGroupId);
-                                        var it = g?.Items.FirstOrDefault(x => x.Id == r.ResourceOptionItemId);
+                                        var g = ResourceGroups.FirstOrDefault(x => x.Id == r.SelectorId);
+                                        var it = g?.Items.FirstOrDefault(x => x.Id == r.SelectorItemId);
                                         <div>• @g?.DisplayName → @it?.Resource?.Name</div>
                                     }
                                 </div>
@@ -125,7 +125,7 @@ else
                     }
                     else
                     {
-                        @foreach (var set in GroupBySetKey(c.NumericRules, r => r.SetKey))
+                        @foreach (var set in GroupBySetKey(c.NumericRules, r => r.GroupKey))
                         {
                             <div class="@CsS.Spacing.M.Bottom(Size.S1)">
                                 <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
@@ -134,7 +134,7 @@ else
                                 <div>
                                     @foreach (var r in set)
                                     {
-                                        var g = NumericGroups.FirstOrDefault(x => x.Id == r.NumericInputId);
+                                        var g = NumericGroups.FirstOrDefault(x => x.Id == r.NumericQuestionId);
                                         <div>• @g?.DisplayName — @RangeLabel(r.MaxAllowedValue, r.MinAllowedValue)</div>
                                     }
                                 </div>

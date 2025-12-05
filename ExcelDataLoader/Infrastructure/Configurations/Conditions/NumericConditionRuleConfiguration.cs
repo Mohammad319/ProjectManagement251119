@@ -8,15 +8,15 @@ public class NumericConditionRuleConfiguration : IEntityTypeConfiguration<Numeri
 {
     public void Configure(EntityTypeBuilder<NumericConditionRule> b)
     {
-        b.HasOne(x => x.QuestionCondition)
+        b.HasOne(x => x.Condition)
          .WithMany(c => c.NumericRules)
-         .HasForeignKey(x => x.QuestionConditionId);
+         .HasForeignKey(x => x.ConditionId);
 
-        b.HasOne(x => x.NumericInput)
+        b.HasOne(x => x.NumericQuestion)
          .WithMany()
-         .HasForeignKey(x => x.NumericInputId)
+         .HasForeignKey(x => x.NumericQuestionId)
          .OnDelete(DeleteBehavior.Restrict);
 
-        b.HasIndex(x => new { x.QuestionConditionId, x.SetKey });
+        b.HasIndex(x => new { x.ConditionId, x.GroupKey });
     }
 }

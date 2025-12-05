@@ -18,7 +18,7 @@ public static class ConditionNumericRequirementMapper
         {
             //Id = e.Id,
             //ConditionId = e.ConditionId,
-            NumericInputId = e.NumericInputId,
+            NumericInputId = e.NumericQuestionId,
             MaxAllowedValue = e.MaxAllowedValue,
             MinAllowedValue = e.MinAllowedValue
         };

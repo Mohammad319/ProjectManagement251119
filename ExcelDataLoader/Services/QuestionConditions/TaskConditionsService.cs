@@ -89,23 +89,23 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
 
         await using var db = await _factory.CreateDbContextAsync(ct);
         var rows = await db.OptionResourceAssignments.AsNoTracking()
-            .Where(b => raIds.Contains(b.ResourceAssignmentId))
+            .Where(b => raIds.Contains(b.AssignmentId))
             .Select(b => new
             {
                 b.Id,
-                b.ResourceAssignmentId,
-                b.ChoiceOptionId,
-                ChoiceGroupId = b.ChoiceOption.OptionGroupId,
-                b.Formulas
+                b.AssignmentId,
+                b.OptionId,
+                ChoiceGroupId = b.Option.OptionGroupId,
+                b.Expressions
             }).ToListAsync(ct);
 
         foreach (var b in rows)
-            result[b.ResourceAssignmentId].Add(new OptionBindVM
+            result[b.AssignmentId].Add(new OptionBindVM
             {
                 Id = b.Id,
                 ChoiceGroupId = b.ChoiceGroupId,
-                ChoiceOptionId = b.ChoiceOptionId,
-                Formulas = b.Formulas?.ToList() ?? []
+                ChoiceOptionId = b.OptionId,
+                Formulas = b.Expressions?.ToList() ?? []
             });
 
         return result;
@@ -118,25 +118,25 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
 
         await using var db = await _factory.CreateDbContextAsync(ct);
         var rows = await db.NumericResourceAssignments.AsNoTracking()
-            .Where(b => raIds.Contains(b.ResourceAssignmentId))
+            .Where(b => raIds.Contains(b.AssignmentId))
             .Select(b => new
             {
                 b.Id,
-                b.ResourceAssignmentId,
+                b.AssignmentId,
                 b.NumericId,
                 b.MinInputValue,
                 b.MaxInputValue,
-                b.Formulas
+                b.Expressions
             }).ToListAsync(ct);
 
         foreach (var b in rows)
-            result[b.ResourceAssignmentId].Add(new NumericBindVM
+            result[b.AssignmentId].Add(new NumericBindVM
             {
                 Id = b.Id,
                 NumericId = b.NumericId,
                 InputMinValue = b.MinInputValue,
                 InputMaxValue = b.MaxInputValue,
-                Formulas = b.Formulas?.ToList() ?? []
+                Formulas = b.Expressions?.ToList() ?? []
             });
 
         return result;
@@ -192,17 +192,17 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
 
         SyncCollection(db, dbCond.ResourceRules, editing.ResourceRules, (x, y) =>
         {
-            x.ResourceOptionGroupId = y.ResourceOptionGroupId;
-            x.ResourceOptionItemId = y.ResourceOptionItemId;
-            x.SetKey = y.SetKey;
+            x.SelectorId = y.SelectorId;
+            x.SelectorItemId = y.SelectorItemId;
+            x.GroupKey = y.GroupKey;
         });
 
         SyncCollection(db, dbCond.NumericRules, editing.NumericRules, (x, y) =>
         {
-            x.NumericInputId = y.NumericInputId;
+            x.NumericQuestionId = y.NumericQuestionId;
             x.MinAllowedValue = y.MinAllowedValue;
             x.MaxAllowedValue = y.MaxAllowedValue;
-            x.SetKey = y.SetKey;
+            x.GroupKey = y.GroupKey;
         });
 
         SyncCollection(db, dbCond.VariableRules, editing.VariableRules, (x, y) =>
@@ -210,7 +210,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
             x.VariableName = y.VariableName;
             x.MinAllowedValue = y.MinAllowedValue;
             x.MaxAllowedValue = y.MaxAllowedValue;
-            x.SetKey = y.SetKey;
+            x.GroupKey = y.GroupKey;
         });
 
         // اختياري: مزامنة تعيين الموارد التابعة للشرط
@@ -247,9 +247,9 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
         {
             var entity = new OptionResourceAssignment
             {
-                ChoiceOptionId = vm.ChoiceOptionId,
-                ResourceAssignmentId = raId,
-                Formulas = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
+                OptionId = vm.ChoiceOptionId,
+                AssignmentId = raId,
+                Expressions = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
             };
             db.OptionResourceAssignments.Add(entity);
             await db.SaveChangesAsync(ct);
@@ -258,8 +258,8 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
         else
         {
             var entity = await db.OptionResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
-            entity.ChoiceOptionId = vm.ChoiceOptionId;
-            entity.Formulas = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
+            entity.OptionId = vm.ChoiceOptionId;
+            entity.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
             await db.SaveChangesAsync(ct);
             return entity.Id;
         }
@@ -274,10 +274,10 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
             var entity = new NumericResourceAssignment
             {
                 NumericId = vm.NumericId,
-                ResourceAssignmentId = raId,
+                AssignmentId = raId,
                 MinInputValue = vm.InputMinValue,
                 MaxInputValue = vm.InputMaxValue,
-                Formulas = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
+                Expressions = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
             };
             db.NumericResourceAssignments.Add(entity);
             await db.SaveChangesAsync(ct);
@@ -289,7 +289,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
             entity.NumericId = vm.NumericId;
             entity.MinInputValue = vm.InputMinValue;
             entity.MaxInputValue = vm.InputMaxValue;
-            entity.Formulas = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
+            entity.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
             await db.SaveChangesAsync(ct);
             return entity.Id;
         }
