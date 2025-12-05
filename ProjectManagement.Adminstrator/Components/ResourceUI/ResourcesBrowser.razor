@@ -26,10 +26,10 @@
                 Folders,
                 expanded,
                 selectedFolderIds,
-                EventCallback.Factory.Create<ResourceFolderEntity>(this, ToggleSelectionAsync),
+                EventCallback.Factory.Create<ResourceCategory>(this, ToggleSelectionAsync),
                 EnableFolderContext
-                ? EventCallback.Factory.Create<ResourceFolderEntity>(this, ContextF)
-                : EventCallback<ResourceFolderEntity>.Empty)
+                ? EventCallback.Factory.Create<ResourceCategory>(this, ContextF)
+                : EventCallback<ResourceCategory>.Empty)
     </div>
 
     <div class="@CsS.Layout.FlexMinWidth(360) @CsS.Spacing.M.All(Size.S2)">
@@ -76,7 +76,7 @@
                                     </div>
                             </td>
                             <td class="@CsS.Table.Td">
-                                <input type="checkbox" class="@CsS.Input.Check" checked="@r.Active" disabled />
+                                <input type="checkbox" class="@CsS.Input.Check" checked="@r.IsActive" disabled />
                             </td>
                             <td class="@CsS.Table.Td">@r.ResType</td>
                             <td class="@CsS.Table.Td">@r.Data.Unit</td>
@@ -94,14 +94,14 @@
 </div>
 
 @code {
-    [Parameter] public RenderFragment<ResourceEntity>? RowActions { get; set; }
+    [Parameter] public RenderFragment<ResourceDefinition>? RowActions { get; set; }
     [Parameter] public bool EnableFolderContext { get; set; } = true;
 
-    [Parameter] public List<ResourceFolderEntity> Folders { get; set; } = new();
-    private List<ResourceEntity> resourcesToShow = new();
+    [Parameter] public List<ResourceCategory> Folders { get; set; } = new();
+    private List<ResourceDefinition> resourcesToShow = new();
     private HashSet<int> expanded = new();
     private HashSet<int> selectedFolderIds = new();
-    void CalcModeal(ResourceEntity model) => MHD.Modal.AddModal<CalcResCostUI>(model.Name,
+    void CalcModeal(ResourceDefinition model) => MHD.Modal.AddModal<CalcResCostUI>(model.Name,
     new Dictionary<string, object>
     {
         [nameof(CalcResCostUI.Resource)] = model,
@@ -115,7 +115,7 @@
         }
     }
 
-    private async Task ToggleSelectionAsync(ResourceFolderEntity folder)
+    private async Task ToggleSelectionAsync(ResourceCategory folder)
     {
         selectedFolderIds.Clear();
         selectedFolderIds.Add(folder.Id);
@@ -126,18 +126,18 @@
     private async Task UpdateResourcesAsync()=>
         resourcesToShow = await ResourceFolderService.UpdateResourcesAsync(selectedFolderIds);
 
-    async Task ContextF(ResourceFolderEntity item)
+    async Task ContextF(ResourceCategory item)
     {
         var list = new List<MenuItem>()
             {
-                new() { Label = $"➕ Resource", OnClickAsync = () => {UpdateForm(new ResourceEntity(){FolderId = item.Id}); return Task.CompletedTask; } },
+                new() { Label = $"➕ Resource", OnClickAsync = () => {UpdateForm(new ResourceDefinition(){FolderId = item.Id}); return Task.CompletedTask; } },
                 new() { Label = $"➕ Subfolder", OnClickAsync = () => {AddFolder(item.Id); return Task.CompletedTask; } },
                 new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => {UpdateForm(item); return Task.CompletedTask; } },
                 new() { Label = $"🗑 {ResourceApp.delete}", OnClickAsync = () => {Remove(item); return Task.CompletedTask; } },
             };
         await ContextService.ShowMenuAsync(list);
     }
-    void UpdateForm(ResourceEntity model) => MHD.Modal.AddModal<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
+    void UpdateForm(ResourceDefinition model) => MHD.Modal.AddModal<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
 new Dictionary<string, object>
 {
 [nameof(ResourceFormDLUI.model)] = model,
@@ -149,15 +149,15 @@ new Dictionary<string, object>
         StateHasChanged();
     }
 
-    private void AddFolder(int? parentID) => UpdateForm(new ResourceFolderEntity() { DisplayName = "", ParentFolderId = parentID });
-    void UpdateForm(ResourceFolderEntity model) =>
+    private void AddFolder(int? parentID) => UpdateForm(new ResourceCategory() { DisplayName = "", ParentFolderId = parentID });
+    void UpdateForm(ResourceCategory model) =>
     Modal.AddModal<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
         AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
         {
             [nameof(FolderFormUI.Form)] = model,
             [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
         }, SizeMHD.Medium);
-    void Remove(ResourceFolderEntity model) => MHD.DeleteMessage(model.DisplayName, () => DeleteFolder(model.Id));
+    void Remove(ResourceCategory model) => MHD.DeleteMessage(model.DisplayName, () => DeleteFolder(model.Id));
     private async Task DeleteFolder(int id)
     {
         try

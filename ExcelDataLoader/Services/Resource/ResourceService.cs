@@ -10,7 +10,7 @@ namespace ProjectImportHub.Services.Resource
 {
     public static class ResourceSelectors
     {
-        public static Expression<Func<Entities.ResourceEntity, ResourceEXDto>> Selector => x => new ResourceEXDto()
+        public static Expression<Func<Entities.ResourceDefinition, ResourceEXDto>> Selector => x => new ResourceEXDto()
         {
             Id = x.Id,
             Name = x.Name,
@@ -22,17 +22,17 @@ namespace ProjectImportHub.Services.Resource
     }
     public interface IResourceService
     {
-        Task<List<Entities.ResourceEntity>> GetAllAsync();
+        Task<List<Entities.ResourceDefinition>> GetAllAsync();
         Task<ResourceEXDto?> GetByIdAsync(int id);
-        Task<int> CreateAsync(Entities.ResourceEntity resource);
-        Task<bool> UpdateAsync(Entities.ResourceEntity resource);
+        Task<int> CreateAsync(Entities.ResourceDefinition resource);
+        Task<bool> UpdateAsync(Entities.ResourceDefinition resource);
         Task<bool> DeleteAsync(int id);
         Task<List<TabItem>> GetTabItems();
     }
     public class ResourceService(IDbContextFactory<ProjectImportHubContext> contextFactory) : 
         BaseService(contextFactory) , IResourceService
     {
-        public async Task<List<Entities.ResourceEntity>> GetAllAsync()
+        public async Task<List<Entities.ResourceDefinition>> GetAllAsync()
         {
             await using var _context = _contextFactory.CreateDbContext();
             return await _context.Resources.ToListAsync();
@@ -44,7 +44,7 @@ namespace ProjectImportHub.Services.Resource
             return await _context.Resources.Where(x => x.Id == id).Select(ResourceSelectors.Selector).FirstOrDefaultAsync();
         }
 
-        public async Task<int> CreateAsync(Entities.ResourceEntity resource)
+        public async Task<int> CreateAsync(Entities.ResourceDefinition resource)
         {
             await using var _context = _contextFactory.CreateDbContext();
             _context.Resources.Add(resource);
@@ -52,7 +52,7 @@ namespace ProjectImportHub.Services.Resource
             return resource.Id;
         }
 
-        public async Task<bool> UpdateAsync(Entities.ResourceEntity resource)
+        public async Task<bool> UpdateAsync(Entities.ResourceDefinition resource)
         {
             await using var _context = _contextFactory.CreateDbContext();
             var existing = await _context.Resources.FindAsync(resource.Id);
@@ -68,7 +68,7 @@ namespace ProjectImportHub.Services.Resource
         {
             await using var _context = _contextFactory.CreateDbContext();
             var ra = await _context.ConditionResourceAssignments.Where(x => x.ResourceId == id).ToListAsync();
-            var rc = await _context.ResourceOptionItems.Where(x => x.ResourceId == id).ToListAsync();
+            var rc = await _context.ResourceChoiceOptions.Where(x => x.ResourceId == id).ToListAsync();
             var tsre = await _context.TaskResourceAssignments.Where(x => x.ResourceId == id).ToListAsync();
 
             _context.RemoveRange(ra);

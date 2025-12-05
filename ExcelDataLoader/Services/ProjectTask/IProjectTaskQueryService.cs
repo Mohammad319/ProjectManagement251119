@@ -26,7 +26,7 @@ namespace ProjectImportHub.Services.ProjectTask
                 .Select(t => new ProjectTaskListItemDto(
                     t.Id,
                     t.Code,
-                    t.DisplayName,
+                    t.Name,
                     t.UnitCode,
                     t.Quantity,
                     t.IsActive
@@ -51,14 +51,14 @@ namespace ProjectImportHub.Services.ProjectTask
                 FallId = e.FallId,
                 LocationId = e.LocationId,
                 Code = e.Code,
-                DisplayName = e.DisplayName,
-                UnitGroupId = e.UnitGroupId,
+                DisplayName = e.Name,
+                UnitGroupId = e.TaskUnitGroupId,
                 UnitCode = e.UnitCode,
                 Quantity = e.Quantity,
                 ChangeFactor1 = e.ChangeFactor1,
                 ChangeFactor2 = e.ChangeFactor2,
                 IsActive = e.IsActive,
-                Note = e.Note,
+                Note = e.FieldNotes,
                 VisibleFolderIds = e.VisibleFolderIds?.ToList() ?? [],
                 Responsible = e.Responsible,
                 Status = e.Status,
@@ -88,7 +88,7 @@ namespace ProjectImportHub.Services.ProjectTask
                     t.Resource.Data.ChangeFactor1,
                     t.Resource.Data.ChangeFactor2,
                     t.Resource.Data.Unit,
-                    t.Resource.Active
+                    t.Resource.IsActive
                 ))
                 .ToListAsync(ct);
         }

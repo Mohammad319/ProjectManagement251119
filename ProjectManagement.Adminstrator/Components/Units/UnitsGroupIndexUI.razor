@@ -17,7 +17,7 @@
         aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
     @((MarkupString)Icons.GetVisibleIcon(IsVisible))
 </button>
-<Grid TItem="UnitGroupEntity" Items="FallsList">
+<Grid TItem="TaskUnitGroup" Items="FallsList">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH">
 
@@ -45,11 +45,11 @@
 </Grid>
 @code {
     bool IsVisible = true;
-    List<UnitGroupEntity>? FallsList;
-    void UpdateForm() => UpdateForm(new UnitGroupEntity() { DisplayName = "" });
-    void UpdateForm(UnitGroupEntity model)
+    List<TaskUnitGroup>? FallsList;
+    void UpdateForm() => UpdateForm(new TaskUnitGroup() { DisplayName = "" });
+    void UpdateForm(TaskUnitGroup model)
     {
-        UnitGroupEntity up = new() { DisplayName = "" };
+        TaskUnitGroup up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
         Modal.AddModal<UnitsGroupFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New] :
                     AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
@@ -59,10 +59,10 @@
                     }
                     , SizeMHD.XL);
     }
-    void Remove(UnitGroupEntity model) =>
+    void Remove(TaskUnitGroup model) =>
     MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
 
-    async Task ConfirmRemoveAsync(UnitGroupEntity model)
+    async Task ConfirmRemoveAsync(TaskUnitGroup model)
     {
         bool result = await ExHandlers.RunCheckTokenAsync(() => UnitGroupsService.DeleteAsync(model.Id));
         if (result)

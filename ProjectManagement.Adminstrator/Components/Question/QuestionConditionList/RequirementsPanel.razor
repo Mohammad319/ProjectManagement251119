@@ -1,4 +1,4 @@
-﻿@using System
+﻿﻿@using System
 @using System.Collections.Generic
 @using System.Linq
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
@@ -6,47 +6,48 @@
 @using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using ProjectImportHub.Entities.Questions.Conditions
 @using ProjectImportHub.Entities.Questions.Groups
+@using ProjectImportHub.Services.Resource
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
 
 @code {
-    [Parameter] public TaskConditionEntity Condition { get; set; } = null!;
-    [Parameter] public IEnumerable<OptionGroupEntity> ChoiceGroups { get; set; }// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
-    [Parameter] public IEnumerable<ResourceOptionGroupEntity> ResourceGroups { get; set; }
-    [Parameter] public IEnumerable<NumericInputEntity> NumericGroups { get; set; }
+    [Parameter] public ConditionDefinition Condition { get; set; } = null!;
+    [Parameter] public IEnumerable<QuestionGroupDefinition> ChoiceGroups { get; set; }// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
+    [Parameter] public IEnumerable<ResourceSelectorDefinition> ResourceGroups { get; set; }
+    [Parameter] public IEnumerable<NumericQuestionDefinition> NumericGroups { get; set; }
 
-    private IEnumerable<OptionItemEntity> GetLocalChoiceOptions(int groupId)
-        => ChoiceGroups.FirstOrDefault(g => g.Id == groupId)?.Options ?? Enumerable.Empty<OptionItemEntity>();
-    private IEnumerable<ResourceOptionItemEntity> GetResourceItems(int groupId)
-    => ResourceGroups.FirstOrDefault(g => g.Id == groupId)?.Items ?? Enumerable.Empty<ResourceOptionItemEntity>();
-    
+    private IEnumerable<QuestionOptionDefinition> GetLocalChoiceOptions(int groupId)
+        => ChoiceGroups.FirstOrDefault(g => g.Id == groupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>();
+    private IEnumerable<ResourceChoiceOptionDefinition> GetResourceItems(int groupId)
+    => ResourceGroups.FirstOrDefault(g => g.Id == groupId)?.Items ?? Enumerable.Empty<ResourceChoiceOptionDefinition>();
 
-    private void AddChoiceReq() => Condition?.OptionRequirements.Add(new ConditionOptionRequirementEntity { QuestionConditionId = Condition.Id, SetKey = 1 });
-    private void RemoveChoiceReq(ConditionOptionRequirementEntity r) => Condition?.OptionRequirements.Remove(r);
-    private void AddResReq() => Condition?.ResourceRequirements.Add(new ConditionResourceRequirementEntity { QuestionConditionId = Condition.Id, SetKey = 1 });
-    private void RemoveResReq(ConditionResourceRequirementEntity r) => Condition?.ResourceRequirements.Remove(r);
-    private void AddNumReq() => Condition?.NumericRequirements.Add(new ConditionNumericRequirementEntity { QuestionConditionId = Condition.Id, SetKey = 1 });
-    private void RemoveNumReq(ConditionNumericRequirementEntity r) => Condition?.NumericRequirements.Remove(r);
 
-    private void OnChoiceGroupChanged(ConditionOptionRequirementEntity r, ChangeEventArgs e)
-    { if (int.TryParse(Convert.ToString(e.Value), out var id)) { r.OptionGroupId = id; r.OptionItemId = 0; } }
-    private void OnResGroupChanged(ConditionResourceRequirementEntity r, ChangeEventArgs e)
-    { 
-        if (int.TryParse(Convert.ToString(e.Value), out var id)) 
+    private void AddChoiceReq() => Condition?.OptionRules.Add(new OptionConditionRule { ConditionId = Condition.Id, GroupKey = 1 });
+    private void RemoveChoiceReq(OptionConditionRule r) => Condition?.OptionRules.Remove(r);
+    private void AddResReq() => Condition?.ResourceRules.Add(new ResourceConditionRule { QuestionConditionId = Condition.Id, SetKey = 1 });
+    private void RemoveResReq(ResourceConditionRule r) => Condition?.ResourceRules.Remove(r);
+    private void AddNumReq() => Condition?.NumericRules.Add(new NumericConditionRule { QuestionConditionId = Condition.Id, SetKey = 1 });
+    private void RemoveNumReq(NumericConditionRule r) => Condition?.NumericRules.Remove(r);
+
+    private void OnChoiceGroupChanged(OptionConditionRule r, ChangeEventArgs e)
+    { if (int.TryParse(Convert.ToString(e.Value), out var id)) { r.QuestionGroupId = id; r.OptionId = 0; } }
+    private void OnResGroupChanged(ResourceConditionRule r, ChangeEventArgs e)
+    {
+        if (int.TryParse(Convert.ToString(e.Value), out var id))
         { r.ResourceOptionGroupId = id; r.ResourceOptionItemId = 0; }
     }
-    private void OnNumericGroupChanged(ConditionNumericRequirementEntity r, ChangeEventArgs e)
+    private void OnNumericGroupChanged(NumericConditionRule r, ChangeEventArgs e)
     { if (int.TryParse(Convert.ToString(e.Value), out var id)) r.NumericInputId = id; }
 
     // --- Variable requirements helpers ---
     private void AddVarReq()
-        => Condition?.VariableRequirements.Add(new ConditionVariableRequirementEntity
+        => Condition?.VariableRules.Add(new VariableConditionRule
         {
             QuestionConditionId = Condition.Id,
             SetKey = 1
         });
 
-    private void RemoveVarReq(ConditionVariableRequirementEntity r)
-        => Condition?.VariableRequirements.Remove(r);
+    private void RemoveVarReq(VariableConditionRule r)
+        => Condition?.VariableRules.Remove(r);
 
 
     // تسمية لطيفة للعرض (اختياري)
@@ -68,18 +69,18 @@
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddChoiceReq">Add</button>
         </div>
 
-        @if (Condition?.OptionRequirements == null || Condition.OptionRequirements.Count == 0)
+        @if (Condition?.OptionRules == null || Condition.OptionRules.Count == 0)
         {
             <div class="@CsS.Text.Secondary">None</div>
         }
         else
         {
-            @foreach (var r in Condition.OptionRequirements)
+            @foreach (var r in Condition.OptionRules)
             {
                 <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
                     <div class="@CsS.Grid.Span.MD4">
                         <label class="@CsS.Form.Label">Group</label>
-                        <select class="@CsS.Input.Select" value="@r.OptionGroupId" @onchange="e => OnChoiceGroupChanged(r, e)">
+                        <select class="@CsS.Input.Select" value="@r.QuestionGroupId" @onchange="e => OnChoiceGroupChanged(r, e)">
                             <option value="0">-- select --</option>
                             @foreach (var g in ChoiceGroups)
                             {
@@ -90,9 +91,9 @@
 
                     <div class="@CsS.Grid.Span.MD5">
                         <label class="@CsS.Form.Label">Option</label>
-                        <select class="@CsS.Input.Select" @bind="r.OptionItemId">
+                        <select class="@CsS.Input.Select" @bind="r.OptionId">
                             <option value="0">-- select --</option>
-                            @foreach (var opt in GetLocalChoiceOptions(r.OptionGroupId))
+                            @foreach (var opt in GetLocalChoiceOptions(r.QuestionGroupId))
                             {
                                 <option value="@opt.Id">@opt.DisplayName</option>
                             }
@@ -101,7 +102,7 @@
 
                     <div class="@CsS.Grid.Span.MD2">
                         <label class="@CsS.Form.Label">SetKey</label>
-                        <input type="number" class="@CsS.Input.Number" @bind="r.SetKey" />
+                        <input type="number" class="@CsS.Input.Number" @bind="r.GroupKey" />
                     </div>
 
                     <div class="@CsS.Util.PlaceSelfEnd">
@@ -119,13 +120,13 @@
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddResReq">Add</button>
         </div>
 
-        @if (Condition?.ResourceRequirements == null || Condition.ResourceRequirements.Count == 0)
+        @if (Condition?.ResourceRules == null || Condition.ResourceRules.Count == 0)
         {
             <div class="@CsS.Text.Secondary">None</div>
         }
         else
         {
-            @foreach (var r in Condition.ResourceRequirements)
+            @foreach (var r in Condition.ResourceRules)
             {
                 <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)">
                     <div class="@CsS.Grid.Span.MD4">
@@ -170,13 +171,13 @@
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddNumReq">Add</button>
         </div>
 
-        @if (Condition?.NumericRequirements == null || Condition.NumericRequirements.Count == 0)
+        @if (Condition?.NumericRules == null || Condition.NumericRules.Count == 0)
         {
             <div class="@CsS.Text.Secondary">None</div>
         }
         else
         {
-            @foreach (var r in Condition.NumericRequirements)
+            @foreach (var r in Condition.NumericRules)
             {
                 <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom(Size.S2)">
                     <div class="@CsS.Grid.Span.MD2">
@@ -220,13 +221,13 @@
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddVarReq">Add</button>
         </div>
 
-        @if (Condition?.VariableRequirements == null || Condition.VariableRequirements.Count == 0)
+        @if (Condition?.VariableRules == null || Condition.VariableRules.Count == 0)
         {
             <div class="@CsS.Text.Secondary">None</div>
         }
         else
         {
-            @foreach (var r in Condition.VariableRequirements)
+            @foreach (var r in Condition.VariableRules)
             {
                 <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom(Size.S2)" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
                     <div class="@CsS.Grid.Span.MD2">

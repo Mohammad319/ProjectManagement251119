@@ -1,5 +1,6 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Resources
 @using ProjectImportHub.Infrastructure
 @inherits AppComponentBase
 @inject IResourcePropertiesService ResourcePropertiesService
@@ -55,8 +56,8 @@
                 <label class="@CsS.Form.Label" for="rp-min">MinValue:</label>
                 <InputNumber id="rp-min"
                              class="@CsS.Input.Number"
-                             @bind-Value="@ResourceProp.PropertyValues" />
-                <ValidationMessage For="@(() => ResourceProp.PropertyValues)" class="@CsS.Text.Danger" />
+                             @bind-Value="@ResourceProp.StepValue" />
+                <ValidationMessage For="@(() => ResourceProp.StepValue)" class="@CsS.Text.Danger" />
             </div>
 
             <!-- MaxValue -->
@@ -108,7 +109,7 @@
 
 @code {
     [CascadingParameter] private EditContext EditContext { get; set; }
-    [Parameter] public ResourcePropertyEntity ResourceProp { get; set; } = new();
+    [Parameter] public ResourceAttribute ResourceProp { get; set; } = new();
     [Parameter] public EventCallback<bool> Callback { get; set; }
     [Parameter] public int GroupId { get; set; } = new();
     bool IsLoading = false;
@@ -116,7 +117,7 @@
     {
         IsLoading = true;
         bool result = false;
-        ResourceProp.PropertySetId = GroupId;
+        ResourceProp.AttributeSetId = GroupId;
         if (ResourceProp.Id == 0)
         {
             await ResourcePropertiesService.AddAsync(ResourceProp);

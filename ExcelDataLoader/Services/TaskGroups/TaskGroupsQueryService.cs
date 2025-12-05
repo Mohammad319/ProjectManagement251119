@@ -1,29 +1,30 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProjectImportHub.Entities;
+using ProjectImportHub.Entities.Tasks;
 using ProjectImportHub.Infrastructure;
 
 namespace ProjectImportHub.Services.TaskGroups;
 public interface ITaskGroupsQueryService
 {
-    Task<ProjectTaskEntity?> GetTaskGraphAsync(int id, CancellationToken ct);
-    Task<IReadOnlyList<ResourceFolderEntity>> GetVisibleFoldersAsync(int taskId, CancellationToken ct);
-    Task<IReadOnlyList<ResourceEntity>> GetFolderResourcesAsync(int folderId, CancellationToken ct);
+    Task<TaskDefinition?> GetTaskGraphAsync(int id, CancellationToken ct);
+    Task<IReadOnlyList<ResourceCategory>> GetVisibleFoldersAsync(int taskId, CancellationToken ct);
+    Task<IReadOnlyList<ResourceDefinition>> GetFolderResourcesAsync(int folderId, CancellationToken ct);
 }
 public sealed class TaskGroupsQueryService(IDbContextFactory<ProjectImportHubContext> _factory) : ITaskGroupsQueryService
 {
-    public async Task<ProjectTaskEntity?> GetTaskGraphAsync(int id, CancellationToken ct)
+    public async Task<TaskDefinition?> GetTaskGraphAsync(int id, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
 
         return await db.Tasks
             .AsNoTracking()
-            .Include(t => t.OptionGroups).ThenInclude(g => g.Options)
-            .Include(t => t.ResourceOptionGroups).ThenInclude(g => g.Items).ThenInclude(i => i.Resource)
-            .Include(t => t.NumericInputs)
+            .Include(t => t.QuestionGroups).ThenInclude(g => g.Options)
+            .Include(t => t.ResourceSelectors).ThenInclude(g => g.Items).ThenInclude(i => i.Resource)
+            .Include(t => t.NumericQuestions)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
     }
 
-    public async Task<IReadOnlyList<ResourceFolderEntity>> GetVisibleFoldersAsync(int taskId, CancellationToken ct)
+    public async Task<IReadOnlyList<ResourceCategory>> GetVisibleFoldersAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
 
@@ -32,7 +33,7 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<ProjectImportHubCon
             .FirstAsync(t => t.Id == taskId, ct);
 
         var ids = task.VisibleFolderIds ?? [];
-        var folders = await db.Folders
+        var folders = await db.ResourceCategories
             .AsNoTracking()
             .Where(f => ids.Contains(f.Id))
             .OrderBy(f => f.SortOrder)
@@ -41,7 +42,7 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<ProjectImportHubCon
         return folders;
     }
 
-    public async Task<IReadOnlyList<ResourceEntity>> GetFolderResourcesAsync(int folderId, CancellationToken ct)
+    public async Task<IReadOnlyList<ResourceDefinition>> GetFolderResourcesAsync(int folderId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
 

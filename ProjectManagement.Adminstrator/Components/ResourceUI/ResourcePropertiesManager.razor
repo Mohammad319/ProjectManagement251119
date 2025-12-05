@@ -1,7 +1,7 @@
 ﻿@using System.Globalization
 @using Microsoft.EntityFrameworkCore
 @using ProjectImportHub.Entities
-@using ProjectImportHub.Entities.Assignments
+@using ProjectImportHub.Entities.Resources
 @using ProjectImportHub.Infrastructure
 @inject IDbContextFactory<ProjectImportHubContext> ContextFactory
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
@@ -24,7 +24,7 @@
         {
             <div class="@CC.Card.Panel">
                 <div class="@CsS.Layout.FlexJustifyBetween @CsS.Layout.FlexItemsCenter @CsS.Spacing.P.All(Size.S2)">
-                    <h3 class="@CC.Text.Size12">@set.DisplayName (@set.Properties.Count)</h3>
+                    <h3 class="@CC.Text.Size12">@set.DisplayName (@set.Attributes.Count)</h3>
                     <div class="@CsS.Layout.Inline">
                         <button class="@CsS.Btn.Outline.Secondary" @onclick="() => LinkAllInSetAsync(set)">تحديد الكل</button>
                         <button class="@CsS.Btn.Outline.Secondary" @onclick="() => UnlinkAllInSetAsync(set)">إلغاء الكل</button>
@@ -32,7 +32,7 @@
                 </div>
 
                 <div class="border-t border-gray-200 dark:border-gray-800">
-                    @foreach (var p in set.Properties)
+                    @foreach (var p in set.Attributes)
                     {
                         var bind = GetBind(p.Id);
                         var isLinked = bind is not null;
@@ -56,23 +56,23 @@
                                     {
                                         <input class="@CsS.Input.Text"
                                                placeholder="قيمة نصية"
-                                               value="@bind!.TextDefault"
+                                               value="@bind!.TextValue"
                                                @onchange="async e => await SaveTextAsync(p, e.Value?.ToString())" />
                                     }
                                     else
                                     {
                                        
                                             var numAttrs = new Dictionary<string, object>();
-                                            if (p.PropertyValues.HasValue) numAttrs["min"] = p.PropertyValues.Value.ToString(CultureInfo.InvariantCulture);
+                                            if (p.StepValue.HasValue) numAttrs["min"] = p.StepValue.Value.ToString(CultureInfo.InvariantCulture);
                                             if (p.MaxNumericValue.HasValue) numAttrs["max"] = p.MaxNumericValue.Value.ToString(CultureInfo.InvariantCulture);
-                                            var shown = bind!.NumberDefault?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+                                            var shown = bind!.NumericValue?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
 
                                         <div class="@CsS.Layout.FlexItemsCenter flex-nowrap">
 
-                                            @if (p.PropertyValues.HasValue || p.MaxNumericValue.HasValue)
+                                            @if (p.StepValue.HasValue || p.MaxNumericValue.HasValue)
                                             {
                                                 <span class="text-xs text-gray-500 ms-2 whitespace-nowrap shrink-0" dir="ltr">
-                                                    @FormatRange(p.PropertyValues, p.MaxNumericValue)
+                                                    @FormatRange(p.StepValue, p.MaxNumericValue)
                                                 </span>
                                             }
                                             <input class="@CsS.Input.Number"
@@ -102,11 +102,11 @@
     private string? loadError;
 
     // نجلب المجموعات مع خصائصها
-    private List<ResourcePropertySetEntity> propertySets = new();
+    private List<ResourceAttributeSet> propertySets = new();
 
     // قاموس سريع للوصول إلى الربط الحالي لكل خاصية لهذا المورد
-    // key: PropertyId  =>  value: Bind
-    private Dictionary<int, ResourcePropertyBindEntity> bindsByPropId = new();
+    // key: AttributeId  =>  value: Bind
+    private Dictionary<int, ResourceAttributeValue> bindsByPropId = new();
 
     protected override async Task OnParametersSetAsync() => await ReloadAsync();
 
@@ -118,14 +118,14 @@
             using var db = await ContextFactory.CreateDbContextAsync();
 
             // خصائص + مجموعاتها
-            propertySets = await db.ResourcePropertySets.AsNoTracking()
-                                   .Include(s => s.Properties).ToListAsync();
+            propertySets = await db.ResourceAttributeSets.AsNoTracking()
+                                   .Include(s => s.Attributes).ToListAsync();
 
             // جميع الربوط الخاصة بهذا المورد
-            var binds = await db.ResourceProperty.AsNoTracking()
+            var binds = await db.ResourceAttributeValues.AsNoTracking()
                                 .Where(b => b.ResourceId == ResourceId).ToListAsync();
 
-            bindsByPropId = binds.ToDictionary(b => b.PropertyId, b => b);
+            bindsByPropId = binds.ToDictionary(b => b.AttributeId, b => b);
         }
         catch (Exception ex)
         {
@@ -139,7 +139,7 @@
     }
 
     // ===== Helpers =====
-    private ResourcePropertyBindEntity? GetBind(int propertyId)
+    private ResourceAttributeValue? GetBind(int propertyId)
         => bindsByPropId.TryGetValue(propertyId, out var b) ? b : null;
 
     private static string FormatRange(double? min, double? max)
@@ -158,21 +158,21 @@
         return x;
     }
 
-    private static string DefaultText(ResourcePropertyEntity p, string? current)
+    private static string DefaultText(ResourceAttribute p, string? current)
         => !string.IsNullOrEmpty(current) ? current : (p.DefaultTextValue ?? string.Empty);
 
-    private static double? DefaultNumber(ResourcePropertyEntity p, double? current)
+    private static double? DefaultNumber(ResourceAttribute p, double? current)
     {
         var candidate = current
                         ?? p.DefaultNumericValue
-                        ?? p.PropertyValues
+                        ?? p.StepValue
                         ?? p.MaxNumericValue
                         ?? 0;
-        return Clamp(candidate, p.PropertyValues, p.MaxNumericValue);
+        return Clamp(candidate, p.StepValue, p.MaxNumericValue);
     }
 
     // ===== Actions =====
-    private async Task ToggleBindAsync(ResourcePropertyEntity p, bool link)
+    private async Task ToggleBindAsync(ResourceAttribute p, bool link)
     {
         try
         {
@@ -182,14 +182,14 @@
             {
                 if (!bindsByPropId.TryGetValue(p.Id, out var bind))
                 {
-                    bind = new ResourcePropertyBindEntity
+                    bind = new ResourceAttributeValue
                     {
                         ResourceId = ResourceId,
-                        PropertyId = p.Id,
-                        TextDefault = p.DataType == DataType.Text
+                        AttributeId = p.Id,
+                        TextValue = p.DataType == DataType.Text
                                       ? DefaultText(p, null)
                                       : null,
-                        NumberDefault = p.DataType == DataType.Number
+                        NumericValue = p.DataType == DataType.Number
                                         ? DefaultNumber(p, null)
                                         : null
                     };
@@ -202,13 +202,13 @@
                     // تحديث نوع القيمة الافتراضي حسب نوع الخاصية (اختياري)
                     if (p.DataType == DataType.Text)
                     {
-                        bind.NumberDefault = null;
-                        bind.TextDefault = DefaultText(p, bind.TextDefault);
+                        bind.NumericValue = null;
+                        bind.TextValue = DefaultText(p, bind.TextValue);
                     }
                     else
                     {
-                        bind.TextDefault = null;
-                        bind.NumberDefault = DefaultNumber(p, bind.NumberDefault);
+                        bind.TextValue = null;
+                        bind.NumericValue = DefaultNumber(p, bind.NumericValue);
                     }
                     db.Update(bind);
                     await db.SaveChangesAsync();
@@ -234,23 +234,23 @@
         }
     }
 
-    private async Task SaveTextAsync(ResourcePropertyEntity p, string? value)
+    private async Task SaveTextAsync(ResourceAttribute p, string? value)
     {
         try
         {
             using var db = await ContextFactory.CreateDbContextAsync();
             if (!bindsByPropId.TryGetValue(p.Id, out var bind))
             {
-                bind = new ResourcePropertyBindEntity
+                bind = new ResourceAttributeValue
                 {
                     ResourceId = ResourceId,
-                    PropertyId = p.Id
+                    AttributeId = p.Id
                 };
                 db.Add(bind);
                 bindsByPropId[p.Id] = bind;
             }
-            bind.TextDefault = value ?? string.Empty;
-            bind.NumberDefault = null;
+            bind.TextValue = value ?? string.Empty;
+            bind.NumericValue = null;
 
             db.Update(bind);
             await db.SaveChangesAsync();
@@ -265,7 +265,7 @@
         }
     }
 
-    private async Task SaveNumberAsync(ResourcePropertyEntity p, string? valueStr)
+    private async Task SaveNumberAsync(ResourceAttribute p, string? valueStr)
     {
         double? value = null;
         if (!string.IsNullOrWhiteSpace(valueStr))
@@ -282,7 +282,7 @@
         // تحقق المدى
         if (value is not null)
         {
-            if (p.PropertyValues.HasValue && value < p.PropertyValues) { loadError = $"القيمة يجب أن تكون ≥ {p.PropertyValues}"; StateHasChanged(); return; }
+            if (p.StepValue.HasValue && value < p.StepValue) { loadError = $"القيمة يجب أن تكون ≥ {p.StepValue}"; StateHasChanged(); return; }
             if (p.MaxNumericValue.HasValue && value > p.MaxNumericValue) { loadError = $"القيمة يجب أن تكون ≤ {p.MaxNumericValue}"; StateHasChanged(); return; }
         }
 
@@ -291,16 +291,16 @@
             using var db = await ContextFactory.CreateDbContextAsync();
             if (!bindsByPropId.TryGetValue(p.Id, out var bind))
             {
-                bind = new ResourcePropertyBindEntity
+                bind = new ResourceAttributeValue
                 {
                     ResourceId = ResourceId,
-                    PropertyId = p.Id
+                    AttributeId = p.Id
                 };
                 db.Add(bind);
                 bindsByPropId[p.Id] = bind;
             }
-            bind.NumberDefault = value;
-            bind.TextDefault = null;
+            bind.NumericValue = value;
+            bind.TextValue = null;
 
             db.Update(bind);
             await db.SaveChangesAsync();
@@ -315,30 +315,30 @@
         }
     }
 
-    private async Task LinkAllInSetAsync(ResourcePropertySetEntity set)
+    private async Task LinkAllInSetAsync(ResourceAttributeSet set)
     {
         try
         {
             using var db = await ContextFactory.CreateDbContextAsync();
-            var ids = set.Properties.Select(p => p.Id).ToHashSet();
+            var ids = set.Attributes.Select(p => p.Id).ToHashSet();
 
             // اجلب الموجود
-            var existing = await db.Set<ResourcePropertyBindEntity>()
-                                   .Where(b => b.ResourceId == ResourceId && ids.Contains(b.PropertyId))
+            var existing = await db.Set<ResourceAttributeValue>()
+                                   .Where(b => b.ResourceId == ResourceId && ids.Contains(b.AttributeId))
                                    .ToListAsync();
-            var existingIds = existing.Select(b => b.PropertyId).ToHashSet();
+            var existingIds = existing.Select(b => b.AttributeId).ToHashSet();
 
-            var toAdd = new List<ResourcePropertyBindEntity>();
-            foreach (var p in set.Properties)
+            var toAdd = new List<ResourceAttributeValue>();
+            foreach (var p in set.Attributes)
             {
                 if (!existingIds.Contains(p.Id))
                 {
-                    var b = new ResourcePropertyBindEntity
+                    var b = new ResourceAttributeValue
                     {
                         ResourceId = ResourceId,
-                        PropertyId = p.Id,
-                        TextDefault = p.DataType == DataType.Text ? DefaultText(p, null) : null,
-                        NumberDefault = p.DataType == DataType.Number ? DefaultNumber(p, null) : null
+                        AttributeId = p.Id,
+                        TextValue = p.DataType == DataType.Text ? DefaultText(p, null) : null,
+                        NumericValue = p.DataType == DataType.Number ? DefaultNumber(p, null) : null
                     };
                     toAdd.Add(b);
                     bindsByPropId[p.Id] = b;
@@ -361,15 +361,15 @@
         }
     }
 
-    private async Task UnlinkAllInSetAsync(ResourcePropertySetEntity set)
+    private async Task UnlinkAllInSetAsync(ResourceAttributeSet set)
     {
         try
         {
             using var db = await ContextFactory.CreateDbContextAsync();
-            var ids = set.Properties.Select(p => p.Id).ToHashSet();
+            var ids = set.Attributes.Select(p => p.Id).ToHashSet();
 
-            var toRemove = await db.Set<ResourcePropertyBindEntity>()
-                                   .Where(b => b.ResourceId == ResourceId && ids.Contains(b.PropertyId))
+            var toRemove = await db.Set<ResourceAttributeValue>()
+                                   .Where(b => b.ResourceId == ResourceId && ids.Contains(b.AttributeId))
                                    .ToListAsync();
 
             if (toRemove.Count > 0)

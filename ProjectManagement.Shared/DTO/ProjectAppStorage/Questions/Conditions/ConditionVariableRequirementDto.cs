@@ -5,7 +5,7 @@ public class ConditionVariableRequirementDto
 {
     public int Id { get; set; }
     public int QuestionConditionId { get; set; }
-    public string? VariableName { get; set; }
+    public string VariableName { get; set; }
     public double? MinAllowedValue { get; set; }
     public double? MaxAllowedValue { get; set; }
 }

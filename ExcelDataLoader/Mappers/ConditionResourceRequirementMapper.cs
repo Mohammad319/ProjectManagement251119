@@ -10,14 +10,14 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class ConditionResourceRequirementMapper
 {
-    public static ConditionResourceRequirementDto ToDto(this ConditionResourceRequirementEntity e)
+    public static ConditionResourceRequirementDto ToDto(this ResourceConditionRule e)
     {
         if (e == null) return null!;
 
         return new ConditionResourceRequirementDto
         {
             //Id = e.Id,
-            //QuestionConditionId = e.QuestionConditionId,
+            //ConditionId = e.ConditionId,
             //ResourceOptionGroupId = e.ResourceOptionGroupId,
             ResourceOptionItemId = e.ResourceOptionItemId
         };

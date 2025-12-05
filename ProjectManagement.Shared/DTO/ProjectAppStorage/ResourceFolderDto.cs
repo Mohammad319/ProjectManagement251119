@@ -5,8 +5,8 @@ public class ResourceFolderDto
 {
     public int Id { get; set; }
     public required string DisplayName { get; set; }
-    public string? Note { get; set; }
+    public string Note { get; set; }
     public int SortOrder { get; set; }
-    public ResourceFolderDto? ParentFolder { get; set; }
+    public ResourceFolderDto ParentFolder { get; set; }
     public int? ParentFolderId { get; set; }
 }

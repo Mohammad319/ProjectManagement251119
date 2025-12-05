@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class ResourceFolderMapper
 {
-    public static ResourceFolderDto ToDto(this ResourceFolderEntity e)
+    public static ResourceFolderDto ToDto(this ResourceCategory e)
     {
         if (e == null) return null!;
 

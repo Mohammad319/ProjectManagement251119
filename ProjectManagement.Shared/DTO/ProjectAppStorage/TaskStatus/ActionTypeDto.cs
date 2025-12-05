@@ -4,7 +4,7 @@ namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
 public class ActionTypeDto
 {
     public int Id { get; set; }
-    public string? DisplayName { get; set; }
+    public string DisplayName { get; set; }
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
 }

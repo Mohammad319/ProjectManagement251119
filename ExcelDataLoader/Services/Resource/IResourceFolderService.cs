@@ -6,41 +6,41 @@ namespace ProjectImportHub.Services.Resource
 {
     public interface IResourceFolderService
     {
-        Task<List<ResourceFolderEntity>> GetAllAsync();
-        Task<List<Entities.ResourceEntity>> GetAllChildFolderIds(HashSet<int> selectedFolderIds);
-        Task<List<ResourceEntity>> UpdateResourcesAsync(HashSet<int> selectedFolderIds);
-        Task<ResourceFolderEntity> GetByIdAsync(int id);
-        Task<bool> UpdateAsync(ResourceFolderEntity obj);
-        Task<int> AddAsync(ResourceFolderEntity obj);
+        Task<List<ResourceCategory>> GetAllAsync();
+        Task<List<Entities.ResourceDefinition>> GetAllChildFolderIds(HashSet<int> selectedFolderIds);
+        Task<List<ResourceDefinition>> UpdateResourcesAsync(HashSet<int> selectedFolderIds);
+        Task<ResourceCategory> GetByIdAsync(int id);
+        Task<bool> UpdateAsync(ResourceCategory obj);
+        Task<int> AddAsync(ResourceCategory obj);
         Task<bool> DeleteAsync(int id);
     }
     public class ResourceFolderService(IDbContextFactory<ProjectImportHubContext> ContextFactory) : IResourceFolderService
     {
-        public async Task<int> AddAsync(ResourceFolderEntity obj)
+        public async Task<int> AddAsync(ResourceCategory obj)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            context.Folders.Add(obj);
+            context.ResourceCategories.Add(obj);
             await context.SaveChangesAsync();
             return obj.Id;
         }
         public async Task<bool> DeleteAsync(int id)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            var entity = await context.Folders.FindAsync(id);
+            var entity = await context.ResourceCategories.FindAsync(id);
             if (entity == null)
             {
                 return false;
             }
-            context.Folders.Remove(entity);
+            context.ResourceCategories.Remove(entity);
             await context.SaveChangesAsync();
             return true;
         }
-        public async Task<List<ResourceFolderEntity>> GetAllAsync()
+        public async Task<List<ResourceCategory>> GetAllAsync()
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            return await context.Folders.OrderBy(f => f.SortOrder).ToListAsync();
+            return await context.ResourceCategories.OrderBy(f => f.SortOrder).ToListAsync();
         }
-        public async Task<List<Entities.ResourceEntity>> UpdateResourcesAsync(HashSet<int> selectedFolderIds)
+        public async Task<List<Entities.ResourceDefinition>> UpdateResourcesAsync(HashSet<int> selectedFolderIds)
         {
             using var db = ContextFactory.CreateDbContext();
 
@@ -56,9 +56,9 @@ namespace ProjectImportHub.Services.Resource
                 .Where(r => r.FolderId != null && allIds.Contains(r.FolderId.Value))
                 .ToListAsync();
         }
-        public async Task<List<Entities.ResourceEntity>> GetAllChildFolderIds(HashSet<int> selectedFolderIds)
+        public async Task<List<Entities.ResourceDefinition>> GetAllChildFolderIds(HashSet<int> selectedFolderIds)
         {
-            List<Entities.ResourceEntity> resourcesToShow = [];
+            List<Entities.ResourceDefinition> resourcesToShow = [];
             using var db = ContextFactory.CreateDbContext();
             foreach (var id in selectedFolderIds)
             {
@@ -74,7 +74,7 @@ namespace ProjectImportHub.Services.Resource
         }
         private async Task<List<int>> GetAllChildFolderIds(ProjectImportHubContext db, int parentId)
         {
-            var childIds = await db.Folders.Where(f => f.ParentFolderId == parentId)
+            var childIds = await db.ResourceCategories.Where(f => f.ParentFolderId == parentId)
                                    .Select(f => f.Id).ToListAsync();
             var allIds = new List<int>(childIds);
             foreach (var id in childIds)
@@ -83,15 +83,15 @@ namespace ProjectImportHub.Services.Resource
             }
             return allIds;
         }
-        public async Task<ResourceFolderEntity> GetByIdAsync(int id)
+        public async Task<ResourceCategory> GetByIdAsync(int id)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            return await context.Folders.FindAsync(id);
+            return await context.ResourceCategories.FindAsync(id);
         }
-        public async Task<bool> UpdateAsync(ResourceFolderEntity obj)
+        public async Task<bool> UpdateAsync(ResourceCategory obj)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            var entity = await context.Folders.FindAsync(obj.Id);
+            var entity = await context.ResourceCategories.FindAsync(obj.Id);
             if (entity == null)
             {
                 return false;

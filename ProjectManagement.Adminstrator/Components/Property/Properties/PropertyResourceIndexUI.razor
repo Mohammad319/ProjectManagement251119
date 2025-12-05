@@ -1,5 +1,6 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Resources
 @using ProjectImportHub.Infrastructure
 @using ProjectImportHub.Services.ResourceProperties
 @using ProjectManagement.Adminstrator.Constants
@@ -11,7 +12,7 @@
 <button @onclick="() => UpdateForm()" class="@CsS.Btn.Outline.Success" title="إضافة" aria-label="إضافة">
                     @((MarkupString)Icons.Plus)
                 </button>
-<Grid TItem="ResourcePropertyEntity" Items="PropertiesList?.Where(x => SelectedGroupId == 0 || x.PropertySetId == SelectedGroupId)">
+<Grid TItem="ResourceAttribute" Items="PropertiesList?.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH"></th>
         <th style="width:200px;" class="@CssClasses.Table.TH">@CalcResource.code</th>
@@ -39,12 +40,12 @@
 </Grid>
 @code {
     [Parameter] public int GroupId { get; set; } = new();
-    List<ResourcePropertyEntity> PropertiesList = new(); 
+    List<ResourceAttribute> PropertiesList = new(); 
 
-    void Remove(ResourcePropertyEntity model) =>
+    void Remove(ResourceAttribute model) =>
 MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
 
-    async Task ConfirmRemoveAsync(ResourcePropertyEntity model)
+    async Task ConfirmRemoveAsync(ResourceAttribute model)
     {
         if (await ResourcePropertiesService.DeleteAsync(model.Id))
         {
@@ -53,12 +54,12 @@ MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
             StateHasChanged();
         }
     }
-    void UpdateForm() => UpdateForm(new ResourcePropertyEntity() { DisplayName = "" });
-    void UpdateForm(ResourcePropertyEntity model)
+    void UpdateForm() => UpdateForm(new ResourceAttribute() { DisplayName = "" });
+    void UpdateForm(ResourceAttribute model)
     {
-        ResourcePropertyEntity up = new() { DisplayName = "" };
+        ResourceAttribute up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
-        up.PropertySetId = GroupId;
+        up.AttributeSetId = GroupId;
         Modal.AddModal<PropertyResourceFormUI>(model.Id == 0 ? 
             AppLoc[LocalizerConst.New, ""] :
                     AppLoc[LocalizerConst.Update,"(p" + model.Id + ") ," + model.DisplayName], new Dictionary<string, object>
@@ -79,7 +80,7 @@ MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
         Modal.CloseLastModal();
         StateHasChanged();
     }
-    List<ResourcePropertySetEntity> Groups = new();
+    List<ResourceAttributeSet> Groups = new();
     int SelectedGroupId = 0;
     protected async override Task OnInitializedAsync()
     {

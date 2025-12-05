@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class NumericResourceAssignmentMapper
 {
-    public static NumericResourceAssignmentDto ToDto(this NumericResourceAssignmentEntity e)
+    public static NumericResourceAssignmentDto ToDto(this NumericResourceAssignment e)
     {
         if (e == null) return null!;
 

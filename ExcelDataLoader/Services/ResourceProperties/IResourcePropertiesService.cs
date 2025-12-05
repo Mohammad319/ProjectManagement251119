@@ -1,22 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjectImportHub.Entities;
+using ProjectImportHub.Entities.Resources;
 using ProjectImportHub.Infrastructure;
 
 namespace ProjectImportHub.Services.ResourceProperties
 {
     public interface IResourcePropertiesService
     {
-        Task<List<ResourcePropertyEntity>> GetByGroupIdAsync(int groupId);
-        Task<bool> UpdateAsync(ResourcePropertyEntity obj);
-        Task<int> AddAsync(ResourcePropertyEntity obj);
+        Task<List<ResourceAttribute>> GetByGroupIdAsync(int groupId);
+        Task<bool> UpdateAsync(ResourceAttribute obj);
+        Task<int> AddAsync(ResourceAttribute obj);
         Task<bool> DeleteAsync(int id);
     }
     public class ResourcePropertiesService(IDbContextFactory<ProjectImportHubContext> ContextFactory) : IResourcePropertiesService
     {
-        public async Task<int> AddAsync(ResourcePropertyEntity obj)
+        public async Task<int> AddAsync(ResourceAttribute obj)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            context.ResourceProperties.Add(obj);
+            context.ResourceAttributes.Add(obj);
             await context.SaveChangesAsync();
             return obj.Id;
         }
@@ -24,26 +24,26 @@ namespace ProjectImportHub.Services.ResourceProperties
         public async Task<bool> DeleteAsync(int id)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            var entity = await context.ResourceProperties.FindAsync(id);
+            var entity = await context.ResourceAttributes.FindAsync(id);
             if (entity == null)
             {
                 return false;
             }
-            context.ResourceProperties.Remove(entity);
+            context.ResourceAttributes.Remove(entity);
             await context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<List<ResourcePropertyEntity>> GetByGroupIdAsync(int groupId)
+        public async Task<List<ResourceAttribute>> GetByGroupIdAsync(int groupId)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            return await context.ResourceProperties.Where(x => x.PropertySetId == groupId).ToListAsync();
+            return await context.ResourceAttributes.Where(x => x.AttributeSetId == groupId).ToListAsync();
         }
 
-        public async Task<bool> UpdateAsync(ResourcePropertyEntity obj)
+        public async Task<bool> UpdateAsync(ResourceAttribute obj)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            var entity = await context.ResourceProperties.FindAsync(obj.Id);
+            var entity = await context.ResourceAttributes.FindAsync(obj.Id);
             if (entity == null)
             {
                 return false;

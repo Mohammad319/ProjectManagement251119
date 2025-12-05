@@ -107,7 +107,7 @@
             <div>
                 <button type="button" class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole())">Add Role</button>
             </div>
-            @if (model.CostRole != null && model.CostRole.Any())
+            @if (model.CostRoles != null && model.CostRoles.Any())
             {
                 <div class="@CsS.Grid.Span.MD6">
                     <div class="@CsS.Layout.Inline">
@@ -118,17 +118,17 @@
                         <div class=" ">#</div>
                     </div>
                     <br />
-                    @if (model.CostRole is not null && model.CostRole.Count > 0)
+                    @if (model.CostRoles is not null && model.CostRoles.Count > 0)
                     {
-                        @for (int i = 0; i < model.CostRole.Count; i++)
+                        @for (int i = 0; i < model.CostRoles.Count; i++)
                         {
                             int d = i;
-                            var role = model.CostRole[d];
+                            var role = model.CostRoles[d];
                             <div class="@CsS.Layout.Inline">
                                 <div class="flex items-center ">
                                     <button type="button" title="Remove"
                                             class="@CsS.Btn.Outline.Danger h-6 w-6 p-0 flex items-center justify-center"
-                                            @onclick="() => model.CostRole.Remove(role)">
+                                            @onclick="() => model.CostRoles.Remove(role)">
                                         x
                                     </button>
                                 </div>
@@ -172,7 +172,7 @@
 
 @code {
     [CascadingParameter] private EditContext EditContext { get; set; }
-    [Parameter] public ResourceEntity model { get; set; } = new();
+    [Parameter] public ResourceDefinition model { get; set; } = new();
     bool IsEditMode => model.Id > 0;
     [Parameter] public EventCallback<bool> CallBack { get; set; }
 
@@ -203,12 +203,12 @@
     }
     void AddRole()
     {
-        if (model.CostRole == null) model.CostRole = [];
-        if (model.CostRole.Count != 0)
-            model.CostRole.Add(new() { Min = model.CostRole.Last().Max,
-                Max = model.CostRole.Last().Max + 10, 
-                Value = model.CostRole.Last().Value + 1 });
-        else model.CostRole.Add(new() { Min = 0, Max = 10, Value = 5 });
+        if (model.CostRoles == null) model.CostRoles = [];
+        if (model.CostRoles.Count != 0)
+            model.CostRoles.Add(new() { Min = model.CostRoles.Last().Max,
+                Max = model.CostRoles.Last().Max + 10, 
+                Value = model.CostRoles.Last().Value + 1 });
+        else model.CostRoles.Add(new() { Min = 0, Max = 10, Value = 5 });
         StateHasChanged();
     }
 }

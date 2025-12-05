@@ -1,4 +1,5 @@
 ﻿using ProjectImportHub.Entities;
+using ProjectImportHub.Entities.Tasks;
 
 namespace ProjectImportHub.Dto.ProjectTask
 {
@@ -15,7 +16,7 @@ namespace ProjectImportHub.Dto.ProjectTask
         public string? Code { get; set; }
         public string DisplayName { get; set; } = string.Empty;
 
-        public int? UnitGroupId { get; set; }     // früher UnitGroupId
+        public int? UnitGroupId { get; set; }     // früher TaskUnitGroupId
         public string? UnitCode { get; set; }     // früher Unit
 
         public double? Quantity { get; set; }
@@ -34,6 +35,6 @@ namespace ProjectImportHub.Dto.ProjectTask
 
         public List<int> VisibleFolderIds { get; set; } = new();    // früher VisibleFolders
 
-        // Hilfsanzeige (HeaderNotes…): füg’s später hinzu, wenn nötig
+        // Hilfsanzeige (RowNotes…): füg’s später hinzu, wenn nötig
     }
 }

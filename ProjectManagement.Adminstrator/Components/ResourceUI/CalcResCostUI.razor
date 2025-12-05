@@ -61,7 +61,7 @@
 </div>
 
 @code {
-    [Parameter] public ResourceEntity Resource { get; set; }
+    [Parameter] public ResourceDefinition Resource { get; set; }
 
     CalcResCost CalcResCost = new();
     [Parameter] public EventCallback<bool> CallBack { get; set; }

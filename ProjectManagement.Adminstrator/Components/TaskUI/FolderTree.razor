@@ -1,6 +1,7 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using ProjectImportHub.Entities
 @using ProjectImportHub.Entities.Questions.Assignments
+@using ProjectImportHub.Entities.Tasks
 @using ProjectImportHub.Infrastructure
 @using ProjectImportHub.Services.Resource
 @using ProjectManagement.Adminstrator.Components.ResourceUI
@@ -31,7 +32,7 @@
     {
         if (!TaskResourceLink.Any(x => x.TaskId == TaskPM.Id && x.ResourceId == resId))
         {
-            await TaskResourceService.CreateAsync(new TaskResourceAssignmentEntity() { TaskId = TaskPM.Id, ResourceId = resId });
+            await TaskResourceService.CreateAsync(new TaskResourceAssignment() { TaskId = TaskPM.Id, ResourceId = resId });
             TaskResourceLink.Add(new TaskResourceLinkDto() { TaskId = TaskPM.Id, ResourceId = resId });
         }
         else
@@ -42,8 +43,8 @@
         StateHasChanged();
     }
 
-    [Parameter] public ProjectTaskEntity TaskPM { get; set; }
-    [Parameter] public List<ResourceFolderEntity> folders  { get; set;}
+    [Parameter] public TaskDefinition TaskPM { get; set; }
+    [Parameter] public List<ResourceCategory> folders  { get; set;}
     [Parameter] public List<TaskResourceLinkDto> TaskResourceLink { get; set; }
 
 }

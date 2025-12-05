@@ -4,11 +4,11 @@ namespace ProjectImportHub.Services.UnitGroups
 {
     public interface IUnitGroupsService
     {
-        Task<List<UnitGroupEntity>> GetAllAsync();
+        Task<List<TaskUnitGroup>> GetAllAsync();
 
-        Task<UnitGroupEntity> GetByIdAsync(int id);
-        Task<bool> UpdateAsync(UnitGroupEntity obj);
-        Task<int> AddAsync(UnitGroupEntity obj);
+        Task<TaskUnitGroup> GetByIdAsync(int id);
+        Task<bool> UpdateAsync(TaskUnitGroup obj);
+        Task<int> AddAsync(TaskUnitGroup obj);
         Task<bool> DeleteAsync(int id);
     }
 }

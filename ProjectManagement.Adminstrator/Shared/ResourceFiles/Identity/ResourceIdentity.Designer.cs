@@ -196,7 +196,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Identity {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to First DisplayName.
+        ///   Looks up a localized string similar to First Name.
         /// </summary>
         public static string firstname {
             get {

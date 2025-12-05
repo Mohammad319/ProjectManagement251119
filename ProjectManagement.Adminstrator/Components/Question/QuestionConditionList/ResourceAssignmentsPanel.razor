@@ -18,42 +18,42 @@
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 @code {
-    [Parameter] public TaskConditionEntity Condition { get; set; } = null!;
+    [Parameter] public ConditionDefinition Condition { get; set; } = null!;
 
-    [Parameter] public List<OptionGroupEntity> TaskChoiceGroups { get; set; } = new();
-    [Parameter] public List<NumericInputEntity> TaskNumericGroups { get; set; } = new();
+    [Parameter] public List<QuestionGroupDefinition> TaskChoiceGroups { get; set; } = new();
+    [Parameter] public List<NumericQuestionDefinition> TaskNumericGroups { get; set; } = new();
 
     [Parameter] public Dictionary<int, List<OptionBindVM>> OptBindsByRA { get; set; } = new();
     [Parameter] public Dictionary<int, List<NumericBindVM>> NumBindsByRA { get; set; } = new();
     [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; }
     [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; }
-    private bool CanAddBindingsFor(ResourceAssignmentEntity a) => a.Id > 0;
+    private bool CanAddBindingsFor(ConditionResourceAssignment a) => a.Id > 0;
     private void AddAssignment() =>
-        Condition.ConditionResourceAssignments.Add(
-            new ResourceAssignmentEntity
+        Condition.Assignments.Add(
+            new ConditionResourceAssignment
             {
-                Resource = new ResourceEntity
+                Resource = new ResourceDefinition
                 {
                     Data = new () // تأكد من النوع الصحيح لجدول Data لديك
                 },
                 CapRole = [] // أو النوع الفعلي لقائمة CapRole
-            }); private void RemoveAssignment(ResourceAssignmentEntity a) => Condition.ConditionResourceAssignments.Remove(a);
-    private void RemoveAssignment(ResourceEntity resource)
+            }); private void RemoveAssignment(ConditionResourceAssignment a) => Condition.Assignments.Remove(a);
+    private void RemoveAssignment(ResourceDefinition resource)
     {
         if (resource is null) return;
-        if (Condition.ConditionResourceAssignments.Any(x => x.ResourceId == resource.Id))
-            Condition.ConditionResourceAssignments.RemoveAll(x => x.ResourceId == resource.Id);
+        if (Condition.Assignments.Any(x => x.ResourceId == resource.Id))
+            Condition.Assignments.RemoveAll(x => x.ResourceId == resource.Id);
         else
         {
-            Condition.ConditionResourceAssignments.Add(new ResourceAssignmentEntity()
+            Condition.Assignments.Add(new ConditionResourceAssignment()
             {
                 ResourceId = resource.Id,
                 ChangeFactor1 = resource?.Data?.ChangeFactor1 == null ? 0 : resource.Data.ChangeFactor1,
                 ChangeFactor2 = resource?.Data?.ChangeFactor2 == null ? 0 : resource.Data.ChangeFactor2,
                 CapWaste = resource?.Data?.CapWaste == null ? 0 : resource.Data.CapWaste,
                 BaseCost = resource?.Data?.BaseCost == null ? 0 : resource.Data.BaseCost,
-                IsActive = resource.Active,
-                Resource = new ResourceEntity
+                IsActive = resource.IsActive,
+                Resource = new ResourceDefinition
                 {
                     Id = resource.Id,
                     Name = resource.Name,
@@ -104,7 +104,7 @@
     private void AddNumericEq(int raId, NumericBindVM vm) => vm.Formulas.Add(string.Empty);
     private void RemoveNumericEq(int raId, NumericBindVM vm, int idx) { if (idx >= 0 && idx < vm.Formulas.Count) vm.Formulas.RemoveAt(idx); }
 
-    void AddRole(ResourceAssignmentEntity a)
+    void AddRole(ConditionResourceAssignment a)
     {
         a.CapRole ??= new();  // ← مهم
         if (a.CapRole.Count != 0)
@@ -123,16 +123,16 @@
     </div>
     <div>
         <FolderResourcesAddUI TaskId="Condition.TaskId"
-                              ResIds="Condition.ConditionResourceAssignments.Select(x => x.ResourceId).ToList()"
+                              ResIds="Condition.Assignments.Select(x => x.ResourceId).ToList()"
                               OnSave="(e)=>RemoveAssignment(e)"></FolderResourcesAddUI>
     </div>
-    @if (Condition.ConditionResourceAssignments.Count == 0)
+    @if (Condition.Assignments.Count == 0)
     {
         <div class="">None</div>
     }
     else
     {
-        @foreach (var a in Condition.ConditionResourceAssignments)
+        @foreach (var a in Condition.Assignments)
         {
             <div class="@NewCC.Card.SubPanel @CsS.Spacing.M.Bottom(Size.S2)">
                 <div class="@CsS.Grid.Col.MD12">
@@ -284,7 +284,7 @@
 
                                                     <select class="@CsS.Input.Select" @bind="b.ChoiceOptionId" aria-label="Choice option">
                                                         <option value="0">-- select --</option>
-                                                        @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<OptionItemEntity>())
+                                                        @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
                                                         {
                                                             <option value="@o.Id">@o.DisplayName</option>
                                                         }

@@ -10,15 +10,15 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class ConditionOptionRequirementMapper
 {
-    public static ConditionOptionRequirementDto ToDto(this ConditionOptionRequirementEntity e)
+    public static ConditionOptionRequirementDto ToDto(this OptionConditionRule e)
     {
         if (e == null) return null!;
 
         return new ConditionOptionRequirementDto
         {
-            //QuestionConditionId = e.QuestionConditionId,
-            //OptionGroupId = e.OptionGroupId,
-            OptionItemId = e.OptionItemId
+            //ConditionId = e.ConditionId,
+            //QuestionGroupId = e.QuestionGroupId,
+            OptionItemId = e.OptionId
         };
     }
 }

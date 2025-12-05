@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class TaskConditionMapper
 {
-    public static TaskConditionDto ToDto(this TaskConditionEntity e)
+    public static TaskConditionDto ToDto(this ConditionDefinition e)
     {
         if (e == null) return null!;
 

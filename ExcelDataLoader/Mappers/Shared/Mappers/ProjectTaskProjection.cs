@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProjectImportHub.Entities;
+using ProjectImportHub.Entities.Tasks;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
@@ -8,35 +9,35 @@ namespace ProjectManagement.Shared.Mappers;
 public static class ProjectTaskProjection
 {
     public static IQueryable<ProjectTaskDto> TasksBaseToDto(
-    this IQueryable<ProjectTaskEntity> query, int tenantid)
+    this IQueryable<TaskDefinition> query, int tenantid)
     {
         return query.AsNoTracking().AsSplitQuery()
             .Select(t => new ProjectTaskDto
             {
                 Id = t.Id,
-                DisplayName = t.DisplayName,
+                DisplayName = t.Name,
                 SortOrder = t.SortOrder,
                 IsVisible = t.IsVisible,
                 CapacityResourceId = t.CapacityResourceId,
-                UnitGroupId = t.UnitGroupId,
+                UnitGroupId = t.TaskUnitGroupId,
                 Code = t.Code,
                 NewUnitCode = t.NewUnitCode,
-                Note = t.Note,
+                Note = t.FieldNotes,
                 UnitCode = t.UnitCode,
                 WorkloadThresholds = t.WorkloadThresholds,
                 Quantity = t.Quantity,
                 Uncontrollable = t.Uncontrollable,
-                UnitGroup = t.UnitGroup == null ? null : new UnitGroupDto
+                UnitGroup = t.TaskUnitGroup == null ? null : new UnitGroupDto
                 {
-                    Id = t.UnitGroup.Id,
-                    DisplayName = t.UnitGroup.DisplayName,
-                    Keys = t.UnitGroup.Keys,
+                    Id = t.TaskUnitGroup.Id,
+                    DisplayName = t.TaskUnitGroup.DisplayName,
+                    Keys = t.TaskUnitGroup.Keys,
                 },
 
                 BaseResources = t.TaskResourceAssignments.Select(a => new
                     {
                         a,
-                        Link = a.Resource.ResourcesTenant
+                        Link = a.Resource.TenantLinks
                             .Where(x => x.TenantId == tenantid)
                             .Select(x => new
                             {
@@ -69,16 +70,16 @@ public static class ProjectTaskProjection
                         ResourceSortId = z.Link == null ? (int?)null : z.Link.ResourceSortId,
                         StatusId = z.Link == null ? (int?)null : z.Link.StatusId,
                         MenuId = z.a.MenuId,
-                        Properties = z.a.Resource.PropertiesBind
+                        Properties = z.a.Resource.AttributeValues
                             .Select(b => new ResourcePropertyBindDto
                             {
-                                Id = b.PropertyId,
-                                NumberDefault = b.NumberDefault,
-                                DataType = b.Property.DataType,
-                                DisplayName = b.Property.DisplayName,
-                                IsUserEditable = b.Property.IsUserEditable,
-                                MaxNumericValue = b.Property.MaxNumericValue,
-                                TextDefault = b.TextDefault,
+                                Id = b.AttributeId,
+                                NumberDefault = b.NumericValue,
+                                DataType = b.Attribute.DataType,
+                                DisplayName = b.Attribute.DisplayName,
+                                IsUserEditable = b.Attribute.IsUserEditable,
+                                MaxNumericValue = b.Attribute.MaxNumericValue,
+                                TextDefault = b.TextValue,
                             }).ToList(),
 
                         Data = new ResourceData
@@ -101,33 +102,33 @@ public static class ProjectTaskProjection
     }
 
    public static IQueryable<ProjectTaskDto> ProjectToDto(
-    this IQueryable<ProjectTaskEntity> query, int tenantid, int depid)
+    this IQueryable<TaskDefinition> query, int tenantid, int depid)
     {
         return query.AsNoTracking().AsSplitQuery()
             .Select(t => new ProjectTaskDto
             {
                 Id = t.Id,
-                DisplayName = t.DisplayName,
+                DisplayName = t.Name,
                 SortOrder = t.SortOrder,
                 IsVisible = t.IsVisible,
                 CapacityResourceId = t.CapacityResourceId,
-                UnitGroupId = t.UnitGroupId,
+                UnitGroupId = t.TaskUnitGroupId,
                 Code = t.Code,
                 NewUnitCode = t.NewUnitCode,
-                Note = t.Note,
+                Note = t.FieldNotes,
                 UnitCode = t.UnitCode,
                 WorkloadThresholds = t.WorkloadThresholds,
                 Quantity = t.Quantity,
                 Uncontrollable = t.Uncontrollable,
-                UpperNote = t.UpperNote,
+                UpperNote = t.RowNotes,
                
-                UnitGroup = t.UnitGroup == null ? null : new UnitGroupDto
+                UnitGroup = t.TaskUnitGroup == null ? null : new UnitGroupDto
                 {
-                    Id = t.UnitGroup.Id,
-                    DisplayName = t.UnitGroup.DisplayName,
-                    Keys = t.UnitGroup.Keys,
+                    Id = t.TaskUnitGroup.Id,
+                    DisplayName = t.TaskUnitGroup.DisplayName,
+                    Keys = t.TaskUnitGroup.Keys,
                 },
-                OptionGroups = t.OptionGroups.Select(g => new OptionGroupDto
+                OptionGroups = t.QuestionGroups.Select(g => new OptionGroupDto
                 {
                     Id = g.Id,
                     DisplayName = g.DisplayName,
@@ -143,7 +144,7 @@ public static class ProjectTaskProjection
                         OptionGroupId = o.OptionGroupId,
                     }).ToList()
                 }).ToList(),
-                ResourceOptionGroups = t.ResourceOptionGroups.Select(g => new ResourceOptionGroupDto
+                ResourceOptionGroups = t.ResourceSelectors.Select(g => new ResourceOptionGroupDto
                 {
                     Id = g.Id,
                     DisplayName = g.DisplayName,
@@ -155,7 +156,7 @@ public static class ProjectTaskProjection
                         ResourceName = i.Resource.Name,
                     }).ToList()
                 }).ToList(),
-                NumericInputs = t.NumericInputs.Select(n => new NumericInputDto
+                NumericInputs = t.NumericQuestions.Select(n => new NumericInputDto
                 {
                     Id = n.Id,
                     DisplayName = n.DisplayName,
@@ -168,28 +169,28 @@ public static class ProjectTaskProjection
                 Conditions = t.Conditions.Select(c => new TaskConditionDto
                 {
                     Id = c.Id,
-                    NumericToResourceLogic = c.NumericToResourceLogic,
-                    OptionToNumericLogic = c.OptionToNumericLogic,
-                    OptionToResourceLogic = c.OptionToResourceLogic,
+                    NumericToResourceLogic = c.NumericResourceLogic,
+                    OptionToNumericLogic = c.OptionNumericLogic,
+                    OptionToResourceLogic = c.OptionResourceLogic,
 
-                    VariableRequirements = c.VariableRequirements
+                    VariableRequirements = c.VariableRules
                         .Select(r => new ConditionVariableRequirementDto { Id = r.Id }).ToList(),
 
-                    OptionRequirements = c.OptionRequirements
+                    OptionRequirements = c.OptionRules
                         .Select(r => new ConditionOptionRequirementDto
                         {
-                            OptionItemId = r.OptionItemId,
-                            SetKey = r.SetKey,
+                            OptionItemId = r.OptionId,
+                            SetKey = r.GroupKey,
                         }).ToList(),
 
-                    ResourceRequirements = c.ResourceRequirements
+                    ResourceRequirements = c.ResourceRules
                         .Select(r => new ConditionResourceRequirementDto
                         {
                             SetKey = r.SetKey,
                             ResourceOptionItemId = r.ResourceOptionItemId,
                         }).ToList(),
 
-                    NumericRequirements = c.NumericRequirements
+                    NumericRequirements = c.NumericRules
                         .Select(r => new ConditionNumericRequirementDto
                         {
                             SetKey = r.SetKey,
@@ -199,11 +200,11 @@ public static class ProjectTaskProjection
                         }).ToList(),
 
                     // نحسب رابط المستأجر مرة واحدة لكل ResourceAssignment ثم نُسقِط
-                    ConditionResourceAssignments = c.ConditionResourceAssignments
+                    ConditionResourceAssignments = c.Assignments
                         .Select(a => new
                         {
                             a,
-                            Link = a.Resource.ResourcesTenant
+                            Link = a.Resource.TenantLinks
                                 .Where(x => x.TenantId == tenantid)
                                 .Select(x => new
                                 {
@@ -260,15 +261,15 @@ public static class ProjectTaskProjection
                                 StatusId = z.Link == null ? (int?)null : z.Link.StatusId,
                                 // ------------------------------------
 
-                                Properties = z.a.Resource.PropertiesBind.Select(b => new ResourcePropertyBindDto
+                                Properties = z.a.Resource.AttributeValues.Select(b => new ResourcePropertyBindDto
                                 {
                                     Id = b.Id,
-                                    NumberDefault = b.NumberDefault,
-                                    DataType = b.Property.DataType,
-                                    DisplayName = b.Property.DisplayName,
-                                    IsUserEditable = b.Property.IsUserEditable,
-                                    MaxNumericValue = b.Property.MaxNumericValue,
-                                    TextDefault = b.TextDefault,
+                                    NumberDefault = b.NumericValue,
+                                    DataType = b.Attribute.DataType,
+                                    DisplayName = b.Attribute.DisplayName,
+                                    IsUserEditable = b.Attribute.IsUserEditable,
+                                    MaxNumericValue = b.Attribute.MaxNumericValue,
+                                    TextDefault = b.TextValue,
                                 }).ToList(),
                             },
 

@@ -79,7 +79,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Active.
+        ///   Looks up a localized string similar to IsActive.
         /// </summary>
         public static string active {
             get {
@@ -412,7 +412,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Note.
+        ///   Looks up a localized string similar to FieldNotes.
         /// </summary>
         public static string note {
             get {
@@ -826,7 +826,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to UpperNote.
+        ///   Looks up a localized string similar to RowNotes.
         /// </summary>
         public static string UpperNote {
             get {

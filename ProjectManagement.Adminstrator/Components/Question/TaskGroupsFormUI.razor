@@ -1,6 +1,7 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using ProjectImportHub.Entities
 @using ProjectImportHub.Entities.Questions.Groups
+@using ProjectImportHub.Entities.Tasks
 @using ProjectImportHub.Infrastructure
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
 @using ProjectManagement.Shared.Base.ProjectAppStorage
@@ -12,16 +13,16 @@
 @inject ProjectImportHub.Services.TaskGroups.ITaskGroupsCommandService TaskGroupsCommand
 
 @code {
-    ProjectTaskEntity Task { get; set; } = default!;
+    TaskDefinition Task { get; set; } = default!;
     [Parameter] public int ID { get; set; } = default!;
-    List<ResourceFolderEntity> Folders { get; set; }
-    ResourceFolderEntity Selected;
+    List<ResourceCategory> Folders { get; set; }
+    ResourceCategory Selected;
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         Task = await TaskGroupsQuery.GetTaskGraphAsync(ID, CancellationToken.None)
-               ?? new ProjectTaskEntity();
+               ?? new TaskDefinition();
 
         Folders = (await TaskGroupsQuery.GetVisibleFoldersAsync(Task.Id, CancellationToken.None)).ToList();
     }
@@ -37,38 +38,38 @@
 
     // ====== Choice ======
     private void AddChoiceGroup()
-        => Task.OptionGroups.Add(new OptionGroupEntity { TaskId = ID, DisplayName = "Group", SortOrder = Task.OptionGroups.Count });
+        => Task.QuestionGroups.Add(new QuestionGroupDefinition { TaskId = ID, DisplayName = "Group", SortOrder = Task.QuestionGroups.Count });
 
-    private void RemoveChoiceGroup(OptionGroupEntity g)
-        => Task.OptionGroups.Remove(g);
+    private void RemoveChoiceGroup(QuestionGroupDefinition g)
+        => Task.QuestionGroups.Remove(g);
 
-    private void AddChoiceOption(OptionGroupEntity g)
-        => g.Options.Add(new OptionItemEntity { OptionGroupId = g.Id, DisplayName = "Option" });
+    private void AddChoiceOption(QuestionGroupDefinition g)
+        => g.Options.Add(new QuestionOptionDefinition { OptionGroupId = g.Id, DisplayName = "Option" });
 
-    private void RemoveChoiceOption(OptionGroupEntity g, OptionItemEntity o)
+    private void RemoveChoiceOption(QuestionGroupDefinition g, QuestionOptionDefinition o)
         => g.Options.Remove(o);
 
     // ====== Numeric ======
     private void AddNumericGroup()
-        => Task.NumericInputs.Add(new NumericInputEntity { TaskId = ID, DisplayName = "Numeric", SortOrder = Task.NumericInputs.Count });
+        => Task.NumericQuestions.Add(new NumericQuestionDefinition { TaskId = ID, DisplayName = "Numeric", SortOrder = Task.NumericQuestions.Count });
 
-    private void RemoveNumericGroup(NumericInputEntity g)
-        => Task.NumericInputs.Remove(g);
+    private void RemoveNumericGroup(NumericQuestionDefinition g)
+        => Task.NumericQuestions.Remove(g);
 
     // ====== Resource ======
     private void AddResourceGroup()
-        => Task.ResourceOptionGroups.Add(new ResourceOptionGroupEntity { TaskId = ID, DisplayName = "Resources", SortOrder = Task.ResourceOptionGroups.Count });
+        => Task.ResourceSelectors.Add(new ResourceSelectorDefinition { TaskId = ID, DisplayName = "Resources", SortOrder = Task.ResourceSelectors.Count });
 
-    private void RemoveResourceGroup(ResourceOptionGroupEntity g)
-        => Task.ResourceOptionGroups.Remove(g);
+    private void RemoveResourceGroup(ResourceSelectorDefinition g)
+        => Task.ResourceSelectors.Remove(g);
 
-    private void AddResourceItem(ResourceOptionGroupEntity g)
-        => g.Items.Add(new ResourceOptionItemEntity { ResourceChoiceGroupId = g.Id });
+    private void AddResourceItem(ResourceSelectorDefinition g)
+        => g.Items.Add(new ResourceChoiceOptionDefinition { ResourceChoiceGroupId = g.Id });
 
-    private void RemoveResourceItem(ResourceOptionGroupEntity g, ResourceOptionItemEntity it)
+    private void RemoveResourceItem(ResourceSelectorDefinition g, ResourceChoiceOptionDefinition it)
         => g.Items.Remove(it);
 
-    void AddDelete(ResourceOptionGroupEntity group, ResourceEntity res)
+    void AddDelete(ResourceSelectorDefinition group, ResourceDefinition res)
     {
         if (group.Items.Any(x => x.ResourceId == res.Id))
         {
@@ -77,12 +78,12 @@
         }
         else
         {
-            var toadd = new ResourceOptionItemEntity { ResourceChoiceGroupId = group.Id, ResourceId = res.Id, Resource = res };
+            var toadd = new ResourceChoiceOptionDefinition { ResourceChoiceGroupId = group.Id, ResourceId = res.Id, Resource = res };
             group.Items.Add(toadd);
         }
     }
 
-    async Task LoadResourcesAsync(ResourceFolderEntity folders)
+    async Task LoadResourcesAsync(ResourceCategory folders)
     {
         if (folders.Resources == null || folders.Resources.Count == 0)
         {
@@ -107,10 +108,10 @@
     }
 
     // ====== Helpers: RevealSectionKeys ======
-    private static string GetRevealKeys(OptionItemEntity o)
+    private static string GetRevealKeys(QuestionOptionDefinition o)
         => o?.RevealedSectionKeys is { Count: > 0 } ? string.Join(", ", o.RevealedSectionKeys) : string.Empty;
 
-    private static void SetRevealKeys(OptionItemEntity o, string? input)
+    private static void SetRevealKeys(QuestionOptionDefinition o, string? input)
     {
         if (o is null) return;
         if (string.IsNullOrWhiteSpace(input)) { o.RevealedSectionKeys = new List<string>(); return; }
@@ -138,7 +139,7 @@ else
             <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom(Size.S1)">
                 <div class="@CsS.Layout.FlexMinWidth(280)">
                     <label class="@CsS.Form.Label">@CalcResource.name</label>
-                    <input class="@CsS.Input.Text" value="@Task?.DisplayName" readonly />
+                    <input class="@CsS.Input.Text" value="@Task?.Name" readonly />
                 </div>
 
                 <div class="@CsS.Layout.FlexWrap @CsS.Util.PlaceSelfEnd">
@@ -154,9 +155,9 @@ else
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddChoiceGroup">Add Group</button>
                 </div>
 
-                @if (Task.OptionGroups?.Count > 0)
+                @if (Task.QuestionGroups?.Count > 0)
                 {
-                    @foreach (var g in Task.OptionGroups.OrderBy(x => x.SortOrder))
+                    @foreach (var g in Task.QuestionGroups.OrderBy(x => x.SortOrder))
                     {
                         <div class="@NewCC.Card.SubPanel">
                             <div class="@CsS.Grid.Col.MD12">
@@ -243,9 +244,9 @@ else
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddNumericGroup">Add Group</button>
                 </div>
 
-                @if (Task.NumericInputs?.Count > 0)
+                @if (Task.NumericQuestions?.Count > 0)
                 {
-                    @foreach (var g in Task.NumericInputs.OrderBy(x => x.SortOrder))
+                    @foreach (var g in Task.NumericQuestions.OrderBy(x => x.SortOrder))
                     {
                         <div class="@NewCC.Card.SubPanel">
                             <!-- NOTE: this row is 8 columns; keep spans sum = 8 -->
@@ -295,9 +296,9 @@ else
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddResourceGroup">Add Group</button>
                 </div>
 
-                @if (Task.ResourceOptionGroups?.Count > 0)
+                @if (Task.ResourceSelectors?.Count > 0)
                 {
-                    @foreach (var g in Task.ResourceOptionGroups.OrderBy(x => x.SortOrder))
+                    @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
                     {
                         <div class="@NewCC.Card.SubPanel">
                             <div class="@CsS.Grid.Col.MD12">

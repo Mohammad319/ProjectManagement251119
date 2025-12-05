@@ -1,5 +1,7 @@
 ﻿@using ProjectImportHub.Dto.ProjectTask
 @using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Lookups
+@using ProjectImportHub.Entities.Tasks
 @using ProjectImportHub.Services.ProjectTask
 @inject IProjectTaskService TaskService
 @inherits AppComponentBase
@@ -22,7 +24,7 @@
                     {
                         foreach (var action in ActionsTasks)
                         {
-                            <option value="@action.Id">@action.DisplayName</option>
+                            <option value="@action.Id">@action.Name</option>
                         }
                     }
                 </InputSelect>
@@ -37,7 +39,7 @@
                     {
                         foreach (var action in LocationsList)
                         {
-                            <option value="@action.Id">@action.DisplayName</option>
+                            <option value="@action.Id">@action.Name</option>
                         }
                     }
                 </InputSelect>
@@ -52,7 +54,7 @@
                     {
                         foreach (var action in FallsList)
                         {
-                            <option value="@action.Id">@action.DisplayName</option>
+                            <option value="@action.Id">@action.Name</option>
                         }
                     }
                 </InputSelect>
@@ -67,7 +69,7 @@
                     {
                         foreach (var action in ActionTypesList)
                         {
-                            <option value="@action.Id">@action.DisplayName</option>
+                            <option value="@action.Id">@action.Name</option>
                         }
                     }
                 </InputSelect>
@@ -221,14 +223,14 @@
     private ProjectTaskEditDto UpdateForm { get; set; } = new();
 
     // Lookups
-    private List<ProjectImportHub.Entities.ActionEntity> ActionsTasks = new();
+    private List<ActionEntity> ActionsTasks = new();
     private List<ActionTypeEntity> ActionTypesList = new();
     private List<FallEntity> FallsList = new();
     private List<LocationEntity> LocationsList = new();
-    private List<UnitGroupEntity> Groups = new();
-    private List<ResourceFolderEntity> Folders = new();
+    private List<TaskUnitGroup> Groups = new();
+    private List<ResourceCategory> Folders = new();
 
-    private UnitGroupEntity SelectedGroup => Groups.FirstOrDefault(g => g.Id == UpdateForm.UnitGroupId);
+    private TaskUnitGroup SelectedGroup => Groups.FirstOrDefault(g => g.Id == UpdateForm.UnitGroupId);
     [Inject] private IProjectTaskQueryService TaskQueries { get; set; } = default!;
 
 

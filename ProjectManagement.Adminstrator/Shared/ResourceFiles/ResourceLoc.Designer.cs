@@ -349,7 +349,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Only Active.
+        ///   Looks up a localized string similar to Only IsActive.
         /// </summary>
         public static string onlyActive {
             get {

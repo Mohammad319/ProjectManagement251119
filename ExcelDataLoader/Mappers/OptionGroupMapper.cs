@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class OptionGroupMapper
 {
-    public static OptionGroupDto ToDto(this OptionGroupEntity e)
+    public static OptionGroupDto ToDto(this QuestionGroupDefinition e)
     {
         if (e == null) return null!;
 

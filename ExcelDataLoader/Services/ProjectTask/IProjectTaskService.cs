@@ -2,6 +2,9 @@
 using Microsoft.EntityFrameworkCore.Internal;
 using ProjectImportHub.Dto.ProjectTask;
 using ProjectImportHub.Entities;
+using ProjectImportHub.Entities.Lookups;
+using ProjectImportHub.Entities.Resources;
+using ProjectImportHub.Entities.Tasks;
 using ProjectImportHub.Infrastructure;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
@@ -15,15 +18,15 @@ namespace ProjectImportHub.Services.ProjectTask
 {
     public static class TaskSelectors
     {
-        public static Expression<Func<ProjectTaskEntity, TaskWithResourcesMDto>> WithResources => x => new TaskWithResourcesMDto()
+        public static Expression<Func<TaskDefinition, TaskWithResourcesMDto>> WithResources => x => new TaskWithResourcesMDto()
         {
             Id = x.Id,
-            Name = x.DisplayName,
+            Name = x.Name,
             Code = x.Code,
             ChangeFactor1 = x.ChangeFactor1,
             ChangeFactor2 = x.ChangeFactor2,
             ResIdCap = x.CapacityResourceId,
-            Note = x.Note,
+            Note = x.FieldNotes,
             Quantity = x.Quantity,
             Unit = x.UnitCode,
             Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
@@ -74,15 +77,15 @@ namespace ProjectImportHub.Services.ProjectTask
         Task DeleteAsync(int id, CancellationToken ct);
         Task<(IReadOnlyList<ActionEntity> actions,
       IReadOnlyList<ActionTypeEntity> actionTypes, IReadOnlyList<FallEntity> falls,
-      IReadOnlyList<LocationEntity> locations, IReadOnlyList<UnitGroupEntity> unitGroups,
-      IReadOnlyList<ResourceFolderEntity> folders)> GetLookupsAsync(CancellationToken ct);
+      IReadOnlyList<LocationEntity> locations, IReadOnlyList<TaskUnitGroup> unitGroups,
+      IReadOnlyList<ResourceCategory> folders)> GetLookupsAsync(CancellationToken ct);
     }
 
     public sealed class ProjectTaskService(IDbContextFactory<ProjectImportHubContext> factory) : IProjectTaskService
     {
         public async Task<(IReadOnlyList<ActionEntity>, IReadOnlyList<ActionTypeEntity>,
-                   IReadOnlyList<FallEntity>, IReadOnlyList<LocationEntity>, IReadOnlyList<UnitGroupEntity>,
-                   IReadOnlyList<ResourceFolderEntity>)> GetLookupsAsync(CancellationToken ct)
+                   IReadOnlyList<FallEntity>, IReadOnlyList<LocationEntity>, IReadOnlyList<TaskUnitGroup>,
+                   IReadOnlyList<ResourceCategory>)> GetLookupsAsync(CancellationToken ct)
         {
             async Task<List<T>> Run<T>(Func<ProjectImportHubContext, IQueryable<T>> query) where T : class
             {
@@ -91,12 +94,12 @@ namespace ProjectImportHub.Services.ProjectTask
             }
 
 
-            var actionsTask = Run(db => db.Actions.OrderBy(x => x.DisplayName));
-            var actionTypesTask = Run(db => db.ActionTypes.OrderBy(x => x.DisplayName));
-            var fallsTask = Run(db => db.Falls.OrderBy(x => x.DisplayName));
-            var locationsTask = Run(db => db.Locations.OrderBy(x => x.DisplayName));
-            var unitGroupsTask = Run(db => db.UnitGroups.OrderBy(x => x.DisplayName));
-            var foldersTask = Run(db => db.Folders.OrderBy(x => x.SortOrder));
+            var actionsTask = Run(db => db.Actions.OrderBy(x => x.Name));
+            var actionTypesTask = Run(db => db.ActionTypes.OrderBy(x => x.Name));
+            var fallsTask = Run(db => db.Falls.OrderBy(x => x.Name));
+            var locationsTask = Run(db => db.Locations.OrderBy(x => x.Name));
+            var unitGroupsTask = Run(db => db.TaskUnitGroups.OrderBy(x => x.DisplayName));
+            var foldersTask = Run(db => db.ResourceCategories.OrderBy(x => x.SortOrder));
 
             await Task.WhenAll(actionsTask, actionTypesTask, fallsTask, locationsTask, unitGroupsTask, foldersTask);
 
@@ -121,14 +124,14 @@ namespace ProjectImportHub.Services.ProjectTask
             if (!string.IsNullOrEmpty(filter.NameOrCode))
             {
                 query = query.Where(x => x.Code.Contains(filter.NameOrCode) ||
-                x.DisplayName.Contains(filter.NameOrCode));
+                x.Name.Contains(filter.NameOrCode));
             }
             return await query.TasksBaseToDto(tenantid).ToListAsync(ct);
         }
         public async Task<ProjectTaskDto> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            return await db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().ProjectToDto(tenantid, depId).FirstOrDefaultAsync(x => x.Id == id, ct);
+            return await db.Tasks?.Where(x => x.Status == TaskStatusEnum.Ready)?.AsNoTracking()?.ProjectToDto(tenantid, depId)?.FirstOrDefaultAsync(x => x.Id == id, ct);
         }
         private static void Validate(ProjectTaskEditDto d)
         {
@@ -147,7 +150,7 @@ namespace ProjectImportHub.Services.ProjectTask
 
             await using var db = await factory.CreateDbContextAsync(ct);
 
-            var e = new ProjectTaskEntity
+            var e = new TaskDefinition
             {
                 ActionId = d.ActionId,
                 ActionTypeId = d.ActionTypeId,
@@ -157,14 +160,14 @@ namespace ProjectImportHub.Services.ProjectTask
                 FallId = d.FallId,
                 LocationId = d.LocationId,
                 Code = d.Code,
-                DisplayName = d.DisplayName,
-                UnitGroupId = d.UnitGroupId,
+                Name = d.DisplayName,
+                TaskUnitGroupId = d.UnitGroupId,
                 UnitCode = d.UnitCode,
                 Quantity = d.Quantity,
                 ChangeFactor1 = d.ChangeFactor1,
                 ChangeFactor2 = d.ChangeFactor2,
                 IsActive = d.IsActive,
-                Note = d.Note,
+                FieldNotes = d.Note,
                 VisibleFolderIds = d.VisibleFolderIds?.ToList() ?? [],
                 Uncontrollable = d.Uncontrollable,
                 
@@ -200,14 +203,14 @@ namespace ProjectImportHub.Services.ProjectTask
             e.FallId = d.FallId;
             e.LocationId = d.LocationId;
             e.Code = d.Code;
-            e.DisplayName = d.DisplayName;
-            e.UnitGroupId = d.UnitGroupId;
+            e.Name = d.DisplayName;
+            e.TaskUnitGroupId = d.UnitGroupId;
             e.UnitCode = d.UnitCode;
             e.Quantity = d.Quantity;
             e.ChangeFactor1 = d.ChangeFactor1;
             e.ChangeFactor2 = d.ChangeFactor2;
             e.IsActive = d.IsActive;
-            e.Note = d.Note;
+            e.FieldNotes = d.Note;
             e.VisibleFolderIds = d.VisibleFolderIds?.ToList() ?? [];
             e.WorkloadThresholds =
             [
@@ -239,7 +242,7 @@ namespace ProjectImportHub.Services.ProjectTask
                 .Where(x => x.TaskId == taskId && x.ResourceId == resourceId)
                 .Select(x => new TaskResourceDto
                 {
-                    Active = x.Resource == null ? false : x.Resource.Active,
+                    Active = x.Resource == null ? false : x.Resource.IsActive,
                     MenuId = x.MenuId,
                     BaseCost = x.BaseCost,
                     CapRole = x.CapRole,
@@ -279,11 +282,11 @@ namespace ProjectImportHub.Services.ProjectTask
         public async Task<bool> UpdateResourceAppStorageTenantAsync(int TenantId, int ResourceId, ResourceTenantLinkBase taskResourceDto, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            var zz = await db.ResourceTenant.FirstOrDefaultAsync
+            var zz = await db.ResourceTenantLinks.FirstOrDefaultAsync
                 (x => x.TenantId == TenantId && x.ResourceId == ResourceId, ct);
             if(zz == null)
             {
-                zz = new Entities.Assignments.ResourceTenantLinkEntity
+                zz = new ResourceTenantLinkEntity
                 {
                     TenantId = TenantId,
                     ResourceId = ResourceId,
@@ -295,7 +298,7 @@ namespace ProjectImportHub.Services.ProjectTask
                     ResourceSortId = taskResourceDto.ResourceSortId,
                     AccountId = taskResourceDto.AccountId,
                 };
-                db.ResourceTenant.Add(zz);
+                db.ResourceTenantLinks.Add(zz);
             }
             else
             {

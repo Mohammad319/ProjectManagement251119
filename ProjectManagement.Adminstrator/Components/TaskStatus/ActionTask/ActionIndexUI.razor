@@ -1,14 +1,15 @@
 ﻿
 @using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Lookups
 @using ProjectImportHub.Services
 @using ProjectManagement.Adminstrator.Constants
 @inherits AppComponentBase
-@inject IEntityService<ProjectImportHub.Entities.ActionEntity> service
+@inject IEntityService<ActionEntity> service
 <div class="@CssClasses.Layout.FlexItemsCenter p-1">
     <button @onclick="UpdateForm" class="@CssClasses.Btn.Outline.Success">@((MarkupString)Icons.Plus)</button>
     <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.Outline.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
 </div>
-<Grid TItem="ProjectImportHub.Entities.ActionEntity" Items="ActionsTasks?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)">
+<Grid TItem="ActionEntity" Items="ActionsTasks?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)">
 
         <Column>
             <Template Context="status">
@@ -18,30 +19,30 @@
                 </div>
             </Template>
         </Column>
-        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+        <Column Title="" ValueSelector="c => c.Name"></Column>
 </Grid>
 
 @code {
     bool IsVisible = true;
-    List<ProjectImportHub.Entities.ActionEntity>? ActionsTasks;
-    void UpdateForm() => UpdateForm(new ProjectImportHub.Entities.ActionEntity(){ DisplayName = "name"});
-    void UpdateForm(ProjectImportHub.Entities.ActionEntity model)
+    List<ActionEntity>? ActionsTasks;
+    void UpdateForm() => UpdateForm(new ActionEntity(){ Name = "name"});
+    void UpdateForm(ActionEntity model)
     {
-            ProjectImportHub.Entities.ActionEntity up = new() { DisplayName = "" };
+            ActionEntity up = new() { Name = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
 
         Modal.AddModal<ActionFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
-            AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+            AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>
                 {
                     [nameof(ActionFormUI.Model)] = up,
                     [nameof(ActionFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
                 }
             , SizeMHD.Medium);
     }
-    void Remove(ProjectImportHub.Entities.ActionEntity model) =>
-    MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+    void Remove(ActionEntity model) =>
+    MHD.DeleteMessage(model.Name, () => ConfirmRemoveAsync(model));
 
-    async Task ConfirmRemoveAsync(ProjectImportHub.Entities.ActionEntity model)
+    async Task ConfirmRemoveAsync(ActionEntity model)
     {
         bool result = await ExHandlers.RunCheckTokenAsync(() => service.DeleteAsync(model.Id));
         if (result)

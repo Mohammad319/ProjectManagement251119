@@ -13,12 +13,12 @@ public class TaskResourceAssignmentDto
     public double CapWaste { get; set; } = 1;
     public double? BaseCost { get; set; } = 0;
     public bool Uncontrollable { get; set; } = false;
-    public List<RoleDTO>? CapRole { get; set; } = [];
+    public List<RoleDTO> CapRole { get; set; } = [];
     public List<string> Formulas { get; set; } = [];
     public int TaskId { get; set; }
-    public ProjectTaskDto? Task { get; set; }
+    public ProjectTaskDto Task { get; set; }
     public int ResourceId { get; set; }
-    public ResourceDto? Resource { get; set; }
+    public ResourceDto Resource { get; set; }
 
     public double? CalcCap()
     {

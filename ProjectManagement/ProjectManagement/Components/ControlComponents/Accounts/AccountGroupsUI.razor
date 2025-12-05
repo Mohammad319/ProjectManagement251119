@@ -88,7 +88,7 @@
     {
         await ContextService.ShowMenuAsync(new()
             {
-                // new MenuItem {IconHtml = "➕", DisplayName = $"{AppLoc[LocalizerConst.New, CalcResource.account]}" , OnClickAsync = () => UpdateForm(new AccountEntity(){AccountGroupId = item.Id}) },
+                // new MenuItem {IconHtml = "➕", Name = $"{AppLoc[LocalizerConst.New, CalcResource.account]}" , OnClickAsync = () => UpdateForm(new AccountEntity(){AccountGroupId = item.Id}) },
                 new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => {UpdateForm(item);
             return Task.CompletedTask;
         } },

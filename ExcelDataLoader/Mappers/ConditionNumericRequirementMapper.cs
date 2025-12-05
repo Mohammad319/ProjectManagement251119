@@ -10,14 +10,14 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class ConditionNumericRequirementMapper
 {
-    public static ConditionNumericRequirementDto ToDto(this ConditionNumericRequirementEntity e)
+    public static ConditionNumericRequirementDto ToDto(this NumericConditionRule e)
     {
         if (e == null) return null!;
 
         return new ConditionNumericRequirementDto
         {
             //Id = e.Id,
-            //QuestionConditionId = e.QuestionConditionId,
+            //ConditionId = e.ConditionId,
             NumericInputId = e.NumericInputId,
             MaxAllowedValue = e.MaxAllowedValue,
             MinAllowedValue = e.MinAllowedValue

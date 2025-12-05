@@ -6,7 +6,7 @@ namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
 public class ResourceOptionGroupDto
 {
     public int Id { get; set; }
-    public string? SectionKey { get; set; }
+    public string SectionKey { get; set; }
     public int SortOrder { get; set; } = 0;
     public string DisplayName { get; set; } = string.Empty;
 

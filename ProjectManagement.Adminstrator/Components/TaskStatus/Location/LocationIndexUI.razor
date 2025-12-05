@@ -1,4 +1,5 @@
 ﻿@using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Lookups
 @using ProjectImportHub.Services
 @using ProjectManagement.Adminstrator.Constants
 @inherits AppComponentBase
@@ -17,27 +18,27 @@
                 </div>
             </Template>
         </Column>
-        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+        <Column Title="" ValueSelector="c => c.Name"></Column>
 </Grid>
 
 @code {
         bool IsVisible = true;
         List<LocationEntity>? LocationsList;
-        void UpdateForm() => UpdateForm(new LocationEntity() { DisplayName = "name" });
+        void UpdateForm() => UpdateForm(new LocationEntity() { Name = "name" });
         void UpdateForm(LocationEntity model)
             {
                 LocationEntity up = new();
                 PropertyCopier.CopyPropertiesTo(model, up);
 
 Modal.AddModal<LocationFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
-            AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+            AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>
             {
                             [nameof(LocationFormUI.Model)] = up,
                 [nameof(LocationFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
             }, SizeMHD.Medium);
             }
     void Remove(LocationEntity model) =>
-    MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+    MHD.DeleteMessage(model.Name, () => ConfirmRemoveAsync(model));
 
     async Task ConfirmRemoveAsync(LocationEntity model)
     {

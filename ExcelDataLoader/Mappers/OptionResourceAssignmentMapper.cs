@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class OptionResourceAssignmentMapper
 {
-    public static OptionResourceAssignmentDto ToDto(this OptionResourceAssignmentEntity e)
+    public static OptionResourceAssignmentDto ToDto(this OptionResourceAssignment e)
     {
         if (e == null) return null!;
 

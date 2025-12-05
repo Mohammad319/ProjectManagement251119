@@ -6,10 +6,10 @@ namespace ProjectImportHub.Services.UnitGroups
 {
     public class UnitGroupsService(IDbContextFactory<ProjectImportHubContext> ContextFactory) : IUnitGroupsService
     {
-        public async Task<int> AddAsync(UnitGroupEntity obj)
+        public async Task<int> AddAsync(TaskUnitGroup obj)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            context.UnitGroups.Add(obj);
+            context.TaskUnitGroups.Add(obj);
             await context.SaveChangesAsync();
             return obj.Id;
         }
@@ -17,32 +17,32 @@ namespace ProjectImportHub.Services.UnitGroups
         public async Task<bool> DeleteAsync(int id)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            var entity = await context.UnitGroups.FindAsync(id);
+            var entity = await context.TaskUnitGroups.FindAsync(id);
             if (entity == null)
             {
                 return false;
             }
-            context.UnitGroups.Remove(entity);
+            context.TaskUnitGroups.Remove(entity);
             await context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<UnitGroupEntity> GetByIdAsync(int id)
+        public async Task<TaskUnitGroup> GetByIdAsync(int id)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            return await context.UnitGroups.FindAsync(id);
+            return await context.TaskUnitGroups.FindAsync(id);
         }
 
-        public async Task<List<UnitGroupEntity>> GetAllAsync()
+        public async Task<List<TaskUnitGroup>> GetAllAsync()
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            return await context.UnitGroups.ToListAsync();
+            return await context.TaskUnitGroups.ToListAsync();
         }
 
-        public async Task<bool> UpdateAsync(UnitGroupEntity obj)
+        public async Task<bool> UpdateAsync(TaskUnitGroup obj)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            var entity = await context.UnitGroups.FindAsync(obj.Id);
+            var entity = await context.TaskUnitGroups.FindAsync(obj.Id);
             if (entity == null)
             {
                 return false;

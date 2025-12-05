@@ -1,8 +1,9 @@
 ﻿
 @using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Lookups
 @using ProjectImportHub.Services
 @inherits AppComponentBase
-@inject IEntityService<ProjectImportHub.Entities.ActionEntity> service
+@inject IEntityService<ActionEntity> service
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
@@ -16,8 +17,8 @@
         <!-- Name -->
         <div>
             <label class="@CsS.Form.Label">@CalcResource.name:</label>
-            <InputText class="@CsS.Input.Text" @bind-Value="@Model.DisplayName" />
-            <ValidationMessage For="@(() => Model.DisplayName)" class="@CsS.Text.Danger" />
+            <InputText class="@CsS.Input.Text" @bind-Value="@Model.Name" />
+            <ValidationMessage For="@(() => Model.Name)" class="@CsS.Text.Danger" />
         </div>
 
         <!-- Order -->
@@ -45,7 +46,7 @@
 </div>
 
 @code {
-    [Parameter] public ProjectImportHub.Entities.ActionEntity Model { get; set; } = new ProjectImportHub.Entities.ActionEntity() { DisplayName = "name"};
+    [Parameter] public ActionEntity Model { get; set; } = new ActionEntity() { Name = "name"};
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
     bool IsLoading = false;

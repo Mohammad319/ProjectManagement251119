@@ -48,21 +48,21 @@
 @code {
     // باراميترات المكوّن
     [Parameter] public int? FolderId { get; set; }
-    [Parameter] public ResourceFolderEntity? Form { get; set; }
+    [Parameter] public ResourceCategory? Form { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
     // تحكم بعدد الحقول في السطر من شاشة md وما فوق
     [Parameter] public int ColumnsMd { get; set; } = 2;
 
     // نموذج التحرير
-    private ResourceFolderEntity folder = new() { DisplayName = "" };
+    private ResourceCategory folder = new() { DisplayName = "" };
 
     protected override async Task OnInitializedAsync()
     {
         // لو أُرسل كائن Form (نسخ قيمته فقط حتى لا نعدل مرجع خارجي)
         if (Form is not null)
         {
-            folder = new ResourceFolderEntity
+            folder = new ResourceCategory
             {
                 Id = Form.Id,
                 DisplayName = Form.DisplayName,

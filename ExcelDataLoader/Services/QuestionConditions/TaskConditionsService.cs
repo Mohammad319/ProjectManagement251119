@@ -9,32 +9,32 @@ namespace ProjectImportHub.Services.QuestionConditions;
 public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubContext> _factory) : ITaskConditionsService
 {
     // ===== تحميل الصفحة =====
-    public async Task<List<TaskConditionEntity>> GetConditionsAsync(int taskId, CancellationToken ct)
+    public async Task<List<ConditionDefinition>> GetConditionsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.QuestionConditions
+        return await db.Conditions
             .AsNoTracking().AsSplitQuery()
             .Where(c => c.TaskId == taskId)
-            .Include(c => c.OptionRequirements)
-            .Include(c => c.VariableRequirements)
-            .Include(c => c.ResourceRequirements)
-            .Include(c => c.NumericRequirements)
-            .Include(c => c.ConditionResourceAssignments).ThenInclude(a => a.Resource)
+            .Include(c => c.OptionRules)
+            .Include(c => c.VariableRules)
+            .Include(c => c.ResourceRules)
+            .Include(c => c.NumericRules)
+            .Include(c => c.Assignments).ThenInclude(a => a.Resource)
             .ToListAsync(ct);
     }
 
-    public async Task<List<ResourceOptionGroupEntity>> GetResourceGroupsAsync(int taskId, CancellationToken ct)
+    public async Task<List<ResourceSelectorDefinition>> GetResourceGroupsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.ResourceOptionGroups.AsNoTracking()
+        return await db.ResourceSelectors.AsNoTracking()
             .Where(g => g.TaskId == taskId)
-            .Select(g => new ResourceOptionGroupEntity
+            .Select(g => new ResourceSelectorDefinition
             {
                 Id = g.Id,
                 DisplayName = g.DisplayName,
                 SortOrder = g.SortOrder,
                 TaskId = g.TaskId,
-                Items = g.Items.Select(o => new ResourceOptionItemEntity
+                Items = g.Items.Select(o => new ResourceChoiceOptionDefinition
                 {
                     Id = o.Id,
                     ResourceChoiceGroupId = o.ResourceChoiceGroupId,
@@ -45,19 +45,19 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
             .ToListAsync(ct);
     }
 
-    public async Task<List<OptionGroupEntity>> GetChoiceGroupsAsync(int taskId, CancellationToken ct)
+    public async Task<List<QuestionGroupDefinition>> GetChoiceGroupsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.OptionGroups.AsNoTracking()
+        return await db.QuestionGroups.AsNoTracking()
             .Where(g => g.TaskId == taskId)
-            .Select(g => new OptionGroupEntity
+            .Select(g => new QuestionGroupDefinition
             {
                 Id = g.Id,
                 DisplayName = g.DisplayName,
                 SortOrder = g.SortOrder,
                 TaskId = g.TaskId,
                 Options = g.Options
-                    .Select(o => new OptionItemEntity
+                    .Select(o => new QuestionOptionDefinition
                     {
                         Id = o.Id,
                         DisplayName = o.DisplayName,
@@ -66,12 +66,12 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
             }).ToListAsync(ct);
     }
 
-    public async Task<List<NumericInputEntity>> GetNumericGroupsAsync(int taskId, CancellationToken ct)
+    public async Task<List<NumericQuestionDefinition>> GetNumericGroupsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.NumericInputGroups.AsNoTracking()
+        return await db.NumericQuestions.AsNoTracking()
             .Where(ng => ng.TaskId == taskId)
-            .Select(ng => new NumericInputEntity
+            .Select(ng => new NumericQuestionDefinition
             {
                 Id = ng.Id,
                 DisplayName = ng.DisplayName,
@@ -117,7 +117,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
         if (raIds.Length == 0) return result;
 
         await using var db = await _factory.CreateDbContextAsync(ct);
-        var rows = await db.NumericGroupResourceAssignments.AsNoTracking()
+        var rows = await db.NumericResourceAssignments.AsNoTracking()
             .Where(b => raIds.Contains(b.ResourceAssignmentId))
             .Select(b => new
             {
@@ -143,61 +143,61 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
     }
 
     // ===== شرط واحد =====
-    public async Task<TaskConditionEntity?> GetConditionAsync(int id, CancellationToken ct)
+    public async Task<ConditionDefinition?> GetConditionAsync(int id, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.QuestionConditions
+        return await db.Conditions
             .AsSplitQuery()
-            .Include(c => c.OptionRequirements)
-            .Include(c => c.VariableRequirements)
-            .Include(c => c.ResourceRequirements)
-            .Include(c => c.NumericRequirements)
-            .Include(c => c.ConditionResourceAssignments).ThenInclude(a => a.Resource)
+            .Include(c => c.OptionRules)
+            .Include(c => c.VariableRules)
+            .Include(c => c.ResourceRules)
+            .Include(c => c.NumericRules)
+            .Include(c => c.Assignments).ThenInclude(a => a.Resource)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
     }
 
-    public async Task<int> UpsertConditionAsync(TaskConditionEntity editing, CancellationToken ct)
+    public async Task<int> UpsertConditionAsync(ConditionDefinition editing, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
 
-        // لا تمرر Resource مرفقة عند الإضافة/التحديث
-        foreach (var ra in editing.ConditionResourceAssignments)
-            ra.Resource = null;
+        //// لا تمرر Resource مرفقة عند الإضافة/التحديث
+        //foreach (var ra in editing.Assignments)
+        //    ra.Resource = null;
 
         if (editing.Id == 0)
         {
-            db.QuestionConditions.Add(editing);
+            db.Conditions.Add(editing);
             await db.SaveChangesAsync(ct);
             return editing.Id;
         }
 
-        var dbCond = await db.QuestionConditions
-            .Include(c => c.OptionRequirements)
-            .Include(c => c.ResourceRequirements)
-            .Include(c => c.VariableRequirements)
-            .Include(c => c.NumericRequirements)
-            .Include(c => c.ConditionResourceAssignments)
+        var dbCond = await db.Conditions
+            .Include(c => c.OptionRules)
+            .Include(c => c.ResourceRules)
+            .Include(c => c.VariableRules)
+            .Include(c => c.NumericRules)
+            .Include(c => c.Assignments)
             .FirstAsync(c => c.Id == editing.Id, ct);
 
-        dbCond.OptionToResourceLogic = editing.OptionToResourceLogic;
-        dbCond.OptionToNumericLogic = editing.OptionToNumericLogic;
-        dbCond.NumericToResourceLogic = editing.NumericToResourceLogic;
+        dbCond.OptionResourceLogic = editing.OptionResourceLogic;
+        dbCond.OptionNumericLogic = editing.OptionNumericLogic;
+        dbCond.NumericResourceLogic = editing.NumericResourceLogic;
 
-        SyncCollection(db, dbCond.OptionRequirements, editing.OptionRequirements, (x, y) =>
+        SyncCollection(db, dbCond.OptionRules, editing.OptionRules, (x, y) =>
         {
-            x.OptionGroupId = y.OptionGroupId;
-            x.OptionItemId = y.OptionItemId;
-            x.SetKey = y.SetKey;
+            x.QuestionGroupId = y.QuestionGroupId;
+            x.OptionId = y.OptionId;
+            x.GroupKey = y.GroupKey;
         });
 
-        SyncCollection(db, dbCond.ResourceRequirements, editing.ResourceRequirements, (x, y) =>
+        SyncCollection(db, dbCond.ResourceRules, editing.ResourceRules, (x, y) =>
         {
             x.ResourceOptionGroupId = y.ResourceOptionGroupId;
             x.ResourceOptionItemId = y.ResourceOptionItemId;
             x.SetKey = y.SetKey;
         });
 
-        SyncCollection(db, dbCond.NumericRequirements, editing.NumericRequirements, (x, y) =>
+        SyncCollection(db, dbCond.NumericRules, editing.NumericRules, (x, y) =>
         {
             x.NumericInputId = y.NumericInputId;
             x.MinAllowedValue = y.MinAllowedValue;
@@ -205,7 +205,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
             x.SetKey = y.SetKey;
         });
 
-        SyncCollection(db, dbCond.VariableRequirements, editing.VariableRequirements, (x, y) =>
+        SyncCollection(db, dbCond.VariableRules, editing.VariableRules, (x, y) =>
         {
             x.VariableName = y.VariableName;
             x.MinAllowedValue = y.MinAllowedValue;
@@ -214,7 +214,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
         });
 
         // اختياري: مزامنة تعيين الموارد التابعة للشرط
-        SyncCollection(db, dbCond.ConditionResourceAssignments, editing.ConditionResourceAssignments, (x, y) =>
+        SyncCollection(db, dbCond.Assignments, editing.Assignments, (x, y) =>
         {
             x.ResourceId = y.ResourceId;
             x.ChangeFactor1 = y.ChangeFactor1;
@@ -232,7 +232,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
     public async Task DeleteConditionAsync(int id, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        var e = await db.QuestionConditions.FindAsync([id], ct);
+        var e = await db.Conditions.FindAsync([id], ct);
         if (e is null) return;
         db.Remove(e);
         await db.SaveChangesAsync(ct);
@@ -245,7 +245,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
 
         if (vm.Id == 0)
         {
-            var entity = new OptionResourceAssignmentEntity
+            var entity = new OptionResourceAssignment
             {
                 ChoiceOptionId = vm.ChoiceOptionId,
                 ResourceAssignmentId = raId,
@@ -271,7 +271,7 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
 
         if (vm.Id == 0)
         {
-            var entity = new NumericResourceAssignmentEntity
+            var entity = new NumericResourceAssignment
             {
                 NumericId = vm.NumericId,
                 ResourceAssignmentId = raId,
@@ -279,13 +279,13 @@ public sealed class TaskConditionsService(IDbContextFactory<ProjectImportHubCont
                 MaxInputValue = vm.InputMaxValue,
                 Formulas = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
             };
-            db.NumericGroupResourceAssignments.Add(entity);
+            db.NumericResourceAssignments.Add(entity);
             await db.SaveChangesAsync(ct);
             return entity.Id;
         }
         else
         {
-            var entity = await db.NumericGroupResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
+            var entity = await db.NumericResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
             entity.NumericId = vm.NumericId;
             entity.MinInputValue = vm.InputMinValue;
             entity.MaxInputValue = vm.InputMaxValue;

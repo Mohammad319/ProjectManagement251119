@@ -61,7 +61,7 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
         [HttpGet("resapp")]
         public Task<IActionResult> ResourcesApp()
         {
-            List<ResourceEntity>? resources = null;// await ResourceService.GetAllAsync();
+            List<ResourceDefinition>? resources = null;// await ResourceService.GetAllAsync();
             return Task.FromResult<IActionResult>(Ok(resources));
         }
         [Authorize(Roles = PMRolesConst.Tenant.Users)]

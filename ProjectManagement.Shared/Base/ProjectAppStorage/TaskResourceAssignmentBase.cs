@@ -18,7 +18,7 @@ namespace ProjectManagement.Shared.Base.ProjectAppStorage
         public double CapWaste { get; set; } = 1;
         public double? BaseCost { get; set; } = 0;
         public bool Uncontrollable { get; set; } = false;
-        public List<RoleDTO>? CapRole { get; set; } = [];
+        public List<RoleDTO> CapRole { get; set; } = [];
         public List<string> Formulas { get; set; } = [];
     }
 }

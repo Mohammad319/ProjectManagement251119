@@ -1,5 +1,6 @@
 ﻿@using Microsoft.EntityFrameworkCore
 @using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Resources
 @using ProjectImportHub.Infrastructure
 @using ProjectImportHub.Services.ResourceProperties
 @using ProjectImportHub.Services.UnitGroups
@@ -12,7 +13,7 @@
 <button @onclick="UpdateForm" class="@CsS.Btn.Outline.Success" title="إضافة">
     @((MarkupString)Icons.Plus)
 </button>
-<Grid TItem="ResourcePropertySetEntity" Items="ActionsTasks">
+<Grid TItem="ResourceAttributeSet" Items="ActionsTasks">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH"></th>
         <th class="@CssClasses.Table.TH">@CalcResource.name</th>
@@ -37,11 +38,11 @@
     </ChildContent>
 </Grid>
 @code {
-    List<ResourcePropertySetEntity> ActionsTasks;
-    void UpdateForm() => UpdateForm(new ResourcePropertySetEntity() { DisplayName = "name" });
-    void UpdateForm(ResourcePropertySetEntity model)
+    List<ResourceAttributeSet> ActionsTasks;
+    void UpdateForm() => UpdateForm(new ResourceAttributeSet() { DisplayName = "name" });
+    void UpdateForm(ResourceAttributeSet model)
     {
-        ResourcePropertySetEntity up = new() { DisplayName = "" };
+        ResourceAttributeSet up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
 
         Modal.AddModal<PropertyGroupsFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
@@ -52,17 +53,17 @@
                 }
             , SizeMHD.Medium);
     }
-    void Properties(ResourcePropertySetEntity model)
+    void Properties(ResourceAttributeSet model)
     {
         Modal.AddModal<PropertyResourceIndexUI>("Property", new Dictionary<string, object>
             {
             [nameof(PropertyResourceIndexUI.GroupId)] = model.Id,
             } , SizeMHD.Medium);
     }
-    void Remove(ResourcePropertySetEntity model) =>
+    void Remove(ResourceAttributeSet model) =>
     MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
 
-    async Task ConfirmRemoveAsync(ResourcePropertySetEntity model)
+    async Task ConfirmRemoveAsync(ResourceAttributeSet model)
     {
         bool result = await GroupPropertiesService.DeleteAsync(model.Id);
         if (result)

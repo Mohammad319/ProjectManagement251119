@@ -9,10 +9,10 @@
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
 
 @code {
-    [Parameter] public TaskConditionEntity Condition { get; set; } = null!;
-    [Parameter] public List<OptionGroupEntity> TaskChoiceGroups { get; set; } = new();
-    [Parameter] public List<NumericInputEntity> TaskNumericGroups { get; set; } = new();
-    [Parameter] public List<ResourceOptionGroupEntity> ResourceGroups { get; set; }
+    [Parameter] public ConditionDefinition Condition { get; set; } = null!;
+    [Parameter] public List<QuestionGroupDefinition> TaskChoiceGroups { get; set; } = new();
+    [Parameter] public List<NumericQuestionDefinition> TaskNumericGroups { get; set; } = new();
+    [Parameter] public List<ResourceSelectorDefinition> ResourceGroups { get; set; }
 
     [Parameter] public Dictionary<int, List<OptionBindVM>> OptBindsByRA { get; set; } = new();
     [Parameter] public Dictionary<int, List<NumericBindVM>> NumBindsByRA { get; set; } = new();
@@ -26,7 +26,7 @@
         <div>
             <label class="@CsS.Form.Label">Choice ↔ Resource</label>
             <InputSelect TValue="ConditionLogic"
-                         @bind-Value="Condition.OptionToResourceLogic"
+                         @bind-Value="Condition.OptionResourceLogic"
                          class="@CsS.Input.Select">
                 <option value="And">AND</option>
                 <option value="Or">OR</option>
@@ -36,7 +36,7 @@
         <div>
             <label class="@CsS.Form.Label">Choice ↔ Numeric</label>
             <InputSelect TValue="ConditionLogic"
-                         @bind-Value="Condition.OptionToNumericLogic"
+                         @bind-Value="Condition.OptionNumericLogic"
                          class="@CsS.Input.Select">
                 <option value="And">AND</option>
                 <option value="Or">OR</option>
@@ -46,7 +46,7 @@
         <div>
             <label class="@CsS.Form.Label">Numeric ↔ @ResourceLoc.resource</label>
             <InputSelect TValue="ConditionLogic"
-                         @bind-Value="Condition.NumericToResourceLogic"
+                         @bind-Value="Condition.NumericResourceLogic"
                          class="@CsS.Input.Select">
                 <option value="And">AND</option>
                 <option value="Or">OR</option>

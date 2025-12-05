@@ -44,7 +44,7 @@ namespace ProjectImportHub.Services.Resource
 
             await using var db = await factory.CreateDbContextAsync(ct);
 
-            return await db.Folders.AsNoTracking()
+            return await db.ResourceCategories.AsNoTracking()
                 .Where(f => visibleFolderIds.Contains(f.Id))
                 .OrderBy(f => f.SortOrder)
                 .Select(f => new FolderDto(f.Id, f.DisplayName))
@@ -108,7 +108,7 @@ namespace ProjectImportHub.Services.Resource
 
             if (r is null) return;
 
-            db.TaskResourceAssignments.Add(new TaskResourceAssignmentEntity
+            db.TaskResourceAssignments.Add(new TaskResourceAssignment
             {
                 TaskId = projectTaskId,
                 ResourceId = r.Id,

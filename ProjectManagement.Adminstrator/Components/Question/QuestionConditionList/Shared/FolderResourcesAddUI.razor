@@ -48,16 +48,16 @@
 </div>
 @code {
     [Parameter] public int TaskId { get; set; }
-    [Parameter] public EventCallback<ResourceEntity> OnSave { get; set; }
+    [Parameter] public EventCallback<ResourceDefinition> OnSave { get; set; }
     [Parameter] public List<int> ResIds { get; set; }
 
-    List<ResourceFolderEntity> Folders { get; set; }
-    ResourceFolderEntity Selected;
+    List<ResourceCategory> Folders { get; set; }
+    ResourceCategory Selected;
     protected override async Task OnInitializedAsync()
     {
         Folders = (await TaskGroupsQuery.GetVisibleFoldersAsync(TaskId, CancellationToken.None)).ToList();
     }
-    async Task AddDelete( ResourceEntity res)
+    async Task AddDelete( ResourceDefinition res)
     {
         if (ResIds.Any(x => x == res.Id))
         {
@@ -69,7 +69,7 @@
         }
         await OnSave.InvokeAsync(res);
     }
-    async Task LoadResourcesAsync(ResourceFolderEntity folders)
+    async Task LoadResourcesAsync(ResourceCategory folders)
     {
         if (folders.Resources == null || folders.Resources.Count == 0)
         {

@@ -1,4 +1,5 @@
 ﻿@using ProjectImportHub.Entities
+@using ProjectImportHub.Entities.Lookups
 @using ProjectImportHub.Services
 @using ProjectManagement.Adminstrator.Constants
 @inherits AppComponentBase
@@ -18,22 +19,22 @@
                 </div>
             </Template>
         </Column>
-        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+        <Column Title="" ValueSelector="c => c.Name"></Column>
 </Grid>
 
 
 @code {
     bool IsVisible = true;
     List<ActionTypeEntity>? ActionTypesList;
-    void UpdateForm() => UpdateForm(new ActionTypeEntity() { DisplayName = "" });
+    void UpdateForm() => UpdateForm(new ActionTypeEntity() { Name = "" });
 
     void UpdateForm(ActionTypeEntity model)
     {
-        ActionTypeEntity up = new() { DisplayName=""};
+        ActionTypeEntity up = new() { Name=""};
         PropertyCopier.CopyPropertiesTo(model, up);
 
         Modal.AddModal<ActionTypeFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
-                    AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+                    AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>
                         {
                             [nameof(ActionTypeFormUI.Model)] = up,
                             [nameof(ActionTypeFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
@@ -41,7 +42,7 @@
                     , SizeMHD.Medium);
     }
     void Remove(ActionTypeEntity model) =>
-    MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+    MHD.DeleteMessage(model.Name, () => ConfirmRemoveAsync(model));
 
     async Task ConfirmRemoveAsync(ActionTypeEntity model)
     {

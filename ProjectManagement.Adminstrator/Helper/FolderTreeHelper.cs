@@ -12,11 +12,11 @@ namespace ProjectManagement.Adminstrator.Helper
         /// </summary>
         public static RenderFragment RenderFolderTreeRecursive(
             object receiver,
-            List<ResourceFolderEntity> folders,
+            List<ResourceCategory> folders,
             HashSet<int> expanded,
             HashSet<int> selectedFolderIds,
-            EventCallback<ResourceFolderEntity> onClick,
-            EventCallback<ResourceFolderEntity> onContextMenu = default
+            EventCallback<ResourceCategory> onClick,
+            EventCallback<ResourceCategory> onContextMenu = default
         ) => builder =>
         {
             foreach (var parent in folders.Where(f => f.ParentFolderId == null).OrderBy(f => f.SortOrder))
@@ -27,13 +27,13 @@ namespace ProjectManagement.Adminstrator.Helper
 
         private static RenderFragment RenderFolderTreeItem(
             object receiver,
-            List<ResourceFolderEntity> folders,
-            ResourceFolderEntity folder,
+            List<ResourceCategory> folders,
+            ResourceCategory folder,
             int level,
             HashSet<int> expanded,
             HashSet<int> selectedFolderIds,
-            EventCallback<ResourceFolderEntity> onClick,
-            EventCallback<ResourceFolderEntity> onContextMenu
+            EventCallback<ResourceCategory> onClick,
+            EventCallback<ResourceCategory> onContextMenu
         ) => builder =>
         {
             bool hasChildren = folders.Any(c => c.ParentFolderId == folder.Id);

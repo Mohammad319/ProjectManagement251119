@@ -15,13 +15,13 @@
 
 @code {
     [Parameter] public int TaskId { get; set; }
-    private List<TaskConditionEntity> conditions = new();
-    private TaskConditionEntity? editing;
+    private List<ConditionDefinition> conditions = new();
+    private ConditionDefinition? editing;
     private bool isLoading = true;
     private string? error;
-    private List<OptionGroupEntity> taskChoiceGroups = new();
-    private List<NumericInputEntity> taskNumericGroups = new();
-    List<ResourceOptionGroupEntity> ResourceGroups = new();
+    private List<QuestionGroupDefinition> taskChoiceGroups = new();
+    private List<NumericQuestionDefinition> taskNumericGroups = new();
+    List<ResourceSelectorDefinition> ResourceGroups = new();
 
     // مفاتيح الربط: ResourceAssignmentId -> VMs
     private readonly Dictionary<int, List<OptionBindVM>> optBindsByRA = new();
@@ -46,7 +46,7 @@
             // 3) تحميل Bindings حسب ResourceAssignmentIds
             optBindsByRA.Clear(); numBindsByRA.Clear();
             var raIds = conditions
-                .SelectMany(c => c.ConditionResourceAssignments)
+                .SelectMany(c => c.Assignments)
                 .Select(a => a.Id)
                 .Distinct()
                 .ToArray();
@@ -72,17 +72,17 @@
 
     private void NewCondition()
     {
-        editing = new TaskConditionEntity
+        editing = new ConditionDefinition
         {
             TaskId = TaskId,
-            OptionToResourceLogic = ConditionLogic.And,
-            OptionToNumericLogic = ConditionLogic.And,
-            NumericToResourceLogic = ConditionLogic.And,
-            OptionRequirements = new(),
-            VariableRequirements = new(),
-            ResourceRequirements = new(),
-            NumericRequirements = new(),
-            ConditionResourceAssignments = new()
+            OptionResourceLogic = ConditionLogic.And,
+            OptionNumericLogic = ConditionLogic.And,
+            NumericResourceLogic = ConditionLogic.And,
+            OptionRules = new(),
+            VariableRules = new(),
+            ResourceRules = new(),
+            NumericRules = new(),
+            Assignments = new()
         };
     }
 
@@ -92,7 +92,7 @@
         if (editing is null) return;
 
         // تعبئة الـ bindings الخاصة بهذه الـ condition فقط
-        var raIds = editing.ConditionResourceAssignments.Select(a => a.Id).Distinct().ToArray();
+        var raIds = editing.Assignments.Select(a => a.Id).Distinct().ToArray();
         optBindsByRA.Clear(); numBindsByRA.Clear();
         foreach (var raId in raIds)
         {
@@ -120,7 +120,7 @@
         if (editing is null) return;
 
         // مهم: لا نمرر Resource مرفقة لتفادي مشاكل الـ tracking
-        foreach (var ra in editing.ConditionResourceAssignments)
+        foreach (var ra in editing.Assignments)
             ra.Resource = null;
 
         await ConditionsService.UpsertConditionAsync(editing, CancellationToken.None);
@@ -130,8 +130,8 @@
 
     private void CancelEdit() { editing = null; }
 
-    internal static string CGLabel(OptionGroupEntity g) => $"{g.DisplayName}";
-    internal static string NGLabel(NumericInputEntity g) => $"{g.DisplayName}";
+    internal static string CGLabel(QuestionGroupDefinition g) => $"{g.DisplayName}";
+    internal static string NGLabel(NumericQuestionDefinition g) => $"{g.DisplayName}";
 
     // ---------- حفظ الربطات ----------
     private async Task SaveOptionBindingAsync(int raId, OptionBindVM vm)

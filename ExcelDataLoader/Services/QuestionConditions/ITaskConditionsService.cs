@@ -6,18 +6,18 @@ namespace ProjectImportHub.Services.QuestionConditions;
 public interface ITaskConditionsService
 {
     // تحميل list الصفحة (الشروط + مجموعات المستوى task)
-    Task<List<TaskConditionEntity>> GetConditionsAsync(int taskId, CancellationToken ct);
-    Task<List<ResourceOptionGroupEntity>> GetResourceGroupsAsync(int taskId, CancellationToken ct);
-    Task<List<OptionGroupEntity>> GetChoiceGroupsAsync(int taskId, CancellationToken ct);
-    Task<List<NumericInputEntity>> GetNumericGroupsAsync(int taskId, CancellationToken ct);
+    Task<List<ConditionDefinition>> GetConditionsAsync(int taskId, CancellationToken ct);
+    Task<List<ResourceSelectorDefinition>> GetResourceGroupsAsync(int taskId, CancellationToken ct);
+    Task<List<QuestionGroupDefinition>> GetChoiceGroupsAsync(int taskId, CancellationToken ct);
+    Task<List<NumericQuestionDefinition>> GetNumericGroupsAsync(int taskId, CancellationToken ct);
 
     // تحميل Bindings حسب ResourceAssignment Ids
     Task<Dictionary<int, List<OptionBindVM>>> GetOptionBindsByResourceAssignmentsAsync(int[] raIds, CancellationToken ct);
     Task<Dictionary<int, List<NumericBindVM>>> GetNumericBindsByResourceAssignmentsAsync(int[] raIds, CancellationToken ct);
 
     // CRUD لشرط واحد
-    Task<TaskConditionEntity?> GetConditionAsync(int id, CancellationToken ct);
-    Task<int> UpsertConditionAsync(TaskConditionEntity editing, CancellationToken ct);
+    Task<ConditionDefinition?> GetConditionAsync(int id, CancellationToken ct);
+    Task<int> UpsertConditionAsync(ConditionDefinition editing, CancellationToken ct);
     Task DeleteConditionAsync(int id, CancellationToken ct);
 
     // حفظ ربطات Option/Numeric لِـ ResourceAssignment محدد

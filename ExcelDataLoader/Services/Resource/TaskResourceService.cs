@@ -7,12 +7,12 @@ namespace ProjectImportHub.Services.Resource
 {
     public interface ITaskResourceService
     {
-        Task<bool> CreateAsync(TaskResourceAssignmentEntity conditions);
+        Task<bool> CreateAsync(TaskResourceAssignment conditions);
         Task<bool> DeletAsync(int taskid, int resId);
     }
     public class TaskResourceService(IDbContextFactory<ProjectImportHubContext> contextFactory) : BaseService(contextFactory), ITaskResourceService
     {
-        public async Task<bool> CreateAsync(TaskResourceAssignmentEntity conditions)
+        public async Task<bool> CreateAsync(TaskResourceAssignment conditions)
         {
             await using var context = _contextFactory.CreateDbContext();
             context.TaskResourceAssignments.Add(conditions);

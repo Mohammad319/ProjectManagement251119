@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class ConditionVariableRequirementMapper
 {
-    public static ConditionVariableRequirementDto ToDto(this ConditionVariableRequirementEntity e)
+    public static ConditionVariableRequirementDto ToDto(this VariableConditionRule e)
     {
         if (e == null) return null!;
 

@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Mappers;
 
 public static class UnitGroupMapper
 {
-    public static UnitGroupDto ToDto(this UnitGroupEntity e)
+    public static UnitGroupDto ToDto(this TaskUnitGroup e)
     {
         if (e == null) return null!;
 

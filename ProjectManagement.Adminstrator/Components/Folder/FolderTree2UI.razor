@@ -21,8 +21,8 @@
     </RowActions>
 </ResourcesBrowser>
 @code {
-    private List<ResourceFolderEntity> folders = new();
-    private List<ResourceEntity> resourcesToShow = new();
+    private List<ResourceCategory> folders = new();
+    private List<ResourceDefinition> resourcesToShow = new();
     bool isLoading = false;
     protected override async Task OnInitializedAsync()
     {
@@ -32,7 +32,7 @@
     async Task Refreeh() { await UpdateResourcesAsync(); }
 
     void PropertyGroups() => MHD.Modal.AddModal<PropertyGroupsUI>("Property Groups", (IDictionary<string, object>)null, SizeMHD.Medium, null);
-    void Property(ResourceEntity model) { 
+    void Property(ResourceDefinition model) { 
         MHD.Modal.AddModal<ResourcePropertiesManager>(model.Name,
         new Dictionary<string, object>
         {
@@ -40,14 +40,14 @@
         });
     }
 
-    void UpdateForm(ResourceEntity model) => MHD.Modal.AddModal<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
+    void UpdateForm(ResourceDefinition model) => MHD.Modal.AddModal<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
         new Dictionary<string, object>
         {
             [nameof(ResourceFormDLUI.model)] = model,
             [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, Refreeh),
         });
 
-    void Remove(ResourceEntity model) => MHD.DeleteMessage(model.Name, () => DeleteR(model.Id));
+    void Remove(ResourceDefinition model) => MHD.DeleteMessage(model.Name, () => DeleteR(model.Id));
     async Task DeleteR(int id)
     {
         if (await ResourceService.DeleteAsync(id))
