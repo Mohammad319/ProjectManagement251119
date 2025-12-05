@@ -33,13 +33,19 @@
     {
         if (!TaskResourceLink.Any(x => x.TaskId == TaskPM.Id && x.ResourceId == resId))
         {
-            await TaskResourceService.CreateAsync(new TaskResourceAssignment() { TaskId = TaskPM.Id, ResourceId = resId });
-            TaskResourceLink.Add(new TaskResourceLinkDto() { TaskId = TaskPM.Id, ResourceId = resId });
+            var created = await TaskResourceService.CreateAsync(new TaskResourceAssignment() { TaskId = TaskPM.Id, ResourceId = resId });
+            if (created)
+            {
+                TaskResourceLink.Add(new TaskResourceLinkDto() { TaskId = TaskPM.Id, ResourceId = resId });
+            }
         }
         else
         {
-            await TaskResourceService.DeletAsync(TaskPM.Id, resId);
-            TaskResourceLink.RemoveAll(x => x.TaskId == TaskPM.Id && x.ResourceId == resId);
+            var deleted = await TaskResourceService.DeleteAsync(TaskPM.Id, resId);
+            if (deleted)
+            {
+                TaskResourceLink.RemoveAll(x => x.TaskId == TaskPM.Id && x.ResourceId == resId);
+            }
         }
         StateHasChanged();
     }
