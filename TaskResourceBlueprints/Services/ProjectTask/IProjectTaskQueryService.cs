@@ -1,4 +1,4 @@
-﻿
+﻿using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using TaskResourceBlueprints.Dto.ProjectTask;
 using TaskResourceBlueprints.Infrastructure;
@@ -10,16 +10,15 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         Task<IReadOnlyList<ProjectTaskListItemDto>> GetListAsync(CancellationToken ct);
         Task<ProjectTaskEditDto> GetForEditAsync(int id, CancellationToken ct);
         Task<IReadOnlyList<ResourceTaskIndexDto>> GetTaskResourcesAsync(int id, CancellationToken ct);
-
     }
 
-    public sealed class ProjectTaskQueryService(IDbContextFactory<TaskResourceBlueprintsContext> factory)
-        : IProjectTaskQueryService
+    public sealed class ProjectTaskQueryService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory) : IProjectTaskQueryService
     {
+
         // Deutsch: Liste für Index-Grid (leichtgewichtig, ohne Includes)
         public async Task<IReadOnlyList<ProjectTaskListItemDto>> GetListAsync(CancellationToken ct)
         {
-            await using var db = await factory.CreateDbContextAsync(ct);
+            await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 
             return await db.Tasks
                 .AsNoTracking()
@@ -35,10 +34,9 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .ToListAsync(ct);
         }
 
-        // Deutsch: Detail für Bearbeiten (nur benötigte Felder)
         public async Task<ProjectTaskEditDto> GetForEditAsync(int id, CancellationToken ct)
         {
-            await using var db = await factory.CreateDbContextAsync(ct);
+            await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 
             var e = await db.Tasks
                 .AsNoTracking()
@@ -60,7 +58,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 ChangeFactor2 = e.ChangeFactor2,
                 IsActive = e.IsActive,
                 Note = e.FieldNotes,
-                VisibleFolderIds = e.VisibleFolderIds?.ToList() ?? [],
+                VisibleFolderIds = e.VisibleFolderIds?.ToList() ?? new List<int>(),
                 Responsible = e.Responsible,
                 Status = e.Status,
                 AdminNote = e.AdminNote,
@@ -79,10 +77,12 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
         public async Task<IReadOnlyList<ResourceTaskIndexDto>> GetTaskResourcesAsync(int id, CancellationToken ct)
         {
-            await using var db = await factory.CreateDbContextAsync(ct);
+            await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 
             return await db.TaskResourceAssignments
-                .AsNoTracking().Where(t => t.TaskId == id)
+                .AsNoTracking()
+                .Where(t => t.TaskId == id)
+                .OrderBy(t => t.Resource.Name)
                 .Select(t => new ResourceTaskIndexDto(
                     t.ResourceId,
                     t.Resource.Name,

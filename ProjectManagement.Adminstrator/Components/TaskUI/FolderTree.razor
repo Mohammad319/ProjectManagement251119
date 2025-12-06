@@ -38,7 +38,7 @@
         }
         else
         {
-            await TaskResourceService.DeletAsync(TaskPM.Id, resId);
+            await TaskResourceService.DeleteAsync(TaskPM.Id, resId);
             TaskResourceLink.RemoveAll(x => x.TaskId == TaskPM.Id && x.ResourceId == resId);
         }
         StateHasChanged();

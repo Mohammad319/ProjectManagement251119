@@ -8,7 +8,7 @@ namespace TaskResourceBlueprints.Services.Resource
     public interface IResourceFolderService
     {
         Task<List<ResourceCategory>> GetAllAsync();
-        Task<List<Entities.ResourceDefinition>> GetAllChildFolderIds(HashSet<int> selectedFolderIds);
+        Task<List<ResourceDefinition>> GetAllChildFolderIds(HashSet<int> selectedFolderIds);
         Task<List<ResourceDefinition>> UpdateResourcesAsync(HashSet<int> selectedFolderIds);
         Task<ResourceCategory> GetByIdAsync(int id);
         Task<bool> UpdateAsync(ResourceCategory obj);
