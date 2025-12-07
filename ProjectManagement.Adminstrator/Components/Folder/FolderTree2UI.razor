@@ -12,7 +12,7 @@
 @inject IResourceService ResourceService
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
-@inject IResourceFolderService ResourceFolderService
+@inject IResourceCategoryService ResourceFolderService
 
 <ResourcesBrowser EnableFolderContext="true">
     <RowActions Context="r">
@@ -65,7 +65,7 @@
     private async Task UpdateResourcesAsync()
     {
         resourcesToShow.Clear();
-        resourcesToShow.AddRange(await ResourceFolderService.GetAllChildFolderIds(selectedFolderIds));
+        resourcesToShow.AddRange(await ResourceFolderService.GetResourcesAsync(selectedFolderIds));
     }
 
     private HashSet<int> selectedFolderIds = new();

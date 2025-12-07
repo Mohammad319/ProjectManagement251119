@@ -4,7 +4,7 @@
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Entities.Tasks
 @using TaskResourceBlueprints.Services.ProjectTask
-@inject IProjectTaskService TaskService
+@inject ITaskDefinitionService TaskService
 @inherits AppComponentBase
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
@@ -221,7 +221,7 @@
     [Parameter] public EventCallback<bool> Saved { get; set; }
 
     // Formularmodell (DTO)
-    private ProjectTaskEditDto UpdateForm { get; set; } = new();
+    private TaskDefinitionEditDto UpdateForm { get; set; } = new();
 
     // Lookups
     private List<ActionEntity> ActionsTasks = new();
@@ -232,7 +232,7 @@
     private List<ResourceCategory> Folders = new();
 
     private TaskUnitGroup SelectedGroup => Groups.FirstOrDefault(g => g.Id == UpdateForm.UnitGroupId);
-    [Inject] private IProjectTaskQueryService TaskQueries { get; set; } = default!;
+    [Inject] private ITaskDefinitionQueryService TaskQueries { get; set; } = default!;
 
 
     protected override async Task OnInitializedAsync()

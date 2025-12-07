@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Threading;
 using TaskResourceBlueprints.Dto.ProjectTask;
 using TaskResourceBlueprints.Dto.Resource;
 using TaskResourceBlueprints.Entities.Questions.Assignments;
@@ -6,50 +7,19 @@ using TaskResourceBlueprints.Infrastructure;
 
 namespace TaskResourceBlueprints.Services.Resource
 {
-    public interface ITaskFoldersService
+    public interface ITaskResourceService
     {
-        Task<IReadOnlyList<FolderDto>> GetVisibleFoldersAsync(int projectTaskId, CancellationToken ct = default);
-
-        Task<IReadOnlyList<FolderDto>> GetVisibleFoldersAsync(
-            int projectTaskId, IReadOnlyList<int> visibleFolderIds, CancellationToken ct = default);
-
         Task<(IReadOnlyList<ResourceRowDto> rows, string folderName)> GetFolderResourcesAsync(
             int projectTaskId, int folderId, CancellationToken ct = default);
-
+        Task<bool> AssignResourceToTaskAsync(TaskResourceAssignment assignment, CancellationToken cancellationToken = default);
         Task AddAssignmentAsync(int projectTaskId, int resourceId, CancellationToken ct = default);
-        Task RemoveAssignmentAsync(int projectTaskId, int resourceId, CancellationToken ct = default);
+        Task RemoveResourceFromTaskAsync(int projectTaskId, int resourceId, CancellationToken ct = default);
         Task<bool> RemoveAssignmentAsync(int id, CancellationToken ct = default);
     }
 
-    public sealed class TaskFoldersService(IDbContextFactory<TaskResourceBlueprintsContext> factory)
-        : ITaskFoldersService
+    public sealed class TaskResourceService(IDbContextFactory<TaskResourceBlueprintsContext> factory)
+        : ITaskResourceService
     {
-        public async Task<IReadOnlyList<FolderDto>> GetVisibleFoldersAsync(int projectTaskId, CancellationToken ct = default)
-        {
-            await using var db = await factory.CreateDbContextAsync(ct);
-
-            var ids = await db.Tasks.AsNoTracking()
-                .Where(t => t.Id == projectTaskId)
-                .Select(t => t.VisibleFolderIds)
-                .FirstOrDefaultAsync(ct) ?? [];
-
-            return await GetVisibleFoldersAsync(projectTaskId, ids, ct);
-        }
-
-        public async Task<IReadOnlyList<FolderDto>> GetVisibleFoldersAsync(
-            int projectTaskId, IReadOnlyList<int> visibleFolderIds, CancellationToken ct = default)
-        {
-            if (visibleFolderIds is null || visibleFolderIds.Count == 0)
-                return Array.Empty<FolderDto>();
-
-            await using var db = await factory.CreateDbContextAsync(ct);
-
-            return await db.ResourceCategories.AsNoTracking()
-                .Where(f => visibleFolderIds.Contains(f.Id))
-                .OrderBy(f => f.SortOrder)
-                .Select(f => new FolderDto(f.Id, f.DisplayName))
-                .ToListAsync(ct);
-        }
 
         public async Task<(IReadOnlyList<ResourceRowDto> rows, string folderName)> GetFolderResourcesAsync(
             int projectTaskId, int folderId, CancellationToken ct = default)
@@ -85,7 +55,27 @@ namespace TaskResourceBlueprints.Services.Resource
 
             return (rows, folderName);
         }
+        public async Task<bool> AssignResourceToTaskAsync(
+    TaskResourceAssignment assignment,
+    CancellationToken cancellationToken = default)
+        {
+            await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
+            // يمكن التحقق من عدم التكرار إن احتجت:
+            var exists = await context.TaskResourceAssignments
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.TaskId == assignment.TaskId &&
+                    x.ResourceId == assignment.ResourceId,
+                    cancellationToken);
+
+            if (exists)
+                return false;
+
+            await context.TaskResourceAssignments.AddAsync(assignment, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
         public async Task AddAssignmentAsync(int projectTaskId, int resourceId, CancellationToken ct = default)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
@@ -113,25 +103,28 @@ namespace TaskResourceBlueprints.Services.Resource
                 TaskId = projectTaskId,
                 ResourceId = r.Id,
                 ChangeFactor1 = r.ChangeFactor1,
-                ChangeFactor2 = r.ChangeFactor2,   // ✔️ كان خطأ عندك سابقًا
+                ChangeFactor2 = r.ChangeFactor2,
                 CapWaste = r.CapWaste,
                 BaseCost = r.BaseCost,
-                //ac = true
             });
 
             await db.SaveChangesAsync(ct);
         }
 
-        public async Task RemoveAssignmentAsync(int projectTaskId, int resourceId, CancellationToken ct = default)
+        public async Task RemoveResourceFromTaskAsync(int taskId, int resourceId, CancellationToken ct = default)
         {
-            await using var db = await factory.CreateDbContextAsync(ct);
+            await using var context = await factory.CreateDbContextAsync(ct);
 
-            var ite = await db.TaskResourceAssignments
-                .FirstOrDefaultAsync(x => x.TaskId == projectTaskId && x.ResourceId == resourceId, ct);
-            if (ite is null) return;
+            var existing = await context.TaskResourceAssignments
+                .FirstOrDefaultAsync(
+                    tr => tr.TaskId == taskId && tr.ResourceId == resourceId,
+                    ct);
 
-            db.TaskResourceAssignments.Remove(ite);
-            await db.SaveChangesAsync(ct);
+            if (existing is null)
+                return ;
+
+            context.TaskResourceAssignments.Remove(existing);
+            await context.SaveChangesAsync(ct);
         }
 
         public async Task<bool> RemoveAssignmentAsync(int id, CancellationToken ct = default)

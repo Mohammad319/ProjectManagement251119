@@ -21,23 +21,20 @@ namespace TaskResourceBlueprints
             //services.AddDbContext<TaskResourceBlueprintsContext>(options => options.UseSqlServer(TaskResourceBlueprintsDb));
 
             services.AddScoped(typeof(IEntityService<>), typeof(EntityService<>));
+
+            services.AddScoped<ITaskDefinitionQueryService, ProjectTaskQueryService>();
+            services.AddScoped<ITaskDefinitionService, ProjectTaskService>();
             services.AddScoped<ITaskResourceService, TaskResourceService>();
 
-            services.AddScoped<IProjectTaskQueryService, ProjectTaskQueryService>();
-            services.AddScoped<IProjectTaskService, ProjectTaskService>();
-            services.AddScoped<ITaskFoldersService, TaskFoldersService>();
-
-            services.AddScoped<IProjectTaskService,ProjectTaskService>();
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();
 
             services.AddScoped<ITaskGroupsQueryService,TaskGroupsQueryService>();
-            services.AddScoped<ITaskGroupsCommandService, TaskGroupsCommandService>();
             services.AddScoped<ITaskConditionsService,TaskConditionsService>();
-            services.AddScoped<IUnitGroupsService, UnitGroupsService>();
+            services.AddScoped<ITaskUnitGroupService, TaskUnitGroupService>();
             services.AddScoped<IResourceService, ResourceService>();
-            services.AddScoped<IResourcePropertiesService, ResourcePropertiesService>();
-            services.AddScoped<IGroupPropertiesService, GroupPropertiesService>();
-            services.AddScoped<IResourceFolderService, ResourceFolderService>();
+            services.AddScoped<IResourceAttributeService, ResourceAttributeService>();
+            services.AddScoped<IResourceAttributeSetService, ResourceAttributeSetService>();
+            services.AddScoped<IResourceCategoryService, ResourceCategoryService>();
         }
     }
 }

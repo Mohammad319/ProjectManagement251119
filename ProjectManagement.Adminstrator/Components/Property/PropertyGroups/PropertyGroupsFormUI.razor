@@ -1,7 +1,7 @@
 ﻿@using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
 @inherits AppComponentBase
-@inject IGroupPropertiesService GroupPropertiesService
+@inject IResourceAttributeSetService GroupPropertiesService
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using TaskResourceBlueprints.Services.ResourceProperties
@@ -49,7 +49,7 @@
         bool result = false;
         if (Model.Id == 0)
         {
-            var id = await GroupPropertiesService.AddAsync(Model);
+            var id = await GroupPropertiesService.CreateAsync(Model);
             result = id > 0;
         }
         else result = await GroupPropertiesService.UpdateAsync(Model);

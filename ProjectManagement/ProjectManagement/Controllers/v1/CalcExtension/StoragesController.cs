@@ -16,7 +16,7 @@ using System.Collections.Generic;
 namespace ProjectManagement.Server.Controllers.v1.CalcExtension
 {
     [ApiVersion("1.0")]
-    public class StoragesController(IProjectTaskService TaskService) : BaseApiController
+    public class StoragesController(ITaskDefinitionService TaskService) : BaseApiController
     {
         [Authorize]
         [HttpPost("updaterestenant/{resId}")]

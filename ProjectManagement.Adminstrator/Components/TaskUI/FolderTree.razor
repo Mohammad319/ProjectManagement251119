@@ -8,7 +8,6 @@
 @using ProjectManagement.Adminstrator.Components.ResourceUI
 @using ProjectManagement.Adminstrator.Helper
 @using ProjectManagement.Shared.DTO.App.TasksResource
-@using static TaskResourceBlueprints.Services.Resource.TaskResourceService
 @inject ITaskResourceService TaskResourceService
 @inject MhdServices MHD
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
@@ -29,16 +28,21 @@
 </ResourcesBrowser>
 
 @code {
+    public sealed class TaskResourceLinkDto
+    {
+        public int TaskId { get; init; }
+        public int ResourceId { get; init; }
+    }
     async Task OnCheckboxChanged( int resId)
     {
         if (!TaskResourceLink.Any(x => x.TaskId == TaskPM.Id && x.ResourceId == resId))
         {
-            await TaskResourceService.CreateAsync(new TaskResourceAssignment() { TaskId = TaskPM.Id, ResourceId = resId });
+            await TaskResourceService.AssignResourceToTaskAsync(new TaskResourceAssignment() { TaskId = TaskPM.Id, ResourceId = resId });
             TaskResourceLink.Add(new TaskResourceLinkDto() { TaskId = TaskPM.Id, ResourceId = resId });
         }
         else
         {
-            await TaskResourceService.DeleteAsync(TaskPM.Id, resId);
+            await TaskResourceService.RemoveResourceFromTaskAsync(TaskPM.Id, resId);
             TaskResourceLink.RemoveAll(x => x.TaskId == TaskPM.Id && x.ResourceId == resId);
         }
         StateHasChanged();

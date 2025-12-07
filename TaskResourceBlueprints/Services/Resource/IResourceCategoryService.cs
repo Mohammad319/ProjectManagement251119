@@ -1,22 +1,40 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TaskResourceBlueprints.Dto.ProjectTask;
 using TaskResourceBlueprints.Entities;
 using TaskResourceBlueprints.Entities.Resources;
 using TaskResourceBlueprints.Infrastructure;
 
 namespace TaskResourceBlueprints.Services.Resource
 {
-    public interface IResourceFolderService
+    public interface IResourceCategoryService
     {
+        Task<IReadOnlyList<FolderDto>> GetVisibleFoldersAsync(int taskId, CancellationToken ct = default);
         Task<List<ResourceCategory>> GetAllAsync();
-        Task<List<ResourceDefinition>> GetAllChildFolderIds(HashSet<int> selectedFolderIds);
-        Task<List<ResourceDefinition>> UpdateResourcesAsync(HashSet<int> selectedFolderIds);
+        Task<List<ResourceDefinition>> GetResourcesAsync(HashSet<int> selectedFolderIds);
+        Task<IReadOnlyList<ResourceDefinition>> GetFolderResourcesAsync(int folderId, CancellationToken ct);
+
         Task<ResourceCategory> GetByIdAsync(int id);
         Task<bool> UpdateAsync(ResourceCategory obj);
         Task<int> AddAsync(ResourceCategory obj);
         Task<bool> DeleteAsync(int id);
     }
-    public class ResourceFolderService(IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory) : IResourceFolderService
+    public class ResourceCategoryService(IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory) : IResourceCategoryService
     {
+        public async Task<IReadOnlyList<FolderDto>> GetVisibleFoldersAsync(int taskId, CancellationToken ct = default)
+        {
+            await using var db = await ContextFactory.CreateDbContextAsync(ct);
+
+            var ids = await db.Tasks.AsNoTracking()
+                .Where(t => t.Id == taskId)
+                .Select(t => t.VisibleFolderIds)
+                .FirstOrDefaultAsync(ct) ?? [];
+
+            return await db.ResourceCategories.AsNoTracking()
+                .Where(f => ids.Contains(f.Id))
+                .OrderBy(f => f.SortOrder)
+                .Select(f => new FolderDto(f.Id, f.DisplayName))
+                .ToListAsync(ct);
+        }
         public async Task<int> AddAsync(ResourceCategory obj)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
@@ -41,7 +59,16 @@ namespace TaskResourceBlueprints.Services.Resource
             await using var context = await ContextFactory.CreateDbContextAsync();
             return await context.ResourceCategories.OrderBy(f => f.SortOrder).ToListAsync();
         }
-        public async Task<List<Entities.ResourceDefinition>> UpdateResourcesAsync(HashSet<int> selectedFolderIds)
+        public async Task<IReadOnlyList<ResourceDefinition>> GetFolderResourcesAsync(int folderId, CancellationToken ct)
+        {
+            await using var db = await _factory.CreateDbContextAsync(ct);
+
+            return await db.Resources
+                .AsNoTracking()
+                .Where(r => r.FolderId == folderId)
+                .ToListAsync(ct);
+        }
+        public async Task<List<ResourceDefinition>> GetResourcesAsync(HashSet<int> selectedFolderIds)
         {
             using var db = ContextFactory.CreateDbContext();
 
@@ -57,22 +84,22 @@ namespace TaskResourceBlueprints.Services.Resource
                 .Where(r => r.FolderId != null && allIds.Contains(r.FolderId.Value))
                 .ToListAsync();
         }
-        public async Task<List<Entities.ResourceDefinition>> GetAllChildFolderIds(HashSet<int> selectedFolderIds)
-        {
-            List<Entities.ResourceDefinition> resourcesToShow = [];
-            using var db = ContextFactory.CreateDbContext();
-            foreach (var id in selectedFolderIds)
-            {
-                var allChildIds = await GetAllChildFolderIds(db, id);
-                allChildIds.Add(id);
+        //public async Task<List<ResourceDefinition>> GetAllChildFolderIds(HashSet<int> selectedFolderIds)
+        //{
+        //    List<ResourceDefinition> resourcesToShow = [];
+        //    using var db = ContextFactory.CreateDbContext();
+        //    foreach (var id in selectedFolderIds)
+        //    {
+        //        var allChildIds = await GetAllChildFolderIds(db, id);
+        //        allChildIds.Add(id);
 
-                var resources = await db.Resources
-                                        .Where(r => r.FolderId != null && allChildIds.Contains(r.FolderId.Value))
-                                        .ToListAsync();
-                resourcesToShow.AddRange(resources);
-            }
-            return resourcesToShow;
-        }
+        //        var resources = await db.Resources
+        //                                .Where(r => r.FolderId != null && allChildIds.Contains(r.FolderId.Value))
+        //                                .ToListAsync();
+        //        resourcesToShow.AddRange(resources);
+        //    }
+        //    return resourcesToShow;
+        //}
         private async Task<List<int>> GetAllChildFolderIds(TaskResourceBlueprintsContext db, int parentId)
         {
             var childIds = await db.ResourceCategories.Where(f => f.ParentCategoryId == parentId)

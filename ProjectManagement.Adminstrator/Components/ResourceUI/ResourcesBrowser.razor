@@ -10,7 +10,7 @@
 @inherits AppComponentBase
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using ProjectManagement.Shared.Enums
-@inject IResourceFolderService ResourceFolderService
+@inject IResourceCategoryService ResourceFolderService
 
 <div class="@CsS.Layout.FlexWrap">
     <div class="@CsS.Layout.FlexWidth(208) @CC.Card.Panel">
@@ -125,7 +125,7 @@
     }
 
     private async Task UpdateResourcesAsync()=>
-        resourcesToShow = await ResourceFolderService.UpdateResourcesAsync(selectedFolderIds);
+        resourcesToShow = await ResourceFolderService.GetResourcesAsync(selectedFolderIds);
 
     async Task ContextF(ResourceCategory item)
     {

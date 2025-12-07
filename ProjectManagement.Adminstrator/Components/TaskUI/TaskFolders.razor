@@ -1,7 +1,9 @@
 ﻿@using TaskResourceBlueprints.Dto.ProjectTask
 @using TaskResourceBlueprints.Dto.Resource
 @using TaskResourceBlueprints.Services.Resource
-@inject ITaskFoldersService FoldersService
+@inject ITaskResourceService FoldersService
+@inject IResourceCategoryService ResourceCategoryService
+
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 <div class="@CsS.Layout.FlexWrap">
@@ -125,7 +127,7 @@
     protected override async Task OnInitializedAsync()
     {
         // Deutsch: sichtbare Ordner für die Aufgabe laden (Überladung ohne visibleIds & mit optionalem Token)
-        Folders = (await FoldersService.GetVisibleFoldersAsync(TaskId)).ToList();
+        Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(TaskId)).ToList();
     }
 
     private async Task LoadResourcesAsync(int folderId, string folderName)
@@ -143,7 +145,7 @@
         if (!r.IsAssigned)
             await FoldersService.AddAssignmentAsync(TaskId, r.Id);
         else
-            await FoldersService.RemoveAssignmentAsync(TaskId, r.Id);
+            await FoldersService.RemoveResourceFromTaskAsync(TaskId, r.Id);
 
         // Deutsch: aktuelle Ordneransicht neu laden
         var current = Folders?.FirstOrDefault(f => f.DisplayName == SelectedFolderName);

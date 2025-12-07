@@ -10,8 +10,9 @@
 @inherits AppComponentBase
 @using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
+@using TaskResourceBlueprints.Services.Resource
 @inject TaskResourceBlueprints.Services.TaskGroups.ITaskGroupsQueryService TaskGroupsQuery
-@inject TaskResourceBlueprints.Services.TaskGroups.ITaskGroupsCommandService TaskGroupsCommand
+@inject IResourceCategoryService ResourceCategoryService
 
 @code {
     TaskDefinition Task { get; set; } = default!;
@@ -22,15 +23,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Task = await TaskGroupsQuery.GetTaskGraphAsync(ID, CancellationToken.None)
+        Task = await TaskGroupsQuery.GetTaskWithConditionsAsync(ID, CancellationToken.None)
                ?? new TaskDefinition();
+        Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(Task.Id, CancellationToken.None))
+.Select(f => new ResourceCategory() { Id = f.Id, DisplayName = f.DisplayName }).ToList();
 
-        Folders = (await TaskGroupsQuery.GetVisibleFoldersAsync(Task.Id, CancellationToken.None)).ToList();
     }
 
     private async Task SaveAsync()
     {
-        await TaskGroupsCommand.SaveGroupsAsync(Task, CancellationToken.None);
+        await TaskGroupsQuery.SaveTaskConditionsAsync(Task, CancellationToken.None);
         await OnSaved.InvokeAsync(true);
         Close();
     }
@@ -89,7 +91,7 @@
         if (folders.Resources == null || folders.Resources.Count == 0)
         {
             Selected = null;
-            folders.Resources = (await TaskGroupsQuery.GetFolderResourcesAsync(folders.Id, CancellationToken.None)).ToList();
+            folders.Resources = (await ResourceCategoryService.GetFolderResourcesAsync(folders.Id, CancellationToken.None)).ToList();
         }
         Selected = folders;
         StateHasChanged();

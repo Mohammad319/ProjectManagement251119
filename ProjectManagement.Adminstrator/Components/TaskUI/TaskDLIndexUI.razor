@@ -5,9 +5,9 @@
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList
 @using ProjectManagement.Adminstrator.Constants
 @using ProjectManagement.Client.Adminstrator.Services.MHDBlazor
-@inject IProjectTaskQueryService TaskQueries
-@inject IProjectTaskService TaskCommands
-@inject ITaskFoldersService FoldersService
+@inject ITaskDefinitionQueryService TaskQueries
+@inject ITaskDefinitionService TaskCommands
+@inject ITaskResourceService FoldersService
 
 @inject MhdServices MHD
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
@@ -161,7 +161,7 @@ new Dictionary<string, object>
         }
         else
         {
-                task.ResourceTasks = (await TaskQueries.GetTaskResourcesAsync(task.Id, CancellationToken.None)).ToList();
+                task.ResourceTasks = (await TaskQueries.GetResourcesForTaskAsync(task.Id, CancellationToken.None)).ToList();
             
             ColspanTaskIDs.Add(task.Id);
         }

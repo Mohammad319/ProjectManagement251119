@@ -1,173 +1,217 @@
 ﻿@using System.Globalization
 @using System.Linq
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
-@using Microsoft.EntityFrameworkCore
 @using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using TaskResourceBlueprints.Entities
-@using TaskResourceBlueprints.Infrastructure
 @inherits AppComponentBase
 @using TaskResourceBlueprints.Services.UnitGroups
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
-@inject IUnitGroupsService UnitGroupsService
+
+@inject ITaskUnitGroupService UnitGroupsService
+
 <div class="@CsS.Modal.Body">
 
-        <!-- Form row -->
-        <div class="@CsS.Grid.Col.MD4">
-            <div class="@CsS.Grid.Span.MD2">
-                <label class="@CsS.Form.Label" for="group-name">@CalcResource.name</label>
-                <input id="group-name" class="@CsS.Input.Text" @bind="_model.DisplayName"
-                       placeholder="Group 1" />
-            </div>
-
-            <div class="@CsS.Grid.Span.MD2">
-            <label class="@CsS.Form.Label" for="to-unit">Convert to</label>
-                <select id="to-unit"
-                        class="@CsS.Input.Select"
-                        @bind="_toUnit" @bind:after="OnTargetChanged">
-                    @foreach (var t in _allTargets)
-                    {
-                        <option value="@t">@t</option>
-                    }
-                </select>
-            </div>
+    <!-- Form row -->
+    <div class="@CsS.Grid.Col.MD4">
+        <div class="@CsS.Grid.Span.MD2">
+            <label class="@CsS.Form.Label" for="group-name">@CalcResource.name</label>
+            <input id="group-name"
+                   class="@CsS.Input.Text"
+                   @bind="_model.DisplayName"
+                   placeholder="Group 1" />
         </div>
 
-        <!-- From units -->
-        <div class="@CsS.Spacing.M.Top(Size.S4)">
-            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom(Size.S2)">
-                <h3 class="@NewCC.Text.H5">
+        <div class="@CsS.Grid.Span.MD2">
+            <label class="@CsS.Form.Label" for="to-unit">Convert to</label>
+            <select id="to-unit"
+                    class="@CsS.Input.Select"
+                    @bind="_toUnit"
+                    @bind:after="OnTargetChanged">
+                @foreach (var t in _allTargets)
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- From units -->
+    <div class="@CsS.Spacing.M.Top(Size.S4)">
+        <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom(Size.S2)">
+            <h3 class="@NewCC.Text.H5">
                 Available units
             </h3>
-            </div>
-
-            <div class="@CsS.Grid.Col.MD3">
-                @foreach (var u in _fromUnits)
-                {
-                    var selected = HasKey(u, _toUnit);
-                    <div class="@CsS.Spacing.M.Bottom(Size.S1) rounded-lg border px-3 py-2 bg-gray-50 dark:bg-gray-900/60 border-gray-200 dark:border-gray-700 @CsS.Layout.FlexJustifyBetween">
-                        <span class="@NewCC.Text.Sm">@u</span>
-
-                        @if (!selected)
-                        {
-                            <button class="@CsS.Btn.Outline.Success"
-                                    @onclick="() => Toggle(u)">
-                            @((MarkupString)Icons.Plus)
-                        </button>
-                        }
-                        else
-                        {
-                            <button class="@CsS.Btn.Outline.Danger"
-                                    @onclick="() => Toggle(u)">
-                                @Icons.Delete
-                            </button>
-                        }
-                    </div>
-                }
-            </div>
         </div>
 
-        <!-- Selected keys -->
-        <div class="@CsS.Spacing.M.Top(Size.S4)">
-        <h3 class="@NewCC.Text.H5 @CsS.Spacing.M.Bottom(Size.S1)">Selected pairs (Keys)</h3>
+        <div class="@CsS.Grid.Col.MD3">
+            @foreach (var u in _fromUnits)
+            {
+                var selected = HasKey(u);
 
-            @if (_model.Keys.Count == 0)
-            {
-            <div class="@NewCC.Text.MutedXs">There are no specific keys yet.</div>
-            }
-            else
-            {
-                <div class="@CsS.Layout.FlexWrap">
-                    @foreach (var k in _model.Keys)
+                <div class="@CsS.Spacing.M.Bottom(Size.S1) rounded-lg border px-3 py-2 bg-gray-50 dark:bg-gray-900/60 border-gray-200 dark:border-gray-700 @CsS.Layout.FlexJustifyBetween">
+                    <span class="@NewCC.Text.Sm">@u</span>
+
+                    @if (!selected)
                     {
-                        <span class="@CsS.Background.Primary @CsS.Spacing.M.Right(Size.S1) @CsS.Spacing.M.Bottom(Size.S1)">
-                            @k
-                            <button class="@CsS.Spacing.M.Left(Size.S1) rounded-full px-1 hover:bg-blue-200 dark:hover:bg-blue-800/60"
-                                title="Removal"
-                                    @onclick="() => RemoveKey(k)">
-                                ×
-                            </button>
-                        </span>
+                        <button class="@CsS.Btn.Outline.Success"
+                                disabled="@_isSaving"
+                                @onclick="() => Toggle(u)">
+                            @((MarkupString)Icons.Plus)
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="@CsS.Btn.Outline.Danger"
+                                disabled="@_isSaving"
+                                @onclick="() => Toggle(u)">
+                            @Icons.Delete
+                        </button>
                     }
                 </div>
             }
         </div>
+    </div>
+
+    <!-- Selected keys -->
+    <div class="@CsS.Spacing.M.Top(Size.S4)">
+        <h3 class="@NewCC.Text.H5 @CsS.Spacing.M.Bottom(Size.S1)">Selected pairs (Keys)</h3>
+
+        @if (_model.Keys.Count == 0)
+        {
+            <div class="@NewCC.Text.MutedXs">There are no specific keys yet.</div>
+        }
+        else
+        {
+            <div class="@CsS.Layout.FlexWrap">
+                @foreach (var k in _model.Keys)
+                {
+                    <span class="@CsS.Background.Primary @CsS.Spacing.M.Right(Size.S1) @CsS.Spacing.M.Bottom(Size.S1)">
+                        @k
+                        <button class="@CsS.Spacing.M.Left(Size.S1) rounded-full px-1 hover:bg-blue-200 dark:hover:bg-blue-800/60"
+                                title="Removal"
+                                disabled="@_isSaving"
+                                @onclick="() => RemoveKey(k)">
+                            ×
+                        </button>
+                    </span>
+                }
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(_error))
+    {
+        <div class="@CsS.Spacing.M.Top(Size.S2) text-red-600 text-sm">
+            @_error
+        </div>
+    }
 
     <div class="@CsS.Modal.Footer">
-        <button type="button" class="@CsS.Btn.Outline.Success" @onclick="SaveAsync">@ResourceApp.save</button>
-        <button type="button" @onclick="Close" class="@CsS.Btn.Outline.Secondary">@ResourceApp.cancel</button>
+        <button type="button"
+                class="@CsS.Btn.Outline.Success"
+                disabled="@_isSaving"
+                @onclick="SaveAsync">
+            @ResourceApp.save
+        </button>
+
+        <button type="button"
+                disabled="@_isSaving"
+                @onclick="Close"
+                class="@CsS.Btn.Outline.Secondary">
+            @ResourceApp.cancel
+        </button>
     </div>
 </div>
 
 @code {
-    // ====== نموذج المجموعة المراد حفظها ======
-    private void Close()
-    {
-        MHD.Modal.CloseLastModal();
-    }
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
-    [Parameter] public int? GroupId { get; set; } // إن مررت Id سنحمّل لل@ResourceApp.update
+    /// <summary>
+    /// إن مررت Id سنحمّل المجموعة للتحرير، وإلا فسيتم إنشاء مجموعة جديدة.
+    /// </summary>
+    [Parameter] public int? GroupId { get; set; }
 
-    TaskUnitGroup _model = new();
-    string _toUnit = "m3";
-    bool _isSaving = false;
-    string? _error;
-    bool _savedOk = false;
+    private TaskUnitGroup _model = new();
+    private string _toUnit = "m3";
+    private bool _isSaving;
+    private string? _error;
+    private bool _savedOk;
 
     // كل الوحدات الهدف المتوفرة في الكتالوج
-    List<string> _allTargets = UnitRulesCatalog.Rules.Values
-                              .Select(r => r.ToUnit)
-                              .Distinct(StringComparer.OrdinalIgnoreCase)
-                              .OrderBy(s => s)
-                              .ToList();
+    private readonly List<string> _allTargets = UnitRulesCatalog.Rules.Values
+        .Select(r => r.ToUnit)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(s => s)
+        .ToList();
 
-    IEnumerable<string> _fromUnits => UnitRulesCatalog.Rules.Values
+    private IEnumerable<string> _fromUnits => UnitRulesCatalog.Rules.Values
         .Where(r => string.Equals(r.ToUnit, _toUnit, StringComparison.OrdinalIgnoreCase))
         .Select(r => r.FromUnit)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .OrderBy(s => s);
 
-
     protected override async Task OnInitializedAsync()
     {
+        // لو عندنا GroupId نحمّل المجموعة من الخدمة
         if (GroupId is int id)
         {
-            var g = await UnitGroupsService.GetByIdAsync(id);
-            if (g is not null) _model = g;
+            var group = await UnitGroupsService.GetByIdAsync(id);
+            if (group is not null)
+            {
+                _model = group;
+            }
         }
 
+        // تأكد دائماً أن Keys ليست null
+        _model.Keys ??= new List<string>();
+
+        // تأكد أن وحدة الهدف المختارة موجودة في القائمة
         if (!_allTargets.Contains(_toUnit, StringComparer.OrdinalIgnoreCase))
             _toUnit = _allTargets.FirstOrDefault() ?? "m3";
     }
 
-    void OnTargetChanged()
+    private void Close()
+    {
+        MHD.Modal.CloseLastModal();
+    }
+
+    private void OnTargetChanged()
     {
         // لا نُفرغ المفاتيح؛ لأن المجموعة قد تحتوي أزواجًا لهدف آخر
         StateHasChanged();
     }
 
-    void Toggle(string fromUnit)
+    private void Toggle(string fromUnit)
     {
         var key = UnitRulesCatalog.BuildKey(fromUnit);
-        var idx = _model.Keys.FindIndex(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
-        if (idx >= 0) _model.Keys.RemoveAt(idx);
-        else _model.Keys.Add(key);
+        var idx = _model.Keys.FindIndex(k =>
+            string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+
+        if (idx >= 0)
+            _model.Keys.RemoveAt(idx);
+        else
+            _model.Keys.Add(key);
     }
 
-    bool HasKey(string fromUnit, string toUnit)
+    private bool HasKey(string fromUnit)
     {
         var key = UnitRulesCatalog.BuildKey(fromUnit);
         return _model.Keys.Any(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
     }
 
-    void RemoveKey(string key)
+    private void RemoveKey(string key)
     {
         _model.Keys.RemoveAll(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
     }
 
-    async Task SaveAsync()
+    private async Task SaveAsync()
     {
+        if (_isSaving)
+            return;
+
+        _isSaving = true;
         _error = null;
+
         try
         {
             if (string.IsNullOrWhiteSpace(_model.DisplayName))
@@ -178,10 +222,17 @@
             else
                 await UnitGroupsService.UpdateAsync(_model);
 
+            _savedOk = true;
+
+            // نبلغ الأب بنجاح الحفظ (مثلاً لتحديث القائمة)
             await Callback.InvokeAsync(true);
+
+            // إغلاق المودال بعد نجاح العملية
+            Close();
         }
         catch (Exception ex)
         {
+            _error = ex.Message;
             MHD.MessageOk("Error", ex.Message, MhdState.Danger);
         }
         finally

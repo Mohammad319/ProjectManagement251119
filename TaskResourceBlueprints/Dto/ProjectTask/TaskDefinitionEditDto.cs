@@ -3,7 +3,7 @@ using TaskResourceBlueprints.Entities.Tasks;
 
 namespace TaskResourceBlueprints.Dto.ProjectTask
 {
-    public sealed class ProjectTaskEditDto
+    public sealed class TaskDefinitionEditDto
     {
         public int Id { get; set; }
         public TaskStatusEnum Status { get; set; } = TaskStatusEnum.ToPlan;

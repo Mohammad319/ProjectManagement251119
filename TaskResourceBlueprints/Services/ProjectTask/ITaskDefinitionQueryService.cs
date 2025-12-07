@@ -5,24 +5,20 @@ using TaskResourceBlueprints.Infrastructure;
 
 namespace TaskResourceBlueprints.Services.ProjectTask
 {
-    public interface IProjectTaskQueryService
+    public interface ITaskDefinitionQueryService
     {
         Task<IReadOnlyList<ProjectTaskListItemDto>> GetListAsync(CancellationToken ct);
-        Task<ProjectTaskEditDto> GetForEditAsync(int id, CancellationToken ct);
-        Task<IReadOnlyList<ResourceTaskIndexDto>> GetTaskResourcesAsync(int id, CancellationToken ct);
+        Task<TaskDefinitionEditDto> GetForEditAsync(int id, CancellationToken ct);
+        Task<IReadOnlyList<ResourceTaskIndexDto>> GetResourcesForTaskAsync(int id, CancellationToken ct);
     }
 
-    public sealed class ProjectTaskQueryService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory) : IProjectTaskQueryService
+    public sealed class ProjectTaskQueryService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory) : ITaskDefinitionQueryService
     {
-
-        // Deutsch: Liste für Index-Grid (leichtgewichtig, ohne Includes)
         public async Task<IReadOnlyList<ProjectTaskListItemDto>> GetListAsync(CancellationToken ct)
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 
-            return await db.Tasks
-                .AsNoTracking()
-                .OrderBy(t => t.SortOrder)
+            return await db.Tasks.AsNoTracking().OrderBy(t => t.SortOrder)
                 .Select(t => new ProjectTaskListItemDto(
                     t.Id,
                     t.Code,
@@ -34,7 +30,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .ToListAsync(ct);
         }
 
-        public async Task<ProjectTaskEditDto> GetForEditAsync(int id, CancellationToken ct)
+        public async Task<TaskDefinitionEditDto> GetForEditAsync(int id, CancellationToken ct)
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 
@@ -42,7 +38,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .AsNoTracking()
                 .FirstAsync(x => x.Id == id, ct);
 
-            var dto = new ProjectTaskEditDto
+            var dto = new TaskDefinitionEditDto
             {
                 Id = e.Id,
                 ActionId = e.ActionId,
@@ -75,7 +71,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             return dto;
         }
 
-        public async Task<IReadOnlyList<ResourceTaskIndexDto>> GetTaskResourcesAsync(int id, CancellationToken ct)
+        public async Task<IReadOnlyList<ResourceTaskIndexDto>> GetResourcesForTaskAsync(int id, CancellationToken ct)
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 

@@ -5,7 +5,7 @@
 @using TaskResourceBlueprints.Services.ResourceProperties
 @using ProjectManagement.Adminstrator.Constants
 @inherits AppComponentBase
-@inject IResourcePropertiesService ResourcePropertiesService
+@inject IResourceAttributeService ResourcePropertiesService
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
@@ -75,7 +75,7 @@ MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
         if (IsSuccess)
         {
             PropertiesList = null;
-            PropertiesList = await ResourcePropertiesService.GetByGroupIdAsync(GroupId);
+            PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);
         }
         Modal.CloseLastModal();
         StateHasChanged();
@@ -84,6 +84,6 @@ MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
     int SelectedGroupId = 0;
     protected async override Task OnInitializedAsync()
     {
-        PropertiesList = await ResourcePropertiesService.GetByGroupIdAsync(GroupId);
+        PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);
     }
 }

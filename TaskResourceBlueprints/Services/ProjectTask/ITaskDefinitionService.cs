@@ -1,11 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using TaskResourceBlueprints.Dto.ProjectTask;
-using TaskResourceBlueprints.Entities;
-using TaskResourceBlueprints.Entities.Lookups;
-using TaskResourceBlueprints.Entities.Resources;
-using TaskResourceBlueprints.Entities.Tasks;
-using TaskResourceBlueprints.Infrastructure;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
@@ -14,6 +7,12 @@ using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Mappers;
 using System.Linq.Expressions;
 using System.Text.Json.Serialization;
+using TaskResourceBlueprints.Dto.ProjectTask;
+using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities.Lookups;
+using TaskResourceBlueprints.Entities.Resources;
+using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Services.ProjectTask
 {
     public static class TaskSelectors
@@ -64,16 +63,16 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         public List<string> Formulas { get; set; } = [];
         public ResourceTypesEnum ResType { get; set; }
     }
-    public interface IProjectTaskService
+    public interface ITaskDefinitionService
     {
         Task<bool> UpdateResourceAppStorageTenantAsync(int tenantId, int ResourceId, ResourceTenantLinkBase taskResourceDto, CancellationToken ct);
         Task<List<TaskWithResourcesMDto>?> GetTasksWithAdjustedResources(int? ActionId, int? LocationId, int? FallId, int? ActionTypeId);
-        Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto filter,int tenantid,CancellationToken ct);
+        Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto filter, int tenantid, CancellationToken ct);
         Task<ProjectTaskDto> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct);
         Task<TaskResourceDto?> GetTaskResourceAsync(int TaskId, int ResourceId, CancellationToken ct);
         Task<bool> SaveTaskResourceAsync(int TaskId, int ResourceId, TaskResourceDto taskResourceDto, CancellationToken ct);
-        Task<int> CreateAsync(ProjectTaskEditDto dto, CancellationToken ct);
-        Task UpdateAsync(ProjectTaskEditDto dto, CancellationToken ct);
+        Task<int> CreateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
+        Task UpdateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task DeleteAsync(int id, CancellationToken ct);
         Task<(IReadOnlyList<ActionEntity> actions,
       IReadOnlyList<ActionTypeEntity> actionTypes, IReadOnlyList<FallEntity> falls,
@@ -81,7 +80,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
       IReadOnlyList<ResourceCategory> folders)> GetLookupsAsync(CancellationToken ct);
     }
 
-    public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : IProjectTaskService
+    public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : ITaskDefinitionService
     {
         public async Task<(IReadOnlyList<ActionEntity>, IReadOnlyList<ActionTypeEntity>,
                    IReadOnlyList<FallEntity>, IReadOnlyList<LocationEntity>, IReadOnlyList<TaskUnitGroup>,
@@ -120,7 +119,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         public async Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto filter, int tenantid, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            var query = db.Tasks.Where(x=>x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
+            var query = db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
             if (!string.IsNullOrEmpty(filter.NameOrCode))
             {
                 query = query.Where(x => x.Code.Contains(filter.NameOrCode) ||
@@ -133,7 +132,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             await using var db = await factory.CreateDbContextAsync(ct);
             return await db.Tasks?.Where(x => x.Status == TaskStatusEnum.Ready)?.AsNoTracking()?.ProjectToDto(tenantid, depId)?.FirstOrDefaultAsync(x => x.Id == id, ct);
         }
-        private static void Validate(ProjectTaskEditDto d)
+        private static void Validate(TaskDefinitionEditDto d)
         {
             if (string.IsNullOrWhiteSpace(d.DisplayName))
                 throw new ArgumentException("Name ist erforderlich.");
@@ -144,7 +143,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         }
 
         // Deutsch: Create – eigener DbContext-Scope, kein Parallelismus
-        public async Task<int> CreateAsync(ProjectTaskEditDto d, CancellationToken ct)
+        public async Task<int> CreateAsync(TaskDefinitionEditDto d, CancellationToken ct)
         {
             Validate(d);
 
@@ -170,7 +169,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 FieldNotes = d.Note,
                 VisibleFolderIds = d.VisibleFolderIds?.ToList() ?? [],
                 Uncontrollable = d.Uncontrollable,
-                
+
                 WorkloadThresholds =
                 [
                     d.Thickness ?? 0,
@@ -185,7 +184,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         }
 
         // Deutsch: Update – Entity innerhalb desselben DbContext laden & speichern
-        public async Task UpdateAsync(ProjectTaskEditDto d, CancellationToken ct)
+        public async Task UpdateAsync(TaskDefinitionEditDto d, CancellationToken ct)
         {
             Validate(d);
 
@@ -194,7 +193,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             var e = await db.Tasks.FirstAsync(x => x.Id == d.Id, ct);
 
             e.ActionId = d.ActionId;
-            e.Responsible= d.Responsible;
+            e.Responsible = d.Responsible;
             e.Status = d.Status;
             e.AdminNote = d.AdminNote;
             e.Uncontrollable = d.Uncontrollable;
@@ -234,7 +233,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             await db.SaveChangesAsync(ct);
         }
 
-        public async Task<TaskResourceDto?> GetTaskResourceAsync(int taskId,int resourceId,CancellationToken ct)
+        public async Task<TaskResourceDto?> GetTaskResourceAsync(int taskId, int resourceId, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
 
@@ -284,7 +283,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             await using var db = await factory.CreateDbContextAsync(ct);
             var zz = await db.ResourceTenantLinks.FirstOrDefaultAsync
                 (x => x.TenantId == TenantId && x.ResourceId == ResourceId, ct);
-            if(zz == null)
+            if (zz == null)
             {
                 zz = new ResourceTenantLinkEntity
                 {

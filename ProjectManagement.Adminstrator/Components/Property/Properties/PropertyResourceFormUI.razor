@@ -3,7 +3,7 @@
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Infrastructure
 @inherits AppComponentBase
-@inject IResourcePropertiesService ResourcePropertiesService
+@inject IResourceAttributeService ResourcePropertiesService
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using TaskResourceBlueprints.Services.ResourceProperties
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
@@ -120,7 +120,7 @@
         ResourceProp.AttributeSetId = GroupId;
         if (ResourceProp.Id == 0)
         {
-            await ResourcePropertiesService.AddAsync(ResourceProp);
+            await ResourcePropertiesService.CreateAsync(ResourceProp);
         }
         else
         {
