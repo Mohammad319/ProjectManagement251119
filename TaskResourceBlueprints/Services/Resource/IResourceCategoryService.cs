@@ -61,7 +61,7 @@ namespace TaskResourceBlueprints.Services.Resource
         }
         public async Task<IReadOnlyList<ResourceDefinition>> GetFolderResourcesAsync(int folderId, CancellationToken ct)
         {
-            await using var db = await _factory.CreateDbContextAsync(ct);
+            await using var db = await ContextFactory.CreateDbContextAsync(ct);
 
             return await db.Resources
                 .AsNoTracking()

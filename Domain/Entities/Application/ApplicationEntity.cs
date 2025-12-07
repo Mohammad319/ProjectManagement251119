@@ -9,21 +9,42 @@ namespace Domain.Entities.Application
 {
     public class RowEntity : RowBase
     {
-        public List<AttributeBase> Attributes { get; set; }
+        public List<AttributeBase> Attributes { get; set; } = [];
     }
+
     public class ApplicationDataEntity : ApplicationDataBase
     {
-        public List<RowEntity> Row { get; set; } = [];
+        public List<RowEntity> Rows { get; set; } = []; // كان Row
     }
-    public class ApplicationEntity : ApplicationBase, IDataKeyFilterReadOnly
+
+    /// <summary>
+    /// Application (form) created by a department.
+    /// </summary>
+    public sealed class ApplicationEntity : ApplicationBase, IDataKeyFilterReadOnly
     {
-        [Key] public int Id { get; set; }
-        ApplicationDataEntity data;
-        public ApplicationDataEntity Data { get { data ??= new ApplicationDataEntity(); return data; } set { data = value; } }
+        [Key]
+        public int Id { get; set; }
 
+        private ApplicationDataEntity _data = new();
+
+        /// <summary>
+        /// Dynamic data associated with the application.
+        /// </summary>
+        public ApplicationDataEntity Data
+        {
+            get => _data;
+            set => _data = value ?? new ApplicationDataEntity();
+        }
+
+        /// <summary>
+        /// Department responsible for this application.
+        /// </summary>
         public int DepartmentId { get; set; }
-        [JsonIgnore] public DepartmentEntity Department { get; set; }
 
-        [JsonIgnore] public int TenantId { get; set; }
+        [JsonIgnore]
+        public DepartmentEntity Department { get; set; } = null!;
+
+        [JsonIgnore]
+        public int TenantId { get; set; }
     }
 }

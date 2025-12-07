@@ -12,8 +12,8 @@ namespace Persistence.Configurations
         public void Configure(EntityTypeBuilder<UserEntity> modelBuilder)
         {
             modelBuilder.HasIndex(u => u.Email).IsUnique();
-            modelBuilder.Property(u => u.Firstname).HasMaxLength(30);
-            modelBuilder.Property(u => u.Lastname).HasMaxLength(30);
+            modelBuilder.Property(u => u.FirstName).HasMaxLength(30);
+            modelBuilder.Property(u => u.LastName).HasMaxLength(30);
         }
     }
     class TenderConfiguration : IEntityTypeConfiguration<TenderEntity>

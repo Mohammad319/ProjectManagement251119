@@ -8,19 +8,54 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Users
 {
-    public class UserEntity: IDataKeyFilterReadOnly
+    /// <summary>
+    /// Represents an application user that belongs to a specific tenant.
+    /// </summary>
+    public sealed class UserEntity : IDataKeyFilterReadOnly
     {
         public int Id { get; set; }
-        public string IdAuth { get; set; }
-        public string Email { get; set; }
-        public string Username { get; set; }
+
+        /// <summary>
+        /// External authentication provider user id (e.g. Azure AD).
+        /// </summary>
+        [Required]
+        public string ExternalAuthId { get; set; } = string.Empty;
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string UserName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optional department the user belongs to.
+        /// </summary>
         public int? DepartmentId { get; set; }
-        public string Firstname { get; set; }
-        public string Lastname { get; set; }
-        public DepartmentEntity Department { get; set; }
-        public ICollection<FolderEntity> Folders { get; set; }
-        public ICollection<ProjectEntity> Projects { get; set; }
-        public ICollection<CalculationEntity> Calculations { get; set; }
-        [JsonIgnore] public int TenantId { get; set; }
+
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+
+        /// <summary>
+        /// Navigation to the user's department.
+        /// </summary>
+        public DepartmentEntity? Department { get; set; }
+
+        /// <summary>
+        /// Folders owned by the user.
+        /// </summary>
+        public ICollection<FolderEntity> Folders { get; set; } = [];
+
+        /// <summary>
+        /// Projects created/owned by the user.
+        /// </summary>
+        public ICollection<ProjectEntity> Projects { get; set; } = [];
+
+        /// <summary>
+        /// Calculations created by the user.
+        /// </summary>
+        public ICollection<CalculationEntity> Calculations { get; set; } = [];
+
+        [JsonIgnore]
+        public int TenantId { get; set; }
     }
 }

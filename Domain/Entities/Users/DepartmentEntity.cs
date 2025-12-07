@@ -8,15 +8,35 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Users
 {
-    public class DepartmentEntity : DepartmentBase, IDataKeyFilterReadOnly
+    /// <summary>
+    /// Logical department within a tenant.
+    /// </summary>
+    public sealed class DepartmentEntity : DepartmentBase, IDataKeyFilterReadOnly
     {
         public int Id { get; set; }
-        [JsonIgnore] public int TenantId { get; set; }
-        public DateTime Created { get; set; } = DateTime.Now;
+
+        [JsonIgnore]
+        public int TenantId { get; set; }
+
+        public DateTime Created { get; set; } = DateTime.UtcNow;
         public DateTime? LastModified { get; set; }
 
-        [JsonIgnore] public ICollection<FolderEntity> Folders { get; set; }
-        [JsonIgnore] public ICollection<UserEntity> Users { get; set; }
-        [JsonIgnore] public ICollection<ProjectEntity> Projects { get; set; }
+        /// <summary>
+        /// Folders belonging to this department.
+        /// </summary>
+        [JsonIgnore]
+        public ICollection<FolderEntity> Folders { get; set; } = [];
+
+        /// <summary>
+        /// Users assigned to this department.
+        /// </summary>
+        [JsonIgnore]
+        public ICollection<UserEntity> Users { get; set; } = [];
+
+        /// <summary>
+        /// Projects owned by this department.
+        /// </summary>
+        [JsonIgnore]
+        public ICollection<ProjectEntity> Projects { get; set; } = [];
     }
 }

@@ -31,7 +31,7 @@ namespace TaskResourceBlueprints
             services.AddScoped<ITaskGroupsQueryService,TaskGroupsQueryService>();
             services.AddScoped<ITaskConditionsService,TaskConditionsService>();
             services.AddScoped<ITaskUnitGroupService, TaskUnitGroupService>();
-            services.AddScoped<IResourceService, ResourceService>();
+            services.AddScoped<IResourceBlueprintsService, ResourceBlueprintsService>();
             services.AddScoped<IResourceAttributeService, ResourceAttributeService>();
             services.AddScoped<IResourceAttributeSetService, ResourceAttributeSetService>();
             services.AddScoped<IResourceCategoryService, ResourceCategoryService>();

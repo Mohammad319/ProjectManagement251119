@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Threading;
-using TaskResourceBlueprints.Dto.ProjectTask;
+using ProjectManagement.Shared.Enums;
 using TaskResourceBlueprints.Dto.Resource;
 using TaskResourceBlueprints.Entities.Questions.Assignments;
 using TaskResourceBlueprints.Infrastructure;
+using TaskResourceBlueprints.Services.ProjectTask;
 
 namespace TaskResourceBlueprints.Services.Resource
 {
@@ -11,7 +11,10 @@ namespace TaskResourceBlueprints.Services.Resource
     {
         Task<(IReadOnlyList<ResourceRowDto> rows, string folderName)> GetFolderResourcesAsync(
             int projectTaskId, int folderId, CancellationToken ct = default);
-        Task<bool> AssignResourceToTaskAsync(TaskResourceAssignment assignment, CancellationToken cancellationToken = default);
+        Task<TaskResourceDto?> GetTaskResourceAsync(int TaskId, int ResourceId, CancellationToken ct);
+
+        Task<bool> UpdateAssignmentAsync(int TaskId, int ResourceId, TaskResourceDto taskResourceDto, CancellationToken ct);
+        Task<bool> AddAssignmentAsync(TaskResourceAssignment assignment, CancellationToken cancellationToken = default);
         Task AddAssignmentAsync(int projectTaskId, int resourceId, CancellationToken ct = default);
         Task RemoveResourceFromTaskAsync(int projectTaskId, int resourceId, CancellationToken ct = default);
         Task<bool> RemoveAssignmentAsync(int id, CancellationToken ct = default);
@@ -45,7 +48,7 @@ namespace TaskResourceBlueprints.Services.Resource
                     r.Data.Unit,
                     r.Data.Quantity,
                     r.Data.ChangeFactor1,
-                    r.Data.ChangeFactor2,     // ✔️ انتبه: CF2 الصحيح
+                    r.Data.ChangeFactor2,
                     r.Data.CapWaste,
                     r.Data.Cost,
                     r.Data.BaseCost,
@@ -55,7 +58,50 @@ namespace TaskResourceBlueprints.Services.Resource
 
             return (rows, folderName);
         }
-        public async Task<bool> AssignResourceToTaskAsync(
+        public async Task<TaskResourceDto?> GetTaskResourceAsync(int taskId, int resourceId, CancellationToken ct)
+        {
+            await using var db = await factory.CreateDbContextAsync(ct);
+
+            var zz = await db.TaskResourceAssignments.AsNoTracking()
+                .Where(x => x.TaskId == taskId && x.ResourceId == resourceId)
+                .Select(x => new TaskResourceDto
+                {
+                    Active = x.Resource == null ? false : x.Resource.IsActive,
+                    MenuId = x.MenuId,
+                    BaseCost = x.BaseCost,
+                    CapRole = x.CapacityRoles,
+                    CapWaste = x.CapWaste,
+                    ChangeFactor1 = x.ChangeFactor1,
+                    ChangeFactor2 = x.ChangeFactor2,
+                    Formulas = x.Expressions,
+                    ResType = x.Resource == null ? ResourceTypesEnum.Adjustment : x.Resource.ResType,
+                    Uncontrollable = x.Uncontrollable,
+                })
+                .FirstOrDefaultAsync(ct);
+
+            return zz;
+        }
+        public async Task<bool> UpdateAssignmentAsync(int TaskId, int ResourceId, TaskResourceDto taskResourceDto, CancellationToken ct)
+        {
+            await using var db = await factory.CreateDbContextAsync(ct);
+            var zz = await db.TaskResourceAssignments.FirstOrDefaultAsync
+                (x => x.TaskId == TaskId && x.ResourceId == ResourceId, ct);
+            if (zz != null)
+            {
+                zz.MenuId = taskResourceDto.MenuId;
+                zz.ChangeFactor1 = taskResourceDto.ChangeFactor1;
+                zz.ChangeFactor2 = taskResourceDto.ChangeFactor2;
+                zz.CapWaste = taskResourceDto.CapWaste;
+                zz.BaseCost = taskResourceDto.BaseCost;
+                zz.Uncontrollable = taskResourceDto.Uncontrollable;
+                zz.Expressions = taskResourceDto.Formulas;
+                zz.CapacityRoles = taskResourceDto.CapRole;
+                await db.SaveChangesAsync(ct);
+                return true;
+            }
+            return false;
+        }
+        public async Task<bool> AddAssignmentAsync(
     TaskResourceAssignment assignment,
     CancellationToken cancellationToken = default)
         {
@@ -121,7 +167,7 @@ namespace TaskResourceBlueprints.Services.Resource
                     ct);
 
             if (existing is null)
-                return ;
+                return;
 
             context.TaskResourceAssignments.Remove(existing);
             await context.SaveChangesAsync(ct);

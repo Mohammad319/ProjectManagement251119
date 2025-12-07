@@ -39,7 +39,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 if (row.ID == Guid.Empty)
                 {
                     row.ID = Guid.NewGuid();
-                    ApplicationUpdate.Data.Row.Add(row);
+                    ApplicationUpdate.Data.Rows.Add(row);
                 }
                 else
                 {
@@ -61,7 +61,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         }
         bool RemoveAsync(RowEntity st)
         {
-            ApplicationUpdate.Data.Row.Remove(st);
+            ApplicationUpdate.Data.Rows.Remove(st);
             StateHasChanged();
             return true;
         }

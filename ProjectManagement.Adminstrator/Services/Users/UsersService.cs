@@ -167,12 +167,12 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 {
                     Id = olduser.UserId.Value,
                     DepartmentId = user.DepartmentId,
-                    Firstname = user.Firstname,
-                    Lastname = user.Lastname,
+                    FirstName = user.Firstname,
+                    LastName = user.Lastname,
                     TenantId = tentnid.Value,
                     //Username = user.Email,
                     //Email = user.Email,
-                    IdAuth = user.Id
+                    ExternalAuthId = user.Id
                 };
                 var dataAccess = await CreateDbContext(tentnid.Value);
                 dataAccess.User.Update(userEntity);
@@ -254,10 +254,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 ue = new UserEntity()
                 {
                     DepartmentId = request.DepartmentId,
-                    Firstname = request.Firstname,
-                    Lastname = request.Lastname,
+                    FirstName = request.Firstname,
+                    LastName = request.Lastname,
                     TenantId = tenantId.Value,
-                    Username = request.Email,
+                    UserName = request.Email,
                     Email = request.Email,
                 };
                 var dbtenant = await CreateDbContext(tenantId.Value);
@@ -289,7 +289,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             {
                 if (tenantId.HasValue && ue != null)
                 {
-                    ue.IdAuth = userEntity.Id;
+                    ue.ExternalAuthId = userEntity.Id;
                     var dbtenant = await CreateDbContext(tenantId.Value);
                     dbtenant.User.Update(ue);
                     await dbtenant.SaveChangesAsync();

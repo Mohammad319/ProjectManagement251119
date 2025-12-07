@@ -89,13 +89,13 @@ namespace ProjectManagement.Services
                 {
                     localUser = new UserEntity
                     {
-                        IdAuth = identityUser.Id,
-                        Firstname = request.Firstname,
-                        Lastname = request.Lastname,
+                        ExternalAuthId = identityUser.Id,
+                        FirstName = request.Firstname,
+                        LastName = request.Lastname,
                         Email = request.Email,
                         TenantId = _factory!.TenantID!.Value,
                         DepartmentId = request.DepartmentId,
-                        Username = request.Email,
+                        UserName = request.Email,
                     };
                     _shContext.User.Add(localUser);
                     await _shContext.SaveChangesAsync();
@@ -128,7 +128,7 @@ namespace ProjectManagement.Services
             bool deletFrumAuth = true;
             if (!string.IsNullOrEmpty(id))
                 deletFrumAuth = await DeleteUserFromAuthAsync(id.ToString());
-            var u = await _shContext.User.FirstOrDefaultAsync(x => x.IdAuth == id || x.Id == userid);
+            var u = await _shContext.User.FirstOrDefaultAsync(x => x.ExternalAuthId == id || x.Id == userid);
             if (!onlyfromregister && u != null && deletFrumAuth)
             {
                 var calcs = _shContext.Calculation.Where(x => x.IsPrivate && x.UserId == u.Id);
@@ -156,7 +156,7 @@ namespace ProjectManagement.Services
             var userEntity = await _shContext.User.FirstOrDefaultAsync(x => x.Id == tenantUser.Id);
             if (userEntity != null)
             {
-                userEntity.IdAuth = authUser.Id;
+                userEntity.ExternalAuthId = authUser.Id;
                 _shContext.User.Update(userEntity);
                 await _shContext.SaveChangesAsync();
             }
@@ -190,9 +190,9 @@ namespace ProjectManagement.Services
                 if (userEntity != null)
                 {
                     userEntity.DepartmentId = user.DepartmentId;
-                    userEntity.Firstname = user.Firstname;
-                    userEntity.Lastname = user.Lastname;
-                    userEntity.IdAuth = user.IdAuth;
+                    userEntity.FirstName = user.Firstname;
+                    userEntity.LastName = user.Lastname;
+                    userEntity.ExternalAuthId = user.IdAuth;
                     _shContext.User.Update(userEntity);
                     await _shContext.SaveChangesAsync();
                 }
@@ -229,16 +229,16 @@ namespace ProjectManagement.Services
 
             return tenantUsers.Select(tUser =>
             {
-                authDict.TryGetValue(tUser.IdAuth ?? "", out var appUser);
+                authDict.TryGetValue(tUser.ExternalAuthId ?? "", out var appUser);
 
                 return new TenantUserDto
                 {
                     Id = tUser.Id,
-                    Firstname = tUser.Firstname,
-                    Lastname = tUser.Lastname,
-                    IdAuth = tUser.IdAuth,
+                    Firstname = tUser.FirstName,
+                    Lastname = tUser.LastName,
+                    IdAuth = tUser.ExternalAuthId,
                     DepartmentId = tUser.DepartmentId,
-                    Username = tUser.Username,
+                    Username = tUser.UserName,
                     Email = tUser.Email,
                     IsInAuth = appUser != null,
                     LockoutEnabled = appUser?.LockoutEnabled ?? false,

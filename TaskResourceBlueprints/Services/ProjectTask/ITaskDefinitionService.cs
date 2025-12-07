@@ -69,8 +69,6 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         Task<List<TaskWithResourcesMDto>?> GetTasksWithAdjustedResources(int? ActionId, int? LocationId, int? FallId, int? ActionTypeId);
         Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto filter, int tenantid, CancellationToken ct);
         Task<ProjectTaskDto> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct);
-        Task<TaskResourceDto?> GetTaskResourceAsync(int TaskId, int ResourceId, CancellationToken ct);
-        Task<bool> SaveTaskResourceAsync(int TaskId, int ResourceId, TaskResourceDto taskResourceDto, CancellationToken ct);
         Task<int> CreateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task UpdateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task DeleteAsync(int id, CancellationToken ct);
@@ -231,51 +229,6 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             db.Tasks.Remove(e);
             await db.SaveChangesAsync(ct);
-        }
-
-        public async Task<TaskResourceDto?> GetTaskResourceAsync(int taskId, int resourceId, CancellationToken ct)
-        {
-            await using var db = await factory.CreateDbContextAsync(ct);
-
-            var zz = await db.TaskResourceAssignments.AsNoTracking()
-                .Where(x => x.TaskId == taskId && x.ResourceId == resourceId)
-                .Select(x => new TaskResourceDto
-                {
-                    Active = x.Resource == null ? false : x.Resource.IsActive,
-                    MenuId = x.MenuId,
-                    BaseCost = x.BaseCost,
-                    CapRole = x.CapacityRoles,
-                    CapWaste = x.CapWaste,
-                    ChangeFactor1 = x.ChangeFactor1,
-                    ChangeFactor2 = x.ChangeFactor2,
-                    Formulas = x.Expressions,
-                    ResType = x.Resource == null ? ResourceTypesEnum.Adjustment : x.Resource.ResType,
-                    Uncontrollable = x.Uncontrollable,
-                })
-                .FirstOrDefaultAsync(ct);
-
-            return zz;
-        }
-
-        public async Task<bool> SaveTaskResourceAsync(int TaskId, int ResourceId, TaskResourceDto taskResourceDto, CancellationToken ct)
-        {
-            await using var db = await factory.CreateDbContextAsync(ct);
-            var zz = await db.TaskResourceAssignments.FirstOrDefaultAsync
-                (x => x.TaskId == TaskId && x.ResourceId == ResourceId, ct);
-            if (zz != null)
-            {
-                zz.MenuId = taskResourceDto.MenuId;
-                zz.ChangeFactor1 = taskResourceDto.ChangeFactor1;
-                zz.ChangeFactor2 = taskResourceDto.ChangeFactor2;
-                zz.CapWaste = taskResourceDto.CapWaste;
-                zz.BaseCost = taskResourceDto.BaseCost;
-                zz.Uncontrollable = taskResourceDto.Uncontrollable;
-                zz.Expressions = taskResourceDto.Formulas;
-                zz.CapacityRoles = taskResourceDto.CapRole;
-                await db.SaveChangesAsync(ct);
-                return true;
-            }
-            return false;
         }
 
         public async Task<bool> UpdateResourceAppStorageTenantAsync(int TenantId, int ResourceId, ResourceTenantLinkBase taskResourceDto, CancellationToken ct)

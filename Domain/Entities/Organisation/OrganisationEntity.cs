@@ -3,7 +3,6 @@ using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.DTO.Organisation;
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Organisation
