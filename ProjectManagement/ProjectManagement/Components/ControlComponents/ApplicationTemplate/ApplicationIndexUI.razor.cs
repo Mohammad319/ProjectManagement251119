@@ -17,7 +17,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             {
                 Data = new()
                 {
-                    Row = [
+                    Rows = [
                     new (){Name = "Row_1", IsVisible = true, ID = Guid.NewGuid(),
                         Style = "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
                         StyleRow = "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",

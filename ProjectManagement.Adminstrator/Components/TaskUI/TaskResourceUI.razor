@@ -1,4 +1,5 @@
 ﻿@inject ITaskDefinitionService TaskService
+@inject  ITaskResourceService TaskResourceService
 @inherits AppComponentBase
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
@@ -8,6 +9,7 @@
 @using ProjectManagement.Adminstrator.Components.ResourceUI
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @using ProjectManagement.Shared.Enums
+@using TaskResourceBlueprints.Services.Resource
 @inject IStringLocalizer<CalcResource> L
 
 <div class="@CsS.Modal.Body">
@@ -258,12 +260,12 @@
     }
     protected override async Task OnInitializedAsync()
     {
-        TaskResource = await TaskService.GetTaskResourceAsync
+        TaskResource = await TaskResourceService.GetTaskResourceAsync
         (Task.Id , Resource.Id , CancellationToken.None);
     }
     async Task SaveAsync()
     {
-        if (await TaskService.SaveTaskResourceAsync(Task.Id, Resource.Id, TaskResource, CancellationToken.None))
+        if (await TaskResourceService.UpdateAssignmentAsync(Task.Id, Resource.Id, TaskResource, CancellationToken.None))
         {
             MHD.Modal.CloseLastModal();
         }

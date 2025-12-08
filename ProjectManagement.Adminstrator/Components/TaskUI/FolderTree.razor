@@ -37,7 +37,7 @@
     {
         if (!TaskResourceLink.Any(x => x.TaskId == TaskPM.Id && x.ResourceId == resId))
         {
-            await TaskResourceService.AssignResourceToTaskAsync(new TaskResourceAssignment() { TaskId = TaskPM.Id, ResourceId = resId });
+            await TaskResourceService.AddAssignmentAsync(new TaskResourceAssignment() { TaskId = TaskPM.Id, ResourceId = resId });
             TaskResourceLink.Add(new TaskResourceLinkDto() { TaskId = TaskPM.Id, ResourceId = resId });
         }
         else

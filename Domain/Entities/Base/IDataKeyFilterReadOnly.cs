@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Domain.Entities.Base
+﻿namespace Domain.Entities.Base
 {
+    /// <summary>
+    /// Marks an entity that is bound to a specific tenant.
+    /// </summary>
     public interface IDataKeyFilterReadOnly
     {
-        public int TenantId { get; set; }
+        int TenantId { get; set; }
     }
 }
+

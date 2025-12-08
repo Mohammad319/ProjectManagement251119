@@ -142,7 +142,8 @@
                                               Value="a.ResourceId"
                                               ValueChanged="@(v => a.ResourceId = v ?? 0)"
                                               InitialName="@(a.Resource?.Name)"
-                                              OnPicked="@(sel => { a.ResourceId = sel.id; StateHasChanged(); })" />
+                                              @* OnPicked="@(sel => { a.ResourceId = sel.id; StateHasChanged(); })"  *@
+                                              />
                     </div>
                     <div>
                         <label class="@CsS.Form.Label">Factor1</label>

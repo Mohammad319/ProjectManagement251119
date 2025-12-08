@@ -1,17 +1,17 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Folder;
 using Domain.Entities.Project;
-using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Resource;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Users
 {
-    public class DepartmentEntity : DepartmentBase, IDataKeyFilterReadOnly
+    /// <summary>
+    /// Logical department within a tenant.
+    /// </summary>
+    public sealed class DepartmentEntity : IDataKeyFilterReadOnly
     {
         public int Id { get; set; }
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
@@ -21,10 +21,25 @@ namespace Domain.Entities.Users
         public string Description { get; set; }
         [JsonIgnore] public int TenantId { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;
+
         public DateTime? LastModified { get; set; }
 
-        [JsonIgnore] public ICollection<FolderEntity> Folders { get; set; }
-        [JsonIgnore] public ICollection<UserEntity> Users { get; set; }
-        [JsonIgnore] public ICollection<ProjectEntity> Projects { get; set; }
+        /// <summary>
+        /// Folders belonging to this department.
+        /// </summary>
+        [JsonIgnore]
+        public ICollection<FolderEntity> Folders { get; set; } = [];
+
+        /// <summary>
+        /// Users assigned to this department.
+        /// </summary>
+        [JsonIgnore]
+        public ICollection<UserEntity> Users { get; set; } = [];
+
+        /// <summary>
+        /// Projects owned by this department.
+        /// </summary>
+        [JsonIgnore]
+        public ICollection<ProjectEntity> Projects { get; set; } = [];
     }
 }

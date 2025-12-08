@@ -341,7 +341,8 @@ else
                                                                       InitialName="@it.Resource?.Name"
                                                                       Value="it.ResourceId"
                                                                       ValueChanged="@(v => it.ResourceId = v ?? 0)"
-                                                                      OnPicked="@(sel => { it.ResourceId = sel.id; StateHasChanged(); })" />
+                                                                      @* OnPicked="@(sel => { it.ResourceId = sel.id; StateHasChanged(); })" *@
+                                                                      />
                                             </div>
 
                                             <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">

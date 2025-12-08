@@ -24,14 +24,25 @@ namespace Domain.Entities.Folder
         public bool IsVisible { get; set; } = true;
         [JsonIgnore] public int TenantId { get; set; }
 
+        /// <summary>
+        /// Department that owns this folder (required).
+        /// </summary>
         public int DepartmentId { get; set; }
-        [JsonIgnore] public DepartmentEntity Department { get; set; }
-        public int? UserId { get; set; }
-        [JsonIgnore] public UserEntity User { get; set; }
 
-        public ICollection<ProjectEntity> Projects { get; set; }
-        //public Guid? FolderId { get; set; }
-        //public FolderEntity Folder { get; set; }
-        //public ICollection<FolderEntity> Folders { get; set; }
+        [JsonIgnore]
+        public DepartmentEntity Department { get; set; } = null!;
+
+        /// <summary>
+        /// Optional user that owns this folder.
+        /// </summary>
+        public int? UserId { get; set; }
+
+        [JsonIgnore]
+        public UserEntity? User { get; set; }
+
+        /// <summary>
+        /// Projects contained in this folder.
+        /// </summary>
+        public ICollection<ProjectEntity> Projects { get; set; } = [];
     }
 }

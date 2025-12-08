@@ -1,19 +1,42 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.DTO.App.Dataloader;
+using TaskResourceBlueprints.Dto.Resource;
 using TaskResourceBlueprints.Entities;
 using TaskResourceBlueprints.Infrastructure;
 
 namespace TaskResourceBlueprints.Services.Resource
 {
-    public interface IResourceService
+    public interface IResourceBlueprintsService
     {
+        Task<List<ResourceLookupDto>> SearchAsync(string term, int maxResults, CancellationToken ct = default);
+
         Task<int> CreateAsync(ResourceDefinition resource);
         Task<bool> UpdateAsync(ResourceDefinition resource);
         Task<bool> DeleteAsync(int id);
     }
 
-    public class ResourceService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory) : IResourceService
+    public class ResourceBlueprintsService(IDbContextFactory<TaskResourceBlueprintsContext> dbContextFactory) : IResourceBlueprintsService
     {
+        public async Task<List<ResourceLookupDto>> SearchAsync(string term, int maxResults, CancellationToken ct = default)
+        {
+            await using var context = await dbContextFactory.CreateDbContextAsync(ct);
+
+            term = term.Trim();
+
+            return await context.Resources
+                .AsNoTracking()
+                .Where(r => r.IsActive &&
+                            (r.Name.Contains(term))) // عدّل حسب الحاجة
+                .OrderBy(r => r.Name)
+                .Take(maxResults)
+                .Select(r => new ResourceLookupDto
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Group = r.Folder != null ? r.Folder.DisplayName : null
+                })
+                .ToListAsync(ct);
+        }
         public async Task<int> CreateAsync(ResourceDefinition resource)
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();

@@ -1,9 +1,6 @@
 ﻿using Domain.Entities.Base;
-using Domain.Entities.Calculation;
-using Domain.Entities.Folder;
-using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.Constant;
-using System.Collections.Generic;
+using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 

@@ -4,7 +4,7 @@
 @inject MhdServices MHD
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
-@inject TaskResourceBlueprints.Services.Resource.IResourceService ResourceService
+@inject TaskResourceBlueprints.Services.Resource.IResourceBlueprintsService ResourceService
 
 <div class="@CsS.Modal.Body">
     <EditForm Model="CalcResCost" OnValidSubmit="HandleSubmit" class="">
