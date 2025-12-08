@@ -2,7 +2,6 @@
 using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
 using Domain.Entities.Project;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -11,13 +10,9 @@ namespace Domain.Entities.Users
     /// <summary>
     /// Represents an application user that belongs to a specific tenant.
     /// </summary>
-    public sealed class UserEntity : IDataKeyFilterReadOnly
+    public sealed class UserEntity : AuditableEntity<int>
     {
-        public int Id { get; set; }
-
-        /// <summary>
-        /// External authentication provider user id (e.g. Azure AD).
-        /// </summary>
+        /// <summary>External authentication provider user id (Azure AD / Identity).</summary>
         [Required]
         public string ExternalAuthId { get; set; } = string.Empty;
 
@@ -54,8 +49,5 @@ namespace Domain.Entities.Users
         /// Calculations created by the user.
         /// </summary>
         public ICollection<CalculationEntity> Calculations { get; set; } = [];
-
-        [JsonIgnore]
-        public int TenantId { get; set; }
     }
 }

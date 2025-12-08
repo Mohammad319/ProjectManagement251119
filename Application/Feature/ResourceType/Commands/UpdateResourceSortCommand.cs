@@ -15,7 +15,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
 
             resourceSort.Name = request.Dto.Name;
             resourceSort.IsVisible = request.Dto.IsVisible;
-            request.Dto.CopyPropertiesTo(resourceSort.Data);
+            request.Dto.CopyPropertiesTo(resourceSort.Metadata);
             resourceSort.AccountId = request.Dto.AccountId; 
             dataAccess.ResourceSort.Update(resourceSort);
             await dataAccess.SaveChangesAsync(cancellationToken);

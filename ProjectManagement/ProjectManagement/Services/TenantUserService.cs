@@ -19,7 +19,28 @@ namespace ProjectManagement.Services
         Task<bool> RemoveAsync(string id, bool onlyfromregister, int userid);
 
     }
-    public class TenantUserService(UserManager<ApplicationUser> _userManager, IShardingSingleDbContext _shContext, IDbContextFactory _factory) : ITenantUserService
+    public interface ICurrentTenantService
+    {
+        int TenantId { get; }
+    }
+    public class CurrentTenantService(IHttpContextAccessor _httpContextAccessor) : ICurrentTenantService
+    {
+        public int TenantId
+        {
+            get
+            {
+                var user = _httpContextAccessor.HttpContext?.User;
+                var claimValue = user?.FindFirst(PMClaimsConst.Tentan)?.Value;
+
+                if (!int.TryParse(claimValue, out var tenantId))
+                    throw new UnauthorizedAccessException("TenantId is missing or invalid.");
+
+                return tenantId;
+            }
+        }
+    }
+
+    public class TenantUserService(UserManager<ApplicationUser> _userManager, IShardingSingleDbContext _shContext, ICurrentTenantService _currentTenant) : ITenantUserService
     {
         #region Password Generator
         string GenerateRandomPassword(int length = 10)
@@ -46,7 +67,7 @@ namespace ProjectManagement.Services
                 Firstname = tenantUser.Firstname,
                 Lastname = tenantUser.Lastname,
                 UserName = tenantUser.Email,
-                TenantId = _factory!.TenantID!.Value,
+                TenantId = _currentTenant.TenantId,
                 DepartmentId = tenantUser.DepartmentId,
                 LockoutEnabled = tenantUser.LockoutEnabled,
                 LockoutStart = tenantUser.LockoutStart,
@@ -58,13 +79,6 @@ namespace ProjectManagement.Services
 
             var result = await _userManager.CreateAsync(newUser, temporaryPassword);
             if (!result.Succeeded) return null;
-
-            //// إرسال البريد لكلمة المرور المؤقتة
-            //await _emailService.SendEmailAsync(
-            //    newUser.Email,
-            //    "Your Tenant Admin Account",
-            //    $"Hello {newUser.Firstname}, your temporary password is: <b>{temporaryPassword}</b>"
-            //);
 
             return newUser;
         }
@@ -93,7 +107,7 @@ namespace ProjectManagement.Services
                         FirstName = request.Firstname,
                         LastName = request.Lastname,
                         Email = request.Email,
-                        TenantId = _factory!.TenantID!.Value,
+                        TenantId = _currentTenant.TenantId,
                         DepartmentId = request.DepartmentId,
                         UserName = request.Email,
                     };
@@ -120,7 +134,7 @@ namespace ProjectManagement.Services
         public async Task<bool> DeleteUserFromAuthAsync(string authId)
         {
             var user = await _userManager.FindByIdAsync(authId);
-            if (user == null || user.TenantId != _factory.TenantID) return false;
+            if (user == null || user.TenantId != _currentTenant.TenantId) return false;
             var result = await _userManager.DeleteAsync(user); return result.Succeeded;
         }
         public async Task<bool> RemoveAsync(string id, bool onlyfromregister, int userid)
@@ -172,7 +186,7 @@ namespace ProjectManagement.Services
             if (!string.IsNullOrEmpty(user.IdAuth))
                 oldUser = await _userManager.FindByIdAsync(user.IdAuth);
 
-            if (oldUser != null && oldUser.TenantId == _factory!.TenantID)
+            if (oldUser != null && oldUser.TenantId == _currentTenant.TenantId)
             {
                 oldUser.Firstname = user.Firstname;
                 oldUser.Lastname = user.Lastname;
@@ -222,7 +236,7 @@ namespace ProjectManagement.Services
             var tenantUsers = await tenantUsersQuery.ToListAsync();
 
             var authUsers = await _userManager.Users
-                .Where(x => x.TenantId == _factory!.TenantID)
+                .Where(x => x.TenantId == _currentTenant.TenantId)
                 .ToListAsync();
 
             var authDict = authUsers.ToDictionary(x => x.Id, x => x);

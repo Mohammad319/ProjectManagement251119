@@ -11,7 +11,7 @@ namespace Application.Feature.Project.ProcurementMethods.Queries
     {
         public async Task<IEnumerable<ListOrderDTO>> Handle(GetVisualProcurementMethodsQuery query, CancellationToken cancellationToken)
         {
-            Expression<Func<ProcurementMethodsEntity, bool>> predicate;
+            Expression<Func<ProcurementMethodEntity, bool>> predicate;
             if (query.ID.HasValue)
                 predicate = x => x.IsVisible == true || x.Id == query.ID;
             else
@@ -21,7 +21,7 @@ namespace Application.Feature.Project.ProcurementMethods.Queries
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Order = x.Order,
+                    Order = x.SortOrder,
                 }).ToListAsync(cancellationToken);
         }
     }

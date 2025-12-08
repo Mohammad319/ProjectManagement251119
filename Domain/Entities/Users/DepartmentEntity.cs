@@ -11,30 +11,47 @@ namespace Domain.Entities.Users
     /// <summary>
     /// Logical department within a tenant.
     /// </summary>
-    public sealed class DepartmentEntity : IDataKeyFilterReadOnly
+    public sealed class DepartmentEntity : AuditableEntity<int>
     {
-        public int Id { get; set; }
-        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(60, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; }
-        [MaxLength(500, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Description { get; set; }
-        [JsonIgnore] public int TenantId { get; set; }
-        public DateTime Created { get; set; } = DateTime.Now;
+        // Id من IntBaseEntity
+        // TenantId من IntBaseEntity
 
+        [Required(
+            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(
+            60,
+            ErrorMessageResourceName = ErrorsMessages.MaxLength,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; } = string.Empty;
+
+        [MaxLength(
+            500,
+            ErrorMessageResourceName = ErrorsMessages.MaxLength,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        public string? Description { get; set; }
+
+        /// <summary>
+        /// Creation time of this department.
+        /// </summary>
+        public DateTime Created { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Last modification time.
+        /// </summary>
         public DateTime? LastModified { get; set; }
 
         /// <summary>
         /// Folders belonging to this department.
         /// </summary>
         [JsonIgnore]
-        public ICollection<FolderEntity> Folders { get; set; } = [];
+        public ICollection<FolderEntity> Folders { get; set; } = new List<FolderEntity>();
 
         /// <summary>
         /// Users assigned to this department.
         /// </summary>
         [JsonIgnore]
-        public ICollection<UserEntity> Users { get; set; } = [];
+        public ICollection<UserEntity> Users { get; set; } = new List<UserEntity>();
 
         /// <summary>
         /// Projects owned by this department.
@@ -42,4 +59,5 @@ namespace Domain.Entities.Users
         [JsonIgnore]
         public ICollection<ProjectEntity> Projects { get; set; } = [];
     }
+
 }

@@ -15,10 +15,10 @@ namespace Application.Feature.Project.Project.Commands
             x.Id == request.Id && (request.DepartmentId == null || x.Folder.DepartmentId == request.DepartmentId), cancellationToken);
             if (project == null)
                 return false;
-            double order = project.Order;
+            double order = project.SortOrder;
             _mapper.Map(request.Dto, project);
             project.UserId = request.UserId;
-            request.Dto.CopyPropertiesTo(project.Data);
+            request.Dto.CopyPropertiesTo(project.Metadata);
             _dataAccess.Project.Update(project);
             await _dataAccess.SaveChangesAsync(cancellationToken);
             return true;

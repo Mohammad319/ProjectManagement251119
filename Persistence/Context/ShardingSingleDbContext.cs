@@ -8,12 +8,14 @@ using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Persistence.Configurations;
 using ProjectManagement.Shared.Base.Application;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Organisation;
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -22,24 +24,34 @@ using System.Threading.Tasks;
 
 namespace Persistence.Context
 {
-    public class ShardingSingleDbContext : DbContext, IShardingSingleDbContext
+    public class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbContext> options)
+        : DbContext(options),
+          IShardingSingleDbContext
     {
-        public int TenantId { get; set; }
-
-        public ShardingSingleDbContext(DbContextOptions<ShardingSingleDbContext> options)
-            : base(options)
-        {
-        }
         /// <summary>
-        /// قيمة التينانت الحالية، يجب تعيينها قبل تنفيذ أي استعلام.
+        /// قيمة الـ Tenant الحالية، يجب تعيينها من الطبقة الأعلى (Middleware / Service).
         /// </summary>
         public int TenantId { get; set; }
-
+        public int? CurrentUserId { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // في الغالب ستستخدم DI لتمرير الـ ConnectionString
-            // وإذا احتجت لقراءة من خدمة TenantService يمكن إضافتها هنا
+            // في العادة سيتم تمرير الـ ConnectionString من DI
+            // وإذا أردت استخدام TenantService يمكن إضافته هنا عبر Constructor Injection
+
+            // مثال سابق (معلق):
+            // var tenantConnectionString = _tenantService.GetConnectionString();
+            // if (!string.IsNullOrEmpty(tenantConnectionString))
+            // {
+            //     optionsBuilder
+            //         .UseSqlServer(tenantConnectionString, options =>
+            //         {
+            //             options.EnableRetryOnFailure(maxRetryCount: 5,
+            //                                          maxRetryDelay: TimeSpan.FromSeconds(10),
+            //                                          errorNumbersToAdd: null);
+            //             options.MinBatchSize(5);
+            //         });
+            // }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -53,7 +65,7 @@ namespace Persistence.Context
             ConfigureGlobalTenantFilter(modelBuilder);
         }
 
-        #region Configuration helpers
+        #region Helper configuration methods
 
         private static void ConfigureTenderAttributeRelations(ModelBuilder modelBuilder)
         {
@@ -74,7 +86,7 @@ namespace Persistence.Context
 
         private static void ConfigureEntityConfigurations(ModelBuilder modelBuilder)
         {
-            // يمكنك الاستغناء عن هذه المجموعة واستخدام:
+            // يمكنك أيضًا استخدام:
             // modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShardingSingleDbContext).Assembly);
 
             modelBuilder.ApplyConfiguration(new ProjectConfiguration());
@@ -101,10 +113,8 @@ namespace Persistence.Context
                 .Property(e => e.Data)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
-                    v => JsonSerializer.Deserialize<OrganisationData>(v, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    }) ?? new OrganisationData());
+                    v => JsonSerializer.Deserialize<OrganisationData>(v,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new OrganisationData());
 
             modelBuilder.Entity<OpportunityEntity>()
                 .Property(e => e.Data)
@@ -144,7 +154,7 @@ namespace Persistence.Context
                         .IncrementsBy(100);
 
             modelBuilder.Entity<StatusEntity>()
-                .Property(o => o.Order)
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<TaskStatusEntity>()
@@ -156,29 +166,29 @@ namespace Persistence.Context
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<TypeEntity>()
-                .Property(o => o.Order)
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<ContractEntity>()
-                .Property(o => o.Order)
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<CompensationEntity>()
-                .Property(o => o.Order)
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
-            modelBuilder.Entity<ProcurementMethodsEntity>()
-                .Property(o => o.Order)
+            modelBuilder.Entity<ProcurementMethodEntity>()
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<ResourceTypeEntity>()
-                .Property(o => o.Order)
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
         }
 
         /// <summary>
         /// تطبيق Global Query Filter لكل الكيانات التي تطبّق IDataKeyFilterReadOnly
-        /// بحيث يتم فلترتها تلقائياً حسب TenantId الحالي.
+        /// بحيث يتم فلترتها تلقائيًا حسب TenantId الحالي في الـ DbContext.
         /// </summary>
         private void ConfigureGlobalTenantFilter(ModelBuilder modelBuilder)
         {
@@ -206,49 +216,69 @@ namespace Persistence.Context
 
         #region DbSets
 
-        public DbSet<TenderEntity> Tender { get; set; }
-        public DbSet<ProjectEntity> Project { get; set; }
-        public DbSet<FolderEntity> Folder { get; set; }
-        public DbSet<StatusEntity> CalculationStatus { get; set; }
-        public DbSet<CalculationEntity> Calculation { get; set; }
-        public DbSet<TaskEntity> Tasks { get; set; }
-        public DbSet<ResourceEntity> Resource { get; set; }
-        public DbSet<ResourceTypeEntity> ResourceType { get; set; }
-        public DbSet<OrganisationTypeEntity> OrganisationType { get; set; }
-        public DbSet<StorageEntity> Storage { get; set; }
-        public DbSet<TemplateEntity> Template { get; set; }
-        public DbSet<ResourceSortEntity> ResourceSort { get; set; }
+        public DbSet<TenderEntity> Tender { get; set; } = default!;
+        public DbSet<ProjectEntity> Project { get; set; } = default!;
+        public DbSet<FolderEntity> Folder { get; set; } = default!;
+        public DbSet<StatusEntity> CalculationStatus { get; set; } = default!;
+        public DbSet<CalculationEntity> Calculation { get; set; } = default!;
+        public DbSet<TaskEntity> Tasks { get; set; } = default!;
+        public DbSet<ResourceEntity> Resource { get; set; } = default!;
+        public DbSet<ResourceTypeEntity> ResourceType { get; set; } = default!;
+        public DbSet<OrganisationTypeEntity> OrganisationType { get; set; } = default!;
+        public DbSet<StorageEntity> Storage { get; set; } = default!;
+        public DbSet<TemplateEntity> Template { get; set; } = default!;
+        public DbSet<ResourceSortEntity> ResourceSort { get; set; } = default!;
 
-        public DbSet<ApplicationEntity> Application { get; set; }
-        public DbSet<ApplicationValuesEntity> ApplicationValues { get; set; }
-        public DbSet<TypeEntity> CalcProjectType { get; set; }
-        public DbSet<TaskStatusEntity> TaskStatus { get; set; }
-        public DbSet<ProcurementMethodsEntity> ProcurementMethod { get; set; }
-        public DbSet<CompensationEntity> Compensation { get; set; }
-        public DbSet<ContractEntity> Contract { get; set; }
-        public DbSet<OfferEntity> Offer { get; set; }
-        public DbSet<OrganisationCategoryEntity> OrganisationCategory { get; set; }
-        public DbSet<OrganisationEntity> Organisation { get; set; }
-        public DbSet<AccountGroupEntity> AccountGroup { get; set; }
-        public DbSet<AccountEntity> Account { get; set; }
-        public DbSet<ShareCalcEntity> ShareCalc { get; set; }
-        public DbSet<OpportunityEntity> Opportunity { get; set; }
-        public DbSet<DepartmentEntity> Department { get; set; }
-        public DbSet<StatusResourcesEntity> ResourceStatus { get; set; }
-        public DbSet<UserEntity> User { get; set; }
-        public DbSet<AttributeNameTenderEntity> AttributeNameTender { get; set; }
-        public DbSet<TenderAttributeBindEntity> TenderAttributeBind { get; set; }
+        public DbSet<ApplicationEntity> Application { get; set; } = default!;
+        public DbSet<ApplicationValuesEntity> ApplicationValues { get; set; } = default!;
+        public DbSet<TypeEntity> CalcProjectType { get; set; } = default!;
+        public DbSet<TaskStatusEntity> TaskStatus { get; set; } = default!;
+        public DbSet<ProcurementMethodEntity> ProcurementMethod { get; set; } = default!;
+        public DbSet<CompensationEntity> Compensation { get; set; } = default!;
+        public DbSet<ContractEntity> Contract { get; set; } = default!;
+        public DbSet<OfferEntity> Offer { get; set; } = default!;
+        public DbSet<OrganisationCategoryEntity> OrganisationCategory { get; set; } = default!;
+        public DbSet<OrganisationEntity> Organisation { get; set; } = default!;
+        public DbSet<AccountGroupEntity> AccountGroup { get; set; } = default!;
+        public DbSet<AccountEntity> Account { get; set; } = default!;
+        public DbSet<ShareCalcEntity> ShareCalc { get; set; } = default!;
+        public DbSet<OpportunityEntity> Opportunity { get; set; } = default!;
+        public DbSet<DepartmentEntity> Department { get; set; } = default!;
+        public DbSet<StatusResourcesEntity> ResourceStatus { get; set; } = default!;
+        public DbSet<UserEntity> User { get; set; } = default!;
+        public DbSet<AttributeNameTenderEntity> AttributeNameTender { get; set; } = default!;
+        public DbSet<TenderAttributeBindEntity> TenderAttributeBind { get; set; } = default!;
 
         #endregion
 
-        #region SaveChanges / Tenant Handling
+        #region SaveChanges / Tenant handling
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateTenantId();
+            UpdateAuditFields();
             return await base.SaveChangesAsync(cancellationToken);
         }
+        private void UpdateAuditFields()
+        {
+            var entries = ChangeTracker.Entries<IAuditable>()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
+            var now = DateTime.UtcNow;
+            var userId = CurrentUserId ?? 0; // أو null إذا جعلتها int?
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    entry.Entity.CreatedAt = now;
+                    entry.Entity.CreatedBy = userId;
+                }
+
+                entry.Entity.UpdatedAt = now;
+                entry.Entity.UpdatedBy = userId;
+            }
+        }
         private void UpdateTenantId()
         {
             var entries = ChangeTracker

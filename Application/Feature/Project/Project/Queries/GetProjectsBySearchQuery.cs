@@ -59,7 +59,7 @@ namespace Application.Feature.Project.Project.Queries
                         Code = x.Code,
                         EndDate = x.EndDate,
                         StartDate = x.StartDate,
-                        Order = x.Order,
+                        Order = x.SortOrder,
                         FolderId = x.FolderId,
                     }).ToListAsync(cancellationToken);
         }

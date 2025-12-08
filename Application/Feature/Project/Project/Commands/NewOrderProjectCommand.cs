@@ -12,7 +12,7 @@ namespace Application.Feature.Project.Project.Commands
             if (project == null)
                 return false;
 
-            project.Order = request.NewOrder;
+            project.SortOrder = request.NewOrder;
             await dataAccess.SaveChangesAsync(cancellationToken);
             return true;
         }

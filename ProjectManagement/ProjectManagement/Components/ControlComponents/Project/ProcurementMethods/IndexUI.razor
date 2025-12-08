@@ -7,12 +7,12 @@
 @inject ContextMenuService ContextService
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
-<MhdTable TItem="ProcurementMethodsEntity" Items="Status?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.Order)"
+<MhdTable TItem="ProcurementMethodEntity" Items="Status?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)"
       ShowFilter="false">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH">
             <div class="@CssClasses.Layout.FlexItemsCenter">
-                <button @onclick="() => UpdateForm(new ProcurementMethodsEntity())" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
+                <button @onclick="() => UpdateForm(new ProcurementMethodEntity())" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
                 <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
             </div>
         </th>

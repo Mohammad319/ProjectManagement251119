@@ -8,7 +8,7 @@ using ProjectManagement.Shared.Constant;
 namespace ProjectManagement.Server.Controllers.v1.Identity
 {
     [ApiVersion("1.0")]
-    public class DepartmentsController(IDbContextFactory _tenantService, IAuthRepository dataAccess) : BaseApiController
+    public class DepartmentsController(IAuthRepository dataAccess) : BaseApiController
     {
         [HttpGet, Authorize(Roles = PMRolesConst.Tenant.Users)]
         public async Task<IActionResult> GetAsListAll()
@@ -24,7 +24,8 @@ namespace ProjectManagement.Server.Controllers.v1.Identity
                 did = null;
                 if (GetDepartmentId().HasValue) return BadRequest();
             }
-            return Ok(await dataAccess.GetUsersAsync(_tenantService.TenantID, did));
+            var tenantId = GetTenantId();  // من الـ Claims
+            return Ok(await dataAccess.GetUsersAsync(tenantId, did));
         }
     }
 }

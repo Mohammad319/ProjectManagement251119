@@ -3,56 +3,77 @@ using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
 using Domain.Entities.Organisation;
 using Domain.Entities.Users;
-using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Resource;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
 {
-    public class ProjectEntity : IDataKeyFilterReadOnly
+    public class ProjectEntity : AuditableEntity<Guid>
     {
-        public Guid Id { get; set; }
-        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; }
+        [Required(
+            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(
+            80,
+            ErrorMessageResourceName = ErrorsMessages.MaxLength,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; } = string.Empty;
 
-        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Code { get; set; }
+        [MaxLength(
+            80,
+            ErrorMessageResourceName = ErrorsMessages.MaxLength,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        public string? Code { get; set; }
 
-        public DateTime StartDate { get; set; } = DateTime.Now;
-        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
+        public DateTime StartDate { get; set; } = DateTime.UtcNow;
 
+        public DateTime EndDate { get; set; } = DateTime.UtcNow.AddMonths(2);
 
-        //[MaxLength(25000, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
-        public DateTime TenderDeadline { get; set; } = DateTime.Now;
-        public DateTime TenderQA { get; set; } = DateTime.Now;
-        public double Order { get; set; }
-        ProjectData data = new();
-        public ProjectData Data { get { data ??= new ProjectData(); return data; } set { data = value; } }
+        public DateTime TenderDeadline { get; set; } = DateTime.UtcNow;
 
-        [JsonIgnore] public int TenantId { get; set; }
-        public DateTime Created { get; set; } = DateTime.UtcNow;
-        public DateTime? LastModified { get; set; }
-        public int? TypeId { get; set; }
-        public TypeEntity Type { get; set; }
+        public DateTime TenderQA { get; set; } = DateTime.UtcNow;
+
+        // ترتيب العرض العام
+        public double SortOrder { get; set; }
+
+        private ProjectData? _data;
+        public ProjectData Metadata
+        {
+            get => _data ??= new ProjectData();
+            set => _data = value;
+        }
+
+        // نوع المشروع (اختياري)
+        public int? ProjectTypeId { get; set; }
+        public TypeEntity? ProjectType { get; set; }
+
+        // مجلد المشروع (أساسي)
         public Guid FolderId { get; set; }
-        public FolderEntity Folder { get; set; }
+        public FolderEntity Folder { get; set; } = null!;
+
+        // المنظمة المالكة (اختيارية)
         public int? OrganisationId { get; set; }
-        public OrganisationEntity Organisation { get; set; }
+        public OrganisationEntity? Organisation { get; set; }
+
+        // المستخدم المرتبط (مالك/منشئ، اختياري)
         public int? UserId { get; set; }
-        public UserEntity User { get; set; }
-        public int? ProcurementMethodsId { get; set; }
-        public ProcurementMethodsEntity ProcurementMethods { get; set; }
+        public UserEntity? User { get; set; }
+
+        public int? ProcurementMethodId { get; set; }
+        public ProcurementMethodEntity? ProcurementMethod { get; set; }
+
         public int? CompensationId { get; set; }
-        public CompensationEntity Compensation { get; set; }
+        public CompensationEntity? Compensation { get; set; }
+
         public int? ContractId { get; set; }
-        public ContractEntity Contract { get; set; }
+        public ContractEntity? Contract { get; set; }
+
         public bool IsVisible { get; set; } = true;
-        public ICollection<CalculationEntity> Calculations { get; set; }
+
+        [JsonIgnore]
+        public ICollection<CalculationEntity> Calculations { get; set; } = [];
     }
 }

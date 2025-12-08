@@ -19,7 +19,7 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ResourceTypeEntity> modelBuilder)
         {
-            modelBuilder.Property(e => e.Data).HasConversion(
+            modelBuilder.Property(e => e.Metadata).HasConversion(
     v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
     v => JsonSerializer.Deserialize<ResourceTypeData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceTypeData());
 
@@ -30,7 +30,7 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ResourceSortEntity> modelBuilder)
         {
-            modelBuilder.Property(e => e.Data).HasConversion(
+            modelBuilder.Property(e => e.Metadata).HasConversion(
     v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
     v => JsonSerializer.Deserialize<ResourceTypeData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceTypeData());
 

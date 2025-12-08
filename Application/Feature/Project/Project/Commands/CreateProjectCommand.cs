@@ -24,9 +24,9 @@ namespace Application.Feature.Project.Project.Commands
             if (folder.DepartmentId != request.DepartmentId && request.DepartmentId!= null)
                 return Guid.Empty;
             ProjectEntity post = _mapper.Map<ProjectEntity>(request.Dto);
-            request.Dto.CopyPropertiesTo(post.Data);
+            request.Dto.CopyPropertiesTo(post.Metadata);
             double? max = _dataAccess.Project.Where(x => (request.DepartmentId == null || x.Folder.DepartmentId == request.DepartmentId) || x.UserId == request.UserId)
-                .Max(x => (double?)x.Order);
+                .Max(x => (double?)x.SortOrder);
             if (max.HasValue) folder.Order = max.Value + 100;
             else folder.Order = 100;
             post.UserId = request.UserId;

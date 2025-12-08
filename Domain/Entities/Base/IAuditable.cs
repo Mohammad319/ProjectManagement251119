@@ -7,8 +7,15 @@ namespace Domain.Entities.Base
     public interface IAuditable
     {
         DateTime CreatedAt { get; set; }
-        string CreatedBy { get; set; }
+        int CreatedBy { get; set; }
         DateTime? UpdatedAt { get; set; }
-        string UpdatedBy { get; set; }
+        int? UpdatedBy { get; set; }
+    }
+    public abstract class AuditableEntity<TKey> : BaseEntity<TKey>, IAuditable
+    {
+        public DateTime CreatedAt { get; set; }
+        public int CreatedBy { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public int? UpdatedBy { get; set; }
     }
 }

@@ -10,17 +10,17 @@ namespace ProjectManagement.Components.ControlComponents.Project.ProcurementMeth
     public partial class IndexUI
     {
         bool IsVisible = true;
-        List<ProcurementMethodsEntity>? Status;
-        void UpdateForm(ProcurementMethodsEntity model) =>
+        List<ProcurementMethodEntity>? Status;
+        void UpdateForm(ProcurementMethodEntity model) =>
     MHD.Modal.ShowComponent<PMFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.procurementMethods] :
                 AppLoc[LocalizerConst.Update, model.Name],
 new Dictionary<string, object> { [nameof(PMFormUI.Procurement)] = model, [nameof(PMFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate) });
 
-        void Remove(ProcurementMethodsEntity status)
+        void Remove(ProcurementMethodEntity status)
         {
             MHD.DeleteMessage(status.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
         }
-        async Task ConfirmRemoveAsync(ProcurementMethodsEntity st)
+        async Task ConfirmRemoveAsync(ProcurementMethodEntity st)
         {
             bool result = await MicroBus.Send(new DeleteProcurementMethodsCommand(st.Id));
             if (result)

@@ -16,7 +16,7 @@ namespace Application.Feature.Project.Project.Queries
                     Id = x.Id,
                     Name = x.Name,
                     Code = x.Code,
-                    Order = x.Order,
+                    Order = x.SortOrder,
                     EndDate = x.EndDate,
                     StartDate = x.StartDate,
                 }).ToListAsync(cancellationToken);

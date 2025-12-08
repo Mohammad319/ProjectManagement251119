@@ -7,11 +7,8 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
 {
-    public sealed class TypeEntity : AuditableEntity<int>
+    public sealed class ProcurementMethodEntity : AuditableEntity<int>
     {
-        /// <summary>
-        /// ترتيب العرض للجميع (ليس لكل مستخدم).
-        /// </summary>
         public int SortOrder { get; set; }
 
         public bool IsVisible { get; set; } = true;
@@ -25,9 +22,6 @@ namespace Domain.Entities.Project
             ErrorMessageResourceType = typeof(ResLocalize))]
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>
-        /// اللون المميز، HEX format. مثال: #00ff00
-        /// </summary>
         [StringLength(
             7,
             ErrorMessageResourceName = ErrorsMessages.MaxLength,
@@ -41,5 +35,4 @@ namespace Domain.Entities.Project
         [JsonIgnore]
         public ICollection<ProjectEntity> Projects { get; set; } = [];
     }
-
 }

@@ -20,7 +20,7 @@ namespace Application.Feature.Project.Status.Queries
             {
                 Id = x.Id,
                 Name = x.Name,
-                Order = x.Order,
+                Order = x.SortOrder,
             }).ToListAsync(cancellationToken);
         }
     }

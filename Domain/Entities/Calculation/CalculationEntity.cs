@@ -61,7 +61,7 @@ namespace Domain.Entities.Calculation
         public int? StatusId { get; set; }
         [ForeignKey(nameof(StatusId))] public StatusEntity Status { get; set; }
         public int? ProcurementMethodsId { get; set; }
-        [JsonIgnore][ForeignKey(nameof(ProcurementMethodsId))] public ProcurementMethodsEntity ProcurementMethods { get; set; }
+        [JsonIgnore][ForeignKey(nameof(ProcurementMethodsId))] public ProcurementMethodEntity ProcurementMethods { get; set; }
         public int? CompensationId { get; set; }
         [JsonIgnore][ForeignKey(nameof(CompensationId))] public CompensationEntity Compensation { get; set; }
         public int? ContractId { get; set; }

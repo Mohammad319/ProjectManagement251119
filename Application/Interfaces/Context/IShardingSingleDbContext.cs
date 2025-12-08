@@ -37,7 +37,7 @@ namespace Application.Interfaces.Context
         DbSet<StorageEntity> Storage { get; set; }
         DbSet<TaskStatusEntity> TaskStatus { get; set; }
         DbSet<StatusResourcesEntity> ResourceStatus { get; set; }
-        DbSet<ProcurementMethodsEntity> ProcurementMethod { get; set; }
+        DbSet<ProcurementMethodEntity> ProcurementMethod { get; set; }
         DbSet<CompensationEntity> Compensation { get; set; }
         DbSet<ContractEntity> Contract { get; set; }
         DbSet<TenderEntity> Tender { get; set; }

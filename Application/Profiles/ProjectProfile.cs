@@ -10,7 +10,7 @@ namespace Application.Profiles
         {
             CreateMap<ProjectEntity, PostProjectDTO>().ReverseMap();
             CreateMap<TypeEntity, PostTypeDTO>().ReverseMap();
-            CreateMap<ProcurementMethodsEntity, PostProcurementMethodsDTO>().ReverseMap();
+            CreateMap<ProcurementMethodEntity, PostProcurementMethodsDTO>().ReverseMap();
             CreateMap<ContractEntity, PostContractDTO>().ReverseMap();
             CreateMap<CompensationEntity, PostCompensationDTO>().ReverseMap();
         }

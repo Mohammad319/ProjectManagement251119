@@ -21,7 +21,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.Type
         {
             UpdateObj.Name = Status.Name;
             UpdateObj.Color = Status.Color; 
-            UpdateObj.Order = Status.Order;       
+            UpdateObj.Order = Status.SortOrder;       
         }
         private async Task HandleSubmitAsync()
         {

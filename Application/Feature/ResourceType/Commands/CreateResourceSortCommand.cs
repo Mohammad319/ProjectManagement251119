@@ -12,7 +12,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
         public async Task<int> Handle(CreateResourceSortCommand request, CancellationToken cancellationToken)
         {
             ResourceSortEntity resourceSort = mapper.Map<ResourceSortEntity>(request.Dto);
-            request.Dto.CopyPropertiesTo(resourceSort.Data);
+            request.Dto.CopyPropertiesTo(resourceSort.Metadata);
 
             dataAccess.ResourceSort.Add(resourceSort);
             await dataAccess.SaveChangesAsync(cancellationToken);

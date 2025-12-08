@@ -19,11 +19,6 @@ namespace ProjectManagement.Server.Controllers
                 return tenantId;
             }
             return null;
-
-            //if (int.TryParse(User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.Tentan)?.Value, out int dId))
-            //    return dId;
-            
-            //return null;
         }
         protected int? GetDepartmentId()
         {

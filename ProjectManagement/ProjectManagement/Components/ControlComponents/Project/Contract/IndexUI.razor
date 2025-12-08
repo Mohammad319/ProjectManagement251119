@@ -8,7 +8,7 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
- <MhdTable TItem="ContractEntity" Items="ContractList?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.Order)"
+ <MhdTable TItem="ContractEntity" Items="ContractList?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)"
       ShowFilter="false">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH">

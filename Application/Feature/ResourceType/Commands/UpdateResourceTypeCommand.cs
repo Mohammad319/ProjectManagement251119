@@ -13,7 +13,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
             if (resourceType == null)
                 return false;
             resourceType = mapper.Map(request.Dto, resourceType);
-            request.Dto.CopyPropertiesTo(resourceType.Data);
+            request.Dto.CopyPropertiesTo(resourceType.Metadata);
             dataAccess.ResourceType.Update(resourceType);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return true;

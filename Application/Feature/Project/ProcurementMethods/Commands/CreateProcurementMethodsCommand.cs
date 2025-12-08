@@ -10,7 +10,7 @@ namespace Application.Feature.Project.ProcurementMethods.Commands
     {
         public async Task<int> Handle(CreateProcurementMethodsCommand request, CancellationToken cancellationToken)
         {
-            ProcurementMethodsEntity entity = mapper.Map<ProcurementMethodsEntity>(request.Dto);
+            ProcurementMethodEntity entity = mapper.Map<ProcurementMethodEntity>(request.Dto);
             dataAccess.ProcurementMethod.Add(entity);
             await dataAccess.SaveChangesAsync();
             return entity.Id;

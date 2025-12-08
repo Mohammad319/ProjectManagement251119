@@ -15,18 +15,18 @@ public sealed class GetResourceSortQueryHandler(IShardingSingleDbContext context
             .Where(x => x.ResourceTypeId == request.ResourceId)
             .Select(x => new ResourceSortModel
             {
-                BaseCost = x.Data.BaseCost,
-                CapWaste = x.Data.CapWaste,
-                ChangeFactor1 = x.Data.ChangeFactor1,
-                ChangeFactor2 = x.Data.ChangeFactor2,
-                CO2 = x.Data.CO2,
-                Cost = x.Data.Cost,
-                FixedQ = x.Data.FixedQ,
+                BaseCost = x.Metadata.BaseCost,
+                CapWaste = x.Metadata.CapWaste,
+                ChangeFactor1 = x.Metadata.ChangeFactor1,
+                ChangeFactor2 = x.Metadata.ChangeFactor2,
+                CO2 = x.Metadata.CO2,
+                Cost = x.Metadata.Cost,
+                FixedQ = x.Metadata.FixedQ,
                 Id = x.Id,
                 IsVisible = x.IsVisible,
                 Name = x.Name,
-                Order = x.Order,
-                Unit = x.Data.Unit,
+                Order = x.SortOrder,
+                Unit = x.Metadata.Unit,
                 ResourceTypeId = x.ResourceTypeId,
                 AccountId = x.AccountId
             })

@@ -13,7 +13,8 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 @inject ICommandDispatcher MicroBus
-@inject IDbContextFactory factory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
 <style>
     input, td, th {
     min-width: 40px;
@@ -97,13 +98,26 @@ else
 
     async Task ConfirmRemoveAsync(TemplateListDTO st)
     {
-        if (await MicroBus.Send(new RemoveTemplateCommands(st.Id,factory.DepartmentID)))
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // نحصل على DepartmentID من الـ Claims
+        int? departmentId = null;
+
+        var depClaim = user.FindFirst(System.Security.Claims.ClaimTypes.GroupSid)?.Value;
+        if (int.TryParse(depClaim, out var depId))
+            departmentId = depId;
+
+        if (await MicroBus.Send(new RemoveTemplateCommands(st.Id, departmentId)))
         {
             List.Remove(st);
             StateHasChanged();
             MHD.Notifications(ToastType.Delete, true);
         }
-        else  MHD.Notifications(ToastType.Delete, false);
+        else
+        {
+            MHD.Notifications(ToastType.Delete, false);
+        }
     }
 
     async Task CallBack(bool refrsh)

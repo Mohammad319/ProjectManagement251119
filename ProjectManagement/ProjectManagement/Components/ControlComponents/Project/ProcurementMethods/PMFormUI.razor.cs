@@ -7,7 +7,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.ProcurementMeth
 {
     public partial class PMFormUI
     {
-        [Parameter] public ProcurementMethodsEntity Procurement { get; set; } = new();
+        [Parameter] public ProcurementMethodEntity Procurement { get; set; } = new();
         [Parameter] public EventCallback<bool> Callback { get; set; }
         PostProcurementMethodsDTO ProcurementUpdate { get; set; } = new PostProcurementMethodsDTO();
         bool IsLoading = false;

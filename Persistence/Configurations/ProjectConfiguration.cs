@@ -12,9 +12,9 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ProjectEntity> modelBuilder)
         {
-            modelBuilder.Property(p => p.Created).HasDefaultValueSql("GETUTCDATE()");
+            modelBuilder.Property(p => p.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
-            modelBuilder.Property(e => e.Data).HasConversion(
+            modelBuilder.Property(e => e.Metadata).HasConversion(
                 v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                 v => JsonSerializer.Deserialize<ProjectData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ProjectData());
 
@@ -22,9 +22,9 @@ namespace Persistence.Configurations
                 .HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.HasOne(pt => pt.Folder).WithMany(p => p.Projects).HasForeignKey(pt => pt.FolderId).OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.HasOne(pt => pt.ProcurementMethods).WithMany(p => p.Projects).HasForeignKey(pt => pt.ProcurementMethodsId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.HasOne(pt => pt.ProcurementMethod).WithMany(p => p.Projects).HasForeignKey(pt => pt.ProcurementMethodId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.User).WithMany(p => p.Projects).HasForeignKey(pt => pt.UserId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Type).WithMany(p => p.Projects).HasForeignKey(pt => pt.TypeId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.HasOne(pt => pt.ProjectType).WithMany(p => p.Projects).HasForeignKey(pt => pt.ProjectTypeId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Compensation).WithMany(p => p.Projects).HasForeignKey(pt => pt.CompensationId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Contract).WithMany(p => p.Projects).HasForeignKey(pt => pt.ContractId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Projects).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);

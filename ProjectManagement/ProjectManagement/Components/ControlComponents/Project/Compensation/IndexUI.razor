@@ -10,7 +10,7 @@
 
 <MhdTable Items="CompensationList?
                               .Where(x => x.IsVisible == IsVisible)?
-                              .OrderByDescending(x => x.Order)"
+                              .OrderByDescending(x => x.SortOrder)"
           ShowFilter="false">
  <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH">

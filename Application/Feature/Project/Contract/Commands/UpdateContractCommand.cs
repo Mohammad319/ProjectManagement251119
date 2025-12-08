@@ -14,7 +14,7 @@ namespace Application.Feature.Project.Contract.Commands
             {
                 _ProjectContract.Name = request.Dto.Name;
                 _ProjectContract.IsVisible = request.Dto.IsVisible;
-                _ProjectContract.Order = request.Dto.Order;
+                _ProjectContract.SortOrder = request.Dto.Order;
                 await postRepository.SaveChangesAsync(cancellationToken);
                 return true;
             }

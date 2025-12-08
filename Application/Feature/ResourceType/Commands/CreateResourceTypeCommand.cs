@@ -11,7 +11,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
         public async Task<int> Handle(CreateResourceTypeCommand request, CancellationToken cancellationToken)
         {
             ResourceTypeEntity resourceType = mapper.Map<ResourceTypeEntity>(request.Dto);
-            request.Dto.CopyPropertiesTo(resourceType.Data);
+            request.Dto.CopyPropertiesTo(resourceType.Metadata);
 
             dataAccess.ResourceType.Add(resourceType);
             await dataAccess.SaveChangesAsync(cancellationToken);

@@ -9,52 +9,79 @@ using System.Security.Claims;
 
 namespace ProjectManagement
 {
-    public class DbContextFactory(IHttpContextAccessor httpContextAccessor, ApplicationDbContext _context, IMemoryCache _cache) : IDbContextFactory
+    public class DbContextFactory : IDbContextFactory
     {
-        public int? TenantID { get; private set; }
-        public int? DepartmentID { get; private set; }
-        public int UserID { get; private set; }
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ApplicationDbContext _appContext;
+        private readonly IMemoryCache _cache;
+
         private const string CacheKey = "TenantConnections";
 
-        public string GetConnectionString(int tenantId)
+        public int? TenantID => throw new NotImplementedException();
+
+        public DbContextFactory(
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationDbContext appContext,
+            IMemoryCache cache)
         {
-            var TenantConnections = _cache.Get<Dictionary<int, string>>(CacheKey);
-            if (TenantConnections == null)
-            {
-                TenantConnections = _context.Tenants
-                    .Include(t => t.TenantDB) // Eager load the related entity
-                    .Where(t => t.TenantDB != null)
-                    .ToDictionary(t => t.Id, t => t.TenantDB.ConnectionString);
-                _cache.Set(CacheKey, TenantConnections, TimeSpan.FromDays(10));
-            }
-            return TenantConnections.TryGetValue(tenantId, out var conn) ? conn : null;
+            _httpContextAccessor = httpContextAccessor;
+            _appContext = appContext;
+            _cache = cache;
         }
+
+        private string? GetConnectionString(int tenantId)
+        {
+            if (!_cache.TryGetValue<Dictionary<int, string>>(CacheKey, out var tenantConnections))
+            {
+                tenantConnections = _appContext.Tenants
+                    .Include(t => t.TenantDB)
+                    .Where(t => t.TenantDB != null)
+                    .ToDictionary(
+                        t => t.Id,
+                        t => t.TenantDB!.ConnectionString);
+
+                _cache.Set(CacheKey, tenantConnections, TimeSpan.FromDays(10));
+            }
+
+            return tenantConnections.TryGetValue(tenantId, out var conn) ? conn : null;
+        }
+
         public IShardingSingleDbContext CreateDbContext()
         {
-            var user = httpContextAccessor.HttpContext?.User;
-            var tenantIdClaim = user?.FindFirst(PMClaimsConst.Tentan)?.Value;
-            if (int.TryParse(user?.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.UserId)?.Value, out int userid))
-                UserID = userid;
-            if (int.TryParse(user?.Claims.FirstOrDefault(x => x.Type == ClaimTypes.GroupSid)?.Value, out int departmentID))
-                DepartmentID = departmentID;
+            var httpContext = _httpContextAccessor.HttpContext
+                               ?? throw new Exception("No HttpContext available.");
 
+            var user = httpContext.User;
+
+            // TenantId من الـ Claims
+            var tenantIdClaim = user.FindFirst(PMClaimsConst.Tentan)?.Value;
             if (!int.TryParse(tenantIdClaim, out var tenantId))
-            {
                 throw new Exception("Invalid or missing tenantId in user claims.");
-            }
 
-            TenantID = tenantId;
+            // UserId من الـ Claims
+            int? userId = null;
+            if (int.TryParse(user.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.UserId)?.Value, out var uId))
+                userId = uId;
 
-            var ConnectionString = GetConnectionString(tenantId);
+            // DepartmentId من الـ Claims (لو حبيت تستعمله لاحقاً)
+            int? departmentId = null;
+            if (int.TryParse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.GroupSid)?.Value, out var depId))
+                departmentId = depId;
+
+            var connectionString = GetConnectionString(tenantId)
+                                   ?? throw new Exception($"No connection string found for tenant {tenantId}.");
+
             var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
-            optionsBuilder.UseSqlServer(ConnectionString);
+            optionsBuilder.UseSqlServer(connectionString);
 
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
-                TenantId = tenantId
+                TenantId = tenantId,
+                CurrentUserId = userId
             };
 
             return db;
         }
     }
+
 }

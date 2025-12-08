@@ -29,6 +29,7 @@ namespace ProjectManagement.DependencyInjection
             services.AddScoped<IDbContextFactory, DbContextFactory>();
             services.AddScoped<INotificationHub, SendHubNotification>();
             services.AddScoped<ITenantUserService, TenantUserService>();
+            services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 
             services.AddClientServices();
 
