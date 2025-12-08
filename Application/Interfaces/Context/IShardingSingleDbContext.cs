@@ -42,7 +42,6 @@ namespace Application.Interfaces.Context
         DbSet<ContractEntity> Contract { get; set; }
         DbSet<TenderEntity> Tender { get; set; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken());
-        Task<int> SaveChangesAsync(int tenantId, string connStr = null);
         DbSet<ApplicationEntity> Application { get; set; }
         DbSet<ApplicationValuesEntity> ApplicationValues { get; set; }
         DbSet<OfferEntity> Offer { get; set; }
