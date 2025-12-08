@@ -8,13 +8,14 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public class AttributeNameTenderEntity : AttributeNameTenderBase, IDataKeyFilterReadOnly
+    public class AttributeNameTenderEntity : IDataKeyFilterReadOnly
     {
         [Key]public int Id { get; set; }
+        public string Name { get; set; }
+        public string Note { get; set; }
         public int CalculationId { get; set; }
         [JsonIgnore][ForeignKey(nameof(CalculationId))] public CalculationEntity Calculation { get; set; }
         [JsonIgnore] public int TenantId { get; set; }
-        //public ICollection<TenderAttributeBindEntity> TendersAttributes { get; set; }
         public ICollection<TenderAttributeBindEntity> TendersAttributes { get; set; }
 
     }

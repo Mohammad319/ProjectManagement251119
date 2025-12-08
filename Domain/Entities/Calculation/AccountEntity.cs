@@ -2,7 +2,10 @@
 using Domain.Entities.Folder;
 using Domain.Entities.ResourceType;
 using ProjectManagement.Shared.Base.Account;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Account;
+using ProjectManagement.Shared.Resource;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,9 +13,16 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public class AccountEntity : AccountBase, IDataKeyFilterReadOnly
+    public class AccountEntity : IDataKeyFilterReadOnly
     {
         [Key] public int Id { get; set; }
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(20, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Account { get; set; }
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; }
+
+        public DateTime LastUpdate { get; set; } = DateTime.Now;
         public bool IsVisible { get; set; } = true;
         public int AccountGroupId { get; set; }
         AccountData data;

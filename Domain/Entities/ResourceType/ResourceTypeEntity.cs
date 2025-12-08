@@ -2,7 +2,10 @@
 using Domain.Entities.Calculation;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.ResourceType;
+using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Resource;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,9 +13,16 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.ResourceType
 {
-    public class ResourceTypeEntity : ResourceTypeBase, IDataKeyFilterReadOnly
+    public class ResourceTypeEntity : IDataKeyFilterReadOnly
     {
         public int Id { get; set; }
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; }
+        public int Order { get; set; }
+        public bool IsVisible { get; set; } = true;
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
+        public ResourceTypesEnum Type { get; set; }
         [JsonIgnore] public ICollection<ResourceSortEntity> ResourcesSort { get; set; }
         [JsonIgnore] public AccountEntity Account { get; set; }
         public int? AccountId { get; set; }

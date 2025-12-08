@@ -2,7 +2,9 @@
 using Domain.Entities.Folder;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.Resource;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,13 +12,16 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public class TaskEntity : TaskBase, IDataKeyFilterReadOnly
+    public class TaskEntity : IDataKeyFilterReadOnly
     {
         [JsonIgnore] public int TenantId { get; set; }
 
         TaskData data = new();
         public TaskData Data { get { data ??= new TaskData(); return data; } set { data = value; } }
         [Key] public int Id { get; set; }
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; }
+        public double Order { get; set; }
         public int? TaskId { get; set; }
         [ForeignKey(nameof(TaskId))]
         [JsonIgnore] public TaskEntity Task { get; set; }

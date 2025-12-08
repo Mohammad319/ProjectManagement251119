@@ -2,15 +2,21 @@
 using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using ProjectManagement.Shared.Base.Organisation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Organisation;
+using ProjectManagement.Shared.Resource;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Organisation
 {
-    public class OrganisationEntity : OrganisationBase, IDataKeyFilterReadOnly
+    public class OrganisationEntity : IDataKeyFilterReadOnly
     {
         public int Id { get; set; }
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; }
         //public OrganisationData Data { get; set; } = new();
         private OrganisationData data = new();
         public OrganisationData Data

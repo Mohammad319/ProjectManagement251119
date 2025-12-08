@@ -5,8 +5,11 @@ using Domain.Entities.Organisation;
 using Domain.Entities.Project;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Base.Project;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.Resource;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -15,13 +18,32 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public class CalculationEntity : CalculationBase, IDataKeyFilterReadOnly
+    public class CalculationEntity : IDataKeyFilterReadOnly
     {
         public CalculationEntity()
         {
             Tasks = [];
         }
         [Key] public int Id { get; set; }
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Code { get; set; }
+
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; }
+        [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(ResLocalize))]
+
+        public double Tax { get; set; } = 25;
+        public Procurement Procurement { get; set; }
+
+        public DateTime TenderDeadline { get; set; } = DateTime.Now;
+        public DateTime TenderQA { get; set; } = DateTime.Now;
+        public DateTime StartDate { get; set; } = DateTime.Now;
+        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
+        public double Order { get; set; }
+        public DateTime? PublicationDate { get; set; } = DateTime.Now;
+        public DateTime? DecisionDate { get; set; } = DateTime.Now;
         CalculationData data = new();
         public CalculationData Data { get { data ??= new CalculationData(); return data; } set { data = value; } }
         CalculationHourlyPriceFactorData hourlyPriceFactor = new();
