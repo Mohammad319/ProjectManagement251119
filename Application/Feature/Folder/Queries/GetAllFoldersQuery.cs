@@ -14,7 +14,7 @@ namespace Application.Feature.Project.Folder.Queries
                     Color = x.Color,
                     Name = x.Name,
                     Id = x.Id,
-                    Order = x.Order,
+                    Order = x.SortOrder,
                 }).ToListAsync(cancellationToken: cancellationToken);
         }
     }

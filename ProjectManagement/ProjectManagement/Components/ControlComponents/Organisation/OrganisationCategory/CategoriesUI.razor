@@ -24,7 +24,7 @@
         <div class="mt-2 w-40 min-w-[200px] bg-white dark:bg-gray-900 rounded shadow">
             @if (Categories != null)
             {
-                foreach (var cat in Categories.Where(x => x.CategoryId == null))
+                foreach (var cat in Categories.Where(x => x.ParentCategoryId == null))
                 {
                     <div role="button"
                          @oncontextmenu:preventDefault
@@ -33,9 +33,9 @@
                         <strong>@cat.Name</strong>
                     </div>
 
-                    @if (Categories.Any(x => x.CategoryId == cat.Id))
+                    @if (Categories.Any(x => x.ParentCategoryId == cat.Id))
                     {
-                        foreach (var cat2 in Categories.Where(x => x.CategoryId == cat.Id))
+                        foreach (var cat2 in Categories.Where(x => x.ParentCategoryId == cat.Id))
                         {
                             <div role="button"
                                  @oncontextmenu:preventDefault

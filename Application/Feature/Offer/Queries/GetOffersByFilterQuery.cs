@@ -40,8 +40,8 @@ public sealed class GetOffersByFilterQueryHandler(IShardingSingleDbContext _data
             {
                 Id = x.Id,
                 BaseCost = x.Data.BaseCost,
-                SubCategory = x.Organisation.Category.Name,
-                Category = x.Organisation.Category.Category.Name,
+                SubCategory = x.Organisation.OrganisationCategory.Name,
+                Category = x.Organisation.OrganisationCategory.ParentCategory.Name,
                 Comment = x.Comment,
                 Cost = x.Data.Cost,
                 Date = x.Date,

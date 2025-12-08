@@ -28,8 +28,8 @@ namespace Application.Feature.Calculation.Tender.Queries
                     Id = x.Id,
                     CompanyId = x.OrganisationId,
                     Company = x.Organisation.Name,
-                    Category = x.Organisation.Category.Name,
-                    SubCategory = x.Organisation.Category.Category.Name,
+                    Category = x.Organisation.OrganisationCategory.Name,
+                    SubCategory = x.Organisation.OrganisationCategory.ParentCategory.Name,
                     Values = x.TendersAttributes.Select((a) => new ValuesList()
                     {
                         AttributeID = a.TenderAttributeId,

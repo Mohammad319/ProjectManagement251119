@@ -12,10 +12,10 @@ namespace Application.Feature.Organisation.OrganisationCategory.Commands
         public async Task<int> Handle(CreateOrganisationCategoryCommand request, CancellationToken cancellationToken)
         {
             OrganisationCategoryEntity entity = mapper.Map<OrganisationCategoryEntity>(request.Dto);
-            if (entity.CategoryId.HasValue && entity.CategoryId > 0)
+            if (entity.ParentCategoryId.HasValue && entity.ParentCategoryId > 0)
             {
-                var parent = dataAccess.OrganisationCategory.Find(entity.CategoryId);
-                if (parent.CategoryId > 0)
+                var parent = dataAccess.OrganisationCategory.Find(entity.ParentCategoryId);
+                if (parent.ParentCategoryId > 0)
                     return 0;
             }
             dataAccess.OrganisationCategory.Add(entity);

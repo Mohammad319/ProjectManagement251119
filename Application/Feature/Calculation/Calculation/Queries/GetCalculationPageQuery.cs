@@ -64,11 +64,11 @@ namespace Application.Feature.Calculation.Calculation.Queries
                         Date = o.Date,
                         OrganisationId = o.OrganisationId,
                         Organisation = o.Organisation != null ? o.Organisation.Name : string.Empty,
-                        SubCategory = (o.Organisation != null && o.Organisation.Category != null)
-                            ? o.Organisation.Category.Name
+                        SubCategory = (o.Organisation != null && o.Organisation.OrganisationCategory != null)
+                            ? o.Organisation.OrganisationCategory.Name
                             : string.Empty,
-                        Category = (o.Organisation != null && o.Organisation.Category != null && o.Organisation.Category.Category != null)
-                            ? o.Organisation.Category.Category.Name
+                        Category = (o.Organisation != null && o.Organisation.OrganisationCategory != null && o.Organisation.OrganisationCategory.ParentCategory != null)
+                            ? o.Organisation.OrganisationCategory.ParentCategory.Name
                             : string.Empty
                     }
                 })
@@ -119,7 +119,7 @@ namespace Application.Feature.Calculation.Calculation.Queries
                         Sort = r.ResourceSort != null ? r.ResourceSort.Name : string.Empty,
                         ResName = r.ResourceType != null ? r.ResourceType.Name : string.Empty,
                         Account = r.Account != null ? r.Account.Name : string.Empty,
-                        AccountCode = r.Account != null ? r.Account.Account : string.Empty,
+                        AccountCode = r.Account != null ? r.Account.Code : string.Empty,
 
                         Offers = new List<ListOfferDTO>()
                     }).ToList()

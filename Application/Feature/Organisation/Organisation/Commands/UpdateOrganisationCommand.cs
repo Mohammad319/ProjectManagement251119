@@ -12,7 +12,7 @@ namespace Application.Feature.Organisation.Organisation.Commands
         {
             var Company = await dataAccess.Organisation.FindAsync(request.Id);
             mapper.Map(request.dto, Company);
-            Company.Data = request.dto.CopyPropertiesTo(Company.Data);
+            Company.Metadata = request.dto.CopyPropertiesTo(Company.Metadata);
             dataAccess.Organisation.Update(Company);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return true;

@@ -14,7 +14,7 @@ namespace Persistence.Configurations
             modelBuilder.HasOne(pt => pt.Department).WithMany(p => p.Folders)
             .HasForeignKey(pt => pt.DepartmentId).OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.HasMany(x => x.Projects).WithOne(u => u.Folder)
+            modelBuilder.HasMany(x => x.FolderProjects).WithOne(u => u.Folder)
                 .HasForeignKey(pt => pt.FolderId).OnDelete(DeleteBehavior.Cascade);
         }
     }

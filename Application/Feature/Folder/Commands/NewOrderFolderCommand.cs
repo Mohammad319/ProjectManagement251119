@@ -13,7 +13,7 @@ namespace Application.Feature.Folder.Commands
             if (folder == null)
                 return false;
 
-            folder.Order = request.NewOrder;
+            folder.SortOrder = request.NewOrder;
 
             dataAccess.Folder.Update(folder);
             await dataAccess.SaveChangesAsync(cancellationToken);

@@ -177,7 +177,7 @@
                             <select class="@CssClasses.Input.Text" @onchange="CategoryChange">
                                 <option value="0" selected></option>
                                 @if (Categories != null)
-                                    foreach (var category in Categories.Where(x => x.CategoryId == null))
+                                    foreach (var category in Categories.Where(x => x.ParentCategoryId == null))
                                     {
                                         <option selected="@(CategorySelected!=null&& CategorySelected.Id == category.Id)" value="@category.Id">@category.Name</option>
                                     }
@@ -189,7 +189,7 @@
                                 <label class="@CssClasses.Form.Label">@ResourceLoc.category</label>
                                 <InputSelect class="@CssClasses.Input.Text" @bind-Value="@PostCompany.CategoryId">
                                     <option value="0" selected></option>
-                                    @if (Categories.Any(x => x.CategoryId == CategorySelected.Id)) foreach (var category in Categories.Where(x => x.CategoryId == CategorySelected.Id))
+                                    @if (Categories.Any(x => x.ParentCategoryId == CategorySelected.Id)) foreach (var category in Categories.Where(x => x.ParentCategoryId == CategorySelected.Id))
                                         {
                                             <option value="@category.Id">@category.Name</option>
                                         }
@@ -251,7 +251,7 @@
     {
         Categories = await MicroBus.Send(new GetOrganisationCategoryQuery());
         var SubCat = Categories.FirstOrDefault(x => x.Id == CategoryID);
-        CategorySelected = Categories.FirstOrDefault(x => x.Id == SubCat.CategoryId);
+        CategorySelected = Categories.FirstOrDefault(x => x.Id == SubCat.ParentCategoryId);
 
         if (ID > 0)
         {

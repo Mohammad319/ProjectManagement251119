@@ -27,8 +27,8 @@ namespace Application.Feature.Project.Project.Commands
             request.Dto.CopyPropertiesTo(post.Metadata);
             double? max = _dataAccess.Project.Where(x => (request.DepartmentId == null || x.Folder.DepartmentId == request.DepartmentId) || x.UserId == request.UserId)
                 .Max(x => (double?)x.SortOrder);
-            if (max.HasValue) folder.Order = max.Value + 100;
-            else folder.Order = 100;
+            if (max.HasValue) folder.SortOrder = max.Value + 100;
+            else folder.SortOrder = 100;
             post.UserId = request.UserId;
 
             _dataAccess.Project.Add(post);

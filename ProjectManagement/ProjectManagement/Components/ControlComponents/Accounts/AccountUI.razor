@@ -26,7 +26,7 @@
                 @if (Accounts != null) foreach (var account in Accounts?.Where(x => x.IsVisible == IsVisible))
                 {
                     <tr class="@CssClasses.Table.Tr" @oncontextmenu:preventDefault @oncontextmenu="() => AccountContextM(account)">
-                        <td class="@CssClasses.Table.Td">@account.Account</td>
+                        <td class="@CssClasses.Table.Td">@account.Code</td>
                         <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@account.IsVisible" /></td>
                         <td class="@CssClasses.Table.Td">@account.Name</td>
                         <td class="@CssClasses.Table.Td">

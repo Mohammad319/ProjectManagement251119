@@ -16,8 +16,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             var user = authState.User;
             bool isInAnyRole = PMRolesConst.Tenant.AdminSuperManger.Split(',').Any(r => user.IsInRole(r));
             List<MenuItem> list = [];
-            if (item.CategoryId == null)
-                list.Add(new MenuItem { Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}", OnClickAsync = () => {ModalForm(new OrganisationCategoryEntity() { CategoryId = item.Id });
+            if (item.ParentCategoryId == null)
+                list.Add(new MenuItem { Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}", OnClickAsync = () => {ModalForm(new OrganisationCategoryEntity() { ParentCategoryId = item.Id });
                     return Task.CompletedTask;
                 }
                 });

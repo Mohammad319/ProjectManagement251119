@@ -36,8 +36,8 @@ namespace Application.Feature.Offer.Commands
                     Comment = x.Comment,
                     Date = x.Date,
                     OrganisationId = x.OrganisationId,
-                    SubCategory = x.Organisation.Category.Name,
-                    Category = x.Organisation.Category.Category.Name,
+                    SubCategory = x.Organisation.OrganisationCategory.Name,
+                    Category = x.Organisation.OrganisationCategory.ParentCategory.Name,
 
                     //UCDepartment = x.ContactOrganisation.Department,
                     //UCMobile = x.ContactOrganisation.Mobile,

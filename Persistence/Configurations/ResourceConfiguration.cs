@@ -1,16 +1,11 @@
 ﻿using Domain.Entities.Calculation;
 using Domain.Entities.ResourceType;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using ProjectManagement.Shared.DTO.Calculation;
-using System.Text.Json.Serialization.Metadata;
-using System.Collections.Generic;
-using ProjectManagement.Shared.DTO.ResourceType;
-using ProjectManagement.Shared.DTO.Offer;
-using static ProjectManagement.Shared.Constant.URLConst;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Offer;
+using ProjectManagement.Shared.DTO.ResourceType;
+using System.Text.Json;
 
 
 namespace Persistence.Configurations
@@ -23,7 +18,7 @@ namespace Persistence.Configurations
     v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
     v => JsonSerializer.Deserialize<ResourceTypeData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceTypeData());
 
-            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourcesType).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourcesTypes).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
         }
     }
     class ResourceSortConfiguration : IEntityTypeConfiguration<ResourceSortEntity>
@@ -36,7 +31,7 @@ namespace Persistence.Configurations
 
             modelBuilder.HasOne(x => x.ResourceType).WithMany(u => u.ResourcesSort).HasForeignKey(pt => pt.ResourceTypeId)
                 .HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourcesSort).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourcesSorts).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
         }
     }
     class ResourceConfiguration : IEntityTypeConfiguration<ResourceEntity>
@@ -59,8 +54,8 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<TaskEntity> modelBuilder)
         {
-    //        modelBuilder.Property(p => p.Data)
-    //.HasColumnType("jsonb"); // Use "json" for MySQL or "jsonb" for PostgreSQL
+            //        modelBuilder.Property(p => p.Data)
+            //.HasColumnType("jsonb"); // Use "json" for MySQL or "jsonb" for PostgreSQL
 
             modelBuilder.Property(e => e.Data).HasConversion(
                 v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
@@ -80,7 +75,7 @@ namespace Persistence.Configurations
     v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
     v => JsonSerializer.Deserialize<OfferData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new OfferData());
 
-          //  modelBuilder.HasOne(pt => pt.Resource).WithMany(p => p.Offers).HasForeignKey(pt => pt.ResourceID).OnDelete(DeleteBehavior.Cascade);
+            //  modelBuilder.HasOne(pt => pt.Resource).WithMany(p => p.Offers).HasForeignKey(pt => pt.ResourceID).OnDelete(DeleteBehavior.Cascade);
 
             //No Working ->
             modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Offers).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);

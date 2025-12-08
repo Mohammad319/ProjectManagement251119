@@ -18,7 +18,7 @@ public sealed class GetAccountGroupsAsListQueryHandler(IShardingSingleDbContext 
                     .OrderByDescending(y => y)
                     .Select(y => new ListAccountDTO
                     {
-                        Account = y.Account,
+                        Account = y.Code,
                         Name = y.Name,
                         Id = y.Id,
                     }).ToList(),

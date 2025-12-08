@@ -29,7 +29,7 @@ namespace Application.Extention
                 Sort = r.ResourceSort?.Name ?? string.Empty,
                 ResName = r.ResourceType?.Name ?? string.Empty,
                 Account = r.Account?.Name ?? string.Empty,
-                AccountCode = r.Account?.Account ?? string.Empty,
+                AccountCode = r.Account?.Code ?? string.Empty,
                 TaskId = r.TaskId,
                 Offers = r.Offers == null ? []: r.Offers.Select(of => MapToListOfferDTO(of)).ToList(),
             };
@@ -45,8 +45,8 @@ namespace Application.Extention
                 Date = of.Date,
                 OrganisationId = of.OrganisationId,
                 Organisation = of.Organisation != null ? of.Organisation.Name : string.Empty,
-                SubCategory = of.Organisation != null && of.Organisation.Category != null ? of.Organisation.Category.Name : string.Empty,
-                Category = of.Organisation != null && of.Organisation.Category != null && of.Organisation.Category.Category != null ? of.Organisation.Category.Category.Name : string.Empty
+                SubCategory = of.Organisation != null && of.Organisation.OrganisationCategory != null ? of.Organisation.OrganisationCategory.Name : string.Empty,
+                Category = of.Organisation != null && of.Organisation.OrganisationCategory != null && of.Organisation.OrganisationCategory.ParentCategory != null ? of.Organisation.OrganisationCategory.ParentCategory.Name : string.Empty
             };
         }
 

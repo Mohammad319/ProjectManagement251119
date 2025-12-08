@@ -14,7 +14,7 @@ namespace Application.Feature.Organisation.OrganisationCategory.Commands
                 var OfferCategory = await dataAccess.OrganisationCategory.FindAsync(request.Id);
                 if (OfferCategory == null)
                     return false;
-            if (await dataAccess.OrganisationCategory.AnyAsync(x => x.CategoryId == request.Id))
+            if (await dataAccess.OrganisationCategory.AnyAsync(x => x.ParentCategoryId == request.Id))
                 return false;
                 dataAccess.OrganisationCategory.Remove(OfferCategory);
                 await dataAccess.SaveChangesAsync(cancellationToken);

@@ -11,7 +11,7 @@ namespace Application.Feature.Organisation.Organisation.Commands
         {
             OrganisationEntity Org = new();
             request.dto.CopyPropertiesTo(Org);
-            request.dto.CopyPropertiesTo(Org.Data);
+            request.dto.CopyPropertiesTo(Org.Metadata);
             Org.OrganisationTypeId = request.dto.OrganisationTypeID;
             dataAccess.Organisation.Add(Org);
             await dataAccess.SaveChangesAsync(cancellationToken);

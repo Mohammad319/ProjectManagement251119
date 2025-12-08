@@ -13,8 +13,8 @@ namespace Application.Feature.Calculation.Tender.Queries
                 {
                     Id = x.Id,
                     Company = x.Organisation.Name,
-                    Category = x.Organisation.Category.Name,
-                    SubCategory = x.Organisation.Category.Category.Name,
+                    Category = x.Organisation.OrganisationCategory.Name,
+                    SubCategory = x.Organisation.OrganisationCategory.ParentCategory.Name,
                     Note = x.Note,
                 }
                 ).AsNoTracking().FirstOrDefaultAsync();

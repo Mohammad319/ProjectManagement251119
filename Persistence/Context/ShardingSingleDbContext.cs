@@ -110,7 +110,7 @@ namespace Persistence.Context
                     v => JsonSerializer.Deserialize<AccountData>(v, JsonSerializerOptions.Default) ?? new AccountData());
 
             modelBuilder.Entity<OrganisationEntity>()
-                .Property(e => e.Data)
+                .Property(e => e.Metadata)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
                     v => JsonSerializer.Deserialize<OrganisationData>(v,

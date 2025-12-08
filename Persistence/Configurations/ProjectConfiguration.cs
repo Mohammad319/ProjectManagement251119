@@ -20,7 +20,7 @@ namespace Persistence.Configurations
 
             modelBuilder.HasMany(x => x.Calculations).WithOne(u => u.Project).HasForeignKey(pt => pt.ProjectId)
                 .HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasOne(pt => pt.Folder).WithMany(p => p.Projects).HasForeignKey(pt => pt.FolderId).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.HasOne(pt => pt.Folder).WithMany(p => p.FolderProjects).HasForeignKey(pt => pt.FolderId).OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.HasOne(pt => pt.ProcurementMethod).WithMany(p => p.Projects).HasForeignKey(pt => pt.ProcurementMethodId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.User).WithMany(p => p.Projects).HasForeignKey(pt => pt.UserId).OnDelete(DeleteBehavior.SetNull);
