@@ -24,15 +24,17 @@ namespace Persistence.Context
 {
     public class ShardingSingleDbContext : DbContext, IShardingSingleDbContext
     {
-        /// <summary>
-        /// قيمة التينانت الحالية، يجب تعيينها قبل تنفيذ أي استعلام.
-        /// </summary>
         public int TenantId { get; set; }
 
         public ShardingSingleDbContext(DbContextOptions<ShardingSingleDbContext> options)
             : base(options)
         {
         }
+        /// <summary>
+        /// قيمة التينانت الحالية، يجب تعيينها قبل تنفيذ أي استعلام.
+        /// </summary>
+        public int TenantId { get; set; }
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
