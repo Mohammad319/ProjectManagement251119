@@ -10,15 +10,8 @@ namespace Domain.Entities.Folder
 {
     public class FolderEntity : AuditableEntity<Guid>
     {
-        public UserEntity? CreatedByUser { get; set; }
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            50,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
 
         [StringLength(7, ErrorMessageResourceName = ErrorsMessages.StringLength, ErrorMessageResourceType = typeof(ResLocalize), MinimumLength = 7)]
         public string Color { get; set; } = "#08bf66";

@@ -1,19 +1,47 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Organisation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
+using ProjectManagement.Shared.Resource;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public class OfferEntity : IntBaseEntity
+    public sealed class OfferEntity : IntBaseEntity
     {
-        public DateTime Date { get; set; } = DateTime.Now;
+        /// <summary>
+        /// تاريخ العرض.
+        /// </summary>
+        public DateTime Date { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// تعليق اختياري على العرض.
+        /// </summary>
+        [MaxLength(FieldLengths.Comment)]
         public string? Comment { get; set; }
-        OfferData data = new();
-        public OfferData Data { get { data ??= new OfferData(); return data; } set { data = value; } }
+
+        private OfferData? _data;
+        public OfferData Data
+        {
+            get => _data ??= new OfferData();
+            set => _data = value;
+        }
+
+        /// <summary>
+        /// المنظمة المقدِّمة للعرض (اختيارية).
+        /// </summary>
         public int? OrganisationId { get; set; }
+
+        [JsonIgnore]
         public OrganisationEntity? Organisation { get; set; }
-        public int ResourceID { get; set; }
+
+        /// <summary>
+        /// المورد المرتبط بهذا العرض (إجباري).
+        /// </summary>
+        public int ResourceId { get; set; }
+
+        [JsonIgnore]
         public ResourceEntity Resource { get; set; } = null!;
     }
 }

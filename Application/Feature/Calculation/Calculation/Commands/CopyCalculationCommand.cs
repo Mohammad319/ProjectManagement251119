@@ -20,7 +20,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
                 Code = calc.Code,
                 CompensationId = calc.CompensationId,
                 ContractId = calc.ContractId,
-                Created = DateTime.Now,
+                CreatedAt = DateTime.Now,
                 OrganisationId = calc.OrganisationId,
                 PublicationDate = calc.PublicationDate,
                 DecisionDate = calc.DecisionDate,
@@ -33,8 +33,8 @@ namespace Application.Feature.Calculation.Calculation.Commands
                 TypeId = calc.TypeId,
                 TenderDeadline = calc.TenderDeadline,
                 TenderQA = calc.TenderQA,
-                LastModified = DateTime.Now,
-                UserId = request.UserId,
+                UpdatedAt = DateTime.Now,
+                CreatedBy = request.UserId,
                 StartDate = calc.StartDate,
                 StatusId = calc.StatusId,
                 ProcurementMethodsId = calc.ProcurementMethodsId,
@@ -54,7 +54,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
                     res.Id = 0;
                     res.TaskId = 0;
                     res.OpportunityId = null;
-                    res.OfferId = 0;
+                    res.PrimaryOfferId = 0;
                     //res.OfferResource = null;
                     //res.Offers = null;
                 }
@@ -62,8 +62,8 @@ namespace Application.Feature.Calculation.Calculation.Commands
                 task.Id = 0;
                 task.CalculationId = 0;
             }
-            newCalc.UserId = request.UserId;
-            newCalc.Created = DateTime.Now;
+            newCalc.CreatedBy = request.UserId;
+            newCalc.CreatedAt = DateTime.Now;
             _context.Calculation.Add(newCalc);
             await _context.SaveChangesAsync(cancellationToken);
             return newCalc.Id;

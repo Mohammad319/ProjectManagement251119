@@ -13,14 +13,14 @@ namespace Application.Feature.Offer.Commands
                 return false;
             _dataAccess.Offer.Remove(Offer);
             var resources = await _dataAccess.Resource.Where(x => x.Id ==
-            Offer.ResourceID).Select(x => new
+            Offer.ResourceId).Select(x => new
             {
                 Resource = x,
                 CalcID = x.Task.CalculationId
             }).FirstOrDefaultAsync(cancellationToken: cancellationToken);
-            if (resources != null && resources.Resource.OfferId == Offer.Id)
+            if (resources != null && resources.Resource.PrimaryOfferId == Offer.Id)
             {
-                resources.Resource.OfferId = null;
+                resources.Resource.PrimaryOfferId = null;
                 _dataAccess.Resource.Update(resources.Resource);
             }
 

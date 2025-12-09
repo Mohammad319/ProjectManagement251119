@@ -12,20 +12,11 @@ namespace Domain.Entities.Calculation
 {
     public sealed class AccountEntity : AuditableEntity<int>
     {
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            20,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Code { get; set; } = string.Empty; 
+        [Required, MaxLength(FieldLengths.Code)]
+        public string Code { get; set; } = string.Empty;
 
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string? Name { get; set; }
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
 
         public bool IsVisible { get; set; } = true;
 

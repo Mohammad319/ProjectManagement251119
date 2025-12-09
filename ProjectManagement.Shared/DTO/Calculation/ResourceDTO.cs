@@ -13,7 +13,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public ResourceTypesEnum ResType { get; set; }
         public string Name { get; set; }
         public double Order { get; set; }
-        public bool Active { get; set; } = true;
+        public bool IsActive { get; set; } = true;
         public ResourceData Data { get; set; } = new();
         public int? OfferId { get; set; }
         public int? AccountId { get; set; }

@@ -8,14 +8,8 @@ namespace Domain.Entities.Organisation
 {
     public sealed class OrganisationCategoryEntity : AuditableEntity<int>
     {
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
 
         /// <summary>
         /// التصنيف الأب (في حالة وجود تسلسل هرمي).

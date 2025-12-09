@@ -23,7 +23,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double ChangeFactor1 => Data.ChangeFactor1;
         public double ChangeFactor2 => Data.ChangeFactor2;
         public double? Cap => Data.Cap;
-        public bool Active => Data.Active;
+        public bool Active => Data.IsActive;
         public string Code => Data.Code;
         public TaskType Type => Data.Type;
 
@@ -47,14 +47,14 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
             return Id == other.Id &&
                    CollSpan == other.CollSpan &&
-                   (Data?.Active == other.Data?.Active) &&
+                   (Data?.IsActive == other.Data?.IsActive) &&
                    (Data?.Quantity == other.Data?.Quantity);
         }
 
         public override int GetHashCode()
         {
             // دمج خصائص مهمة في حساب الهاش كود
-            return HashCode.Combine(Id, CollSpan, Data?.Active, Data?.Quantity);
+            return HashCode.Combine(Id, CollSpan, Data?.IsActive, Data?.Quantity);
         }
         public TaskListMVVM()
         {

@@ -48,7 +48,7 @@ namespace Application.Feature.Offer.Commands
                     //UCFirstName = x.ContactOrganisation.FirstName,
                 }
             }).FirstOrDefaultAsync(cancellationToken: cancellationToken);
-            await notification.SendNotificationAsync(offer.CalcID.ToString(), ObjectTypHub.Offer, OperationType.Add, new HubDataDto() { Data = offer.Offer, ParentId = entity.ResourceID });
+            await notification.SendNotificationAsync(offer.CalcID.ToString(), ObjectTypHub.Offer, OperationType.Add, new HubDataDto() { Data = offer.Offer, ParentId = entity.ResourceId });
             return entity.Id;
         }
     }

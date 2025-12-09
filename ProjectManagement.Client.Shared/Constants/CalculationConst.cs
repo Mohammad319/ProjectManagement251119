@@ -15,7 +15,7 @@ namespace ProjectManagement.Client.Constant
     {
         public static readonly List<NetCalcProperty> NetCall =
           [ new() { TN = nameof(TaskData.Code), RN = string.Empty, TT = ColT.Txt, RT = ColT.Null },                        //index=0
-            new() { TN = nameof(TaskData.Active), RN = nameof(ResourceListMVVM.Active), TT = ColT.Check, RT = ColT.Check },
+            new() { TN = nameof(TaskData.IsActive), RN = nameof(ResourceListMVVM.Active), TT = ColT.Check, RT = ColT.Check },
             new() { TN = string.Empty, RN = nameof(ResourceListMVVM.AccountCode), TT = ColT.Null, RT = ColT.Txt },
             new() { TN = nameof(TaskListMVVM.Name), RN = nameof(ResourceListMVVM.Name), TT = ColT.Txt, RT = ColT.Txt },
             new() { TN = nameof(TaskListMVVM.Status), RN = nameof(ResourceListMVVM.Status), TT = ColT.Status, RT = ColT.Status },

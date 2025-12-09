@@ -17,7 +17,7 @@ public sealed class GetAllCalculationsQueryHandler(IShardingSingleDbContext cont
             .Where(x =>
                 x.ProjectId == request.ProjectId &&
                 (!request.DepartmentId.HasValue || x.Project.Folder.DepartmentId == request.DepartmentId) &&
-                (!x.IsPrivate || x.UserId == request.UserId))
+                (!x.IsPrivate || x.CreatedBy == request.UserId))
             .Select(x => new ListCalculationDTO
             {
                 Id = x.Id,

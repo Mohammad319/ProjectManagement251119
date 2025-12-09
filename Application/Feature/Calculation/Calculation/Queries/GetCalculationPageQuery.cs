@@ -1,10 +1,6 @@
 ﻿using Application.Interfaces;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 // يُفترض وجود واجهات MediatR هنا (IRequest, IRequestHandler)
 
@@ -28,7 +24,7 @@ namespace Application.Feature.Calculation.Calculation.Queries
                 .AsNoTracking()
                 .Where(x => x.Id == query.Id &&
                             (!query.DepartmentId.HasValue || x.Project.Folder.DepartmentId == query.DepartmentId) &&
-                            (!x.IsPrivate || x.UserId == query.UserId))
+                            (!x.IsPrivate || x.CreatedBy == query.UserId))
                 .Select(x => new CalculationPageDTO
                 {
                     Tax = x.Tax,
@@ -54,7 +50,7 @@ namespace Application.Feature.Calculation.Calculation.Queries
                 .Where(o => o.Resource.Task.CalculationId == query.Id)
                 .Select(o => new
                 {
-                    ResourceId = o.ResourceID,
+                    ResourceId = o.ResourceId,
                     Offer = new ListOfferDTO
                     {
                         Id = o.Id,
@@ -96,24 +92,24 @@ namespace Application.Feature.Calculation.Calculation.Queries
                     Data = t.Metadata,
                     Status = t.Status != null ? t.Status.Name : string.Empty,
                     StatusColor = t.Status != null ? t.Status.Color : string.Empty,
-                    Opportunity = t.Opportunity != null ? t.Opportunity.Type : string.Empty,
+                    Opportunity = t.Opportunity != null ? t.Opportunity.OpportunityType : string.Empty,
 
                     Resources = t.Resources.Select(r => new ResourceListDTO
                     {
                         Name = r.Name,
-                        Active = r.Active,
+                        Active = r.IsActive,
                         Id = r.Id,
                         ResType = r.ResType,
                         ResourceSortId = r.ResourceSortId,
                         ResourceTypeId = r.ResourceTypeId,
                         AccountId = r.AccountId,
                         StatusId = r.StatusId,
-                        OfferId = r.OfferId,
+                        OfferId = r.PrimaryOfferId,
                         Order = r.SortOrder,
                         OpportunityId = r.OpportunityId,
                         Data = r.Metadata,
 
-                        Opportunity = r.Opportunity != null ? r.Opportunity.Type : string.Empty,
+                        Opportunity = r.Opportunity != null ? r.Opportunity.OpportunityType : string.Empty,
                         StatusColor = r.Status != null ? r.Status.Color : string.Empty,
                         Status = r.Status != null ? r.Status.Name : string.Empty,
                         Sort = r.ResourceSort != null ? r.ResourceSort.Name : string.Empty,

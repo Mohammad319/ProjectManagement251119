@@ -17,6 +17,9 @@ namespace ProjectManagement.Shared.Base.Calculation
         public double ChangeFactor2 { get; set; } = 1;
 
         public double CapWaste { get; set; }
+        public double Cap { get; set; } = 0;
+        public double Waste { get; set; } = 0;
+
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public double Cost { get; set; }
         public double? BaseCost { get; set; }

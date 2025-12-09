@@ -27,7 +27,7 @@ namespace Application.Feature.Offer.Commands
     }).FirstOrDefaultAsync(cancellationToken);
 
                 if (item == null || (query.OfferId.HasValue && item.Offer == null)) return false;
-                item.Resource.OfferId = query.OfferId;
+                item.Resource.PrimaryOfferId = query.OfferId;
                 if (item.Offer != null)
                 {
                     item.Resource.Metadata.BaseCost = item.Offer.Data.BaseCost;

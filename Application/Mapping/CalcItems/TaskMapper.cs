@@ -22,7 +22,7 @@ namespace Application.Mapping.CalcItems
                 StatusId = t.StatusId,
                 Status = t.Status?.Name ?? string.Empty,
                 StatusColor = t.Status?.Color ?? string.Empty,
-                Opportunity = t.Opportunity?.Type ?? string.Empty,
+                Opportunity = t.Opportunity?.OpportunityType ?? string.Empty,
                 Data = t.Metadata,
                 Resources = t.Resources?.Select(ResourceExtention.MapToResourceListDTO).ToList() ?? [],
 

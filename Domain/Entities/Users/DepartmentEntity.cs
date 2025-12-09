@@ -16,14 +16,8 @@ namespace Domain.Entities.Users
         // Id من IntBaseEntity
         // TenantId من IntBaseEntity
 
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            60,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
 
         [MaxLength(
             500,

@@ -15,7 +15,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
         {
             public async Task<bool> Handle(UpdateOpportunityCommand request, CancellationToken cancellationToken)
             {
-                OpportunityEntity Opportunity = await _dataAccess.Opportunity.FirstOrDefaultAsync(x => x.Id == request.Id);
+                OpportunityEntity Opportunity = await _dataAccess.Opportunity.FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken: cancellationToken);
                 if (Opportunity == null) return false;
                 _mapper.Map(request.dto, Opportunity);
                 _dataAccess.Opportunity.Update(Opportunity);

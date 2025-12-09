@@ -20,7 +20,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 
         [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public double? Cap { get; set; }
-        public bool Active { get; set; } = true;
+        public bool IsActive { get; set; } = true;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Code { get; set; }
         public TaskType Type { get; set; }

@@ -23,7 +23,7 @@ namespace Application.Extention
                     if (calcId != oldcalcId)
                     {
                         res.OpportunityId = null;
-                        res.OfferId = null;
+                        res.PrimaryOfferId = null;
                         res.Offers = null;
                     }
                     res.Id = 0;
@@ -44,12 +44,12 @@ namespace Application.Extention
         }
         public static void SetNetCalcId(TaskEntity task)
         {
-            task.Tasks?.ForEach(t =>
+            foreach (var t in task.Tasks)
             {
                 t.CalculationId = task.CalculationId;
                 t.Metadata.IsOH = task.Metadata.IsOH;
                 SetNetCalcId(t);
-            });
+            }
         }
         public static TaskEntity Reset(TaskEntity task)
         {
@@ -63,8 +63,10 @@ namespace Application.Extention
 
             if (task.Resources != null) for (int i = 0; i < task.Resources.Count; i++)
                     task.Resources[i] = ResourceExtention.Reset(task.Resources.ElementAt(i));
-            for (int i = 0; i < task?.Tasks?.Count; i++)
-                task.Tasks[i] = Reset(task.Tasks.ElementAt(i));
+            //for (int i = 0; i < task?.Tasks?.Count; i++)
+            //    task.Tasks[i] = Reset(task.Tasks.ElementAt(i));
+            //foreach (var child in task.Tasks)Reset(child);
+            task.Tasks = [.. task.Tasks.Select(t => Reset(t))];
 
             return task;
         }

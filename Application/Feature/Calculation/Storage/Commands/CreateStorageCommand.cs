@@ -35,7 +35,7 @@ namespace Application.Feature.Calculation.Storage.Commands
                     x.ResourceTypeId,
                     x.Name,
                     x.AccountId,
-                    x.Active,
+                    x.IsActive,
                     x.ResType,
                     x.StatusId,
                     x.ResourceSortId,

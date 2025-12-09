@@ -15,7 +15,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (SelectedData.ExistItem(CalculationItemType.task, task.Id))
                 return CSS.SelectedItem;
 
-            return task.Data.Active && parentActive ? $"background-color:{color};"
+            return task.Data.IsActive && parentActive ? $"background-color:{color};"
                 : $"background-color:{color};color:rgba(180, 180, 180, 0.5);";
         }
 

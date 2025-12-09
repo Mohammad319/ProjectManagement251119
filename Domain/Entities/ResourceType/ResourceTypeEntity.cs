@@ -11,15 +11,8 @@ namespace Domain.Entities.ResourceType
 {
     public sealed class ResourceTypeEntity : AuditableEntity<int>
     {
-
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
 
         public int SortOrder { get; set; }
 

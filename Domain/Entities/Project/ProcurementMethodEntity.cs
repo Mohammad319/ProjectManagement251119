@@ -13,14 +13,8 @@ namespace Domain.Entities.Project
 
         public bool IsVisible { get; set; } = true;
 
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
 
         [StringLength(
             7,

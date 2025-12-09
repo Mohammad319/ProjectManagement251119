@@ -3,7 +3,6 @@ using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Organisation;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -11,14 +10,8 @@ namespace Domain.Entities.Organisation
 {
     public sealed class OrganisationEntity : AuditableEntity<int>
     {
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
 
         private OrganisationData? _metadata = new();
         public OrganisationData Metadata

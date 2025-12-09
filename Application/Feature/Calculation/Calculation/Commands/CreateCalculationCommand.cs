@@ -20,8 +20,8 @@ namespace Application.Feature.Calculation.Calculation.Commands
             if (max.HasValue) calculation.SortOrder = max.Value + 100;
             else calculation.SortOrder = 100;
 
-            calculation.UserId = request.UserId;
-            calculation.Created = DateTime.Now;
+            calculation.CreatedBy = request.UserId;
+            calculation.CreatedAt = DateTime.Now;
             _dataAccess.Calculation.Add(calculation);
             await _dataAccess.SaveChangesAsync(cancellationToken);
             return calculation.Id;

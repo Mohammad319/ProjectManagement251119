@@ -37,7 +37,7 @@ namespace Application.Services.CalculationItems.Resource
                     .AsNoTracking().FirstOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
                 if (res == null) continue;
                 res.Id = 0;
-                res.OfferId = null;
+                res.PrimaryOfferId = null;
                 if (sourceCalcId != Parent.NewCalcID)
                 {
                     if (!string.IsNullOrEmpty(res.Metadata.QuantityParam))
@@ -112,7 +112,7 @@ namespace Application.Services.CalculationItems.Resource
                     if (!string.IsNullOrEmpty(Resource.Metadata.QuantityParam))
                         Resource.Metadata.QuantityParam = PMValuesConst.FixedQ;
                     Resource.Offers = null;
-                    Resource.OfferId = null;
+                    Resource.PrimaryOfferId = null;
                     Resource.OpportunityId = null;
                 }
                 Resource.SortOrder = Parent.Max.HasValue ? Parent.Max.Value + 100 : 0;

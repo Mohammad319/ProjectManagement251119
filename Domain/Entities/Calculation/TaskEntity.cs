@@ -10,22 +10,31 @@ namespace Domain.Entities.Calculation
 {
     public sealed class TaskEntity : IntBaseEntity
     {
-        private TaskData? _metadata = new();
+        private TaskData? _metadata;
         public TaskData Metadata
         {
             get => _metadata ??= new TaskData();
             set => _metadata = value;
         }
 
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(FieldLengths.Name)]
+        public required string Name { get; set; }
+        [MaxLength(FieldLengths.Comment)]
+        public string? Note { get; set; }
+        public double? Quantity { get; set; }
+        [MaxLength(FieldLengths.Unit)]
+        public string? Unit { get; set; }
+        public double ChangeFactor1 { get; set; } = 1;
+        public double ChangeFactor2 { get; set; } = 1;
 
+        [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(ResLocalize))]
+        public double? Cap { get; set; }
+        public bool IsActive { get; set; } = true;
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        public string? Code { get; set; }
+        public TaskType Type { get; set; }
+
+        public bool IsOH { get; set; }
         /// <summary>
         /// SortOrder of task in UI display.
         /// </summary>
@@ -43,7 +52,7 @@ namespace Domain.Entities.Calculation
         /// <summary>
         /// Child tasks (subtasks).
         /// </summary>
-        public List<TaskEntity> Tasks { get; set; } = [];
+        public ICollection<TaskEntity> Tasks { get; set; } = [];
 
         // -----------------------
         // Opportunity relation

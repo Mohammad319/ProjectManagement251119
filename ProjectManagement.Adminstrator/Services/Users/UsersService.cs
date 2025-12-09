@@ -198,7 +198,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 var dataAccess = await CreateDbContext(user.TenantId.Value);
                 var usert = dataAccess.User.Find(user.UserId);
                 if (usert == null) return false;
-                var calcs = dataAccess.Calculation.Where(x => x.IsPrivate && x.UserId == user.UserId);
+                var calcs = dataAccess.Calculation.Where(x => x.IsPrivate && x.CreatedBy == user.UserId);
                 if (calcs != null)
                     dataAccess.Calculation.RemoveRange(calcs);
 
