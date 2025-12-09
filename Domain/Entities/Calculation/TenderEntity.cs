@@ -9,24 +9,25 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public class TenderAttributeBindEntity : IDataKeyFilterReadOnly
+    public class TenderAttributeBindEntity : IntBaseEntity
     {
         public int TenderId { get; set; }
-        [ForeignKey(nameof(TenderId))] public TenderEntity Tender { get; set; }
+        [ForeignKey(nameof(TenderId))] public TenderEntity Tender { get; set; } = null!;
         public int TenderAttributeId { get; set; }
-        [ForeignKey(nameof(TenderAttributeId))] public AttributeNameTenderEntity TenderAttribute { get; set; }
-        [JsonIgnore] public int TenantId { get; set; }
-
+        [ForeignKey(nameof(TenderAttributeId))] 
+        public TenderAttributeDefinitionEntity TenderAttribute { get; set; } = null!;
         public double Value { get; set; }
     }
-    public class TenderEntity : TenderBase, IDataKeyFilterReadOnly
+    public class TenderEntity : IntBaseEntity
     {
-        [Key] public int Id { get; set; }
+        public string? Attributes { get; set; }
+        public string? Note { get; set; }
         public int CalculationId { get; set; }
-        [ForeignKey(nameof(CalculationId))] public CalculationEntity Calculation { get; set; }
+        [ForeignKey(nameof(CalculationId))] 
+        public CalculationEntity Calculation { get; set; } = null!;
         public int OrganisationId { get; set; }
-        [ForeignKey(nameof(OrganisationId))] public OrganisationEntity Organisation { get; set; }
-        [JsonIgnore] public int TenantId { get; set; }
-        public ICollection<TenderAttributeBindEntity> TendersAttributes { get; set; }
+        [ForeignKey(nameof(OrganisationId))] 
+        public OrganisationEntity Organisation { get; set; } = null!;
+        public ICollection<TenderAttributeBindEntity> TendersAttributes { get; set; } = [];
     }
 }

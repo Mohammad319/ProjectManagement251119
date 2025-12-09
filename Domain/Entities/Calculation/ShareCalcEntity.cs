@@ -16,18 +16,18 @@ namespace Domain.Entities.Calculation
         public bool Tap5 { get; set; }
         public bool Tap6 { get; set; }
     }
-    public class ShareCalcEntity : IDataKeyFilterReadOnly
+    public sealed class ShareCalcEntity : IDataKeyFilterReadOnly
     {
         public int Id { get; set; }
         [JsonIgnore] public int TenantId { get; set; }
         public int DepartmentId { get; set; }
-        public DepartmentEntity Department { get; set; }
+        public DepartmentEntity Department { get; set; } = null!;
         public int? UserId { get; set; }
-        public UserEntity User { get; set; }
+        public UserEntity? User { get; set; }
         public int CalculationId { get; set; }
-        public CalculationEntity Calculation { get; set; }
-        ShareCalcData data;
-        public ShareCalcData Data { get { data ??= new ShareCalcData(); return data; } set { data = value; } }
+        public CalculationEntity Calculation { get; set; } = null!;
+        ShareCalcData? _metadata;
+        public ShareCalcData Metadata { get { _metadata ??= new ShareCalcData(); return _metadata; } set { _metadata = value; } }
 
     }
 }

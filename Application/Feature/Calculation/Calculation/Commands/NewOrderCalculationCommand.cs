@@ -12,7 +12,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
             if (calc == null)
                 return false;
 
-            calc.Order = request.NewOrder;
+            calc.SortOrder = request.NewOrder;
             await _dataAccess.SaveChangesAsync(cancellationToken);
             return true;
         }

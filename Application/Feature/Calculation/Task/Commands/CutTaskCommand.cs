@@ -29,16 +29,16 @@ namespace Application.Feature.Calculation.Task.Commands
                 {
                     var parent = await _dataAccess.Tasks.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.TaskParentID && x.CalculationId == request.NewNetCalcId, cancellationToken: cancellationToken);
                     if (parent == null) return false;
-                    request.IsOH = parent.Data.IsOH;
+                    request.IsOH = parent.Metadata.IsOH;
                     if (parent.Tasks == null || parent.Tasks.Count == 0) Max = null;
-                    else Max = parent?.Tasks?.Max(x => x.Order);
+                    else Max = parent?.Tasks?.Max(x => x.SortOrder);
                 }
                 else
                 {
                     var Calc = await _dataAccess.Calculation.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.NewNetCalcId, cancellationToken: cancellationToken);
                     if (Calc == null) return false;
                     if (Calc.Tasks == null || Calc.Tasks.Count == 0) Max = null;
-                    else Max = Calc?.Tasks?.Max(x => x.Order);
+                    else Max = Calc?.Tasks?.Max(x => x.SortOrder);
                 }
                 if (Max == null) Max = 0;
                 else Max += 100;
@@ -50,9 +50,9 @@ namespace Application.Feature.Calculation.Task.Commands
                     {
                         var task = await _dataAccess.Tasks.AsNoTracking().Where(x =>
     x.Id == item.Id && x.CalculationId == request.OldCalcId).FirstOrDefaultAsync(cancellationToken);
-                        task.Data.IsOH = request.IsOH;
+                        task.Metadata.IsOH = request.IsOH;
                         TaskExtention.SetNetCalcId(task);
-                        task.TaskId = request.TaskParentID;
+                        task.ParentTaskId = request.TaskParentID;
                         _dataAccess.Tasks.Update(task);
                         Entities.Add(task);
                     }
@@ -68,7 +68,7 @@ namespace Application.Feature.Calculation.Task.Commands
                         {
                             t.Resources = resources.Where(r => r.TaskId == t.Id).ToList();
                         }
-                        var task = tasks.FirstOrDefault(x => x.TaskId == null);
+                        var task = tasks.FirstOrDefault(x => x.ParentTaskId == null);
                         TaskExtention.BuildTaskHierarchy(tasks);
                         task = TaskExtention.Reset(task);
 
@@ -76,13 +76,13 @@ namespace Application.Feature.Calculation.Task.Commands
     x.Id == item.Id && x.CalculationId == request.OldCalcId);
                         _dataAccess.Tasks.Remove(task2);
                         await _dataAccess.SaveChangesAsync(cancellationToken);
-                        task.TaskId = request.TaskParentID;
-                        if (task.CalculationId != request.NewNetCalcId && !string.IsNullOrEmpty(task.Data.QuantityParam))
-                            task.Data.QuantityParam = PMValuesConst.FixedQ;
-                        task.Data.Quantity = item.Value;
+                        task.ParentTaskId = request.TaskParentID;
+                        if (task.CalculationId != request.NewNetCalcId && !string.IsNullOrEmpty(task.Metadata.QuantityParam))
+                            task.Metadata.QuantityParam = PMValuesConst.FixedQ;
+                        task.Metadata.Quantity = item.Value;
                         task.CalculationId = request.NewNetCalcId;
-                        task.Data.IsOH = request.IsOH;
-                        task.Order = Max.Value;
+                        task.Metadata.IsOH = request.IsOH;
+                        task.SortOrder = Max.Value;
                         Max += 100;
 
                         TaskExtention.SetNetCalcId(task);

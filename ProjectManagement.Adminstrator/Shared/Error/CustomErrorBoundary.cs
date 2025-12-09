@@ -7,11 +7,11 @@ namespace ProjectManagement.Client.Adminstrator.Shared.Error
     public class CustomErrorBoundary: ErrorBoundary
     {
         //[Inject] private IWebAssemblyHostEnvironment env { get; set; }
-        //protected override Task OnErrorAsync(System.Exception exception)
+        //protected override ParentTask OnErrorAsync(System.Exception exception)
         //{
         //    if(env.IsDevelopment())
         //        return base.OnErrorAsync(exception);
-        //    return Task.CompletedTask;
+        //    return ParentTask.CompletedTask;
         //}
     }
 }

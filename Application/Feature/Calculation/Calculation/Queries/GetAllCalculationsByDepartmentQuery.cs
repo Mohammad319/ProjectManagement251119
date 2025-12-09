@@ -20,7 +20,7 @@ public sealed class GetAllCalculationsByDepartmentQueryHandler(IShardingSingleDb
             {
                 Id = x.Id,
                 Name = x.Name,
-                Order = x.Order,
+                Order = x.SortOrder,
                 IsPrivate = x.IsPrivate,
                 TenderDeadline = x.TenderDeadline,
                 TenderQA = x.TenderQA,

@@ -16,12 +16,12 @@ namespace Application.Feature.Project.Folder.Commands
                 return Guid.Empty;
             FolderEntity folder = mapper.Map<FolderEntity>(request.dto);
 
-            double? max = context.Folder.Where(x => x.DepartmentId == request.DepartmentId.Value || x.UserId == request.UserId).Max(x => (double?)x.SortOrder);
+            double? max = context.Folder.Where(x => x.DepartmentId == request.DepartmentId.Value || x.CreatedBy == request.UserId).Max(x => (double?)x.SortOrder);
             if (max.HasValue) folder.SortOrder = max.Value + 100;
             else folder.SortOrder = 100;
 
             folder.DepartmentId = request.DepartmentId.Value;
-            folder.UserId = request.UserId;
+            folder.CreatedBy = request.UserId;
             context.Folder.Add(folder);
             await context.SaveChangesAsync(cancellationToken);
             return folder.Id;

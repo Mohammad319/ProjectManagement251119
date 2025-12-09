@@ -493,7 +493,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sub Task.
+        ///   Looks up a localized string similar to Sub ParentTask.
         /// </summary>
         public static string SubTask {
             get {
@@ -511,7 +511,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Task.
+        ///   Looks up a localized string similar to ParentTask.
         /// </summary>
         public static string task {
             get {
@@ -520,7 +520,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Task status.
+        ///   Looks up a localized string similar to ParentTask status.
         /// </summary>
         public static string taskStatus {
             get {

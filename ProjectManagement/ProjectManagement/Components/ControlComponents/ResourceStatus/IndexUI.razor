@@ -6,7 +6,7 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
- <MhdTable TItem="StatusResourcesEntity" Items="Status?.Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.Order).ToList()"
+ <MhdTable TItem="StatusResourcesEntity" Items="Status?.Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder).ToList()"
       ShowFilter="false">
       <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH">

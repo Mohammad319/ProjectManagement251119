@@ -18,7 +18,7 @@ namespace Persistence.Configurations
     v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
     v => JsonSerializer.Deserialize<ResourceTypeData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceTypeData());
 
-            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourcesTypes).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourceTypes).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
         }
     }
     class ResourceSortConfiguration : IEntityTypeConfiguration<ResourceSortEntity>
@@ -31,14 +31,14 @@ namespace Persistence.Configurations
 
             modelBuilder.HasOne(x => x.ResourceType).WithMany(u => u.ResourcesSort).HasForeignKey(pt => pt.ResourceTypeId)
                 .HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourcesSorts).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourceSorts).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
         }
     }
     class ResourceConfiguration : IEntityTypeConfiguration<ResourceEntity>
     {
         public void Configure(EntityTypeBuilder<ResourceEntity> modelBuilder)
         {
-            modelBuilder.Property(e => e.Data).HasConversion(
+            modelBuilder.Property(e => e.Metadata).HasConversion(
                 v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                 v => JsonSerializer.Deserialize<ResourceData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceData());
 
@@ -54,14 +54,14 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<TaskEntity> modelBuilder)
         {
-            //        modelBuilder.Property(p => p.Data)
+            //        modelBuilder.Property(p => p.Metadata)
             //.HasColumnType("jsonb"); // Use "json" for MySQL or "jsonb" for PostgreSQL
 
-            modelBuilder.Property(e => e.Data).HasConversion(
+            modelBuilder.Property(e => e.Metadata).HasConversion(
                 v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                 v => JsonSerializer.Deserialize<TaskData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new TaskData());
 
-            //modelBuilder.HasMany(pt => pt.Tasks).WithOne(p => p.Task).HasForeignKey(pt => pt.TaskId).OnDelete(DeleteBehavior.Cascade);
+            //modelBuilder.HasMany(pt => pt.Tasks).WithOne(p => p.ParentTask).HasForeignKey(pt => pt.ParentTaskId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.HasOne(pt => pt.Status).WithMany(p => p.Tasks).HasForeignKey(pt => pt.StatusId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Opportunity).WithMany(p => p.Tasks).HasForeignKey(pt => pt.OpportunityId).OnDelete(DeleteBehavior.ClientSetNull);
         }

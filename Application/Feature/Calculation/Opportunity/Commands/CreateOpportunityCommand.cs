@@ -12,7 +12,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
             public async Task<int> Handle(CreateOpportunityCommand request, CancellationToken cancellationToken)
             {
                 OpportunityEntity Opportunity = _mapper.Map<OpportunityEntity>(request.dto);
-                Opportunity.Data = request.dto.Data;
+                Opportunity.Metadata = request.dto.Data;
                 _dataAccess.Opportunity.Add(Opportunity);
             Opportunity.CalculationId = request.CalculationId;
             await _dataAccess.SaveChangesAsync(cancellationToken);

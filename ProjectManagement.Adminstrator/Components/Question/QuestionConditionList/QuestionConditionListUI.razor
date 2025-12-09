@@ -38,7 +38,7 @@
             // 1) الشروط
             conditions = await ConditionsService.GetConditionsAsync(TaskId, CancellationToken.None);
 
-            // 2) مجموعات الـ Task
+            // 2) مجموعات الـ ParentTask
             ResourceGroups = await ConditionsService.GetResourceGroupsAsync(TaskId, CancellationToken.None);
             taskChoiceGroups = await ConditionsService.GetChoiceGroupsAsync(TaskId, CancellationToken.None);
             taskNumericGroups = await ConditionsService.GetNumericGroupsAsync(TaskId, CancellationToken.None);

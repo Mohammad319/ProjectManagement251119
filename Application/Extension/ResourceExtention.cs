@@ -20,9 +20,9 @@ namespace Application.Extention
                 AccountId = r.AccountId,
                 StatusId = r.StatusId,
                 OfferId = r.OfferId,
-                Order = r.Order,
+                Order = r.SortOrder,
                 OpportunityId = r.OpportunityId,
-                Data = r.Data,
+                Data = r.Metadata,
                 Opportunity = r.Opportunity?.Type ?? string.Empty,
                 StatusColor = r.Status?.Color ?? string.Empty,
                 Status = r.Status?.Name ?? string.Empty,
@@ -64,8 +64,8 @@ namespace Application.Extention
                 ResType = res.ResType,
                 Active = res.Active,
                 Name = res.Name,
-                Order = res.Order,
-                Data = res.Data,
+                SortOrder = res.Order,
+                Metadata = res.Data,
             };
         }
         public static ResourceEntity Reset(ResourceEntity res)
@@ -73,7 +73,7 @@ namespace Application.Extention
             return new ResourceEntity()
             {
                 Name = res.Name,
-                Data = res.Data,
+                Metadata = res.Metadata,
                 Active = res.Active,
                 ResType = res.ResType,
                 TenantId = res.TenantId,

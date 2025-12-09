@@ -36,9 +36,9 @@ namespace Persistence.Configurations
                 .HasForeignKey(pt => pt.TenderAttributeId).OnDelete(DeleteBehavior.Cascade);
         }
     }
-    class AttributeNameTenderConfiguration : IEntityTypeConfiguration<AttributeNameTenderEntity>
+    class AttributeNameTenderConfiguration : IEntityTypeConfiguration<TenderAttributeDefinitionEntity>
     {
-        public void Configure(EntityTypeBuilder<AttributeNameTenderEntity> modelBuilder)
+        public void Configure(EntityTypeBuilder<TenderAttributeDefinitionEntity> modelBuilder)
         {
             modelBuilder.HasOne(pt => pt.Calculation).WithMany(p => p.AttributesTender).HasForeignKey(pt => pt.CalculationId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.HasMany(pt => pt.TendersAttributes).WithOne(p => p.TenderAttribute).HasForeignKey(pt => pt.TenderAttributeId).OnDelete(DeleteBehavior.Cascade);

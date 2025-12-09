@@ -15,8 +15,8 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
             temp.DepartmentId = command.DepartmentId;
             temp.Name = command.dto.Name;
             temp.IsVisible = command.dto.Active;
-            temp.Data = new();
-            command.dto.CopyPropertiesTo(temp.Data);
+            temp.Metadata = new();
+            command.dto.CopyPropertiesTo(temp.Metadata);
             context.Template.Update(temp);
             await context.SaveChangesAsync(cancellationToken);
             return true;

@@ -16,7 +16,7 @@ namespace Persistence.Configurations
         {
             var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-            modelBuilder.Property(e => e.Data).HasConversion(v => JsonSerializer.Serialize(v, jsonOptions),v => JsonSerializer.Deserialize<CalculationData>(v, jsonOptions) ?? new CalculationData());
+            modelBuilder.Property(e => e.Metadata).HasConversion(v => JsonSerializer.Serialize(v, jsonOptions),v => JsonSerializer.Deserialize<CalculationData>(v, jsonOptions) ?? new CalculationData());
 
             modelBuilder.Property(e => e.HourlyPriceFactorData).HasConversion(v => JsonSerializer.Serialize(v, jsonOptions),
                 v => JsonSerializer.Deserialize<CalculationHourlyPriceFactorData>(v, jsonOptions) ?? new CalculationHourlyPriceFactorData());

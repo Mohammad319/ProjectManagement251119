@@ -209,7 +209,7 @@ new Dictionary<string, object>
 
     private void OpenTaskFolders(int id, string name)
     {
-        // Wichtig: TaskId an Child übergeben (Child erwartet TaskId, nicht ProjectTask)
+        // Wichtig: ParentTaskId an Child übergeben (Child erwartet ParentTaskId, nicht ProjectTask)
         MHD.Modal.AddModal<TaskFolders>(ResourceLoc.resource, new Dictionary<string, object>
         {
             [nameof(TaskFolders.TaskId)] = id

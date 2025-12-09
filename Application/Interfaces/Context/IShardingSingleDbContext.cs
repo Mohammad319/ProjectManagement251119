@@ -51,7 +51,7 @@ namespace Application.Interfaces.Context
         DbSet<AccountGroupEntity> AccountGroup { get; set; }
         DbSet<AccountEntity> Account { get; set; }
         public DbSet<UserEntity> User { get; set; }
-        DbSet<AttributeNameTenderEntity> AttributeNameTender { get; set; }
+        DbSet<TenderAttributeDefinitionEntity> AttributeNameTender { get; set; }
         public DbSet<TenderAttributeBindEntity> TenderAttributeBind { get; set; }
     }
 }

@@ -104,7 +104,7 @@ namespace Persistence.Context
         private static void ConfigureJsonDataConversions(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountEntity>()
-                .Property(e => e.Data)
+                .Property(e => e.Metadata)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
                     v => JsonSerializer.Deserialize<AccountData>(v, JsonSerializerOptions.Default) ?? new AccountData());
@@ -117,13 +117,13 @@ namespace Persistence.Context
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new OrganisationData());
 
             modelBuilder.Entity<OpportunityEntity>()
-                .Property(e => e.Data)
+                .Property(e => e.Metadata)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
                     v => JsonSerializer.Deserialize<OpportunityData>(v, JsonSerializerOptions.Default) ?? new OpportunityData());
 
             modelBuilder.Entity<ShareCalcEntity>()
-                .Property(e => e.Data)
+                .Property(e => e.Metadata)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
                     v => JsonSerializer.Deserialize<ShareCalcData>(v, JsonSerializerOptions.Default) ?? new ShareCalcData());
@@ -141,7 +141,7 @@ namespace Persistence.Context
                     v => JsonSerializer.Deserialize<ApplicationValuesData>(v, JsonSerializerOptions.Default) ?? new ApplicationValuesData());
 
             modelBuilder.Entity<TemplateEntity>()
-                .Property(e => e.Data)
+                .Property(e => e.Metadata)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, JsonSerializerOptions.Default),
                     v => JsonSerializer.Deserialize<TemplateData>(v, JsonSerializerOptions.Default) ?? new TemplateData());
@@ -158,11 +158,11 @@ namespace Persistence.Context
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<TaskStatusEntity>()
-                .Property(o => o.Order)
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<StatusResourcesEntity>()
-                .Property(o => o.Order)
+                .Property(o => o.SortOrder)
                 .HasDefaultValueSql("NEXT VALUE FOR OrderSeq");
 
             modelBuilder.Entity<TypeEntity>()
@@ -246,7 +246,7 @@ namespace Persistence.Context
         public DbSet<DepartmentEntity> Department { get; set; } = default!;
         public DbSet<StatusResourcesEntity> ResourceStatus { get; set; } = default!;
         public DbSet<UserEntity> User { get; set; } = default!;
-        public DbSet<AttributeNameTenderEntity> AttributeNameTender { get; set; } = default!;
+        public DbSet<TenderAttributeDefinitionEntity> AttributeNameTender { get; set; } = default!;
         public DbSet<TenderAttributeBindEntity> TenderAttributeBind { get; set; } = default!;
 
         #endregion

@@ -23,5 +23,3 @@ namespace Domain.Entities.Organisation
             public ICollection<OrganisationEntity> Organisations { get; set; } = [];
         }
     }
-
-}

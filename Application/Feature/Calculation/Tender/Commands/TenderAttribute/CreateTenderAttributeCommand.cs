@@ -20,7 +20,7 @@ namespace Application.Feature.Calculation.Tender.Commands
             }
             public async Task<int> Handle(CreateTenderAttributeCommand request, CancellationToken cancellationToken)
             {
-                AttributeNameTenderEntity attr = new()
+                TenderAttributeDefinitionEntity attr = new()
                 {
                     CalculationId = request.CalculationId,
                     Note = request.dto.Note,

@@ -42,11 +42,11 @@ public sealed class GetTasksByFilterQueryHandler(IShardingSingleDbContext _dataA
             .Select(x => new TaskListDTO
             {
                 Id = x.Id,
-                Data = x.Data,
+                Data = x.Metadata,
                 Name = x.Name,
                 StatusColor = x.Status.Color,
                 Status = x.Status.Name,
-                TaskId = x.TaskId,
+                TaskId = x.ParentTaskId,
                 StatusId = x.StatusId,
             })
             .ToListAsync(cancellationToken);

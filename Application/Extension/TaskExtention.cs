@@ -13,8 +13,8 @@ namespace Application.Extention
             {
                 task.CalculationId = calcId;
                 task.Id = 0;
-                task.TaskId = null;
-                task.Data.IsOH = oh;
+                task.ParentTaskId = null;
+                task.Metadata.IsOH = oh;
 
                 if (calcId != oldcalcId)
                     task.OpportunityId = null;
@@ -33,7 +33,7 @@ namespace Application.Extention
         }
         public static void BuildTaskHierarchy(List<TaskEntity> all)
         {
-            var lookup = all.Where(x => x.TaskId != null).GroupBy(x => x.TaskId).ToDictionary(g => g.Key, g => g.ToList());
+            var lookup = all.Where(x => x.ParentTaskId != null).GroupBy(x => x.ParentTaskId).ToDictionary(g => g.Key, g => g.ToList());
             foreach (var task in all)
             {
                 if (lookup.TryGetValue(task.Id, out var children))
@@ -47,18 +47,18 @@ namespace Application.Extention
             task.Tasks?.ForEach(t =>
             {
                 t.CalculationId = task.CalculationId;
-                t.Data.IsOH = task.Data.IsOH;
+                t.Metadata.IsOH = task.Metadata.IsOH;
                 SetNetCalcId(t);
             });
         }
         public static TaskEntity Reset(TaskEntity task)
         {
             task.Id = 0;
-            task.TaskId = null;
+            task.ParentTaskId = null;
             task.OpportunityId = null;
             task.CalculationId = 0;
             task.Opportunity = null;
-            task.Task = null;
+            task.ParentTask = null;
             task.Status = null;
 
             if (task.Resources != null) for (int i = 0; i < task.Resources.Count; i++)

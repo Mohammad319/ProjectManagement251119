@@ -62,7 +62,7 @@ namespace Application.Services.CalculationItems.Task
                 if (tasks.Any(t => t.TaskId != parentTask.Id)) return false;
 
                 foreach (var task in tasks)
-                    task.Data.IsOH = parentTask.Data.IsOH;
+                    task.Data.IsOH = parentTask.Metadata.IsOH;
             }
             else
             {
@@ -116,7 +116,7 @@ namespace Application.Services.CalculationItems.Task
             var taskWithCalcId = await _context.Tasks.Where(x => x.Id == taskId).Select(x => new { Task = x, CalcId = x.CalculationId }).FirstOrDefaultAsync(cancellationToken);
             if (taskWithCalcId == null) return false;
 
-            taskWithCalcId.Task.Order = newOrder;
+            taskWithCalcId.Task.SortOrder = newOrder;
             return await UpdateTaskAsync(taskWithCalcId.CalcId, taskWithCalcId.Task, cancellationToken);
         }
 
@@ -130,10 +130,10 @@ namespace Application.Services.CalculationItems.Task
             task.Name = dto.Name;
             task.StatusId = dto.StatusId;
             task.OpportunityId = dto.OpportunityId;
-            task.Data = dto.Data;
-            task.Data.QuantityParam = dto.Data.QuantityParam;
+            task.Metadata = dto.Data;
+            task.Metadata.QuantityParam = dto.Data.QuantityParam;
 
-            if (dto.Data.Type != task.Data.Type && dto.Data.Type == TaskType.CodeName)
+            if (dto.Data.Type != task.Metadata.Type && dto.Data.Type == TaskType.CodeName)
             {
                 bool hasResources = await _context.Resource.AnyAsync(x => x.TaskId == task.Id, cancellationToken);
                 if (hasResources)
@@ -141,7 +141,7 @@ namespace Application.Services.CalculationItems.Task
 
                 task.StatusId = null;
                 task.OpportunityId = null;
-                task.Data = new()
+                task.Metadata = new()
                 {
                     IsOH = dto.Data.IsOH,
                     Type = TaskType.CodeName,
@@ -175,8 +175,8 @@ namespace Application.Services.CalculationItems.Task
         async Task<double> GetMaxOrderAsync(int deleteOriginal, int? TaskParentID, CancellationToken ct)
         {
             return TaskParentID.HasValue
-                ? await _context.Tasks.Where(x => x.TaskId == TaskParentID).MaxAsync(x => x.Order, ct)
-                : await _context.Tasks.Where(x => x.CalculationId == deleteOriginal && x.TaskId == null).MaxAsync(x => x.Order, ct);
+                ? await _context.Tasks.Where(x => x.ParentTaskId == TaskParentID).MaxAsync(x => x.SortOrder, ct)
+                : await _context.Tasks.Where(x => x.CalculationId == deleteOriginal && x.ParentTaskId == null).MaxAsync(x => x.SortOrder, ct);
         }
         public async Task<List<TaskEntity>> CloneTasksAsync(int rootTaskId, int targetCalcId, int sourceCalcId, bool isOH, bool deleteOriginal, int? parentTaskId, double order, CancellationToken cancellationToken)
         {
@@ -197,7 +197,7 @@ namespace Application.Services.CalculationItems.Task
             TaskExtention.SetCalculationIdRecursive(tasks, isOH, targetCalcId, sourceCalcId);
 
             if (parentTaskId.HasValue)
-                rootTask.TaskId = parentTaskId;
+                rootTask.ParentTaskId = parentTaskId;
 
             await _context.Tasks.AddAsync(rootTask, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);

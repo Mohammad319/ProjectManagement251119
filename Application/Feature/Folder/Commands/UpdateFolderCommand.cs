@@ -13,7 +13,7 @@ namespace Application.Feature.Project.Folder.Commands
             var _folder = await context.Folder.FindAsync(request.Id, cancellationToken);
             if (_folder != null && (!request.DepartmentId.HasValue || _folder.DepartmentId == request.DepartmentId.Value))
             {
-                _folder.UserId = request.UserId;
+                _folder.CreatedBy = request.UserId;
                 _folder.Name = request.Dto.Name;
                 _folder.Color = request.Dto.Color;
                 _folder.IsVisible = request.Dto.IsVisible;

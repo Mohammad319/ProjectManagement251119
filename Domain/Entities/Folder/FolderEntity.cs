@@ -10,6 +10,7 @@ namespace Domain.Entities.Folder
 {
     public class FolderEntity : AuditableEntity<Guid>
     {
+        public UserEntity? CreatedByUser { get; set; }
         [Required(
             ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
             ErrorMessageResourceType = typeof(ResLocalize))]

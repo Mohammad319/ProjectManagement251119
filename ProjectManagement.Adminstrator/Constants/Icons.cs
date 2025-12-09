@@ -3,7 +3,7 @@
 public static class Icons
     {
         const string SVGHeader = "xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24'";
-        // Task
+        // ParentTask
         public const string NewTask = "🧩";            // U+1F4DD
         public const string NewSubTask = "🧩";         // U+1F9E9
         public const string NewResource = "👷";       // مزيج من U+1F464 + ➕

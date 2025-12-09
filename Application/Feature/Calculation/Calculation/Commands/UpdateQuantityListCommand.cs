@@ -15,14 +15,14 @@ namespace Application.Feature.Calculation.Calculation.Commands
            x.Id == request.Id && (request.DepartmentId == null || x.Project.Folder.DepartmentId == request.DepartmentId), cancellationToken: cancellationToken);
             if (calculation == null) return false;
 
-            calculation.Data.QuanityList = request.model;
+            calculation.Metadata.QuanityList = request.model;
 
             _dataAccess.Calculation.Update(calculation);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
             CalculationPageDTO calc = new();
             calculation.CopyPropertiesTo(calc);
-            calc.QuanityList = calculation.Data.QuanityList;
+            calc.QuanityList = calculation.Metadata.QuanityList;
 
             await notification.SendNotificationAsync(calculation.Id.ToString(), ObjectTypHub.calculation, OperationType.Update, calc);
 

@@ -30,8 +30,8 @@ namespace Application.Feature.Offer.Commands
                 item.Resource.OfferId = query.OfferId;
                 if (item.Offer != null)
                 {
-                    item.Resource.Data.BaseCost = item.Offer.Data.BaseCost;
-                    item.Resource.Data.Cost = item.Offer.Data.Cost;
+                    item.Resource.Metadata.BaseCost = item.Offer.Data.BaseCost;
+                    item.Resource.Metadata.Cost = item.Offer.Data.Cost;
                 }
 
                 _context.Resource.Update(item.Resource);

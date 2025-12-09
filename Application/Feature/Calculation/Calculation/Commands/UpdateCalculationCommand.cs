@@ -14,7 +14,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
            x.Id == request.Id && (request.DepartmentId == null || x.Project.Folder.DepartmentId == request.DepartmentId), cancellationToken: cancellationToken);
             if (calculation == null) return false;
             _mapper.Map(request.dto, calculation);
-            request.CopyPropertiesTo(calculation.Data);
+            request.CopyPropertiesTo(calculation.Metadata);
             _dataAccess.Calculation.Update(calculation);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 

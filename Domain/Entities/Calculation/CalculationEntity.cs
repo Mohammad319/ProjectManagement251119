@@ -1,17 +1,12 @@
 ﻿using Domain.Entities.Application;
 using Domain.Entities.Base;
-using Domain.Entities.Folder;
 using Domain.Entities.Organisation;
 using Domain.Entities.Project;
 using Domain.Entities.Users;
-using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Resource;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -41,11 +36,11 @@ namespace Domain.Entities.Calculation
         public DateTime TenderQA { get; set; } = DateTime.Now;
         public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
-        public double Order { get; set; }
+        public double SortOrder { get; set; }
         public DateTime? PublicationDate { get; set; } = DateTime.Now;
         public DateTime? DecisionDate { get; set; } = DateTime.Now;
-        CalculationData data = new();
-        public CalculationData Data { get { data ??= new CalculationData(); return data; } set { data = value; } }
+        CalculationData metadata = new();
+        public CalculationData Metadata { get { metadata ??= new CalculationData(); return metadata; } set { metadata = value; } }
         CalculationHourlyPriceFactorData hourlyPriceFactor = new();
         public CalculationHourlyPriceFactorData HourlyPriceFactorData { get { hourlyPriceFactor ??= new CalculationHourlyPriceFactorData(); return hourlyPriceFactor; } set { hourlyPriceFactor = value; } }
 
@@ -72,7 +67,7 @@ namespace Domain.Entities.Calculation
         [ForeignKey(nameof(UserId))][JsonIgnore] public UserEntity User { get; set; }
         public int? TemplateId { get; set; }
         [JsonIgnore] public TemplateEntity Template { get; set; }
-        [JsonIgnore] public ICollection<AttributeNameTenderEntity> AttributesTender { get; set; }
+        [JsonIgnore] public ICollection<TenderAttributeDefinitionEntity> AttributesTender { get; set; }
         [JsonIgnore] public ICollection<TenderEntity> Tenders { get; set; }
         public List<TaskEntity> Tasks { get; set; }
         public ICollection<ShareCalcEntity> SharesCalc { get; set; }

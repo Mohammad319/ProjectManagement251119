@@ -14,16 +14,16 @@ namespace Application.Mapping.CalcItems
         {
             return new TaskListDTO
             {
-                TaskId = t.TaskId,
+                TaskId = t.ParentTaskId,
                 Id = t.Id,
                 Name = t.Name,
                 OpportunityId = t.OpportunityId,
-                Order = t.Order,
+                Order = t.SortOrder,
                 StatusId = t.StatusId,
                 Status = t.Status?.Name ?? string.Empty,
                 StatusColor = t.Status?.Color ?? string.Empty,
                 Opportunity = t.Opportunity?.Type ?? string.Empty,
-                Data = t.Data,
+                Data = t.Metadata,
                 Resources = t.Resources?.Select(ResourceExtention.MapToResourceListDTO).ToList() ?? [],
 
             };
@@ -35,9 +35,9 @@ namespace Application.Mapping.CalcItems
             Name = dto.Name,
             OpportunityId = dto.OpportunityId,
             StatusId = dto.StatusId,
-            TaskId = dto.TaskId,
-            Order = dto.Order,
-            Data = dto.Data,
+            ParentTaskId = dto.TaskId,
+            SortOrder = dto.Order,
+            Metadata = dto.Data,
             Resources = dto.Resources?.Select(x => x.Parse(dto.Id)).ToList(),
             Tasks = dto.Tasks?.Select(t => MapToTaskEntity(t, calcId)).ToList() ?? [],
         };

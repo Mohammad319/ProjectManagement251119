@@ -1,30 +1,56 @@
 ﻿using Domain.Entities.Base;
-using Domain.Entities.Folder;
 using Domain.Entities.Users;
-using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Resource;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public class TemplateEntity : IDataKeyFilterReadOnly
+    public sealed class TemplateEntity : AuditableEntity<int>
     {
-        public int Id { get; set; }
-        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; }
-        TemplateData data;
-        public TemplateData Data { get { data ??= new TemplateData(); return data; } set { data = value; } }
+        /// <summary>
+        /// Template name.
+        /// </summary>
+        [Required(
+            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(
+            80,
+            ErrorMessageResourceName = ErrorsMessages.MaxLength,
+            ErrorMessageResourceType = typeof(ResLocalize))]
+        public string Name { get; set; } = string.Empty;
 
-        [JsonIgnore] public bool IsVisible { get; set; } = true;
-        [JsonIgnore] public int TenantId { get; set; }
-        [JsonIgnore] public int? DepartmentId { get; set; }
-        [JsonIgnore] public DepartmentEntity Department { get; set; }
-        [JsonIgnore] public ICollection<CalculationEntity> Calculations { get; set; }
+        /// <summary>
+        /// Extra metadata for the template.
+        /// </summary>
+        private TemplateData? _metadata;
+        public TemplateData Metadata
+        {
+            get => _metadata ??= new TemplateData();
+            set => _metadata = value;
+        }
+
+        /// <summary>
+        /// Whether this template is visible in UI.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsVisible { get; set; } = true;
+
+        /// <summary>
+        /// Optional department that owns this template.
+        /// </summary>
+        [JsonIgnore]
+        public int? DepartmentId { get; set; }
+
+        [JsonIgnore]
+        public DepartmentEntity? Department { get; set; }
+
+        /// <summary>
+        /// Calculations created from this template.
+        /// </summary>
+        [JsonIgnore]
+        public ICollection<CalculationEntity> Calculations { get; set; } = [];
     }
 }

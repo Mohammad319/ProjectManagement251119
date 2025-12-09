@@ -41,11 +41,11 @@ namespace Application.Feature.Calculation.Calculation.Commands
                 Procurement = calc.Procurement,
                 Tasks = calc.Tasks,
                 ProjectId = request.ProjectId,
-                Data = calc.Data,
+                Metadata = calc.Metadata,
             };
-            double? max = _context.Calculation.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.Order);
-            if (max.HasValue) newCalc.Order = max.Value + 100;
-            else newCalc.Order = 100;
+            double? max = _context.Calculation.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.SortOrder);
+            if (max.HasValue) newCalc.SortOrder = max.Value + 100;
+            else newCalc.SortOrder = 100;
 
             foreach (var task in calc.Tasks)
             {

@@ -13,12 +13,12 @@ namespace Application.Feature.Calculation.Calculation.Commands
         public async Task<int> Handle(CreateCalculationCommand request, CancellationToken cancellationToken)
         {
             CalculationEntity calculation = _mapper.Map<CalculationEntity>(request.Dto);
-            request.CopyPropertiesTo(calculation.Data);
+            request.CopyPropertiesTo(calculation.Metadata);
 
             calculation.ProjectId = request.ProjectId;
-            double? max = _dataAccess.Calculation.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.Order);
-            if (max.HasValue) calculation.Order = max.Value + 100;
-            else calculation.Order = 100;
+            double? max = _dataAccess.Calculation.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.SortOrder);
+            if (max.HasValue) calculation.SortOrder = max.Value + 100;
+            else calculation.SortOrder = 100;
 
             calculation.UserId = request.UserId;
             calculation.Created = DateTime.Now;

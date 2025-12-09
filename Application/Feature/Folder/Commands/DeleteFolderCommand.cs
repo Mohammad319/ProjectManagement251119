@@ -14,7 +14,7 @@ namespace Application.Feature.Project.Folder.Commands
             {
                 bool hasAnyProject = await postRepository.Project.AnyAsync(x => x.FolderId == request.Id, cancellationToken);
 
-                if (hasAnyProject || _folder.UserId != request.UserId)
+                if (hasAnyProject || _folder.CreatedBy != request.UserId)
                     return false;
 
                 postRepository.Folder.Remove(_folder);

@@ -30,8 +30,8 @@
                         <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@account.IsVisible" /></td>
                         <td class="@CssClasses.Table.Td">@account.Name</td>
                         <td class="@CssClasses.Table.Td">
-                            @if (account.Data != null && account.Data.Comments != null)
-                                foreach (var comm in account.Data.Comments)
+                                @if (account.Metadata != null && account.Metadata.Comments != null)
+                                    foreach (var comm in account.Metadata.Comments)
                                 {
                                     <label>@comm</label>
 

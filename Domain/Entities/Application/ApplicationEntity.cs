@@ -28,7 +28,7 @@ namespace Domain.Entities.Application
         private ApplicationDataEntity _data = new();
 
         /// <summary>
-        /// Dynamic data associated with the application.
+        /// Dynamic metadata associated with the application.
         /// </summary>
         public ApplicationDataEntity Data
         {

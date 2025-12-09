@@ -21,12 +21,12 @@ public sealed class GetShareQueryHandler(IShardingSingleDbContext _context)
                 DepartmentId = x.DepartmentId,
                 UserId = x.UserId,
                 User = x.User.FirstName + " " + x.User.LastName,
-                Tap1 = x.Data.Tap1,
-                Tap2 = x.Data.Tap2,
-                Tap3 = x.Data.Tap3,
-                Tap4 = x.Data.Tap4,
-                Tap5 = x.Data.Tap5,
-                Tap6 = x.Data.Tap6,
+                Tap1 = x.Metadata.Tap1,
+                Tap2 = x.Metadata.Tap2,
+                Tap3 = x.Metadata.Tap3,
+                Tap4 = x.Metadata.Tap4,
+                Tap5 = x.Metadata.Tap5,
+                Tap6 = x.Metadata.Tap6,
                 Department = x.Department.Name
             }).ToListAsync(cancellationToken);
     }

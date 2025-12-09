@@ -23,7 +23,7 @@ public sealed class GetAllCalculationsQueryHandler(IShardingSingleDbContext cont
                 Id = x.Id,
                 Name = x.Name,
                 Code = x.Code,
-                Order = x.Order,
+                Order = x.SortOrder,
                 TenderDeadline = x.TenderDeadline,
                 TenderQA = x.TenderQA,
                 IsPrivate = x.IsPrivate,

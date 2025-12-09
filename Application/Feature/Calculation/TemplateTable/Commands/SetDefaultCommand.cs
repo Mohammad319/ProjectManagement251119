@@ -37,16 +37,16 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
                 TemplateModelDTO r = new()
                 {
                     Name = calc.Name,
-                    Currency = tempTable.Data.Currency,
-                    DateFormat = tempTable.Data.DateFormat,
-                    NetColor = tempTable.Data.NetColor,
-                    SSColor = tempTable.Data.SSColor,
-                    FreezList = tempTable.Data.FreezList,
-                    MathRound = tempTable.Data.MathRound,
-                    NetOrder = tempTable.Data.NetOrder,
-                    NetWidth = tempTable.Data.NetWidth,
-                    SSOrder = tempTable.Data.SSOrder,
-                    SSWidth = tempTable.Data.SSWidth
+                    Currency = tempTable.Metadata.Currency,
+                    DateFormat = tempTable.Metadata.DateFormat,
+                    NetColor = tempTable.Metadata.NetColor,
+                    SSColor = tempTable.Metadata.SSColor,
+                    FreezList = tempTable.Metadata.FreezList,
+                    MathRound = tempTable.Metadata.MathRound,
+                    NetOrder = tempTable.Metadata.NetOrder,
+                    NetWidth = tempTable.Metadata.NetWidth,
+                    SSOrder = tempTable.Metadata.SSOrder,
+                    SSWidth = tempTable.Metadata.SSWidth
                 };
                 return r;
             }

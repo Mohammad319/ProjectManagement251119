@@ -11,16 +11,16 @@ namespace Application.Feature.Calculation.TemplateTable.Queries
             return await context.Template.AsNoTracking().Where(x => x.Id == query.Id).Select(x => new TemplateModelDTO
             {
                 Name = x.Name,
-                Currency = x.Data.Currency,
-                DateFormat = x.Data.DateFormat,
-                FreezList = x.Data.FreezList,
-                MathRound = x.Data.MathRound,
-                NetColor = x.Data.NetColor,
-                NetOrder = x.Data.NetOrder,
-                NetWidth = x.Data.NetWidth,
-                SSColor = x.Data.SSColor,
-                SSOrder = x.Data.SSOrder,
-                SSWidth = x.Data.SSWidth,
+                Currency = x.Metadata.Currency,
+                DateFormat = x.Metadata.DateFormat,
+                FreezList = x.Metadata.FreezList,
+                MathRound = x.Metadata.MathRound,
+                NetColor = x.Metadata.NetColor,
+                NetOrder = x.Metadata.NetOrder,
+                NetWidth = x.Metadata.NetWidth,
+                SSColor = x.Metadata.SSColor,
+                SSOrder = x.Metadata.SSOrder,
+                SSWidth = x.Metadata.SSWidth,
             }).FirstOrDefaultAsync(cancellationToken: cancellationToken);
         }
     }

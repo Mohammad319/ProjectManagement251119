@@ -20,7 +20,7 @@ namespace ProjectManagement.Server.Controllers.v1.Account
                 x.Id,
                 x.Name,
                 Accounts = x.Accounts.Select(a => new
-                { a.Id, a.Name, a.IsVisible, a.Data, a.Code, })
+                { a.Id, a.Name, a.IsVisible, a.Metadata, a.Code, })
             }));
         }
         [HttpGet]

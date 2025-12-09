@@ -646,7 +646,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Order.
+        ///   Looks up a localized string similar to SortOrder.
         /// </summary>
         public static string order {
             get {

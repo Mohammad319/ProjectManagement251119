@@ -37,7 +37,7 @@ namespace Application.Feature.Calculation.Calculation.Queries
                     Code = x.Code,
                     TemplateId = x.TemplateId,
                     Factors = x.HourlyPriceFactorData.Factors,
-                    QuanityList = x.Data.QuanityList,
+                    QuanityList = x.Metadata.QuanityList,
 
                     Compensation = x.Compensation != null ? x.Compensation.Name : string.Empty,
                     Customer = x.Organisation != null ? x.Organisation.Name : string.Empty,
@@ -87,13 +87,13 @@ namespace Application.Feature.Calculation.Calculation.Queries
                 .Where(t => t.CalculationId == query.Id)
                 .Select(t => new TaskListDTO
                 {
-                    TaskId = t.TaskId,
+                    TaskId = t.ParentTaskId,
                     Id = t.Id,
                     Name = t.Name,
                     OpportunityId = t.OpportunityId,
-                    Order = t.Order,
+                    Order = t.SortOrder,
                     StatusId = t.StatusId,
-                    Data = t.Data,
+                    Data = t.Metadata,
                     Status = t.Status != null ? t.Status.Name : string.Empty,
                     StatusColor = t.Status != null ? t.Status.Color : string.Empty,
                     Opportunity = t.Opportunity != null ? t.Opportunity.Type : string.Empty,
@@ -109,9 +109,9 @@ namespace Application.Feature.Calculation.Calculation.Queries
                         AccountId = r.AccountId,
                         StatusId = r.StatusId,
                         OfferId = r.OfferId,
-                        Order = r.Order,
+                        Order = r.SortOrder,
                         OpportunityId = r.OpportunityId,
-                        Data = r.Data,
+                        Data = r.Metadata,
 
                         Opportunity = r.Opportunity != null ? r.Opportunity.Type : string.Empty,
                         StatusColor = r.Status != null ? r.Status.Color : string.Empty,

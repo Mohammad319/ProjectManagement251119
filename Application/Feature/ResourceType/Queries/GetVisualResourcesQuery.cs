@@ -52,7 +52,7 @@ namespace Application.Feature.Calculation.ResourceType.Queries
 
                 result.Statues = await context.ResourceStatus
                     .AsNoTracking()
-                    .OrderBy(x => x.Order)
+                    .OrderBy(x => x.SortOrder)
                     .Select(x => new ListDTO
                     {
                         Id = x.Id,

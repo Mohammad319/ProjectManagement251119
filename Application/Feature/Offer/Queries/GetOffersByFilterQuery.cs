@@ -47,7 +47,7 @@ public sealed class GetOffersByFilterQueryHandler(IShardingSingleDbContext _data
                 Date = x.Date,
                 Organisation = x.Organisation.Name,
                 ResName = x.Resource.Name,
-                TaskCode = x.Resource.Task.Data.Code,
+                TaskCode = x.Resource.Task.Metadata.Code,
                 TaskName = x.Resource.Task.Name,
                 CalcCode = x.Resource.Task.Calculation.Code,
                 CalcName = x.Resource.Task.Calculation.Name,

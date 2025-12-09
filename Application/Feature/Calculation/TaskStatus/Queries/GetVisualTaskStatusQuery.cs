@@ -23,7 +23,7 @@ namespace Application.Feature.Project.TaskStatus.Queries
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Order = x.Order,
+                    Order = x.SortOrder,
                     Color = x.Color,
                 }).AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
         }

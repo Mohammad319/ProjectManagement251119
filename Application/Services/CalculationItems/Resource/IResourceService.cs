@@ -24,7 +24,7 @@ namespace Application.Services.CalculationItems.Resource
         {
             var Parent = await _dataAccess.Tasks.Where(x => x.Id == parentTaskId).Select(x => new
             {
-                MaxOrder = x.Resources.Max(r => (double?)r.Order),
+                MaxOrder = x.Resources.Max(r => (double?)r.SortOrder),
                 NewCalcID = x.CalculationId,
             }).FirstOrDefaultAsync(cancellationToken);
             if (Parent is null) return false;
@@ -40,13 +40,13 @@ namespace Application.Services.CalculationItems.Resource
                 res.OfferId = null;
                 if (sourceCalcId != Parent.NewCalcID)
                 {
-                    if (!string.IsNullOrEmpty(res.Data.QuantityParam))
-                        res.Data.QuantityParam = PMValuesConst.FixedQ;
-                    res.Data.Quantity = item.Value;
+                    if (!string.IsNullOrEmpty(res.Metadata.QuantityParam))
+                        res.Metadata.QuantityParam = PMValuesConst.FixedQ;
+                    res.Metadata.Quantity = item.Value;
                     res.OpportunityId = null;
                 }
                 res.TaskId = parentTaskId;
-                res.Order = nextOrder;
+                res.SortOrder = nextOrder;
                 nextOrder += 100;
                 Entities.Add(res);
             }
@@ -66,7 +66,7 @@ namespace Application.Services.CalculationItems.Resource
         {
             var parent = await _dataAccess.Tasks.Where(x => x.Id == parentTaskId).Select(x => new
             {
-                MaxOrder = x.Resources.Max(r => (double?)r.Order),
+                MaxOrder = x.Resources.Max(r => (double?)r.SortOrder),
                 CalID = x.CalculationId,
             }).FirstOrDefaultAsync(cancellationToken: cancellationToken);
             if (parent == null) return false;
@@ -76,7 +76,7 @@ namespace Application.Services.CalculationItems.Resource
             foreach (var resPost in Items)
             {
                 ResourceEntity resource = resPost.Parse(parentTaskId);
-                resource.Order = nextOrder;
+                resource.SortOrder = nextOrder;
                 nextOrder += 100;
                 Entities.Add(resource);
             }
@@ -98,7 +98,7 @@ namespace Application.Services.CalculationItems.Resource
             var Parent = await _dataAccess.Tasks.Where(x => x.Id == TaskId).Select(x => new
             {
                 CalID = x.CalculationId,
-                Max = x.Resources.Max(x => (int?)x.Order),
+                Max = x.Resources.Max(x => (int?)x.SortOrder),
             }).FirstOrDefaultAsync(cancellationToken: cancellationToken);
             if (Parent == null) return false;
             List<ResourceEntity> Entities = [];
@@ -109,13 +109,13 @@ namespace Application.Services.CalculationItems.Resource
                 if (Resource == null || Resource.TaskId == TaskId) continue;
                 if (Parent.CalID != sourceCalcId)
                 {
-                    if (!string.IsNullOrEmpty(Resource.Data.QuantityParam))
-                        Resource.Data.QuantityParam = PMValuesConst.FixedQ;
+                    if (!string.IsNullOrEmpty(Resource.Metadata.QuantityParam))
+                        Resource.Metadata.QuantityParam = PMValuesConst.FixedQ;
                     Resource.Offers = null;
                     Resource.OfferId = null;
                     Resource.OpportunityId = null;
                 }
-                Resource.Order = Parent.Max.HasValue ? Parent.Max.Value + 100 : 0;
+                Resource.SortOrder = Parent.Max.HasValue ? Parent.Max.Value + 100 : 0;
                 Resource.TaskId = TaskId;
 
                 Entities.Add(Resource);
@@ -170,7 +170,7 @@ namespace Application.Services.CalculationItems.Resource
             if (Resource == null)
                 return false;
 
-            Resource.Res.Order = NewOrder;
+            Resource.Res.SortOrder = NewOrder;
             _dataAccess.Resource.Update(Resource.Res);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
@@ -211,8 +211,8 @@ namespace Application.Services.CalculationItems.Resource
 
             var updatedEntity = resourcePost.Parse(resourceData.Original.TaskId);
             updatedEntity.Id = resourceData.Original.Id;
-            updatedEntity.Order = resourceData.Original.Order;
-            updatedEntity.Data.QuantityParam = res.Data.QuantityParam;
+            updatedEntity.SortOrder = resourceData.Original.SortOrder;
+            updatedEntity.Metadata.QuantityParam = res.Data.QuantityParam;
 
             // تحديث الكيان
             _dataAccess.Resource.Update(updatedEntity);

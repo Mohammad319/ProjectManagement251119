@@ -39,7 +39,7 @@ namespace Application.Feature.Calculation.Storage.Commands
                     x.ResType,
                     x.StatusId,
                     x.ResourceSortId,
-                    x.Data,
+                    x.Metadata,
                 }).FirstOrDefaultAsync(cancellationToken);
             }
 
@@ -51,7 +51,7 @@ namespace Application.Feature.Calculation.Storage.Commands
                     StorageLevel = request.Level,
                     StorageType = request.Type,
                     DepartmentId = request.DepartmentId ?? 0,
-                    UserId = request.UserId,
+                    CreatedBy = request.UserId,
                     StorageValue = JsonSerializer.Serialize(obj)
                 };
                 _dataAccess.Storage.Add(st);

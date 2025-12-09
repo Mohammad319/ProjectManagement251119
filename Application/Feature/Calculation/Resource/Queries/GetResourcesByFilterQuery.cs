@@ -25,7 +25,7 @@ public sealed class GetResourcesByFilterQueryHandler(IShardingSingleDbContext _d
         if (!string.IsNullOrWhiteSpace(filter.Unit))
         {
             resultList = resultList
-                .Where(x => x.Data.Unit.Contains(filter.Unit, StringComparison.CurrentCultureIgnoreCase))
+                .Where(x => x.Metadata.Unit.Contains(filter.Unit, StringComparison.CurrentCultureIgnoreCase))
                 .ToList();
         }
 

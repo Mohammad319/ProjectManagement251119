@@ -12,8 +12,6 @@ namespace Domain.Entities.Calculation
 {
     public sealed class AccountEntity : AuditableEntity<int>
     {
-        // Id + TenantId + CreatedAt/By + UpdatedAt/By من AuditableEntity<int>
-
         [Required(
             ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
             ErrorMessageResourceType = typeof(ResLocalize))]

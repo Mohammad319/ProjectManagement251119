@@ -15,11 +15,11 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
                 IsVisible = command.dto.Active,
                 DepartmentId = command.DepartmentId,
             };
-            command.dto.CopyPropertiesTo(entity.Data);
+            command.dto.CopyPropertiesTo(entity.Metadata);
             context.Template.Add(entity);
             await context.SaveChangesAsync(cancellationToken);
             TemplateModelDTO r = new() { Name = entity.Name };
-            entity.Data.CopyPropertiesTo(r);
+            entity.Metadata.CopyPropertiesTo(r);
 
             return r;
         }
