@@ -119,7 +119,7 @@
     {
         if (editing is null) return;
 
-        // مهم: لا نمرر Resource مرفقة لتفادي مشاكل الـ tracking
+        // مهم: لا نمرر Resources مرفقة لتفادي مشاكل الـ tracking
         foreach (var ra in editing.Assignments)
             ra.Resource = null;
 

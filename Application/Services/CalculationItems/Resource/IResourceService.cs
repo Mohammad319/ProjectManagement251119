@@ -33,7 +33,7 @@ namespace Application.Services.CalculationItems.Resource
 
             foreach (var item in Items)
             {
-                var res = await _dataAccess.Resource
+                var res = await _dataAccess.Resources
                     .AsNoTracking().FirstOrDefaultAsync(x => x.Id == item.Id, cancellationToken);
                 if (res == null) continue;
                 res.Id = 0;
@@ -50,10 +50,10 @@ namespace Application.Services.CalculationItems.Resource
                 nextOrder += 100;
                 Entities.Add(res);
             }
-            _dataAccess.Resource.AddRange(Entities);
+            _dataAccess.Resources.AddRange(Entities);
             await _dataAccess.SaveChangesAsync(cancellationToken);
             var newIds = Entities.Select(x => x.Id).ToList();
-            var loadedEntities = await _dataAccess.Resource.Where(r => newIds.Contains(r.Id))
+            var loadedEntities = await _dataAccess.Resources.Where(r => newIds.Contains(r.Id))
                 .Include(r => r.Account).Include(r => r.Status).Include(r => r.Opportunity)
                 .Include(r => r.ResourceSort).Include(r => r.ResourceType).ToListAsync(cancellationToken);
 
@@ -80,10 +80,10 @@ namespace Application.Services.CalculationItems.Resource
                 nextOrder += 100;
                 Entities.Add(resource);
             }
-            _dataAccess.Resource.AddRange(Entities);
+            _dataAccess.Resources.AddRange(Entities);
             await _dataAccess.SaveChangesAsync(cancellationToken);
             var newIds = Entities.Select(x => x.Id).ToList();
-            var loadedEntities = await _dataAccess.Resource.Where(r => newIds.Contains(r.Id))
+            var loadedEntities = await _dataAccess.Resources.Where(r => newIds.Contains(r.Id))
                 .Include(r => r.Account).Include(r => r.Status).Include(r => r.Opportunity)
                 .Include(r => r.ResourceSort).Include(r => r.ResourceType).ToListAsync(cancellationToken);
             var resourceDtos = loadedEntities.Select(ResourceExtention.MapToResourceListDTO).ToList();
@@ -105,7 +105,7 @@ namespace Application.Services.CalculationItems.Resource
 
             foreach (var id in items)
             {
-                var Resource = await _dataAccess.Resource.FindAsync(id.Id);
+                var Resource = await _dataAccess.Resources.FindAsync(id.Id);
                 if (Resource == null || Resource.TaskId == TaskId) continue;
                 if (Parent.CalID != sourceCalcId)
                 {
@@ -120,7 +120,7 @@ namespace Application.Services.CalculationItems.Resource
 
                 Entities.Add(Resource);
             }
-            _dataAccess.Resource.UpdateRange(Entities);
+            _dataAccess.Resources.UpdateRange(Entities);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
             if (sourceCalcId == Parent.CalID)
@@ -129,11 +129,11 @@ namespace Application.Services.CalculationItems.Resource
             {
                 foreach (var item in Entities)
                 {
-                    _dataAccess.Resource.Entry(item).Reference(p => p.Account).Load();
-                    _dataAccess.Resource.Entry(item).Reference(p => p.Status).Load();
-                    _dataAccess.Resource.Entry(item).Reference(p => p.Opportunity).Load();
-                    _dataAccess.Resource.Entry(item).Reference(p => p.ResourceSort).Load();
-                    _dataAccess.Resource.Entry(item).Reference(p => p.ResourceType).Load();
+                    _dataAccess.Resources.Entry(item).Reference(p => p.Account).Load();
+                    _dataAccess.Resources.Entry(item).Reference(p => p.Status).Load();
+                    _dataAccess.Resources.Entry(item).Reference(p => p.Opportunity).Load();
+                    _dataAccess.Resources.Entry(item).Reference(p => p.ResourceSort).Load();
+                    _dataAccess.Resources.Entry(item).Reference(p => p.ResourceType).Load();
                 }
                 List<ResourceListDTO> ListHub = [];// entities.Select(TaskExpression.SelectTaskListDTO.Compile()).ToList();
                 foreach (var item in Entities) ListHub.Add(item.MapToResourceListDTO());
@@ -149,10 +149,10 @@ namespace Application.Services.CalculationItems.Resource
             List<int> DeletedItems = [];
             foreach (int id in resourceIds)
             {
-                var res = await _dataAccess.Resource.FirstOrDefaultAsync(x => x.Id == id &&
+                var res = await _dataAccess.Resources.FirstOrDefaultAsync(x => x.Id == id &&
                 x.Task.CalculationId == calcId, cancellationToken: cancellationToken);
                 if (res == null) continue;
-                _dataAccess.Resource.Remove(res);
+                _dataAccess.Resources.Remove(res);
                 DeletedItems.Add(id);
             }
             await _dataAccess.SaveChangesAsync(cancellationToken);
@@ -162,7 +162,7 @@ namespace Application.Services.CalculationItems.Resource
 
         public async Task<bool> NewOrderAsync(int Id, double NewOrder, CancellationToken cancellationToken = default)
         {
-            var Resource = await _dataAccess.Resource.Where(x => x.Id == Id).Select(x => new
+            var Resource = await _dataAccess.Resources.Where(x => x.Id == Id).Select(x => new
             {
                 Res = x,
                 CalID = x.Task.CalculationId,
@@ -171,10 +171,10 @@ namespace Application.Services.CalculationItems.Resource
                 return false;
 
             Resource.Res.SortOrder = NewOrder;
-            _dataAccess.Resource.Update(Resource.Res);
+            _dataAccess.Resources.Update(Resource.Res);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
-            var fullResource = await _dataAccess.Resource
+            var fullResource = await _dataAccess.Resources
                 .Where(x => x.Id == Id)
                 .Include(x => x.Offers)
                 .Include(x => x.Account)
@@ -192,7 +192,7 @@ namespace Application.Services.CalculationItems.Resource
 
         public async Task<bool> UpdateAsync(int taskId, ResourcePostDTO res, CancellationToken cancellationToken = default)
         {
-            var resourceData = await _dataAccess.Resource
+            var resourceData = await _dataAccess.Resources
                 .AsNoTracking()
                 .Where(x => x.Id == taskId)
                 .Select(x => new
@@ -215,10 +215,10 @@ namespace Application.Services.CalculationItems.Resource
             updatedEntity.Metadata.QuantityParam = res.Data.QuantityParam;
 
             // تحديث الكيان
-            _dataAccess.Resource.Update(updatedEntity);
+            _dataAccess.Resources.Update(updatedEntity);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
-            var fullResource = await _dataAccess.Resource
+            var fullResource = await _dataAccess.Resources
                 .Where(x => x.Id == updatedEntity.Id)
                 .Include(x => x.ResourceType)
                 .Include(x => x.ResourceSort)

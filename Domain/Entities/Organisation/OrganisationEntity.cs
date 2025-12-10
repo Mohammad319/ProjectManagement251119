@@ -11,12 +11,12 @@ namespace Domain.Entities.Organisation
     public sealed class OrganisationEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        private OrganisationData? _metadata = new();
+        private OrganisationData? _metadata;
         public OrganisationData Metadata
         {
-            get => _metadata ?? new OrganisationData();
+            get => _metadata ??= new OrganisationData();
             set => _metadata = value ?? new OrganisationData();
         }
 

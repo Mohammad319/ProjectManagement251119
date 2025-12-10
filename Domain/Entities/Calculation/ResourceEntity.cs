@@ -3,7 +3,6 @@ using Domain.Entities.ResourceType;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Enums;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 

@@ -15,9 +15,9 @@ namespace Application.Feature.Organisation.Organisation.Commands
                 var Company = await dataAccess.Organisation.FindAsync(request.Id);
                 if (Company == null)
                     return false;
-                var offers = await dataAccess.Offer.Where(x => x.OrganisationId == Company.Id).ToListAsync(cancellationToken: cancellationToken);
+                var offers = await dataAccess.Offers.Where(x => x.OrganisationId == Company.Id).ToListAsync(cancellationToken: cancellationToken);
                 if (offers != null) foreach (var offer in offers) offer.OrganisationId = null;
-                dataAccess.Offer.UpdateRange(offers);
+                dataAccess.Offers.UpdateRange(offers);
                 dataAccess.Organisation.Remove(Company);
                 await dataAccess.SaveChangesAsync(cancellationToken);
                 return true;

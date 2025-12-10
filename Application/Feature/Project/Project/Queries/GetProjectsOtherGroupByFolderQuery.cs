@@ -9,8 +9,8 @@ namespace Application.Feature.Project.Project.Queries
     {
         public async Task<IEnumerable<ListProjectDTO>> Handle(GetProjectsOtherGroupByFolderQuery query, CancellationToken cancellationToken)
         {
-            return await context.Project.Where(x => x.IsVisible == true && x.FolderId == query.FolderId &&
-            x.Calculations.SelectMany(c => c.SharesCalc).Any(s => s.UserId == query.UserId ||
+            return await context.Projects.Where(x => x.IsVisible == true && x.FolderId == query.FolderId &&
+            x.Calculations.SelectMany(c => c.SharesCalc).Any(s => s.CreatedBy == query.UserId ||
             s.DepartmentId == query.DepartmentId)).AsNoTracking().Select(x => new ListProjectDTO()
             {
                 Id = x.Id,

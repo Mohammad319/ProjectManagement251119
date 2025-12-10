@@ -35,7 +35,7 @@ namespace Application.Feature.Calculation.Task.Commands
                 }
                 else
                 {
-                    var Calc = await _dataAccess.Calculation.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.NewNetCalcId, cancellationToken: cancellationToken);
+                    var Calc = await _dataAccess.Calculations.AsNoTracking().FirstOrDefaultAsync(x => x.Id == request.NewNetCalcId, cancellationToken: cancellationToken);
                     if (Calc == null) return false;
                     if (Calc.Tasks == null || Calc.Tasks.Count == 0) Max = null;
                     else Max = Calc?.Tasks?.Max(x => x.SortOrder);
@@ -62,7 +62,7 @@ namespace Application.Feature.Calculation.Task.Commands
     .IgnoreQueryFilters().AsNoTracking().ToListAsync(cancellationToken);
                         if (tasks == null) continue;
                         var taskIds = tasks.Select(t => t.Id).ToList();
-                        var resources = await _dataAccess.Resource.Where(r => taskIds.Contains(r.TaskId))
+                        var resources = await _dataAccess.Resources.Where(r => taskIds.Contains(r.TaskId))
                             .AsNoTracking().ToListAsync(cancellationToken);
                         foreach (var t in tasks)
                         {

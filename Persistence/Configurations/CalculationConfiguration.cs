@@ -30,7 +30,7 @@ namespace Persistence.Configurations
             modelBuilder.HasOne(pt => pt.CreatedByUser).WithMany(p => p.Calculations).HasForeignKey(pt => pt.CreatedBy).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Calculations).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);
 
-            //modelBuilder.HasOne(pt => pt.Project).WithMany(p => p.Calculations).HasForeignKey(pt => pt.ProjectId).OnDelete(DeleteBehavior.Cascade);
+            //modelBuilder.HasOne(pt => pt.Projects).WithMany(p => p.Calculations).HasForeignKey(pt => pt.ProjectId).OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

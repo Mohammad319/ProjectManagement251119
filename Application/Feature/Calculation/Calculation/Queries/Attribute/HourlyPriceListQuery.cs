@@ -11,7 +11,7 @@ public sealed class HourlyPriceListQueryHandler(IShardingSingleDbContext _dataAc
 {
     public async Task<List<HourlyPriceListGroupDTO>> Handle(HourlyPriceListQuery request, CancellationToken cancellationToken)
     {
-        var calculation = await _dataAccess.Calculation
+        var calculation = await _dataAccess.Calculations
             .AsNoTracking()
             .Where(x => x.Id == request.Id &&
                         (!request.DepartmentId.HasValue || x.Project.Folder.DepartmentId == request.DepartmentId))

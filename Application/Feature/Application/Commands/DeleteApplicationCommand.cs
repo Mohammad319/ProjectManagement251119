@@ -11,10 +11,10 @@ namespace Application.Feature.Application.Commands
     {
         public async Task<bool> Handle(DeleteApplicationCommand request, CancellationToken cancellationToken)
         {
-            var _folder = await _context.Application.FindAsync(request.Id);
+            var _folder = await _context.Applications.FindAsync(request.Id);
             if (_folder != null)
             {
-                _context.Application.Remove(_folder);
+                _context.Applications.Remove(_folder);
                 await _context.SaveChangesAsync(cancellationToken);
                 return true;
             }

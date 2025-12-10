@@ -10,23 +10,23 @@ namespace Application.Feature.Offer.Commands
     {
         public async Task<bool> Handle(CalcAvgOfferCommand request, CancellationToken cancellationToken)
         {
-            var offer = await _dataAccess.Offer.Where(x => x.OrganisationId == request.OrgID &&
+            var offer = await _dataAccess.Offers.Where(x => x.OrganisationId == request.OrgID &&
             x.Resource.Task.CalculationId == request.CalcID).ToListAsync(cancellationToken: cancellationToken);
             if (offer == null) return false;
-            double sum = offer.Sum(c => c.Data.Cost);
+            double sum = offer.Sum(c => c.Metadata.Cost);
             foreach (var off in offer)
             {
-                off.Data.BaseCost = (off.Data.Cost * request.Avg) / sum;
+                off.Metadata.BaseCost = (off.Metadata.Cost * request.Avg) / sum;
             }
-            _dataAccess.Offer.UpdateRange(offer);
+            _dataAccess.Offers.UpdateRange(offer);
             await _dataAccess.SaveChangesAsync(cancellationToken: cancellationToken);
 
-            List<ListOfferDTO> result = await _dataAccess.Offer.Where(x => x.OrganisationId == request.OrgID &&
+            List<ListOfferDTO> result = await _dataAccess.Offers.Where(x => x.OrganisationId == request.OrgID &&
             x.Resource.Task.CalculationId == request.CalcID).Select(x => new ListOfferDTO()
             {
                 Id = x.Id,
-                BaseCost = x.Data.BaseCost,
-                Cost = x.Data.Cost,
+                BaseCost = x.Metadata.BaseCost,
+                Cost = x.Metadata.Cost,
                 Organisation = x.Organisation.Name,
                 Comment = x.Comment,
                 Date = x.Date,

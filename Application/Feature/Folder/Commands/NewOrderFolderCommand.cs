@@ -9,13 +9,13 @@ namespace Application.Feature.Folder.Commands
     {
         public async Task<bool> Handle(NewOrderFolderCommand request, CancellationToken cancellationToken)
         {
-            var folder = await dataAccess.Folder.FindAsync(request.Id, cancellationToken);
+            var folder = await dataAccess.Folders.FindAsync(request.Id, cancellationToken);
             if (folder == null)
                 return false;
 
             folder.SortOrder = request.NewOrder;
 
-            dataAccess.Folder.Update(folder);
+            dataAccess.Folders.Update(folder);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return true;
         }

@@ -9,7 +9,7 @@ namespace Application.Feature.Project.Contract.Commands
     {
         public async Task<bool> Handle(UpdateContractCommand request, CancellationToken cancellationToken)
         {
-            var _ProjectContract = await postRepository.Contract.FindAsync(request.Id, cancellationToken);
+            var _ProjectContract = await postRepository.Contracts.FindAsync(request.Id, cancellationToken);
             if (_ProjectContract != null)
             {
                 _ProjectContract.Name = request.Dto.Name;

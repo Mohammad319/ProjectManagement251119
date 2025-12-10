@@ -8,7 +8,7 @@ namespace Application.Feature.Project.Compensation.Commands
     {
         public async Task<bool> Handle(UpdateCompensationCommand request, CancellationToken cancellationToken)
         {
-            var _ProjectCompensation = await postRepository.Compensation.FindAsync(request.Id, cancellationToken);
+            var _ProjectCompensation = await postRepository.Compensations.FindAsync(request.Id, cancellationToken);
             if (_ProjectCompensation != null)
             {
                 _ProjectCompensation.Name = request.Dto.Name;

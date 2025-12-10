@@ -12,7 +12,7 @@ namespace Application.Feature.Project.Contract.Commands
         public async Task<int> Handle(CreateContractCommand request, CancellationToken cancellationToken)
         {
             ContractEntity entity = mapper.Map<ContractEntity>(request.Dto);
-            postRepository.Contract.Add(entity);
+            postRepository.Contracts.Add(entity);
             await postRepository.SaveChangesAsync(cancellationToken);
             return entity.Id;
         }

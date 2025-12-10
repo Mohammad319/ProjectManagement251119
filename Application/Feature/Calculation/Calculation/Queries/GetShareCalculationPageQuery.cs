@@ -17,7 +17,7 @@ public sealed class GetShareCalculationPageQueryHandler(IShardingSingleDbContext
             .Where(x =>
                 x.CalculationId == request.Id &&
                 (request.DepartmentId == null || x.DepartmentId == request.DepartmentId) &&
-                (x.UserId == null || x.UserId == request.UserId))
+                (x.CreatedAt == null || (x.CreatedBy == request.UserId)))
             .Select(CalculationExpression.SelectCalculationPageOtherDepartmentDTO)
             .FirstOrDefaultAsync(cancellationToken);
     }

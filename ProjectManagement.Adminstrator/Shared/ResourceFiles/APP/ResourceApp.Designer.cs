@@ -250,7 +250,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Created.
+        ///   Looks up a localized string similar to CreatedAt.
         /// </summary>
         public static string created {
             get {
@@ -835,7 +835,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Type of Compensation.
+        ///   Looks up a localized string similar to Type of Compensations.
         /// </summary>
         public static string typeOfCompensation {
             get {

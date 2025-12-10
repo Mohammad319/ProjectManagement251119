@@ -17,7 +17,7 @@ namespace Application.Feature.Project.Project.Commands
     {
         public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
         {
-            FolderEntity folder = await _dataAccess.Folder.FindAsync(request.Dto.FolderId, cancellationToken);
+            FolderEntity folder = await _dataAccess.Folders.FindAsync(request.Dto.FolderId, cancellationToken);
             if (folder == null)
                 return Guid.Empty;
 
@@ -25,13 +25,13 @@ namespace Application.Feature.Project.Project.Commands
                 return Guid.Empty;
             ProjectEntity post = _mapper.Map<ProjectEntity>(request.Dto);
             request.Dto.CopyPropertiesTo(post.Metadata);
-            double? max = _dataAccess.Project.Where(x => (request.DepartmentId == null || x.Folder.DepartmentId == request.DepartmentId) || x.UserId == request.UserId)
+            double? max = _dataAccess.Projects.Where(x => (request.DepartmentId == null || x.Folder.DepartmentId == request.DepartmentId) || x.CreatedBy == request.UserId)
                 .Max(x => (double?)x.SortOrder);
             if (max.HasValue) folder.SortOrder = max.Value + 100;
             else folder.SortOrder = 100;
-            post.UserId = request.UserId;
+            post.CreatedBy = request.UserId;
 
-            _dataAccess.Project.Add(post);
+            _dataAccess.Projects.Add(post);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
             return post.Id;

@@ -12,13 +12,13 @@ public sealed class GetApplicationQueryHandler(IShardingSingleDbContext _context
     {
         if (request.WithNoneVisible)
         {
-            return await _context.Application
+            return await _context.Applications
                 .OrderByDescending(x => x)
                 .Where(x => x.IsVisible == true)
                 .ToListAsync(cancellationToken);
         }
 
-        return await _context.Application
+        return await _context.Applications
             .OrderByDescending(x => x)
             .ToListAsync(cancellationToken);
     }

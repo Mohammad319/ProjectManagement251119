@@ -61,8 +61,16 @@ namespace Application.Extention
             task.ParentTask = null;
             task.Status = null;
 
-            if (task.Resources != null) for (int i = 0; i < task.Resources.Count; i++)
-                    task.Resources[i] = ResourceExtention.Reset(task.Resources.ElementAt(i));
+            //if (task.Resources != null) for (int i = 0; i < task.Resources.Count; i++)
+            //        task.Resources[i] = ResourceExtention.Reset(task.Resources.ElementAt(i));
+            if (task.Resources != null)
+            {
+                task.Resources = task.Resources
+                    .Select(r => ResourceExtention.Reset(r))
+                    .ToList();
+            }
+
+
             //for (int i = 0; i < task?.Tasks?.Count; i++)
             //    task.Tasks[i] = Reset(task.Tasks.ElementAt(i));
             //foreach (var child in task.Tasks)Reset(child);

@@ -10,11 +10,11 @@ namespace Application.Feature.Offer.Commands
     {
         public async Task<bool> Handle(UpdateOfferCommand request, CancellationToken cancellationToken)
         {
-            var offer = await _dataAccess.Offer.FindAsync(request.Id);
+            var offer = await _dataAccess.Offers.FindAsync(request.Id);
             if (offer == null)
                 return false;
             offer.Date = DateTime.Now;
-            offer.Data = new OfferData()
+            offer.Metadata = new OfferData()
             {
                 Comment = request.dto.Comment,
                 BaseCost = request.dto.BaseCost,
@@ -24,14 +24,14 @@ namespace Application.Feature.Offer.Commands
             offer.OrganisationId = request.dto.OrganisationId;
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
-            var result = await _dataAccess.Offer.Where(x => x.Id == offer.Id).Select(x => new
+            var result = await _dataAccess.Offers.Where(x => x.Id == offer.Id).Select(x => new
             {
                 CalcID = x.Resource.Task.CalculationId,
                 Offer = new ListOfferDTO()
                 {
                     Id = x.Id,
-                    BaseCost = x.Data.BaseCost,
-                    Cost = x.Data.Cost,
+                    BaseCost = x.Metadata.BaseCost,
+                    Cost = x.Metadata.Cost,
                     Organisation = x.Organisation.Name,
                     Comment = x.Comment,
                     Date = x.Date,

@@ -10,14 +10,14 @@ namespace Application.Feature.Project.Folder.Commands
     {
         public async Task<bool> Handle(UpdateFolderCommand request, CancellationToken cancellationToken)
         {
-            var _folder = await context.Folder.FindAsync(request.Id, cancellationToken);
+            var _folder = await context.Folders.FindAsync(request.Id, cancellationToken);
             if (_folder != null && (!request.DepartmentId.HasValue || _folder.DepartmentId == request.DepartmentId.Value))
             {
                 _folder.CreatedBy = request.UserId;
                 _folder.Name = request.Dto.Name;
                 _folder.Color = request.Dto.Color;
                 _folder.IsVisible = request.Dto.IsVisible;
-                context.Folder.Update(_folder);
+                context.Folders.Update(_folder);
                 await context.SaveChangesAsync(cancellationToken);
                 return true;
             }

@@ -11,7 +11,7 @@ public sealed class UpdateAccountCommandHandler(IShardingSingleDbContext _contex
 
     public async Task<bool> Handle(UpdateAccountCommand request, CancellationToken cancellationToken)
     {
-        var existing = await _context.Account.FindAsync([request.Id], cancellationToken);
+        var existing = await _context.Accounts.FindAsync([request.Id], cancellationToken);
         if (existing is null) return false;
         _mapper.Map(request.Dto, existing);
         await _context.SaveChangesAsync(cancellationToken);

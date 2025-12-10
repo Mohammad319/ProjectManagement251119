@@ -59,7 +59,7 @@
     private void RemoveNumericGroup(NumericQuestionDefinition g)
         => Task.NumericQuestions.Remove(g);
 
-    // ====== Resource ======
+    // ====== Resources ======
     private void AddResourceGroup()
         => Task.ResourceSelectors.Add(new ResourceSelectorDefinition { TaskId = ID, DisplayName = "Resources", SortOrder = Task.ResourceSelectors.Count });
 

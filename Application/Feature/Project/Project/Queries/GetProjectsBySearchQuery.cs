@@ -8,9 +8,9 @@ namespace Application.Feature.Project.Project.Queries
     {
         public async Task<IEnumerable<SearchProjectDTO>> Handle(GetProjectsBySearchQuery query, CancellationToken cancellationToken)
         {
-            var projects = context.Project.Where(x => x.Folder.DepartmentId == query.DepartmentId || x.UserId == query.UserId
+            var projects = context.Projects.Where(x => x.Folder.DepartmentId == query.DepartmentId || x.CreatedBy == query.UserId
             || (x.Calculations.SelectMany(c => c.SharesCalc)
-            .Any(s => s.UserId == query.UserId || s.DepartmentId == query.DepartmentId))).AsQueryable();
+            .Any(s => s.CreatedBy == query.UserId || s.DepartmentId == query.DepartmentId))).AsQueryable();
             projects = projects.Where(x => x.IsVisible == query.dto.IsVisible);
             if (query.dto.CustomerId.HasValue)
                 projects = projects.Where(x => x.OrganisationId == query.dto.CustomerId.Value);

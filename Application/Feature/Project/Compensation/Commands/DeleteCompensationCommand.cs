@@ -8,10 +8,10 @@ namespace Application.Feature.Project.Compensation.Commands
     {
         public async Task<bool> Handle(DeleteCompensationCommand request, CancellationToken cancellationToken)
         {
-            var _ProjectTyp = await _context.Compensation.FindAsync(request.Id, cancellationToken);
+            var _ProjectTyp = await _context.Compensations.FindAsync(request.Id, cancellationToken);
             if (_ProjectTyp != null)
             {
-                _context.Compensation.Remove(_ProjectTyp);
+                _context.Compensations.Remove(_ProjectTyp);
                 await _context.SaveChangesAsync(cancellationToken);
                 return true;
             }

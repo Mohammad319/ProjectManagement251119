@@ -10,7 +10,7 @@ public sealed class GetCalculationPostQueryHandler(IShardingSingleDbContext _con
 {
     public async Task<PostCalculationDTO> Handle(GetCalculationPostQuery request, CancellationToken cancellationToken)
     {
-        return await _context.Calculation
+        return await _context.Calculations
             .AsNoTracking()
             .Where(x => x.Id == request.Id)
             .Select(x => new PostCalculationDTO

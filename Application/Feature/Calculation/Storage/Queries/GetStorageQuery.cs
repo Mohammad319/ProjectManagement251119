@@ -16,7 +16,7 @@ public sealed class GetStorageQueryHandler(IShardingSingleDbContext _context)
 {
     public async Task<IEnumerable<StorageDTO<object>>> Handle(GetStorageQuery request, CancellationToken cancellationToken)
     {
-        var baseQuery = _context.Storage
+        var baseQuery = _context.Storages
             .Where(x =>
                 x.StorageType == request.Type &&
                 x.StorageLevel == request.AuthoritySelected &&

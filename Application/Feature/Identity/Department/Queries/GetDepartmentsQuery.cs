@@ -14,9 +14,9 @@ namespace Application.Feature.Identity.Department.Queries
                     {
                         Id = x.Id,
                         Name = x.Name,
-                        Created = x.Created,
+                        Created = x.CreatedAt,
                         Description = x.Description,
-                        LastModified = x.LastModified,
+                        LastModified = x.UpdatedAt,
                         UsersCount = x.Users.Count,
                         ProjectsCount = x.Projects.Count,
                         FoldersCount = x.Folders.Count,

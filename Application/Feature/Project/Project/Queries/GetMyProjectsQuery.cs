@@ -9,8 +9,8 @@ namespace Application.Feature.Project.Project.Queries
     {
         public async Task<IEnumerable<ListProjectDTO>> Handle(GetMyProjectsQuery query, CancellationToken cancellationToken)
         {
-            return await _context.Project.OrderByDescending(x => x)
-                .Where(x => x.IsVisible == query.IsVisible && x.UserId == query.UserId)
+            return await _context.Projects.OrderByDescending(x => x)
+                .Where(x => x.IsVisible == query.IsVisible && x.CreatedBy == query.UserId)
                 .AsNoTracking().Select(x => new ListProjectDTO()
                 {
                     Id = x.Id,

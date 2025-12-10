@@ -11,7 +11,7 @@ namespace ProjectManagement.Shared.DTO.Project
 {
     public class ProjectData
     {
-        [Range(0, 5, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [Range(0, 5)]
         public int Priority { get; set; } = 3;
 
         public List<AddressDTO> Address { get; set; } = [];

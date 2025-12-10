@@ -8,7 +8,7 @@ namespace Application.Feature.Project.Folder.Queries
     {
         public async Task<IEnumerable<ListFolderDTO>> Handle(GetAllFoldersQuery query, CancellationToken cancellationToken)
         {
-            return await _context.Folder.Where(x => x.IsVisible == true)
+            return await _context.Folders.Where(x => x.IsVisible == true)
                 .AsNoTracking().Select(x => new ListFolderDTO
                 {
                     Color = x.Color,

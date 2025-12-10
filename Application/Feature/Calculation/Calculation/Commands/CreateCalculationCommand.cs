@@ -16,13 +16,13 @@ namespace Application.Feature.Calculation.Calculation.Commands
             request.CopyPropertiesTo(calculation.Metadata);
 
             calculation.ProjectId = request.ProjectId;
-            double? max = _dataAccess.Calculation.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.SortOrder);
+            double? max = _dataAccess.Calculations.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.SortOrder);
             if (max.HasValue) calculation.SortOrder = max.Value + 100;
             else calculation.SortOrder = 100;
 
             calculation.CreatedBy = request.UserId;
             calculation.CreatedAt = DateTime.Now;
-            _dataAccess.Calculation.Add(calculation);
+            _dataAccess.Calculations.Add(calculation);
             await _dataAccess.SaveChangesAsync(cancellationToken);
             return calculation.Id;
         }

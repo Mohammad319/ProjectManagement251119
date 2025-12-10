@@ -23,7 +23,7 @@ namespace Application.Feature.Calculation.Tender.Queries
             public async Task<TenderAttributeValuesListDTO> Handle(GetTenderListQuery query, CancellationToken cancellationToken)
             {
                 TenderAttributeValuesListDTO result = new();
-                result.Tenders = await _context.Tender.Where(x => x.CalculationId == query.CalculationId).Select(x => new TenderListDTO()
+                result.Tenders = await _context.Tenders.Where(x => x.CalculationId == query.CalculationId).Select(x => new TenderListDTO()
                 {
                     Id = x.Id,
                     CompanyId = x.OrganisationId,

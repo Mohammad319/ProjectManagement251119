@@ -10,7 +10,7 @@ namespace Application.Feature.Identity.Department.Commands
     {
         public async Task<bool> Handle(UpdateDepartmentCommand command, CancellationToken cancellationToken)
         {
-            var group = new DepartmentEntity() { Id = command.Id, Name = command.dto.Name, Description = command.dto.Description, Created = DateTime.Now };
+            var group = new DepartmentEntity() { Id = command.Id, Name = command.dto.Name, Description = command.dto.Description, CreatedAt = DateTime.Now };
             dataAccess.Department.Update(group);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return true;

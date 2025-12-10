@@ -16,7 +16,7 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
                 DepartmentId = command.DepartmentId,
             };
             command.dto.CopyPropertiesTo(entity.Metadata);
-            context.Template.Add(entity);
+            context.Templates.Add(entity);
             await context.SaveChangesAsync(cancellationToken);
             TemplateModelDTO r = new() { Name = entity.Name };
             entity.Metadata.CopyPropertiesTo(r);

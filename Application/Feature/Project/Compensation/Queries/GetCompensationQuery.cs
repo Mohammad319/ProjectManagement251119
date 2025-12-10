@@ -9,7 +9,7 @@ namespace Application.Feature.Project.Compensation.Queries
     {
         public async Task<List<CompensationEntity>> Handle(GetCompensationQuery query, CancellationToken cancellationToken)
         {
-            return await context.Compensation.ToListAsync(cancellationToken);
+            return await context.Compensations.ToListAsync(cancellationToken);
         }
     }
 }

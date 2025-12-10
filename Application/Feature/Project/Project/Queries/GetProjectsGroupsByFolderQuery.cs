@@ -9,12 +9,12 @@ namespace Application.Feature.Project.Project.Queries
         {
             public async Task<IEnumerable<ListProjectDTO>> Handle(GetProjectsGroupsByFolderQuery query, CancellationToken cancellationToken)
             {
-                var list = context.Project.Where(x => x.IsVisible == query.IsVisible
+                var list = context.Projects.Where(x => x.IsVisible == query.IsVisible
                 && x.FolderId == query.FolderId);
                 if (query.DepartmentId.HasValue)
                 {
                     list = list.Where(x => x.Folder.DepartmentId == query.DepartmentId
-                    || x.UserId == query.UserId);
+                    || x.CreatedBy == query.UserId);
                 }
                 //else list = list.Where(x => x.DepartmentId.HasValue);
                 return await list.AsNoTracking().Select(x => new ListProjectDTO()

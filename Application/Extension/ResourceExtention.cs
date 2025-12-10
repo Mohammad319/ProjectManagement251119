@@ -39,9 +39,9 @@ namespace Application.Extention
             return new ListOfferDTO
             {
                 Id = of.Id,
-                BaseCost = of.Data.BaseCost,
-                Cost = of.Data.Cost,
-                Comment = of.Data.Comment,
+                BaseCost = of.Metadata.BaseCost,
+                Cost = of.Metadata.Cost,
+                Comment = of.Metadata.Comment,
                 Date = of.Date,
                 OrganisationId = of.OrganisationId,
                 Organisation = of.Organisation != null ? of.Organisation.Name : string.Empty,

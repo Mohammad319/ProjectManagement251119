@@ -12,14 +12,14 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
         {
             public async Task<bool> Handle(RemoveTemplateCommands command, CancellationToken cancellationToken)
             {
-                var result = await context.Template.FirstOrDefaultAsync(x => x.Id == command.Id);
-                var Calcs = await context.Calculation.Where(x => x.TemplateId == command.Id).ToListAsync();
+                var result = await context.Templates.FirstOrDefaultAsync(x => x.Id == command.Id);
+                var Calcs = await context.Calculations.Where(x => x.TemplateId == command.Id).ToListAsync();
                 foreach (var cal in Calcs) cal.TemplateId = null;
-                context.Calculation.UpdateRange(Calcs);
+                context.Calculations.UpdateRange(Calcs);
 
                 if (result != null || (!command.DepartmentId.HasValue || result.DepartmentId == command.DepartmentId))
                 {
-                    context.Template.Remove(result);
+                    context.Templates.Remove(result);
                     await context.SaveChangesAsync();
                     return true;
                 }

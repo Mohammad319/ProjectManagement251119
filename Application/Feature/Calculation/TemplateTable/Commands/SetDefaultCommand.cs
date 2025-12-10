@@ -15,7 +15,7 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
         {
             public async Task<TemplateModelDTO> Handle(SetDefaultCommand command, CancellationToken cancellationToken)
             {
-                var calc = context.Calculation.FirstOrDefault(x => x.Id == command.CalculationId);
+                var calc = context.Calculations.FirstOrDefault(x => x.Id == command.CalculationId);
                 if (calc == null) return null;
                 if (command.TemplateId == 0)
                     command.TemplateId = null;
@@ -25,14 +25,14 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
                 {
                     if (command.TemplateId.HasValue && command.TemplateId > 0)
                     {
-                        tempTable = await context.Template.FirstOrDefaultAsync(x => x.Id == command.TemplateId);
+                        tempTable = await context.Templates.FirstOrDefaultAsync(x => x.Id == command.TemplateId);
                         if (tempTable == null)
                             return null;
                     }
 
                 }
                 calc.TemplateId = command.TemplateId;
-                context.Calculation.Update(calc);
+                context.Calculations.Update(calc);
                 await context.SaveChangesAsync(cancellationToken);
                 TemplateModelDTO r = new()
                 {

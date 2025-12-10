@@ -36,7 +36,7 @@ public static class Icons
         public const string Delete = "❌";//"🗑️";               // U+1F5D1 (Trash Bin)
         public const string Details = "ℹ️";              // U+2139 (Information)
 
-        public const string Template = "🎨";              // U+1F5C2 (Template)
+        public const string Template = "🎨";              // U+1F5C2 (Templates)
         public const string Refresh = "🔄";              // U+1F504 (Refresh) 🔄
         public const string Refresh2 = "↻";              // U+1F504 (Refresh) ↻
         public const string Active = "🟢";              // U+1F7E2 (Refresh) ↻

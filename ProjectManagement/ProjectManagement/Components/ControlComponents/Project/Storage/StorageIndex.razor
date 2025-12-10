@@ -92,7 +92,7 @@
     async Task GetAsync()
     {
         BtnImportIsVisible = false;
-        var data = await _context.Storage.Where(x =>
+        var data = await _context.Storages.Where(x =>
         x.StorageType == Post.Type &&
         x.StorageLevel == Post.AuthoritySelected &&
         x.StorageSort == Post.SortSelected).ToListAsync();

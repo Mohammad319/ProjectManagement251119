@@ -9,7 +9,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
     {
         public async Task<bool> Handle(UpdateResourceSortCommand request, CancellationToken cancellationToken)
         {
-            var resourceSort = await dataAccess.ResourceSort.FindAsync(request.Id, cancellationToken);
+            var resourceSort = await dataAccess.ResourceSorts.FindAsync(request.Id, cancellationToken);
             if (resourceSort == null)
                 return false;
 
@@ -17,7 +17,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
             resourceSort.IsVisible = request.Dto.IsVisible;
             request.Dto.CopyPropertiesTo(resourceSort.Metadata);
             resourceSort.AccountId = request.Dto.AccountId; 
-            dataAccess.ResourceSort.Update(resourceSort);
+            dataAccess.ResourceSorts.Update(resourceSort);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return true;
         }

@@ -13,11 +13,11 @@ namespace Application.Feature.Calculation.Tender.Commands
                 dataAccess.TenderAttributeBind.RemoveRange(tenders);
                 await dataAccess.SaveChangesAsync();
             }
-            var tender = await dataAccess.Tender.FirstOrDefaultAsync(x => x.Id == request.Id &&
+            var tender = await dataAccess.Tenders.FirstOrDefaultAsync(x => x.Id == request.Id &&
             x.CalculationId == request.CalculationId);
             if (tender == null)
                 return false;
-            dataAccess.Tender.Remove(tender);
+            dataAccess.Tenders.Remove(tender);
             await dataAccess.SaveChangesAsync();
             return true;
         }

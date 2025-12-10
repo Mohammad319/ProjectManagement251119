@@ -14,7 +14,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
             ResourceSortEntity resourceSort = mapper.Map<ResourceSortEntity>(request.Dto);
             request.Dto.CopyPropertiesTo(resourceSort.Metadata);
 
-            dataAccess.ResourceSort.Add(resourceSort);
+            dataAccess.ResourceSorts.Add(resourceSort);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return resourceSort.Id;
         }

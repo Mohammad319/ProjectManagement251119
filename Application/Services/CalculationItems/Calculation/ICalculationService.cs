@@ -20,7 +20,7 @@ namespace Application.Services.CalculationItems.Calculation
     {
         public async Task<int> CopyAsync(int Id, Guid ProjectId, int? DepartmentId, int UserId, CancellationToken cancellationToken)
         {
-            var calc = await _context.Calculation.FirstOrDefaultAsync(x => x.Id == Id &&
+            var calc = await _context.Calculations.FirstOrDefaultAsync(x => x.Id == Id &&
             (x.Project.Folder.DepartmentId == DepartmentId) || DepartmentId == null, cancellationToken: cancellationToken);
             if (calc == null) return 0;
             CalculationEntity newCalc = new()
@@ -50,7 +50,7 @@ namespace Application.Services.CalculationItems.Calculation
                 ProjectId = ProjectId,
                 Metadata = calc.Metadata,
             };
-            double? max = _context.Calculation.Where(x => x.ProjectId == ProjectId).Max(x => (double?)x.SortOrder);
+            double? max = _context.Calculations.Where(x => x.ProjectId == ProjectId).Max(x => (double?)x.SortOrder);
             if (max.HasValue) newCalc.SortOrder = max.Value + 100;
             else newCalc.SortOrder = 100;
             foreach (var task in calc.Tasks)
@@ -68,7 +68,7 @@ namespace Application.Services.CalculationItems.Calculation
             }
             newCalc.CreatedBy = UserId;
             newCalc.CreatedAt = DateTime.Now;
-            _context.Calculation.Add(newCalc);
+            _context.Calculations.Add(newCalc);
             await _context.SaveChangesAsync(cancellationToken);
             return newCalc.Id;
         }

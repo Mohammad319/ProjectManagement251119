@@ -8,10 +8,10 @@ public sealed class DeleteAccountCommandHandler(IShardingSingleDbContext _contex
 {
     public async Task<bool> Handle(DeleteAccountCommand request, CancellationToken cancellationToken)
     {
-        var entity = await _context.Account.FindAsync([request.Id], cancellationToken);
+        var entity = await _context.Accounts.FindAsync([request.Id], cancellationToken);
         if (entity is null) return false;
 
-        _context.Account.Remove(entity);
+        _context.Accounts.Remove(entity);
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }

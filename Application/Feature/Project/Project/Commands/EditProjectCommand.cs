@@ -11,15 +11,15 @@ namespace Application.Feature.Project.Project.Commands
     {
         public async Task<bool> Handle(EditProjectCommand request, CancellationToken cancellationToken)
         {
-            var project = await _dataAccess.Project.FirstOrDefaultAsync(x =>
+            var project = await _dataAccess.Projects.FirstOrDefaultAsync(x =>
             x.Id == request.Id && (request.DepartmentId == null || x.Folder.DepartmentId == request.DepartmentId), cancellationToken);
             if (project == null)
                 return false;
             double order = project.SortOrder;
             _mapper.Map(request.Dto, project);
-            project.UserId = request.UserId;
+            project.CreatedBy = request.UserId;
             request.Dto.CopyPropertiesTo(project.Metadata);
-            _dataAccess.Project.Update(project);
+            _dataAccess.Projects.Update(project);
             await _dataAccess.SaveChangesAsync(cancellationToken);
             return true;
         }

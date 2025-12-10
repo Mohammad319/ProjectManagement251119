@@ -14,7 +14,7 @@ namespace Application.Feature.Calculation.ResourceType.Queries
             public async Task<ResourceFormDTO> Handle(GetVisualResourcesQuery request, CancellationToken cancellationToken)
             {
                 ResourceFormDTO result = new();
-                result.ResourceTypes = await context.ResourceType.Where(x => x.IsVisible == true)
+                result.ResourceTypes = await context.ResourceTypes.Where(x => x.IsVisible == true)
                     .AsNoTracking().OrderByDescending(x => x)
                     .Select(x => new ListResourceTypeDTO()
                     {

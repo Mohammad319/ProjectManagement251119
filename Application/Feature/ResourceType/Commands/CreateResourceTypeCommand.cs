@@ -13,7 +13,7 @@ namespace Application.Feature.Calculation.ResourceType.Commands
             ResourceTypeEntity resourceType = mapper.Map<ResourceTypeEntity>(request.Dto);
             request.Dto.CopyPropertiesTo(resourceType.Metadata);
 
-            dataAccess.ResourceType.Add(resourceType);
+            dataAccess.ResourceTypes.Add(resourceType);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return resourceType.Id;
         }

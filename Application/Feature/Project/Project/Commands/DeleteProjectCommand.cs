@@ -13,12 +13,12 @@ namespace Application.Feature.Project.Project.Commands
     {
         public async Task<bool> Handle(DeleteProjectCommand request, CancellationToken cancellationToken)
         {
-            var project = await postRepository.Project.Include(x=>x.Folder)
+            var project = await postRepository.Projects.Include(x=>x.Folder)
                 .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
             if (project == null || (project.Folder.DepartmentId != request.DepartmentId && request.DepartmentId != null))
                 return false;
 
-            postRepository.Project.Remove(project);
+            postRepository.Projects.Remove(project);
             await postRepository.SaveChangesAsync(cancellationToken);
             return true;
         }

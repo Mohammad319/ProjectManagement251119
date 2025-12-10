@@ -15,7 +15,7 @@ namespace Application.Feature.Account.Commands
         public async Task<int> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
         {
             var entity = _mapper.Map<AccountEntity>(request.AccountDto);
-            _context.Account.Add(entity);
+            _context.Accounts.Add(entity);
             await _context.SaveChangesAsync(cancellationToken);
             return entity.Id;
         }

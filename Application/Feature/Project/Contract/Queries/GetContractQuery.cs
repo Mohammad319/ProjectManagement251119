@@ -9,7 +9,7 @@ namespace Application.Feature.Project.Contract.Queries
     {
         public async Task<List<ContractEntity>> Handle(GetContractQuery query, CancellationToken cancellationToken)
         {
-            return await context.Contract.ToListAsync(cancellationToken);
+            return await context.Contracts.ToListAsync(cancellationToken);
         }
     }
 }

@@ -113,7 +113,7 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(
         typeof(ProjectManagement.Client._Imports).Assembly
     );
-// Add additional endpoints required by the Identity /Account Razor components.
+// Add additional endpoints required by the Identity /Accounts Razor components.
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();

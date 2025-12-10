@@ -4,6 +4,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
@@ -14,7 +15,7 @@ namespace Domain.Entities.Calculation
         /// Template name.
         /// </summary>
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
 
         /// <summary>
@@ -41,6 +42,13 @@ namespace Domain.Entities.Calculation
 
         [JsonIgnore]
         public DepartmentEntity? Department { get; set; }
+        [ForeignKey(nameof(CreatedBy))]
+        [JsonIgnore]
+        public UserEntity? CreatedByUser { get; set; }
+
+        [ForeignKey(nameof(UpdatedBy))]
+        [JsonIgnore]
+        public UserEntity? UpdatedByUser { get; set; }
 
         /// <summary>
         /// Calculations created from this template.

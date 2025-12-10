@@ -8,11 +8,11 @@ namespace Application.Feature.Offer.Commands
     {
         public async Task<bool> Handle(DeleteOfferCommand request, CancellationToken cancellationToken)
         {
-            var Offer = await _dataAccess.Offer.FindAsync(request.Id);
+            var Offer = await _dataAccess.Offers.FindAsync(request.Id);
             if (Offer == null)
                 return false;
-            _dataAccess.Offer.Remove(Offer);
-            var resources = await _dataAccess.Resource.Where(x => x.Id ==
+            _dataAccess.Offers.Remove(Offer);
+            var resources = await _dataAccess.Resources.Where(x => x.Id ==
             Offer.ResourceId).Select(x => new
             {
                 Resource = x,
@@ -21,7 +21,7 @@ namespace Application.Feature.Offer.Commands
             if (resources != null && resources.Resource.PrimaryOfferId == Offer.Id)
             {
                 resources.Resource.PrimaryOfferId = null;
-                _dataAccess.Resource.Update(resources.Resource);
+                _dataAccess.Resources.Update(resources.Resource);
             }
 
             await _dataAccess.SaveChangesAsync(cancellationToken);

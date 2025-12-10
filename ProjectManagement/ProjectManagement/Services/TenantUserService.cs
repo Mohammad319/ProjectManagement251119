@@ -145,8 +145,8 @@ namespace ProjectManagement.Services
             var u = await _shContext.User.FirstOrDefaultAsync(x => x.ExternalAuthId == id || x.Id == userid);
             if (!onlyfromregister && u != null && deletFrumAuth)
             {
-                var calcs = _shContext.Calculation.Where(x => x.IsPrivate && x.CreatedBy == u.Id);
-                if (calcs != null) _shContext.Calculation.RemoveRange(calcs);
+                var calcs = _shContext.Calculations.Where(x => x.IsPrivate && x.CreatedBy == u.Id);
+                if (calcs != null) _shContext.Calculations.RemoveRange(calcs);
                 if (u != null) _shContext.User.Remove(u);
                 await _shContext.SaveChangesAsync();
             }

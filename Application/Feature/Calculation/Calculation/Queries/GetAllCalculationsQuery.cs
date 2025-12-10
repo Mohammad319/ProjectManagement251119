@@ -12,7 +12,7 @@ public sealed class GetAllCalculationsQueryHandler(IShardingSingleDbContext cont
 {
     public async Task<IEnumerable<ListCalculationDTO>> Handle(GetAllCalculationsQuery request, CancellationToken cancellationToken)
     {
-        return await context.Calculation
+        return await context.Calculations
             .AsNoTracking()
             .Where(x =>
                 x.ProjectId == request.ProjectId &&

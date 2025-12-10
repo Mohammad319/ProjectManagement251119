@@ -7,7 +7,7 @@ namespace Domain.Entities.Calculation
     public sealed class AccountGroupEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// All accounts belonging to this group.

@@ -12,10 +12,10 @@ public sealed class GetAllCalculationsByDepartmentQueryHandler(IShardingSingleDb
 {
     public async Task<IEnumerable<ListCalculationDTO>> Handle(GetAllCalculationsByDepartmentQuery request, CancellationToken cancellationToken)
     {
-        return await context.Calculation.AsNoTracking()
+        return await context.Calculations.AsNoTracking()
             .Where(x => x.ProjectId == request.ProjectId &&
                         (request.DepartmentId == null ||
-                         x.SharesCalc.Any(s => s.UserId == request.UserId || s.DepartmentId == request.DepartmentId)))
+                         x.SharesCalc.Any(s => s.CreatedBy == request.UserId || s.DepartmentId == request.DepartmentId)))
             .Select(x => new ListCalculationDTO
             {
                 Id = x.Id,

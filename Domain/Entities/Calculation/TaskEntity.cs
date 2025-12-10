@@ -18,7 +18,7 @@ namespace Domain.Entities.Calculation
         }
 
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         [MaxLength(FieldLengths.Comment)]
         public string? Note { get; set; }
         public double? Quantity { get; set; }
@@ -30,7 +30,7 @@ namespace Domain.Entities.Calculation
         [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(ResLocalize))]
         public double? Cap { get; set; }
         public bool IsActive { get; set; } = true;
-        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(FieldLengths.Code)]
         public string? Code { get; set; }
         public TaskType Type { get; set; }
 
@@ -85,6 +85,6 @@ namespace Domain.Entities.Calculation
         // Task resources
         // -----------------------
 
-        public List<ResourceEntity> Resources { get; set; } = [];
+        public ICollection<ResourceEntity> Resources { get; set; } = [];
     }
 }

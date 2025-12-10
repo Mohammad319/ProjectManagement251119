@@ -5,8 +5,8 @@ using Domain.Entities.Organisation;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
@@ -14,12 +14,9 @@ namespace Domain.Entities.Project
     public class ProjectEntity : AuditableEntity<Guid>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
+        [MaxLength(FieldLengths.Code)]
         public string? Code { get; set; }
 
         public DateTime StartDate { get; set; } = DateTime.UtcNow;
@@ -33,11 +30,11 @@ namespace Domain.Entities.Project
         // ترتيب العرض العام
         public double SortOrder { get; set; }
 
-        private ProjectData? _data;
+        private ProjectData? _metadata;
         public ProjectData Metadata
         {
-            get => _data ??= new ProjectData();
-            set => _data = value;
+            get => _metadata ??= new ProjectData();
+            set => _metadata = value;
         }
 
         // نوع المشروع (اختياري)
@@ -53,9 +50,12 @@ namespace Domain.Entities.Project
         public OrganisationEntity? Organisation { get; set; }
 
         // المستخدم المرتبط (مالك/منشئ، اختياري)
-        public int? UserId { get; set; }
-        public UserEntity? User { get; set; }
-
+        [ForeignKey(nameof(CreatedBy))]
+        [JsonIgnore]
+        public UserEntity? CreatedByUser { get; set; }
+        [ForeignKey(nameof(UpdatedBy))]
+        [JsonIgnore]
+        public UserEntity? UpdatedByUser { get; set; }
         public int? ProcurementMethodId { get; set; }
         public ProcurementMethodEntity? ProcurementMethod { get; set; }
 

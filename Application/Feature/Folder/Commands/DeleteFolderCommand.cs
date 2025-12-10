@@ -9,15 +9,15 @@ namespace Application.Feature.Project.Folder.Commands
     {
         public async Task<bool> Handle(DeleteFolderCommand request, CancellationToken cancellationToken)
         {
-            var _folder = await postRepository.Folder.FindAsync(request.Id, cancellationToken);
+            var _folder = await postRepository.Folders.FindAsync(request.Id, cancellationToken);
             if (_folder != null && (!request.DepartmentId.HasValue || _folder.DepartmentId == request.DepartmentId))
             {
-                bool hasAnyProject = await postRepository.Project.AnyAsync(x => x.FolderId == request.Id, cancellationToken);
+                bool hasAnyProject = await postRepository.Projects.AnyAsync(x => x.FolderId == request.Id, cancellationToken);
 
                 if (hasAnyProject || _folder.CreatedBy != request.UserId)
                     return false;
 
-                postRepository.Folder.Remove(_folder);
+                postRepository.Folders.Remove(_folder);
                 await postRepository.SaveChangesAsync(cancellationToken);
                 return true;
             }

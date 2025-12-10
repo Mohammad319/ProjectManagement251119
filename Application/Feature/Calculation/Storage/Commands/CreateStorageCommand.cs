@@ -19,7 +19,7 @@ namespace Application.Feature.Calculation.Storage.Commands
                 if (tasks == null) return false;
 
                 var taskIds = tasks.Select(t => t.Id).ToList();
-                var resources = await _dataAccess.Resource.Where(r => taskIds.Contains(r.TaskId))
+                var resources = await _dataAccess.Resources.Where(r => taskIds.Contains(r.TaskId))
                     .AsNoTracking().ToListAsync(cancellationToken);
                 foreach (var ts in tasks)
                     ts.Resources = [.. resources.Where(r => r.TaskId == ts.Id)];
@@ -30,7 +30,7 @@ namespace Application.Feature.Calculation.Storage.Commands
             }
             else if (request.Type == CalculationItemType.resource)
             {
-                obj = await _dataAccess.Resource.AsNoTracking().Where(x => x.Id == request.Id).Select(x => new
+                obj = await _dataAccess.Resources.AsNoTracking().Where(x => x.Id == request.Id).Select(x => new
                 {
                     x.ResourceTypeId,
                     x.Name,
@@ -54,7 +54,7 @@ namespace Application.Feature.Calculation.Storage.Commands
                     CreatedBy = request.UserId,
                     StorageValue = JsonSerializer.Serialize(obj)
                 };
-                _dataAccess.Storage.Add(st);
+                _dataAccess.Storages.Add(st);
                 await _dataAccess.SaveChangesAsync(cancellationToken);
                 return true;
             }

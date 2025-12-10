@@ -12,7 +12,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
             if (Opportunity == null)
                 return false;
             var tasks = _dataAccess.Tasks.Where(x => x.OpportunityId == Opportunity.Id);
-            var res = _dataAccess.Resource.Where(x => x.OpportunityId == Opportunity.Id);
+            var res = _dataAccess.Resources.Where(x => x.OpportunityId == Opportunity.Id);
             if (tasks != null) foreach (var task in tasks) task.OpportunityId = null;
             if (res != null) foreach (var task in res) task.OpportunityId = null;
 

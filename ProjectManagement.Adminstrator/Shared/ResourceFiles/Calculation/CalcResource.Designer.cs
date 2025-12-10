@@ -61,7 +61,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Account.
+        ///   Looks up a localized string similar to Accounts.
         /// </summary>
         public static string account {
             get {
@@ -70,7 +70,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Account groups.
+        ///   Looks up a localized string similar to Accounts groups.
         /// </summary>
         public static string accountGroups {
             get {
@@ -106,7 +106,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculation.
+        ///   Looks up a localized string similar to Calculations.
         /// </summary>
         public static string calculation {
             get {
@@ -547,7 +547,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project.
+        ///   Looks up a localized string similar to Projects.
         /// </summary>
         public static string project {
             get {
@@ -556,7 +556,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project compensation.
+        ///   Looks up a localized string similar to Projects compensation.
         /// </summary>
         public static string projectCompensation {
             get {
@@ -565,7 +565,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project contract.
+        ///   Looks up a localized string similar to Projects contract.
         /// </summary>
         public static string projectContract {
             get {
@@ -574,7 +574,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project type.
+        ///   Looks up a localized string similar to Projects type.
         /// </summary>
         public static string projectType {
             get {
@@ -601,7 +601,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource sort.
+        ///   Looks up a localized string similar to Resources sort.
         /// </summary>
         public static string resourceSort {
             get {
@@ -619,7 +619,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource Type.
+        ///   Looks up a localized string similar to Resources Type.
         /// </summary>
         public static string resourceType {
             get {
@@ -628,7 +628,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource Type System.
+        ///   Looks up a localized string similar to Resources Type System.
         /// </summary>
         public static string resourceTypeSystem {
             get {
@@ -682,7 +682,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Storage Sort.
+        ///   Looks up a localized string similar to Storages Sort.
         /// </summary>
         public static string StorageSort {
             get {
@@ -727,7 +727,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Tender deadline.
+        ///   Looks up a localized string similar to Tenders deadline.
         /// </summary>
         public static string tenderDeadline {
             get {
@@ -745,7 +745,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Tender sum (excl. tax).
+        ///   Looks up a localized string similar to Tenders sum (excl. tax).
         /// </summary>
         public static string tenderSumExclTax {
             get {
@@ -754,7 +754,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Tender sum (incl. Tax).
+        ///   Looks up a localized string similar to Tenders sum (incl. Tax).
         /// </summary>
         public static string tenderSumInclTax {
             get {

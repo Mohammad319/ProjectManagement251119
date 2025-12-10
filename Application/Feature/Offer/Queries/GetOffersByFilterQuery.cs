@@ -15,7 +15,7 @@ public sealed class GetOffersByFilterQueryHandler(IShardingSingleDbContext _data
     {
         var f = request.Filter;
 
-        IQueryable<OfferEntity> result = _dataAccess.Offer.AsQueryable();
+        IQueryable<OfferEntity> result = _dataAccess.Offers.AsQueryable();
 
         if (f.CalculationID > 0)
             result = result.Where(x => x.Resource.Task.CalculationId == f.CalculationID);
@@ -39,11 +39,11 @@ public sealed class GetOffersByFilterQueryHandler(IShardingSingleDbContext _data
             .Select(x => new ListOfferCalcInfo
             {
                 Id = x.Id,
-                BaseCost = x.Data.BaseCost,
+                BaseCost = x.Metadata.BaseCost,
                 SubCategory = x.Organisation.OrganisationCategory.Name,
                 Category = x.Organisation.OrganisationCategory.ParentCategory.Name,
                 Comment = x.Comment,
-                Cost = x.Data.Cost,
+                Cost = x.Metadata.Cost,
                 Date = x.Date,
                 Organisation = x.Organisation.Name,
                 ResName = x.Resource.Name,

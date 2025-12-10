@@ -75,7 +75,7 @@ else
     List<ListDTO>? Departments;
     async Task FormUI(int id) {
         Form = await MicroBus.Send(new GetTemplateByIdQuery(id,null));
-        //await Repo.Template.GetByIdAsync(id);
+        //await Repo.Templates.GetByIdAsync(id);
         Form.Id = id;
     }
     async Task GetAsync(string idstr)

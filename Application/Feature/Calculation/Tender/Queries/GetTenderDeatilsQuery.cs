@@ -8,7 +8,7 @@ namespace Application.Feature.Calculation.Tender.Queries
     {
         public async Task<TenderDetailsDTO> Handle(GetTenderDeatilsQuery query, CancellationToken cancellationToken)
         {
-            return await context.Tender.Where(x => x.Id == query.Id && x.CalculationId == query.CalculationId).Select(
+            return await context.Tenders.Where(x => x.Id == query.Id && x.CalculationId == query.CalculationId).Select(
                 x => new TenderDetailsDTO()
                 {
                     Id = x.Id,

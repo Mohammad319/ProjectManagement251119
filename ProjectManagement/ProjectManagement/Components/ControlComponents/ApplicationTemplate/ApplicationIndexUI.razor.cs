@@ -83,7 +83,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         async Task GetApplicationsAsync()
         {
             Applications = await MicroBus.Send(new GetApplicationQuery(true));
-            //ExHandlers.RunCheckTokenAsync(() => Repo.Application.GetApplicationsAsync(true));
+            //ExHandlers.RunCheckTokenAsync(() => Repo.Applications.GetApplicationsAsync(true));
         }
         protected async override Task OnInitializedAsync()
         {

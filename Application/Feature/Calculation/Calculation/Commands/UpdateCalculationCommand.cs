@@ -10,12 +10,12 @@ namespace Application.Feature.Calculation.Calculation.Commands
     {
         public async Task<bool> Handle(UpdateCalculationCommand request, CancellationToken cancellationToken)
         {
-            var calculation = await _dataAccess.Calculation.FirstOrDefaultAsync(x =>
+            var calculation = await _dataAccess.Calculations.FirstOrDefaultAsync(x =>
            x.Id == request.Id && (request.DepartmentId == null || x.Project.Folder.DepartmentId == request.DepartmentId), cancellationToken: cancellationToken);
             if (calculation == null) return false;
             _mapper.Map(request.dto, calculation);
             request.CopyPropertiesTo(calculation.Metadata);
-            _dataAccess.Calculation.Update(calculation);
+            _dataAccess.Calculations.Update(calculation);
             await _dataAccess.SaveChangesAsync(cancellationToken);
 
             CalculationPageDTO calc = new();

@@ -8,7 +8,7 @@ namespace Application.Feature.Calculation.TemplateTable.Queries
     {
         public async Task<TemplateModelDTO> Handle(GetTemplateByIdQuery query, CancellationToken cancellationToken)
         {
-            return await context.Template.AsNoTracking().Where(x => x.Id == query.Id).Select(x => new TemplateModelDTO
+            return await context.Templates.AsNoTracking().Where(x => x.Id == query.Id).Select(x => new TemplateModelDTO
             {
                 Name = x.Name,
                 Currency = x.Metadata.Currency,

@@ -11,10 +11,10 @@ namespace Application.Feature.Calculation.Storage.Commands
         {
             public async Task<bool> Handle(DeleteStorageCommand request, CancellationToken cancellationToken)
             {
-                var task = await _dataAccess.Storage.FindAsync(request.Id);
+                var task = await _dataAccess.Storages.FindAsync(request.Id);
                 if (task == null)
                     return false;
-                _dataAccess.Storage.Remove(task);
+                _dataAccess.Storages.Remove(task);
                 await _dataAccess.SaveChangesAsync();
                 return true;
             }

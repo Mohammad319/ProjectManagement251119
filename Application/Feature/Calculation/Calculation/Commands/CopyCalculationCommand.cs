@@ -10,7 +10,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
     {
         public async Task<int> Handle(CopyCalculationCommand request, CancellationToken cancellationToken)
         {
-            var calc = await _context.Calculation.FirstOrDefaultAsync(x => x.Id == request.Id &&
+            var calc = await _context.Calculations.FirstOrDefaultAsync(x => x.Id == request.Id &&
             (x.Project.Folder.DepartmentId == request.DepartmentId) || request.DepartmentId == null, cancellationToken: cancellationToken);
             if (calc == null) return 0;
 
@@ -43,7 +43,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
                 ProjectId = request.ProjectId,
                 Metadata = calc.Metadata,
             };
-            double? max = _context.Calculation.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.SortOrder);
+            double? max = _context.Calculations.Where(x => x.ProjectId == request.ProjectId).Max(x => (double?)x.SortOrder);
             if (max.HasValue) newCalc.SortOrder = max.Value + 100;
             else newCalc.SortOrder = 100;
 
@@ -64,7 +64,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
             }
             newCalc.CreatedBy = request.UserId;
             newCalc.CreatedAt = DateTime.Now;
-            _context.Calculation.Add(newCalc);
+            _context.Calculations.Add(newCalc);
             await _context.SaveChangesAsync(cancellationToken);
             return newCalc.Id;
         }

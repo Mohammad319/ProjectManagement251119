@@ -19,8 +19,8 @@ public sealed class GetShareQueryHandler(IShardingSingleDbContext _context)
             {
                 Id = x.Id,
                 DepartmentId = x.DepartmentId,
-                UserId = x.UserId,
-                User = x.User.FirstName + " " + x.User.LastName,
+                UserId = x.CreatedBy,
+                User = x.CreatedAtUser.FirstName + " " + x.CreatedAtUser.LastName,
                 Tap1 = x.Metadata.Tap1,
                 Tap2 = x.Metadata.Tap2,
                 Tap3 = x.Metadata.Tap3,

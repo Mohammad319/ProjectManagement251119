@@ -15,7 +15,7 @@ namespace Application.Feature.Project.Compensation.Queries
             if (query.ID.HasValue) predicate = x => x.IsVisible == true || x.Id == query.ID;
             else predicate = x => x.IsVisible == true;
 
-            return await context.Compensation.Where(predicate).AsNoTracking().Select(x => new ListOrderDTO
+            return await context.Compensations.Where(predicate).AsNoTracking().Select(x => new ListOrderDTO
             {
                 Id = x.Id,
                 Name = x.Name,

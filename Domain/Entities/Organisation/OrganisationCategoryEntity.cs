@@ -1,6 +1,5 @@
 ﻿using Domain.Entities.Base;
 using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -9,12 +8,11 @@ namespace Domain.Entities.Organisation
     public sealed class OrganisationCategoryEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// التصنيف الأب (في حالة وجود تسلسل هرمي).
         /// </summary>
-        [JsonIgnore]
         public int? ParentCategoryId { get; set; }
 
         [JsonIgnore]

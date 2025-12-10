@@ -117,21 +117,21 @@ namespace ProjectManagement.Adminstrator.Services.Users
             dataAccess.User.RemoveRange(dataAccess.User.Where(x => x.TenantId == TenantId));
             dataAccess.Department.RemoveRange(dataAccess.Department.Where(x => x.TenantId == TenantId));
             dataAccess.AccountGroup.RemoveRange(dataAccess.AccountGroup.Where(x => x.TenantId == TenantId));
-            dataAccess.Application.RemoveRange(dataAccess.Application.Where(x => x.TenantId == TenantId));
+            dataAccess.Applications.RemoveRange(dataAccess.Applications.Where(x => x.TenantId == TenantId));
             dataAccess.OrganisationCategory.RemoveRange(dataAccess.OrganisationCategory.Where(x => x.TenantId == TenantId));
             await dataAccess.SaveChangesAsync();
-            dataAccess.Folder.RemoveRange(dataAccess.Folder.Where(x => x.TenantId == TenantId));
+            dataAccess.Folders.RemoveRange(dataAccess.Folders.Where(x => x.TenantId == TenantId));
             dataAccess.OrganisationType.RemoveRange(dataAccess.OrganisationType.Where(x => x.TenantId == TenantId));
 
             await dataAccess.SaveChangesAsync();
 
             dataAccess.Opportunity.RemoveRange(dataAccess.Opportunity.Where(x => x.TenantId == TenantId));
             dataAccess.ProcurementMethod.RemoveRange(dataAccess.ProcurementMethod.Where(x => x.TenantId == TenantId));
-            dataAccess.Compensation.RemoveRange(dataAccess.Compensation.Where(x => x.TenantId == TenantId));
-            dataAccess.Contract.RemoveRange(dataAccess.Contract.Where(x => x.TenantId == TenantId));
+            dataAccess.Compensations.RemoveRange(dataAccess.Compensations.Where(x => x.TenantId == TenantId));
+            dataAccess.Contracts.RemoveRange(dataAccess.Contracts.Where(x => x.TenantId == TenantId));
             dataAccess.CalculationStatus.RemoveRange(dataAccess.CalculationStatus.Where(x => x.TenantId == TenantId));
             dataAccess.ResourceStatus.RemoveRange(dataAccess.ResourceStatus.Where(x => x.TenantId == TenantId));
-            dataAccess.Template.RemoveRange(dataAccess.Template.Where(x => x.TenantId == TenantId));
+            dataAccess.Templates.RemoveRange(dataAccess.Templates.Where(x => x.TenantId == TenantId));
 
             await dataAccess.SaveChangesAsync();
 
@@ -198,9 +198,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 var dataAccess = await CreateDbContext(user.TenantId.Value);
                 var usert = dataAccess.User.Find(user.UserId);
                 if (usert == null) return false;
-                var calcs = dataAccess.Calculation.Where(x => x.IsPrivate && x.CreatedBy == user.UserId);
+                var calcs = dataAccess.Calculations.Where(x => x.IsPrivate && x.CreatedBy == user.UserId);
                 if (calcs != null)
-                    dataAccess.Calculation.RemoveRange(calcs);
+                    dataAccess.Calculations.RemoveRange(calcs);
 
                 dataAccess.User.Remove(usert);
                 await dataAccess.SaveChangesAsync();

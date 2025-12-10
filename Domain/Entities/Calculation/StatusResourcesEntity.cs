@@ -9,8 +9,8 @@ namespace Domain.Entities.Calculation
     public sealed class StatusResourcesEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
-        [StringLength(7, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize), MinimumLength = 7)]
+        public string Name { get; set; } = string.Empty;
+        [Required, StringLength(FieldLengths.ColorHex, MinimumLength = FieldLengths.ColorHex)]
         public string Color { get; set; } = "#00ff00";
         public int SortOrder { get; set; }
         public bool IsVisible { get; set; } = true;

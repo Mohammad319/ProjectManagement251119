@@ -1,9 +1,7 @@
 ﻿using Domain.Entities.Base;
-using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Account;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -16,7 +14,7 @@ namespace Domain.Entities.Calculation
         public string Code { get; set; } = string.Empty;
 
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public bool IsVisible { get; set; } = true;
 

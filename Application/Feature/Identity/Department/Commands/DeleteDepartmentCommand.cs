@@ -8,7 +8,7 @@ namespace Application.Feature.Identity.Department.Commands
         public async Task<bool> Handle(DeleteDepartmentCommand command, CancellationToken cancellationToken)
         {
             var group = await dataAccess.Department.FindAsync(command.Id);
-            if (group == null || await dataAccess.Project.AnyAsync(x => x.Folder.DepartmentId == command.Id, cancellationToken: cancellationToken))
+            if (group == null || await dataAccess.Projects.AnyAsync(x => x.Folder.DepartmentId == command.Id, cancellationToken: cancellationToken))
                 return false;
             dataAccess.Department.Remove(group);
             await dataAccess.SaveChangesAsync(cancellationToken);

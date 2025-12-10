@@ -8,10 +8,10 @@ namespace Application.Feature.Calculation.ResourceType.Commands
     {
         public async Task<bool> Handle(DeleteResourceTypeCommand request, CancellationToken cancellationToken)
         {
-            var resourceType = await dataAccess.ResourceType.FindAsync(request.Id, cancellationToken);
+            var resourceType = await dataAccess.ResourceTypes.FindAsync(request.Id, cancellationToken);
             if (resourceType == null)
                 return false;
-            dataAccess.ResourceType.Remove(resourceType);
+            dataAccess.ResourceTypes.Remove(resourceType);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return true;
         }

@@ -20,10 +20,10 @@ namespace Application.Feature.Project.Type.Queries
     //        projectCalcFormDTO.Methods = await context.ProcurementMethod.Where(x => x.IsVisible == true).AsNoTracking()
     //            .Select(x => new ListDTO{Id = x.Id,Name = x.Name,}).ToListAsync(cancellationToken);
 
-    //        projectCalcFormDTO.Compensations = await context.Compensation.Where(x => x.IsVisible == true).AsNoTracking()
+    //        projectCalcFormDTO.Compensations = await context.Compensations.Where(x => x.IsVisible == true).AsNoTracking()
     //            .Select(x => new ListDTO { Id = x.Id, Name = x.Name, }).ToListAsync(cancellationToken);
 
-    //        projectCalcFormDTO.Contracts = await context.Contract.Where(x => x.IsVisible == true).AsNoTracking()
+    //        projectCalcFormDTO.Contracts = await context.Contracts.Where(x => x.IsVisible == true).AsNoTracking()
     //            .Select(x => new ListDTO { Id = x.Id, Name = x.Name, }).ToListAsync(cancellationToken);
 
     //        projectCalcFormDTO.OrganisationCategories = await context.OrganisationCategory.AsNoTracking()

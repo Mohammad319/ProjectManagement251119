@@ -17,7 +17,7 @@ namespace Application.Feature.Calculation.Tender.Commands
                 Note = request.dto.Note,
             };
 
-            dataAccess.Tender.Add(tender);
+            dataAccess.Tenders.Add(tender);
             await dataAccess.SaveChangesAsync();
 
             List<TenderAttributeBindEntity> TendersAttributes = [];

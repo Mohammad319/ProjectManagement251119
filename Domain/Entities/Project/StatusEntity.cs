@@ -20,16 +20,12 @@ namespace Domain.Entities.Project
         public bool IsVisible { get; set; } = true;
 
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// اللون على هيئة HEX مثل #00FF00.
         /// </summary>
-        [StringLength(
-            7,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize),
-            MinimumLength = 7)]
+        [Required, StringLength(FieldLengths.ColorHex, MinimumLength = FieldLengths.ColorHex)]
         public string Color { get; set; } = "#00ff00";
 
         [JsonIgnore]

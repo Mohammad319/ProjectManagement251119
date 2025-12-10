@@ -71,11 +71,11 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<OfferEntity> modelBuilder)
         {
-            modelBuilder.Property(e => e.Data).HasConversion(
+            modelBuilder.Property(e => e.Metadata).HasConversion(
     v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
     v => JsonSerializer.Deserialize<OfferData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new OfferData());
 
-            //  modelBuilder.HasOne(pt => pt.Resource).WithMany(p => p.Offers).HasForeignKey(pt => pt.ResourceID).OnDelete(DeleteBehavior.Cascade);
+            //  modelBuilder.HasOne(pt => pt.Resources).WithMany(p => p.Offers).HasForeignKey(pt => pt.ResourceID).OnDelete(DeleteBehavior.Cascade);
 
             //No Working ->
             modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Offers).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);

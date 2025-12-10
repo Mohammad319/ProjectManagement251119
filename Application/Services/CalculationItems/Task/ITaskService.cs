@@ -66,7 +66,7 @@ namespace Application.Services.CalculationItems.Task
             }
             else
             {
-                bool calcExists = await _context.Calculation.AnyAsync(x => x.Id == targetCalcId, cancellationToken);
+                bool calcExists = await _context.Calculations.AnyAsync(x => x.Id == targetCalcId, cancellationToken);
                 if (!calcExists) return false;
             }
 
@@ -135,7 +135,7 @@ namespace Application.Services.CalculationItems.Task
 
             if (dto.Data.Type != task.Metadata.Type && dto.Data.Type == TaskType.CodeName)
             {
-                bool hasResources = await _context.Resource.AnyAsync(x => x.TaskId == task.Id, cancellationToken);
+                bool hasResources = await _context.Resources.AnyAsync(x => x.TaskId == task.Id, cancellationToken);
                 if (hasResources)
                     return false;
 
@@ -185,7 +185,7 @@ namespace Application.Services.CalculationItems.Task
 
             var taskIds = tasks.Select(t => t.Id).ToList();
 
-            var resources = await _context.Resource.Where(r => taskIds.Contains(r.TaskId))
+            var resources = await _context.Resources.Where(r => taskIds.Contains(r.TaskId))
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
@@ -224,7 +224,7 @@ namespace Application.Services.CalculationItems.Task
             List<int> taskIds = [.. tasks.Select(t => t.Id)];
             await LoadTaskNavigationAsync(taskIds, cancellationToken);
 
-            List<ResourceEntity> allResources = await _context.Resource.Where(r => taskIds.Contains(r.TaskId))
+            List<ResourceEntity> allResources = await _context.Resources.Where(r => taskIds.Contains(r.TaskId))
                 .Include(r => r.Status)
                 .Include(r => r.Account)
                 .Include(r => r.ResourceType)

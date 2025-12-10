@@ -11,7 +11,7 @@ namespace Application.Feature.Project.ProcurementMethods.Commands
         public async Task<int> Handle(CreateCompensationCommand request, CancellationToken cancellationToken)
         {
             CompensationEntity entity = mapper.Map<CompensationEntity>(request.Dto);
-            dataAccess.Compensation.Add(entity);
+            dataAccess.Compensations.Add(entity);
             await dataAccess.SaveChangesAsync(cancellationToken);
             return entity.Id;
         }

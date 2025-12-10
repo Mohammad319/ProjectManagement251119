@@ -54,7 +54,7 @@ namespace ProjectManagement.Components.ControlComponents.Accounts
 
         public void Dispose()
         {
-            //UoWService.Account.AccountHasChanged -= ModalChanged;
+            //UoWService.Accounts.AccountHasChanged -= ModalChanged;
         }
     }
 }

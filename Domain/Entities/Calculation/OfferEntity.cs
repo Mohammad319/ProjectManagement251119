@@ -2,7 +2,6 @@
 using Domain.Entities.Organisation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -21,11 +20,11 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Comment)]
         public string? Comment { get; set; }
 
-        private OfferData? _data;
-        public OfferData Data
+        private OfferData? _metadata;
+        public OfferData Metadata
         {
-            get => _data ??= new OfferData();
-            set => _data = value;
+            get => _metadata ??= new OfferData();
+            set => _metadata = value;
         }
 
         /// <summary>

@@ -19,13 +19,13 @@ namespace Application.Feature.Calculation.Tender.Commands
             }
             public async Task<bool> Handle(UpdateTenderCommand request, CancellationToken cancellationToken)
             {
-                var tender = await _dataAccess.Tender.FirstOrDefaultAsync(x => x.Id == request.Id &&
+                var tender = await _dataAccess.Tenders.FirstOrDefaultAsync(x => x.Id == request.Id &&
                 x.CalculationId == request.CalculationId);
                 if (tender == null)
                     return false;
                 tender.Note = request.dto.Note;
 
-                _dataAccess.Tender.Update(tender);
+                _dataAccess.Tenders.Update(tender);
                 await _dataAccess.SaveChangesAsync();
                 return true;
             }

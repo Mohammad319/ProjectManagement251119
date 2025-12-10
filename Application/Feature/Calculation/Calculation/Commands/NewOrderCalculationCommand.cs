@@ -8,7 +8,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
     {
         public async Task<bool> Handle(NewOrderCalculationCommand request, CancellationToken cancellationToken)
         {
-            var calc = await _dataAccess.Calculation.FindAsync(request.Id);
+            var calc = await _dataAccess.Calculations.FindAsync(request.Id);
             if (calc == null)
                 return false;
 

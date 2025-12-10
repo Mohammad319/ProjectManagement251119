@@ -15,7 +15,7 @@ public sealed class GetResourcesByFilterQueryHandler(IShardingSingleDbContext _d
     public async Task<object> Handle(GetResourcesByFilterQuery request, CancellationToken cancellationToken)
     {
         var filter = request.Filter;
-        var query = _dataAccess.Resource.AsNoTracking().AsQueryable();
+        var query = _dataAccess.Resources.AsNoTracking().AsQueryable();
 
         query = ApplyBaseFilter(query, filter);
         query = ApplyOptionalFilter(query, filter);

@@ -7,12 +7,12 @@ namespace Application.Feature.Calculation.Calculation.Commands
     {
         public async Task<bool> Handle(DeleteCalculationCommand request, CancellationToken cancellationToken)
         {
-            var calculation = await _dataAccess.Calculation.FirstOrDefaultAsync(x =>
+            var calculation = await _dataAccess.Calculations.FirstOrDefaultAsync(x =>
            x.Id == request.Id && (request.DepartmentId == null || x.Project.Folder.DepartmentId == request.DepartmentId), cancellationToken: cancellationToken);
             if (calculation == null)
                 return false;
 
-            _dataAccess.Calculation.Remove(calculation);
+            _dataAccess.Calculations.Remove(calculation);
             await _dataAccess.SaveChangesAsync(cancellationToken);
             return true;
         }

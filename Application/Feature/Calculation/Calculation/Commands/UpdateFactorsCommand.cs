@@ -12,12 +12,12 @@ namespace Application.Feature.Calculation.Calculation.Commands
         {
             public async Task<bool> Handle(UpdateFactorsCommand request, CancellationToken cancellationToken)
             {
-                CalculationEntity calculation = await _dataAccess.Calculation.FirstOrDefaultAsync(x =>
+                CalculationEntity calculation = await _dataAccess.Calculations.FirstOrDefaultAsync(x =>
                x.Id == request.Id && (request.DepartmentId == null || x.Project.Folder.DepartmentId == request.DepartmentId), cancellationToken: cancellationToken);
                 if (calculation == null) return false;
 
                 calculation.HourlyPriceFactorData.Factors = request.model;
-                _dataAccess.Calculation.Update(calculation);
+                _dataAccess.Calculations.Update(calculation);
                 await _dataAccess.SaveChangesAsync(cancellationToken);
 
                 CalculationPageDTO calc = new();

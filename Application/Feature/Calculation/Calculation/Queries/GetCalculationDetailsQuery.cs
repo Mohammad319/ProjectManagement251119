@@ -10,7 +10,7 @@ public sealed class GetCalculationDetailsQueryHandler(IShardingSingleDbContext c
 {
     public async Task<CalculationDetailsDTO> Handle(GetCalculationDetailsQuery request, CancellationToken cancellationToken)
     {
-        return await context.Calculation
+        return await context.Calculations
             .AsNoTracking()
             .Where(x => x.Id == request.Id)
             .Select(x => new CalculationDetailsDTO

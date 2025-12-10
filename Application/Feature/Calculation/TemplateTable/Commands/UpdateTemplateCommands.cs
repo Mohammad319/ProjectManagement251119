@@ -10,14 +10,14 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
     {
         public async Task<bool> Handle(UpdateTemplateCommands command, CancellationToken cancellationToken)
         {
-            TemplateEntity temp = await context.Template.FirstOrDefaultAsync(x => x.Id == command.Id);
+            TemplateEntity temp = await context.Templates.FirstOrDefaultAsync(x => x.Id == command.Id);
             if (temp == null) return false;
             temp.DepartmentId = command.DepartmentId;
             temp.Name = command.dto.Name;
             temp.IsVisible = command.dto.Active;
             temp.Metadata = new();
             command.dto.CopyPropertiesTo(temp.Metadata);
-            context.Template.Update(temp);
+            context.Templates.Update(temp);
             await context.SaveChangesAsync(cancellationToken);
             return true;
         }

@@ -10,14 +10,14 @@ namespace Application.Feature.Calculation.Calculation.Commands
     {
         public async Task<bool> Handle(HourlyPriceListCommand request, CancellationToken cancellationToken)
         {
-            var calculation = await _dataAccess.Calculation.FirstOrDefaultAsync(x => x.Id == request.Id
+            var calculation = await _dataAccess.Calculations.FirstOrDefaultAsync(x => x.Id == request.Id
             && (!request.DepartmentId.HasValue || x.Project.Folder.DepartmentId == request.DepartmentId));
             if (calculation == null)
                 return false;
 
             calculation.HourlyPriceFactorData.HourlyPrice = request.HourlyPriceList;
 
-            _dataAccess.Calculation.Update(calculation);
+            _dataAccess.Calculations.Update(calculation);
             await _dataAccess.SaveChangesAsync();
 
             await notification.SendNotificationAsync(calculation.Id.ToString(),

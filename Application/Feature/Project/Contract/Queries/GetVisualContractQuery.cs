@@ -17,7 +17,7 @@ namespace Application.Feature.Project.Contract.Queries
             else
                 predicate = x => x.IsVisible == true;
 
-            return await context.Contract.AsNoTracking().Where(predicate).Select(x => new ListOrderDTO
+            return await context.Contracts.AsNoTracking().Where(predicate).Select(x => new ListOrderDTO
             {
                 Id = x.Id,
                 Name = x.Name,

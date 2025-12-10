@@ -9,7 +9,7 @@ public sealed class GetQueryHandler(IShardingSingleDbContext context): IRequestH
 {
     public async Task<List<ResourceTypeModel>> Handle(GetQuery request, CancellationToken cancellationToken)
     {
-        return await context.ResourceType
+        return await context.ResourceTypes
             .AsNoTracking()
             .Where(x => x.IsVisible == request.IsVisible)
             .Select(x => new ResourceTypeModel

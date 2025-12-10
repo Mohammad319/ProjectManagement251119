@@ -16,7 +16,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
     public class CalculationData
     {
-        public List<QuanityListDTO> QuanityList { get; set; }
+        public List<QuanityListDTO> QuanityList { get; set; } = [];
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [Range(0, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]

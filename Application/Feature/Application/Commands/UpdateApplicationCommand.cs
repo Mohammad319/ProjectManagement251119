@@ -10,7 +10,7 @@ namespace Application.Feature.Application.Commands
     {
         public async Task<bool> Handle(UpdateApplicationCommand request, CancellationToken cancellationToken)
         {
-            var app = await _dataAccess.Application.FindAsync(request.dto.Id);
+            var app = await _dataAccess.Applications.FindAsync(request.dto.Id);
             if (app == null)
                 return false;
             app.LastUpdate = DateTime.Now;

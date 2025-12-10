@@ -9,7 +9,7 @@ namespace Application.Feature.Project.Folder.Queries
     {
         public async Task<List<ListFolderDTO>> Handle(GetFoldersDepartmentQuery query, CancellationToken cancellationToken)
         {
-            var list = context.Folder.Where(x => x.IsVisible == query.IsVisible).AsNoTracking().AsQueryable();
+            var list = context.Folders.Where(x => x.IsVisible == query.IsVisible).AsNoTracking().AsQueryable();
 
             if (query.DepartmentId.HasValue)
             {

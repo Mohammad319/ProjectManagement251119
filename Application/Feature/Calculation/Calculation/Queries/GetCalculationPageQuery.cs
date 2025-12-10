@@ -20,7 +20,7 @@ namespace Application.Feature.Calculation.Calculation.Queries
         public async Task<CalculationPageDTO> Handle(GetCalculationPageQuery query, CancellationToken cancellationToken)
         {
             // 1. جلب بيانات الحساب الأساسية
-            var calculationDto = await _context.Calculation
+            var calculationDto = await _context.Calculations
                 .AsNoTracking()
                 .Where(x => x.Id == query.Id &&
                             (!query.DepartmentId.HasValue || x.Project.Folder.DepartmentId == query.DepartmentId) &&
@@ -45,7 +45,7 @@ namespace Application.Feature.Calculation.Calculation.Queries
                 return null; // أو throw NotFoundException
 
             // 2. جلب العروض
-            var offers = await _context.Offer
+            var offers = await _context.Offers
                 .AsNoTracking()
                 .Where(o => o.Resource.Task.CalculationId == query.Id)
                 .Select(o => new
@@ -54,9 +54,9 @@ namespace Application.Feature.Calculation.Calculation.Queries
                     Offer = new ListOfferDTO
                     {
                         Id = o.Id,
-                        BaseCost = o.Data.BaseCost,
-                        Cost = o.Data.Cost,
-                        Comment = o.Data.Comment,
+                        BaseCost = o.Metadata.BaseCost,
+                        Cost = o.Metadata.Cost,
+                        Comment = o.Metadata.Comment,
                         Date = o.Date,
                         OrganisationId = o.OrganisationId,
                         Organisation = o.Organisation != null ? o.Organisation.Name : string.Empty,

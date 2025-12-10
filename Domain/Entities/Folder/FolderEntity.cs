@@ -2,8 +2,8 @@
 using Domain.Entities.Project;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Folder
@@ -11,9 +11,9 @@ namespace Domain.Entities.Folder
     public class FolderEntity : AuditableEntity<Guid>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        [StringLength(7, ErrorMessageResourceName = ErrorsMessages.StringLength, ErrorMessageResourceType = typeof(ResLocalize), MinimumLength = 7)]
+        [Required, StringLength(FieldLengths.ColorHex, MinimumLength = FieldLengths.ColorHex)]
         public string Color { get; set; } = "#08bf66";
         public double SortOrder { get; set; }
         public bool IsVisible { get; set; } = true;
@@ -25,10 +25,15 @@ namespace Domain.Entities.Folder
 
         [JsonIgnore]
         public DepartmentEntity Department { get; set; } = null!;
+        [ForeignKey(nameof(CreatedBy))]
+        [JsonIgnore]
+        public UserEntity? CreatedByUser { get; set; }
 
-        /// <summary>
-        /// Projects contained in this folder.
-        /// </summary>
+        [ForeignKey(nameof(UpdatedBy))]
+        [JsonIgnore]
+        public UserEntity? UpdatedByUser { get; set; }        /// <summary>
+                                                              /// Projects contained in this folder.
+                                                              /// </summary>
         public ICollection<ProjectEntity> FolderProjects { get; set; } = [];
     }
 }

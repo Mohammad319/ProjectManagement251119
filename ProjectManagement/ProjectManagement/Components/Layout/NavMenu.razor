@@ -119,7 +119,7 @@
         _navigationManager.LocationChanged += OnLocationChanged;
     }
 
-    // مزامنة الثيم مع كل تنقّل داخل /Account/Manage
+    // مزامنة الثيم مع كل تنقّل داخل /Accounts/Manage
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = _navigationManager.ToBaseRelativePath(e.Location);
@@ -147,7 +147,7 @@
 
     private void Setting(string ty = "control") => Page = ty;
 
-    // لو Account/Manage صفحة خاصة (Identity Razor Page) يفضَّل forceLoad: true
+    // لو Accounts/Manage صفحة خاصة (Identity Razor Page) يفضَّل forceLoad: true
     // لو هي Route Blazor عادي ممكن تخليها false
     private void PersonalSettingFun() => _navigationManager.NavigateTo("Account/Manage", true);
 

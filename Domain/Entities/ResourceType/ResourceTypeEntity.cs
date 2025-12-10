@@ -12,15 +12,11 @@ namespace Domain.Entities.ResourceType
     public sealed class ResourceTypeEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public  string Name { get; set; } = string.Empty;
 
         public int SortOrder { get; set; }
 
         public bool IsVisible { get; set; } = true;
-
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
         public ResourceTypesEnum Kind { get; set; }
 
         public int? AccountId { get; set; }
@@ -44,8 +40,6 @@ namespace Domain.Entities.ResourceType
 
     public class ResourceSortEntity : AuditableEntity<int>
     {
-        // Id + TenantId + CreatedAt/By + UpdatedAt/By
-        // كلهم موجودين في AuditableEntity<int>
 
         private ResourceTypeData? _metadata;
         public ResourceTypeData Metadata
@@ -54,13 +48,7 @@ namespace Domain.Entities.ResourceType
             set => _metadata = value;
         }
 
-        [Required(
-            ErrorMessageResourceName = ErrorsMessages.FieldIsRequred,
-            ErrorMessageResourceType = typeof(ResLocalize))]
-        [MaxLength(
-            80,
-            ErrorMessageResourceName = ErrorsMessages.MaxLength,
-            ErrorMessageResourceType = typeof(ResLocalize))]
+        [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; set; } = string.Empty;
 
         public bool IsVisible { get; set; } = true;

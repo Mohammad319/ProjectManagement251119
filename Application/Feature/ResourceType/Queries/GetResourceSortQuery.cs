@@ -10,7 +10,7 @@ public sealed class GetResourceSortQueryHandler(IShardingSingleDbContext context
 {
     public async Task<List<ResourceSortModel>> Handle(GetResourceSortQuery request, CancellationToken cancellationToken)
     {
-        return await context.ResourceSort
+        return await context.ResourceSorts
             .AsNoTracking()
             .Where(x => x.ResourceTypeId == request.ResourceId)
             .Select(x => new ResourceSortModel

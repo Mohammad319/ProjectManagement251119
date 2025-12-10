@@ -115,7 +115,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Bind Cap with Resource .
+        ///   Looks up a localized string similar to Bind Cap with Resources .
         /// </summary>
         public static string capResourceBind {
             get {
@@ -295,7 +295,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Storage.
+        ///   Looks up a localized string similar to Storages.
         /// </summary>
         public static string storage {
             get {

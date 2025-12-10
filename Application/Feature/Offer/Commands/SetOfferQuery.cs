@@ -18,7 +18,7 @@ namespace Application.Feature.Offer.Commands
             public async Task<bool> Handle(GetSetOfferQuery query, CancellationToken cancellationToken)
             {
                 if (query.OfferId == 0) query.OfferId = null;
-                var item = await _context.Resource.Where(x => x.Id == query.ResourceId)
+                var item = await _context.Resources.Where(x => x.Id == query.ResourceId)
     .Select(x => new
     {
         Resource = x,
@@ -30,11 +30,11 @@ namespace Application.Feature.Offer.Commands
                 item.Resource.PrimaryOfferId = query.OfferId;
                 if (item.Offer != null)
                 {
-                    item.Resource.Metadata.BaseCost = item.Offer.Data.BaseCost;
-                    item.Resource.Metadata.Cost = item.Offer.Data.Cost;
+                    item.Resource.Metadata.BaseCost = item.Offer.Metadata.BaseCost;
+                    item.Resource.Metadata.Cost = item.Offer.Metadata.Cost;
                 }
 
-                _context.Resource.Update(item.Resource);
+                _context.Resources.Update(item.Resource);
                 await _context.SaveChangesAsync(cancellationToken);
                 Console.WriteLine("OfferId " + query.OfferId.ToString());
                 await notification.SendNotificationAsync(item.CalcID.ToString(), ObjectTypHub.Offer, OperationType.Update, new HubDataDto() { Parent = query.OfferId.ToString(), ParentId = item.Resource.Id });

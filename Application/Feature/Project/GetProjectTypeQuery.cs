@@ -35,12 +35,12 @@ namespace Application.Feature.Project.Type.Queries
                         Id = x.Id,
                         Name = x.Name,
                     }).ToListAsync(cancellationToken: cancellationToken),
-                    Contracts = await context.Contract.AsNoTracking().Where(x => x.IsVisible || x.Id == query.Contracts).Select(x => new ListDTO
+                    Contracts = await context.Contracts.AsNoTracking().Where(x => x.IsVisible || x.Id == query.Contracts).Select(x => new ListDTO
                     {
                         Id = x.Id,
                         Name = x.Name,
                     }).ToListAsync(cancellationToken: cancellationToken),
-                    Compensations = await context.Compensation.AsNoTracking().Where(x => x.IsVisible || x.Id == query.Compensations).Select(x => new ListDTO
+                    Compensations = await context.Compensations.AsNoTracking().Where(x => x.IsVisible || x.Id == query.Compensations).Select(x => new ListDTO
                     {
                         Id = x.Id,
                         Name = x.Name,

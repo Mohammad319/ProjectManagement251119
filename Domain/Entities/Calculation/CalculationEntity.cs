@@ -6,7 +6,6 @@ using Domain.Entities.Users;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -20,13 +19,13 @@ namespace Domain.Entities.Calculation
             Tasks = [];
         }
 
-        [MaxLength(15)]
+        [Required, MaxLength(FieldLengths.Code)]
         public string Code { get; set; } = string.Empty;
 
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        [Range(0,100)]
+        [Range(0, 100)]
         public double Tax { get; set; } = 25;
 
         public Procurement Procurement { get; set; }

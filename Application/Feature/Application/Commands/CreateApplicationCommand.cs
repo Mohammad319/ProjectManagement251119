@@ -22,7 +22,7 @@ namespace Application.Feature.Application.Commands
                 //DataStr = JsonSerializer.Serialize(request.Dto.Rows),
             };
 
-            context.Application.Add(template);
+            context.Applications.Add(template);
             await context.SaveChangesAsync(cancellationToken);
             return template.Id;
         }

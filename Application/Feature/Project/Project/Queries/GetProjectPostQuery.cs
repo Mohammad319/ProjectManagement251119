@@ -10,7 +10,7 @@ namespace Application.Feature.Project.Project.Queries
     {
         public async Task<PostProjectDTO> Handle(GetProjectPostQuery query, CancellationToken cancellationToken)
         {
-            var pro = await context.Project
+            var pro = await context.Projects
                 .Where(x => x.Id == query.Id).AsNoTracking().Select(x => new PostProjectDTO()
                 {
                     IsVisible = x.IsVisible,

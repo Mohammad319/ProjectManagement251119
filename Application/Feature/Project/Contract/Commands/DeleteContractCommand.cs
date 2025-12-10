@@ -7,10 +7,10 @@ namespace Application.Feature.Project.Contract.Commands
     {
         public async Task<bool> Handle(DeleteContractCommand request, CancellationToken cancellationToken)
         {
-            var _ProjectTyp = await context.Contract.FindAsync(request.Id, cancellationToken);
+            var _ProjectTyp = await context.Contracts.FindAsync(request.Id, cancellationToken);
             if (_ProjectTyp != null)
             {
-                context.Contract.Remove(_ProjectTyp);
+                context.Contracts.Remove(_ProjectTyp);
                 await context.SaveChangesAsync(cancellationToken);
                 return true;
             }

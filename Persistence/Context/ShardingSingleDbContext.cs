@@ -36,22 +36,6 @@ namespace Persistence.Context
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // في العادة سيتم تمرير الـ ConnectionString من DI
-            // وإذا أردت استخدام TenantService يمكن إضافته هنا عبر Constructor Injection
-
-            // مثال سابق (معلق):
-            // var tenantConnectionString = _tenantService.GetConnectionString();
-            // if (!string.IsNullOrEmpty(tenantConnectionString))
-            // {
-            //     optionsBuilder
-            //         .UseSqlServer(tenantConnectionString, options =>
-            //         {
-            //             options.EnableRetryOnFailure(maxRetryCount: 5,
-            //                                          maxRetryDelay: TimeSpan.FromSeconds(10),
-            //                                          errorNumbersToAdd: null);
-            //             options.MinBatchSize(5);
-            //         });
-            // }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -216,31 +200,31 @@ namespace Persistence.Context
 
         #region DbSets
 
-        public DbSet<TenderEntity> Tender { get; set; } = default!;
-        public DbSet<ProjectEntity> Project { get; set; } = default!;
-        public DbSet<FolderEntity> Folder { get; set; } = default!;
+        public DbSet<TenderEntity> Tenders { get; set; } = default!;
+        public DbSet<ProjectEntity> Projects { get; set; } = default!;
+        public DbSet<FolderEntity> Folders { get; set; } = default!;
         public DbSet<StatusEntity> CalculationStatus { get; set; } = default!;
-        public DbSet<CalculationEntity> Calculation { get; set; } = default!;
+        public DbSet<CalculationEntity> Calculations { get; set; } = default!;
         public DbSet<TaskEntity> Tasks { get; set; } = default!;
-        public DbSet<ResourceEntity> Resource { get; set; } = default!;
-        public DbSet<ResourceTypeEntity> ResourceType { get; set; } = default!;
+        public DbSet<ResourceEntity> Resources { get; set; } = default!;
+        public DbSet<ResourceTypeEntity> ResourceTypes { get; set; } = default!;
         public DbSet<OrganisationTypeEntity> OrganisationType { get; set; } = default!;
-        public DbSet<StorageEntity> Storage { get; set; } = default!;
-        public DbSet<TemplateEntity> Template { get; set; } = default!;
-        public DbSet<ResourceSortEntity> ResourceSort { get; set; } = default!;
+        public DbSet<StorageEntity> Storages { get; set; } = default!;
+        public DbSet<TemplateEntity> Templates { get; set; } = default!;
+        public DbSet<ResourceSortEntity> ResourceSorts { get; set; } = default!;
 
-        public DbSet<ApplicationEntity> Application { get; set; } = default!;
+        public DbSet<ApplicationEntity> Applications { get; set; } = default!;
         public DbSet<ApplicationValuesEntity> ApplicationValues { get; set; } = default!;
         public DbSet<TypeEntity> CalcProjectType { get; set; } = default!;
         public DbSet<TaskStatusEntity> TaskStatus { get; set; } = default!;
         public DbSet<ProcurementMethodEntity> ProcurementMethod { get; set; } = default!;
-        public DbSet<CompensationEntity> Compensation { get; set; } = default!;
-        public DbSet<ContractEntity> Contract { get; set; } = default!;
-        public DbSet<OfferEntity> Offer { get; set; } = default!;
+        public DbSet<CompensationEntity> Compensations { get; set; } = default!;
+        public DbSet<ContractEntity> Contracts { get; set; } = default!;
+        public DbSet<OfferEntity> Offers { get; set; } = default!;
         public DbSet<OrganisationCategoryEntity> OrganisationCategory { get; set; } = default!;
         public DbSet<OrganisationEntity> Organisation { get; set; } = default!;
         public DbSet<AccountGroupEntity> AccountGroup { get; set; } = default!;
-        public DbSet<AccountEntity> Account { get; set; } = default!;
+        public DbSet<AccountEntity> Accounts { get; set; } = default!;
         public DbSet<ShareCalcEntity> ShareCalc { get; set; } = default!;
         public DbSet<OpportunityEntity> Opportunity { get; set; } = default!;
         public DbSet<DepartmentEntity> Department { get; set; } = default!;

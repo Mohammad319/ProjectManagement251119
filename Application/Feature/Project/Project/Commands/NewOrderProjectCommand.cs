@@ -8,7 +8,7 @@ namespace Application.Feature.Project.Project.Commands
     {
         public async Task<bool> Handle(NewOrderProjectCommand request, CancellationToken cancellationToken)
         {
-            var project = await dataAccess.Project.FindAsync(request.Id, cancellationToken);
+            var project = await dataAccess.Projects.FindAsync(request.Id, cancellationToken);
             if (project == null)
                 return false;
 

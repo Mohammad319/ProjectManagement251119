@@ -97,7 +97,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to By Resource.
+        ///   Looks up a localized string similar to By Resources.
         /// </summary>
         public static string ByResource {
             get {
@@ -241,7 +241,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Folder.
+        ///   Looks up a localized string similar to Folders.
         /// </summary>
         public static string folder {
             get {
@@ -412,7 +412,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project overhead costs.
+        ///   Looks up a localized string similar to Projects overhead costs.
         /// </summary>
         public static string ProjectOverheadCosts {
             get {
@@ -430,7 +430,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource.
+        ///   Looks up a localized string similar to Resources.
         /// </summary>
         public static string resource {
             get {
@@ -529,7 +529,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Template.
+        ///   Looks up a localized string similar to Templates.
         /// </summary>
         public static string template {
             get {
@@ -547,7 +547,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Tender.
+        ///   Looks up a localized string similar to Tenders.
         /// </summary>
         public static string tender {
             get {

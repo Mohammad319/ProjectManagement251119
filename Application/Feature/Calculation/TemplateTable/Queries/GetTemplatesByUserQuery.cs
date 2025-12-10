@@ -8,7 +8,7 @@ namespace Application.Feature.Calculation.TemplateTable.Queries
     {
         public async Task<List<TemplateListDTO>> Handle(GetTemplatesByUserQuery query, CancellationToken cancellationToken)
         {
-            return await context.Template.AsNoTracking().Where(x => x.DepartmentId == query.DepartmentId).OrderByDescending(x => x)
+            return await context.Templates.AsNoTracking().Where(x => x.DepartmentId == query.DepartmentId).OrderByDescending(x => x)
                  .Select(x => new TemplateListDTO { Id = x.Id, Name = x.Name }).ToListAsync(cancellationToken: cancellationToken);
         }
     }

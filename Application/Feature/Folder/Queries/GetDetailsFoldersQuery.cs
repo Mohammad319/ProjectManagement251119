@@ -9,7 +9,7 @@ namespace Application.Feature.Project.Folder.Queries
     {
         public async Task<DetailsFolderDTO> Handle(GetDetailsFoldersQuery query, CancellationToken cancellationToken)
         {
-            return await context.Folder.OrderByDescending(x => x)
+            return await context.Folders.OrderByDescending(x => x)
                 .AsNoTracking().Where(x => x.Id == query.Id)
                 .Select(x => new DetailsFolderDTO
                 {
