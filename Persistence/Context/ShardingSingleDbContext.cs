@@ -17,6 +17,7 @@ using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Organisation;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
@@ -41,8 +42,25 @@ namespace Persistence.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            var entityTypes = modelBuilder.Model.GetEntityTypes()
+    .Where(t => typeof(IDataKeyFilterReadOnly).IsAssignableFrom(t.ClrType));
 
-            ConfigureTenderAttributeRelations(modelBuilder);
+            foreach (var entityType in entityTypes)
+            {
+                var param = Expression.Parameter(entityType.ClrType, "e");
+                var tenantProperty = Expression.Property(param, nameof(IDataKeyFilterReadOnly.TenantId));
+
+                // this.TenantId
+                var currentTenantId = Expression.Constant(TenantId);
+                var body = Expression.Equal(tenantProperty, currentTenantId);
+
+                var lambda = Expression.Lambda(body, param);
+
+                modelBuilder.Entity(entityType.ClrType)
+                    .HasQueryFilter(lambda);
+            }
+                ///-------------------------------------------------------
+                ConfigureTenderAttributeRelations(modelBuilder);
             ConfigureEntityConfigurations(modelBuilder);
             ConfigureJsonDataConversions(modelBuilder);
             ConfigureOrderSequences(modelBuilder);

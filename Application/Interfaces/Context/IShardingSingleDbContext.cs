@@ -12,8 +12,6 @@ namespace Application.Interfaces.Context
 {
     public interface IShardingSingleDbContext
     {
-        public DatabaseFacade Database { get; }
-        public ChangeTracker ChangeTracker { get; }
         //void SetTenant(int tenantId);
         // DbSet<OfferResourceEntity> OfferResource { get; set; }
         DbSet<ProjectEntity> Projects { get; set; }

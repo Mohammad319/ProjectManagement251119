@@ -23,8 +23,8 @@ namespace Domain.Entities.Calculation
         private AccountData? _metadata;
         public AccountData Metadata
         {
-            get => _metadata ??= new AccountData();
-            set => _metadata = value ?? new AccountData();
+            get => _metadata ??= new ();
+            set => _metadata = value;
         }
 
         [JsonIgnore]
