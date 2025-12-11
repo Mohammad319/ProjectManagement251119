@@ -161,7 +161,7 @@ namespace Domain.Entities.Calculation
                 SortOrder = sortOrder,
             };
 
-            entity.Update(dto); // إعادة استخدام منطق Update
+            entity.Update(dto);
 
             return entity;
         }

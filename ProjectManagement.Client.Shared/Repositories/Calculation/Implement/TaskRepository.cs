@@ -13,7 +13,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
     {
         static string TaskURLBase => PMAPIConst.Task;
         public async Task<List<ListOrderDTO>> GetAsync(int? id = null) =>
-    [.. (await _httpRepository.GetAsync<List<ListOrderDTO>>(TaskURLBase + $"status?id={id}")).OrderBy(x => x.Order),];
+    [.. (await _httpRepository.GetAsync<List<ListOrderDTO>>(TaskURLBase + $"status?id={id}")).OrderBy(x => x.SortOrder),];
 
         public async Task<bool> ReOrderAsync(int Id, double newOrder)
         {

@@ -3,6 +3,7 @@ using Domain.Entities.Base;
 using Domain.Entities.Organisation;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
@@ -167,11 +168,6 @@ namespace Domain.Entities.Calculation
         // Factory + Update methods
         // =========================================================
 
-        private CalculationEntity(Guid projectId)
-        {
-            ProjectId = projectId;
-        }
-
         public static CalculationEntity CreateCopy(CalculationEntity original, Guid newProjectId, int userId)
         {
             var copy = new CalculationEntity
@@ -188,8 +184,8 @@ namespace Domain.Entities.Calculation
                 Tax = original.Tax,
                 PublicationDate = original.PublicationDate,
                 DecisionDate = original.DecisionDate,
-                HourlyPriceFactorData = original.HourlyPriceFactorData.Clone(),
-                Metadata = original.Metadata.Clone(),
+                HourlyPriceFactorData = new(),//original.HourlyPriceFactorData.Clone(),
+                Metadata = new(),//original.Metadata.Clone(),
                 CreatedBy = userId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -200,8 +196,18 @@ namespace Domain.Entities.Calculation
 
             return copy;
         }
-
-
+        public void SetTemplate(int? tempId)
+        {
+            TemplateId = tempId;
+        }
+        public void UpdateFactors(List<OHFactors> factors)
+        {
+            HourlyPriceFactorData.Factors = factors;
+        }
+        public void UpdateHourlyPriceList(List<HourlyPriceListGroupDTO> hourlyPriceList)
+        {
+            HourlyPriceFactorData.HourlyPrice = hourlyPriceList;
+        }
         public void Update(CalculationPostDTO dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Code))
@@ -221,8 +227,7 @@ namespace Domain.Entities.Calculation
 
             SortOrder = dto.Order;
 
-            Metadata = dto.met ?? new CalculationData();
-            HourlyPriceFactorData = dto.HourlyPriceFactorData ?? new CalculationHourlyPriceFactorData();
+            Metadata = dto.Metadata ?? new CalculationData();
 
             IsPrivate = dto.IsPrivate;
             IsVisible = dto.IsVisible;

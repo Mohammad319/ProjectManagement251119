@@ -32,9 +32,6 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
 
-        [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(ResLocalize))]
-        public double? Cap { get; set; }
-
         public bool IsActive { get; set; } = true;
 
         [MaxLength(FieldLengths.Code)]
@@ -155,7 +152,6 @@ namespace Domain.Entities.Calculation
             Quantity = dto.Quantity;
             Note = dto.Note;
             Unit = dto.Unit;
-            Cap = dto.Cap;
             IsActive = dto.IsActive;
             Code = dto.Code;
             Type = dto.Type;

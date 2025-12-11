@@ -2,51 +2,77 @@
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation.Template;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
     public sealed class TemplateEntity : AuditableEntity<int>
     {
-        /// <summary>
-        /// Template name.
-        /// </summary>
         [Required, MaxLength(FieldLengths.Name)]
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; private set; } = string.Empty;
 
-
-        /// <summary>
-        /// Extra metadata for the template.
-        /// </summary>
         private TemplateData? _metadata;
         public TemplateData Metadata
         {
             get => _metadata ??= new TemplateData();
-            set => _metadata = value;
+            private set => _metadata = value;
         }
 
-        /// <summary>
-        /// Whether this template is visible in UI.
-        /// </summary>
         [JsonIgnore]
-        public bool IsVisible { get; set; } = true;
-
-        /// <summary>
-        /// Optional department that owns this template.
-        /// </summary>
-        [JsonIgnore]
-        public int? DepartmentId { get; set; }
+        public bool IsVisible { get; private set; } = true;
 
         [JsonIgnore]
-        public DepartmentEntity? Department { get; set; }
+        public int? DepartmentId { get; private set; }
 
-        /// <summary>
-        /// Calculations created from this template.
-        /// </summary>
         [JsonIgnore]
-        public ICollection<CalculationEntity> Calculations { get; set; } = [];
+        public DepartmentEntity? Department { get; private set; }
+
+        [JsonIgnore]
+        public ICollection<CalculationEntity> Calculations { get; private set; } = [];
+
+        private TemplateEntity() { }
+
+        public TemplateEntity(string name, bool isVisible, int? departmentId)
+        {
+            SetName(name);
+            IsVisible = isVisible;
+            DepartmentId = departmentId;
+        }
+
+        // ----------------------------------------------
+        // Behavior
+        // ----------------------------------------------
+
+        public void SetName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ValidationException("Template name is required.");
+
+            Name = name.Trim();
+        }
+
+        public void Update(string name, bool isVisible, int? departmentId, TemplateData metadata)
+        {
+            SetName(name);
+            IsVisible = isVisible;
+            DepartmentId = departmentId;
+            Metadata = metadata;
+        }
+
+        public void UpdateMetadata(TemplateData metadata)
+        {
+            Metadata = metadata;
+        }
+
+        public void SetVisibility(bool isVisible)
+        {
+            IsVisible = isVisible;
+        }
+
+        public void SetDepartment(int? departmentId)
+        {
+            DepartmentId = departmentId;
+        }
     }
 }

@@ -1,53 +1,64 @@
 ﻿using Application.Interfaces;
-using Application.Interfaces.Context;
-using Microsoft.EntityFrameworkCore;
+using Application.Services.CalculationItems.Tender;
 using ProjectManagement.Shared.DTO.Calculation;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Application.Feature.Calculation.Tender.Queries
 {
-    public class GetTenderListQuery : IRequest<TenderAttributeValuesListDTO>
+    // =========================================================
+    // Tender Queries
+    // =========================================================
+
+    // --------- GetTenderList ---------
+    public sealed record GetTenderListQuery(
+        int CalculationId
+    ) : IRequest<List<TenderListDTO>>;
+
+    public sealed class GetTenderListQueryHandler
+        : IRequestHandler<GetTenderListQuery, List<TenderListDTO>>
     {
-        public int CalculationId { get; set; }
+        private readonly ITenderQueryService _service;
 
-        public class GetTenderListQueryHandler : IRequestHandler<GetTenderListQuery, TenderAttributeValuesListDTO>
+        public GetTenderListQueryHandler(ITenderQueryService service)
         {
-            private readonly IShardingSingleDbContext _context;
-
-            public GetTenderListQueryHandler(IShardingSingleDbContext context)
-            {
-                _context = context;
-            }
-            public async Task<TenderAttributeValuesListDTO> Handle(GetTenderListQuery query, CancellationToken cancellationToken)
-            {
-                TenderAttributeValuesListDTO result = new();
-                result.Tenders = await _context.Tenders.Where(x => x.CalculationId == query.CalculationId).Select(x => new TenderListDTO()
-                {
-                    Id = x.Id,
-                    CompanyId = x.OrganisationId,
-                    Company = x.Organisation.Name,
-                    Category = x.Organisation.OrganisationCategory.Name,
-                    SubCategory = x.Organisation.OrganisationCategory.ParentCategory.Name,
-                    Values = x.TendersAttributes.Select((a) => new ValuesList()
-                    {
-                        AttributeID = a.TenderAttributeId,
-                        Values = a.Value
-                    }).ToList(),
-                }).AsNoTracking().ToListAsync();
-
-                result.Attributes = await _context.AttributeNameTender
-                    .Where(x => x.CalculationId == query.CalculationId)
-                    .Select(x => new TenderAttributeListDTO()
-                    {
-                        Id = x.Id,
-                        Name = x.Name,
-                        Note = x.Note,
-                    }).AsNoTracking().ToListAsync();
-
-                return result;
-            }
+            _service = service;
         }
+
+        public Task<List<TenderListDTO>> Handle(GetTenderListQuery request, CancellationToken cancellationToken)
+            => _service.GetTenderListAsync(request.CalculationId, cancellationToken);
+    }
+
+    // --------- GetTenderDetails ---------
+    public sealed record GetTenderDetailsQuery(
+        int TenderId,int calculationId
+    ) : IRequest<TenderDetailsDTO?>;
+
+    public sealed class GetTenderDetailsQueryHandler(ITenderQueryService service)
+                : IRequestHandler<GetTenderDetailsQuery, TenderDetailsDTO?>
+    {
+        public Task<TenderDetailsDTO?> Handle(GetTenderDetailsQuery request, CancellationToken cancellationToken)
+            => service.GetTenderDetailsAsync(request.TenderId,request.calculationId, cancellationToken);
+    }
+
+    // =========================================================
+    // TenderAttribute Queries
+    // =========================================================
+
+    // --------- GetTenderAttributes (per Calculation) ---------
+    public sealed record GetTenderAttributesQuery(
+        int CalculationId
+    ) : IRequest<List<TenderAttributeListDTO>>;
+
+    public sealed class GetTenderAttributesQueryHandler
+        : IRequestHandler<GetTenderAttributesQuery, List<TenderAttributeListDTO>>
+    {
+        private readonly ITenderAttributeQueryService _service;
+
+        public GetTenderAttributesQueryHandler(ITenderAttributeQueryService service)
+        {
+            _service = service;
+        }
+
+        public Task<List<TenderAttributeListDTO>> Handle(GetTenderAttributesQuery request, CancellationToken cancellationToken)
+            => _service.GetAttributesAsync(request.CalculationId, cancellationToken);
     }
 }

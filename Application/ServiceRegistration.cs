@@ -1,6 +1,4 @@
 ﻿using Application.Interfaces;
-using Application.Services.CalculationItems.Resource;
-using Application.Services.CalculationItems.Task;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;   // مهم للـ ILoggerFactory
@@ -12,8 +10,6 @@ namespace Application
     {
         public static void AddApplicationLayer(this IServiceCollection services)
         {
-            services.AddScoped<IResourceService, ResourceService>();
-            services.AddScoped<ITaskService, TaskService>();
             services.AddScoped<ICommandDispatcher, CommandDispatcher>();
 
             services.AddCommandHandlers(Assembly.GetExecutingAssembly());
@@ -32,7 +28,7 @@ namespace Application
     }
 
 
-public static class CommandHandlerRegistrationExtensions
+    public static class CommandHandlerRegistrationExtensions
     {
         public static void AddCommandHandlers(this IServiceCollection services, Assembly assembly)
         {

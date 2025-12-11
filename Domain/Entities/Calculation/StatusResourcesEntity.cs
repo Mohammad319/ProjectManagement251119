@@ -1,6 +1,5 @@
 ﻿using Domain.Entities.Base;
 using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 

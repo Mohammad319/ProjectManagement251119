@@ -14,14 +14,14 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpGet(URLConst.Details + "/{id}/{calculationId}")]
         public async Task<IActionResult> Details(int id, int calculationId)
         {
-            return Ok(await MicroBus.Send(new GetTenderDeatilsQuery(id,calculationId)));
+            return Ok(await MicroBus.Send(new GetTenderDetailsQuery(id,calculationId)));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet(URLConst.GetAll + "/{calculationId}")]
         public async Task<IActionResult> GetAll(int calculationId)
         {
-            return Ok(await MicroBus.Send(new GetTenderListQuery() { CalculationId = calculationId }));
+            return Ok(await MicroBus.Send(new GetTenderListQuery(calculationId)));
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]

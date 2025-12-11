@@ -6,6 +6,24 @@ using System.Collections.Generic;
 
 namespace ProjectManagement.Shared.Base.Calculation
 {
+    public class TaskData2
+    {
+        public List<string> UpperNote { get; set; } = [];
+        public string QuantityParam { get; set; }
+
+        [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public double? Cap { get; set; }
+        public bool IsActive { get; set; } = true;
+
+        public bool PriceSubInPrecent { get; set; }
+        public double? PriceSubDB { get; set; }
+        public double? PriceSubTaxDB { get; set; }
+        public double? MinPrice { get; set; }
+        public double? CeilingPrice { get; set; }
+        public bool HasVoice { get; set; }
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Responsible { get; set; }
+    }
     public class TaskData
     {
         [AllowNull, MaxLength(500)]
@@ -34,6 +52,24 @@ namespace ProjectManagement.Shared.Base.Calculation
         public bool HasVoice { get; set; }
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Responsible { get; set; }
+
+        public TaskData Clone()
+        {
+            return new TaskData
+            {
+                UpperNote = [.. UpperNote],
+                QuantityParam = QuantityParam,
+                Cap = Cap,
+                IsActive = IsActive,
+                PriceSubInPrecent = PriceSubInPrecent,
+                PriceSubDB = PriceSubDB,
+                PriceSubTaxDB = PriceSubTaxDB,
+                MinPrice = MinPrice,
+                CeilingPrice = CeilingPrice,
+                HasVoice = HasVoice,
+                Responsible = Responsible
+            };
+        }
     }
     public enum TaskType
     {

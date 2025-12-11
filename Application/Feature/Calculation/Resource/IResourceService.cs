@@ -1,8 +1,5 @@
 ﻿using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Application.Feature.Calculation.Resource
 {

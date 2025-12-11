@@ -85,9 +85,9 @@
         {
             if (TempForm.Id > 0)
             {
-                refresh = await MicroBus.Send(new UpdateTemplateCommands(TemplateUpdate, TempForm.Id, null));
+                refresh = await MicroBus.Send(new UpdateTemplateCommand(TemplateUpdate, TempForm.Id, null));
             }
-            else if (await MicroBus.Send(new CreateTemplateCommands(TemplateUpdate, null)) != null)
+            else if (await MicroBus.Send(new CreateTemplateCommand(TemplateUpdate, null)) != null)
                 refresh = true;
         }
         catch (Exception ex)

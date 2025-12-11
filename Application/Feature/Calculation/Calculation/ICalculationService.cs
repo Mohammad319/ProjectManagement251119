@@ -6,16 +6,55 @@ namespace Application.Feature.Calculation.Calculation
 {
     public interface ICalculationService
     {
-        Task<int> CreateAsync(CalculationPostDTO dto, CancellationToken ct = default);
-        Task<bool> UpdateAsync(int id, CalculationPostDTO dto, CancellationToken ct = default);
-        Task<bool> DeleteAsync(int id, CancellationToken ct = default);
+        Task<int> CreateAsync(
+            CalculationPostDTO dto,
+            Guid projectId,
+            int userId,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
 
-        Task<int> CopyAsync(int id, Guid targetProjectId, CancellationToken ct = default);
+        Task<bool> UpdateAsync(
+            int id,
+            CalculationPostDTO dto,
+            int userId,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
 
-        Task<bool> UpdateFactorsAsync(int id, List<OHFactors> model, CancellationToken ct = default);
-        Task<bool> UpdateQuantityListAsync(int id, List<QuanityListDTO> model, CancellationToken ct = default);
-        Task<bool> UpdateHourlyPriceListAsync(int id, List<HourlyPriceListGroupDTO> model, CancellationToken ct = default);
+        Task<bool> DeleteAsync(
+            int id,
+            int userId,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
 
-        Task<bool> ReorderAsync(int id, double newSortOrder, CancellationToken ct = default);
+        Task<int> CopyAsync(
+            int id,
+            Guid projectId,
+            int? departmentId,
+            int userId,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> NewOrderAsync(
+            int id,
+            double newOrder,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> UpdateHourlyPriceListAsync(
+            int id,
+            List<HourlyPriceListGroupDTO> hourlyPriceList,
+            int userId,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> UpdateFactorsAsync(
+            int id,
+            List<OHFactors> factors,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> UpdateQuantityListAsync(
+            int id,
+            List<QuanityListDTO> model,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
     }
 }

@@ -13,10 +13,20 @@ namespace ProjectManagement.Shared.DTO.General
         public string Name { get; set; }
         public T Data { get; set; }
     }
+    public interface IListOrderDTO
+    {
+        public int Id { get;  }
+        public int SortOrder { get;  }
+        public string Name { get; }
+        public string Color { get; }
+        public bool IsVisible { get;  }
+
+        void Update(string name, string color, int sortOrder, bool isVisible);
+    }
     public class ListOrderDTO
     {
         public int Id { get; set; }
-        public int Order { get; set; }
+        public int SortOrder { get; set; }
         public string Name { get; set; }
         public string Color { get; set; } = "#00ff00";
     }

@@ -5,6 +5,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ProjectManagement.Shared.Base.Calculation
 {
+    public class ResourceData2
+    {
+        public List<string> UpperNote { get; set; } = [];
+        public string QuantityParam { get; set; }
+        public double? Cap { get; set; } = 0;
+        public double? Waste { get; set; } = 0;
+    }
     public class ResourceData
     {
         public string Note { get; set; }
@@ -24,6 +31,17 @@ namespace ProjectManagement.Shared.Base.Calculation
         public double Cost { get; set; }
         public double? BaseCost { get; set; }
         public double? CO2 { get; set; }
+
+        public ResourceData Clone()
+        {
+            return new ResourceData
+            {
+                UpperNote = [.. UpperNote],
+                QuantityParam = QuantityParam,
+                Cap = Cap,
+                Waste = Waste
+            };
+        }
     }
 
     public class ResourceBase

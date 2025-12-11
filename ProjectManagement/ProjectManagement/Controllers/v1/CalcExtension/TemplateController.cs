@@ -29,7 +29,7 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger), HttpGet(URLConst.Template.Set + "/{id}/{tempId?}")]
         public async Task<IActionResult> SetDefault(int id, int? tempId)
         {
-            return Ok(await MicroBus.Send(new SetDefaultCommand() { CalculationId = id, DepartmentId = GetDepartmentId(), TemplateId = tempId }));
+            return Ok(await MicroBus.Send(new SetDefaultTemplateCommand(id, tempId, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
         [HttpPost]
@@ -38,25 +38,25 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
             var DepartmentId = GetDepartmentId();
             if (!DepartmentId.HasValue)
                 return BadRequest();
-            return Ok(await MicroBus.Send(new CreateTemplateCommands(dto, DepartmentId)));
+            return Ok(await MicroBus.Send(new CreateTemplateCommand(dto, DepartmentId)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.Admin)]
         [HttpPost(URLConst.Template.PostAdmin + "/{departmentId?}")]
         public async Task<IActionResult> PostAdmin(TemplateListPostDTO dto, int? departmentId)
         {
-            return Ok(await MicroBus.Send(new CreateTemplateCommands(dto, departmentId)));
+            return Ok(await MicroBus.Send(new CreateTemplateCommand(dto, departmentId)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut(URLConst.Template.Update + "/{id}")]
         public async Task<IActionResult> Update(int id, TemplateListPostDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateTemplateCommands(dto,id, GetDepartmentId())));
+            return Ok(await MicroBus.Send(new UpdateTemplateCommand(dto,id, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            return Ok(await MicroBus.Send(new RemoveTemplateCommands(id, GetDepartmentId() )));
+            return Ok(await MicroBus.Send(new DeleteTemplateCommand(id, GetDepartmentId() )));
         }
     }
 }

@@ -108,7 +108,7 @@ else
         if (int.TryParse(depClaim, out var depId))
             departmentId = depId;
 
-        if (await MicroBus.Send(new RemoveTemplateCommands(st.Id, departmentId)))
+        if (await MicroBus.Send(new DeleteTemplateCommand(st.Id, departmentId)))
         {
             List.Remove(st);
             StateHasChanged();

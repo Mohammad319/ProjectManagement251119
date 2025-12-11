@@ -21,7 +21,7 @@ namespace Application.Feature.Project.Contract.Queries
             {
                 Id = x.Id,
                 Name = x.Name,
-                Order = x.SortOrder,
+                SortOrder = x.SortOrder,
             }).ToListAsync(cancellationToken);
         }
     }

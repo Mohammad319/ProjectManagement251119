@@ -19,7 +19,7 @@ namespace Application.Feature.Project.Compensation.Queries
             {
                 Id = x.Id,
                 Name = x.Name,
-                Order = x.SortOrder
+                SortOrder = x.SortOrder
             }).ToListAsync(cancellationToken);
         }
     }

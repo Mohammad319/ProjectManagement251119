@@ -1,15 +1,55 @@
 ﻿using Application.Interfaces;
+using Application.Services.CalculationItems.TemplateTable;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace Application.Feature.Calculation.TemplateTable.Queries
 {
-    public sealed record GetTemplatesByUserQuery(int? DepartmentId) : IRequest<List<TemplateListDTO>>;
-    public class GetTemplatesByUserQueryHandler(IShardingSingleDbContext context) : IRequestHandler<GetTemplatesByUserQuery, List<TemplateListDTO>>
+    // ============================================
+    // GetTemplateByIdQuery
+    // ============================================
+
+    public sealed record GetTemplateByIdQuery(
+        int Id,
+        int? DepartmentId
+    ) : IRequest<TemplateModelDTO?>;
+
+    public sealed class GetTemplateByIdQueryHandler
+        : IRequestHandler<GetTemplateByIdQuery, TemplateModelDTO?>
     {
-        public async Task<List<TemplateListDTO>> Handle(GetTemplatesByUserQuery query, CancellationToken cancellationToken)
+        private readonly ITemplateQueryService _service;
+
+        public GetTemplateByIdQueryHandler(ITemplateQueryService service)
         {
-            return await context.Templates.AsNoTracking().Where(x => x.DepartmentId == query.DepartmentId).OrderByDescending(x => x)
-                 .Select(x => new TemplateListDTO { Id = x.Id, Name = x.Name }).ToListAsync(cancellationToken: cancellationToken);
+            _service = service;
         }
+
+        public Task<TemplateModelDTO?> Handle(
+            GetTemplateByIdQuery request,
+            CancellationToken cancellationToken)
+            => _service.GetByIdAsync(request.Id, request.DepartmentId, cancellationToken);
+    }
+
+    // ============================================
+    // GetTemplatesByUserQuery
+    // ============================================
+
+    public sealed record GetTemplatesByUserQuery(
+        int? DepartmentId
+    ) : IRequest<List<TemplateListDTO>>;
+
+    public sealed class GetTemplatesByUserQueryHandler
+        : IRequestHandler<GetTemplatesByUserQuery, List<TemplateListDTO>>
+    {
+        private readonly ITemplateQueryService _service;
+
+        public GetTemplatesByUserQueryHandler(ITemplateQueryService service)
+        {
+            _service = service;
+        }
+
+        public Task<List<TemplateListDTO>> Handle(
+            GetTemplatesByUserQuery request,
+            CancellationToken cancellationToken)
+            => _service.GetByUserAsync(request.DepartmentId, cancellationToken);
     }
 }

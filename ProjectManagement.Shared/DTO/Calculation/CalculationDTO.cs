@@ -83,6 +83,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
     }
     public class CalculationPostDTO
     {
+        public int? TemplateId { get; private set; }
         private CalculationData? _metadata;
         public CalculationData Metadata
         {
