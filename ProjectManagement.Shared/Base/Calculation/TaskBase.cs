@@ -34,8 +34,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         public bool HasVoice { get; set; }
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Responsible { get; set; }
-
-        //----------------
     }
     public enum TaskType
     {

@@ -53,7 +53,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (resource is null)
                 throw new ArgumentNullException(nameof(resource));
 
-            // نفترض أن Data لازم تكون موجودة
+            // نفترض أن Metadata لازم تكون موجودة
             if (resource.Data is null)
                 throw new InvalidOperationException("resource.Data must not be null.");
 

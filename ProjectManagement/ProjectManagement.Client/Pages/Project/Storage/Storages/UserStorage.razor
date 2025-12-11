@@ -60,9 +60,9 @@ else
                     List<TaskPostDTO> tasks = Tasks.Where(x => IDs.Any(r => r == x.Id)).Select(x => x.StorageValue).ToList();
                     if (tasks != null)
                     {
-                tasks.ForEach(x => x.Data.IsOH = Calc.OHFactors);
+                tasks.ForEach(x => x.Metadata.IsOH = Calc.OHFactors);
                         if(ParentID>0)
-                        tasks.ForEach(x => x.TaskId = ParentID);
+                        tasks.ForEach(x => x.ParentTaskId = ParentID);
                 return await Repo.Task.CreateAsync(tasks, Calc.Id);
                     }
                 }

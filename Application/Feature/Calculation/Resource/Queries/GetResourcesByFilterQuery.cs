@@ -1,7 +1,5 @@
 ﻿using Application.Extention;
 using Application.Interfaces;
-using Application.Interfaces.Context;
-using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.DTO.Calculation;
 using System;
 

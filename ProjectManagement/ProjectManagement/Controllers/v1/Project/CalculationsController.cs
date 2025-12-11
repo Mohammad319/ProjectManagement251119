@@ -79,7 +79,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Calculation.Create + "/{ProjectId}")]
-        public async Task<IActionResult> Post(Guid ProjectId, PostCalculationDTO Dto)
+        public async Task<IActionResult> Post(Guid ProjectId, CalculationPostDTO Dto)
         {
             return Ok(await MicroBus.Send(new CreateCalculationCommand(Dto, ProjectId, GetUserId(), GetDepartmentId())));
         }
@@ -92,7 +92,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, PostCalculationDTO dto)
+        public async Task<IActionResult> Update(int id, CalculationPostDTO dto)
         {
             return Ok(await MicroBus.Send(new UpdateCalculationCommand(dto, id, GetUserId(), GetDepartmentId())));
         }

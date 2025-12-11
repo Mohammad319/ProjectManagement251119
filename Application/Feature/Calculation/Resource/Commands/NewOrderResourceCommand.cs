@@ -1,6 +1,4 @@
-﻿using Application.Extention;
-using Application.Interfaces;
-using Application.Services.CalculationItems.Resource;
+﻿using Application.Interfaces;
 
 namespace Application.Feature.Calculation.Resource.Commands
 {

@@ -12,17 +12,35 @@ namespace ProjectManagement.Shared.DTO.Calculation
     {
         public int Id { get; set; }
 
-        public int? TaskId { get; set; }
-        TaskData data = new();
-        public TaskData Data { get { data ??= new TaskData(); return data; } set { data = value; } }
-        public List<ResourcePostDTO> Resources { get; set; }
-        public List<TaskPostDTO> Tasks { get; set; }
-        [JsonIgnore] public bool Colspan { get; set; }
+        public int? ParentTaskId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? StatusId { get; set; }
         public int? OpportunityId { get; set; }
         public bool OnlyCodeText = false;
+
+        public string Note { get; set; }
+        public double? Quantity { get; set; }
+        [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Unit { get; set; }
+        public double ChangeFactor1 { get; set; } = 1;
+        public double ChangeFactor2 { get; set; } = 1;
+        [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public double? Cap { get; set; }
+        public bool IsActive { get; set; } = true;
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Code { get; set; }
+        public TaskType Type { get; set; }
+        public bool IsOH { get; set; }
+
+        TaskData data = new();
+        public TaskData Metadata { get { data ??= new TaskData(); return data; } set { data = value; } }
+        public List<ResourcePostDTO> Resources { get; set; }
+        public List<TaskPostDTO> Tasks { get; set; }
+        [JsonIgnore] public bool Colspan { get; set; }
+
+        public decimal Cost { get; private set; }
+        public decimal? BaseCost { get; private set; }
     }
     public class TaskStorageDTO : TaskBase
     {

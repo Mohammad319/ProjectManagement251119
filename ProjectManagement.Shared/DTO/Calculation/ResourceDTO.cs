@@ -1,8 +1,11 @@
 ﻿using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.ValueObjects.Calculation;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Shared.DTO.Calculation
@@ -21,6 +24,23 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? ResourceSortId { get; set; }
         public int? ResourceTypeId { get; set; }
         public int? OpportunityId { get; set; }
+
+        public double SortOrder { get; set; }
+
+        [MaxLength(FieldLengths.Comment)]
+        public string? Note { get; set; }
+
+        [MaxLength(FieldLengths.Unit)]
+        public string? Unit { get; set; }
+        [Required]
+        public double? Quantity { get; set; }
+        public double? CO2 { get; set; }
+        public decimal Cost { get; set; }
+        public decimal? BaseCost { get; set; }
+        public double? ChangeFactor1 { get; set; }
+        public double? ChangeFactor2 { get; set; }
+
+        //public CostValue Cost { get; private set; } = null!;
 
         [JsonIgnore]public List<string> Formulas { get; set; } = [];
         [JsonIgnore] public bool IsAdded { get; set; }

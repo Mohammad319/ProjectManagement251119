@@ -25,15 +25,10 @@ namespace Domain.Entities.Folder
 
         [JsonIgnore]
         public DepartmentEntity Department { get; set; } = null!;
-        [ForeignKey(nameof(CreatedBy))]
-        [JsonIgnore]
-        public UserEntity? CreatedByUser { get; set; }
 
-        [ForeignKey(nameof(UpdatedBy))]
-        [JsonIgnore]
-        public UserEntity? UpdatedByUser { get; set; }        /// <summary>
-                                                              /// Projects contained in this folder.
-                                                              /// </summary>
+        /// <summary>
+        /// /// Projects contained in this folder.
+        /// /// </summary>
         public ICollection<ProjectEntity> FolderProjects { get; set; } = [];
     }
 }

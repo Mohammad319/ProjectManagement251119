@@ -59,8 +59,21 @@ namespace Persistence.Context
                 modelBuilder.Entity(entityType.ClrType)
                     .HasQueryFilter(lambda);
             }
-                ///-------------------------------------------------------
-                ConfigureTenderAttributeRelations(modelBuilder);
+            ///-------------------------------------------------------
+
+            modelBuilder.Entity<ResourceEntity>(builder =>
+            {
+                builder.OwnsOne(r => r.Cost, owned =>
+                {
+                    owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
+                    owned.Property(x => x.Cost).HasColumnName("Cost");
+                    owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
+                    owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
+                });
+            });
+
+            ///-------------------------------------------------------
+            ConfigureTenderAttributeRelations(modelBuilder);
             ConfigureEntityConfigurations(modelBuilder);
             ConfigureJsonDataConversions(modelBuilder);
             ConfigureOrderSequences(modelBuilder);

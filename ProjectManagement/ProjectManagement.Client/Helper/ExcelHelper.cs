@@ -39,7 +39,7 @@ namespace ProjectManagement.Client.Helper
                         Name = !string.IsNullOrWhiteSpace(name) ? name : "Task",
                         Tasks = new(),
                         Colspan = false,
-                        Data = new TaskData
+                        Metadata = new TaskData
                         {
                             Code = code,
                             Unit = unit,
@@ -50,21 +50,21 @@ namespace ProjectManagement.Client.Helper
 
                     if (string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(priceStr) && string.IsNullOrWhiteSpace(quantityStr))
                     {
-                        task.Data.Type = TaskType.CodeName;
-                        task.Data.Quantity = null;
+                        task.Metadata.Type = TaskType.CodeName;
+                        task.Metadata.Quantity = null;
                     }
                     else if (unit == "-" && quantityStr == "-" && priceStr == "-")
                     {
-                        task.Data.Type = TaskType.Minus;
-                        task.Data.Quantity = belopStr == "-" ? 0 : 1;
+                        task.Metadata.Type = TaskType.Minus;
+                        task.Metadata.Quantity = belopStr == "-" ? 0 : 1;
                     }
                     else
                     {
-                        task.Data.QuantityParam = ConstValues.FixedQ;
+                        task.Metadata.QuantityParam = ConstValues.FixedQ;
                         _ = double.TryParse(quantityStr, out double quantity);
                         _ = double.TryParse(priceStr, out double price);
-                        task.Data.Quantity = quantity;
-                        task.Data.PriceSubDB = price;
+                        task.Metadata.Quantity = quantity;
+                        task.Metadata.PriceSubDB = price;
                     }
 
                     if (!string.IsNullOrWhiteSpace(task.Name))
@@ -85,10 +85,10 @@ namespace ProjectManagement.Client.Helper
             {
                 for (int parent = child - 1; parent >= 0; parent--)
                 {
-                    bool parentHasCode = !string.IsNullOrEmpty(sections[parent].Data.Code);
-                    bool childHasCode = !string.IsNullOrEmpty(sections[child].Data.Code);
+                    bool parentHasCode = !string.IsNullOrEmpty(sections[parent].Metadata.Code);
+                    bool childHasCode = !string.IsNullOrEmpty(sections[child].Metadata.Code);
 
-                    if ((parentHasCode && childHasCode && sections[child].Data.Code.StartsWith(sections[parent].Data.Code))
+                    if ((parentHasCode && childHasCode && sections[child].Metadata.Code.StartsWith(sections[parent].Metadata.Code))
                         || (!childHasCode && parentHasCode))
                     {
                         sections[parent].Tasks.Insert(0, sections[child]);

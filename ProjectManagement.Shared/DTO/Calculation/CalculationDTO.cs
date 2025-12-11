@@ -1,10 +1,11 @@
-﻿using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.Base.Calculation;
+﻿using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Base.Organisation;
+using ProjectManagement.Shared.Base.Project;
+using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.DTO.App;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using ProjectManagement.Shared.Base.Organisation;
-using ProjectManagement.Shared.DTO.App;
 
 namespace ProjectManagement.Shared.DTO.Calculation
 {
@@ -80,8 +81,64 @@ namespace ProjectManagement.Shared.DTO.Calculation
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Inspector { get; set; }
     }
-    public class PostCalculationDTO : CalculationDataBase
+    public class CalculationPostDTO
     {
+        private CalculationData? _metadata;
+        public CalculationData Metadata
+        {
+            get => _metadata ??= new CalculationData();
+            private set => _metadata = value;
+        }
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Code { get; set; }
+
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Name { get; set; }
+        [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+
+        public double Tax { get; set; } = 25;
+        public Procurement Procurement { get; set; }
+
+        public DateTime TenderDeadline { get; set; } = DateTime.Now;
+        public DateTime TenderQA { get; set; } = DateTime.Now;
+        public DateTime StartDate { get; set; } = DateTime.Now;
+        public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
+        public double Order { get; set; }
+        public DateTime? PublicationDate { get; set; } = DateTime.Now;
+        public DateTime? DecisionDate { get; set; } = DateTime.Now;
+        public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; }
+        public List<OHFactors> Factors { get; set; }
+
+
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [Range(0, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public double TimeMonth { get; set; } = 12;
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [Range(-999, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public int Priority { get; set; } = 50;
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+
+        public List<AddressDTO> Address { get; set; } = [];
+        public List<string> Notes { get; set; } = [];
+        public List<string> Responsibles { get; set; } = [];
+        public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
+        public List<IncomeBase> Income { get; set; } = [];
+
+        public string Maps { get; set; }
+        public string Developer { get; set; }
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ClientsManager { get; set; }
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Designer { get; set; }
+        public string OverviewInfo { get; set; }
+        [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string ContactPerson { get; set; }
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Supervisor { get; set; }
+        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string Inspector { get; set; }
         public bool IsPrivate { get; set; }
         public int? StatusId { get; set; }
         public int? ContractId { get; set; }

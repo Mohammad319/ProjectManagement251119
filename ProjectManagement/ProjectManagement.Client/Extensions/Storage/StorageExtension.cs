@@ -13,7 +13,7 @@ namespace ProjectManagement.Client.Extensions.Storage
             TaskPostDTO taskToPost = new()
             {
                 Name = task.Name,
-                Data = task.Data,
+                Metadata = task.Data,
                 Tasks = [],
                 Resources = [],
             };

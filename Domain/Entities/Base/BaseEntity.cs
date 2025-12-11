@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Base
 {
@@ -7,6 +8,8 @@ namespace Domain.Entities.Base
     /// المفتاح الأساسي Generic (يمكن أن يكون Guid أو int).
     /// </summary>
     /// <typeparam name="TKey">نوع المفتاح الأساسي (Guid أو int مثلاً).</typeparam>
+    //[Index(nameof(TenantId))]
+    [Index(nameof(TenantId), nameof(Id))]
     public abstract class BaseEntity<TKey> : IDataKeyFilterReadOnly
     {
         /// <summary>
@@ -19,7 +22,7 @@ namespace Domain.Entities.Base
         /// معرّف التينانت، يُستخدم في الفلترة والتأمين متعدد التينانت.
         /// يتم تعيينه تلقائياً في DbContext داخل UpdateTenantId().
         /// </summary>
-        [JsonIgnore]public int TenantId { get; set; }
+        [JsonIgnore] public int TenantId { get; set; }
     }
 
     /// <summary>

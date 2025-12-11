@@ -1,5 +1,6 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Organisation;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
 using System.ComponentModel.DataAnnotations;
@@ -7,6 +8,7 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
+    [Index(nameof(TenantId), nameof(ResourceId))]
     public sealed class OfferEntity : IntBaseEntity
     {
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using Application.Interfaces.Email;
+﻿using Application.Feature.Calculation.Resource;
+using Application.Interfaces.Email;
 using Microsoft.Extensions.DependencyInjection;
 using Persistence.Service;
 
@@ -9,6 +10,7 @@ namespace Persistence.Factory
         public static IServiceCollection AddPersistenceServices(this IServiceCollection services)
         {
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IResourceService, ResourceService>();
 
             services.AddScoped(provider =>
             {

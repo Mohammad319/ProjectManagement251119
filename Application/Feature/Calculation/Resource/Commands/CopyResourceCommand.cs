@@ -1,10 +1,5 @@
-﻿using Application.Extention;
-using Application.Interfaces;
-using Application.Services.CalculationItems.Resource;
-using Domain.Entities.Calculation;
-using ProjectManagement.Shared.Constant;
+﻿using Application.Interfaces;
 using ProjectManagement.Shared.DTO.Project;
-using System;
 
 namespace Application.Feature.Calculation.Resource.Commands
 {

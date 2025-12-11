@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Domain.ValueObjects
+namespace ProjectManagement.Shared.ValueObjects.Calculation
 {
     internal class AdjustmentFactors
     {

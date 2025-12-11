@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+﻿ using Domain.Entities.Base;
 using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
 using Domain.Entities.Project;

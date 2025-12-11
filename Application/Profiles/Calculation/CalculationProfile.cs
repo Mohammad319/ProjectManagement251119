@@ -10,8 +10,8 @@ namespace Application.Profiles.Calculation
     {
         public CalculationProfile()
         {
-            CreateMap<CalculationEntity, PostCalculationDTO>().ReverseMap();
-            CreateMap<CalculationEntity, PostCalculationDTO>().ReverseMap();
+            CreateMap<CalculationEntity, CalculationPostDTO>().ReverseMap();
+            CreateMap<CalculationEntity, CalculationPostDTO>().ReverseMap();
 
             CreateMap<OpportunityEntity, PostOpportunityDTO>().ReverseMap();
 

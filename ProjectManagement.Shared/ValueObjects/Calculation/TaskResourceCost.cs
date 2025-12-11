@@ -1,0 +1,50 @@
+﻿
+using System;
+
+namespace ProjectManagement.Shared.ValueObjects.Calculation
+{
+    public sealed class CostValue
+    {
+        /// <summary>
+        /// التكلفة النهائية كما تُعرض في الواجهة أو تُخزّن.
+        /// </summary>
+        public decimal Cost { get; private set; }
+
+        /// <summary>
+        /// التكلفة الأساسية قبل التعديلات (اختياري).
+        /// </summary>
+        public decimal? BaseCost { get; private set; }
+
+        /// <summary>
+        /// عوامل التعديل (اختيارية).
+        /// </summary>
+        public double? ChangeFactor1 { get; private set; }
+        public double? ChangeFactor2 { get; private set; }
+
+        private CostValue() { } // للـ EF
+
+        public CostValue(
+            decimal cost,
+            decimal? baseCost = null,
+            double? changeFactor1 = null,
+            double? changeFactor2 = null)
+        {
+            Set(cost, baseCost, changeFactor1, changeFactor2);
+        }
+
+        public void Set(
+            decimal cost,
+            decimal? baseCost,
+            double? changeFactor1,
+            double? changeFactor2)
+        {
+            if (cost < 0)
+                throw new ArgumentOutOfRangeException(nameof(cost), "Cost cannot be negative.");
+
+            Cost = cost;
+            BaseCost = baseCost;
+            ChangeFactor1 = changeFactor1;
+            ChangeFactor2 = changeFactor2;
+        }
+    }
+}

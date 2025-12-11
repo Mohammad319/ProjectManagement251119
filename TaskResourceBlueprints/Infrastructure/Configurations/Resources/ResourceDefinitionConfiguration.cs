@@ -22,7 +22,7 @@ public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<Resource
         b.Property(e => e.CostRoles)
             .HasJsonListComparer();
 
-        // Data: ResourceData as JSON + comparer
+        // Metadata: ResourceData as JSON + comparer
         b.Property(e => e.Data)
             .HasJsonConversionWithComparer();
 

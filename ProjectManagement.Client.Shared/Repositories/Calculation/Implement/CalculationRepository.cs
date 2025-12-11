@@ -56,19 +56,19 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
             string page = otherdepartment ? URLConst.Calculation.SharedPage : URLConst.Calculation.Page;
             return await _httpRepository.GetAsync<CalculationMVVM>(CalcURLBase + $"{page}/{id}");
         }
-        public async Task<PostCalculationDTO> GetPostAsync(int id) =>
-            await _httpRepository.GetAsync<PostCalculationDTO>(CalcURLBase + URLConst.Calculation.GetToPost + $"/{id}");
+        public async Task<CalculationPostDTO> GetPostAsync(int id) =>
+            await _httpRepository.GetAsync<CalculationPostDTO>(CalcURLBase + URLConst.Calculation.GetToPost + $"/{id}");
 
-        public async Task<int> CreateAsync(Guid ProjectId, PostCalculationDTO model)
+        public async Task<int> CreateAsync(Guid ProjectId, CalculationPostDTO model)
         {
-            return await _httpRepository.PostAsync<int, PostCalculationDTO>(model, CalcURLBase + URLConst.Calculation.Create + "/" + ProjectId);
+            return await _httpRepository.PostAsync<int, CalculationPostDTO>(model, CalcURLBase + URLConst.Calculation.Create + "/" + ProjectId);
         }
 
         public async Task<bool> UpdateAsync(int calculationId, List<HourlyPriceListGroupDTO> hourlyPriceList)
         {
             return await _httpRepository.PostAsync<bool, List<HourlyPriceListGroupDTO>>(hourlyPriceList, CalcURLBase + URLConst.Calculation.HourlyPriceList + "/" + calculationId);
         }
-        public async Task<bool> UpdateAsync(PostCalculationDTO model, int id)
+        public async Task<bool> UpdateAsync(CalculationPostDTO model, int id)
         {
             return await _httpRepository.PutAsync(model, CalcURLBase + id);
         }

@@ -1,5 +1,4 @@
-﻿@using BlazorMHD.UI.Components.Data.Card
-@using ProjectManagement.Client.Shared.MVVM.Calculation
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Model.Project.Calculation;
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.Base.Calculation
@@ -20,7 +19,7 @@
                 {
                     int x = i;
                     <li class="nav-item" role="presentation">
-                        <button @onclick="()=> TaskUpdate = PostList[x]" class="nav-link active" type="button" role="tab">@(i + 1)</button>
+                        <button @onclick="() => TaskUpdate = PostList[x]" class="nav-link active" type="button" role="tab">@(i + 1)</button>
                     </li>
                 }
             </ul>
@@ -33,8 +32,8 @@
         <div class="@CssClasses.Layout.FlexWrap">
             <div class="@CssClasses.Layout.FlexWidth(200)">
                 <label class="@CssClasses.Form.Label">@CalcResource.code</label>
-                <InputText @bind-Value="TaskUpdate.Data.Code" class="@CssClasses.Input.Text" />
-                <ValidationMessage For="@(() => TaskUpdate.Data.Code)" />
+                <InputText @bind-Value="TaskUpdate.Metadata.Code" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => TaskUpdate.Metadata.Code)" />
             </div>
             <div class="@CssClasses.Layout.FlexMinWidth(400)">
                 <label class="@CssClasses.Form.Label">@CalcResource.name </label>
@@ -48,11 +47,11 @@
         <div class="@CssClasses.Layout.FlexWrap">
             @if (!TaskUpdate.OnlyCodeText)
             {
-                <div class="@CssClasses.Layout.FlexWidth(InputNumber + (TaskUpdate.Data.QuantityParam == ConstValues.FixedQ ? 130 : 0))">
+                <div class="@CssClasses.Layout.FlexWidth(InputNumber + (TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ ? 130 : 0))">
                     <label class="@CssClasses.Form.Label">@CalcResource.quantity</label>
                     <div class="w-full @CssClasses.Layout.ButtonGroup">
                         <InputSelect class="@CssClasses.Input.Select"
-                                     @bind-Value:get="TaskUpdate.Data.QuantityParam"
+                                     @bind-Value:get="TaskUpdate.Metadata.QuantityParam"
                                      @bind-Value:set="(value) => ChangeQuantityParam(value)">
                             <option></option>
                             <option value="@ConstValues.FixedQ">FixedQ</option>
@@ -63,60 +62,60 @@
                                 }
                         </InputSelect>
 
-                        @if (TaskUpdate.Data.QuantityParam == ConstValues.FixedQ)
+                        @if (TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ)
                         {
-                            <InputNumber @bind-Value="TaskUpdate.Data.Quantity" class="@CssClasses.Input.Text" />
+                            <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="@CssClasses.Input.Text" />
                         }
                     </div>
                 </div>
 
                 <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
                     <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
-                    <InputText @bind-Value="TaskUpdate.Data.Unit" class="@CssClasses.Input.Text" />
-                    <ValidationMessage For="@(() => TaskUpdate.Data.Unit)" />
+                    <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.Unit)" />
                 </div>
 
                 @if (Task.Tasks == null || Task.Tasks.Count == 0)
                 {
                     <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
                         <label class="@CssClasses.Form.Label">@CalcResource.cap </label>
-                        <InputNumber @bind-Value="TaskUpdate.Data.Ca‌​p" class="@CssClasses.Input.Text" />
-                        <ValidationMessage For="@(() => TaskUpdate.Data.Cap)" />
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.Ca‌​p" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For="@(() => TaskUpdate.Metadata.Cap)" />
                     </div>
                 }
 
-                @if (TaskUpdate.TaskId.HasValue)
+                @if (TaskUpdate.ParentTaskId.HasValue)
                 {
                     <div class="@CssClasses.Layout.FlexWidth(130)">
                         <label class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
-                        <InputNumber @bind-Value="TaskUpdate.Data.ChangeFactor1" class="@CssClasses.Input.Text" />
-                        <ValidationMessage For="@(() => TaskUpdate.Data.ChangeFactor1)" />
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor1)" />
                     </div>
                     <div class="@CssClasses.Layout.FlexWidth(130)">
                         <label class="@CssClasses.Form.Label">@CalcResource.changeFactor2 </label>
-                        <InputNumber @bind-Value="TaskUpdate.Data.ChangeFactor2" class="@CssClasses.Input.Text" />
-                        <ValidationMessage For="@(() => TaskUpdate.Data.ChangeFactor2)" />
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@CssClasses.Input.Text" />
+                        <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
                     </div>
                 }
 
                 <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
                     <label class="@CssClasses.Form.Label">@CalcResource.priceSub </label>
-                    <InputNumber @bind-Value="TaskUpdate.Data.PriceSubDB" class="@CssClasses.Input.Text" />
-                    <ValidationMessage For="@(() => TaskUpdate.Data.PriceSubDB)" />
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceSubDB)" />
                 </div>
                 <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
                     <label class="@CssClasses.Form.Label">@CalcResource.minPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Data.MinPrice" class="@CssClasses.Input.Text" />
-                    <ValidationMessage For="@(() => TaskUpdate.Data.MinPrice)" />
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.MinPrice)" />
                 </div>
                 <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
                     <label class="@CssClasses.Form.Label">@CalcResource.ceilingPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Data.CeilingPrice" class="@CssClasses.Input.Text" />
-                    <ValidationMessage For="@(() => TaskUpdate.Data.CeilingPrice)" />
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.CeilingPrice)" />
                 </div>
             }
 
-            @if (Task.Resources == null || Task.Resources.Count == 0 || Task.Data.Type == TaskType.CodeName)
+            @if (Task.Resources == null || Task.Resources.Count == 0 || Task.Type == TaskType.CodeName)
             {
                 <div class="@CssClasses.Layout.FlexWidth(150)">
                     <div class="@CssClasses.Form.CheckWrapperM">
@@ -160,13 +159,13 @@
 
                 <div class="@CssClasses.Layout.FlexWidth(250)">
                     <label class="@CssClasses.Form.Label">@CalcResource.responsible</label>
-                    <InputText @bind-Value="TaskUpdate.Data.Responsible" class="@CssClasses.Input.Text" />
-                    <ValidationMessage For="@(() => TaskUpdate.Data.Responsible)" />
+                    <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.Responsible)" />
                 </div>
 
                 <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
                     <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="TaskUpdate.Data.PriceSubInPrecent" />
+                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
                         <label class="@CssClasses.Form.Label">
                             @ResourceLoc.inprecent
                         </label>
@@ -175,7 +174,7 @@
 
                 <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
                     <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox @bind-Value="TaskUpdate.Data.IsActive" class="@CssClasses.Input.Check" />
+                        <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@CssClasses.Input.Check" />
                         <label class="@CssClasses.Form.Label">@CalcResource.active</label>
                     </div>
                 </div>
@@ -187,29 +186,29 @@
         <div class="@CssClasses.Layout.FlexWrap">
             <div class="flex-grow">
                 <label class="@CssClasses.Form.Label">@CalcResource.note </label>
-                <InputTextArea @bind-Value="TaskUpdate.Data.Note" class="@CssClasses.Input.Text" />
-                <ValidationMessage For="@(() => TaskUpdate.Data.Note)" />
+                <InputTextArea @bind-Value="TaskUpdate.Metadata.Note" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => TaskUpdate.Metadata.Note)" />
             </div>
             <div class="w-[100px]">
                 <button type="button"
                         class="@CssClasses.Btn.Solid.Primary mt-7"
-                        @onclick="() => TaskUpdate.Data.UpperNote.Add(string.Empty)">
+                        @onclick="() => TaskUpdate.Metadata.UpperNote.Add(string.Empty)">
                     @CalcResource.UpperNote
                 </button>
             </div>
         </div>
 
-        @for (int i = 0; i < TaskUpdate.Data.UpperNote.Count; i++)
+        @for (int i = 0; i < TaskUpdate.Metadata.UpperNote.Count; i++)
         {
             int d = i;
             <div class="@CssClasses.Layout.FlexWrap mt-1">
                 <div class="flex-grow">
-                    <textarea lang="3" @bind="TaskUpdate.Data.UpperNote[d]" class="@CssClasses.Input.Text"></textarea>
+                    <textarea lang="3" @bind="TaskUpdate.Metadata.UpperNote[d]" class="@CssClasses.Input.Text"></textarea>
                 </div>
                 <div class="w-[100px]">
                     <button type="button"
                             class="@CssClasses.Btn.Solid.Danger"
-                            @onclick="() => TaskUpdate.Data.UpperNote.RemoveAt(d)">
+                            @onclick="() => TaskUpdate.Metadata.UpperNote.RemoveAt(d)">
                         @((MarkupString)@Icons.DeleteSVG)
                     </button>
                 </div>
@@ -224,7 +223,7 @@
     {
         if (PostList.Count > 1)
         {
-            <button type="button" class="@CssClasses.Btn.Outline.Danger" @onclick="()=> PostList.Remove(TaskUpdate)">@ResourceApp.delete</button>
+            <button type="button" class="@CssClasses.Btn.Outline.Danger" @onclick="() => PostList.Remove(TaskUpdate)">@ResourceApp.delete</button>
         }
         <button type="button" class="@CssClasses.Btn.Outline.Primary" @onclick="NewSP">@ResourceApp.newItem</button>
     }
@@ -253,19 +252,19 @@
 
     private void ChangeQuantityParam(string qp)
     {
-        TaskUpdate.Data.QuantityParam = qp;
-        if (string.IsNullOrEmpty(qp)) TaskUpdate.Data.Quantity = null;
-        else if (qp != ConstValues.FixedQ) TaskUpdate.Data.Quantity = Calc.QuanityList?.FirstOrDefault(x => x.Name == qp)?.Quantity;
+        TaskUpdate.Metadata.QuantityParam = qp;
+        if (string.IsNullOrEmpty(qp)) TaskUpdate.Metadata.Quantity = null;
+        else if (qp != ConstValues.FixedQ) TaskUpdate.Metadata.Quantity = Calc.QuanityList?.FirstOrDefault(x => x.Name == qp)?.Quantity;
     }
 
     protected async override Task OnInitializedAsync()
     {
         PropertyCopier.CopyPropertiesTo(Task, TaskUpdate);
-        TaskUpdate.OnlyCodeText = TaskUpdate.Data.Type == TaskType.CodeName;
+        TaskUpdate.OnlyCodeText = TaskUpdate.Metadata.Type == TaskType.CodeName;
 
         if (Task.Id == 0) PostList.Add(TaskUpdate);
         Statuses = (await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync())).ToList();
-        if(Calc.Opportunities== null)
+        if (Calc.Opportunities == null)
             Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
     }
 
@@ -280,11 +279,11 @@
     {
         if (po.OnlyCodeText)
         {
-            po.Data.Type = TaskType.CodeName;
-            po.Data.QuantityParam = string.Empty;
-            po.Data.Quantity = null;
+            po.Metadata.Type = TaskType.CodeName;
+            po.Metadata.QuantityParam = string.Empty;
+            po.Metadata.Quantity = null;
         }
-        else po.Data.Type = TaskType.Task;
+        else po.Metadata.Type = TaskType.Task;
     }
 
     async Task HandleSubmitAsync()
@@ -308,7 +307,7 @@
                     CheckTaskType(item);
                     item.Order = maxOrder;
                     maxOrder += 100;
-                    item.Data.IsOH = Calc.OHFactors;
+                    item.Metadata.IsOH = Calc.OHFactors;
                 }
                 hasSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Task.CreateAsync(PostList, Calc.Id));
             }

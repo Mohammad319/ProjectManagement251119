@@ -23,16 +23,16 @@
                     }
                 </div>
             </td>
-            <td class="@CssClasses.Table.Td">@task.Data.Code</td>
-            <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@task.Data.IsActive" /></td>
+            <td class="@CssClasses.Table.Td">@task.Metadata.Code</td>
+            <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
             <td class="@CssClasses.Table.Td">@task.Name</td>
-            <td class="@CssClasses.Table.Td">@task.Data.Quantity</td>
+            <td class="@CssClasses.Table.Td">@task.Metadata.Quantity</td>
             <td class="@CssClasses.Table.Td"></td>
-            <td class="@CssClasses.Table.Td">@task.Data.Unit</td>
-            <td class="@CssClasses.Table.Td">@task.Data.ChangeFactor1 / @task.Data.ChangeFactor2</td>
-            <td class="@CssClasses.Table.Td">@task.Data.Cap</td>
+            <td class="@CssClasses.Table.Td">@task.Metadata.Unit</td>
+            <td class="@CssClasses.Table.Td">@task.Metadata.ChangeFactor1 / @task.Metadata.ChangeFactor2</td>
+            <td class="@CssClasses.Table.Td">@task.Metadata.Cap</td>
             <td class="@CssClasses.Table.Td"></td>
-            <td class="@CssClasses.Table.Td">@task.Data.Note</td>
+            <td class="@CssClasses.Table.Td">@task.Metadata.Note</td>
         </tr>
         if (task.Colspan)
         {

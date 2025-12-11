@@ -123,7 +123,7 @@ else if (_tasks != null)
                 Order = Task.SortOrder,
                 StatusId = Task.StatusId,
                 
-                Data = new ProjectManagement.Shared.Base.Calculation.TaskData
+                Metadata = new ProjectManagement.Shared.Base.Calculation.TaskData
                 {
                     QuantityParam = ConstValues.FixedQ,
                     Quantity = Task.Quantity ?? 0,
@@ -145,7 +145,7 @@ else if (_tasks != null)
                     AccountId = res.AccountId,
                     IsActive = res.Active,
                     StatusId = res.StatusId,
-                // Data = res.Data,
+                // Metadata = res.Metadata,
                     Data = new ResourceData()
                     {
                     Note = res.Data.Note,
@@ -165,8 +165,8 @@ else if (_tasks != null)
         foreach (var ts in Tasks)
         {
             ts.Id = 0;
-            ts.Data.IsOH = Calc.OHFactors;
-            ts.TaskId = null;
+            ts.Metadata.IsOH = Calc.OHFactors;
+            ts.ParentTaskId = null;
             if (ts.StatusId == 0) ts.StatusId = null;
         }
 

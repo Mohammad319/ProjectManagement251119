@@ -35,9 +35,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
 
         public double Tax { get; set; } = 25;
-
-
-        //public bool AdditionalCostLock { get; set; }
         public Procurement Procurement { get; set; }
 
         public DateTime TenderDeadline { get; set; } = DateTime.Now;
@@ -47,12 +44,5 @@ namespace ProjectManagement.Shared.Base.Calculation
         public double Order { get; set; }
         public DateTime? PublicationDate { get; set; } = DateTime.Now;
         public DateTime? DecisionDate { get; set; } = DateTime.Now;
-
-        //public List<HourlyPriceListGroupDTO> HourlyPrice;
-        //public List<OHFactors> Factors;
-
-        //profit decision OHFactors
-        //learned experience
-        //Income Income         Year Q1, Q2, Q3 and Q4
     }
 }

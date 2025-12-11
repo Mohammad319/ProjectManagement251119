@@ -2,7 +2,7 @@
 using Domain.Entities.Base;
 using Domain.Entities.Organisation;
 using Domain.Entities.Project;
-using Domain.Entities.Users;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
@@ -12,151 +12,277 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public sealed class CalculationEntity : AuditableEntity<int>
+    [Index(nameof(TenantId), nameof(ProjectId))]
+    public sealed class CalculationEntity : AuditableSoftDeletableEntity<int>
     {
-        public CalculationEntity()
-        {
-            Tasks = [];
-        }
-
-        [Required, MaxLength(FieldLengths.Code)]
-        public string Code { get; set; } = string.Empty;
-
-        [Required, MaxLength(FieldLengths.Name)]
-        public string Name { get; set; } = string.Empty;
-
-        [Range(0, 100)]
-        public double Tax { get; set; } = 25;
-
-        public Procurement Procurement { get; set; }
-
-        public DateTime TenderDeadline { get; set; } = DateTime.UtcNow;
-        public DateTime TenderQA { get; set; } = DateTime.UtcNow;
-        public DateTime StartDate { get; set; } = DateTime.UtcNow;
-        public DateTime EndDate { get; set; } = DateTime.UtcNow.AddMonths(2);
-
-        public double SortOrder { get; set; }
-
-        public DateTime? PublicationDate { get; set; } = DateTime.UtcNow;
-        public DateTime? DecisionDate { get; set; } = DateTime.UtcNow;
-
         private CalculationData? _metadata;
         public CalculationData Metadata
         {
             get => _metadata ??= new CalculationData();
-            set => _metadata = value;
+            private set => _metadata = value;
+        }
+        private CalculationHourlyPriceFactorData? _hourlyPriceFactor;
+
+        public CalculationEntity()
+        {
+            Tasks = [];
+            SharesCalc = [];
+            Offers = [];
+            Opportunities = [];
+            Applications = [];
+            AttributesTender = [];
+            Tenders = [];
         }
 
-        private CalculationHourlyPriceFactorData? _hourlyPriceFactor;
+        // -----------------------
+        // Basic fields
+        // -----------------------
+
+        [Required, MaxLength(FieldLengths.Code)]
+        public string Code { get; private set; } = string.Empty;
+
+        [Required, MaxLength(FieldLengths.Name)]
+        public string Name { get; private set; } = string.Empty;
+
+        /// <summary>
+        /// نسبة الضريبة (0 - 100)
+        /// </summary>
+        [Range(0, 100)]
+        public double Tax { get; private set; } = 25;
+
+        public Procurement Procurement { get; private set; }
+
+        public DateTime TenderDeadline { get; private set; } = DateTime.UtcNow;
+        public DateTime TenderQA { get; private set; } = DateTime.UtcNow;
+        public DateTime StartDate { get; private set; } = DateTime.UtcNow;
+        public DateTime EndDate { get; private set; } = DateTime.UtcNow.AddMonths(2);
+
+        public double SortOrder { get; set; }
+
+        public DateTime? PublicationDate { get; private set; } = DateTime.UtcNow;
+        public DateTime? DecisionDate { get; private set; } = DateTime.UtcNow;
+
+
+
         public CalculationHourlyPriceFactorData HourlyPriceFactorData
         {
             get => _hourlyPriceFactor ??= new CalculationHourlyPriceFactorData();
-            set => _hourlyPriceFactor = value;
+            private set => _hourlyPriceFactor = value;
         }
 
-        public bool IsPrivate { get; set; }
-        public bool IsVisible { get; set; } = true;
+        public bool IsPrivate { get; private set; }
+        public bool IsVisible { get; private set; } = true;
 
         // -----------------------
-        // Organisation / Type / Status
+        // Organisation / Type / Status / Procurement / Contracting
         // -----------------------
 
-        public int? OrganisationId { get; set; }
+        public int? OrganisationId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(OrganisationId))]
-        public OrganisationEntity? Organisation { get; set; }
+        public OrganisationEntity? Organisation { get; private set; }
 
-        public int? TypeId { get; set; }
+        public int? TypeId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(TypeId))]
-        public TypeEntity? Type { get; set; }
+        public TypeEntity? Type { get; private set; }
 
-        public int? StatusId { get; set; }
+        public int? StatusId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(StatusId))]
-        public StatusEntity? Status { get; set; }
+        public StatusEntity? Status { get; private set; }
 
-        public int? ProcurementMethodsId { get; set; }
+        public int? ProcurementMethodsId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(ProcurementMethodsId))]
-        public ProcurementMethodEntity? ProcurementMethods { get; set; }
+        public ProcurementMethodEntity? ProcurementMethods { get; private set; }
 
-        public int? CompensationId { get; set; }
+        public int? CompensationId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(CompensationId))]
-        public CompensationEntity? Compensation { get; set; }
+        public CompensationEntity? Compensation { get; private set; }
 
-        public int? ContractId { get; set; }
+        public int? ContractId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(ContractId))]
-        public ContractEntity? Contract { get; set; }
+        public ContractEntity? Contract { get; private set; }
 
         // -----------------------
         // Project
         // -----------------------
 
-        public Guid ProjectId { get; set; }
+        public Guid ProjectId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(ProjectId))]
-        public ProjectEntity Project { get; set; } = null!;
-
-        // -----------------------
-        // Audit users (from AuditableEntity: CreatedBy, UpdatedBy)
-        // -----------------------
-
-        [ForeignKey(nameof(CreatedBy))]
-        [JsonIgnore]
-        public UserEntity CreatedByUser { get; set; } = null!;
-
-        [ForeignKey(nameof(UpdatedBy))]
-        [JsonIgnore]
-        public UserEntity? UpdatedByUser { get; set; }
+        public ProjectEntity Project { get; private set; } = null!;
 
         // -----------------------
         // Template
         // -----------------------
 
-        public int? TemplateId { get; set; }
+        public int? TemplateId { get; private set; }
 
         [JsonIgnore]
-        public TemplateEntity? Template { get; set; }
+        public TemplateEntity? Template { get; private set; }
 
         // -----------------------
         // Tenders / Attributes
         // -----------------------
 
         [JsonIgnore]
-        public ICollection<TenderAttributeDefinitionEntity> AttributesTender { get; set; } = [];
+        public ICollection<TenderAttributeDefinitionEntity> AttributesTender { get; private set; } = [];
 
         [JsonIgnore]
-        public ICollection<TenderEntity> Tenders { get; set; } = [];
+        public ICollection<TenderEntity> Tenders { get; private set; } = [];
 
         // -----------------------
         // Tasks
         // -----------------------
 
-        public ICollection<TaskEntity> Tasks { get; set; } = [];
+        public ICollection<TaskEntity> Tasks { get; private set; } = [];
 
         // -----------------------
         // Shares / Offers / Opportunities / Applications
         // -----------------------
 
-        public ICollection<ShareCalcEntity> SharesCalc { get; set; } = [];
+        public ICollection<ShareCalcEntity> SharesCalc { get; private set; } = [];
 
         [JsonIgnore]
-        public ICollection<OfferEntity> Offers { get; set; } = [];
+        public ICollection<OfferEntity> Offers { get; private set; } = [];
 
         [JsonIgnore]
-        public ICollection<OpportunityEntity> Opportunities { get; set; } = [];
+        public ICollection<OpportunityEntity> Opportunities { get; private set; } = [];
 
         [JsonIgnore]
-        public ICollection<ApplicationValuesEntity> Applications { get; set; } = [];
+        public ICollection<ApplicationValuesEntity> Applications { get; private set; } = [];
+
+        // =========================================================
+        // Factory + Update methods
+        // =========================================================
+
+        private CalculationEntity(Guid projectId)
+        {
+            ProjectId = projectId;
+        }
+
+        public static CalculationEntity CreateCopy(CalculationEntity original, Guid newProjectId, int userId)
+        {
+            var copy = new CalculationEntity
+            {
+                ProjectId = newProjectId,
+                Name = original.Name,
+                Code = original.Code,
+                OrganisationId = original.OrganisationId,
+                CompensationId = original.CompensationId,
+                ContractId = original.ContractId,
+                ProcurementMethodsId = original.ProcurementMethodsId,
+                Procurement = original.Procurement,
+                TemplateId = original.TemplateId,
+                Tax = original.Tax,
+                PublicationDate = original.PublicationDate,
+                DecisionDate = original.DecisionDate,
+                HourlyPriceFactorData = original.HourlyPriceFactorData.Clone(),
+                Metadata = original.Metadata.Clone(),
+                CreatedBy = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // clone child tasks + child resources
+            foreach (var task in original.Tasks)
+                copy.Tasks.Add(TaskEntity.CloneForCalculation(task));
+
+            return copy;
+        }
+
+
+        public void Update(CalculationPostDTO dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Code))
+                throw new ValidationException("Calculation code is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ValidationException("Calculation name is required.");
+
+            Code = dto.Code;
+            Name = dto.Name;
+
+            SetTax(dto.Tax);
+            Procurement = dto.Procurement;
+
+            SetDates(dto.StartDate, dto.EndDate);
+            SetTenderDates(dto.TenderDeadline, dto.TenderQA, dto.PublicationDate, dto.DecisionDate);
+
+            SortOrder = dto.Order;
+
+            Metadata = dto.met ?? new CalculationData();
+            HourlyPriceFactorData = dto.HourlyPriceFactorData ?? new CalculationHourlyPriceFactorData();
+
+            IsPrivate = dto.IsPrivate;
+            IsVisible = dto.IsVisible;
+
+            OrganisationId = dto.OrganisationId;
+            TypeId = dto.TypeId;
+            StatusId = dto.StatusId;
+            ProcurementMethodsId = dto.ProcurementMethodsId;
+            CompensationId = dto.CompensationId;
+            ContractId = dto.ContractId;
+            TemplateId = dto.TemplateId;
+        }
+
+        // =========================================================
+        // Small behavior methods (invariants)
+        // =========================================================
+
+        public void SetTax(double tax)
+        {
+            if (tax < 0 || tax > 100)
+                throw new ArgumentOutOfRangeException(nameof(tax), "Tax must be between 0 and 100.");
+
+            Tax = tax;
+        }
+
+        public void SetDates(DateTime start, DateTime end)
+        {
+            if (end < start)
+                throw new ArgumentException("EndDate cannot be before StartDate.");
+
+            StartDate = start;
+            EndDate = end;
+        }
+
+        public void SetTenderDates(
+            DateTime tenderDeadline,
+            DateTime tenderQA,
+            DateTime? publicationDate,
+            DateTime? decisionDate)
+        {
+            TenderDeadline = tenderDeadline;
+            TenderQA = tenderQA;
+            PublicationDate = publicationDate;
+            DecisionDate = decisionDate;
+        }
+
+        public void SetVisibility(bool isPrivate, bool isVisible)
+        {
+            IsPrivate = isPrivate;
+            IsVisible = isVisible;
+        }
+
+        public void SetStatus(int? statusId)
+        {
+            StatusId = statusId;
+        }
+
+        public void AssignToProject(Guid projectId)
+        {
+            ProjectId = projectId;
+        }
     }
 }

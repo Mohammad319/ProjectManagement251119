@@ -20,10 +20,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<List<ListCalculationMVVM>> GetShareCalculationsAsync(Guid projectId);
         Task<CalculationDetailsDTO> DetailsAsync(int id);
         Task<CalculationMVVM> GetPageAsync(int id,bool otherdepartment);
-        Task<PostCalculationDTO> GetPostAsync(int id);
-        Task<int> CreateAsync(Guid ProjectId, PostCalculationDTO model);
+        Task<CalculationPostDTO> GetPostAsync(int id);
+        Task<int> CreateAsync(Guid ProjectId, CalculationPostDTO model);
         Task<bool> UpdateAsync(int calculationId, List<HourlyPriceListGroupDTO> hourlyPriceList);
-        Task<bool> UpdateAsync(PostCalculationDTO model, int id);
+        Task<bool> UpdateAsync(CalculationPostDTO model, int id);
         Task<bool> UpdateAsync(List<OHFactors> model, int id);
         Task<bool> UpdateAsync(List<QuanityListDTO> model, int id);
 

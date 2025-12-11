@@ -35,9 +35,9 @@ namespace Application.Mapping.CalcItems
             Name = dto.Name,
             OpportunityId = dto.OpportunityId,
             StatusId = dto.StatusId,
-            ParentTaskId = dto.TaskId,
+            ParentTaskId = dto.ParentTaskId,
             SortOrder = dto.Order,
-            Metadata = dto.Data,
+            Metadata = dto.Metadata,
             Resources = dto.Resources?.Select(x => x.Parse(dto.Id)).ToList(),
             Tasks = dto.Tasks?.Select(t => MapToTaskEntity(t, calcId)).ToList() ?? [],
         };

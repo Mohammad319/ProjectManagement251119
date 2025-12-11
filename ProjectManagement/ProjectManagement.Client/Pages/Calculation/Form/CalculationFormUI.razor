@@ -376,7 +376,7 @@
     [Parameter] public EventCallback<ListCalculationMVVM?> Callback { get; set; }
     [Parameter] public required ListCalculationMVVM Calculation { get; set; }
 
-    PostCalculationDTO CalculationUpdate = new();
+    CalculationPostDTO CalculationUpdate = new();
     GetProjectCalcConfigDTO? Config;
 
     private int Part { get; set; } = 1;
@@ -414,7 +414,7 @@
         {
             CalculationUpdate = await ExHandlers.RunCheckTokenAsync(
                 () => Repo.Calculation.GetPostAsync(Calculation.Id)
-            ) ?? new PostCalculationDTO();
+            ) ?? new CalculationPostDTO();
         }
 
         CalculationUpdate.Notes ??= [];

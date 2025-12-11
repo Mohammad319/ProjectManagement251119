@@ -3,17 +3,17 @@ using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Application.Feature.Calculation.Calculation.Queries;
 
-public sealed record GetCalculationPostQuery(int Id) : IRequest<PostCalculationDTO>;
+public sealed record GetCalculationPostQuery(int Id) : IRequest<CalculationPostDTO>;
 
 public sealed class GetCalculationPostQueryHandler(IShardingSingleDbContext _context)
-    : IRequestHandler<GetCalculationPostQuery, PostCalculationDTO>
+    : IRequestHandler<GetCalculationPostQuery, CalculationPostDTO>
 {
-    public async Task<PostCalculationDTO> Handle(GetCalculationPostQuery request, CancellationToken cancellationToken)
+    public async Task<CalculationPostDTO> Handle(GetCalculationPostQuery request, CancellationToken cancellationToken)
     {
         return await _context.Calculations
             .AsNoTracking()
             .Where(x => x.Id == request.Id)
-            .Select(x => new PostCalculationDTO
+            .Select(x => new CalculationPostDTO
             {
                 TenderQA = x.TenderQA,
                 TenderDeadline = x.TenderDeadline,

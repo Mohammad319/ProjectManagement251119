@@ -42,13 +42,6 @@ namespace Domain.Entities.Calculation
 
         [JsonIgnore]
         public DepartmentEntity? Department { get; set; }
-        [ForeignKey(nameof(CreatedBy))]
-        [JsonIgnore]
-        public UserEntity? CreatedByUser { get; set; }
-
-        [ForeignKey(nameof(UpdatedBy))]
-        [JsonIgnore]
-        public UserEntity? UpdatedByUser { get; set; }
 
         /// <summary>
         /// Calculations created from this template.

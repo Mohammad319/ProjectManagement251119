@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
 {
-    public class ProjectEntity : AuditableEntity<Guid>
+    public class ProjectEntity : AuditableSoftDeletableEntity<Guid>
     {
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; set; } = string.Empty;
@@ -49,13 +49,6 @@ namespace Domain.Entities.Project
         public int? OrganisationId { get; set; }
         public OrganisationEntity? Organisation { get; set; }
 
-        // المستخدم المرتبط (مالك/منشئ، اختياري)
-        [ForeignKey(nameof(CreatedBy))]
-        [JsonIgnore]
-        public UserEntity? CreatedByUser { get; set; }
-        [ForeignKey(nameof(UpdatedBy))]
-        [JsonIgnore]
-        public UserEntity? UpdatedByUser { get; set; }
         public int? ProcurementMethodId { get; set; }
         public ProcurementMethodEntity? ProcurementMethod { get; set; }
 
