@@ -1,5 +1,6 @@
 ﻿using Application.Feature.Project.Status.Commands;
 using Application.Feature.Project.Status.Queries;
+using Application.Feature.Project.Status.Queries.Application.Feature.Calculation.Status.Queries;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
@@ -34,13 +35,13 @@ new Dictionary<string, object> { [nameof(StatusFormUI.Status)] = model, [nameof(
             MHD.Modal.Close();
             if (IsSuccess)
             {
-                Status = await MicroBus.Send(new GetAllStatusQuery());
+                Status = await MicroBus.Send(new GetStatusQuery());
             }
         }
 
         protected async override Task OnInitializedAsync()
         {
-            Status = await MicroBus.Send(new GetAllStatusQuery());
+            Status = await MicroBus.Send(new GetStatusQuery());
         }
     }
 }

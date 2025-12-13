@@ -1,4 +1,4 @@
-﻿using Application.Feature.Calculation.Calculation.Commands;
+﻿using Application.Feature.Calculation.Opportunity.Commands;
 using Application.Feature.Calculation.Opportunity.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,13 +20,13 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpPost("{CalculationId}")]
         public async Task<IActionResult> Post(int CalculationId, PostOpportunityDTO dto)
         {
-            return Ok(await MicroBus.Send(new CreateOpportunityCommand(dto,CalculationId)));
+            return Ok(await MicroBus.Send(new CreateOpportunityCommand(dto, CalculationId)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, PostOpportunityDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateOpportunityCommand(dto,id)));
+            return Ok(await MicroBus.Send(new UpdateOpportunityCommand(dto, id)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{id}")]

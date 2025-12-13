@@ -1,27 +1,42 @@
-﻿using Application.Interfaces;
+﻿
+using Application.Feature.General;
+using Application.Interfaces;
 using Domain.Entities.Calculation;
 using ProjectManagement.Shared.DTO.General;
 
 namespace Application.Feature.Calculation.TaskStatus.Queries
 {
-    // GET ALL
-    public sealed record GetAllTaskStatusQuery : IRequest<List<ListOrderDTO>>;
+    public sealed record GetTaskStatusQuery()
+        : IRequest<List<TaskStatusEntity>>;
 
-    public sealed class GetAllTaskStatusQueryHandler(ITaskStatusQueryService service)
-                : IRequestHandler<GetAllTaskStatusQuery, List<ListOrderDTO>>
+    public sealed class GetTaskStatusQueryHandler
+        : IRequestHandler<GetTaskStatusQuery, List<TaskStatusEntity>>
     {
-        public Task<List<ListOrderDTO>> Handle(GetAllTaskStatusQuery request, CancellationToken ct)
-            => service.GetAllAsync(ct);
+        private readonly ILookupStatusQueryService<TaskStatusEntity> _service;
+
+        public GetTaskStatusQueryHandler(ILookupStatusQueryService<TaskStatusEntity> service)
+        {
+            _service = service;
+        }
+
+        public Task<List<TaskStatusEntity>> Handle(GetTaskStatusQuery request, CancellationToken cancellationToken)
+            => _service.GetAllAsync(cancellationToken);
     }
 
-    // GET BY ID
-    public sealed record GetTaskStatusByIdQuery(int Id) : IRequest<ListOrderDTO?>;
+    public sealed record GetVisualTaskStatusQuery(int? Id)
+        : IRequest<IEnumerable<ListOrderDTO>>;
 
-    public sealed class GetTaskStatusByIdQueryHandler(ITaskStatusQueryService _service)
-                : IRequestHandler<GetTaskStatusByIdQuery, ListOrderDTO?>
+    public sealed class GetVisualTaskStatusQueryHandler
+        : IRequestHandler<GetVisualTaskStatusQuery, IEnumerable<ListOrderDTO>>
     {
+        private readonly ILookupStatusQueryService<TaskStatusEntity> _service;
 
-        public Task<ListOrderDTO?> Handle(GetTaskStatusByIdQuery request, CancellationToken ct)
-            => _service.GetByIdAsync(request.Id, ct);
+        public GetVisualTaskStatusQueryHandler(ILookupStatusQueryService<TaskStatusEntity> service)
+        {
+            _service = service;
+        }
+
+        public Task<IEnumerable<ListOrderDTO>> Handle(GetVisualTaskStatusQuery request, CancellationToken cancellationToken)
+            => _service.GetVisualAsync(request.Id, cancellationToken);
     }
 }

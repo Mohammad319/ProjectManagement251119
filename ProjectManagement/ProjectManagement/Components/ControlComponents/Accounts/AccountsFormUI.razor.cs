@@ -1,7 +1,6 @@
 ﻿using Application.Feature.Account.Commands;
-using Application.Feature.Account.Queries.AccountGroup;
+using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
-using DocumentFormat.OpenXml.Office.Word;
 using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.DTO.Account;
@@ -10,7 +9,7 @@ namespace ProjectManagement.Components.ControlComponents.Accounts
 {
     public partial class AccountsFormUI
     {
-        [Parameter] public AccountEntity Account { get; set; } = new();
+        [Parameter] public AccountEntity Account { get; set; } = new("","",0,true,new AccountData());
         [Parameter] public EventCallback<bool> Callback { get; set; }
         [Inject] DialogService DialogService { get; set; }
 
@@ -22,12 +21,12 @@ namespace ProjectManagement.Components.ControlComponents.Accounts
         protected async override Task OnInitializedAsync()
         {
             PropertyCopier.CopyPropertiesTo(Account, PostAccountDTO);
-            GroupsAPI = await MicroBus.Send(new GetAccountGroupsAsListQuery());
+            GroupsAPI = (await MicroBus.Send(new GetAccountGroupsAsListQuery())).ToList();
         }
         private async Task HandleSubmitAsync()
         {
             IsLoading = true;
-           await Callback.InvokeAsync(await NewUpdateAsync(Account.Id, PostAccountDTO));
+            await Callback.InvokeAsync(await NewUpdateAsync(Account.Id, PostAccountDTO));
             CloseModal();
             IsLoading = false;
         }

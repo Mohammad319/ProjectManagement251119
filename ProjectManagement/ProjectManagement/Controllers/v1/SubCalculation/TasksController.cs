@@ -1,6 +1,6 @@
 ﻿using Application.Feature.Calculation.Group.Queries;
 using Application.Feature.Calculation.Task.Commands;
-using Application.Feature.Project.TaskStatus.Queries;
+using Application.Feature.Calculation.TaskStatus.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Shared.Constant;
@@ -26,7 +26,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpPost("{id}")]
         public async Task<IActionResult> Create(int id, [FromBody] List<TaskPostDTO> Tasks)
         {
-            return Ok(await MicroBus.Send(new CreateTaskCommand(Tasks,id)));
+            return Ok(await MicroBus.Send(new CreateTaskCommand(Tasks, id)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost(URLConst.Filter)]
@@ -40,11 +40,11 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, TaskPostDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateTaskCommand(id,dto)));
+            return Ok(await MicroBus.Send(new UpdateTaskCommand(id, dto)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{calcID}")]
         public async Task<IActionResult> Delete(int calcID, [FromBody] IEnumerable<int> items) =>
-            Ok(await MicroBus.Send(new DeleteTaskCommand (items,calcID)));
+            Ok(await MicroBus.Send(new DeleteTaskCommand(items, calcID)));
     }
 }

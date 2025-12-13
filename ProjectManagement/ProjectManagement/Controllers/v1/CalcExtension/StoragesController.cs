@@ -107,6 +107,6 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpGet(URLConst.Storages.Remove + "/{id}")]
         public async Task<IActionResult> Remove(int id) =>
-            Ok(await MicroBus.Send(new DeleteStorageCommand(id, GetUserId())));
+            Ok(await MicroBus.Send(new DeleteStorageCommand(id)));//, GetUserId()
     }
 }

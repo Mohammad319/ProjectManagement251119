@@ -3,19 +3,37 @@ using ProjectManagement.Shared.DTO.Folder;
 
 namespace Application.Feature.Project.Folder.Queries
 {
-    public sealed record GetAllFoldersQuery() : IRequest<IEnumerable<ListFolderDTO>>;
-    public class GetAllFoldersQueryHandler(IShardingSingleDbContext _context) : IRequestHandler<GetAllFoldersQuery, IEnumerable<ListFolderDTO>>
+    public sealed record GetAllFoldersQuery() : IRequest<List<ListFolderDTO>>;
+
+    public sealed class GetAllFoldersQueryHandler(IFolderService service)
+        : IRequestHandler<GetAllFoldersQuery, List<ListFolderDTO>>
     {
-        public async Task<IEnumerable<ListFolderDTO>> Handle(GetAllFoldersQuery query, CancellationToken cancellationToken)
-        {
-            return await _context.Folders.Where(x => x.IsVisible == true)
-                .AsNoTracking().Select(x => new ListFolderDTO
-                {
-                    Color = x.Color,
-                    Name = x.Name,
-                    Id = x.Id,
-                    Order = x.SortOrder,
-                }).ToListAsync(cancellationToken: cancellationToken);
-        }
+        public Task<List<ListFolderDTO>> Handle(GetAllFoldersQuery request, CancellationToken ct)
+            => service.GetAllVisibleAsync(ct);
     }
+    public sealed record GetDetailsFoldersQuery(Guid Id) : IRequest<DetailsFolderDTO?>;
+
+    public sealed class GetDetailsFoldersQueryHandler(IFolderService service)
+        : IRequestHandler<GetDetailsFoldersQuery, DetailsFolderDTO?>
+    {
+        public Task<DetailsFolderDTO?> Handle(GetDetailsFoldersQuery request, CancellationToken ct)
+            => service.GetDetailsAsync(request.Id, ct);
+    }
+    public sealed record GetFoldersDepartmentQuery(bool IsVisible, int? DepartmentId) : IRequest<List<ListFolderDTO>>;
+
+    public sealed class GetFoldersDepartmentQueryHandler(IFolderService service)
+        : IRequestHandler<GetFoldersDepartmentQuery, List<ListFolderDTO>>
+    {
+        public Task<List<ListFolderDTO>> Handle(GetFoldersDepartmentQuery request, CancellationToken ct)
+            => service.GetByDepartmentAsync(request.IsVisible, request.DepartmentId, ct);
+    }
+    public sealed record GetFoldersFromOtherDepartmentQuery(int DepartmentId) : IRequest<List<ListFolderDTO>>;
+
+    public sealed class GetFoldersFromOtherDepartmentQueryHandler(IFolderService service)
+        : IRequestHandler<GetFoldersFromOtherDepartmentQuery, List<ListFolderDTO>>
+    {
+        public Task<List<ListFolderDTO>> Handle(GetFoldersFromOtherDepartmentQuery request, CancellationToken ct)
+            => service.GetFromOtherDepartmentAsync(request.DepartmentId, ct);
+    }
+
 }

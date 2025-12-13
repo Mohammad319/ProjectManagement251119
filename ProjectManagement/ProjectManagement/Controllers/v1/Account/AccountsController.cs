@@ -1,5 +1,5 @@
 ﻿using Application.Feature.Account.Commands;
-using Application.Feature.Account.Queries.AccountGroup;
+using Application.Feature.Account.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Shared.Constant;
@@ -15,12 +15,12 @@ namespace ProjectManagement.Server.Controllers.v1.Account
         [Authorize(Roles = Tenant.Users)]
         public async Task<IActionResult> GetAll()
         {
-            return Ok((await MicroBus.Send(new GetAccountGroupsQuery())).Select(x => new
+            return Ok((await MicroBus.Send(new GetAccountGroupsAsListQuery())).Select(x => new
             {
                 x.Id,
                 x.Name,
                 Accounts = x.Accounts.Select(a => new
-                { a.Id, a.Name, a.IsVisible, a.Metadata, a.Code, })
+                { a.Id, a.Name,  a.Account, })
             }));
         }
         [HttpGet]

@@ -1,4 +1,4 @@
-﻿using Application.Feature.Account.Queries.AccountGroup;
+﻿using Application.Feature.Account.Queries;
 using Application.Feature.Calculation.ResourceType.Commands;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;

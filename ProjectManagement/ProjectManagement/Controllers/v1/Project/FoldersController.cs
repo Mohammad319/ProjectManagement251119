@@ -1,5 +1,4 @@
-﻿using Application.Feature.Folder.Commands;
-using Application.Feature.Project.Folder.Commands;
+﻿using Application.Feature.Project.Folder.Commands;
 using Application.Feature.Project.Folder.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +24,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpGet(URLConst.GetList)]
         public async Task<IActionResult> GetByVisible(bool isVisible = true)
         {
-            return Ok(await MicroBus.Send(new GetFoldersDepartmentQuery(isVisible,GetDepartmentId())));
+            return Ok(await MicroBus.Send(new GetFoldersDepartmentQuery(isVisible, GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.Users), HttpGet(URLConst.Details + "/{id}")]
         public async Task<IActionResult> Details(Guid id)
@@ -43,19 +42,20 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpPost]
         public async Task<IActionResult> Create(PostFolderDTO dto)
         {
-            return Ok(await MicroBus.Send(new CreateFolderCommand(dto, GetUserId(), GetDepartmentId())));
+            if (GetDepartmentId()==null) return BadRequest();
+            return Ok(await MicroBus.Send(new CreateFolderCommand(dto, GetUserId(), GetDepartmentId().Value)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, PostFolderDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateFolderCommand(dto,id, GetUserId(), GetDepartmentId())));
+            return Ok(await MicroBus.Send(new UpdateFolderCommand( id, dto, GetUserId(), GetDepartmentId())));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            return Ok(await MicroBus.Send(new DeleteFolderCommand(id,GetUserId() , GetDepartmentId())));
+            return Ok(await MicroBus.Send(new DeleteFolderCommand(id, GetUserId(), GetDepartmentId())));
         }
     }
 }

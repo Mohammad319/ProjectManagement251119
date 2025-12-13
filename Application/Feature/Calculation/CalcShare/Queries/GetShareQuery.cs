@@ -1,33 +1,15 @@
 ﻿using Application.Interfaces;
-using Application.Interfaces.Context;
-using Microsoft.EntityFrameworkCore;
+using Application.Services.CalculationItems.CalcShare;
 using ProjectManagement.Shared.DTO.Calculation;
 
-namespace Application.Feature.Calculation.CalcShare.Queries;
-
-public sealed record GetShareQuery(int Id, int? DepartmentId, int UserId) : IRequest<IEnumerable<ListShareCalcDTO>>;
-
-public sealed class GetShareQueryHandler(IShardingSingleDbContext _context)
-    : IRequestHandler<GetShareQuery, IEnumerable<ListShareCalcDTO>>
+namespace Application.Feature.Calculation.CalcShare.Queries
 {
-    public async Task<IEnumerable<ListShareCalcDTO>> Handle(GetShareQuery request, CancellationToken cancellationToken)
+    public sealed record GetShareQuery(int Id, int? DepartmentId, int UserId) : IRequest<IEnumerable<ListShareCalcDTO>>;
+
+    public sealed class GetShareQueryHandler(IShareCalcService service)
+        : IRequestHandler<GetShareQuery, IEnumerable<ListShareCalcDTO>>
     {
-        return await _context.ShareCalc
-            .Where(x => x.CalculationId == request.Id &&
-                        x.Calculation.Project.Folder.DepartmentId == request.DepartmentId)
-            .Select(x => new ListShareCalcDTO
-            {
-                Id = x.Id,
-                DepartmentId = x.DepartmentId,
-                UserId = x.CreatedBy,
-                User = x.CreatedAtUser.FirstName + " " + x.CreatedAtUser.LastName,
-                Tap1 = x.Metadata.Tap1,
-                Tap2 = x.Metadata.Tap2,
-                Tap3 = x.Metadata.Tap3,
-                Tap4 = x.Metadata.Tap4,
-                Tap5 = x.Metadata.Tap5,
-                Tap6 = x.Metadata.Tap6,
-                Department = x.Department.Name
-            }).ToListAsync(cancellationToken);
+        public Task<IEnumerable<ListShareCalcDTO>> Handle(GetShareQuery request, CancellationToken ct)
+            => service.GetAsync(request.Id, request.DepartmentId, request.UserId, ct);
     }
 }

@@ -2,17 +2,39 @@
 using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
 using Domain.Entities.Organisation;
-using Domain.Entities.Users;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Project;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
+{public static class ProjectMappingExtensions
 {
-    public class ProjectEntity : AuditableSoftDeletableEntity<Guid>
+    public static ProjectData ToMetadata(this PostProjectDTO dto)
     {
+        return new ProjectData
+        {
+            Procurement = dto.Procurement,
+            ProjectManager = dto.ProjectManager,
+            Notes = dto.Notes,
+            ClientsContactPersonTender = dto.ClientsContactPersonTender,
+            Address = dto.Address,
+            ClientsManager = dto.ClientsManager,
+            Contacts = dto.Contacts,
+            Designer = dto.Designer,
+            Developer = dto.Developer,
+            Inspector = dto.Inspector,
+            OverviewInfoProject = dto.OverviewInfoProject,
+            Responsibles = dto.Responsibles,
+            Supervisor = dto.Supervisor
+        };
+    }
+}
+
+    public sealed class ProjectEntity : AuditableSoftDeletableEntity<Guid>
+    {
+        [Range(0, 5)]
+        public int Priority { get; set; } = 3;
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; set; } = string.Empty;
 
@@ -62,5 +84,44 @@ namespace Domain.Entities.Project
 
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; set; } = [];
+
+        private ProjectEntity() { } // EF
+
+        public static ProjectEntity Create(
+            PostProjectDTO dto,
+            Guid folderId,
+            int createdBy,
+            double sortOrder)
+        {
+            var project = new ProjectEntity
+            {
+                FolderId = folderId,
+                CreatedBy = createdBy,
+                SortOrder = sortOrder
+            };
+            project.Update(dto);
+            return project;
+        }
+
+        public void Update(PostProjectDTO dto)
+        {
+            Name = dto.Name;
+            Code = dto.Code;
+            StartDate = dto.StartDate;
+            EndDate = dto.EndDate;
+            TenderDeadline = dto.TenderDeadline;
+            TenderQA = dto.TenderQA;
+            IsVisible = dto.IsVisible;
+
+            ProjectTypeId = dto.TypeId;
+            OrganisationId = dto.OrganisationId;
+            ProcurementMethodId = dto.ProcurementMethodsId;
+            CompensationId = dto.CompensationId;
+            ContractId = dto.ContractId;
+
+            Metadata = dto.ToMetadata();
+        }
+
+        public void UpdateOrder(double newOrder) => SortOrder = newOrder;
     }
 }

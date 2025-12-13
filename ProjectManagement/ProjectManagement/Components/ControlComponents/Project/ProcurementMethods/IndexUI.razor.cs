@@ -22,7 +22,7 @@ new Dictionary<string, object> { [nameof(PMFormUI.Procurement)] = model, [nameof
         }
         async Task ConfirmRemoveAsync(ProcurementMethodEntity st)
         {
-            bool result = await MicroBus.Send(new DeleteProcurementMethodsCommand(st.Id));
+            bool result = await MicroBus.Send(new DeleteProcurementMethodCommand(st.Id));
             if (result)
             {
                 Status?.Remove(st);

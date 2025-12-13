@@ -1,30 +1,40 @@
 ﻿using Application.Interfaces;
-using AutoMapper;
-using Domain.Entities.Folder;
 using ProjectManagement.Shared.DTO.Folder;
-using System;
 
 namespace Application.Feature.Project.Folder.Commands
 {
-    public sealed record CreateFolderCommand(PostFolderDTO dto, int UserId, int? DepartmentId) : IRequest<Guid>;
+    public sealed record CreateFolderCommand(PostFolderDTO Dto, int UserId, int DepartmentId) : IRequest<Guid>;
 
-    public class CreateFolderCommandHandler(IShardingSingleDbContext context, IMapper mapper) : IRequestHandler<CreateFolderCommand, Guid>
+    public sealed class CreateFolderCommandHandler(IFolderService service)
+        : IRequestHandler<CreateFolderCommand, Guid>
     {
-        public async Task<Guid> Handle(CreateFolderCommand request, CancellationToken cancellationToken)
-        {
-            if (!request.DepartmentId.HasValue)
-                return Guid.Empty;
-            FolderEntity folder = mapper.Map<FolderEntity>(request.dto);
-
-            double? max = context.Folders.Where(x => x.DepartmentId == request.DepartmentId.Value || x.CreatedBy == request.UserId).Max(x => (double?)x.SortOrder);
-            if (max.HasValue) folder.SortOrder = max.Value + 100;
-            else folder.SortOrder = 100;
-
-            folder.DepartmentId = request.DepartmentId.Value;
-            folder.CreatedBy = request.UserId;
-            context.Folders.Add(folder);
-            await context.SaveChangesAsync(cancellationToken);
-            return folder.Id;
-        }
+        public Task<Guid> Handle(CreateFolderCommand request, CancellationToken ct)
+            => service.CreateAsync(request.Dto, request.UserId, request.DepartmentId, ct);
     }
+    public sealed record UpdateFolderCommand(Guid Id, PostFolderDTO Dto, int UserId, int? DepartmentId) : IRequest<bool>;
+
+    public sealed class UpdateFolderCommandHandler(IFolderService service)
+        : IRequestHandler<UpdateFolderCommand, bool>
+    {
+        public Task<bool> Handle(UpdateFolderCommand request, CancellationToken ct)
+            => service.UpdateAsync(request.Id, request.Dto, request.UserId, request.DepartmentId, ct);
+    }
+    public sealed record NewOrderFolderCommand(Guid Id, double NewOrder) : IRequest<bool>;
+
+    public sealed class NewOrderFolderCommandHandler(IFolderService service)
+        : IRequestHandler<NewOrderFolderCommand, bool>
+    {
+        public Task<bool> Handle(NewOrderFolderCommand request, CancellationToken ct)
+            => service.UpdateOrderAsync(request.Id, request.NewOrder, ct);
+    }
+
+    public sealed record DeleteFolderCommand(Guid Id, int UserId, int? DepartmentId) : IRequest<bool>;
+
+    public sealed class DeleteFolderCommandHandler(IFolderService service)
+        : IRequestHandler<DeleteFolderCommand, bool>
+    {
+        public Task<bool> Handle(DeleteFolderCommand request, CancellationToken ct)
+            => service.DeleteAsync(request.Id, request.UserId, request.DepartmentId, ct);
+    }
+
 }

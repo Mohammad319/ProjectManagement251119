@@ -1,9 +1,7 @@
 ﻿using Application.Feature.Calculation.StatusResource.Commands;
-using Application.Feature.Calculation.StatusResource.Queries;
-using DocumentFormat.OpenXml.Office2010.Excel;
+using Application.Feature.Project.StatusResource.Queries;
 using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 
 namespace ProjectManagement.Components.ControlComponents.ResourceStatus
@@ -26,7 +24,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceStatus
         }
         async Task ConfirmRemoveAsync(StatusResourcesEntity st)
         {
-            bool result = await MicroBus.Send(new DeleteStatusResourceCommand(st.Id));
+            bool result = await MicroBus.Send(new DeleteResourceStatusCommand(st.Id));
             if (result)
             {
                 Status?.Remove(st);
@@ -40,13 +38,13 @@ namespace ProjectManagement.Components.ControlComponents.ResourceStatus
             MHD.Modal.Close();
             if (IsSuccess)
             {
-                Status = await MicroBus.Send(new GetStatusResourceQuery());
+                Status = await MicroBus.Send(new GetResourceStatusQuery());
             }
         }
 
         protected async override Task OnInitializedAsync()
         {
-            Status = await MicroBus.Send(new GetStatusResourceQuery());
+            Status = await MicroBus.Send(new GetResourceStatusQuery());
         }
     }
 }

@@ -8,8 +8,7 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
-    <MhdTable Items="Status?
-                                            .Where(x => x.IsVisible == IsVisible)?
+    <MhdTable Items="Status?.Where(x => x.IsVisible == IsVisible)?
                                             .OrderByDescending(x => x.SortOrder)"
               ShowFilter="false">
         <HeaderTemplate>

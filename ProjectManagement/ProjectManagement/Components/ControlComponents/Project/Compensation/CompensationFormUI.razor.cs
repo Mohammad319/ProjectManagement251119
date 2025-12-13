@@ -1,17 +1,16 @@
-﻿using Application.Feature.Project.Compensation.Commands;
-using Application.Feature.Project.ProcurementMethods.Commands;
+﻿using Application.Feature.Project.ProcurementMethods.Commands;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.DTO.Calculation;
 
 namespace ProjectManagement.Components.ControlComponents.Project.Compensation
 {
     public partial class CompensationFormUI
     {
-        [Parameter] public CompensationEntity Compensation { get; set; } = new();
+        [Parameter] public CompensationEntity Compensation { get; set; } = new("new ", "#00ff00", 0, true);
         [Parameter] public EventCallback<bool> Callback { get; set; }
 
-        PostCompensationDTO CompensationUpdate { get; set; } = new();
+        PostTaskStatusDTO CompensationUpdate { get; set; } = new();
         bool IsLoading = false;
         protected override void OnInitialized()
         {
@@ -23,7 +22,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.Compensation
             bool result = false;
             if (Compensation.Id == 0)
                 result = await MicroBus.Send(new CreateCompensationCommand(CompensationUpdate)) > 0;
-            else result = await MicroBus.Send(new UpdateCompensationCommand(CompensationUpdate, Compensation.Id));
+            else result = await MicroBus.Send(new UpdateCompensationCommand(Compensation.Id, CompensationUpdate));
 
             MHD.Notifications(Compensation.Id == 0 ? ToastType.Add : ToastType.Update, result);
             await Callback.InvokeAsync(result);

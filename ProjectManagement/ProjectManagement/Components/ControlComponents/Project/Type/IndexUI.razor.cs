@@ -32,14 +32,14 @@ new Dictionary<string, object> { [nameof(TypeFormUI.Status)] = model, [nameof(Ty
             MHD.Modal.Close();
             if (IsSuccess)
             {
-                Status = await MicroBus.Send(new GetProjectTypeQuery());
+                Status = await MicroBus.Send(new GetTypeQuery());
                 StateHasChanged();
             }
         }
 
         protected async override Task OnInitializedAsync()
         {
-            Status = await MicroBus.Send(new GetProjectTypeQuery());
+            Status = await MicroBus.Send(new GetTypeQuery());
         }
     }
 }

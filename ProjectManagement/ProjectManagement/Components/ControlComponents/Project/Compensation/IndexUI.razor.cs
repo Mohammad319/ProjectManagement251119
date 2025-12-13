@@ -1,8 +1,7 @@
-﻿using Application.Feature.Project.Compensation.Commands;
-using Application.Feature.Project.Compensation.Queries;
+﻿using Application.Feature.Project.Compensation.Queries;
+using Application.Feature.Project.ProcurementMethods.Commands;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 
 namespace ProjectManagement.Components.ControlComponents.Project.Compensation

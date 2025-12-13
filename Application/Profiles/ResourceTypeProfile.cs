@@ -1,7 +1,4 @@
-﻿using Application.Feature.Calculation.ResourceType.Commands;
-using Application.Feature.Calculation.StatusResource.Commands;
-using Application.Feature.Project.StatusResource.Commands;
-using AutoMapper;
+﻿using AutoMapper;
 using Domain.Entities.Calculation;
 using Domain.Entities.ResourceType;
 using ProjectManagement.Shared.DTO.Calculation;

@@ -1,6 +1,5 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.ResourceType;
-using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
@@ -9,7 +8,6 @@ using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.ValueObjects.Calculation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Domain.Entities.Calculation
 {

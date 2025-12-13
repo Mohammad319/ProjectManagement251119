@@ -1,22 +1,24 @@
 ﻿using Application.Interfaces;
-using AutoMapper;
-using Domain.Entities.Application;
-using Domain.Entities.Calculation;
+using Application.Services.CalculationItems.CalcShare;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Application.Feature.Calculation.CalcShare.Commands
 {
-    public sealed record CreateCalcShareCommand(PostShareCalcDTO dto, int FromUser,int FromDepartment) : IRequest<int>;
+    public sealed record UpsertCalcShareCommand(ShareCalcUpsertDTO Dto, int UserId, int? DepartmentId) : IRequest<int>;
 
-        public class CreateCalcShareCommandHandler(IShardingSingleDbContext _dataAccess, IMapper _mapper) : IRequestHandler<CreateCalcShareCommand, int>
-        {
-            public async Task<int> Handle(CreateCalcShareCommand request, CancellationToken cancellationToken)
-            {
-                ShareCalcEntity calculation = _mapper.Map<ShareCalcEntity>(request.dto);
+    public sealed class UpsertCalcShareCommandHandler(IShareCalcService service)
+        : IRequestHandler<UpsertCalcShareCommand, int>
+    {
+        public Task<int> Handle(UpsertCalcShareCommand request, CancellationToken ct)
+            => service.UpsertAsync(request.Dto, request.UserId, request.DepartmentId, ct);
+    }
 
-                _dataAccess.ShareCalc.Add(calculation);
-                await _dataAccess.SaveChangesAsync(cancellationToken);
-                return calculation.Id;
-            }
+    public sealed record DeleteCalcShareCommand(int Id) : IRequest<bool>;
+
+    public sealed class DeleteCalcShareCommandHandler(IShareCalcService service)
+        : IRequestHandler<DeleteCalcShareCommand, bool>
+    {
+        public Task<bool> Handle(DeleteCalcShareCommand request, CancellationToken ct)
+            => service.DeleteAsync(request.Id, ct);
     }
 }

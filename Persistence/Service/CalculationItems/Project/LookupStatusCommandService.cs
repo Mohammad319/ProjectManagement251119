@@ -1,4 +1,4 @@
-﻿using Application.Feature.Calculation.TaskStatus;
+﻿using Application.Feature.General;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
 using ProjectManagement.Shared.DTO.Calculation;

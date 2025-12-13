@@ -1,17 +1,18 @@
 ﻿using Application.Feature.Account.Commands;
-using Application.Feature.Account.Queries.AccountGroup;
+using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
+using ProjectManagement.Shared.DTO.General;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts
 {
     partial class AccountGroupsUI : IDisposable
     {
         int? GroupSelected;
-        public List<AccountGroupEntity>? Groups;
+        public List<ListDTO>? Groups;
         [Inject]
         DialogService DialogService { get; set; }
         async Task ChangeAccountGroupSelectedAsync(AccountGroupEntity ags)
@@ -25,7 +26,9 @@ namespace ProjectManagement.Components.ControlComponents.Accounts
 
         void UpdateForm(AccountGroupEntity model) =>
            DialogService.ShowComponent<AccountGroupsFormUI>(model.Id > 0 ? AppLoc[LocalizerConst.Update, model.Name] : AppLoc[LocalizerConst.New, CalcResource.accountGroups],
-                new Dictionary<string, object> { [nameof(AccountGroupsFormUI.AccountGroup)] = model,
+                new Dictionary<string, object>
+                {
+                    [nameof(AccountGroupsFormUI.AccountGroup)] = model,
                     [nameof(AccountGroupsFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, Callback)
                 });
         async Task Callback(bool refresh)
@@ -36,8 +39,8 @@ namespace ProjectManagement.Components.ControlComponents.Accounts
                 Groups = await MicroBus.Send(new GetAccountGroupsQuery());
             }
         }
-        void Remove(AccountGroupEntity Organisation) => MHD.DeleteMessage(Organisation.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(Organisation)));
-        async Task ConfirmRemoveAsync(AccountGroupEntity account)
+        void Remove(ListDTO Organisation) => MHD.DeleteMessage(Organisation.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(Organisation)));
+        async Task ConfirmRemoveAsync(ListDTO account)
         {
             var reault = await MicroBus.Send(new DeleteAccountGroupCommand(account.Id));
             if (reault)

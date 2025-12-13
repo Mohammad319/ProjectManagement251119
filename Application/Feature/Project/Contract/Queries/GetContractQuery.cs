@@ -1,15 +1,22 @@
-﻿using Application.Interfaces;
+﻿using Application.Feature.General;
+using Application.Interfaces;
 using Domain.Entities.Project;
 using ProjectManagement.Shared.DTO.General;
 
 namespace Application.Feature.Project.Contract.Queries
 {
     public sealed record GetContractQuery() : IRequest<List<ContractEntity>>;
-    public class GetContractQueryHandler(IShardingSingleDbContext context) : IRequestHandler<GetContractQuery, List<ContractEntity>>
+    public sealed class GetContractQueryHandler(ILookupStatusQueryService<ContractEntity> service)
+                : IRequestHandler<GetContractQuery, List<ContractEntity>>
     {
-        public async Task<List<ContractEntity>> Handle(GetContractQuery query, CancellationToken cancellationToken)
-        {
-            return await context.Contracts.ToListAsync(cancellationToken);
-        }
+        public Task<List<ContractEntity>> Handle(GetContractQuery request, CancellationToken cancellationToken)
+            => service.GetAllAsync(cancellationToken);
+    }
+    public sealed record GetVisualContractQuery(int? Id) : IRequest<IEnumerable<ListOrderDTO>>;
+    public sealed class GetVisualContractQueryHandler(ILookupStatusQueryService<ContractEntity> service)
+                : IRequestHandler<GetVisualContractQuery, IEnumerable<ListOrderDTO>>
+    {
+        public Task<IEnumerable<ListOrderDTO>> Handle(GetVisualContractQuery request, CancellationToken cancellationToken)
+            => service.GetVisualAsync(request.Id, cancellationToken);
     }
 }

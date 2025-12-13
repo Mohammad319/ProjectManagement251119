@@ -17,7 +17,7 @@
                 </h2>
                 <div class="flex items-center gap-1">
                     <button class="@CssClasses.Btn.IconButton.Success"
-                            @onclick="() => UpdateForm(new AccountGroupEntity())"
+                            @* @onclick="() => UpdateForm(new AccountGroupEntity())" *@
                             title="Add group">
                         @((MarkupString)Icons.Plus)
                     </button>
@@ -43,8 +43,8 @@
                         var defaultClasses = "bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800";
                         var finalClass = $"{baseClasses} {(isSelected ? selectedClasses : defaultClasses)}";
 
-                        <button @onclick="async () => await ChangeAccountGroupSelectedAsync(item)"
-                                @oncontextmenu="() => GroupContextM(item)"
+                        <button @* @onclick="async () => await ChangeAccountGroupSelectedAsync(item)"
+                                @oncontextmenu="() => GroupContextM(item)" *@
                                 @oncontextmenu:preventDefault
                                 class="@finalClass"
                                 aria-current="@(isSelected ? "page" : null)">
@@ -92,9 +92,9 @@
                 new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => {UpdateForm(item);
             return Task.CompletedTask;
         } },
-                new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => {Remove(item);
-            return Task.CompletedTask;
-        } }
+        //         new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => {Remove(item);
+        //     return Task.CompletedTask;
+        // } }
             });
         GroupSelected = item.Id;
     }

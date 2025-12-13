@@ -3,6 +3,7 @@ using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Client.Shared.Model.Project;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.Type
         [Parameter] public EventCallback<bool> Callback { get; set; }
 
         bool IsLoading = false;
-        private PostTypeDTO UpdateObj = new();
+        private PostTaskStatusDTO UpdateObj = new();
 
         protected override void OnInitialized()
         {
@@ -29,7 +30,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.Type
             bool result = false;
             if (Status.Id == 0)
                 result = await MicroBus.Send(new CreateTypeCommand(UpdateObj)) > 0;
-            else result = await MicroBus.Send(new UpdateTypeCommand(UpdateObj,Status.Id));
+            else result = await MicroBus.Send(new UpdateTypeCommand(Status.Id,UpdateObj));
 
             MHD.Notifications(Status.Id == 0 ? ToastType.Add : ToastType.Update, result);
             await Callback.InvokeAsync(result);

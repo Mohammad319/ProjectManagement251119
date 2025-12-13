@@ -13,7 +13,7 @@
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH">
             <div class="@CssClasses.Layout.FlexItemsCenter">
-                <button @onclick="() => UpdateForm(new ContractEntity())" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
+                <button @onclick="@(() => UpdateForm(new ContractEntity("new status" ,"#00ff00", 0, true)))" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
                 <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
             </div>
         </th>

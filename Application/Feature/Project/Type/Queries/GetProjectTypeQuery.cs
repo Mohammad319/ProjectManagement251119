@@ -1,15 +1,42 @@
-﻿using Application.Interfaces;
+﻿using Application.Feature.General;
+using Application.Interfaces;
 using Domain.Entities.Project;
 using ProjectManagement.Shared.DTO.General;
 
 namespace Application.Feature.Project.Type.Queries
 {
-    public sealed record GetProjectTypeQuery() : IRequest<List<TypeEntity>>;
-    public class GetProjectTypeQueryHandler(IShardingSingleDbContext context) : IRequestHandler<GetProjectTypeQuery, List<TypeEntity>>
+    public sealed record GetTypeQuery()
+        : IRequest<List<TypeEntity>>;
+
+    public sealed class GetTypeQueryHandler
+        : IRequestHandler<GetTypeQuery, List<TypeEntity>>
     {
-        public async Task<List<TypeEntity>> Handle(GetProjectTypeQuery query, CancellationToken cancellationToken)
+        private readonly ILookupStatusQueryService<TypeEntity> _service;
+
+        public GetTypeQueryHandler(ILookupStatusQueryService<TypeEntity> service)
         {
-            return await context.CalcProjectType.ToListAsync(cancellationToken);
+            _service = service;
         }
+
+        public Task<List<TypeEntity>> Handle(GetTypeQuery request, CancellationToken cancellationToken)
+            => _service.GetAllAsync(cancellationToken);
+    }
+
+    // نسخة خفيفة للـ UI (Id, Name, SortOrder)
+    public sealed record GetVisualTypeQuery(int? Id)
+        : IRequest<IEnumerable<ListOrderDTO>>;
+
+    public sealed class GetVisualTypeQueryHandler
+        : IRequestHandler<GetVisualTypeQuery, IEnumerable<ListOrderDTO>>
+    {
+        private readonly ILookupStatusQueryService<TypeEntity> _service;
+
+        public GetVisualTypeQueryHandler(ILookupStatusQueryService<TypeEntity> service)
+        {
+            _service = service;
+        }
+
+        public Task<IEnumerable<ListOrderDTO>> Handle(GetVisualTypeQuery request, CancellationToken cancellationToken)
+            => _service.GetVisualAsync(request.Id, cancellationToken);
     }
 }

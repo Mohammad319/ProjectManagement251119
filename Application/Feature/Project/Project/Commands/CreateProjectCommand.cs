@@ -1,40 +1,41 @@
 ﻿using Application.Interfaces;
-using Application.Interfaces.Context;
-using AutoMapper;
-using Domain.Entities.Folder;
-using Domain.Entities.Project;
 using ProjectManagement.Shared.DTO.Project;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Application.Feature.Project.Project.Commands
 {
     public sealed record CreateProjectCommand(PostProjectDTO Dto, int UserId, int? DepartmentId) : IRequest<Guid>;
 
-    public class CreateProjectCommandHandler(IShardingSingleDbContext _dataAccess, IMapper _mapper) : IRequestHandler<CreateProjectCommand, Guid>
+    public sealed class CreateProjectCommandHandler(IProjectService service)
+        : IRequestHandler<CreateProjectCommand, Guid>
     {
-        public async Task<Guid> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
-        {
-            FolderEntity folder = await _dataAccess.Folders.FindAsync(request.Dto.FolderId, cancellationToken);
-            if (folder == null)
-                return Guid.Empty;
+        public Task<Guid> Handle(CreateProjectCommand request, CancellationToken ct)
+            => service.CreateAsync(request.Dto, request.UserId, request.DepartmentId, ct);
+    }
 
-            if (folder.DepartmentId != request.DepartmentId && request.DepartmentId!= null)
-                return Guid.Empty;
-            ProjectEntity post = _mapper.Map<ProjectEntity>(request.Dto);
-            request.Dto.CopyPropertiesTo(post.Metadata);
-            double? max = _dataAccess.Projects.Where(x => (request.DepartmentId == null || x.Folder.DepartmentId == request.DepartmentId) || x.CreatedBy == request.UserId)
-                .Max(x => (double?)x.SortOrder);
-            if (max.HasValue) folder.SortOrder = max.Value + 100;
-            else folder.SortOrder = 100;
-            post.CreatedBy = request.UserId;
+    public sealed record EditProjectCommand(Guid Id, PostProjectDTO Dto, int UserId, int? DepartmentId) : IRequest<bool>;
 
-            _dataAccess.Projects.Add(post);
-            await _dataAccess.SaveChangesAsync(cancellationToken);
+    public sealed class EditProjectCommandHandler(IProjectService service)
+        : IRequestHandler<EditProjectCommand, bool>
+    {
+        public Task<bool> Handle(EditProjectCommand request, CancellationToken ct)
+            => service.UpdateAsync(request.Id, request.Dto, request.UserId, request.DepartmentId, ct);
+    }
 
-            return post.Id;
-        }
+    public sealed record DeleteProjectCommand(Guid Id, int UserId, int? DepartmentId) : IRequest<bool>;
+
+    public sealed class DeleteProjectCommandHandler(IProjectService service)
+        : IRequestHandler<DeleteProjectCommand, bool>
+    {
+        public Task<bool> Handle(DeleteProjectCommand request, CancellationToken ct)
+            => service.DeleteAsync(request.Id, request.UserId, request.DepartmentId, ct);
+    }
+
+    public sealed record NewOrderProjectCommand(Guid Id, double NewOrder) : IRequest<bool>;
+
+    public sealed class NewOrderProjectCommandHandler(IProjectService service)
+        : IRequestHandler<NewOrderProjectCommand, bool>
+    {
+        public Task<bool> Handle(NewOrderProjectCommand request, CancellationToken ct)
+            => service.UpdateOrderAsync(request.Id, request.NewOrder, ct);
     }
 }
