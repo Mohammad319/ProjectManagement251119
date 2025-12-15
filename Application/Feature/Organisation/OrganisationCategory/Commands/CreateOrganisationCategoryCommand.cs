@@ -1,26 +1,30 @@
 ﻿using Application.Interfaces;
-using AutoMapper;
-using Domain.Entities.Organisation;
 using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Application.Feature.Organisation.OrganisationCategory.Commands
 {
     public sealed record CreateOrganisationCategoryCommand(PostOrganisationCategoryDTO Dto) : IRequest<int>;
+    public sealed record UpdateOrganisationCategoryCommand(PutOrganisationCategoryDTO Dto) : IRequest<bool>;
+    public sealed record DeleteOrganisationCategoryCommand(int Id) : IRequest<bool>;
 
-    public class CreateOrganisationCategoryCommandHandler(IShardingSingleDbContext dataAccess, IMapper mapper) : IRequestHandler<CreateOrganisationCategoryCommand, int>
+    public sealed class CreateOrganisationCategoryCommandHandler(IOrganisationCategoryService service)
+        : IRequestHandler<CreateOrganisationCategoryCommand, int>
     {
-        public async Task<int> Handle(CreateOrganisationCategoryCommand request, CancellationToken cancellationToken)
-        {
-            OrganisationCategoryEntity entity = mapper.Map<OrganisationCategoryEntity>(request.Dto);
-            if (entity.ParentCategoryId.HasValue && entity.ParentCategoryId > 0)
-            {
-                var parent = dataAccess.OrganisationCategory.Find(entity.ParentCategoryId);
-                if (parent.ParentCategoryId > 0)
-                    return 0;
-            }
-            dataAccess.OrganisationCategory.Add(entity);
-            await dataAccess.SaveChangesAsync(cancellationToken);
-            return entity.Id;
-        }
+        public Task<int> Handle(CreateOrganisationCategoryCommand request, CancellationToken ct)
+            => service.CreateAsync(request.Dto, ct);
+    }
+
+    public sealed class UpdateOrganisationCategoryCommandHandler(IOrganisationCategoryService service)
+        : IRequestHandler<UpdateOrganisationCategoryCommand, bool>
+    {
+        public Task<bool> Handle(UpdateOrganisationCategoryCommand request, CancellationToken ct)
+            => service.UpdateAsync(request.Dto, ct);
+    }
+
+    public sealed class DeleteOrganisationCategoryCommandHandler(IOrganisationCategoryService service)
+        : IRequestHandler<DeleteOrganisationCategoryCommand, bool>
+    {
+        public Task<bool> Handle(DeleteOrganisationCategoryCommand request, CancellationToken ct)
+            => service.DeleteAsync(request.Id, ct);
     }
 }

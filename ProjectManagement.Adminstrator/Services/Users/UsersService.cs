@@ -1,5 +1,4 @@
-﻿using Application.Interfaces.Context;
-using AuthPermissions.Entity;
+﻿using AuthPermissions.Entity;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -94,7 +93,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             return roles;
         }
 
-        public async Task<IShardingSingleDbContext> CreateDbContext(int tenantId)
+        public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId)
         {
             using var _appContext = ContextFactory.CreateDbContext();
             string? ConnectionString = await _appContext?.Tenants?.Where(x => x.Id == tenantId)?

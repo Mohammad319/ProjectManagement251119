@@ -1,5 +1,4 @@
-﻿using Application.Interfaces.Context;
-using Domain.Entities.Application;
+﻿using Domain.Entities.Application;
 using Domain.Entities.Base;
 using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
@@ -7,7 +6,6 @@ using Domain.Entities.Organisation;
 using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Persistence.Configurations;
 using ProjectManagement.Shared.Base.Application;
@@ -15,19 +13,14 @@ using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Organisation;
-using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Persistence.Context
 {
     public class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbContext> options)
-        : DbContext(options),
-          IShardingSingleDbContext
+        : DbContext(options)
     {
         /// <summary>
         /// قيمة الـ Tenant الحالية، يجب تعيينها من الطبقة الأعلى (Middleware / Service).

@@ -122,8 +122,8 @@
         PropertyCopier.CopyPropertiesTo(ResourceSort, PostResourceSort);
         bool result = false;
         if (ResourceSort?.Id == 0)
-            result = await MicroBus.Send(new CreateResourceSortCommand(PostResourceSort)) > 0;
-        else result = await MicroBus.Send(new UpdateResourceSortCommand(PostResourceSort,ResourceSort.Id));
+            result = await MicroBus.Send(new CreateResourceSortCommand(ResourceSort.ResourceTypeId ,PostResourceSort)) > 0;
+        else result = await MicroBus.Send(new UpdateResourceSortCommand(ResourceSort.Id,PostResourceSort));
         await Callback.InvokeAsync(result);
         MHD.Notifications(ResourceSort.Id == 0 ? ToastType.Add : ToastType.Update, result);
         MHD.Modal.Close();

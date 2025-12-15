@@ -63,7 +63,7 @@ namespace Persistence.Service.ResourceAccount
                     foreach (var acc in item.Accounts)
                     {
                         var account = new AccountEntity(acc.Account, acc.Name, 0, acc.IsVisible, acc.Data);
-                        group.Accounts.Add(account);
+                        group.AddAccount(account);
                     }
                 }
 

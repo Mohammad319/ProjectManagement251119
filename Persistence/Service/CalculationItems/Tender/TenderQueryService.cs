@@ -1,13 +1,9 @@
-﻿using Application.Interfaces.Context;
-using Application.Services.CalculationItems.Tender;
-using Microsoft.EntityFrameworkCore;
+﻿using Application.Services.CalculationItems.Tender;
 using ProjectManagement.Shared.DTO.Calculation;
-using System;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Persistence.Service.CalculationItems.Tender
 {
-    public sealed class TenderQueryService(IShardingSingleDbContext db) : ITenderQueryService
+    public sealed class TenderQueryService(ShardingSingleDbContext db) : ITenderQueryService
     {
         public async Task<List<TenderListDTO>> GetTenderListAsync(
             int calculationId,

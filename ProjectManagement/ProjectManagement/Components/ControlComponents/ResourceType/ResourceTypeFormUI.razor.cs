@@ -42,7 +42,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceType
             bool result = false;
             if (ResourceType.Id == 0)
                 result = await MicroBus.Send(new CreateResourceTypeCommand(ResourceTypeUpdate)) > 0;
-            else result = await MicroBus.Send(new UpdateResourceTypeCommand(ResourceTypeUpdate, ResourceType.Id));
+            else result = await MicroBus.Send(new UpdateResourceTypeCommand(ResourceType.Id,ResourceTypeUpdate));
 
             MHD.Notifications(ResourceType.Id == 0 ? ToastType.Add : ToastType.Update, result);
             await Callback.InvokeAsync(result);

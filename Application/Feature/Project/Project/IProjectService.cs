@@ -1,4 +1,5 @@
-﻿using ProjectManagement.Shared.DTO.Project;
+﻿using ProjectManagement.Shared.DTO.General;
+using ProjectManagement.Shared.DTO.Project;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,6 +15,16 @@ namespace Application.Feature.Project.Project
         Task<bool> UpdateOrderAsync(Guid id, double newOrder, CancellationToken ct);
 
         // Queries
+        Task<GetProjectCalcConfigDTO> GetProjectCalcConfigAsync(
+     int typeObj,
+     int methods,
+     int contracts,
+     int compensations,
+     int types,
+     int statuses,
+     int orgId,
+     CancellationToken ct = default);
+    
         Task<ProjectDetailsDTO?> GetDetailsAsync(Guid id, CancellationToken ct);
         Task<PostProjectDTO?> GetPostAsync(Guid id, CancellationToken ct);
         Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool isVisible, int userId, int? departmentId, CancellationToken ct);

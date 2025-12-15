@@ -1,41 +1,45 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Folder;
 using Domain.Entities.Project;
+using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Users
 {
-    /// <summary>
-    /// Logical department within a tenant.
-    /// </summary>
     public sealed class DepartmentEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public required string Name { get; set; }
+        public string Name { get; private set; } = string.Empty;
 
         [MaxLength(FieldLengths.Comment)]
-        public string? Description { get; set; }
+        public string? Description { get; private set; }
 
-        /// <summary>
-        /// Folders belonging to this department.
-        /// </summary>
         [JsonIgnore]
-        public ICollection<FolderEntity> Folders { get; set; } = [];
+        public ICollection<FolderEntity> Folders { get; private set; } = [];
 
-        /// <summary>
-        /// Users assigned to this department.
-        /// </summary>
         [JsonIgnore]
-        public ICollection<UserEntity> Users { get; set; } = [];
+        public ICollection<UserEntity> Users { get; private set; } = [];
 
-        /// <summary>
-        /// Projects owned by this department.
-        /// </summary>
         [JsonIgnore]
-        public ICollection<ProjectEntity> Projects { get; set; } = [];
+        public ICollection<ProjectEntity> Projects { get; private set; } = [];
+
+        private DepartmentEntity() { } // EF
+
+        public static DepartmentEntity Create(DepartmentBase dto)
+        {
+            return new DepartmentEntity
+            {
+                Name = dto.Name,
+                Description = dto.Description
+            };
+        }
+
+        public void Update(DepartmentBase dto)
+        {
+            Name = dto.Name;
+            Description = dto.Description;
+        }
     }
-
 }

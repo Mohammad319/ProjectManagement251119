@@ -1,6 +1,7 @@
 ﻿@using Application.Interfaces.Context
 @using BlazorMHD.UI.Components.Data.Table
 @using Microsoft.AspNetCore.Identity
+@using Persistence.Context
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Services
 @using ProjectManagement.Shared
@@ -10,7 +11,7 @@
 @inject ContextMenuService ContextService
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
-@inject IShardingSingleDbContext shContext
+@inject ShardingSingleDbContext shContext
 @inject UserManager<ApplicationUser> _userManager
 @inject ITenantUserService TenantUserService
 

@@ -11,38 +11,57 @@ namespace Domain.Entities.Calculation
     [Index(nameof(TenantId), nameof(ResourceId))]
     public sealed class OfferEntity : IntBaseEntity
     {
-        /// <summary>
-        /// تاريخ العرض.
-        /// </summary>
-        public DateTime Date { get; set; } = DateTime.UtcNow;
+        public DateTime Date { get; private set; } = DateTime.UtcNow;
 
-        /// <summary>
-        /// تعليق اختياري على العرض.
-        /// </summary>
         [MaxLength(FieldLengths.Comment)]
-        public string? Comment { get; set; }
+        public string? Comment { get; private set; }
 
         private OfferData? _metadata;
         public OfferData Metadata
         {
             get => _metadata ??= new OfferData();
-            set => _metadata = value;
+            private set => _metadata = value;
         }
 
-        /// <summary>
-        /// المنظمة المقدِّمة للعرض (اختيارية).
-        /// </summary>
-        public int? OrganisationId { get; set; }
+        public int? OrganisationId { get; private set; }
 
         [JsonIgnore]
-        public OrganisationEntity? Organisation { get; set; }
+        public OrganisationEntity? Organisation { get; private set; }
 
-        /// <summary>
-        /// المورد المرتبط بهذا العرض (إجباري).
-        /// </summary>
-        public int ResourceId { get; set; }
+        public int ResourceId { get; private set; }
 
         [JsonIgnore]
-        public ResourceEntity Resource { get; set; } = null!;
+        public ResourceEntity Resource { get; private set; } = null!;
+
+        private OfferEntity() { } // EF
+
+        public OfferEntity(
+            int resourceId,
+            int? organisationId,
+            OfferData metadata,
+            string? comment)
+        {
+            ResourceId = resourceId;
+            OrganisationId = organisationId;
+            Metadata = metadata;
+            Comment = comment;
+            Date = DateTime.UtcNow;
+        }
+
+        public void Update(
+            int? organisationId,
+            OfferData metadata,
+            string? comment)
+        {
+            OrganisationId = organisationId;
+            Metadata = metadata;
+            Comment = comment;
+            Date = DateTime.UtcNow;
+        }
+
+        public void SetBaseCost(double baseCost)
+        {
+            Metadata.BaseCost = baseCost;
+        }
     }
 }

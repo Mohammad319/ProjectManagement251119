@@ -1,5 +1,6 @@
 ﻿using Application.Feature.Organisation.OrganisationCategory.Commands;
 using Application.Feature.Organisation.OrganisationCategory.Queries;
+using Domain.DTO.Category;
 using Domain.Entities.Organisation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles;
@@ -10,14 +11,14 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 {
     public partial class CategoriesUI
     {
-        async Task Context(OrganisationCategoryEntity item)
+        async Task Context(ListOrganisationCategoryDTO item)
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             bool isInAnyRole = PMRolesConst.Tenant.AdminSuperManger.Split(',').Any(r => user.IsInRole(r));
             List<MenuItem> list = [];
             if (item.ParentCategoryId == null)
-                list.Add(new MenuItem { Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}", OnClickAsync = () => {ModalForm(new OrganisationCategoryEntity() { ParentCategoryId = item.Id });
+                list.Add(new MenuItem { Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}", OnClickAsync = () => {ModalForm(new ListOrganisationCategoryDTO() { ParentCategoryId = item.Id });
                     return Task.CompletedTask;
                 }
                 });
@@ -35,13 +36,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             }
         }
         int PageNr = 0;
-        List<OrganisationCategoryEntity> Categories = [];
-        void ModalForm(OrganisationCategoryEntity model) =>
+        List<ListOrganisationCategoryDTO> Categories = [];
+        void ModalForm(ListOrganisationCategoryDTO model) =>
             MHD.Modal.ShowComponent<CategoryFormUI>(model.Id != 0 ? AppLoc[LocalizerConst.Update, model.Name] : AppLoc[LocalizerConst.New, ResourceLoc.group]
-                , new Dictionary<string, object> { [nameof(CategoryFormUI.Offer)] = model, [nameof(CategoryFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, Callback) });
+                , new Dictionary<string, object> { [nameof(CategoryFormUI.OrganisationCategory)] = model, [nameof(CategoryFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, Callback) });
 
-        OrganisationCategoryEntity? SelectedCategory;
-        async Task GetCompaniesAsync(OrganisationCategoryEntity catID)
+        ListOrganisationCategoryDTO? SelectedCategory;
+        async Task GetCompaniesAsync(ListOrganisationCategoryDTO catID)
         {
             SelectedCategory = null;
             PageNr = 2;
@@ -58,11 +59,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             await GetCategories();
         }
-        void Remove(OrganisationCategoryEntity category)
+        void Remove(ListOrganisationCategoryDTO category)
         {
             MHD.DeleteMessage(category.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(category)));
         }
-        async Task ConfirmRemoveAsync(OrganisationCategoryEntity st)
+        async Task ConfirmRemoveAsync(ListOrganisationCategoryDTO st)
         {
             bool result = await MicroBus.Send(new DeleteOrganisationCategoryCommand(st.Id));
             if (result)

@@ -15,6 +15,5 @@ namespace Domain.Entities.Application
         public int ApplicationId { get; set; }
         public ApplicationEntity Application { get; set; }
         [JsonIgnore] public int TenantId { get; set; }
-
     }
 }

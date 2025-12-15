@@ -1,7 +1,6 @@
 ﻿namespace Persistence.Service.CalculationItems
 {
-    using Application.Feature.Calculation.Calculation;
-    using Application.Interfaces.Context;
+    using global::Application.Feature.Calculation.Calculation;
     using Microsoft.EntityFrameworkCore;
     using ProjectManagement.Shared.DTO.Calculation;
     using ProjectManagement.Shared.DTO.Offer;
@@ -11,7 +10,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public sealed class CalculationQueryService(IShardingSingleDbContext context) : ICalculationQueryService
+    public sealed class CalculationQueryService(ShardingSingleDbContext context) : ICalculationQueryService
     {
 
         // -------------------------------------------------

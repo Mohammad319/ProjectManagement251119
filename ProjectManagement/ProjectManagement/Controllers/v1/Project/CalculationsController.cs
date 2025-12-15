@@ -17,7 +17,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpGet("config/{m}/{con}/{com}/{t}/{st}")]
         public async Task<IActionResult> Config(int m, int con, int com, int t, int st)
         {
-            return Ok(await MicroBus.Send(new GetProjectCalcConfig() { Methods = m, Contracts = con, Compensations = com, Types = t, Statuses = st, TypeObj = 0 }));
+            return Ok(await MicroBus.Send(new GetProjectCalcConfigQuery() { Methods = m, Contracts = con, Compensations = com, Types = t, Statuses = st, TypeObj = 0 }));
         }
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpGet(URLConst.ReOrder + "/{Id}/{NewOrder}")]

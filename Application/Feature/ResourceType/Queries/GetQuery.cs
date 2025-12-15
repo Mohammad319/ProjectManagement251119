@@ -1,34 +1,32 @@
-﻿using Application.Interfaces;
+﻿using Application.Feature.ResourceType;
+using Application.Interfaces;
+using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.ResourceType;
 
-namespace Application.Feature.Calculation.ResourceType.Queries;
-
-public sealed record GetQuery(bool IsVisible) : IRequest<List<ResourceTypeModel>>;
-
-public sealed class GetQueryHandler(IShardingSingleDbContext context): IRequestHandler<GetQuery, List<ResourceTypeModel>>
+namespace Application.Feature.Calculation.ResourceType.Queries
 {
-    public async Task<List<ResourceTypeModel>> Handle(GetQuery request, CancellationToken cancellationToken)
+    public sealed record GetResourceTypesQuery(bool IsVisible) : IRequest<List<ResourceTypeModel>>;
+    public sealed record GetResourceSortQuery(int ResourceTypeId) : IRequest<List<ResourceSortModel>>;
+    public sealed record GetVisualResourcesQuery() : IRequest<ResourceFormDTO>;
+
+    public sealed class GetResourceTypesQueryHandler(IResourceTypeService service)
+        : IRequestHandler<GetResourceTypesQuery, List<ResourceTypeModel>>
     {
-        return await context.ResourceTypes
-            .AsNoTracking()
-            .Where(x => x.IsVisible == request.IsVisible)
-            .Select(x => new ResourceTypeModel
-            {
-                BaseCost = x.Metadata.BaseCost,
-                CapWaste = x.Metadata.CapWaste,
-                ChangeFactor1 = x.Metadata.ChangeFactor1,
-                ChangeFactor2 = x.Metadata.ChangeFactor2,
-                CO2 = x.Metadata.CO2,
-                Cost = x.Metadata.Cost,
-                FixedQ = x.Metadata.FixedQ,
-                Unit = x.Metadata.Unit,
-                IsVisible = request.IsVisible,
-                Order = x.SortOrder,
-                Id = x.Id,
-                Name = x.Name,
-                Type = x.Kind,
-                AccountId = x.AccountId
-            })
-            .ToListAsync(cancellationToken);
+        public Task<List<ResourceTypeModel>> Handle(GetResourceTypesQuery request, CancellationToken ct)
+            => service.GetTypesAsync(request.IsVisible, ct);
+    }
+
+    public sealed class GetResourceSortQueryHandler(IResourceTypeService service)
+        : IRequestHandler<GetResourceSortQuery, List<ResourceSortModel>>
+    {
+        public Task<List<ResourceSortModel>> Handle(GetResourceSortQuery request, CancellationToken ct)
+            => service.GetSortsAsync(request.ResourceTypeId, ct);
+    }
+
+    public sealed class GetVisualResourcesQueryHandler(IResourceTypeService service)
+        : IRequestHandler<GetVisualResourcesQuery, ResourceFormDTO>
+    {
+        public Task<ResourceFormDTO> Handle(GetVisualResourcesQuery request, CancellationToken ct)
+            => service.GetVisualFormAsync(ct);
     }
 }

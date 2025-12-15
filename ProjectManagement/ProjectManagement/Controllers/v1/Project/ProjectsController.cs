@@ -17,7 +17,7 @@ namespace ProjectManagement.Server.Controllers.v1
         [HttpGet("config/{m}/{con}/{com}/{t}")]
         public async Task<IActionResult> Config(int m, int con, int com, int t)
         {
-            return Ok(await MicroBus.Send(new GetProjectCalcConfig() { Methods = m, Contracts = con, Compensations = com, Types = t, TypeObj = 0 }));
+            return Ok(await MicroBus.Send(new GetProjectCalcConfigQuery() { Methods = m, Contracts = con, Compensations = com, Types = t, TypeObj = 0 }));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Project.GetByFolderDepartmentId + "/{folderId}")]
@@ -66,7 +66,7 @@ namespace ProjectManagement.Server.Controllers.v1
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(Guid id, PostProjectDTO dto)
         {
-            return Ok(await MicroBus.Send(new EditProjectCommand(dto,id,GetUserId(),GetDepartmentId())));
+            return Ok(await MicroBus.Send(new EditProjectCommand(id, dto, GetUserId(),GetDepartmentId())));
         }
 
         [Authorize(Roles = Tenant.AdminManger)]

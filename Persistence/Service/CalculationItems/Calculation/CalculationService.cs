@@ -1,15 +1,12 @@
 ﻿using Application.Feature.Calculation.Calculation;
 using Application.Interfaces;
-using Application.Interfaces.Context;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.Enums;
 
 namespace Persistence.Service.CalculationItems
 {
-    public sealed class CalculationService(IShardingSingleDbContext dataAccess, INotificationHub notification) : ICalculationService
+    public sealed class CalculationService(ShardingSingleDbContext dataAccess, INotificationHub notification) : ICalculationService
     {
 
         // -------------------------------------------------

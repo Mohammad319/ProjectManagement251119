@@ -1,25 +1,16 @@
 ﻿using Application.Extention;
 using Application.Feature.Calculation.Resource;
-using Application.Interfaces.Context;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.DTO.Calculation;
 namespace Persistence.Service.CalculationItems
 {
-    public sealed class ResourceQueryService : IResourceQueryService
+    public sealed class ResourceQueryService(ShardingSingleDbContext dataAccess) : IResourceQueryService
     {
-        private readonly IShardingSingleDbContext _dataAccess;
-
-        public ResourceQueryService(IShardingSingleDbContext dataAccess)
-        {
-            _dataAccess = dataAccess;
-        }
-
         public async Task<List<ResourceListDTO>> GetByFilterAsync(
             FilterCalculationItemsDto filter,
             CancellationToken cancellationToken = default)
         {
-            var query = _dataAccess.Resources
+            var query = dataAccess.Resources
                 .AsNoTracking()
                 .AsQueryable();
 

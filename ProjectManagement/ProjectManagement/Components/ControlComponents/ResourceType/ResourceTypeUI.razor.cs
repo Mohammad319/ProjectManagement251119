@@ -51,7 +51,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceType
 
         async Task GetStatus()
         {
-            Items = await MicroBus.Send(new GetQuery(IsVisible));
+            Items = await MicroBus.Send(new GetResourceTypesQuery(IsVisible));
         }
 
         protected async override Task OnInitializedAsync()

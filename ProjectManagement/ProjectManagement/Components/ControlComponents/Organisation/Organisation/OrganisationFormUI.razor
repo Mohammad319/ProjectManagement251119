@@ -2,6 +2,7 @@
 @using Application.Feature.Organisation.Organisation.Queries
 @using Application.Feature.Organisation.OrganisationCategory.Queries
 @using Application.Feature.Organisation.OrganisationType.Queries
+@using Domain.DTO.Category
 @using Domain.Entities.Organisation
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.SharedComponent
@@ -227,8 +228,8 @@
     [Parameter] public int ID { get; set; }
     [Parameter] public int CategoryID { get; set; }
     bool IsLoading = false;
-    List<OrganisationCategoryEntity> Categories;
-    OrganisationCategoryEntity CategorySelected;
+    List<ListOrganisationCategoryDTO> Categories;
+    ListOrganisationCategoryDTO CategorySelected;
 
     async Task CategoryChange(ChangeEventArgs e)
     {

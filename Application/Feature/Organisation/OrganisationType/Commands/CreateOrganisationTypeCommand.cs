@@ -1,19 +1,30 @@
 ﻿using Application.Interfaces;
-using Domain.Entities.Organisation;
 using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Application.Feature.Organisation.OrganisationType.Commands
 {
-    public sealed record CreateOrganisationTypeCommand(PostOrganisationTypeDTO dto) : IRequest<int>;
+    public sealed record CreateOrganisationTypeCommand(PostOrganisationTypeDTO Dto) : IRequest<int>;
+    public sealed record UpdateOrganisationTypeCommand(PostOrganisationTypeDTO Dto, int Id) : IRequest<bool>;
+    public sealed record DeleteOrganisationTypeCommand(int Id) : IRequest<bool>;
 
-    public class CreateOrganisationTypeCommandHandler(IShardingSingleDbContext dataAccess) : IRequestHandler<CreateOrganisationTypeCommand, int>
+    public sealed class CreateOrganisationTypeCommandHandler(IOrganisationTypeService service)
+        : IRequestHandler<CreateOrganisationTypeCommand, int>
     {
-        public async Task<int> Handle(CreateOrganisationTypeCommand request, CancellationToken cancellationToken)
-        {
-            OrganisationTypeEntity OrganisationType = new() { Name = request.dto.Name, IsVisible = request.dto.IsVisible };
-            dataAccess.OrganisationType.Add(OrganisationType);
-            await dataAccess.SaveChangesAsync(cancellationToken);
-            return OrganisationType.Id;
-        }
+        public Task<int> Handle(CreateOrganisationTypeCommand request, CancellationToken ct)
+            => service.CreateAsync(request.Dto, ct);
+    }
+
+    public sealed class UpdateOrganisationTypeCommandHandler(IOrganisationTypeService service)
+        : IRequestHandler<UpdateOrganisationTypeCommand, bool>
+    {
+        public Task<bool> Handle(UpdateOrganisationTypeCommand request, CancellationToken ct)
+            => service.UpdateAsync(request.Id, request.Dto, ct);
+    }
+
+    public sealed class DeleteOrganisationTypeCommandHandler(IOrganisationTypeService service)
+        : IRequestHandler<DeleteOrganisationTypeCommand, bool>
+    {
+        public Task<bool> Handle(DeleteOrganisationTypeCommand request, CancellationToken ct)
+            => service.DeleteAsync(request.Id, ct);
     }
 }

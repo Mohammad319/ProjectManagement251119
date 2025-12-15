@@ -1,4 +1,5 @@
 ﻿using Application.Feature.Organisation.OrganisationCategory.Commands;
+using Domain.DTO.Category;
 using Domain.Entities.Organisation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.DTO.Organisation;
@@ -7,14 +8,14 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 {
     public partial class CategoryFormUI
     {
-        [Parameter] public OrganisationCategoryEntity Offer { get; set; } = new();
-        OrganisationCategoryEntity PostOffer { get; set; } = new();
+        [Parameter] public ListOrganisationCategoryDTO OrganisationCategory { get; set; } = new();
+        ListOrganisationCategoryDTO PostOffer { get; set; } = new();
         [Parameter] public EventCallback<bool> Callback { get; set; }
         bool IsLoading = false;
 
         protected override void OnInitialized()
         {
-            Offer.CopyPropertiesTo(PostOffer);
+            OrganisationCategory.CopyPropertiesTo(PostOffer);
         }
         private async Task HandleSubmitAsync()
         {

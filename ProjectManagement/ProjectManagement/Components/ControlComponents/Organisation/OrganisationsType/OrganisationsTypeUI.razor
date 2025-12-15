@@ -1,6 +1,7 @@
 ﻿@using Application.Feature.Organisation.OrganisationCategory.Commands
 @using Application.Feature.Organisation.OrganisationType.Commands
 @using Application.Feature.Organisation.OrganisationType.Queries
+@using Domain.DTO.Category
 @using Domain.Entities.Organisation
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Shared.Repositories.Organisation
@@ -12,7 +13,7 @@
 
 <div>
     <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-        <button class="@CssClasses.Btn.IconButton.Success" @onclick="() => UpdateForm(new OrganisationTypeEntity())"> @((MarkupString)Icons.Plus)</button>
+        <button class="@CssClasses.Btn.IconButton.Success" @onclick="() => UpdateForm(new ListOrganisationTypeDTO())"> @((MarkupString)Icons.Plus)</button>
 @*             <button class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => { CustomerByGroupID = 0; IsVisible = !IsVisible; CustomerGroupsAPI = await Repo.OrgType.GetAsync(IsVisible); }">
                 @((MarkupString)Icons.GetVisibleIcon(IsVisible))
             </button> *@
@@ -35,13 +36,13 @@
         }
 </div>
 @code {
-    List<OrganisationTypeEntity>? CustomerGroupsAPI;
+    List<ListOrganisationTypeDTO>? CustomerGroupsAPI;
 
     int CustomerByGroupID;
     private bool IsLoading = false;
     bool IsVisible = true;
 
-    void UpdateForm(OrganisationTypeEntity group) =>
+    void UpdateForm(ListOrganisationTypeDTO group) =>
     MHD.Modal.ShowComponent<OrganisationTypeFormUI>(AppLoc[LocalizerConst.New, ResourceIdentity.customerGroup],
     new Dictionary<string, object> { [nameof(OrganisationTypeFormUI.IsLoading)] = IsLoading,[nameof(OrganisationTypeFormUI.CustomerGroup)] = group,
             [nameof(OrganisationTypeFormUI.OnValidSubmit)] = EventCallback.Factory.Create<OrganisationTypeEntity>(this, HandleSubmitAsync)});
@@ -81,12 +82,12 @@
         MHD.Modal.Close();
     }
 
-    void Remove(OrganisationTypeEntity customerGroup)
+    void Remove(ListOrganisationTypeDTO customerGroup)
     {
         MHD.DeleteMessage(customerGroup.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(customerGroup)));
     }
 
-    async Task ConfirmRemoveAsync(OrganisationTypeEntity customerGroup)
+    async Task ConfirmRemoveAsync(ListOrganisationTypeDTO customerGroup)
     {
 
         bool result = await MicroBus.Send(new DeleteOrganisationTypeCommand(customerGroup.Id));

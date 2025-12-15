@@ -1,10 +1,8 @@
-﻿using Application.Interfaces.Context;
-using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Shared.DTO.Calculation.Template;
+﻿using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace Application.Services.CalculationItems.TemplateTable
 {
-    public sealed class TemplateQueryService(IShardingSingleDbContext context) : ITemplateQueryService
+    public sealed class TemplateQueryService(ShardingSingleDbContext context) : ITemplateQueryService
     {
 
         // مكافئ GetTemplateByIdQuery القديم :contentReference[oaicite:1]{index=1}

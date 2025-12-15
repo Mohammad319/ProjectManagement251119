@@ -46,5 +46,6 @@ namespace Domain.Entities.Application
 
         [JsonIgnore]
         public int TenantId { get; set; }
+
     }
 }

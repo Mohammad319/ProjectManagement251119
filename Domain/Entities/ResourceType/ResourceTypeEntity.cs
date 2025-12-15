@@ -1,70 +1,64 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Calculation;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.Enums;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.ResourceType
 {
+    [Index(nameof(TenantId), nameof(AccountId))]
     public sealed class ResourceTypeEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Name)]
-        public  string Name { get; set; } = string.Empty;
+        public string Name { get; private set; } = string.Empty;
 
-        public int SortOrder { get; set; }
+        public int SortOrder { get; private set; }
+        public bool IsVisible { get; private set; } = true;
+        public ResourceTypesEnum Kind { get; private set; }
 
-        public bool IsVisible { get; set; } = true;
-        public ResourceTypesEnum Kind { get; set; }
+        public int? AccountId { get; private set; }
 
-        public int? AccountId { get; set; }
         [JsonIgnore]
-        public AccountEntity? Account { get; set; }
+        public AccountEntity? Account { get; private set; }
 
         private ResourceTypeData? _metadata;
         public ResourceTypeData Metadata
         {
             get => _metadata ??= new();
-            set => _metadata = value;
+            private set => _metadata = value;
         }
 
         [JsonIgnore]
-        public ICollection<ResourceSortEntity> ResourcesSort { get; set; } = [];
+        public ICollection<ResourceSortEntity> ResourcesSort { get; private set; } = [];
 
         [JsonIgnore]
-        public ICollection<ResourceEntity> Resources { get; set; } = [];
-    }
+        public ICollection<Domain.Entities.Calculation.ResourceEntity> Resources { get; private set; } = [];
 
+        private ResourceTypeEntity() { } // EF
 
-    public class ResourceSortEntity : AuditableEntity<int>
-    {
-
-        private ResourceTypeData? _metadata;
-        public ResourceTypeData Metadata
+        public static ResourceTypeEntity Create(PostResourceTypeDTO dto, int sortOrder)
         {
-            get => _metadata ??= new ResourceTypeData();
-            set => _metadata = value;
+            var e = new ResourceTypeEntity();
+            e.Update(dto);
+            e.SortOrder = sortOrder;
+            return e;
         }
 
-        [Required, MaxLength(FieldLengths.Name)]
-        public string Name { get; set; } = string.Empty;
+        public void Update(PostResourceTypeDTO dto)
+        {
+            Name = dto.Name;
+            IsVisible = dto.IsVisible;
+            Kind = dto.Type;
+            AccountId = dto.AccountId;
 
-        public bool IsVisible { get; set; } = true;
+            // dto -> metadata (بدون AutoMapper)
+            Metadata = new ResourceTypeData();
+            dto.CopyPropertiesTo(Metadata);
+        }
 
-        public int SortOrder { get; set; }
-
-        public int ResourceTypeId { get; set; }
-
-        [JsonIgnore]
-        public ResourceTypeEntity ResourceType { get; set; } = null!;
-
-        public int? AccountId { get; set; }
-        public AccountEntity? Account { get; set; }
-
-        [JsonIgnore]
-        public ICollection<ResourceEntity> Resources { get; set; } = [];
+        public void UpdateOrder(int sortOrder) => SortOrder = sortOrder;
     }
-
 }

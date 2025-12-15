@@ -1,5 +1,4 @@
-﻿using Application.Interfaces.Context;
-using AuthPermissions.Context;
+﻿using AuthPermissions.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Persistence.Context;
@@ -46,7 +45,7 @@ namespace ProjectManagement
             return tenantConnections.TryGetValue(tenantId, out var conn) ? conn : null;
         }
 
-        public IShardingSingleDbContext CreateDbContext()
+        public ShardingSingleDbContext CreateDbContext()
         {
             var httpContext = _httpContextAccessor.HttpContext
                                ?? throw new Exception("No HttpContext available.");

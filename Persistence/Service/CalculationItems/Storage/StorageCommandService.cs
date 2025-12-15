@@ -1,14 +1,11 @@
 ﻿using Application.Extention;
-using Application.Interfaces.Context;
 using Application.Services.CalculationItems.Storage;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Shared.Enums;
 using System.Text.Json;
 
 namespace Persistence.Service.CalculationItems.Storage
 {
-    public sealed class StorageCommandService(IShardingSingleDbContext db) : IStorageCommandService
+    public sealed class StorageCommandService(ShardingSingleDbContext db) : IStorageCommandService
     {
         public async Task<bool> CreateAsync(
             CalculationItemType type,

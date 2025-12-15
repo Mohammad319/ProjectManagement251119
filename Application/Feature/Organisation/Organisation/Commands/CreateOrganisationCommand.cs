@@ -1,21 +1,41 @@
 ﻿using Application.Interfaces;
-using Domain.Entities.Organisation;
 using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Application.Feature.Organisation.Organisation.Commands
 {
-    public sealed record CreateOrganisationCommand(PostOrganisationDTO dto) : IRequest<int>;
-    public class CreateCompanyCommandHandler(IShardingSingleDbContext dataAccess) : IRequestHandler<CreateOrganisationCommand, int>
+    // -------------------------
+    // CREATE
+    // -------------------------
+    public sealed record CreateOrganisationCommand(PostOrganisationDTO Dto) : IRequest<int>;
+
+    public sealed class CreateOrganisationCommandHandler(IOrganisationService service)
+        : IRequestHandler<CreateOrganisationCommand, int>
     {
-        public async Task<int> Handle(CreateOrganisationCommand request, CancellationToken cancellationToken)
-        {
-            OrganisationEntity Org = new();
-            request.dto.CopyPropertiesTo(Org);
-            request.dto.CopyPropertiesTo(Org.Metadata);
-            Org.OrganisationTypeId = request.dto.OrganisationTypeID;
-            dataAccess.Organisation.Add(Org);
-            await dataAccess.SaveChangesAsync(cancellationToken);
-            return Org.Id;
-        }
+        public Task<int> Handle(CreateOrganisationCommand request, CancellationToken ct)
+            => service.CreateAsync(request.Dto, ct);
+    }
+
+    // -------------------------
+    // UPDATE
+    // -------------------------
+    public sealed record UpdateOrganisationCommand(PostOrganisationDTO Dto, int Id) : IRequest<bool>;
+
+    public sealed class UpdateOrganisationCommandHandler(IOrganisationService service)
+        : IRequestHandler<UpdateOrganisationCommand, bool>
+    {
+        public Task<bool> Handle(UpdateOrganisationCommand request, CancellationToken ct)
+            => service.UpdateAsync(request.Id, request.Dto, ct);
+    }
+
+    // -------------------------
+    // DELETE
+    // -------------------------
+    public sealed record DeleteOrganisationCommand(int Id) : IRequest<bool>;
+
+    public sealed class DeleteOrganisationCommandHandler(IOrganisationService service)
+        : IRequestHandler<DeleteOrganisationCommand, bool>
+    {
+        public Task<bool> Handle(DeleteOrganisationCommand request, CancellationToken ct)
+            => service.DeleteAsync(request.Id, ct);
     }
 }

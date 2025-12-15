@@ -1,6 +1,7 @@
 ﻿@using Application.Feature.Organisation.Organisation.Commands
 @using Application.Feature.Organisation.Organisation.Queries
 
+@using Domain.DTO.Category
 @using Domain.Entities.Organisation
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Shared.Model.Project
@@ -87,7 +88,7 @@
         }
         await ContextService.ShowMenuAsync(list);
     }
-    [Parameter] public OrganisationCategoryEntity? Category { get; set; }
+    [Parameter] public ListOrganisationCategoryDTO? Category { get; set; }
     [Parameter] public EventCallback Callback { get; set; }
 
     bool IsVisible = true;

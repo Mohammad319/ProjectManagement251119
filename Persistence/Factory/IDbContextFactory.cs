@@ -1,10 +1,8 @@
-﻿using Application.Interfaces.Context;
-
-namespace Persistence.Factory
+﻿namespace Persistence.Factory
 {
     public interface IDbContextFactory
     {
-        IShardingSingleDbContext CreateDbContext();
+        ShardingSingleDbContext CreateDbContext();
         public int? TenantID { get; }
     }
 }

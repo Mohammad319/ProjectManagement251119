@@ -68,9 +68,9 @@ namespace ProjectManagement.Shared.DTO.Organisation
         public string Status { get; set; }
         [Range(0, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? NumberOfWorkersCards { get; set; }
-        public YesNoUnkown? SocialLaborAgreement { get; set; }
-        public YesNoUnkown? QualitySystems { get; set; }
-        public YesNoUnkown? EnvironmentalSystems { get; set; }
+        public YesNoUnkown SocialLaborAgreement { get; set; }
+        public YesNoUnkown QualitySystems { get; set; }
+        public YesNoUnkown EnvironmentalSystems { get; set; }
         public string PIDNumber { get; set; }
         public string IDNumber { get; set; }
         [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]

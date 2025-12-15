@@ -1,12 +1,10 @@
 ﻿using Application.Feature.Calculation.Task;
-using Application.Interfaces.Context;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems
 {
-    public sealed class TaskQueryService(IShardingSingleDbContext dataAccess) : ITaskQueryService
+    public sealed class TaskQueryService(ShardingSingleDbContext dataAccess) : ITaskQueryService
     {
         public async Task<List<TaskListDTO>> GetByFilterAsync(
             FilterCalculationItemsDto filter,

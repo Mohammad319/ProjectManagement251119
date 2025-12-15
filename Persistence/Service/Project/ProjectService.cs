@@ -1,14 +1,68 @@
 ﻿using Application.Feature.Project.Project;
 using Application.Helper;
 using Domain.Entities.Project;
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
+using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
 
 namespace Persistence.Service.Project
 {
     public sealed class ProjectService(ShardingSingleDbContext db) : IProjectService
     {
+        public async Task<GetProjectCalcConfigDTO> GetProjectCalcConfigAsync(
+    int typeObj,
+    int methods,
+    int contracts,
+    int compensations,
+    int types,
+    int statuses,
+    int orgId,
+    CancellationToken ct = default)
+        {
+            var result = new GetProjectCalcConfigDTO
+            {
+                Types = await db.CalcProjectType
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == types)
+                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
+                    .ToListAsync(ct),
+
+                Methods = await db.ProcurementMethod
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == methods)
+                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
+                    .ToListAsync(ct),
+
+                Contracts = await db.Contracts
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == contracts)
+                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
+                    .ToListAsync(ct),
+
+                Compensations = await db.Compensations
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == compensations)
+                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
+                    .ToListAsync(ct),
+
+                Organisation = await db.Organisation
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == orgId)
+                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
+                    .ToListAsync(ct)
+            };
+
+            if (typeObj == 1)
+            {
+                result.Statuses = await db.CalculationStatus
+                    .AsNoTracking()
+                    .Where(x => x.IsVisible || x.Id == statuses)
+                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
+                    .ToListAsync(ct);
+            }
+
+            return result;
+        }
+
         public async Task<Guid> CreateAsync(PostProjectDTO dto, int userId, int? departmentId, CancellationToken ct)
         {
             var folder = await db.Folders.FindAsync(dto.FolderId, ct);

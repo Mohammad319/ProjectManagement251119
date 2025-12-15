@@ -1,11 +1,9 @@
-﻿using Application.Interfaces.Context;
-using Application.Services.CalculationItems.Tender;
+﻿using Application.Services.CalculationItems.Tender;
 using ProjectManagement.Shared.DTO.Calculation;
-using Microsoft.EntityFrameworkCore;
 
 namespace Persistence.Service.CalculationItems.Tender
 {
-    public sealed class TenderAttributeQueryService(IShardingSingleDbContext db) : ITenderAttributeQueryService
+    public sealed class TenderAttributeQueryService(ShardingSingleDbContext db) : ITenderAttributeQueryService
     {
         public async Task<List<TenderAttributeListDTO>> GetAttributesAsync(
             int calculationId,

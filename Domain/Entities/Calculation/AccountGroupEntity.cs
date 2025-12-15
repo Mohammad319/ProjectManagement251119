@@ -9,7 +9,21 @@ namespace Domain.Entities.Calculation
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; private set; } = string.Empty;
 
-        public ICollection<AccountEntity> Accounts { get; private set; } = [];
+        private readonly List<AccountEntity> _accounts = [];
+        public IReadOnlyCollection<AccountEntity> Accounts => _accounts;
+        public void AddAccount(AccountEntity account)
+        {
+            if (account is null)
+                throw new ArgumentNullException(nameof(account));
+
+            if (account.AccountGroupId != Id)
+                account.SetGroup(Id);
+
+            if (_accounts.Any(a => a.Id == account.Id))
+                return;
+
+            _accounts.Add(account);
+        }
 
         private AccountGroupEntity() { }
 
@@ -21,8 +35,13 @@ namespace Domain.Entities.Calculation
         public void SetName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
-                throw new ValidationException("Account group name is required.");
-            Name = name.Trim();
+                throw new ValidationException(nameof(Name));
+            var trimmed = name.Trim();
+
+            if (Name == trimmed)
+                return;
+
+            Name = trimmed;
         }
 
         public void Update(string name) => SetName(name);

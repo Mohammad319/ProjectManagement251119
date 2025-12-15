@@ -2,6 +2,7 @@
 @using Application.Feature.Calculation.Storage.Queries
 @using Application.Interfaces.Context
 @using Microsoft.EntityFrameworkCore
+@using Persistence.Context
 @using ProjectManagement.Client.Pages.Project.Storage.Row
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Project;
@@ -9,7 +10,7 @@
 @using System.Text.Json
 @inherits AppComponentBase
 @inject ICommandDispatcher MicroBus
-@inject  IShardingSingleDbContext _context
+@inject  ShardingSingleDbContext _context
 <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
     <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             @onchange="(e) => GetAuthorityStorage(e)">

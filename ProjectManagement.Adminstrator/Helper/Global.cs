@@ -4,3 +4,4 @@ global using BlazorMHD.Component.Loading;
 global using BlazorMHD.Component.MessageBox;
 global using BlazorMHD.Services;
 global using AuthPermissions.Context;
+global using ProjectManagement.Shared.Helper;

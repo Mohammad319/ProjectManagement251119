@@ -1,4 +1,5 @@
-﻿@using Domain.Entities.Organisation
+﻿@using Domain.DTO.Category
+@using Domain.Entities.Organisation
 @inject ICommandDispatcher MicroBus
 @inject ContextMenuService ContextService
 @inject MhdServices MHD
@@ -29,9 +30,9 @@
 
 @code {
     [Parameter] public bool IsLoading { get; set; }
-    OrganisationTypeEntity PostCustomerGroup = new();
-    [Parameter] public OrganisationTypeEntity? CustomerGroup { get; set; }
-    [Parameter] public EventCallback<OrganisationTypeEntity> OnValidSubmit { get; set; }
+    ListOrganisationTypeDTO PostCustomerGroup = new();
+    [Parameter] public ListOrganisationTypeDTO? CustomerGroup { get; set; }
+    [Parameter] public EventCallback<ListOrganisationTypeDTO> OnValidSubmit { get; set; }
 
     protected override void OnInitialized()
     {

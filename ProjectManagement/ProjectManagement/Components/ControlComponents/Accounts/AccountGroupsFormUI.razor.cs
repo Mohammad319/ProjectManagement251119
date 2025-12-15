@@ -4,44 +4,69 @@ using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.DTO.Account;
 
-namespace ProjectManagement.Components.ControlComponents.Accounts
+namespace ProjectManagement.Components.ControlComponents.Accounts;
+
+public partial class AccountGroupsFormUI
 {
-    public partial class AccountGroupsFormUI
+    [Parameter, EditorRequired] public required AccountGroupEntity AccountGroup { get; set; }
+    [Parameter] public EventCallback<bool> OnSaved { get; set; }
+
+    [Inject] private DialogService DialogService { get; set; } = default!;
+    [Inject] private MhdServices Mhd { get; set; } = default!;
+    [Inject] private ICommandDispatcher Dispatcher { get; set; } = default!;
+
+    private PostAccountGroupDTO EditModel { get; set; } = new();
+    private bool IsLoading { get; set; }
+
+    protected override void OnParametersSet()
     {
-        [Parameter] public required AccountGroupEntity AccountGroup { get; set; }
-        [Parameter] public EventCallback<bool> Callback { get; set; }
-        [Inject] DialogService DialogService { get; set; }
+        // إعادة تعبئة النموذج كل مرة تتغير فيها البيانات القادمة
+        EditModel = new PostAccountGroupDTO();
+        PropertyCopier.CopyPropertiesTo(AccountGroup, EditModel);
+    }
 
-        PostAccountGroupDTO PostDTO { get; set; } = new();
-        bool IsLoading = false;
+    private void CloseModal() => DialogService.Close();
 
-        void CloseModal() => DialogService.Close();
+    private async Task HandleSubmitAsync()
+    {
+        if (IsLoading) return;
 
-        protected override void OnInitialized()
+        IsLoading = true;
+        try
         {
-            PropertyCopier.CopyPropertiesTo(AccountGroup, PostDTO);
-        }
+            var ok = await CreateOrUpdateAsync(AccountGroup.Id, EditModel);
 
-        public async Task<bool> NewUpdateAsync(int id, PostAccountGroupDTO PostDTO)
-        {
-            bool result;
-            result = id == 0 ? await MicroBus.Send(new CreateAccountGroupCommand(PostDTO)) > 0 :
-                await MicroBus.Send(new UpdateAccountGroupCommand(PostDTO, id));
-            MHD.Notifications(id > 0 ? ToastType.Update : ToastType.Add, result);
-            return result;
-        }
-        private async Task HandleSubmitAsync()
-        {
-            IsLoading = true;
-            try
+            // إشعارات
+            Mhd.Notifications(AccountGroup.Id == 0 ? ToastType.Add : ToastType.Update, ok);
+
+            if (ok)
             {
-                await Callback.InvokeAsync(await NewUpdateAsync(AccountGroup.Id, PostDTO));
-            }
-            finally
-            {
-                IsLoading = false;
+                await OnSaved.InvokeAsync(true);
                 CloseModal();
             }
+            else
+            {
+                await OnSaved.InvokeAsync(false);
+                // اترك المودال مفتوحًا ليصحح المستخدم
+            }
         }
+        catch
+        {
+            // خيار: Notification للخطأ العام
+            Mhd.Notifications(ToastType.Danger, false);
+            await OnSaved.InvokeAsync(false);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task<bool> CreateOrUpdateAsync(int id, PostAccountGroupDTO dto)
+    {
+        if (id == 0)
+            return await Dispatcher.Send(new CreateAccountGroupCommand(dto)) > 0;
+
+        return await Dispatcher.Send(new UpdateAccountGroupCommand(dto, id));
     }
 }

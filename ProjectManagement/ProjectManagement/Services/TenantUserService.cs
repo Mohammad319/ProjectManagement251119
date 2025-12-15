@@ -1,10 +1,8 @@
-﻿using Application.Interfaces.Context;
-using Application.Interfaces.Email;
-using AuthPermissions.Context;
+﻿using AuthPermissions.Context;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Persistence.Factory;
+using Persistence.Context;
 using ProjectManagement.Components.ControlComponents.Department;
 using ProjectManagement.Shared.Constant;
 
@@ -40,7 +38,7 @@ namespace ProjectManagement.Services
         }
     }
 
-    public class TenantUserService(UserManager<ApplicationUser> _userManager, IShardingSingleDbContext _shContext, ICurrentTenantService _currentTenant) : ITenantUserService
+    public class TenantUserService(UserManager<ApplicationUser> _userManager, ShardingSingleDbContext _shContext, ICurrentTenantService _currentTenant) : ITenantUserService
     {
         #region Password Generator
         string GenerateRandomPassword(int length = 10)
