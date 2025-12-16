@@ -1,55 +1,109 @@
 ﻿@using Application.Interfaces
-@inject ICommandDispatcher MicroBus
-@inject MhdServices MHD
-    <EditForm class="@CssClasses.Modal.Body" Model="@PostAccountDTO" OnValidSubmit="async () => await HandleSubmitAsync()" id="accountForm">
-        <DataAnnotationsValidator />
+
+<EditForm id="accountForm"
+          class="@CssClasses.Modal.Body"
+          Model="@EditModel"
+          OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
     <div class="@CssClasses.Grid.Col.MD4">
+        <!-- Account -->
         <div>
-                <label class="text-right">@CalcResource.account:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@PostAccountDTO.Account" />
-                <ValidationMessage For=@(() => PostAccountDTO.Account) />
-            </div>
+            <label class="@CssClasses.Form.Label text-right">@CalcResource.account</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="EditModel.Account" />
+            <ValidationMessage For="@(() => EditModel.Account)" />
+        </div>
+
+        <!-- Name -->
         <div>
-                <label class="text-right">@CalcResource.name:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@PostAccountDTO.Name" />
-                <ValidationMessage For=@(() => PostAccountDTO.Name) />
-            </div>
+            <label class="@CssClasses.Form.Label text-right">@CalcResource.name</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="EditModel.Name" />
+            <ValidationMessage For="@(() => EditModel.Name)" />
+        </div>
+
         <div class="@CssClasses.Grid.Span.MD2">
             <div class="@CssClasses.Grid.Col.MD3">
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
-                    <InputSelect @bind-Value="PostAccountDTO.AccountGroupId" class="@CssClasses.Input.Select">
+                <!-- Group -->
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.accountGroups</label>
+
+                    <InputSelect class="@CssClasses.Input.Select"
+                                 @bind-Value="EditModel.AccountGroupId">
                         <option value="0"></option>
-                    @if (GroupsAPI != null) foreach (var item in GroupsAPI)
-                    {
-                        <option value="@item.Id">@item.Name</option>
-                    }
-            </InputSelect>
-            <ValidationMessage For=@(() => PostAccountDTO.AccountGroupId) />
+                        @if (GroupsAPI is not null)
+                        {
+                            foreach (var item in GroupsAPI)
+                            {
+                                <option value="@item.Id">@item.Name</option>
+                            }
+                        }
+                    </InputSelect>
+
+                    <ValidationMessage For="@(() => EditModel.AccountGroupId)" />
+                </div>
+
+                <!-- IsVisible -->
+                <div class="@CssClasses.Form.CheckWrapperM">
+                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="EditModel.IsVisible" />
+                    <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
+                </div>
+
+                <!-- Add comment -->
+                <div>
+                    <button type="button"
+                            class="mt-5 inline-flex items-center gap-1 @CssClasses.Btn.Solid.Primary"
+                            @onclick="AddComment">
+                        @((MarkupString)Icons.Plus)
+                        <span>@CalcResource.comment</span>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="@CssClasses.Form.CheckWrapperM">
-                <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@PostAccountDTO.IsVisible" />
-                <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
-        </div>
-        <div>
-            <button type="button" class="mt-5 inline-flex items-center gap-1 @CssClasses.Btn.Solid.Primary" @onclick="() => PostAccountDTO.Data.Comments.Add(string.Empty)">@((MarkupString)Icons.Plus) @CalcResource.comment</button>
-        </div>
-        </div>
-        </div>
+
+        <!-- Comments list -->
+        @if (EditModel?.Data?.Comments is not null && EditModel.Data.Comments.Count > 0)
+        {
+            <div class="mt-4 space-y-3">
+                @for (var i = 0; i < EditModel.Data.Comments.Count; i++)
+                {
+                    var idx = i;
+
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <label class="@CssClasses.Form.Label text-right">@CalcResource.comment</label>
+
+                            <button type="button"
+                                    class="@CssClasses.Btn.IconButton.Danger"
+                                    title="@ResourceApp.delete"
+                                    @onclick="() => RemoveComment(idx)">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+                        </div>
+
+                        <InputText class="@CssClasses.Input.Text"
+                                   @bind-Value="EditModel.Data.Comments[idx]" />
+                    </div>
+                }
+            </div>
+        }
     </div>
 </EditForm>
-@if (PostAccountDTO.Data.Comments != null) for (int i = 0; i < PostAccountDTO.Data.Comments.Count; i++)
-    {
-        int u = i;
-        <div>
-            <label class="text-right">@CalcResource.comment:</label>
-        <input type="text" class="@CssClasses.Input.Text" @bind="PostAccountDTO.Data.Comments[u]" />
-        </div>
-    }
-    <div class="@CssClasses.Modal.Footer">
-    <button type="submit" form="accountForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
-        @ResourceApp.save
-        </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick="CloseModal">@ResourceApp.cancel</button>
-    </div>
 
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit"
+            form="accountForm"
+            class="@CssClasses.Btn.Outline.Success"
+            disabled="@IsLoading"
+            aria-busy="@IsLoading">
+        @ResourceApp.save
+    </button>
+
+    <button type="button"
+            class="@CssClasses.Btn.Outline.Secondary"
+            data-bs-dismiss="modal"
+            @onclick="CloseModal"
+            disabled="@IsLoading">
+        @ResourceApp.cancel
+    </button>
+</div>

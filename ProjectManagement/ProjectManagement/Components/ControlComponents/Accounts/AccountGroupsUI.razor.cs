@@ -1,12 +1,8 @@
 ﻿using Application.Feature.Account.Commands;
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
-using ContextMenuMHD;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Localization;
-using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Client.Shared.Constants;
-using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.DTO.Account;
@@ -61,7 +57,7 @@ public partial class AccountGroupsUI : IDisposable
             new Dictionary<string, object>
             {
                 [nameof(AccountGroupsFormUI.Id)] = item.Id,
-                [nameof(AccountGroupsFormUI.Model)] = new PostAccountGroupDTO{Name = item.Name},
+                [nameof(AccountGroupsFormUI.Model)] = new PostAccountGroupDTO { Name = item.Name },
                 [nameof(AccountGroupsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, Callback)
             });
     }

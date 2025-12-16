@@ -1,99 +1,76 @@
-﻿@using Application.Feature.Account.Commands
-@using Application.Feature.Account.Queries
-@using Domain.Entities.Calculation
-@using ProjectManagement.Shared.Constant
-@using ProjectManagement.Shared.DTO.Account
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
-<div class="flex-1 p-1 overflow-auto">
-    @if (GroupSelected != null)
-    {
-        <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-            <button class="@CssClasses.Btn.IconButton.Success mt-1 flex items-center gap-2" @onclick="@((e) => UpdateForm(new ListAccountDTO()))"> @((MarkupString)Icons.Plus2)</button>
-            <button class="@CssClasses.Btn.IconButton.Secondary mt-1" @onclick="() => IsVisible = !IsVisible">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
-        </div>
-        <table class="@CssClasses.Table.Tab">
-            <thead class="@CssClasses.Table.Thead">
-                <tr>
-                    <th class="@CssClasses.Table.TH" style="width:105px;">@CalcResource.account</th>
-                    <th class="@CssClasses.Table.TH" style="width:105px;">@ResourceApp.isVisible</th>
-                    <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                    <th class="@CssClasses.Table.TH">@CalcResource.comment</th>
-                </tr>
-            </thead>
-            <tbody class="@CssClasses.Table.TBody">
-                @if (Accounts != null) foreach (var account in Accounts)
-                {
-                    <tr class="@CssClasses.Table.Tr" @oncontextmenu:preventDefault @oncontextmenu="() => AccountContextM(account)">
-                        <td class="@CssClasses.Table.Td">@account.Account</td>
-                        @* <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@account.IsVisible" /></td> *@
-                        <td class="@CssClasses.Table.Td">@account.Name</td>
-@*                         <td class="@CssClasses.Table.Td">
-                                @if (account.Metadata != null && account.Metadata.Comments != null)
-                                    foreach (var comm in account.Metadata.Comments)
-                                {
-                                    <label>@comm</label>
+﻿@using ProjectManagement.Shared.DTO.Account
 
-                                    <br />
-                                }
-                        </td> *@
+<div class="flex-1 p-1 overflow-auto">
+    @if (GroupSelected > 0)
+    {
+        <div class="@CssClasses.Layout.FlexItemsCenter pb-1 gap-2">
+            <button class="@CssClasses.Btn.IconButton.Success mt-1 flex items-center gap-2"
+                    @onclick="CreateForm"
+                    title="@ResourceApp.newItem"
+                    aria-label="@ResourceApp.newItem">
+                @((MarkupString)Icons.Plus2)
+            </button>
+
+            <button class="@CssClasses.Btn.IconButton.Secondary mt-1"
+                    @onclick="ToggleVisibleFilter"
+                    title="@ResourceApp.isVisible"
+                    aria-label="@ResourceApp.isVisible">
+                @((MarkupString)Icons.GetVisibleIcon(IsVisibleOnly))
+            </button>
+        </div>
+
+        @if (IsLoading)
+        {
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading></BlazorMHD.UI.Components.Feedback.Loading.MhdLoading>
+        }
+        else if (Accounts is { Count: > 0 })
+        {
+            <table class="@CssClasses.Table.Tab">
+                <thead class="@CssClasses.Table.Thead">
+                    <tr>
+                        <th class="@CssClasses.Table.TH" style="width:105px;">@CalcResource.account</th>
+                        <th class="@CssClasses.Table.TH" style="width:105px;">@ResourceApp.isVisible</th>
+                        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+                        <th class="@CssClasses.Table.TH">@CalcResource.comment</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody class="@CssClasses.Table.TBody">
+                    @foreach (var account in Accounts)
+                    {
+                        <tr class="@CssClasses.Table.Tr"
+                            @oncontextmenu:preventDefault
+                            @oncontextmenu="() => AccountContextM(account)">
+
+                            <td class="@CssClasses.Table.Td">@account.Account</td>
+
+                            <td class="@CssClasses.Table.Td">
+                                @* <input type="checkbox" disabled checked="@account.IsVisible" /> *@
+                            </td>
+
+                            <td class="@CssClasses.Table.Td">@account.Name</td>
+
+                            <td class="@CssClasses.Table.Td">
+                                @* إذا عندك Comments ضمن Metadata/Data عدّل حسب DTO *@
+                   @*              @if (account.Metadata?.Comments is { Count: > 0 })
+                                {
+                                    @foreach (var comm in account.Metadata.Comments)
+                                    {
+                                        <div class="truncate">@comm</div>
+                                    }
+                                } *@
+                            </td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="p-3 text-sm text-slate-400">
+                @ResourceApp.ThereAreNoItemsToDisplay
+            </div>
+        }
     }
 </div>
-@code {
-    [Parameter] public int GroupSelected { get; set; }
-    bool IsVisible = true;
-    public List<ListAccountDTO>? Accounts { get; set; }
-    async Task AccountContextM(ListAccountDTO item)
-    {
-        await ContextService.ShowMenuAsync(new()
-            {
-                    new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => {UpdateForm(item);
-            return Task.CompletedTask;
-    }
-},
-                    new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => {Remove(item);
-            return Task.CompletedTask;
-    }
-}
-            });
-    }
-    void UpdateForm(ListAccountDTO model)
-    {
-@*         if (model.AccountGroupId == 0) model.AccountGroupId = GroupSelected;
-        var ModalRecord = dialog.NewModal<AccountsFormUI>(model.Id > 0 ? AppLoc[LocalizerConst.Update, model.Name] : AppLoc[LocalizerConst.New, CalcResource.account],
-            new Dictionary<string, object> { 
-                [nameof(AccountsFormUI.Account)] = model,
-                [nameof(AccountsFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, Callback)
-});
-        MHD.Modal.AddModal(ModalRecord); *@
-    }
-    async Task Callback(bool refresh)
-    {
-        if (refresh)
-        {
-            Accounts = null;
-            Accounts = await MicroBus.Send(new GetAccountQuery(GroupSelected));
-        }
-    }
-    protected async override Task OnInitializedAsync()
-    {
-        Accounts = await MicroBus.Send(new GetAccountQuery(GroupSelected));
-    }
-    void Remove(ListAccountDTO Organisation) => MHD.DeleteMessage(Organisation.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(Organisation)));
-    async Task ConfirmRemoveAsync(ListAccountDTO account)
-    {
-        var reault = await MicroBus.Send(new DeleteAccountCommand(account.Id));
-        if (reault)
-        {
-            Accounts.Remove(account);
-            StateHasChanged();
-        }
-        MHD.Notifications(ToastType.Delete, reault);
-    }
-}

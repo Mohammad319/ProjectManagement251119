@@ -131,7 +131,7 @@
     }
     async Task Import2Async()
     {
-        using (var stream = File.OpenReadStream(10485760))
+        using (var stream = File?.OpenReadStream(10485760))
         {
             StreamReader reader = new StreamReader(stream);
             fileUrl = await reader.ReadToEndAsync();
@@ -170,7 +170,7 @@
     }
     async Task Import()
     {
-        using (var stream = File.OpenReadStream(10485760))
+        using (var stream = File?.OpenReadStream(10485760))
         {
             StreamReader reader = new StreamReader(stream);
             fileUrl = await reader.ReadToEndAsync();
@@ -196,7 +196,7 @@
                 }
                 else
                 {
-                    Groups.LastOrDefault().Accounts.Add(new PostAccountDTO()
+                    Groups?.LastOrDefault()?.Accounts.Add(new PostAccountDTO()
                         {
                             Name = list[Name - 1],
                             Account = list[Code - 1],

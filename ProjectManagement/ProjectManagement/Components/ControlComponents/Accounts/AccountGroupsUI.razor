@@ -4,28 +4,44 @@
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
 
 <div class="flex h-full gap-4">
-    <!-- Sidebar / Vertical Tabs -->
-    <div class="w-64 bg-white/80 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 shadow-sm rounded-xl">
+    <!-- Sidebar -->
+    <aside class="w-72 bg-white/80 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl overflow-hidden">
         <div class="flex flex-col h-full">
-            <!-- Header + Actions -->
+            <!-- Header -->
             <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 dark:border-slate-700">
+                <div class="min-w-0">
+                    <div class="text-xs text-slate-500 dark:text-slate-400">@CalcResource.accountGroups</div>
+                    <div class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
+                        @CalcResource.accountGroups
+                    </div>
+                </div>
 
                 <div class="flex items-center gap-1">
                     <button class="@CssClasses.Btn.IconButton.Success"
                             @onclick="CreateForm"
-                            title="@ResourceApp.newItem">
+                            title="@ResourceApp.newItem"
+                            aria-label="@ResourceApp.newItem">
                         @((MarkupString)Icons.Plus)
                     </button>
 
                     <button class="@CssClasses.Btn.IconButton.Primary"
                             @onclick="ImportForm"
-                            title="@ResourceApp.importFromFile">
+                            title="@ResourceApp.importFromFile"
+                            aria-label="@ResourceApp.importFromFile">
                         @((MarkupString)Icons.ImportFromFile)
                     </button>
                 </div>
             </div>
 
-            <!-- Tabs (Groups) -->
+            <!-- Search (اختياري) -->
+            @* لو تحب إضافة بحث لاحقًا *@
+            @* <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700">
+                <input class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800 px-3 py-2 text-sm"
+                       placeholder="@ResourceApp.search"
+                       @bind="_search" />
+            </div> *@
+
+            <!-- List -->
             <nav class="flex-1 overflow-y-auto px-2 py-2 space-y-1">
                 @if (Groups is { Count: > 0 })
                 {
@@ -33,9 +49,18 @@
                     {
                         var isSelected = GroupSelected.HasValue && GroupSelected.Value == item.Id;
 
-                        var baseClasses = "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer";
-                        var selectedClasses = "bg-blue-600 text-white shadow-sm";
-                        var defaultClasses = "bg-transparent text-slate-700 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800";
+                        var baseClasses =
+                        "group flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition " +
+                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 " +
+                        "dark:focus-visible:ring-offset-slate-900";
+
+                        var selectedClasses =
+                        "bg-blue-600 text-white shadow-sm";
+
+                        var defaultClasses =
+                        "bg-transparent text-slate-700 hover:bg-slate-100 active:bg-slate-200 " +
+                        "dark:text-slate-100 dark:hover:bg-slate-800 dark:active:bg-slate-700";
+
                         var finalClass = $"{baseClasses} {(isSelected ? selectedClasses : defaultClasses)}";
 
                         <button class="@finalClass"
@@ -43,37 +68,63 @@
                                 @oncontextmenu="() => GroupContextM(item)"
                                 @oncontextmenu:preventDefault
                                 aria-current="@(isSelected ? "page" : null)">
-                            <span class="truncate">@item.Name</span>
+                            <span class="truncate flex items-center gap-2">
+                                <span class="h-2 w-2 rounded-full @(isSelected ? "bg-white" : "bg-slate-300 dark:bg-slate-600")"></span>
+                                <span class="truncate">@item.Name</span>
+                            </span>
 
-                            @if (isSelected)
-                            {
-                                <span class="ml-2 h-2 w-2 rounded-full bg-white/90"></span>
-                            }
+                            <span class="flex items-center gap-2 opacity-70 group-hover:opacity-100">
+                                @* مؤشر/أيقونة خفيفة بدل النقطة فقط *@
+                                <span class="text-xs">
+                                    @((MarkupString)Icons.DotsVertical)
+                                </span>
+                            </span>
                         </button>
                     }
                 }
                 else
                 {
-                    <p class="px-2 py-4 text-xs text-slate-400">
-                        @ResourceApp.ThereAreNoItemsToDisplay
-                        @ResourceApp.useTheButtonAboveToAddNewItem
-                    </p>
+                    <!-- Empty state -->
+                    <div class="px-3 py-6 text-center">
+                        <div class="mx-auto mb-2 h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                            @((MarkupString)Icons.Folder)
+                        </div>
+                        <div class="text-sm font-semibold text-slate-700 dark:text-slate-100">
+                            @ResourceApp.ThereAreNoItemsToDisplay
+                        </div>
+                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            @ResourceApp.useTheButtonAboveToAddNewItem
+                        </div>
+
+                        <button class="@CssClasses.Btn.Outline.Primary mt-4"
+                                @onclick="CreateForm">
+                            @ResourceApp.newItem
+                        </button>
+                    </div>
                 }
             </nav>
         </div>
-    </div>
+    </aside>
 
     <!-- Content -->
-    <div class="flex-1">
+    <section class="flex-1 min-w-0">
         @if (GroupSelected.HasValue)
         {
             <AccountUI GroupSelected="GroupSelected.Value" />
         }
         else
         {
-            <div class="flex h-full items-center justify-center text-slate-400 text-sm">
-                @ResourceApp.selectAccountGroupHint
+            <div class="h-full rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-white/40 dark:bg-slate-900/40
+                            flex items-center justify-center px-6 text-slate-500 dark:text-slate-400 text-sm">
+                <div class="text-center">
+                    <div class="mx-auto mb-2 h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        @((MarkupString)Icons.Mouse)
+                    </div>
+                    <div class="font-medium text-slate-700 dark:text-slate-100">
+                        @ResourceApp.selectAccountGroupHint
+                    </div>
+                </div>
             </div>
         }
-    </div>
+    </section>
 </div>
