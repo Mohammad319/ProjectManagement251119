@@ -2,7 +2,6 @@
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using ContextMenuMHD;
-using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Services.MHDBlazor;
@@ -10,6 +9,7 @@ using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
+using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.General;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts;
@@ -42,16 +42,29 @@ public partial class AccountGroupsUI : IDisposable
             AppLoc[LocalizerConst.Import, CalcResource.accountGroups],
             Icons.ImportFromFile);
 
-    private void UpdateForm(AccountGroupEntity model) =>
+    private void CreateForm()
+    {
         DialogService.ShowComponent<AccountGroupsFormUI>(
-            model.Id > 0
-                ? AppLoc[LocalizerConst.Update, model.Name]
-                : AppLoc[LocalizerConst.New, CalcResource.accountGroups],
+            AppLoc[LocalizerConst.New, CalcResource.accountGroups],
             new Dictionary<string, object>
             {
-                [nameof(AccountGroupsFormUI.AccountGroup)] = model,
+                [nameof(AccountGroupsFormUI.Id)] = 0,
+                [nameof(AccountGroupsFormUI.Model)] = new PostAccountGroupDTO(),
                 [nameof(AccountGroupsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, Callback)
             });
+    }
+
+    private void EditForm(ListDTO item)
+    {
+        DialogService.ShowComponent<AccountGroupsFormUI>(
+            AppLoc[LocalizerConst.Update, item.Name],
+            new Dictionary<string, object>
+            {
+                [nameof(AccountGroupsFormUI.Id)] = item.Id,
+                [nameof(AccountGroupsFormUI.Model)] = new PostAccountGroupDTO{Name = item.Name},
+                [nameof(AccountGroupsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, Callback)
+            });
+    }
 
     private async Task Callback(bool refresh)
     {
@@ -63,7 +76,8 @@ public partial class AccountGroupsUI : IDisposable
     }
 
     private void Remove(ListDTO organisation) =>
-        MHD.DeleteMessage(organisation.Name,
+        MHD.DeleteMessage(
+            organisation.Name,
             EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(organisation)));
 
     private async Task ConfirmRemoveAsync(ListDTO account)
@@ -72,6 +86,11 @@ public partial class AccountGroupsUI : IDisposable
         if (result)
         {
             Groups?.Remove(account);
+
+            // لو كان المحدد هو المحذوف، نظّفه
+            if (GroupSelected == account.Id)
+                GroupSelected = null;
+
             await InvokeAsync(StateHasChanged);
         }
 
@@ -87,7 +106,7 @@ public partial class AccountGroupsUI : IDisposable
                 Label = $"✏️ {ResourceApp.update}",
                 OnClickAsync = () =>
                 {
-                    UpdateForm(new AccountGroupEntity(item.Name) { Id = item.Id});
+                    EditForm(item);
                     return Task.CompletedTask;
                 }
             },

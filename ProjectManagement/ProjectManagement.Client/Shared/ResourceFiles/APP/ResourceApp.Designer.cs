@@ -619,6 +619,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select a group from the list on the left..
+        /// </summary>
+        public static string selectAccountGroupHint {
+            get {
+                return ResourceManager.GetString("selectAccountGroupHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Set as Default.
         /// </summary>
         public static string setAsDefault {
@@ -723,6 +732,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         public static string update__0_ {
             get {
                 return ResourceManager.GetString("update {0}", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the button above to add a new item..
+        /// </summary>
+        public static string useTheButtonAboveToAddNewItem {
+            get {
+                return ResourceManager.GetString("useTheButtonAboveToAddNewItem", resourceCulture);
             }
         }
         

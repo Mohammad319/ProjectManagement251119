@@ -283,7 +283,7 @@
     <value>Artikeln har tagits bort</value>
   </data>
   <data name="ThereAreNoItemsToDisplay" xml:space="preserve">
-    <value>Det finns inga objekt att visa</value>
+    <value>Det finns inga objekt att visa.</value>
   </data>
   <data name="thereIsNoElements" xml:space="preserve">
     <value>Det finns inga element</value>
@@ -347,5 +347,11 @@
   </data>
   <data name="Button_Apply" xml:space="preserve">
     <value>Tillämpa</value>
+  </data>
+  <data name="selectAccountGroupHint" xml:space="preserve">
+    <value>Välj en grupp från listan till vänster.</value>
+  </data>
+  <data name="useTheButtonAboveToAddNewItem" xml:space="preserve">
+    <value>Använd knappen ovan för att lägga till ett nytt objekt.</value>
   </data>
 </root>

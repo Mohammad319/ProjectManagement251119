@@ -348,4 +348,10 @@
   <data name="Button_Apply" xml:space="preserve">
     <value>Apply</value>
   </data>
+  <data name="selectAccountGroupHint" xml:space="preserve">
+    <value>Select a group from the list on the left.</value>
+  </data>
+  <data name="useTheButtonAboveToAddNewItem" xml:space="preserve">
+    <value>Use the button above to add a new item.</value>
+  </data>
 </root>
