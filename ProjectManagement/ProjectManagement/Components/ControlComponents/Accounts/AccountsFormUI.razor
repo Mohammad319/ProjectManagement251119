@@ -24,24 +24,6 @@
 
         <div class="@CssClasses.Grid.Span.MD2">
             <div class="@CssClasses.Grid.Col.MD3">
-                <!-- Group -->
-                <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.accountGroups</label>
-
-                    <InputSelect class="@CssClasses.Input.Select"
-                                 @bind-Value="EditModel.AccountGroupId">
-                        <option value="0"></option>
-                        @if (GroupsAPI is not null)
-                        {
-                            foreach (var item in GroupsAPI)
-                            {
-                                <option value="@item.Id">@item.Name</option>
-                            }
-                        }
-                    </InputSelect>
-
-                    <ValidationMessage For="@(() => EditModel.AccountGroupId)" />
-                </div>
 
                 <!-- IsVisible -->
                 <div class="@CssClasses.Form.CheckWrapperM">

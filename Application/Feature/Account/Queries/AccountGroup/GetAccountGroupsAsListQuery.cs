@@ -21,12 +21,12 @@ namespace Application.Feature.Account.Queries
         public Task<List<ListDTO>> Handle(GetAccountGroupsQuery request, CancellationToken ct)
             => service.GetGroupsAsListAsync(ct);
     }
-    public sealed record GetAccountQuery(int GroupId) : IRequest<List<ListAccountDTO>>;
+    public sealed record GetAccountQuery(int GroupId) : IRequest<List<AccountManageDTO>>;
 
     public sealed class GetAccountQueryHandler(IAccountService service)
-        : IRequestHandler<GetAccountQuery, List<ListAccountDTO>>
+        : IRequestHandler<GetAccountQuery, List<AccountManageDTO>>
     {
-        public Task<List<ListAccountDTO>> Handle(GetAccountQuery request, CancellationToken ct)
+        public Task<List<AccountManageDTO>> Handle(GetAccountQuery request, CancellationToken ct)
             => service.GetAccountsByGroupAsync(request.GroupId, ct);
     }
 

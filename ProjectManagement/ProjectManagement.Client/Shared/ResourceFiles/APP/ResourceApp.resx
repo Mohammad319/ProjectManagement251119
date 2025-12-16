@@ -354,4 +354,7 @@
   <data name="useTheButtonAboveToAddNewItem" xml:space="preserve">
     <value>Use the button above to add a new item.</value>
   </data>
+  <data name="select" xml:space="preserve">
+    <value>Select</value>
+  </data>
 </root>

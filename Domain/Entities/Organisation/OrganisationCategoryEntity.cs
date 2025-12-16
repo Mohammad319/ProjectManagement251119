@@ -26,17 +26,24 @@ namespace Domain.Entities.Organisation
 
         public static OrganisationCategoryEntity Create(PostOrganisationCategoryDTO dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ValidationException("Name is required.");
+
             ValidateParent(dto.CategoryId);
+
             return new OrganisationCategoryEntity
             {
-                Name = dto.Name,
+                Name = dto.Name.Trim(),
                 ParentCategoryId = dto.CategoryId
             };
         }
 
         public void Update(PutOrganisationCategoryDTO dto)
         {
-            Name = dto.Name;
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ValidationException("Name is required.");
+
+            Name = dto.Name.Trim();
         }
 
         private static void ValidateParent(int? parentId)

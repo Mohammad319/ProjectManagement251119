@@ -2,58 +2,107 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Client.Shared.ResourceFiles
-@using ProjectManagement.Client.Shared.ResourceFiles.Calculation
-@using ProjectManagement.Shared.DTO.Identity;
+@using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Shared.Base.Users
+
 @inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
-    @if (departmentPost != null)
-    {
-         <EditForm Model="@departmentPost" class="@CssClasses.Modal.Body" OnValidSubmit="async () => await HandleSubmitAsync()">
-         <DataAnnotationsValidator />
-        <ValidationSummary></ValidationSummary>
-         <div class="row align-items-center">
-             <div class="">
-                <label>name:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@departmentPost.Name" />
-                <ValidationMessage For=@(() => departmentPost.Name) />
-            </div> 
-            <div class="col">
-                <label>@ResourceLoc.description:</label>
-                <InputTextArea class="@CssClasses.Input.Text" @bind-Value="@departmentPost.Description" />
-                <ValidationMessage For=@(() => departmentPost.Description) />
+@if (departmentPost is not null)
+{
+    <EditForm Model="departmentPost"
+              class="@CssClasses.Modal.Body"
+              OnValidSubmit="HandleSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+                <InputText class="@CssClasses.Input.Text"
+                           @bind-Value="departmentPost.Name"
+                           disabled="@IsSaving" />
+                <ValidationMessage For="() => departmentPost.Name" />
             </div>
-            <div class="form-group">
-                <button type="submit" class="@CssClasses.Btn.Outline.Success" style="margin-right:5px;">@ResourceApp.save</button>
-                <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await OnClickCallback.InvokeAsync(false)">@ResourceApp.cancel</button>
+
+            <div class="col-12 col-md-6">
+                <label class="@CssClasses.Form.Label">@ResourceLoc.description:</label>
+                <InputTextArea class="@CssClasses.Input.Text"
+                               @bind-Value="departmentPost.Description"
+                               disabled="@IsSaving" />
+                <ValidationMessage For="() => departmentPost.Description" />
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <button type="submit"
+                        class="@CssClasses.Btn.Outline.Success"
+                        disabled="@IsSaving">
+                    @ResourceApp.save
+                </button>
+
+                <button type="button"
+                        class="@CssClasses.Btn.Outline.Secondary"
+                        disabled="@IsSaving"
+                        @onclick="Close">
+                    @ResourceApp.cancel
+                </button>
             </div>
         </div>
     </EditForm>
-    }
+}
 
 @code {
     [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
     [Parameter] public DepartmentDetailsDTO? DepartmentList { get; set; }
-    DepartmentBase? departmentPost;
-    protected override void OnInitialized()
+
+    private DepartmentBase? departmentPost;
+    private bool IsSaving;
+
+    protected override void OnParametersSet()
     {
-        departmentPost = new()
-            {
-                Name = DepartmentList?.Name,
-                Description = DepartmentList?.Description,
-            };
+        departmentPost = new DepartmentBase
+        {
+            Name = DepartmentList?.Name ?? string.Empty,
+            Description = DepartmentList?.Description
+        };
     }
+
+    private Task Close() => OnClickCallback.InvokeAsync(false);
+
     private async Task HandleSubmitAsync()
     {
-        if (DepartmentList?.Id > 0 && await MicroBus.Send(new UpdateDepartmentCommand(DepartmentList.Id,departmentPost)))
-            await OnClickCallback.InvokeAsync(true);
+        if (departmentPost is null) { await OnClickCallback.InvokeAsync(false); return; }
 
-        else if (DepartmentList?.Id == 0 && await MicroBus.Send(new CreateDepartmentCommand(departmentPost)) > 0)
-            await OnClickCallback.InvokeAsync(true);
+        if (IsSaving) return;
+        IsSaving = true;
 
-        await OnClickCallback.InvokeAsync(false);
+        try
+        {
+            // Normalize inputs (منع أسماء مسافات فقط)
+            departmentPost.Name = (departmentPost.Name ?? string.Empty).Trim();
+            departmentPost.Description = departmentPost.Description?.Trim();
+
+            // Update
+            if ((DepartmentList?.Id ?? 0) > 0)
+            {
+                var ok = await MicroBus.Send(new UpdateDepartmentCommand(DepartmentList!.Id, departmentPost));
+                await OnClickCallback.InvokeAsync(ok);
+                return;
+            }
+
+            // Create
+            if ((DepartmentList?.Id ?? 0) == 0)
+            {
+                var newId = await MicroBus.Send(new CreateDepartmentCommand(departmentPost));
+                await OnClickCallback.InvokeAsync(newId > 0);
+                return;
+            }
+
+            await OnClickCallback.InvokeAsync(false);
+        }
+        finally
+        {
+            IsSaving = false;
+        }
     }
 }

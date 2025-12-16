@@ -1,7 +1,5 @@
 ﻿using Application.Feature.Account;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.General;
 
@@ -9,17 +7,19 @@ namespace Persistence.Service.ResourceAccount
 {
     public sealed class AccountService(ShardingSingleDbContext db) : IAccountService
     {
-        public Task<List<ListAccountDTO>> GetAccountsByGroupAsync(int groupId, CancellationToken ct = default)
+        public Task<List<AccountManageDTO>> GetAccountsByGroupAsync(int groupId, CancellationToken ct = default)
         {
             return db.Accounts
                 .AsNoTracking()
                 .Where(x => x.AccountGroupId == groupId)
                 .OrderBy(x => x.Code)
-                .Select(x => new ListAccountDTO
+                .Select(x => new AccountManageDTO
                 {
                     Id = x.Id,
-                    Account = x.Code,
-                    Name = x.Name
+                    Code = x.Code,
+                    Name = x.Name,
+                    IsVisible = x.IsVisible,
+                    Metadata = x.Metadata,
                 })
                 .ToListAsync(ct);
         }

@@ -1,0 +1,40 @@
+﻿@using Domain.DTO.Category
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="mt-2 w-40 min-w-[200px] bg-white dark:bg-gray-900 rounded shadow">
+    @if (Roots.Count == 0)
+    {
+        <div class="px-4 py-3 text-gray-500 dark:text-gray-400">
+            -
+        </div>
+    }
+    else
+    {
+        foreach (var root in Roots)
+        {
+            <CategoryTreeNode Node="root"
+                              ChildrenLookup="_byParent"
+                              Level="0"
+                              SelectedId="SelectedId"
+                              OnSelect="OnSelect"
+                              OnContext="OnContext" />
+        }
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<ListOrganisationCategoryDTO> Categories { get; set; } = Array.Empty<ListOrganisationCategoryDTO>();
+
+    [Parameter] public int? SelectedId { get; set; }
+    [Parameter] public EventCallback<ListOrganisationCategoryDTO> OnSelect { get; set; }
+    [Parameter] public EventCallback<ListOrganisationCategoryDTO> OnContext { get; set; }
+
+    private IReadOnlyList<ListOrganisationCategoryDTO> Roots { get; set; } = Array.Empty<ListOrganisationCategoryDTO>();
+    private ILookup<int?, ListOrganisationCategoryDTO> _byParent = default!;
+
+    protected override void OnParametersSet()
+    {
+        _byParent = Categories.ToLookup(x => x.ParentCategoryId);
+        Roots = _byParent[null].ToList();
+    }
+}

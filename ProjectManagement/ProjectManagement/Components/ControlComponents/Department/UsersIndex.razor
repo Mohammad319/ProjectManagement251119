@@ -1,56 +1,63 @@
-﻿@using Application.Interfaces.Context
-@using BlazorMHD.UI.Components.Data.Table
-@using Microsoft.AspNetCore.Identity
-@using Persistence.Context
+﻿@using BlazorMHD.UI.Components.Data.Table
+@using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Client.Shared.Constants
-@using ProjectManagement.Services
 @using ProjectManagement.Shared
-@using ProjectManagement.Shared.Constant
-@using ProjectManagement.Shared.Models.Account
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
-@inject ShardingSingleDbContext shContext
-@inject UserManager<ApplicationUser> _userManager
-@inject ITenantUserService TenantUserService
 
-@using Domain.Entities.Users
-        <div>
-        <button class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await OnClickCallback.InvokeAsync(false)">@((MarkupString)Icons.Back)</button>
-        </div>
+@inherits AppComponentBase
 
-@if (Users != null)
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <button class="@CssClasses.Btn.Outline.Secondary"
+            disabled="@IsBusy"
+            @onclick="Back">
+        @((MarkupString)Icons.Back)
+    </button>
+
+    @if (IsLoading)
+    {
+        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+    }
+</div>
+
+@if (!IsLoading && Users is not null)
 {
-    <div style="overflow:auto" class="overflow-auto">
+    <div class="overflow-auto" style="overflow:auto">
         <MhdTable TItem="TenantUserDto" Items="Users">
-            <MhdTableColumn>
-                <Template Context="User">
-                    <div class="@CssClasses.Layout.FlexItemsCenter">
-                        @if (User.IsInAuth)
-                        {
-                            <div>
-                                <select @bind="User.Role" class="@CssClasses.Input.Text">
-                                    <option value="@PMRolesConst.Tenant.Admin">@ResourceIdentity.Admin</option>
-                                    <option value="@PMRolesConst.Tenant.SuperManger">@PMResourceIdentity.SuperManger</option>
-                                    <option value="@PMRolesConst.Tenant.Manger">@ResourceIdentity.Manger</option>
-                                    <option value="@PMRolesConst.Tenant.User">@ResourceIdentity.User</option>
-                                </select>
-                            </div>
+            <MhdTableColumn Title="">
+                <Template Context="user">
+                    <div class="@CssClasses.Layout.FlexItemsCenter" style="gap:8px; flex-wrap:wrap">
+                        <button class="@CssClasses.Btn.Outline.Warning"
+                                disabled="@IsBusy"
+                                title="@ResourceApp.edit"
+                                @onclick="() => EditUser(user)">
+                            @((MarkupString)Icons.Edit)
+                        </button>
 
-                            <button class="@CssClasses.Btn.Outline.Warning" @onclick="async ()=> await TenantUserService.RecreateUserAsync(User)">Register</button>
-                        }
-                        <button class="@CssClasses.Btn.Outline.Warning" @onclick=" ()=> UserRoleDialog(User)">@Icons.Edit</button>
-                        <button class="@CssClasses.Btn.Outline.Danger" @onclick=" ()=> Delete_Click(User)">@((MarkupString)Icons.DeleteSVG)</button>
-                        <button class="@CssClasses.Btn.Outline.Danger" @onclick=" ()=> DeleteOnlyFRomRegister_Click(User)">remove only from register</button>
+                        <button class="@CssClasses.Btn.Outline.Danger"
+                                disabled="@IsBusy"
+                                title="@ResourceApp.delete"
+                                @onclick="() => AskDeleteUser(user)">
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
+
+                        <button class="@CssClasses.Btn.Outline.Danger"
+                                disabled="@IsBusy"
+                                @onclick="() => AskRemoveOnlyFromRegister(user)">
+                            remove only from register
+                        </button>
                     </div>
                 </Template>
             </MhdTableColumn>
+
             <MhdTableColumn Title="@ResourceIdentity.email" ValueSelector="u => u.Email" Sortable="true" />
-            <MhdTableColumn Title="@CalcResource.name" ValueSelector="@(u => u.Firstname + " " + u.Lastname)" />
+            <MhdTableColumn Title="@CalcResource.name" ValueSelector="@(u => (u.Firstname +" " + u.Lastname))" />
+            <MhdTableColumn Title="Role" ValueSelector="u => u.Role" />
             <MhdTableColumn Title="LockoutStart" ValueSelector="u => u.LockoutStart" />
             <MhdTableColumn Title="LockoutEnd" ValueSelector="u => u.LockoutEnd" />
             <MhdTableColumn Title="Lockout" ValueSelector="u => u.LockoutEnabled" />
-        </MhdTable> 
+        </MhdTable>
     </div>
+}
+else if (!IsLoading)
+{
+    <div class="text-muted">@ResourceApp.notFoundData</div>
 }

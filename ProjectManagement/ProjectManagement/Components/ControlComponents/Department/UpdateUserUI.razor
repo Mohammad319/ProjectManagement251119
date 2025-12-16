@@ -3,7 +3,6 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Identity
-@using Persistence.Factory
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Services
 @using ProjectManagement.Shared
@@ -11,136 +10,162 @@
 @using ProjectManagement.Shared.DTO.General
 @using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Shared.Models.Account
-@using System.Security.Claims
+
 @inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 @inject UserManager<ApplicationUser> _userManager
 @inject IExceptionHandlers ExHandlers
 @inject ITenantUserService TenantUserService
+
 <div class="@CssClasses.Modal.Body">
-    @if (Form != null)
+    @if (Form is not null)
     {
-        <EditForm Model="@Form" OnValidSubmit="HandleSubmitAsync" id="userForm">
+        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync" id="userForm">
             <DataAnnotationsValidator />
+            <ValidationSummary />
+
             <div class="@CssClasses.Grid.Col.MD4">
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.firstname:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@Form.Firstname" />
-                    <ValidationMessage For=@(() => Form.Firstname) />
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Firstname" disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.Firstname" />
                 </div>
+
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.lastname:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@Form.Lastname" />
-                    <ValidationMessage For=@(() => Form.Lastname) />
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Lastname" disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.Lastname" />
                 </div>
+
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.email:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@Form.Email" />
-                    <ValidationMessage For=@(() => Form.Email) />
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Email" disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.Email" />
                 </div>
+
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.lockoutStart:</label>
                     <div class="@CssClasses.Layout.ButtonGroup">
-                        <InputDate class="@CssClasses.Input.Date" @bind-Value="@Form.LockoutStart" />
-                        <button class="@CssClasses.Btn.Outline.Danger" type="button" id="button-addon2" @onclick="()=> Form.LockoutStart = null">
+                        <InputDate class="@CssClasses.Input.Date" @bind-Value="Form.LockoutStart" disabled="@IsBusy" />
+                        <button class="@CssClasses.Btn.Outline.Danger"
+                                type="button"
+                                disabled="@IsBusy"
+                                @onclick="ClearLockoutStart">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
                     </div>
-                    <ValidationMessage For=@(() => Form.LockoutStart) />
+                    <ValidationMessage For="() => Form.LockoutStart" />
                 </div>
+
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.lockoutEnd:</label>
                     <div class="@CssClasses.Layout.ButtonGroup">
-                        <InputDate class="@CssClasses.Input.Date" @bind-Value="@Form.LockoutEnd" />
-                        <button class="@CssClasses.Btn.Outline.Danger" type="button" id="button-addon2" @onclick="()=> Form.LockoutEnd = null">
+                        <InputDate class="@CssClasses.Input.Date" @bind-Value="Form.LockoutEnd" disabled="@IsBusy" />
+                        <button class="@CssClasses.Btn.Outline.Danger"
+                                type="button"
+                                disabled="@IsBusy"
+                                @onclick="ClearLockoutEnd">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
-                    </div>    
-                    <ValidationMessage For=@(() => Form.LockoutEnd) />
+                    </div>
+                    <ValidationMessage For="() => Form.LockoutEnd" />
                 </div>
+
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.phone:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@Form.PhoneNumber" />
-                    <ValidationMessage For=@(() => Form.PhoneNumber) />
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.PhoneNumber" disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.PhoneNumber" />
                 </div>
-                <div>
-                    <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.PhoneNumberConfirmed" />
-                        <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.phoneNumberConfirmed</label>
-                    </div>
+
+                <div class="@CssClasses.Form.CheckWrapperM">
+                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.PhoneNumberConfirmed" disabled="@IsBusy" />
+                    <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.phoneNumberConfirmed</label>
                 </div>
-                <div>
-                    <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.LockoutEnabled" />
-                        <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.logout</label>
-                    </div>
+
+                <div class="@CssClasses.Form.CheckWrapperM">
+                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.LockoutEnabled" disabled="@IsBusy" />
+                    <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.logout</label>
                 </div>
-                @if (Form.Role != PMRolesConst.Tenant.Admin && Departments != null)
+
+                @if (Departments?.Any() == true && Form.Role != PMRolesConst.Tenant.Admin)
                 {
                     <div>
                         <label class="@CssClasses.Form.Label">@PMResourceIdentity.department:</label>
-                        @if (Departments != null)
-                        {
-                            <InputSelect @bind-Value="Form.DepartmentId" class="@CssClasses.Input.Text">
-                                @foreach (var group in Departments)
-                                {
-                                    <option value="@group.Id" selected="@(group.Id == Form.DepartmentId)">@group.Name</option>
-                                }
-                            </InputSelect>
-                        }
-                        <ValidationMessage For="@(() => Form.DepartmentId)" />
+                        <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.DepartmentId" disabled="@IsBusy">
+                            @foreach (var dep in Departments)
+                            {
+                                <option value="@dep.Id">@dep.Name</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Form.DepartmentId" />
                     </div>
                 }
-                @if (Roles != null)
-                {
-                        <div>
-                            <label class="@CssClasses.Form.Label">@PMResourceIdentity.role:</label>
-                            <select @bind="Form.Role" class="@CssClasses.Input.Text">
-                                <option value="@PMRolesConst.Tenant.Admin" selected="@(Roles.Any(x=>x == PMRolesConst.Tenant.Admin))">@PMResourceIdentity.Admin</option>
-                                <option value="@PMRolesConst.Tenant.SuperManger" selected="@(Roles.Any(x=>x == PMRolesConst.Tenant.SuperManger))">@PMResourceIdentity.SuperManger</option>
-                                <option value="@PMRolesConst.Tenant.Manger" selected="@(Roles.Any(x=>x == PMRolesConst.Tenant.Manger))">@PMResourceIdentity.Manger</option>
-                                <option value="@PMRolesConst.Tenant.User" selected="@(Roles.Any(x=>x == PMRolesConst.Tenant.User))">@PMResourceIdentity.User</option>
-                            </select>
-                        </div>
-                }
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.role:</label>
+                    <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.Role" disabled="@IsBusy">
+                        <option value="@PMRolesConst.Tenant.Admin">@PMResourceIdentity.Admin</option>
+                        <option value="@PMRolesConst.Tenant.SuperManger">@PMResourceIdentity.SuperManger</option>
+                        <option value="@PMRolesConst.Tenant.Manger">@PMResourceIdentity.Manger</option>
+                        <option value="@PMRolesConst.Tenant.User">@PMResourceIdentity.User</option>
+                    </InputSelect>
+                </div>
             </div>
         </EditForm>
+
         <div class="@CssClasses.Modal.Footer">
-            <button type="submit" form="userForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+            <button type="submit"
+                    form="userForm"
+                    class="@CssClasses.Btn.Outline.Success"
+                    disabled="@IsBusy">
                 @ResourceApp.save
             </button>
-            <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+
+            <button type="button"
+                    class="@CssClasses.Btn.Outline.Secondary"
+                    disabled="@IsBusy"
+                    @onclick="Cancel">
+                @ResourceApp.cancel
+            </button>
         </div>
     }
 </div>
-
 
 @code {
     [Parameter] public EventCallback<bool> Callback { get; set; }
     [Parameter] public TenantUserDto UserForm { get; set; } = default!;
     [Parameter] public int? DepartmentId { get; set; }
-    // [Parameter] public int TenantId { get; set; }
-    // int CurentTenantId;
 
-    TenantUserDto? Form { get; set; }
-    bool IsLoading = true;
-    IList<string> Roles = [];
-    List<ListDTO>? Departments;
-    string oldRole = string.Empty;
-    [Inject] AuthenticationStateProvider? AuthStateProvider { get; set; }
+    private TenantUserDto? Form { get; set; }
+    private List<ListDTO>? Departments;
+    private IList<string> Roles = [];
 
-    protected async override Task OnInitializedAsync()
+    private bool IsLoading = true;
+    private bool IsSaving = false;
+    private bool IsBusy => IsLoading || IsSaving;
+
+    private string? oldRole;
+
+    protected override async Task OnParametersSetAsync()
     {
-                    if (DepartmentId == 0) DepartmentId = null;
-        Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
-        Form = new()
+        IsLoading = true;
+
+        try
+        {
+            // normalize incoming DepartmentId
+            if (DepartmentId == 0) DepartmentId = null;
+
+            // load lookups
+            Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
+
+            // build form
+            Form = new TenantUserDto
             {
                 Email = UserForm?.Email,
                 Firstname = UserForm?.Firstname,
                 Lastname = UserForm?.Lastname,
-                DepartmentId = DepartmentId,
+                DepartmentId = DepartmentId ?? UserForm?.DepartmentId,
                 LockoutEnabled = UserForm.LockoutEnabled,
                 IdAuth = UserForm?.IdAuth,
                 LockoutStart = UserForm?.LockoutStart,
@@ -148,45 +173,90 @@
                 PhoneNumber = UserForm?.PhoneNumber,
                 PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
                 Id = UserForm.Id,
-            Username = UserForm?.Username,
+                Username = UserForm?.Username,
             };
 
-        await IniUserTenant();
-        Form.Role = Roles.FirstOrDefault();
-        oldRole = Roles?.FirstOrDefault();
-        IsLoading = false;
-    }
-    async Task<IList<string>> GetRolesAsync(string username)
-    {
-        var user = await _userManager.FindByNameAsync(username);
-        if (user == null) return new List<string>();
-        return await _userManager.GetRolesAsync(user);
-    }
-    async Task IniUserTenant()
-    {
-        if (Departments != null && Departments.Any())
-            Form.DepartmentId = Departments.FirstOrDefault().Id;
-        if (UserForm.Id>0)
-            Roles = await GetRolesAsync(UserForm.Username);
-        else
-            Roles.Add(PMRolesConst.Tenant.Manger);
+            await InitRolesAndDefaultsAsync();
+
+            // set role
+            Form.Role = Roles.FirstOrDefault() ?? PMRolesConst.Tenant.Manger;
+            oldRole = Form.Role;
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
     }
 
-    async Task HandleSubmitAsync()
+    private async Task InitRolesAndDefaultsAsync()
     {
+        if (Form is null) return;
+
+        // ✅ لا نغيّر DepartmentId إلا لو فعلاً null
+        if (!Form.DepartmentId.HasValue && Departments?.Any() == true)
+            Form.DepartmentId = Departments[0].Id;
+
+        if (UserForm.Id > 0 && !string.IsNullOrWhiteSpace(UserForm.Username))
+            Roles = await GetRolesAsync(UserForm.Username);
+        else
+            Roles = new List<string> { PMRolesConst.Tenant.Manger };
+    }
+
+    private async Task<IList<string>> GetRolesAsync(string username)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+        if (user is null) return new List<string>();
+        return await _userManager.GetRolesAsync(user);
+    }
+
+    private void ClearLockoutStart()
+    {
+        if (Form is null) return;
+        Form.LockoutStart = null;
+    }
+
+    private void ClearLockoutEnd()
+    {
+        if (Form is null) return;
+        Form.LockoutEnd = null;
+    }
+
+    private Task Cancel() => Callback.InvokeAsync(false);
+
+    private async Task HandleSubmitAsync()
+    {
+        if (Form is null) { await Callback.InvokeAsync(false); return; }
+        if (IsSaving) return;
+
+        // rules
         if (Form.Role == PMRolesConst.Tenant.Admin)
             Form.DepartmentId = null;
         else if (!Form.DepartmentId.HasValue)
             return;
-        if (UserForm.Id == 0)
+
+        IsSaving = true;
+
+        try
         {
-            var res = await TenantUserService.RegisterAsync(Form);
-            await Callback.InvokeAsync(res);
+            // normalize
+            Form.Email = Form.Email?.Trim();
+            Form.Firstname = Form.Firstname?.Trim();
+            Form.Lastname = Form.Lastname?.Trim();
+            Form.PhoneNumber = Form.PhoneNumber?.Trim();
+
+            bool ok;
+            if (UserForm.Id == 0)
+                ok = await TenantUserService.RegisterAsync(Form);
+            else
+                ok = await TenantUserService.UpdateUserAsync(Form);
+
+            await Callback.InvokeAsync(ok);
         }
-        else
+        finally
         {
-            var result = await TenantUserService.UpdateUserAsync(Form);
-            await Callback.InvokeAsync(result);
+            IsSaving = false;
+            StateHasChanged();
         }
     }
 }

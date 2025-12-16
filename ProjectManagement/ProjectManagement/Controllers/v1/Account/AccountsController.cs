@@ -1,9 +1,7 @@
-﻿using Application.Feature.Account.Commands;
-using Application.Feature.Account.Queries;
+﻿using Application.Feature.Account.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.DTO.Account;
 using static ProjectManagement.Shared.Constant.PMRolesConst;
 
 namespace ProjectManagement.Server.Controllers.v1.Account
@@ -20,7 +18,7 @@ namespace ProjectManagement.Server.Controllers.v1.Account
                 x.Id,
                 x.Name,
                 Accounts = x.Accounts.Select(a => new
-                { a.Id, a.Name,  a.Account, })
+                { a.Id, a.Name, a.Account, })
             }));
         }
         [HttpGet]
@@ -28,14 +26,6 @@ namespace ProjectManagement.Server.Controllers.v1.Account
         public async Task<IActionResult> GetAccountGroupsAsList()
         {
             return Ok(await MicroBus.Send(new GetAccountGroupsAsListQuery()));
-        }
-
-        [Authorize(Roles = Tenant.AdminManger)]
-        [HttpPost(URLConst.Account.AddRange)]
-        public async Task<IActionResult> CreateRange(List<PostAccountGroupWithAccountsDTO> dto)
-        {
-            var command = new CreateRangeAccountGroupCommand(dto);
-            return Ok(await MicroBus.Send(command));
         }
     }
 }

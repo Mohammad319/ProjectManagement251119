@@ -217,6 +217,22 @@
         {
             return isTop ? Minus : Plus2;
         }
+    public const string Mouse = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+     fill="none" stroke="currentColor" stroke-width="1.5"
+     stroke-linecap="round" stroke-linejoin="round"
+     class="h-6 w-6">
+  <rect x="7" y="2" width="10" height="20" rx="5" ry="5" />
+  <line x1="12" y1="6" x2="12" y2="10" />
+</svg>
+""";
+        public const string DotsVertical = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+     fill="currentColor" class="h-4 w-4">
+  <circle cx="12" cy="5" r="2" />
+  <circle cx="12" cy="12" r="2" />
+  <circle cx="12" cy="19" r="2" />
+</svg>
+""";
     }
-
-}
+    }

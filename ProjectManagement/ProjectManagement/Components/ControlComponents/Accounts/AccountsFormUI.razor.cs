@@ -2,6 +2,7 @@
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using ProjectManagement.Shared.DTO.Account;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts;
@@ -27,11 +28,9 @@ public partial class AccountsFormUI
 
     private PostAccountDTO EditModel { get; set; } = new();
     private bool IsLoading { get; set; }
-    private List<ListAccountGroupIncludeAccountDTO>? GroupsAPI;
 
     protected override async Task OnParametersSetAsync()
     {
-        // Defensive copy (حتى لا تعدّل نفس instance القادمة من الأب)
         EditModel = new PostAccountDTO
         {
             Name = Model?.Name ?? string.Empty,
@@ -40,26 +39,6 @@ public partial class AccountsFormUI
             IsVisible = Model?.IsVisible ?? true,
             Data = Model?.Data ?? new AccountData()
         };
-
-        // Load once
-        if (GroupsAPI is null)
-        {
-            GroupsAPI = (await Dispatcher.Send(new GetAccountGroupsAsListQuery())).ToList();
-        }
-    }
-    private void AddComment()
-    {
-        EditModel.Data ??= new AccountData();
-        EditModel.Data.Comments ??= new List<string>();
-        EditModel.Data.Comments.Add(string.Empty);
-    }
-
-    private void RemoveComment(int index)
-    {
-        if (EditModel?.Data?.Comments is null) return;
-        if (index < 0 || index >= EditModel.Data.Comments.Count) return;
-
-        EditModel.Data.Comments.RemoveAt(index);
     }
 
     private void CloseModal() => DialogService.Close();
@@ -92,6 +71,20 @@ public partial class AccountsFormUI
             IsLoading = false;
             await InvokeAsync(StateHasChanged);
         }
+    }
+    private void AddComment()
+    {
+        EditModel.Data ??= new AccountData();
+        EditModel.Data.Comments ??= new List<string>();
+        EditModel.Data.Comments.Add(string.Empty);
+    }
+
+    private void RemoveComment(int index)
+    {
+        if (EditModel?.Data?.Comments is null) return;
+        if (index < 0 || index >= EditModel.Data.Comments.Count) return;
+
+        EditModel.Data.Comments.RemoveAt(index);
     }
 
     private async Task<bool> CreateOrUpdateAsync(int id, PostAccountDTO dto)

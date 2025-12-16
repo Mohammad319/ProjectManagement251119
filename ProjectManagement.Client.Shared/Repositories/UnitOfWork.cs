@@ -1,5 +1,4 @@
-﻿using ProjectManagement.Client.Shared.Repositories.Account;
-using ProjectManagement.Client.Shared.Repositories.App;
+﻿using ProjectManagement.Client.Shared.Repositories.App;
 using ProjectManagement.Client.Shared.Repositories.Application;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Folder;
@@ -13,7 +12,6 @@ namespace ProjectManagement.Client.Shared.Repositories
 {
     public interface IUnitOfWorkRepository
     {
-        IAccountGroupsRepository AccountGroup { get; }
         IItemCalcCategoryRepository ItemCalcCategory { get; }
         IApplicationRepo Application { get; }
         ICalculationRepository Calculation { get; }
@@ -33,7 +31,6 @@ namespace ProjectManagement.Client.Shared.Repositories
     }
 
     public class UnitOfWorkRepository(
-        IAccountGroupsRepository accountgroupsrepository,
         IItemCalcCategoryRepository itemcalccategoryrepository,
         IApplicationRepo applicationrepo,
         ICalculationRepository calculationrepository,
@@ -52,7 +49,6 @@ namespace ProjectManagement.Client.Shared.Repositories
         IProjectRepository projectrepository
         ) : IUnitOfWorkRepository
     {
-        public IAccountGroupsRepository AccountGroup { get; } = accountgroupsrepository;
         public IItemCalcCategoryRepository ItemCalcCategory { get; } = itemcalccategoryrepository;
         public IApplicationRepo Application { get; } = applicationrepo;
         public ICalculationRepository Calculation { get; } = calculationrepository;

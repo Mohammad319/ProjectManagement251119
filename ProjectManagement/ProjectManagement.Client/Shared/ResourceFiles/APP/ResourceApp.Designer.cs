@@ -619,6 +619,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select.
+        /// </summary>
+        public static string select {
+            get {
+                return ResourceManager.GetString("select", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select a group from the list on the left..
         /// </summary>
         public static string selectAccountGroupHint {

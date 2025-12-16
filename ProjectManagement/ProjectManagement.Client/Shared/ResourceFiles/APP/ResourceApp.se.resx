@@ -354,4 +354,7 @@
   <data name="useTheButtonAboveToAddNewItem" xml:space="preserve">
     <value>Använd knappen ovan för att lägga till ett nytt objekt.</value>
   </data>
+  <data name="select" xml:space="preserve">
+    <value>välja</value>
+  </data>
 </root>

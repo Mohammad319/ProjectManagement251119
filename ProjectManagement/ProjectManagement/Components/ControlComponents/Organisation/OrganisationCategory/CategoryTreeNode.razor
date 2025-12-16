@@ -1,0 +1,57 @@
+﻿@using Domain.DTO.Category
+
+<div class="@HeaderClass"
+     style="@($"padding-left:{(Level * 16) + 16}px")"
+     @oncontextmenu:preventDefault
+     @oncontextmenu="() => OnContext.InvokeAsync(Node)"
+     @onclick="() => OnSelect.InvokeAsync(Node)">
+
+    @if (HasChildren)
+    {
+        <button type="button"
+                class="mr-2 inline-flex items-center justify-center w-6 h-6 rounded hover:bg-gray-300 dark:hover:bg-gray-700"
+                @onclick:stopPropagation="true"
+                @onclick="Toggle">
+            @Icons.RightBottom(Expanded)
+        </button>
+    }
+    else
+    {
+        <span class="mr-2 inline-flex w-6 h-6"></span>
+    }
+
+    <span class="select-none">@Node.Name</span>
+</div>
+
+@if (Expanded && HasChildren)
+{
+    foreach (var child in ChildrenLookup[Node.Id])
+    {
+        <CategoryTreeNode Node="child"
+                          ChildrenLookup="ChildrenLookup"
+                          Level="@(Level + 1)"
+                          SelectedId="SelectedId"
+                          OnSelect="OnSelect"
+                          OnContext="OnContext" />
+    }
+}
+
+@code {
+    [Parameter, EditorRequired] public ListOrganisationCategoryDTO Node { get; set; } = new();
+    [Parameter, EditorRequired] public ILookup<int?, ListOrganisationCategoryDTO> ChildrenLookup { get; set; } = default!;
+    [Parameter] public int Level { get; set; }
+
+    [Parameter] public int? SelectedId { get; set; }
+    [Parameter] public EventCallback<ListOrganisationCategoryDTO> OnSelect { get; set; }
+    [Parameter] public EventCallback<ListOrganisationCategoryDTO> OnContext { get; set; }
+
+    private bool Expanded { get; set; } = true;
+
+    private bool HasChildren => ChildrenLookup[Node.Id].Any();
+
+    private string HeaderClass =>
+        $"py-2 pr-4 cursor-pointer transition " +
+        $"{(SelectedId == Node.Id ? "bg-gray-800 text-white" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}";
+
+    private void Toggle() => Expanded = !Expanded;
+}

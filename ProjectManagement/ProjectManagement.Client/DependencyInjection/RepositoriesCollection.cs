@@ -1,7 +1,6 @@
 ﻿using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Model.Tenant;
 using ProjectManagement.Client.Shared.Repositories;
-using ProjectManagement.Client.Shared.Repositories.Account;
 using ProjectManagement.Client.Shared.Repositories.App;
 using ProjectManagement.Client.Shared.Repositories.Application;
 using ProjectManagement.Client.Shared.Repositories.Application.Implement;
@@ -16,7 +15,6 @@ using ProjectManagement.Client.Shared.Repositories.Project;
 using ProjectManagement.Client.Shared.Repositories.Project.Implement;
 using ProjectManagement.Client.Shared.Repositories.ResourceType;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
-using System.Linq;
 namespace ProjectManagement.Client.DependencyInjection
 {
     public static class RepositoriesCollection
@@ -36,7 +34,6 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<IApplicationRepo, ApplicationRepo>();
             services.AddScoped<IOfferRepository, OfferRepository>();
             services.AddScoped<IOrganisationRepository, OrganisationRepository>();
-            services.AddScoped<IAccountGroupsRepository, AccountGroupsRepository>();
             services.AddScoped<IOpportunityRepository, OpportunityRepository>();
             services.AddScoped<IShareCalcRepository, ShareCalcRepository>();
             services.AddScoped<ITenderRepository, TenderRepository>();

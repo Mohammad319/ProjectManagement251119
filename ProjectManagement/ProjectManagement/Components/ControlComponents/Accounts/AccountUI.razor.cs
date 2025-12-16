@@ -1,14 +1,8 @@
 ﻿using Application.Feature.Account.Commands;
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
-using ContextMenuMHD;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Localization;
-using ProjectManagement.Client.Services.MHDBlazor;
-using ProjectManagement.Client.Shared.Constants;
-using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
-using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.DTO.Account;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts;
@@ -20,7 +14,7 @@ public partial class AccountUI
     private bool IsVisibleOnly { get; set; } = true;
     private bool IsLoading { get; set; }
 
-    private List<ListAccountDTO>? Accounts { get; set; }
+    private List<AccountManageDTO>? Accounts { get; set; }
 
     [Inject] private ICommandDispatcher MicroBus { get; set; } = default!;
     [Inject] private DialogService DialogService { get; set; } = default!;
@@ -50,9 +44,9 @@ public partial class AccountUI
         {
             // إذا عندك Query يدعم فلترة visible أضفه، وإلا فلتر بالواجهة
             var result = await MicroBus.Send(new GetAccountQuery(GroupSelected));
-            Accounts = IsVisibleOnly
-                ? result?//.Where(x => x.IsVisible)
-                .ToList()
+            Accounts = IsVisibleOnly ? result?.
+                //Where(x => x.IsVisible)
+                ToList()
                 : result;
         }
         finally
@@ -70,32 +64,18 @@ public partial class AccountUI
 
     private void CreateForm()
     {
-        var model = new PostAccountDTO
-        {
-            AccountGroupId = GroupSelected,
-            IsVisible = true,
-            Data = new AccountData()
-        };
-
-        DialogService.ShowComponent<AccountsFormUI>(
-            AppLoc[LocalizerConst.New, CalcResource.account],
-            new Dictionary<string, object>
-            {
-                [nameof(AccountsFormUI.Id)] = 0,
-                [nameof(AccountsFormUI.Model)] = model,
-                [nameof(AccountsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, OnSavedAsync)
-            });
+        EditForm(new AccountManageDTO());
     }
 
-    private void EditForm(ListAccountDTO item)
+    private void EditForm(AccountManageDTO item)
     {
         var model = new PostAccountDTO
         {
-            Account = item.Account,
+            Account = item.Code,
             Name = item.Name,
             AccountGroupId = GroupSelected,
-           // IsVisible = item.IsVisible,
-         //   Data = item.Metadata ?? new AccountData()
+            IsVisible = item.IsVisible,
+            Data = item.Metadata,
         };
 
         DialogService.ShowComponent<AccountsFormUI>(
@@ -114,10 +94,10 @@ public partial class AccountUI
         await LoadAccountsAsync();
     }
 
-    private async Task AccountContextM(ListAccountDTO item)
+    private async Task AccountContextM(AccountManageDTO item)
     {
-        await ContextService.ShowMenuAsync(new()
-        {
+        await ContextService.ShowMenuAsync(
+        [
             new MenuItem
             {
                 Label = $"✏️ {ResourceApp.update}",
@@ -136,15 +116,15 @@ public partial class AccountUI
                     return Task.CompletedTask;
                 }
             }
-        });
+        ]);
     }
 
-    private void Remove(ListAccountDTO account) =>
+    private void Remove(AccountManageDTO account) =>
         MHD.DeleteMessage(
             account.Name,
             EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(account)));
 
-    private async Task ConfirmRemoveAsync(ListAccountDTO account)
+    private async Task ConfirmRemoveAsync(AccountManageDTO account)
     {
         var result = await MicroBus.Send(new DeleteAccountCommand(account.Id));
         if (result)

@@ -1,35 +1,70 @@
-﻿@using ProjectManagement.Shared.DTO.Identity;
-@inject ProjectManagement.Client.Shared.Repositories.Identity.IDepartmentsRepository _usersGroupsRepo
+﻿@using ProjectManagement.Shared.DTO.Identity
 @inherits AppComponentBase
-@inject ICommandDispatcher MicroBus
 
-@if (DepartmentList != null)
+@if (DepartmentList is null)
 {
-    <div>
-        <h4>@DepartmentList.Name</h4>
+    <div class="@CssClasses.Modal.Body">
+        <div class="text-muted">@ResourceApp.notFoundData</div>
+        <div class="@CssClasses.Modal.Footer">
+            <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Back">
+                @((MarkupString)Icons.Back)
+            </button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="@CssClasses.Modal.Body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="m-0">@DepartmentList.Name</h4>
+        </div>
+
         <hr />
+
         <dl class="@CssClasses.Grid.Col.MD3">
             <dt>@CalcResource.name</dt>
             <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.Name</dd>
+
             <dt>@ResourceLoc.description</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.Description</dd>
-            <dt>@ResourceApp.created </dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.Created</dd>
-                <dt>@ResourceApp.lastUpdate
-            </dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.LastModified</dd>
+            <dd class="@CssClasses.Grid.Span.MD2">@FormatText(DepartmentList.Description)</dd>
+
+            <dt>@ResourceApp.created</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@FormatDate(DepartmentList.Created)</dd>
+
+            <dt>@ResourceApp.lastUpdate</dt>
+            <dd class="@CssClasses.Grid.Span.MD2">@FormatDate(DepartmentList.LastModified)</dd>
+
             <dt>@ResourceIdentity.User</dt>
             <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.UsersCount</dd>
+
             <dt>@ResourceLoc.folder</dt>
             <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.FoldersCount</dd>
+
             <dt>@CalcResource.project</dt>
             <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.ProjectsCount</dd>
         </dl>
     </div>
+
+    <div class="@CssClasses.Modal.Footer">
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Back">
+            @((MarkupString)Icons.Back)
+        </button>
+    </div>
 }
 
 @code {
-
     [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
     [Parameter] public DepartmentDetailsDTO? DepartmentList { get; set; }
+
+    private Task Back() => OnClickCallback.InvokeAsync(false);
+
+    private static string FormatText(string? value)
+        => string.IsNullOrWhiteSpace(value) ? "-" : value;
+
+    private static string FormatDate(DateTime? value)
+        => value.HasValue ? value.Value.ToString("yyyy-MM-dd HH:mm") : "-";
+
+    // إذا Created/LastModified عندك DateTimeOffset بدل DateTime:
+    // private static string FormatDate(DateTimeOffset? value)
+    //     => value.HasValue ? value.Value.ToString("yyyy-MM-dd HH:mm") : "-";
 }

@@ -5,23 +5,31 @@
 @using ProjectManagement.Shared
 @using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Shared.Models.Account
+
 @inject ICommandDispatcher MicroBus
 
 @inherits AppComponentBase
 
-@if (Details != null)
+@if (Mode == ViewMode.Details && SelectedDepartment is not null)
 {
-    <DepartmentDetailsUI DepartmentList="Details" OnClickCallback="()=>Details = null"></DepartmentDetailsUI>
+    <DepartmentDetailsUI DepartmentList="SelectedDepartment"
+                        OnClickCallback="BackToList" />
 }
-@if (DepartmentUsersId > -1)
+else if (Mode == ViewMode.Users && SelectedDepartmentIdForUsers > 0)
 {
-    <UsersIndex DepartmentId="DepartmentUsersId" OnClickCallback="()=>DepartmentUsersId=-1"></UsersIndex>
+    <UsersIndex DepartmentId="SelectedDepartmentIdForUsers"
+                OnClickCallback="BackToList" />
 }
 else
 {
     <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-        <button class="@CssClasses.Btn.Outline.Success" @onclick="() => RegistrationForm(new UserAuthModel())">@PMResourceIdentity.register</button>
-        <button @onclick="() => NewDepartment(new DepartmentDetailsDTO())" class="@CssClasses.Btn.Outline.Success">@Icons.Plus2</button>
+        <button class="@CssClasses.Btn.Outline.Success" @onclick="OpenRegisterUser">
+            @PMResourceIdentity.register
+        </button>
+
+        <button class="@CssClasses.Btn.Outline.Success" @onclick="OpenCreateDepartment">
+            @Icons.Plus2
+        </button>
     </div>
 
     <table class="@CssClasses.Table.Tab">
@@ -29,70 +37,158 @@ else
             <tr class="@CssClasses.Table.Tr">
                 <td scope="row" class="@CssClasses.Table.Td">
                     <div>
-                        <button class="@CssClasses.Btn.IconButton.Warning" disabled>@((MarkupString)Icons.Edit)</button>
-                        <button class="@CssClasses.Btn.IconButton.Danger" disabled>@((MarkupString)Icons.DeleteSVG)</button>
-                        <button class="@CssClasses.Btn.Link" @onclick="() => DepartmentUsersId = 0">@ResourceIdentity.Admin</button>
+                        <button class="@CssClasses.Btn.IconButton.Warning" disabled>
+                            @((MarkupString)Icons.Edit)
+                        </button>
+                        <button class="@CssClasses.Btn.IconButton.Danger" disabled>
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
+
+                        <button class="@CssClasses.Btn.Link" @onclick="OpenAdminUsers">
+                            @ResourceIdentity.Admin
+                        </button>
                     </div>
                 </td>
             </tr>
-            @if (Departments != null)
-                foreach (var departemetn in Departments)
+
+            @if (Departments is not null)
+            {
+                @foreach (var department in Departments)
                 {
                     <tr class="@CssClasses.Table.Tr">
                         <td scope="row" class="@CssClasses.Table.Td">
                             <div>
-                                <button @onclick="() => NewDepartment(departemetn)" class="@CssClasses.Btn.IconButton.Warning">@((MarkupString)Icons.Edit)</button>
-                                <button @onclick="() => Remove(departemetn)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
-                            <button class="@CssClasses.Btn.Link" @onclick="() => DepartmentUsersId = departemetn.Id">
-                                @departemetn.Name
-                            </button>
+                                <button class="@CssClasses.Btn.IconButton.Warning"
+                                        @onclick="() => OpenEditDepartment(department)">
+                                    @((MarkupString)Icons.Edit)
+                                </button>
+
+                                <button class="@CssClasses.Btn.IconButton.Danger"
+                                        @onclick="() => AskRemoveDepartment(department)">
+                                    @((MarkupString)Icons.DeleteSVG)
+                                </button>
+
+                                <button class="@CssClasses.Btn.Link"
+                                        @onclick="() => OpenDepartmentUsers(department.Id)">
+                                    @department.Name
+                                </button>
                             </div>
                         </td>
                     </tr>
                 }
+            }
         </tbody>
     </table>
 }
-@code {
-    List<DepartmentDetailsDTO>? Departments;
-    DepartmentDetailsDTO? Details;
 
-    int DepartmentUsersId = -1;
-    void RegistrationForm(UserAuthModel user) =>
-    Modal.ShowComponent<UpdateUserUI>(PMResourceIdentity.register, new Dictionary<string, object>
-            {
-                [nameof(UpdateUserUI.UserForm)] = user,
-                [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate),
-            });
-    void NewDepartment(DepartmentDetailsDTO department) =>
-        Modal.ShowComponent<CreateDepartment>((department.Id > 0 ? AppLoc[LocalizerConst.Update, department.Name] :
-            AppLoc[LocalizerConst.New, ResourceApp.department]), new Dictionary<string, object>
-            {
-                [nameof(CreateDepartment.DepartmentList)] = department,
-                [nameof(CreateDepartment.OnClickCallback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate),
-            }, DialogSize.ExtraLarge);
-    void Remove(DepartmentDetailsDTO department)
+@code {
+    private enum ViewMode
     {
-        MHD.DeleteMessage(department.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(department)));
+        List = 0,
+        Details = 1,
+        Users = 2
     }
-    async Task ConfirmRemoveAsync(DepartmentDetailsDTO department)
+
+    private List<DepartmentDetailsDTO>? Departments;
+    private DepartmentDetailsDTO? SelectedDepartment;
+
+    private int SelectedDepartmentIdForUsers;
+    private ViewMode Mode = ViewMode.List;
+
+    protected override async Task OnInitializedAsync()
     {
-        if (await MicroBus.Send(new DeleteDepartmentCommand(department.Id)))
-        {
-            Departments?.Remove(department);
-        }
+        await ReloadDepartmentsAsync();
+    }
+
+    private async Task ReloadDepartmentsAsync()
+    {
+        Departments = await MicroBus.Send(new GetDepartmentsQuery());
         StateHasChanged();
     }
-    async Task BtnUpdate(bool IsSuccess)
+
+    private void BackToList(bool _ = false)
     {
-        if (IsSuccess)
-            Departments = await MicroBus.Send(new GetDepartmentsQuery());
+        // reset selection
+        SelectedDepartment = null;
+        SelectedDepartmentIdForUsers = 0;
+        Mode = ViewMode.List;
+
         Modal.Close();
         StateHasChanged();
     }
 
-    protected async override Task OnInitializedAsync()
+    private void OpenRegisterUser()
     {
-        Departments = await MicroBus.Send(new GetDepartmentsQuery());
+        var user = new UserAuthModel();
+
+        Modal.ShowComponent<UpdateUserUI>(
+            PMResourceIdentity.register,
+            new Dictionary<string, object>
+            {
+                [nameof(UpdateUserUI.UserForm)] = user,
+                [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
+            });
+    }
+
+    private void OpenCreateDepartment()
+    {
+        OpenDepartmentModal(new DepartmentDetailsDTO { Id = 0 });
+    }
+
+    private void OpenEditDepartment(DepartmentDetailsDTO department)
+    {
+        OpenDepartmentModal(department);
+    }
+
+    private void OpenDepartmentModal(DepartmentDetailsDTO department)
+    {
+        var title = department.Id > 0
+            ? AppLoc[LocalizerConst.Update, department.Name]
+            : AppLoc[LocalizerConst.New, ResourceApp.department];
+
+        Modal.ShowComponent<CreateDepartment>(
+            title,
+            new Dictionary<string, object>
+            {
+                [nameof(CreateDepartment.DepartmentList)] = department,
+                [nameof(CreateDepartment.OnClickCallback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
+            },
+            DialogSize.ExtraLarge);
+    }
+
+    private void OpenAdminUsers()
+    {
+        SelectedDepartmentIdForUsers = 0; // Admin department/users view in your current logic
+        Mode = ViewMode.Users;
+    }
+
+    private void OpenDepartmentUsers(int departmentId)
+    {
+        SelectedDepartmentIdForUsers = departmentId;
+        Mode = ViewMode.Users;
+    }
+
+    private void AskRemoveDepartment(DepartmentDetailsDTO department)
+    {
+        MHD.DeleteMessage(department.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(department)));
+    }
+
+    private async Task ConfirmRemoveAsync(DepartmentDetailsDTO department)
+    {
+        var ok = await MicroBus.Send(new DeleteDepartmentCommand(department.Id));
+        if (ok)
+        {
+            // الأفضل إعادة تحميل لضمان التزامن (خصوصًا لو فيه أكثر من مستخدم/تحديثات)
+            await ReloadDepartmentsAsync();
+        }
+        StateHasChanged();
+    }
+
+    private async Task OnModalResultAsync(bool isSuccess)
+    {
+        if (isSuccess)
+            await ReloadDepartmentsAsync();
+
+        BackToList();
     }
 }

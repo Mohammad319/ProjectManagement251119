@@ -1,0 +1,114 @@
+﻿using Application.Feature.Organisation.Organisation.Commands;
+using Application.Feature.Organisation.Organisation.Queries;
+using Domain.DTO.Category;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using ProjectManagement.Client.Shared.ResourceFiles;
+using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.DTO.Organisation;
+
+namespace ProjectManagement.Components.ControlComponents.Organisation.Organisation
+{
+    public partial class OrganisationsUI
+    {
+        [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+        [Inject] public ICommandDispatcher MicroBus { get; set; } = default!;
+        [Inject] public ContextMenuService ContextService { get; set; } = default!;
+        [Inject] public MhdServices MHD { get; set; } = default!;
+        [Inject] public IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
+
+        [Parameter] public ListOrganisationCategoryDTO? Category { get; set; }
+        [Parameter] public EventCallback Callback { get; set; }
+
+        private bool IsVisible = true;
+        private List<ShortListOrganisationDTO> Organistion { get; set; } = [];
+
+        protected override async Task OnParametersSetAsync()
+        {
+            await GetAsync();
+        }
+
+        private async Task GetAsync()
+        {
+            if (Category?.Id is null || Category.Id <= 0) return;
+            Organistion = await MicroBus.Send(new GetOrganisationsQuery(Category.Id, IsVisible)) ?? [];
+        }
+
+        private async Task<bool> CanManageAsync()
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true) return false;
+
+            return PMRolesConst.Tenant.AdminSuperManger
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(user.IsInRole);
+        }
+
+        private async Task Context(ShortListOrganisationDTO item)
+        {
+            var list = new List<MenuItem>
+            {
+                new()
+                {
+                    Label = $"ℹ️ {ResourceLoc.details}",
+                    OnClickAsync = () => { OrganisationDetails(item); return Task.CompletedTask; }
+                }
+            };
+
+            if (await CanManageAsync())
+            {
+                list.Add(new()
+                {
+                    Label = $"✏️ {ResourceApp.edit}",
+                    OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; }
+                });
+
+                list.Add(new()
+                {
+                    Label = $"🗑️ {ResourceApp.delete}",
+                    OnClickAsync = () => { Remove(item); return Task.CompletedTask; }
+                });
+            }
+
+            await ContextService.ShowMenuAsync(list);
+        }
+
+        private void OrganisationDetails(ShortListOrganisationDTO obj)
+        {
+            // MHD.Modal.AddModal<OrganisationDetailsUI>(...);
+        }
+
+        private void UpdateForm(ShortListOrganisationDTO model)
+        {
+            // MHD.Modal.AddModal<OrganisationFormUI>(...);
+        }
+
+        private void Remove(ShortListOrganisationDTO organisation) =>
+            MHD.DeleteMessage(organisation.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(organisation)));
+
+        private async Task ConfirmRemoveAsync(ShortListOrganisationDTO organisation)
+        {
+            var result = await MicroBus.Send(new DeleteOrganisationCommand(organisation.Id));
+
+            if (result)
+                Organistion.RemoveAll(x => x.Id == organisation.Id);
+
+            MHD.Notifications(ToastType.Delete, result);
+            StateHasChanged();
+        }
+
+        private async Task ReverseElements()
+        {
+            IsVisible = !IsVisible;
+            await GetAsync();
+        }
+
+        private async Task RefreshAsync(bool load)
+        {
+            if (load) await GetAsync();
+        }
+    }
+}

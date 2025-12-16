@@ -21,7 +21,7 @@
 
         @if (IsLoading)
         {
-            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading></BlazorMHD.UI.Components.Feedback.Loading.MhdLoading>
+           <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading></BlazorMHD.UI.Components.Feedback.Loading.MhdLoading>
         }
         else if (Accounts is { Count: > 0 })
         {
@@ -42,23 +42,23 @@
                             @oncontextmenu:preventDefault
                             @oncontextmenu="() => AccountContextM(account)">
 
-                            <td class="@CssClasses.Table.Td">@account.Account</td>
+                            <td class="@CssClasses.Table.Td">@account.Code</td>
 
                             <td class="@CssClasses.Table.Td">
-                                @* <input type="checkbox" disabled checked="@account.IsVisible" /> *@
+                                <input type="checkbox" disabled checked="@account.IsVisible" />
                             </td>
 
                             <td class="@CssClasses.Table.Td">@account.Name</td>
 
                             <td class="@CssClasses.Table.Td">
                                 @* إذا عندك Comments ضمن Metadata/Data عدّل حسب DTO *@
-                   @*              @if (account.Metadata?.Comments is { Count: > 0 })
+                                @if (account.Metadata?.Comments is { Count: > 0 })
                                 {
                                     @foreach (var comm in account.Metadata.Comments)
                                     {
                                         <div class="truncate">@comm</div>
                                     }
-                                } *@
+                                }
                             </td>
 
                         </tr>

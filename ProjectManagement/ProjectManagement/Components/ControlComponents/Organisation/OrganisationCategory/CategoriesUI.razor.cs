@@ -1,7 +1,6 @@
 ﻿using Application.Feature.Organisation.OrganisationCategory.Commands;
 using Application.Feature.Organisation.OrganisationCategory.Queries;
 using Domain.DTO.Category;
-using Domain.Entities.Organisation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
@@ -11,75 +10,147 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 {
     public partial class CategoriesUI
     {
-        async Task Context(ListOrganisationCategoryDTO item)
+        private int PageNr = 0;
+
+        private List<ListOrganisationCategoryDTO> Categories { get; set; } = [];
+        private IReadOnlyList<ListOrganisationCategoryDTO> _roots = Array.Empty<ListOrganisationCategoryDTO>();
+        private ILookup<int?, ListOrganisationCategoryDTO> _byParent = default!;
+
+        private ListOrganisationCategoryDTO? SelectedCategory;
+
+        protected override async Task OnInitializedAsync()
+        {
+            await LoadCategoriesAsync();
+        }
+
+        private void RebuildIndex()
+        {
+            _byParent = Categories.ToLookup(x => x.ParentCategoryId);
+            _roots = _byParent[null].ToList();
+        }
+
+        private async Task LoadCategoriesAsync()
+        {
+            Categories = await MicroBus.Send(new GetOrganisationCategoryQuery()) ?? [];
+            RebuildIndex();
+            StateHasChanged();
+        }
+
+        private void SelectCategory(ListOrganisationCategoryDTO cat)
+        {
+            PageNr = 2;
+            SelectedCategory = cat;
+        }
+
+        private async Task<bool> CanManageAsync()
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            bool isInAnyRole = PMRolesConst.Tenant.AdminSuperManger.Split(',').Any(r => user.IsInRole(r));
+
+            if (user.Identity?.IsAuthenticated != true)
+                return false;
+
+            return PMRolesConst.Tenant.AdminSuperManger
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Any(user.IsInRole);
+        }
+
+        private async Task Context(ListOrganisationCategoryDTO item)
+        {
+            if (!await CanManageAsync())
+                return;
+
             List<MenuItem> list = [];
-            if (item.ParentCategoryId == null)
-                list.Add(new MenuItem { Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}", OnClickAsync = () => {ModalForm(new ListOrganisationCategoryDTO() { ParentCategoryId = item.Id });
+
+            if (item.ParentCategoryId is null)
+            {
+                list.Add(new MenuItem
+                {
+                    Label = $"➕ {AppLoc[LocalizerConst.New, ResourceLoc.category]}",
+                    OnClickAsync = () =>
+                    {
+                        ModalForm(new ListOrganisationCategoryDTO { ParentCategoryId = item.Id });
+                        return Task.CompletedTask;
+                    }
+                });
+            }
+
+            list.Add(new MenuItem
+            {
+                Label = $"✏️ {ResourceApp.update}",
+                OnClickAsync = () =>
+                {
+                    ModalForm(item);
                     return Task.CompletedTask;
                 }
-                });
-            list.Add(new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => {ModalForm(item);
-                return Task.CompletedTask;
-            }
             });
-            list.Add(new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => {Remove(item);
-                return Task.CompletedTask;
-            }
-            });
-            if (user.Identity?.IsAuthenticated == true && isInAnyRole)
-            {
-                await ContextService.ShowMenuAsync(list);
-            }
-        }
-        int PageNr = 0;
-        List<ListOrganisationCategoryDTO> Categories = [];
-        void ModalForm(ListOrganisationCategoryDTO model) =>
-            MHD.Modal.ShowComponent<CategoryFormUI>(model.Id != 0 ? AppLoc[LocalizerConst.Update, model.Name] : AppLoc[LocalizerConst.New, ResourceLoc.group]
-                , new Dictionary<string, object> { [nameof(CategoryFormUI.OrganisationCategory)] = model, [nameof(CategoryFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, Callback) });
 
-        ListOrganisationCategoryDTO? SelectedCategory;
-        async Task GetCompaniesAsync(ListOrganisationCategoryDTO catID)
-        {
-            SelectedCategory = null;
-            PageNr = 2;
-            await Task.Delay(1);
-            SelectedCategory = catID;
+            list.Add(new MenuItem
+            {
+                Label = $"🗑️ {ResourceApp.delete}",
+                OnClickAsync = () =>
+                {
+                    Remove(item);
+                    return Task.CompletedTask;
+                }
+            });
+
+            await ContextService.ShowMenuAsync(list);
         }
-        async Task GetCategories()
-        {
-            //DialogService.ClearModal();
-            Categories = null;
-            Categories = await MicroBus.Send(new GetOrganisationCategoryQuery());
-        }
-        protected async override Task OnInitializedAsync()
-        {
-            await GetCategories();
-        }
-        void Remove(ListOrganisationCategoryDTO category)
+
+        private void ModalForm(ListOrganisationCategoryDTO model) =>
+            MHD.Modal.ShowComponent<CategoryFormUI>(
+                model.Id != 0
+                    ? AppLoc[LocalizerConst.Update, model.Name]
+                    : AppLoc[LocalizerConst.New, ResourceLoc.category],
+                new Dictionary<string, object>
+                {
+                    [nameof(CategoryFormUI.OrganisationCategory)] = model,
+                    [nameof(CategoryFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallbackAsync)
+                });
+
+        private void Remove(ListOrganisationCategoryDTO category)
         {
             MHD.DeleteMessage(category.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(category)));
         }
-        async Task ConfirmRemoveAsync(ListOrganisationCategoryDTO st)
+
+        private async Task ConfirmRemoveAsync(ListOrganisationCategoryDTO st)
         {
             bool result = await MicroBus.Send(new DeleteOrganisationCategoryCommand(st.Id));
+
             if (result)
             {
-                if (Categories.Any(x => x.Id == st.Id))
-                    Categories.Remove(st);
+                Categories.RemoveAll(x => x.Id == st.Id);
+                RebuildIndex();
             }
+
             MHD.Notifications(ToastType.Delete, result);
             StateHasChanged();
         }
-        async Task Callback(bool isSuccess)
+
+        private async Task CallbackAsync(bool isSuccess)
         {
             MHD.Modal.Close();
+
             if (isSuccess)
-                await GetCategories();
+                await LoadCategoriesAsync();
+
             StateHasChanged();
         }
+
+        private void OnTreeSelect(ListOrganisationCategoryDTO cat)
+        {
+            // إذا بدك تمنع اختيار root فقط:
+            // if (cat.ParentCategoryId is null) return;
+
+            PageNr = 2;
+            SelectedCategory = cat;
+        }
+
+        private async Task OnTreeContext(ListOrganisationCategoryDTO cat)
+        {
+            await Context(cat);
+        }
+
     }
 }
