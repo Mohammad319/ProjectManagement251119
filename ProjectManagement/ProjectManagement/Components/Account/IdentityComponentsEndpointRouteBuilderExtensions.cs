@@ -22,26 +22,23 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
 
         var accountGroup = endpoints.MapGroup("/Account");
 
-        accountGroup.MapPost("/Logout", async (
-            ClaimsPrincipal user,
-            [FromServices] SignInManager<ApplicationUser> signInManager,
-            [FromForm] string returnUrl) =>
+        //accountGroup.MapPost("/Logout", async (
+        //    ClaimsPrincipal user,
+        //    [FromServices] SignInManager<ApplicationUser> signInManager,
+        //    [FromForm] string returnUrl) =>
+        //{
+        //    await signInManager.SignOutAsync();
+        //    return TypedResults.LocalRedirect($"~/{returnUrl}");
+        //});
+        accountGroup.MapPost("/Logout", async ([FromServices] SignInManager<ApplicationUser> signInManager,[FromForm] string? returnUrl) =>
         {
             await signInManager.SignOutAsync();
-            return TypedResults.LocalRedirect($"~/{returnUrl}");
-        });
-    //    accountGroup.MapPost("/Logout", async (
-    //[FromServices] SignInManager<ApplicationUser> signInManager,
-    //[FromForm] string? returnUrl) =>
-    //    {
-    //        await signInManager.SignOutAsync();
-    //        if (string.IsNullOrWhiteSpace(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative) || !returnUrl.StartsWith('/'))
-    //        {
-    //            returnUrl = "/";
-    //        }
 
-    //        return TypedResults.LocalRedirect(returnUrl);
-    //    })
+            if (string.IsNullOrWhiteSpace(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative) ||!returnUrl.StartsWith('/'))
+                returnUrl = "/";
+            return TypedResults.LocalRedirect(returnUrl);
+        });
+
         accountGroup.MapPost("/PasskeyCreationOptions", async (
             HttpContext context,
             [FromServices] UserManager<ApplicationUser> userManager,

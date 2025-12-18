@@ -1,25 +1,23 @@
 ﻿using Application;
 using AuthPermissions;
 using AuthPermissions.Context;
-using BlazorMHD.UI.Core.DesignSystem;
 using BlazorMHD.UI.Core.Services;
 using Domain.Settings;
-using TaskResourceBlueprints;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
-using TaskResourceBlueprints.Infrastructure;
 using ProjectManagement.Components;
 using ProjectManagement.Components.Account;
-using ProjectManagement.Components.Account.Pages;
 using ProjectManagement.DependencyInjection;
 using ProjectManagement.Server.HubsPM;
 using ProjectManagement.Server.Middleware;
 using ProjectManagement.Shared.Constant;
 using Serilog;
 using System.Globalization;
+using TaskResourceBlueprints;
+using TaskResourceBlueprints.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
@@ -96,11 +94,11 @@ app.UseSerilogRequestLogging(opts =>
 {
     opts.EnrichDiagnosticContext = (ctx, http) =>
     {
-        var userId = http.User.FindFirst("UserId")?.Value;
-        if (userId is not null) ctx.Set("UserId", userId);
+        var userId = http.User.FindFirst(PMClaimsConst.UserId)?.Value;
+        if (!string.IsNullOrWhiteSpace(userId)) ctx.Set(PMClaimsConst.UserId, userId);
 
-        var tenantId = http.User.FindFirst("tenant")?.Value;
-        if (tenantId is not null) ctx.Set("TenantID", tenantId);
+        var tenantId = http.User.FindFirst(PMClaimsConst.Tentan)?.Value;
+        if (!string.IsNullOrWhiteSpace(tenantId)) ctx.Set(PMClaimsConst.Tentan, tenantId);
     };
 });
 app.MapStaticAssets();

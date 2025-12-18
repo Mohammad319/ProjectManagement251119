@@ -8,13 +8,11 @@ using System.Security.Claims;
 
 namespace ProjectManagement
 {
-    public class DbContextFactory(
-        IHttpContextAccessor httpContextAccessor,
+    public class DbContextFactory(IHttpContextAccessor httpContextAccessor,
         ApplicationDbContext appContext,
         IMemoryCache cache) : IDbContextFactory
     {
         private const string CacheKey = "TenantConnections";
-
         private string? GetConnectionString(int tenantId)
         {
             if (!cache.TryGetValue<Dictionary<int, string>>(CacheKey, out var tenantConnections))
@@ -34,11 +32,8 @@ namespace ProjectManagement
 
         public ShardingSingleDbContext CreateDbContext()
         {
-            var httpContext = httpContextAccessor.HttpContext
-                               ?? throw new Exception("No HttpContext available.");
-
+            var httpContext = httpContextAccessor.HttpContext ?? throw new Exception("No HttpContext available.");
             var user = httpContext.User;
-
             // TenantId من الـ Claims
             var tenantIdClaim = user.FindFirst(PMClaimsConst.Tentan)?.Value;
             if (!int.TryParse(tenantIdClaim, out var tenantId))

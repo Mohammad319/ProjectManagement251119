@@ -11,10 +11,16 @@ builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
 });
+
+//builder.Services.AddScoped(sp =>
+//    sp.GetRequiredService<IHttpClientFactory>().CreateClient("ServerAPI"));
+
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthenticationStateDeserialization();
 builder.Services.AddClientServices();
+
+
 builder.Services.AddChartJs(options =>
 {
     // المواقع الافتراضية (يمكن تركها كما هي)

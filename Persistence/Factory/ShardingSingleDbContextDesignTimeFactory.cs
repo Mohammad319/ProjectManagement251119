@@ -8,14 +8,11 @@ namespace Persistence.Factory
         public ShardingSingleDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
-
-            // ضع ConnectionString ثابتة للتصميم (مثلاً dev database)
-            optionsBuilder.UseSqlServer(
-                @"Server=(localdb)\MSSQLLocalDB;Database=db922357028_2;Trusted_Connection=True;TrustServerCertificate=True;");
+            optionsBuilder.UseSqlServer(@"Server=(localdb)\MSSQLLocalDB;Database=db962510648_2;Trusted_Connection=True;TrustServerCertificate=True;");
 
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
-                TenantId = 0,        // قيمة افتراضية للفلتر
+                TenantId = 0,
                 CurrentUserId = null
             };
 

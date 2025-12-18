@@ -10,8 +10,6 @@ namespace AuthPermissions
         public static void AddAuthPermissionsLayer(this IServiceCollection services)
         {
             services.AddScoped<IAuthRepository, AuthRepository>();
-
-
             services.AddMemoryCache(); // لإضافة IMemoryCache
             services.AddLogging();     // لإضافة ILogger<T>
         }

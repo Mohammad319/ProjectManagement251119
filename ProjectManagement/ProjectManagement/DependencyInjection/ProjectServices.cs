@@ -13,8 +13,13 @@ namespace ProjectManagement.DependencyInjection
             services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents()
-            .AddAuthenticationStateSerialization();
-            services.AddHttpContextAccessor();
+    .AddAuthenticationStateSerialization(options =>
+    {
+        options.SerializeAllClaims = true; // كي تصل PMClaimsConst.UserId و PMClaimsConst.Tentan للـ WASM
+    }); services.AddHttpContextAccessor();
+
+
+
             services.AddHttpClient();
             services.AddScoped(sp =>
             {

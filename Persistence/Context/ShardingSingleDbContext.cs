@@ -294,24 +294,60 @@ namespace Persistence.Context
         }
         private void UpdateAuditFields()
         {
-            var entries = ChangeTracker.Entries<IAuditable>()
-                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
-
             var now = DateTime.UtcNow;
-            int? userId = CurrentUserId ?? null; // أو null إذا جعلتها int?
+
+            int? userId = (CurrentUserId.HasValue && CurrentUserId.Value > 0)
+                ? CurrentUserId.Value
+                : (int?)null;
+
+            Console.WriteLine($"[Audit] CurrentUserId = {CurrentUserId}");
+            Console.WriteLine($"[Audit] Effective UserId = {(userId.HasValue ? userId.ToString() : "NULL")}");
+
+            var entries = ChangeTracker.Entries<IAuditable>()
+                .Where(e =>
+                    e.State == EntityState.Added ||
+                    e.State == EntityState.Modified)
+                .ToList();
+
+            Console.WriteLine($"[Audit] Auditable Entries Count = {entries.Count}");
 
             foreach (var entry in entries)
             {
+                Console.WriteLine($"[Audit] Entity: {entry.Entity.GetType().Name}");
+                Console.WriteLine($"[Audit] State : {entry.State}");
+
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedAt = now;
-                    entry.Entity.CreatedBy = userId;
+
+                    if (userId.HasValue)
+                    {
+                        entry.Entity.CreatedBy = userId;
+                        Console.WriteLine($"[Audit] CreatedBy set to {userId}");
+                    }
+                    else
+                    {
+                        entry.Entity.CreatedBy = null;
+                        Console.WriteLine("[Audit] CreatedBy set to NULL");
+                    }
+                }
+                else // Modified
+                {
+                    entry.Property(nameof(IAuditable.CreatedAt)).IsModified = false;
+                    entry.Property(nameof(IAuditable.CreatedBy)).IsModified = false;
+
+                    Console.WriteLine("[Audit] Prevented modification of CreatedAt / CreatedBy");
                 }
 
                 entry.Entity.UpdatedAt = now;
                 entry.Entity.UpdatedBy = userId;
+
+                Console.WriteLine($"[Audit] UpdatedAt set to {now:O}");
+                Console.WriteLine($"[Audit] UpdatedBy set to {(userId.HasValue ? userId.ToString() : "NULL")}");
+                Console.WriteLine("--------------------------------------------------");
             }
         }
+
         private void UpdateTenantId()
         {
             var entries = ChangeTracker

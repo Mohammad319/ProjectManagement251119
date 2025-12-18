@@ -10,6 +10,13 @@ namespace ProjectManagement.Server.Middleware
     {
         public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, string connectionString)
         {
+            services.AddRazorComponents()
+    .AddInteractiveWebAssemblyComponents()
+    .AddAuthenticationStateSerialization(options =>
+    {
+        options.SerializeAllClaims = true;
+    });
+
             services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
 
             services.AddCascadingAuthenticationState();
@@ -27,7 +34,7 @@ namespace ProjectManagement.Server.Middleware
                 options.LoginPath = "/Account/Login";
                 options.LogoutPath = "/Account/Logout";
                 options.AccessDeniedPath = "/Account/AccessDenied";
-                options.Cookie.SameSite = SameSiteMode.None;
+                options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
@@ -49,9 +56,9 @@ namespace ProjectManagement.Server.Middleware
                 options.Password.RequireLowercase = false;
             });
 
-            using var scope = services.BuildServiceProvider().CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            dbContext.Database.SetConnectionString(connectionString);
+            //using var scope = services.BuildServiceProvider().CreateScope();
+            //var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            //dbContext.Database.SetConnectionString(connectionString);
 
             return services;
         }
