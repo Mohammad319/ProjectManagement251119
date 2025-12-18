@@ -8,9 +8,7 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
-    <MhdTable Items="Status?.Where(x => x.IsVisible == IsVisible)?
-                                            .OrderByDescending(x => x.SortOrder)"
-              ShowFilter="false">
+    <MhdTable Items="Status?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)" ShowFilter="false">
         <HeaderTemplate>
             <th style="width:200px;" class="@CssClasses.Table.TH">
                 <div class="@CssClasses.Layout.FlexItemsCenter">

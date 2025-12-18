@@ -13,12 +13,30 @@ using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Organisation;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 
 namespace Persistence.Context
 {
+    public static class TypeExtensions
+    {
+        public static bool IsAssignableFromGeneric(this Type genericType, Type givenType)
+        {
+            while (givenType != null && givenType != typeof(object))
+            {
+                var current = givenType.IsGenericType
+                    ? givenType.GetGenericTypeDefinition()
+                    : givenType;
+
+                if (genericType == current)
+                    return true;
+
+                givenType = givenType.BaseType!;
+            }
+            return false;
+        }
+    }
+
     public class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbContext> options)
         : DbContext(options)
     {
@@ -28,42 +46,49 @@ namespace Persistence.Context
         public int TenantId { get; set; }
         public int? CurrentUserId { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder){}
+
+        private static void ConfigureAuditUserRelations(ModelBuilder modelBuilder)
         {
+            var entityTypes = modelBuilder.Model.GetEntityTypes()
+                .Where(t =>
+                    typeof(AuditableEntity<>).IsAssignableFromGeneric(t.ClrType) ||
+                    typeof(AuditableSoftDeletableEntity<>).IsAssignableFromGeneric(t.ClrType));
+
+            foreach (var entityType in entityTypes)
+            {
+                var entityBuilder = modelBuilder.Entity(entityType.ClrType);
+
+                // CreatedBy
+                entityBuilder
+                    .HasOne(typeof(UserEntity), nameof(AuditableEntity<int>.CreatedByUser))
+                    .WithMany()
+                    .HasForeignKey(nameof(AuditableEntity<int>.CreatedBy))
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // UpdatedBy
+                entityBuilder
+                    .HasOne(typeof(UserEntity), nameof(AuditableEntity<int>.UpdatedByUser))
+                    .WithMany()
+                    .HasForeignKey(nameof(AuditableEntity<int>.UpdatedBy))
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // DeletedBy (فقط للـ SoftDelete)
+                if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                {
+                    entityBuilder
+                        .HasOne(typeof(UserEntity), nameof(AuditableSoftDeletableEntity<int>.DeletedByUser))
+                        .WithMany()
+                        .HasForeignKey(nameof(AuditableSoftDeletableEntity<int>.DeletedBy))
+                        .OnDelete(DeleteBehavior.Restrict);
+                }
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            var entityTypes = modelBuilder.Model.GetEntityTypes()
-    .Where(t => typeof(IDataKeyFilterReadOnly).IsAssignableFrom(t.ClrType));
-
-            foreach (var entityType in entityTypes)
-            {
-                var param = Expression.Parameter(entityType.ClrType, "e");
-                var tenantProperty = Expression.Property(param, nameof(IDataKeyFilterReadOnly.TenantId));
-
-                // this.TenantId
-                var currentTenantId = Expression.Constant(TenantId);
-                var body = Expression.Equal(tenantProperty, currentTenantId);
-
-                var lambda = Expression.Lambda(body, param);
-
-                modelBuilder.Entity(entityType.ClrType)
-                    .HasQueryFilter(lambda);
-            }
-            ///-------------------------------------------------------
-
-            modelBuilder.Entity<ResourceEntity>(builder =>
-            {
-                builder.OwnsOne(r => r.Cost, owned =>
-                {
-                    owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
-                    owned.Property(x => x.Cost).HasColumnName("Cost");
-                    owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
-                    owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
-                });
-            });
+            ConfigureAuditUserRelations(modelBuilder);
 
             ///-------------------------------------------------------
             ConfigureTenderAttributeRelations(modelBuilder);
@@ -273,7 +298,7 @@ namespace Persistence.Context
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
             var now = DateTime.UtcNow;
-            var userId = CurrentUserId ?? 0; // أو null إذا جعلتها int?
+            int? userId = CurrentUserId ?? null; // أو null إذا جعلتها int?
 
             foreach (var entry in entries)
             {

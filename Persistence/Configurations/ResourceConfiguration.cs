@@ -1,6 +1,5 @@
 ﻿using Domain.Entities.Calculation;
 using Domain.Entities.ResourceType;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
@@ -38,6 +37,13 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<ResourceEntity> modelBuilder)
         {
+            modelBuilder.OwnsOne(r => r.Cost, owned =>
+                {
+                    owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
+                    owned.Property(x => x.Cost).HasColumnName("Cost");
+                    owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
+                    owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
+                });
             modelBuilder.Property(e => e.Metadata).HasConversion(
                 v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                 v => JsonSerializer.Deserialize<ResourceData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceData());
@@ -57,6 +63,14 @@ namespace Persistence.Configurations
             //        modelBuilder.Property(p => p.Metadata)
             //.HasColumnType("jsonb"); // Use "json" for MySQL or "jsonb" for PostgreSQL
 
+            modelBuilder.OwnsOne(t => t.Cost, owned =>
+            {
+                owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
+                owned.Property(x => x.Cost).HasColumnName("Cost");
+                owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
+                owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
+            });
+
             modelBuilder.Property(e => e.Metadata).HasConversion(
                 v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
                 v => JsonSerializer.Deserialize<TaskData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new TaskData());
@@ -71,6 +85,15 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<OfferEntity> modelBuilder)
         {
+            modelBuilder.HasOne(o => o.Resource)
+       .WithMany(r => r.Offers)
+       .HasForeignKey(o => o.ResourceId)
+       .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.HasOne(o => o.Organisation)
+                   .WithMany()
+                   .HasForeignKey(o => o.OrganisationId)
+                   .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Property(e => e.Metadata).HasConversion(
     v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
     v => JsonSerializer.Deserialize<OfferData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new OfferData());

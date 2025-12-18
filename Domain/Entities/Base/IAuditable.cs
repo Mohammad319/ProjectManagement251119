@@ -48,6 +48,7 @@ namespace Domain.Entities.Base
         public bool IsDeleted { get; set; }
         public DateTime? DeletedAt { get; set; }
         public int? DeletedBy { get; set; }
+        [ForeignKey(nameof(DeletedBy))]
         [JsonIgnore]
         public UserEntity? DeletedByUser { get; set; }
     }

@@ -18,16 +18,7 @@
     @ChildContent
 </CascadingValue>
 
-@if (IsLoading)
-{
-    <div>@Localization["Loading"]...</div>
-}
-else if (Items == null || !Items.Any())
-{
-    <div>@Localization["NoData"]</div>
-}
-else
-{
+
     <table class="@TableClass">
         <thead class="@(Thead)">
             <tr>
@@ -51,6 +42,17 @@ else
             </tr>
         </thead>
         <tbody class="@TBody">
+@if (IsLoading)
+{
+            <tr><td colspan="@Columns.Count"><div>@Localization["Loading"]...</div></td></tr>
+            
+}
+else if (Items == null || !Items.Any())
+        {
+            <tr><td colspan="@Columns.Count"><div>@Localization["NoData"]...</div></td></tr>
+}
+else
+{
             @if (EnableVirtualization && FilteredAndSortedItemsList != null)
             {
                 <Virtualize Items="FilteredAndSortedItemsList" Context="item" ItemSize="30">
@@ -92,9 +94,9 @@ else
                     </tr>
                 }
             }
+        }
         </tbody>
     </table>
-}
 
 @if (FooterTemplate != null)
 {

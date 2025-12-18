@@ -1,34 +1,19 @@
-﻿using AuthPermissions.Context;
+﻿using Application.Feature.Identity.Department.Queries;
+using AuthPermissions.Context;
 using BlazorMHD.UI.Core.Services;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
 using Persistence.Context;
-using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Services;
 
 namespace ProjectManagement.Components.ControlComponents.Department
 {
-    public class TenantUserDto
-    {
-        public int Id { get; set; }
-        public string? IdAuth { get; set; }
-        public string? Role { get; set; }
-        public string? Email { get; set; }
-        public string? Username { get; set; }
-        public int? DepartmentId { get; set; }
-        public string? Firstname { get; set; }
-        public string? Lastname { get; set; }
-        public bool IsInAuth { get; set; }
-        public DateTimeOffset? LockoutStart { get; set; }
-        public DateTimeOffset? LockoutEnd { get; set; }
-        public bool LockoutEnabled { get; set; }
-        public string? PhoneNumber { get; set; }
-        public bool PhoneNumberConfirmed { get; set; }
-    }
+
     public partial class UsersIndex
     {
-        [Parameter] public int DepartmentId { get; set; }
+        [Parameter] public int? DepartmentId { get; set; } = null;
         [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
         [Inject] public ICommandDispatcher MicroBus { get; set; } = default!;
         [Inject] public ITenantUserService TenantUserService { get; set; } = default!;
@@ -54,14 +39,12 @@ namespace ProjectManagement.Components.ControlComponents.Department
             {
                 IsLoading = true;
                 StateHasChanged();
-
-                // ✅ غيّر هذا السطر للاستعلام/الخدمة الموجودة عندك:
-                // Users = await MicroBus.Send(new GetUsersByDepartmentQuery(DepartmentId));
+                Users = await MicroBus.Send(new GetUserssQuery(DepartmentId));
                 //
                 // أو:
                 // Users = await TenantUserService.GetUsersByDepartmentAsync(DepartmentId);
 
-                Users ??= new List<TenantUserDto>(); // placeholder آمن لحين ربط الـ query الحقيقي
+                Users ??= []; // placeholder آمن لحين ربط الـ query الحقيقي
             }
             finally
             {

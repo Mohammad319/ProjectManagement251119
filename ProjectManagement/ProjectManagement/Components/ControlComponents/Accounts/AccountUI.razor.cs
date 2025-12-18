@@ -85,7 +85,7 @@ public partial class AccountUI
                 [nameof(AccountsFormUI.Id)] = item.Id,
                 [nameof(AccountsFormUI.Model)] = model,
                 [nameof(AccountsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, OnSavedAsync)
-            });
+            }, DialogSize.ExtraLarge);
     }
 
     private async Task OnSavedAsync(bool ok)

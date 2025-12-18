@@ -12,9 +12,9 @@ namespace Application.Feature.Calculation.TaskStatus.Queries
     public sealed class GetTaskStatusQueryHandler
         : IRequestHandler<GetTaskStatusQuery, List<TaskStatusEntity>>
     {
-        private readonly ILookupStatusQueryService<TaskStatusEntity> _service;
+        private readonly ILookupStatusCommandService<TaskStatusEntity> _service;
 
-        public GetTaskStatusQueryHandler(ILookupStatusQueryService<TaskStatusEntity> service)
+        public GetTaskStatusQueryHandler(ILookupStatusCommandService<TaskStatusEntity> service)
         {
             _service = service;
         }
@@ -29,9 +29,9 @@ namespace Application.Feature.Calculation.TaskStatus.Queries
     public sealed class GetVisualTaskStatusQueryHandler
         : IRequestHandler<GetVisualTaskStatusQuery, IEnumerable<ListOrderDTO>>
     {
-        private readonly ILookupStatusQueryService<TaskStatusEntity> _service;
+        private readonly ILookupStatusCommandService<TaskStatusEntity> _service;
 
-        public GetVisualTaskStatusQueryHandler(ILookupStatusQueryService<TaskStatusEntity> service)
+        public GetVisualTaskStatusQueryHandler(ILookupStatusCommandService<TaskStatusEntity> service)
         {
             _service = service;
         }

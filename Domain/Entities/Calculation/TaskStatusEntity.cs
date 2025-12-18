@@ -22,7 +22,7 @@ namespace Domain.Entities.Calculation
         public ICollection<TaskEntity> Tasks { get; private set; } = [];
 
         // EF Constructor
-        private TaskStatusEntity() { }
+        public TaskStatusEntity() { }
 
         // Domain constructor
         public TaskStatusEntity(string name, string color, int sortOrder, bool isVisible = true)

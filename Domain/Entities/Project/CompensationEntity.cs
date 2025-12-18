@@ -24,7 +24,7 @@ namespace Domain.Entities.Project
 
         [JsonIgnore]
         public ICollection<ProjectEntity> Projects { get; set; } = [];
-        private CompensationEntity() { }
+        public CompensationEntity() { }
 
         public CompensationEntity(string name, string color, int sortOrder, bool isVisible = true)
         {

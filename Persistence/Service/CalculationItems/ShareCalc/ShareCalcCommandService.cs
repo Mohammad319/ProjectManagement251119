@@ -1,7 +1,5 @@
 ﻿using Application.Services.CalculationItems.CalcShare;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems.ShareCalc

@@ -27,7 +27,6 @@ namespace Persistence.Configurations
             modelBuilder.HasOne(pt => pt.Contract).WithMany(p => p.Calculations).HasForeignKey(pt => pt.ContractId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Status).WithMany(p => p.Calculations).HasForeignKey(pt => pt.StatusId).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Template).WithMany(p => p.Calculations).HasForeignKey(pt => pt.TemplateId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.CreatedByUser).WithMany(p => p.Calculations).HasForeignKey(pt => pt.CreatedBy).OnDelete(DeleteBehavior.SetNull);
             modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Calculations).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);
 
             //modelBuilder.HasOne(pt => pt.Projects).WithMany(p => p.Calculations).HasForeignKey(pt => pt.ProjectId).OnDelete(DeleteBehavior.Cascade);

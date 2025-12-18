@@ -1,21 +1,23 @@
 ﻿@using Application.Feature.Identity.Department.Commands
 @using Application.Feature.Identity.Department.Queries
 @using BlazorMHD.UI.Core.Services
+@using Domain.DTO.User
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Shared
 @using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Shared.Models.Account
 
 @inject ICommandDispatcher MicroBus
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
 
-@inherits AppComponentBase
 
 @if (Mode == ViewMode.Details && SelectedDepartment is not null)
 {
     <DepartmentDetailsUI DepartmentList="SelectedDepartment"
                         OnClickCallback="BackToList" />
 }
-else if (Mode == ViewMode.Users && SelectedDepartmentIdForUsers > 0)
+else if (Mode == ViewMode.Users)
 {
     <UsersIndex DepartmentId="SelectedDepartmentIdForUsers"
                 OnClickCallback="BackToList" />
@@ -92,7 +94,7 @@ else
     private List<DepartmentDetailsDTO>? Departments;
     private DepartmentDetailsDTO? SelectedDepartment;
 
-    private int SelectedDepartmentIdForUsers;
+    private int? SelectedDepartmentIdForUsers;
     private ViewMode Mode = ViewMode.List;
 
     protected override async Task OnInitializedAsync()
@@ -113,21 +115,21 @@ else
         SelectedDepartmentIdForUsers = 0;
         Mode = ViewMode.List;
 
-        Modal.Close();
+        MHD.Modal.Close();
         StateHasChanged();
     }
 
     private void OpenRegisterUser()
     {
-        var user = new UserAuthModel();
+        var user = new TenantUserDto();
 
-        Modal.ShowComponent<UpdateUserUI>(
+       MHD.Modal.ShowComponent<UpdateUserUI>(
             PMResourceIdentity.register,
             new Dictionary<string, object>
             {
                 [nameof(UpdateUserUI.UserForm)] = user,
                 [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
-            });
+            }, DialogSize.ExtraLarge);
     }
 
     private void OpenCreateDepartment()
@@ -146,7 +148,7 @@ else
             ? AppLoc[LocalizerConst.Update, department.Name]
             : AppLoc[LocalizerConst.New, ResourceApp.department];
 
-        Modal.ShowComponent<CreateDepartment>(
+       MHD.Modal.ShowComponent<CreateDepartment>(
             title,
             new Dictionary<string, object>
             {
@@ -158,7 +160,7 @@ else
 
     private void OpenAdminUsers()
     {
-        SelectedDepartmentIdForUsers = 0; // Admin department/users view in your current logic
+        SelectedDepartmentIdForUsers = null; // Admin department/users view in your current logic
         Mode = ViewMode.Users;
     }
 

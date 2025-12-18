@@ -9,7 +9,7 @@ namespace Application.Feature.Project.Compensation.Queries
     public sealed record GetCompensationQuery()
         : IRequest<List<CompensationEntity>>;
 
-    public sealed class GetCompensationQueryHandler(ILookupStatusQueryService<CompensationEntity> service)
+    public sealed class GetCompensationQueryHandler(ILookupStatusCommandService<CompensationEntity> service)
                 : IRequestHandler<GetCompensationQuery, List<CompensationEntity>>
     {
         public Task<List<CompensationEntity>> Handle(GetCompensationQuery request, CancellationToken cancellationToken)
@@ -19,15 +19,9 @@ namespace Application.Feature.Project.Compensation.Queries
     public sealed record GetVisualCompensationQuery(int? Id)
         : IRequest<IEnumerable<ListOrderDTO>>;
 
-    public sealed class GetVisualCompensationQueryHandler
-        : IRequestHandler<GetVisualCompensationQuery, IEnumerable<ListOrderDTO>>
+    public sealed class GetVisualCompensationQueryHandler(ILookupStatusCommandService<CompensationEntity> _service)
+                : IRequestHandler<GetVisualCompensationQuery, IEnumerable<ListOrderDTO>>
     {
-        private readonly ILookupStatusQueryService<CompensationEntity> _service;
-
-        public GetVisualCompensationQueryHandler(ILookupStatusQueryService<CompensationEntity> service)
-        {
-            _service = service;
-        }
 
         public Task<IEnumerable<ListOrderDTO>> Handle(GetVisualCompensationQuery request, CancellationToken cancellationToken)
             => _service.GetVisualAsync(request.Id, cancellationToken);

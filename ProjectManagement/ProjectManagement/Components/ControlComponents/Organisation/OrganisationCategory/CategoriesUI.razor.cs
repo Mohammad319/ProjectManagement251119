@@ -13,7 +13,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private int PageNr = 0;
 
         private List<ListOrganisationCategoryDTO> Categories { get; set; } = [];
-        private IReadOnlyList<ListOrganisationCategoryDTO> _roots = Array.Empty<ListOrganisationCategoryDTO>();
+        //private IReadOnlyList<ListOrganisationCategoryDTO> _roots = Array.Empty<ListOrganisationCategoryDTO>();
         private ILookup<int?, ListOrganisationCategoryDTO> _byParent = default!;
 
         private ListOrganisationCategoryDTO? SelectedCategory;
@@ -26,7 +26,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private void RebuildIndex()
         {
             _byParent = Categories.ToLookup(x => x.ParentCategoryId);
-            _roots = _byParent[null].ToList();
+            //_roots = _byParent[null].ToList();
         }
 
         private async Task LoadCategoriesAsync()
@@ -36,11 +36,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             StateHasChanged();
         }
 
-        private void SelectCategory(ListOrganisationCategoryDTO cat)
-        {
-            PageNr = 2;
-            SelectedCategory = cat;
-        }
+        //private void SelectCategory(ListOrganisationCategoryDTO cat)
+        //{
+        //    PageNr = 2;
+        //    SelectedCategory = cat;
+        //}
 
         private async Task<bool> CanManageAsync()
         {

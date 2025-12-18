@@ -6,7 +6,7 @@ namespace Application.Feature.Project.ProcurementMethods.Queries
 {
     public sealed record GetProcurementMethodsQuery() : IRequest<List<ProcurementMethodEntity>>;
     public class GetProcurementMethodsQueryHandler(
-        ILookupStatusQueryService<ProcurementMethodEntity> service) : IRequestHandler<GetProcurementMethodsQuery, List<ProcurementMethodEntity>>
+        ILookupStatusCommandService<ProcurementMethodEntity> service) : IRequestHandler<GetProcurementMethodsQuery, List<ProcurementMethodEntity>>
     {
         public Task<List<ProcurementMethodEntity>> Handle(GetProcurementMethodsQuery query, CancellationToken cancellationToken)
             => service.GetAllAsync(cancellationToken);

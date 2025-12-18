@@ -30,7 +30,7 @@ public partial class AccountGroupsFormUI
 
     private bool IsLoading { get; set; }
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
         // Defensive copy: prevents editing the same DTO instance passed from parent.
         EditModel = new PostAccountGroupDTO

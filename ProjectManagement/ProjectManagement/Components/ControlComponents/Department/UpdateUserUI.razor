@@ -1,4 +1,5 @@
 ﻿@using Application.Feature.Identity.Department.Queries
+@using Domain.DTO.User
 @using Domain.Entities.Users
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
@@ -18,12 +19,13 @@
 @inject IExceptionHandlers ExHandlers
 @inject ITenantUserService TenantUserService
 
-<div class="@CssClasses.Modal.Body">
-    @if (Form is not null)
-    {
-        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync" id="userForm">
+@if (Form is not null)
+{
+        <div class="flex flex-col min-h-full">
+        <!-- المحتوى -->
+        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync" id="userForm" class="space-y-3">
             <DataAnnotationsValidator />
-            <ValidationSummary />
+            <ValidationSummary class="text-xs text-rose-600 bg-rose-50 dark:bg-rose-900/20 p-2 rounded-md" />
 
             <div class="@CssClasses.Grid.Col.MD4">
                 <div>
@@ -112,8 +114,9 @@
                     </InputSelect>
                 </div>
             </div>
+        
         </EditForm>
-
+    </div>
         <div class="@CssClasses.Modal.Footer">
             <button type="submit"
                     form="userForm"
@@ -130,7 +133,7 @@
             </button>
         </div>
     }
-</div>
+
 
 @code {
     [Parameter] public EventCallback<bool> Callback { get; set; }
@@ -147,7 +150,7 @@
 
     private string? oldRole;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
 
@@ -239,7 +242,6 @@
 
         try
         {
-            // normalize
             Form.Email = Form.Email?.Trim();
             Form.Firstname = Form.Firstname?.Trim();
             Form.Lastname = Form.Lastname?.Trim();

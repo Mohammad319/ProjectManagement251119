@@ -11,9 +11,9 @@ namespace Application.Feature.Project.Type.Queries
     public sealed class GetTypeQueryHandler
         : IRequestHandler<GetTypeQuery, List<TypeEntity>>
     {
-        private readonly ILookupStatusQueryService<TypeEntity> _service;
+        private readonly ILookupStatusCommandService<TypeEntity> _service;
 
-        public GetTypeQueryHandler(ILookupStatusQueryService<TypeEntity> service)
+        public GetTypeQueryHandler(ILookupStatusCommandService<TypeEntity> service)
         {
             _service = service;
         }
@@ -29,9 +29,9 @@ namespace Application.Feature.Project.Type.Queries
     public sealed class GetVisualTypeQueryHandler
         : IRequestHandler<GetVisualTypeQuery, IEnumerable<ListOrderDTO>>
     {
-        private readonly ILookupStatusQueryService<TypeEntity> _service;
+        private readonly ILookupStatusCommandService<TypeEntity> _service;
 
-        public GetVisualTypeQueryHandler(ILookupStatusQueryService<TypeEntity> service)
+        public GetVisualTypeQueryHandler(ILookupStatusCommandService<TypeEntity> service)
         {
             _service = service;
         }

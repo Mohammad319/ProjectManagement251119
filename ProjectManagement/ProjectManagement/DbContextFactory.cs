@@ -8,38 +8,25 @@ using System.Security.Claims;
 
 namespace ProjectManagement
 {
-    public class DbContextFactory : IDbContextFactory
+    public class DbContextFactory(
+        IHttpContextAccessor httpContextAccessor,
+        ApplicationDbContext appContext,
+        IMemoryCache cache) : IDbContextFactory
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ApplicationDbContext _appContext;
-        private readonly IMemoryCache _cache;
-
         private const string CacheKey = "TenantConnections";
-
-        public int? TenantID => throw new NotImplementedException();
-
-        public DbContextFactory(
-            IHttpContextAccessor httpContextAccessor,
-            ApplicationDbContext appContext,
-            IMemoryCache cache)
-        {
-            _httpContextAccessor = httpContextAccessor;
-            _appContext = appContext;
-            _cache = cache;
-        }
 
         private string? GetConnectionString(int tenantId)
         {
-            if (!_cache.TryGetValue<Dictionary<int, string>>(CacheKey, out var tenantConnections))
+            if (!cache.TryGetValue<Dictionary<int, string>>(CacheKey, out var tenantConnections))
             {
-                tenantConnections = _appContext.Tenants
+                tenantConnections = appContext.Tenants
                     .Include(t => t.TenantDB)
                     .Where(t => t.TenantDB != null)
                     .ToDictionary(
                         t => t.Id,
                         t => t.TenantDB!.ConnectionString);
 
-                _cache.Set(CacheKey, tenantConnections, TimeSpan.FromDays(10));
+                cache.Set(CacheKey, tenantConnections, TimeSpan.FromDays(10));
             }
 
             return tenantConnections.TryGetValue(tenantId, out var conn) ? conn : null;
@@ -47,7 +34,7 @@ namespace ProjectManagement
 
         public ShardingSingleDbContext CreateDbContext()
         {
-            var httpContext = _httpContextAccessor.HttpContext
+            var httpContext = httpContextAccessor.HttpContext
                                ?? throw new Exception("No HttpContext available.");
 
             var user = httpContext.User;

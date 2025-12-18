@@ -1,4 +1,5 @@
 ﻿using Application.Feature.Identity.Department;
+using Domain.DTO.User;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.DTO.General;
@@ -75,6 +76,23 @@ namespace Persistence.Service.Department
                     UsersCount = x.Users.Count,
                     ProjectsCount = x.Projects.Count,
                     FoldersCount = x.Folders.Count
+                })
+                .ToListAsync(ct);
+        }
+
+        public async Task<List<TenantUserDto>> GetUsersByDepartmentIdAsync(int? departmentId, CancellationToken ct = default)
+        {
+            return await db.User.Where(x=>x.DepartmentId == departmentId)
+                .AsNoTracking()
+                .Select(x => new TenantUserDto
+                {
+                    Id = x.Id,
+                    Username = x.UserName,
+                    Email = x.Email,
+                    DepartmentId = departmentId,
+                    Firstname = x.FirstName,
+                    Lastname = x.LastName,
+                    IdAuth = x.ExternalAuthId,
                 })
                 .ToListAsync(ct);
         }

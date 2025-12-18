@@ -1,13 +1,6 @@
 ﻿using Application.Feature.Application;
-using Application.Feature.Application.Commands;
-using Application.Feature.Application.Queries;
-using Azure.Core;
 using Domain.Entities.Application;
-using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Application;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Persistence.Application
 {

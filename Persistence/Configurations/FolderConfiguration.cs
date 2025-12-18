@@ -8,9 +8,6 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<FolderEntity> modelBuilder)
         {
-            modelBuilder.HasOne(pt => pt.CreatedByUser).WithMany(p => p.Folders)
-            .HasForeignKey(pt => pt.CreatedBy).OnDelete(DeleteBehavior.SetNull);
-
             modelBuilder.HasOne(pt => pt.Department).WithMany(p => p.Folders)
             .HasForeignKey(pt => pt.DepartmentId).OnDelete(DeleteBehavior.Cascade);
 

@@ -24,7 +24,7 @@ namespace Domain.Entities.Project
 
         [JsonIgnore]
         public ICollection<ProjectEntity> Projects { get; set; } = [];
-        private ContractEntity() { }
+        public ContractEntity() { }
 
         public ContractEntity(string name, string color, int sortOrder, bool isVisible = true)
         {

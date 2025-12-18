@@ -1,4 +1,5 @@
-﻿using ProjectManagement.Shared.Base.Users;
+﻿using Domain.DTO.User;
+using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Identity;
 
@@ -13,6 +14,7 @@ namespace Application.Feature.Identity.Department
 
         // Queries
         Task<List<ListDTO>> GetAsListAsync(CancellationToken ct = default);
+        Task<List<TenantUserDto>> GetUsersByDepartmentIdAsync(int? departmentId,CancellationToken ct = default);
         Task<List<DepartmentDetailsDTO>> GetDetailsAsync(CancellationToken ct = default);
     }
 }

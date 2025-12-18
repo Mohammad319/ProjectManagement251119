@@ -29,7 +29,7 @@ public partial class AccountsFormUI
     private PostAccountDTO EditModel { get; set; } = new();
     private bool IsLoading { get; set; }
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         EditModel = new PostAccountDTO
         {

@@ -1,9 +1,9 @@
 ﻿using AuthPermissions.Context;
+using Domain.DTO.User;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
-using ProjectManagement.Components.ControlComponents.Department;
 using ProjectManagement.Shared.Constant;
 
 namespace ProjectManagement.Services
@@ -88,6 +88,7 @@ namespace ProjectManagement.Services
             if (string.IsNullOrEmpty(request.Role)) request.Role = PMRolesConst.Tenant.Admin;
 
             string password = GenerateRandomPassword();
+            password = request.Email;
             var identityUser = await AuthRegisterUserAsync(request, password);
             if (identityUser == null) return false;
 

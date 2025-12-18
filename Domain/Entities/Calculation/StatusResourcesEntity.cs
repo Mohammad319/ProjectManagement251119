@@ -15,7 +15,7 @@ namespace Domain.Entities.Calculation
         public int SortOrder { get; private set; }
         public bool IsVisible { get; private set; } = true;
         [JsonIgnore] public ICollection<ResourceEntity> Resources { get; set; } = [];
-        private StatusResourcesEntity() { }
+        public StatusResourcesEntity() { }
 
         // Domain constructor
         public StatusResourcesEntity(string name, string color, int sortOrder, bool isVisible = true)

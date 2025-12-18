@@ -56,12 +56,12 @@ namespace ProjectManagement.Shared.Constant
                 public const string Secondary = "px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 dark:bg-gray-500";
             }
 
-         public static string  Span =
-         "text-sm md:text-base " +
-         "text-gray-600 dark:text-gray-300 " +
-         "p-1 rounded-md " +
-         "hover:bg-gray-100 dark:hover:bg-gray-700 " +
-         "transition cursor-pointer";
+            public static string Span =
+            "text-sm md:text-base " +
+            "text-gray-600 dark:text-gray-300 " +
+            "p-1 rounded-md " +
+            "hover:bg-gray-100 dark:hover:bg-gray-700 " +
+            "transition cursor-pointer";
             public static class IconButton
             {
                 // أساس مشترك لكل أزرار الأيقونات

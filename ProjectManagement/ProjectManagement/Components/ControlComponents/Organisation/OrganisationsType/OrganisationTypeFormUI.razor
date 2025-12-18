@@ -1,41 +1,69 @@
 ﻿@using Domain.DTO.Category
-@using Domain.Entities.Organisation
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
 
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@PostCustomerGroup" OnValidSubmit="async ()=> await OnValidSubmit.InvokeAsync(PostCustomerGroup)">
-            <DataAnnotationsValidator />
+@inject MhdServices MHD
+
+<EditForm id="orgTypeForm"
+          class="@CssClasses.Modal.Body"
+          Model="@EditModel"
+          OnValidSubmit="SubmitAsync">
+
+    <DataAnnotationsValidator />
+
     <div class="flex flex-wrap items-center gap-4">
         <div class="flex flex-col">
             <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
-            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostCustomerGroup.Name" />
-            <ValidationMessage For=@(() => PostCustomerGroup.Name) />
+            <InputText class="@CssClasses.Input.Text" @bind-Value="EditModel.Name" />
+            <ValidationMessage For="@(() => EditModel.Name)" />
         </div>
+
         <div class="@CssClasses.Form.CheckWrapperM">
-            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@PostCustomerGroup.IsVisible" />
-            <label class="@CssClasses.Form.CheckLabel" for="inlineFormCheck">
+            <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="EditModel.IsVisible" />
+            <label class="@CssClasses.Form.CheckLabel">
                 @ResourceApp.isVisible
             </label>
         </div>
     </div>
-    </EditForm>
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm">
+</EditForm>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit"
+            class="@CssClasses.Btn.Outline.Success"
+            form="orgTypeForm"
+            disabled="@IsLoading">
         @ResourceApp.save
-        </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick=" () => MHD.Modal.Close()">@ResourceApp.cancel</button>
+    </button>
+
+    <button type="button"
+            class="@CssClasses.Btn.Outline.Secondary"
+            @onclick="Close">
+        @ResourceApp.cancel
+    </button>
 </div>
 
 @code {
     [Parameter] public bool IsLoading { get; set; }
-    ListOrganisationTypeDTO PostCustomerGroup = new();
+
+    // الاسم بقي كما هو لتوافق استدعاء المودال عندك
     [Parameter] public ListOrganisationTypeDTO? CustomerGroup { get; set; }
+
     [Parameter] public EventCallback<ListOrganisationTypeDTO> OnValidSubmit { get; set; }
+
+    private ListOrganisationTypeDTO EditModel = new();
 
     protected override void OnInitialized()
     {
-        PropertyCopier.CopyPropertiesTo(CustomerGroup, PostCustomerGroup);
+        // OnParametersSet أفضل من OnInitialized لأن المودال ممكن يعيد تمرير باراميترات
+        EditModel = new ListOrganisationTypeDTO();
+        if (CustomerGroup is not null)
+            PropertyCopier.CopyPropertiesTo(CustomerGroup, EditModel);
     }
+
+    private async Task SubmitAsync()
+    {
+        if (IsLoading) return;
+        await OnValidSubmit.InvokeAsync(EditModel);
+    }
+
+    private void Close()
+        => MHD.Modal.Close();
 }

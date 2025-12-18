@@ -164,7 +164,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             {
                 UserEntity userEntity = new()
                 {
-                    Id = olduser.UserId.Value,
+                    // = olduser.UserId.Value,
                     DepartmentId = user.DepartmentId,
                     FirstName = user.Firstname,
                     LastName = user.Lastname,

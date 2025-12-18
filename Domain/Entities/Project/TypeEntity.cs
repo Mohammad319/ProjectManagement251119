@@ -9,6 +9,8 @@ namespace Domain.Entities.Project
 {
     public sealed class TypeEntity : AuditableEntity<int>, IListOrderDTO
     {
+        public TypeEntity() { }
+
         /// <summary>
         /// ترتيب العرض للجميع (ليس لكل مستخدم).
         /// </summary>

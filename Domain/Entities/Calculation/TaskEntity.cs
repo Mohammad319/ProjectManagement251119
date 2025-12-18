@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.Resource;
 using ProjectManagement.Shared.ValueObjects.Calculation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

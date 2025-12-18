@@ -1,113 +1,189 @@
-﻿@using Application.Feature.Organisation.OrganisationCategory.Commands
-@using Application.Feature.Organisation.OrganisationType.Commands
+﻿@using Application.Feature.Organisation.OrganisationType.Commands
 @using Application.Feature.Organisation.OrganisationType.Queries
+@using BlazorMHD.UI.Components.Data.Table
 @using Domain.DTO.Category
-@using Domain.Entities.Organisation
-@using Microsoft.AspNetCore.Authorization
-@using ProjectManagement.Client.Shared.Repositories.Organisation
 @using ProjectManagement.Shared.DTO.Organisation
+
 @inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
 <div>
     <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-        <button class="@CssClasses.Btn.IconButton.Success" @onclick="() => UpdateForm(new ListOrganisationTypeDTO())"> @((MarkupString)Icons.Plus)</button>
-@*             <button class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => { CustomerByGroupID = 0; IsVisible = !IsVisible; CustomerGroupsAPI = await Repo.OrgType.GetAsync(IsVisible); }">
-                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-            </button> *@
+        <button class="@CssClasses.Btn.IconButton.Success"
+                @onclick="NewOrganisationType"
+                disabled="@IsLoading">
+            @((MarkupString)Icons.Plus)
+        </button>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="py-2">
+            @* إذا عندك كومبوننت Loader استخدمه بدل هذا *@
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
         </div>
+    }
+    else if (OrganisationTypes is null || OrganisationTypes.Count == 0)
+    {
+        <div class="py-2">
+            <span>@ResourceApp.notFoundData</span>
+        </div>
+    }
+    else
+    {
+        @* مثال Grid: فعّلها إذا تبغى تعرض القائمة *@
+        @* 
+        <Grid TItem="ListOrganisationTypeDTO" Items="OrganisationTypes" ShowFilter="false">
+            <Column>
+                <Template Context="item">
+                    <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <button class="@CssClasses.Btn.IconButton.Warning"
+                                @onclick="() => OpenEditModal(item)">
+                            @Icons.Edit
+                        </button>
+                        <button class="@CssClasses.Btn.IconButton.Danger"
+                                @onclick="() => AskDelete(item)">
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
+                    </div>
+                </Template>
+            </Column>
+
+            <Column Title="@CalcResource.name" ValueSelector="c => c.Name"></Column>
+        </Grid>
+        *@
+
+        <MhdTable Items="OrganisationTypes?.Where(x => x.IsVisible == IsVisible)" ShowFilter="false">
+ <HeaderTemplate>
+        <th style="width:200px;" class="@CssClasses.Table.TH">
+            <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <button @onclick="NewOrganisationType" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
+                <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
+            </div>
+        </th>
+        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+    </HeaderTemplate>
+    <ChildContent>
+        <MhdTableColumn>
+            <Template Context="status">
+                <div class="@CssClasses.Layout.FlexItemsCenter">
+                            <button @onclick="() => OpenEditModal(status)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
+                   <button @onclick="() => AskDelete(status)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                </div>
+            </Template>
+        </MhdTableColumn>
+        <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
+    </ChildContent>
+</MhdTable>
+
+    }
 </div>
-        <div>
-        @if (CustomerGroupsAPI != null)
-        {
-@*         <Grid TItem="OrganisationTypeEntity" Items="CustomerGroupsAPI" ShowFilter="false">
-                    <Column>
-                        <Template Context="status">
-                            <div class="@CssClasses.Layout.FlexItemsCenter">
-                                <button @onclick="() => UpdateForm(status)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
-                               <button @onclick="() => Remove(status)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
-                            </div>
-                        </Template>
-                    </Column>
-                <Column Title="@CalcResource.name" ValueSelector="c => c.Name"></Column>
-            </Grid> *@
-        }
-</div>
+
 @code {
-    List<ListOrganisationTypeDTO>? CustomerGroupsAPI;
+    private List<ListOrganisationTypeDTO>? OrganisationTypes;
+    private bool IsLoading;
+    private bool IsVisible = true;
 
-    int CustomerByGroupID;
-    private bool IsLoading = false;
-    bool IsVisible = true;
+    protected override async Task OnInitializedAsync()
+        => await ReloadAsync();
 
-    void UpdateForm(ListOrganisationTypeDTO group) =>
-    MHD.Modal.ShowComponent<OrganisationTypeFormUI>(AppLoc[LocalizerConst.New, ResourceIdentity.customerGroup],
-    new Dictionary<string, object> { [nameof(OrganisationTypeFormUI.IsLoading)] = IsLoading,[nameof(OrganisationTypeFormUI.CustomerGroup)] = group,
-            [nameof(OrganisationTypeFormUI.OnValidSubmit)] = EventCallback.Factory.Create<OrganisationTypeEntity>(this, HandleSubmitAsync)});
+    private void NewOrganisationType()
+        => OpenModal(new ListOrganisationTypeDTO());
 
-    async Task AddEditCustomerCallBack(int groupId)
+    private void OpenEditModal(ListOrganisationTypeDTO item)
+        => OpenModal(item);
+
+    private void OpenModal(ListOrganisationTypeDTO model)
     {
-        MHD.Modal.Close();
-        if (groupId == CustomerByGroupID)
-        {
-            CustomerByGroupID = 0;
-            await Task.Delay(1);
-            CustomerByGroupID = groupId;
-        }
+        // نرسل DTO للـ Form ويُعيد لنا نفس DTO بعد التعديل
+        MHD.Modal.ShowComponent<OrganisationTypeFormUI>(
+            AppLoc[LocalizerConst.New, ResourceIdentity.customerGroup],
+            new Dictionary<string, object>
+            {
+                [nameof(OrganisationTypeFormUI.IsLoading)] = IsLoading,
+                [nameof(OrganisationTypeFormUI.CustomerGroup)] = model,
+                [nameof(OrganisationTypeFormUI.OnValidSubmit)] =
+                    EventCallback.Factory.Create<ListOrganisationTypeDTO>(this, HandleSubmitAsync),
+            });
     }
-    async Task GetCustomers(OrganisationTypeEntity g)
-    {
-        CustomerByGroupID = 0;
-        await Task.Delay(1);
-        CustomerByGroupID = g.Id;
-    }
 
-    private async Task HandleSubmitAsync(OrganisationTypeEntity _customerGroup)
+    private async Task HandleSubmitAsync(ListOrganisationTypeDTO model)
     {
-        if (_customerGroup != null)
+        if (IsLoading) return;
+        if (model is null) return;
+
+        IsLoading = true;
+        try
         {
+            // تحويل UI-DTO إلى DTO الخاص بالأوامر
             PostOrganisationTypeDTO entity = new();
-            PropertyCopier.CopyPropertiesTo(_customerGroup, entity);
+            PropertyCopier.CopyPropertiesTo(model, entity);
 
-            bool result = false;
-            if (_customerGroup.Id == 0)
-                result = await MicroBus.Send(new CreateOrganisationTypeCommand(entity)) > 0;
-            else result = await MicroBus.Send(new UpdateOrganisationTypeCommand(entity,_customerGroup.Id));
-             
-            if (result) await GetAsync();
-            MHD.Notifications(ToastType.Delete, result);
+            bool ok;
+            if (model.Id == 0)
+                ok = await MicroBus.Send(new CreateOrganisationTypeCommand(entity)) > 0;
+            else
+                ok = await MicroBus.Send(new UpdateOrganisationTypeCommand(entity, model.Id));
+
+            if (ok)
+                await ReloadAsync();
+
+            // إشعار حفظ/تعديل
+            MHD.Notifications(model.Id == 0 ? ToastType.Add : ToastType.Update, ok);
         }
-        MHD.Modal.Close();
-    }
-
-    void Remove(ListOrganisationTypeDTO customerGroup)
-    {
-        MHD.DeleteMessage(customerGroup.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(customerGroup)));
-    }
-
-    async Task ConfirmRemoveAsync(ListOrganisationTypeDTO customerGroup)
-    {
-
-        bool result = await MicroBus.Send(new DeleteOrganisationTypeCommand(customerGroup.Id));
-        if (result)
+        finally
         {
-            CustomerGroupsAPI.Remove(customerGroup);
+            IsLoading = false;
+            MHD.Modal.Close();
             StateHasChanged();
         }
-        MHD.Notifications(ToastType.Delete, result);
     }
 
-    protected async override Task OnInitializedAsync()
+    private void AskDelete(ListOrganisationTypeDTO item)
     {
-        await GetAsync();
+        if (item is null) return;
+
+        MHD.DeleteMessage(
+            item.Name,
+            EventCallback.Factory.Create(this, () => ConfirmDeleteAsync(item)));
     }
 
-    async Task GetAsync()
+    private async Task ConfirmDeleteAsync(ListOrganisationTypeDTO item)
+    {
+        if (IsLoading) return;
+        if (item is null) return;
+
+        IsLoading = true;
+        try
+        {
+            var ok = await MicroBus.Send(new DeleteOrganisationTypeCommand(item.Id));
+            if (ok)
+            {
+                OrganisationTypes?.Remove(item);
+                // لا نحتاج Reload إذا حذفنا من القائمة محلياً
+                StateHasChanged();
+            }
+
+            MHD.Notifications(ToastType.Delete, ok);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ReloadAsync()
     {
         IsLoading = true;
-        CustomerGroupsAPI = await MicroBus.Send(new GetAllOrganisationsTypeQuery(IsVisible));
-        IsLoading = false;
+        try
+        {
+            OrganisationTypes = await MicroBus.Send(new GetAllOrganisationsTypeQuery(IsVisible));
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+        }
     }
 }

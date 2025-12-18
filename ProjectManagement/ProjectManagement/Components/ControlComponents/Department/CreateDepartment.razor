@@ -8,42 +8,35 @@
 @inject ICommandDispatcher MicroBus
 @inject IStringLocalizer<ResourceApp> AppLoc
 
-@if (departmentPost is not null)
+@if (editContext is not null)
 {
-    <EditForm Model="departmentPost"
+    <EditForm EditContext="editContext"
               class="@CssClasses.Modal.Body"
               OnValidSubmit="HandleSubmitAsync">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
 
         <div class="row g-3">
             <div class="col-12 col-md-6">
                 <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
                 <InputText class="@CssClasses.Input.Text"
-                           @bind-Value="departmentPost.Name"
+                           @bind-Value="departmentPost!.Name"
                            disabled="@IsSaving" />
-                <ValidationMessage For="() => departmentPost.Name" />
+                <ValidationMessage For="() => departmentPost!.Name" />
             </div>
 
             <div class="col-12 col-md-6">
                 <label class="@CssClasses.Form.Label">@ResourceLoc.description:</label>
                 <InputTextArea class="@CssClasses.Input.Text"
-                               @bind-Value="departmentPost.Description"
+                               @bind-Value="departmentPost!.Description"
                                disabled="@IsSaving" />
-                <ValidationMessage For="() => departmentPost.Description" />
+                <ValidationMessage For="() => departmentPost!.Description" />
             </div>
 
             <div class="col-12 d-flex justify-content-end gap-2">
-                <button type="submit"
-                        class="@CssClasses.Btn.Outline.Success"
-                        disabled="@IsSaving">
+                <button type="submit" class="@CssClasses.Btn.Outline.Success" disabled="@IsSaving">
                     @ResourceApp.save
                 </button>
 
-                <button type="button"
-                        class="@CssClasses.Btn.Outline.Secondary"
-                        disabled="@IsSaving"
-                        @onclick="Close">
+                <button type="button" class="@CssClasses.Btn.Outline.Secondary" disabled="@IsSaving" @onclick="Close">
                     @ResourceApp.cancel
                 </button>
             </div>
@@ -51,20 +44,46 @@
     </EditForm>
 }
 
+
+
 @code {
     [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
     [Parameter] public DepartmentDetailsDTO? DepartmentList { get; set; }
 
     private DepartmentBase? departmentPost;
+    private EditContext? editContext;
     private bool IsSaving;
+
+    private int _loadedId;
+    private string? _loadedName;
+    private string? _loadedDesc;
 
     protected override void OnParametersSet()
     {
+        var id = DepartmentList?.Id ?? 0;
+        var name = DepartmentList?.Name ?? string.Empty;
+        var desc = DepartmentList?.Description;
+
+        // لا تعيد تهيئة الموديل إذا نفس البيانات (حتى لا ينقطع/يرجع الإدخال)
+        if (editContext is not null &&
+            _loadedId == id &&
+            _loadedName == name &&
+            _loadedDesc == desc)
+        {
+            return;
+        }
+
+        _loadedId = id;
+        _loadedName = name;
+        _loadedDesc = desc;
+
         departmentPost = new DepartmentBase
         {
-            Name = DepartmentList?.Name ?? string.Empty,
-            Description = DepartmentList?.Description
+            Name = name,
+            Description = desc
         };
+
+        editContext = new EditContext(departmentPost);
     }
 
     private Task Close() => OnClickCallback.InvokeAsync(false);
@@ -72,17 +91,14 @@
     private async Task HandleSubmitAsync()
     {
         if (departmentPost is null) { await OnClickCallback.InvokeAsync(false); return; }
-
         if (IsSaving) return;
-        IsSaving = true;
 
+        IsSaving = true;
         try
         {
-            // Normalize inputs (منع أسماء مسافات فقط)
-            departmentPost.Name = (departmentPost.Name ?? string.Empty).Trim();
+            departmentPost.Name = (departmentPost.Name ?? "").Trim();
             departmentPost.Description = departmentPost.Description?.Trim();
 
-            // Update
             if ((DepartmentList?.Id ?? 0) > 0)
             {
                 var ok = await MicroBus.Send(new UpdateDepartmentCommand(DepartmentList!.Id, departmentPost));
@@ -90,15 +106,8 @@
                 return;
             }
 
-            // Create
-            if ((DepartmentList?.Id ?? 0) == 0)
-            {
-                var newId = await MicroBus.Send(new CreateDepartmentCommand(departmentPost));
-                await OnClickCallback.InvokeAsync(newId > 0);
-                return;
-            }
-
-            await OnClickCallback.InvokeAsync(false);
+            var newId = await MicroBus.Send(new CreateDepartmentCommand(departmentPost));
+            await OnClickCallback.InvokeAsync(newId > 0);
         }
         finally
         {

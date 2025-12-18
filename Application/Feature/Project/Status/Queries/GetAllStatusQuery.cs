@@ -14,9 +14,9 @@ namespace Application.Feature.Project.Status.Queries
         public sealed class GetStatusQueryHandler
             : IRequestHandler<GetStatusQuery, List<StatusEntity>>
         {
-            private readonly ILookupStatusQueryService<StatusEntity> _service;
+            private readonly ILookupStatusCommandService<StatusEntity> _service;
 
-            public GetStatusQueryHandler(ILookupStatusQueryService<StatusEntity> service)
+            public GetStatusQueryHandler(ILookupStatusCommandService<StatusEntity> service)
             {
                 _service = service;
             }
@@ -31,9 +31,9 @@ namespace Application.Feature.Project.Status.Queries
         public sealed class GetVisualStatusQueryHandler
             : IRequestHandler<GetVisualStatusQuery, IEnumerable<ListOrderDTO>>
         {
-            private readonly ILookupStatusQueryService<StatusEntity> _service;
+            private readonly ILookupStatusCommandService<StatusEntity> _service;
 
-            public GetVisualStatusQueryHandler(ILookupStatusQueryService<StatusEntity> service)
+            public GetVisualStatusQueryHandler(ILookupStatusCommandService<StatusEntity> service)
             {
                 _service = service;
             }

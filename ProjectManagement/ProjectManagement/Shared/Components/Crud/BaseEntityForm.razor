@@ -1,0 +1,83 @@
+﻿@using ProjectManagement.Shared.Constant
+@using Microsoft.AspNetCore.Components.Forms;
+@inject MhdServices MHD
+
+<EditForm id="@FormId" class="@BodyCss" Model="@Model" OnValidSubmit="HandleSubmitAsync">
+    <div class="@FieldsWrapperCss">
+        @Fields
+    </div>
+</EditForm>
+
+<div class="@FooterCss">
+    <button type="submit" class="@SaveButtonCss" form="@FormId" disabled="@IsLoading">
+        @SaveText
+    </button>
+
+    <button type="button" class="@CancelButtonCss" @onclick="OnCancelClicked">
+        @CancelText
+    </button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public object Model { get; set; } = default!;
+    [Parameter] public bool IsNew { get; set; }
+
+    // يترك للـ Wrapper تحديد منطق الحفظ
+    [Parameter, EditorRequired] public Func<Task<bool>> OnCreate { get; set; } = default!;
+    [Parameter, EditorRequired] public Func<Task<bool>> OnUpdate { get; set; } = default!;
+
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    [Parameter, EditorRequired] public RenderFragment Fields { get; set; } = default!;
+
+    // نصوص وأزرار (كلها من Resources في الـ Wrapper)
+    [Parameter, EditorRequired] public string SaveText { get; set; } = "";
+    [Parameter, EditorRequired] public string CancelText { get; set; } = "";
+
+    // ستايل (اختياري)
+    [Parameter] public string FormId { get; set; } = "baseEntityForm";
+    [Parameter] public string BodyCss { get; set; } = CssClasses.Modal.Body;
+    [Parameter] public string FooterCss { get; set; } = CssClasses.Modal.Footer;
+    [Parameter] public string FieldsWrapperCss { get; set; } = "flex flex-wrap items-center gap-4";
+    [Parameter] public string SaveButtonCss { get; set; } = CssClasses.Btn.Outline.Success;
+    [Parameter] public string CancelButtonCss { get; set; } = CssClasses.Btn.Outline.Secondary;
+
+    // إلغاء (اختياري) - الافتراضي: إغلاق المودال
+    [Parameter] public Func<Task>? OnCancel { get; set; }
+
+    private bool IsLoading { get; set; }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (IsLoading) return;
+
+        IsLoading = true;
+        try
+        {
+            var ok = IsNew ? await OnCreate() : await OnUpdate();
+
+            MHD.Notifications(IsNew ? ToastType.Add : ToastType.Update, ok);
+            if (Callback.HasDelegate)
+                await Callback.InvokeAsync(ok);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            MHD.Notifications(ToastType.Danger, false);
+            if (Callback.HasDelegate)
+                await Callback.InvokeAsync(false);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task OnCancelClicked()
+    {
+        if (OnCancel is not null)
+            await OnCancel();
+        else
+            MHD.Modal.Close();
+    }
+}

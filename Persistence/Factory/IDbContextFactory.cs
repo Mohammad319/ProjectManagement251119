@@ -3,6 +3,5 @@
     public interface IDbContextFactory
     {
         ShardingSingleDbContext CreateDbContext();
-        public int? TenantID { get; }
     }
 }

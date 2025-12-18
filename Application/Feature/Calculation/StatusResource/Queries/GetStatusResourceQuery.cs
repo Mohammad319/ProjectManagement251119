@@ -8,7 +8,7 @@ namespace Application.Feature.Project.StatusResource.Queries
     public sealed record GetResourceStatusQuery()
         : IRequest<List<StatusResourcesEntity>>;
 
-    public sealed class GetResourceStatusQueryHandler(ILookupStatusQueryService<StatusResourcesEntity> service)
+    public sealed class GetResourceStatusQueryHandler(ILookupStatusCommandService<StatusResourcesEntity> service)
                 : IRequestHandler<GetResourceStatusQuery, List<StatusResourcesEntity>>
     {
         public Task<List<StatusResourcesEntity>> Handle(GetResourceStatusQuery request, CancellationToken cancellationToken)
@@ -18,7 +18,7 @@ namespace Application.Feature.Project.StatusResource.Queries
     public sealed record GetVisualResourceStatusQuery(int? Id)
         : IRequest<IEnumerable<ListOrderDTO>>;
 
-    public sealed class GetVisualResourceStatusQueryHandler(ILookupStatusQueryService<StatusResourcesEntity> service)
+    public sealed class GetVisualResourceStatusQueryHandler(ILookupStatusCommandService<StatusResourcesEntity> service)
                 : IRequestHandler<GetVisualResourceStatusQuery, IEnumerable<ListOrderDTO>>
     {
         public Task<IEnumerable<ListOrderDTO>> Handle(GetVisualResourceStatusQuery request, CancellationToken cancellationToken)
