@@ -58,7 +58,7 @@
                 </li>
 
                 <li class="text-right md:text-left flex-grow">
-                    <form action="Account/Logout" method="post" class="inline">
+                    <form action="/Account/Logout" method="post" class="inline">
                         <AntiforgeryToken />
                         <input type="hidden" name="ReturnUrl" value="@currentUrl" />
                         <button type="submit" class="btn nav-link flex items-center space-x-2">

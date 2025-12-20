@@ -2,21 +2,19 @@
 
 namespace Persistence.Factory
 {
-    public class ShardingSingleDbContextDesignTimeFactory
-        : IDesignTimeDbContextFactory<ShardingSingleDbContext>
+    public sealed class ShardingSingleDesignTimeFactory : IDesignTimeDbContextFactory<ShardingSingleDbContext>
     {
         public ShardingSingleDbContext CreateDbContext(string[] args)
         {
-            var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
-            optionsBuilder.UseSqlServer(@"Server=(localdb)\MSSQLLocalDB;Database=db962510648_2;Trusted_Connection=True;TrustServerCertificate=True;");
+            var conn = Environment.GetEnvironmentVariable("TENANT_TEMPLATE_CONN")
+                       ?? "Server=.;Database=TenantTemplateDb;Trusted_Connection=True;TrustServerCertificate=True;";
 
-            var db = new ShardingSingleDbContext(optionsBuilder.Options)
-            {
-                TenantId = 0,
-                CurrentUserId = null
-            };
+            var options = new DbContextOptionsBuilder<ShardingSingleDbContext>()
+                .UseSqlServer(conn)
+                .Options;
 
-            return db;
+            return new ShardingSingleDbContext(options) { TenantId = 1 };
         }
     }
+
 }

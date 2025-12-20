@@ -11,7 +11,6 @@ namespace ProjectManagement.Shared.Models.Account
         public string Email { get; set; }
         public string Username { get; set; }
         public int? DepartmentId { get; set; }
-        public int? TenantId { get; set; }
         public string NormalizedEmail { get; set; }
         public string PhoneNumber { get; set; }
         public bool PhoneNumberConfirmed { get; set; }
@@ -21,6 +20,9 @@ namespace ProjectManagement.Shared.Models.Account
         public DateTimeOffset? LockoutStart { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }
+
+        public string Role { get; set; }
+
     }
     public class UserPostDTO
     {

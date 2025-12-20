@@ -1,35 +1,54 @@
 ﻿using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ProjectManagement.Shared.Base.Calculation;
+using Persistence.Serialization;
 using ProjectManagement.Shared.DTO.Calculation;
-using System.Collections.Generic;
-using System.Text.Json;
-using System.Xml;
 
-namespace Persistence.Configurations
+namespace Persistence.Configurations;
+
+internal sealed class CalculationConfiguration : IEntityTypeConfiguration<CalculationEntity>
 {
-    class CalculationConfiguration : IEntityTypeConfiguration<CalculationEntity>
+    public void Configure(EntityTypeBuilder<CalculationEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<CalculationEntity> modelBuilder)
-        {
-            var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        builder.Property(e => e.Metadata).HasJsonConversion();
 
-            modelBuilder.Property(e => e.Metadata).HasConversion(v => JsonSerializer.Serialize(v, jsonOptions),v => JsonSerializer.Deserialize<CalculationData>(v, jsonOptions) ?? new CalculationData());
+        builder.Property(e => e.HourlyPriceFactorData).HasJsonConversion();
 
-            modelBuilder.Property(e => e.HourlyPriceFactorData).HasConversion(v => JsonSerializer.Serialize(v, jsonOptions),
-                v => JsonSerializer.Deserialize<CalculationHourlyPriceFactorData>(v, jsonOptions) ?? new CalculationHourlyPriceFactorData());
+        builder.HasOne(x => x.ProcurementMethods)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.ProcurementMethodsId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.HasOne(pt => pt.ProcurementMethods).WithMany(p => p.Calculations).HasForeignKey(pt => pt.ProcurementMethodsId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Type).WithMany(p => p.Calculations).HasForeignKey(pt => pt.TypeId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Compensation).WithMany(p => p.Calculations).HasForeignKey(pt => pt.CompensationId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Contract).WithMany(p => p.Calculations).HasForeignKey(pt => pt.ContractId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Status).WithMany(p => p.Calculations).HasForeignKey(pt => pt.StatusId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Template).WithMany(p => p.Calculations).HasForeignKey(pt => pt.TemplateId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Calculations).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.Type)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.TypeId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-            //modelBuilder.HasOne(pt => pt.Projects).WithMany(p => p.Calculations).HasForeignKey(pt => pt.ProjectId).OnDelete(DeleteBehavior.Cascade);
-        }
+        builder.HasOne(x => x.Compensation)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.CompensationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Contract)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Status)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Template)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.TemplateId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Organisation)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.OrganisationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // إن رغبت بإعادة علاقة Projects لاحقاً: خليها واضحة وبسلوك حذف مقصود.
+        // builder.HasOne(x => x.Project)....
     }
 }

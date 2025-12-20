@@ -1,47 +1,75 @@
 ﻿using Domain.Entities.Calculation;
-using Domain.Entities.ResourceType;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore;
 using Domain.Entities.Users;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+namespace Persistence.Configurations;
 
-namespace Persistence.Configurations
+internal sealed class UserConfiguration : IEntityTypeConfiguration<UserEntity>
 {
-    class UserConfiguration : IEntityTypeConfiguration<UserEntity>
+    public void Configure(EntityTypeBuilder<UserEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<UserEntity> modelBuilder)
-        {
-            modelBuilder.HasIndex(u => u.Email).IsUnique();
-            modelBuilder.Property(u => u.FirstName).HasMaxLength(30);
-            modelBuilder.Property(u => u.LastName).HasMaxLength(30);
-        }
+        builder.HasIndex(u => u.Email).IsUnique();
+
+        builder.Property(u => u.FirstName).HasMaxLength(30);
+        builder.Property(u => u.LastName).HasMaxLength(30);
     }
-    class TenderConfiguration : IEntityTypeConfiguration<TenderEntity>
+}
+
+internal sealed class TenderConfiguration : IEntityTypeConfiguration<TenderEntity>
+{
+    public void Configure(EntityTypeBuilder<TenderEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<TenderEntity> modelBuilder)
-        {
-            modelBuilder.HasOne(pt => pt.Calculation).WithMany(p => p.Tenders).HasForeignKey(pt => pt.CalculationId).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Tenders).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasMany(pt => pt.TendersAttributes).WithOne(p => p.Tender).HasForeignKey(pt => pt.TenderId).OnDelete(DeleteBehavior.Restrict);
-        }
+        builder.HasOne(x => x.Calculation)
+            .WithMany(x => x.Tenders)
+            .HasForeignKey(x => x.CalculationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // تنبيه: Cascade على Organisation غالباً خطير (يحذف كل tenders عند حذف Organisation)
+        // الأفضل Restrict (عدله حسب منطق النظام عندك)
+        builder.HasOne(x => x.Organisation)
+            .WithMany(x => x.Tenders)
+            .HasForeignKey(x => x.OrganisationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.TendersAttributes)
+            .WithOne(x => x.Tender)
+            .HasForeignKey(x => x.TenderId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
-    class TenderAttributeBindConfiguration : IEntityTypeConfiguration<TenderAttributeBindEntity>
+}
+
+internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguration<TenderAttributeBindEntity>
+{
+    public void Configure(EntityTypeBuilder<TenderAttributeBindEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<TenderAttributeBindEntity> modelBuilder)
-        {
-            modelBuilder.HasKey(m => new { m.TenderAttributeId, m.TenderId });
-            modelBuilder.HasOne(x => x.Tender).WithMany(u => u.TendersAttributes).HasForeignKey(pt => pt.TenderId)
-                .HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.HasOne(pt => pt.TenderAttribute).WithMany(p => p.TendersAttributes)
-                .HasForeignKey(pt => pt.TenderAttributeId).OnDelete(DeleteBehavior.Cascade);
-        }
+        builder.HasKey(m => new { m.TenderAttributeId, m.TenderId });
+
+        builder.HasOne(x => x.Tender)
+            .WithMany(x => x.TendersAttributes)
+            .HasForeignKey(x => x.TenderId)
+            .HasPrincipalKey(x => x.Id)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.TenderAttribute)
+            .WithMany(x => x.TendersAttributes)
+            .HasForeignKey(x => x.TenderAttributeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
-    class AttributeNameTenderConfiguration : IEntityTypeConfiguration<TenderAttributeDefinitionEntity>
+}
+
+internal sealed class AttributeNameTenderConfiguration : IEntityTypeConfiguration<TenderAttributeDefinitionEntity>
+{
+    public void Configure(EntityTypeBuilder<TenderAttributeDefinitionEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<TenderAttributeDefinitionEntity> modelBuilder)
-        {
-            modelBuilder.HasOne(pt => pt.Calculation).WithMany(p => p.AttributesTender).HasForeignKey(pt => pt.CalculationId).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasMany(pt => pt.TendersAttributes).WithOne(p => p.TenderAttribute).HasForeignKey(pt => pt.TenderAttributeId).OnDelete(DeleteBehavior.Cascade);
-        }
+        builder.HasOne(x => x.Calculation)
+            .WithMany(x => x.AttributesTender)
+            .HasForeignKey(x => x.CalculationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(x => x.TendersAttributes)
+            .WithOne(x => x.TenderAttribute)
+            .HasForeignKey(x => x.TenderAttributeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

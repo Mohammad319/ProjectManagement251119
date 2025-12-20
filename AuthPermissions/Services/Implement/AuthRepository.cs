@@ -41,7 +41,7 @@ namespace AuthPermissions.Services.Implement
             if (TenantId.HasValue && TenantId > 0)
             {
                 users = users.Where(x => x.TenantId == TenantId);
-                if (DepartmentId.HasValue)
+                if (DepartmentId.HasValue && DepartmentId > 0)
                     users = users.Where(x => x.DepartmentId == DepartmentId);
                 else users = users.Where(x => x.DepartmentId == null);
             }
@@ -56,7 +56,6 @@ namespace AuthPermissions.Services.Implement
                     LockoutStart = user.LockoutStart,
                     Email = user.Email,
                     UserId = user.UserId,
-                    TenantId = user.TenantId,
                     DepartmentId = user.DepartmentId,
                     Username = user.UserName,
                     PhoneNumber = user.PhoneNumber,

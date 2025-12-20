@@ -138,7 +138,7 @@
     async Task<int> GetUserDepartment()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var claim = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.GroupSid);
+        var claim = authState.User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.DepartmentId);
         if (claim == null) return 0;
         return Convert.ToInt32(claim.Value);
     }

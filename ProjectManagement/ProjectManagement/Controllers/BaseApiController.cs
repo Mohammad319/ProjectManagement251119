@@ -22,7 +22,7 @@ namespace ProjectManagement.Server.Controllers
         }
         protected int? GetDepartmentId()
         {
-            if (int.TryParse(User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.GroupSid)?.Value, out int dId))
+            if (int.TryParse(User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.DepartmentId)?.Value, out int dId))
             {
                 return dId;
             }

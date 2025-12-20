@@ -1,18 +1,20 @@
 ﻿using Domain.Entities.Folder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Persistence.Configurations
-{
-    class FolderConfiguration : IEntityTypeConfiguration<FolderEntity>
-    {
-        public void Configure(EntityTypeBuilder<FolderEntity> modelBuilder)
-        {
-            modelBuilder.HasOne(pt => pt.Department).WithMany(p => p.Folders)
-            .HasForeignKey(pt => pt.DepartmentId).OnDelete(DeleteBehavior.Cascade);
+namespace Persistence.Configurations;
 
-            modelBuilder.HasMany(x => x.FolderProjects).WithOne(u => u.Folder)
-                .HasForeignKey(pt => pt.FolderId).OnDelete(DeleteBehavior.Cascade);
-        }
+internal sealed class FolderConfiguration : IEntityTypeConfiguration<FolderEntity>
+{
+    public void Configure(EntityTypeBuilder<FolderEntity> builder)
+    {
+        builder.HasOne(x => x.Department)
+            .WithMany(x => x.Folders)
+            .HasForeignKey(x => x.DepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.FolderProjects)
+            .WithOne(x => x.Folder)
+            .HasForeignKey(x => x.FolderId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

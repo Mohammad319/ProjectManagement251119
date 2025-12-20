@@ -21,8 +21,8 @@ using Application.Services.CalculationItems.Tender;
 using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Microsoft.Extensions.DependencyInjection;
-using Persistence.Application;
 using Persistence.Service;
+using Persistence.Service.Application;
 using Persistence.Service.CalculationItems;
 using Persistence.Service.CalculationItems.Opportunity;
 using Persistence.Service.CalculationItems.Project;
@@ -79,15 +79,9 @@ namespace Persistence.Factory
             services.AddScoped<ILookupStatusCommandService<ContractEntity>, LookupStatusCommandService<ContractEntity>>();
             services.AddScoped<ILookupStatusCommandService<TypeEntity>, LookupStatusCommandService<TypeEntity>>();
             services.AddScoped<ILookupStatusCommandService<StatusEntity>, LookupStatusCommandService<StatusEntity>>();
-            services.AddScoped<ILookupStatusCommandService<CompensationEntity>,LookupStatusCommandService<CompensationEntity>>();
+            services.AddScoped<ILookupStatusCommandService<CompensationEntity>, LookupStatusCommandService<CompensationEntity>>();
             services.AddScoped<ILookupStatusCommandService<ProcurementMethodEntity>, LookupStatusCommandService<ProcurementMethodEntity>>();
             services.AddScoped<ILookupStatusCommandService<StatusResourcesEntity>, LookupStatusCommandService<StatusResourcesEntity>>();
-
-            services.AddScoped(provider =>
-            {
-                var factory = provider.GetRequiredService<IDbContextFactory>();
-                return factory.CreateDbContext();
-            });
 
             return services;
         }

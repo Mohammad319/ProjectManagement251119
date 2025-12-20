@@ -37,5 +37,12 @@
     {
         public const string Tentan = "tenant";
         public const string UserId = "UserId";
+        public const string DepartmentId = "DepartmentId";
+        public const string Full_name = "full_name";
+
+        
+
+
+
     }
 }

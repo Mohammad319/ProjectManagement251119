@@ -17,14 +17,19 @@ namespace ProjectManagement.Client.Pages.Calculation
         private HubConnection? hubConnection;
         protected override async Task OnInitializedAsync()
         {
-            //hubConnection = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/resourceHub")).Build();
-            hubConnection = new HubConnectionBuilder().WithUrl(Navigation.ToAbsoluteUri("/notification"), options =>
-            {
-                //options.AccessTokenProvider = () => Task.FromResult("_myAccessToken");
-            })
-                    .WithAutomaticReconnect([TimeSpan.Zero, TimeSpan.Zero, TimeSpan.FromSeconds(10)])//.WithAutomaticReconnect()
-                    .Build();
-            //hubConnection.On("AddToGroup" + container.Calculation.Id, AddToGroup);
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/notification"), options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        // ضع هنا طريقة جلب التوكن من التخزين/مزود التوكن عندك
+                        // مثال: await tokenService.GetAccessTokenAsync();
+                        return await Task.FromResult<string?>(null);
+                    };
+                })
+                .WithAutomaticReconnect([TimeSpan.Zero, TimeSpan.Zero, TimeSpan.FromSeconds(10)])
+                .Build();
+
             hubConnection.On<ObjectTypHub, OperationType, object>("calc", GetNewResource);
             await hubConnection.StartAsync();
             await AddToGroup();

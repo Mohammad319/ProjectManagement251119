@@ -2,7 +2,7 @@
 using Domain.Entities.Application;
 using ProjectManagement.Shared.Base.Application;
 
-namespace Persistence.Application
+namespace Persistence.Service.Application
 {
     public class ApplicationService(ShardingSingleDbContext context) : IApplicationService
     {

@@ -18,8 +18,6 @@ namespace TaskResourceBlueprints
     {
         public static void AddTaskResourceBlueprints(this IServiceCollection services)
         {
-            //services.AddDbContext<TaskResourceBlueprintsContext>(options => options.UseSqlServer(TaskResourceBlueprintsDb));
-
             services.AddScoped(typeof(IEntityService<>), typeof(EntityService<>));
 
             services.AddScoped<ITaskDefinitionQueryService, ProjectTaskQueryService>();

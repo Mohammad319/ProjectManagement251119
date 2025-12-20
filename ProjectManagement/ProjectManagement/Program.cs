@@ -4,29 +4,35 @@ using AuthPermissions.Context;
 using BlazorMHD.UI.Core.Services;
 using Domain.Settings;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Persistence.Factory;
 using ProjectManagement.Components;
 using ProjectManagement.Components.Account;
 using ProjectManagement.DependencyInjection;
-using ProjectManagement.Server.HubsPM;
+using ProjectManagement.Middleware;
+using ProjectManagement.Middleware.Identity;
 using ProjectManagement.Server.Middleware;
 using ProjectManagement.Shared.Constant;
 using Serilog;
-using System.Globalization;
 using TaskResourceBlueprints;
 using TaskResourceBlueprints.Infrastructure;
+using Persistence.Factory;
+using ProjectManagement.SignalR;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
-var TaskResourceBlueprintsDb = builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb") ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsDb' not found.");
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+var taskResourceBlueprintsDb = builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb")
+    ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsDb' not found.");
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddCustomAuthentication(connectionString);
+
 builder.Services.AddApplicationLayer();
 builder.Services.AddPersistenceServices();
 builder.Services.AddAuthPermissionsLayer();
@@ -35,61 +41,46 @@ builder.Services.AddTaskResourceBlueprints();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
-    options.UseSqlServer(TaskResourceBlueprintsDb, sqlOptions =>
+    options.UseSqlServer(taskResourceBlueprintsDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     }));
+
 builder.Services.AddProjectServices();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    // خيارات اختيارية
+    options.EnableDetailedErrors = true;
+});
+
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/octet-stream"]);
 });
+
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
 
 builder.Services.BlazorMHD();
+
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseWebAssemblyDebugging();
-    app.UseMigrationsEndPoint();
-}
-else
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-var supportedCultures = new[]
-{
-    new CultureInfo("en-US"),
-    new CultureInfo("se-SE"),
-};
-app.UseRequestLocalization(new RequestLocalizationOptions
-{
-    DefaultRequestCulture = new RequestCulture("en-US"),
-    SupportedCultures = supportedCultures,
-    SupportedUICultures = supportedCultures
-});
 app.UseHttpsRedirection();
 app.UseResponseCompression();
+
 app.UseRouting();
+
 app.UseAuthentication();
-app.Use(async (context, next) =>
-{
-    var tenantClaim = context.User.FindFirst(PMClaimsConst.Tentan)?.Value;
-    var userIdClaim = context.User.FindFirst(PMClaimsConst.UserId)?.Value;
-    await next();
-});
 app.UseAuthorization();
+
+// ✅ مهم جداً: تعبئة TenantContext من claims لكل request
+app.UseTenantContext();
+
 app.UseAntiforgery();
-app.UseMiddleware<GlobalErrorHandling>();
+
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/api"),
+    apiApp => apiApp.UseMiddleware<GlobalErrorHandling>());
+
 app.UseSerilogRequestLogging(opts =>
 {
     opts.EnrichDiagnosticContext = (ctx, http) =>
@@ -101,17 +92,16 @@ app.UseSerilogRequestLogging(opts =>
         if (!string.IsNullOrWhiteSpace(tenantId)) ctx.Set(PMClaimsConst.Tentan, tenantId);
     };
 });
+
 app.MapStaticAssets();
-app.MapControllers(); // API endpoints
+app.MapControllers();
 app.MapHub<NotificationHub>("/notification");
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(
-        typeof(ProjectManagement.Client._Imports).Assembly
-    );
-// Add additional endpoints required by the Identity /Accounts Razor components.
+    .AddAdditionalAssemblies(typeof(ProjectManagement.Client._Imports).Assembly);
+
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();

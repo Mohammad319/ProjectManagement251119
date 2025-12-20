@@ -1,45 +1,86 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Server.Circuits;
+using Microsoft.AspNetCore.SignalR;
+using Persistence.Context;
 using Persistence.Factory;
+using Persistence.Interceptors;
+using ProjectManagement.BlazorServer;
 using ProjectManagement.Client.DependencyInjection;
-using ProjectManagement.Server.HubsPM;
+using ProjectManagement.Middleware;
 using ProjectManagement.Services;
+using ProjectManagement.SignalR;
 
-namespace ProjectManagement.DependencyInjection
+namespace ProjectManagement.DependencyInjection;
+
+public static class ServiceRegistration
 {
-    public static class ServiceRegistration
+    public static IServiceCollection AddProjectServices(this IServiceCollection services)
     {
-        public static IServiceCollection AddProjectServices(this IServiceCollection services)
-        {
-            services.AddRazorComponents()
+        services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents()
-    .AddAuthenticationStateSerialization(options =>
-    {
-        options.SerializeAllClaims = true; // كي تصل PMClaimsConst.UserId و PMClaimsConst.Tentan للـ WASM
-    }); services.AddHttpContextAccessor();
-
-
-
-            services.AddHttpClient();
-            services.AddScoped(sp =>
+            .AddAuthenticationStateSerialization(options =>
             {
-                var navigationManager = sp.GetRequiredService<NavigationManager>();
-                return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
+                options.SerializeAllClaims = true;
             });
-            services.AddApiVersioning();
-            services.AddRazorPages();
-            services.AddServerSideBlazor();
-            services.AddControllers();
 
-            services.AddScoped<IDbContextFactory, DbContextFactory>();
-            services.AddScoped<INotificationHub, SendHubNotification>();
-            services.AddScoped<ITenantUserService, TenantUserService>();
-            services.AddScoped<ICurrentTenantService, CurrentTenantService>();
+        services.AddHttpClient();
+        services.AddScoped(sp =>
+        {
+            var navigationManager = sp.GetRequiredService<NavigationManager>();
+            return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
+        });
 
-            services.AddClientServices();
+        services.AddApiVersioning();
+        services.AddRazorPages();
+        services.AddServerSideBlazor();
+        services.AddControllers();
 
-            return services;
-        }
+        services.AddClientServices();
+
+        // -------------------------
+        // Tenant Context (Hybrid)
+        // -------------------------
+        // TenantContext يُعبّى في 3 أماكن:
+        // 1) HTTP Requests عبر TenantContextMiddleware
+        // 2) Hub invocations عبر TenantContextHubFilter
+        // 3) Blazor Server Circuits عبر TenantContextResolver + TenantCircuitHandler
+        services.AddScoped<TenantContext>();
+        services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
+
+        services.AddScoped<ITenantContextResolver, TenantContextResolver>();
+
+        // CircuitHandler: يضمن تعبئة TenantContext في Blazor Server circuits
+        services.AddSingleton<CircuitHandler, TenantCircuitHandler>();
+
+        // HubFilter: يضمن تعبئة TenantContext قبل كل Hub method invocation
+        services.AddSingleton<IHubFilter, TenantContextHubFilter>();
+
+        // -------------------------
+        // Cache
+        // -------------------------
+        services.AddMemoryCache();
+
+        // -------------------------
+        // Tenant Connection String Provider (Catalog DB)
+        // -------------------------
+        services.AddScoped<ITenantConnectionStringProvider, TenantConnectionStringProvider>();
+
+        // DbContextOptions cache per tenant
+        services.AddSingleton<ITenantDbContextOptionsCache, TenantDbContextOptionsCache>();
+
+        // Interceptor must be Scoped
+        services.AddScoped<TenantAuditSaveChangesInterceptor>();
+
+        // Factory + tenant DbContext
+        services.AddScoped<IDbContextFactory, DbContextFactory>();
+        services.AddScoped<ShardingSingleDbContext>(sp =>
+            sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
+
+        // App services
+        services.AddScoped<INotificationHub, SendHubNotification>();
+        services.AddScoped<ITenantUserService, TenantUserService>();
+
+        return services;
     }
-
 }

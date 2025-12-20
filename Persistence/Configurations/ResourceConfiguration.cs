@@ -1,107 +1,134 @@
 ﻿using Domain.Entities.Calculation;
 using Domain.Entities.ResourceType;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Persistence.Serialization;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.ResourceType;
-using System.Text.Json;
 
+namespace Persistence.Configurations;
 
-namespace Persistence.Configurations
+internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<ResourceTypeEntity>
 {
-    class ResourceTypeConfiguration : IEntityTypeConfiguration<ResourceTypeEntity>
+    public void Configure(EntityTypeBuilder<ResourceTypeEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<ResourceTypeEntity> modelBuilder)
-        {
-            modelBuilder.Property(e => e.Metadata).HasConversion(
-    v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-    v => JsonSerializer.Deserialize<ResourceTypeData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceTypeData());
+        builder.Property(e => e.Metadata)
+            .HasJsonConversion<ResourceTypeData>();
 
-            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourceTypes).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
-        }
+        builder.HasOne(x => x.Account)
+            .WithMany(x => x.ResourceTypes)
+            .HasForeignKey(x => x.AccountId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
-    class ResourceSortConfiguration : IEntityTypeConfiguration<ResourceSortEntity>
-    {
-        public void Configure(EntityTypeBuilder<ResourceSortEntity> modelBuilder)
-        {
-            modelBuilder.Property(e => e.Metadata).HasConversion(
-    v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-    v => JsonSerializer.Deserialize<ResourceTypeData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceTypeData());
+}
 
-            modelBuilder.HasOne(x => x.ResourceType).WithMany(u => u.ResourcesSort).HasForeignKey(pt => pt.ResourceTypeId)
-                .HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.ResourceSorts).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
-        }
+internal sealed class ResourceSortConfiguration : IEntityTypeConfiguration<ResourceSortEntity>
+{
+    public void Configure(EntityTypeBuilder<ResourceSortEntity> builder)
+    {
+        builder.Property(e => e.Metadata)
+            .HasJsonConversion();
+
+        builder.HasOne(x => x.ResourceType)
+            .WithMany(x => x.ResourcesSort)
+            .HasForeignKey(x => x.ResourceTypeId)
+            .HasPrincipalKey(x => x.Id)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.Account)
+            .WithMany(x => x.ResourceSorts)
+            .HasForeignKey(x => x.AccountId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
-    class ResourceConfiguration : IEntityTypeConfiguration<ResourceEntity>
+}
+
+internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceEntity>
+{
+    public void Configure(EntityTypeBuilder<ResourceEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<ResourceEntity> modelBuilder)
+        builder.OwnsOne(r => r.Cost, owned =>
         {
-            modelBuilder.OwnsOne(r => r.Cost, owned =>
-                {
-                    owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
-                    owned.Property(x => x.Cost).HasColumnName("Cost");
-                    owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
-                    owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
-                });
-            modelBuilder.Property(e => e.Metadata).HasConversion(
-                v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                v => JsonSerializer.Deserialize<ResourceData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ResourceData());
+            owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
+            owned.Property(x => x.Cost).HasColumnName("Cost");
+            owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
+            owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
+        });
 
-            modelBuilder.HasOne(pt => pt.ResourceSort).WithMany(p => p.Resources).HasForeignKey(pt => pt.ResourceSortId).OnDelete(DeleteBehavior.ClientSetNull);
-            modelBuilder.HasOne(pt => pt.ResourceType).WithMany(p => p.Resources).HasForeignKey(pt => pt.ResourceTypeId).OnDelete(DeleteBehavior.ClientSetNull);
+        builder.Property(e => e.Metadata)
+            .HasJsonConversion();
 
-            modelBuilder.HasOne(pt => pt.Account).WithMany(p => p.Resources).HasForeignKey(pt => pt.AccountId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Status).WithMany(p => p.Resources).HasForeignKey(pt => pt.StatusId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Opportunity).WithMany(p => p.Resources).HasForeignKey(pt => pt.OpportunityId).OnDelete(DeleteBehavior.ClientSetNull);
-        }
+        builder.HasOne(x => x.ResourceSort)
+            .WithMany(x => x.Resources)
+            .HasForeignKey(x => x.ResourceSortId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        builder.HasOne(x => x.ResourceType)
+            .WithMany(x => x.Resources)
+            .HasForeignKey(x => x.ResourceTypeId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        builder.HasOne(x => x.Account)
+            .WithMany(x => x.Resources)
+            .HasForeignKey(x => x.AccountId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Status)
+            .WithMany(x => x.Resources)
+            .HasForeignKey(x => x.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Opportunity)
+            .WithMany(x => x.Resources)
+            .HasForeignKey(x => x.OpportunityId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
     }
-    class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
+}
+
+internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
+{
+    public void Configure(EntityTypeBuilder<TaskEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<TaskEntity> modelBuilder)
+        builder.OwnsOne(t => t.Cost, owned =>
         {
-            //        modelBuilder.Property(p => p.Metadata)
-            //.HasColumnType("jsonb"); // Use "json" for MySQL or "jsonb" for PostgreSQL
+            owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
+            owned.Property(x => x.Cost).HasColumnName("Cost");
+            owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
+            owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
+        });
 
-            modelBuilder.OwnsOne(t => t.Cost, owned =>
-            {
-                owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
-                owned.Property(x => x.Cost).HasColumnName("Cost");
-                owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
-                owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
-            });
+        builder.Property(e => e.Metadata)
+            .HasJsonConversion();
 
-            modelBuilder.Property(e => e.Metadata).HasConversion(
-                v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                v => JsonSerializer.Deserialize<TaskData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new TaskData());
+        builder.HasOne(x => x.Status)
+            .WithMany(x => x.Tasks)
+            .HasForeignKey(x => x.StatusId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-            //modelBuilder.HasMany(pt => pt.Tasks).WithOne(p => p.ParentTask).HasForeignKey(pt => pt.ParentTaskId).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasOne(pt => pt.Status).WithMany(p => p.Tasks).HasForeignKey(pt => pt.StatusId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Opportunity).WithMany(p => p.Tasks).HasForeignKey(pt => pt.OpportunityId).OnDelete(DeleteBehavior.ClientSetNull);
-        }
-
+        builder.HasOne(x => x.Opportunity)
+            .WithMany(x => x.Tasks)
+            .HasForeignKey(x => x.OpportunityId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
     }
-    class OfferConfiguration : IEntityTypeConfiguration<OfferEntity>
+}
+
+internal sealed class OfferConfiguration : IEntityTypeConfiguration<OfferEntity>
+{
+    public void Configure(EntityTypeBuilder<OfferEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<OfferEntity> modelBuilder)
-        {
-            modelBuilder.HasOne(o => o.Resource)
-       .WithMany(r => r.Offers)
-       .HasForeignKey(o => o.ResourceId)
-       .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(o => o.Resource)
+            .WithMany(r => r.Offers)
+            .HasForeignKey(o => o.ResourceId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.HasOne(o => o.Organisation)
-                   .WithMany()
-                   .HasForeignKey(o => o.OrganisationId)
-                   .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Property(e => e.Metadata).HasConversion(
-    v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-    v => JsonSerializer.Deserialize<OfferData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new OfferData());
+        // كان عندك تعريفان لعلاقة Organisation (واحد Restrict وواحد SetNull)
+        // نخليها واحدة واضحة:
+        builder.HasOne(o => o.Organisation)
+            .WithMany(p => p.Offers)
+            .HasForeignKey(o => o.OrganisationId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-            //  modelBuilder.HasOne(pt => pt.Resources).WithMany(p => p.Offers).HasForeignKey(pt => pt.ResourceID).OnDelete(DeleteBehavior.Cascade);
-
-            //No Working ->
-            modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Offers).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);
-        }
+        builder.Property(e => e.Metadata)
+            .HasJsonConversion();
     }
 }

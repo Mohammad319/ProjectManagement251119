@@ -104,7 +104,7 @@ else
         // نحصل على DepartmentID من الـ Claims
         int? departmentId = null;
 
-        var depClaim = user.FindFirst(System.Security.Claims.ClaimTypes.GroupSid)?.Value;
+        var depClaim = user.FindFirst(PMClaimsConst.DepartmentId)?.Value;
         if (int.TryParse(depClaim, out var depId))
             departmentId = depId;
 

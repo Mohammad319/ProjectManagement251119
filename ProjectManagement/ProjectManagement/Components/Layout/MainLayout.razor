@@ -21,7 +21,6 @@
 @code {
     protected override void OnInitialized()
     {
-        // كل ما يتغير الرابط (URL)، Blazor ينادي هذا الحدث
         Nav.LocationChanged += OnLocationChanged;
     }
 

@@ -1,33 +1,58 @@
 ﻿using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ProjectManagement.Shared.DTO.Calculation;
+using Persistence.Serialization;
 using ProjectManagement.Shared.DTO.Project;
-using System.Text.Json;
-using static ProjectManagement.Shared.Constant.URLConst;
 
-namespace Persistence.Configurations
+namespace Persistence.Configurations;
+
+public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntity>
 {
-    public class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntity>
+    public void Configure(EntityTypeBuilder<ProjectEntity> builder)
     {
-        public void Configure(EntityTypeBuilder<ProjectEntity> modelBuilder)
-        {
-            modelBuilder.Property(p => p.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(p => p.CreatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
 
-            modelBuilder.Property(e => e.Metadata).HasConversion(
-                v => JsonSerializer.Serialize(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                v => JsonSerializer.Deserialize<ProjectData>(v, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ProjectData());
+        builder.Property(e => e.Metadata)
+            .HasJsonConversion<ProjectData>();
 
-            modelBuilder.HasMany(x => x.Calculations).WithOne(u => u.Project).HasForeignKey(pt => pt.ProjectId)
-                .HasPrincipalKey(x => x.Id).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.HasOne(pt => pt.Folder).WithMany(p => p.FolderProjects).HasForeignKey(pt => pt.FolderId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(x => x.Calculations)
+            .WithOne(x => x.Project)
+            .HasForeignKey(x => x.ProjectId)
+            .HasPrincipalKey(x => x.Id)
+            .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.HasOne(pt => pt.ProcurementMethod).WithMany(p => p.Projects).HasForeignKey(pt => pt.ProcurementMethodId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.ProjectType).WithMany(p => p.Projects).HasForeignKey(pt => pt.ProjectTypeId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Compensation).WithMany(p => p.Projects).HasForeignKey(pt => pt.CompensationId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Contract).WithMany(p => p.Projects).HasForeignKey(pt => pt.ContractId).OnDelete(DeleteBehavior.SetNull);
-            modelBuilder.HasOne(pt => pt.Organisation).WithMany(p => p.Projects).HasForeignKey(pt => pt.OrganisationId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(x => x.Folder)
+            .WithMany(x => x.FolderProjects)
+            .HasForeignKey(x => x.FolderId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        }
+        builder.HasOne(x => x.ProcurementMethod)
+            .WithMany(x => x.Projects)
+            .HasForeignKey(x => x.ProcurementMethodId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.ProjectType)
+            .WithMany(x => x.Projects)
+            .HasForeignKey(x => x.ProjectTypeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Compensation)
+            .WithMany(x => x.Projects)
+            .HasForeignKey(x => x.CompensationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Contract)
+            .WithMany(x => x.Projects)
+            .HasForeignKey(x => x.ContractId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.Organisation)
+            .WithMany(x => x.Projects)
+            .HasForeignKey(x => x.OrganisationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // تحسين أداء شائع في SaaS (اختياري) لو TenantId موجود على ProjectEntity:
+        // builder.HasIndex(x => new { x.TenantId, x.Id });
     }
 }
