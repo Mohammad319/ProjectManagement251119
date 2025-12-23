@@ -12,7 +12,7 @@
                 class="mr-2 inline-flex items-center justify-center w-6 h-6 rounded hover:bg-gray-300 dark:hover:bg-gray-700"
                 @onclick:stopPropagation="true"
                 @onclick="Toggle">
-            @Icons.RightBottom(Expanded)
+            @((MarkupString)Icons.RightBottom(Expanded))
         </button>
     }
     else

@@ -15,7 +15,6 @@ public sealed class DbContextFactory(
 {
     public async Task<ShardingSingleDbContext> CreateDbContextAsync(CancellationToken ct = default)
     {
-        // ✅ في Blazor Server circuit غالبًا TenantId لا يُعبّى بالميدلوير
         if (tenantContext.TenantId <= 0)
             await resolver.EnsureResolvedAsync(ct);
 

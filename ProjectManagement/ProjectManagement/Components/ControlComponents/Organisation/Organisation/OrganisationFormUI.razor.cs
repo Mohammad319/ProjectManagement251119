@@ -15,10 +15,10 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 {
     public partial class OrganisationFormUI
     {
-        [Inject] public ICommandDispatcher MicroBus { get; set; } = default!;
-        [Inject] public ContextMenuService ContextService { get; set; } = default!;
-        [Inject] public MhdServices MHD { get; set; } = default!;
-        [Inject] public IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
+        [Inject] ICommandDispatcher MicroBus { get; set; } = default!;
+        [Inject] ContextMenuService ContextService { get; set; } = default!;
+        [Inject] MhdServices MHD { get; set; } = default!;
+        [Inject] IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
 
         private int Part = 1;
 

@@ -1,21 +1,18 @@
-﻿
-using Application.Feature.Organisation.Organisation;
-using Application.Interfaces;
+﻿using Application.Feature.Organisation.Organisation;
 using Domain.Entities.Organisation;
 using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Persistence.Service.Organisation
 {
-    public sealed class OrganisationService(ShardingSingleDbContext db) : IOrganisationService
+    public sealed class OrganisationService(IDbContextFactory dbFactory) : IOrganisationService
     {
-
-        // ---------------- Commands ----------------
-
         public async Task<int> CreateAsync(PostOrganisationDTO dto, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
             var entity = OrganisationEntity.Create(dto);
             db.Organisation.Add(entity);
             await db.SaveChangesAsync(ct);
@@ -24,7 +21,9 @@ namespace Persistence.Service.Organisation
 
         public async Task<bool> UpdateAsync(int id, PostOrganisationDTO dto, CancellationToken ct = default)
         {
-            var entity = await db.Organisation.FindAsync(id);
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            var entity = await db.Organisation.FindAsync([id], ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -34,6 +33,8 @@ namespace Persistence.Service.Organisation
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
             var entity = await db.Organisation
                 .Include(x => x.Offers)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -48,10 +49,10 @@ namespace Persistence.Service.Organisation
             return true;
         }
 
-        // ---------------- Queries ----------------
-
         public async Task<OrganisationDetailsDTO?> GetDetailsAsync(int id, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
             var x = await db.Organisation
                 .AsNoTracking()
                 .Include(x => x.OrganisationCategory).ThenInclude(c => c.ParentCategory)
@@ -79,7 +80,12 @@ namespace Persistence.Service.Organisation
 
         public async Task<PostOrganisationDTO?> GetPostAsync(int id, CancellationToken ct = default)
         {
-            var x = await db.Organisation.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            var x = await db.Organisation
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
+
             if (x == null) return null;
 
             return new PostOrganisationDTO
@@ -97,9 +103,12 @@ namespace Persistence.Service.Organisation
             };
         }
 
-        public Task<List<ShortListOrganisationDTO>> GetByCategoryAsync(int categoryId, bool isVisible, CancellationToken ct = default)
+        public async Task<List<ShortListOrganisationDTO>> GetByCategoryAsync(int categoryId, bool isVisible, CancellationToken ct = default)
         {
-            return db.Organisation.AsNoTracking()
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            return await db.Organisation
+                .AsNoTracking()
                 .Where(x => x.OrganisationCategoryId == categoryId && x.IsVisible == isVisible)
                 .OrderBy(x => x.Name)
                 .Select(x => new ShortListOrganisationDTO
@@ -113,18 +122,24 @@ namespace Persistence.Service.Organisation
                 .ToListAsync(ct);
         }
 
-        public Task<List<ListDTO>> GetVisibleOrIdAsync(int? id, CancellationToken ct = default)
+        public async Task<List<ListDTO>> GetVisibleOrIdAsync(int? id, CancellationToken ct = default)
         {
-            return db.Organisation.AsNoTracking()
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            return await db.Organisation
+                .AsNoTracking()
                 .Where(x => x.IsVisible || (id.HasValue && x.Id == id))
                 .OrderBy(x => x.Name)
                 .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
                 .ToListAsync(ct);
         }
 
-        public Task<List<ListDTO>> GetAsListAsync(CancellationToken ct = default)
+        public async Task<List<ListDTO>> GetAsListAsync(CancellationToken ct = default)
         {
-            return db.Organisation.AsNoTracking()
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            return await db.Organisation
+                .AsNoTracking()
                 .OrderBy(x => x.Name)
                 .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
                 .ToListAsync(ct);

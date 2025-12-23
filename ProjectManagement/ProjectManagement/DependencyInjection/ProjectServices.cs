@@ -16,9 +16,7 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddProjectServices(this IServiceCollection services)
     {
-        services.AddRazorComponents()
-            .AddInteractiveServerComponents()
-            .AddInteractiveWebAssemblyComponents()
+        services.AddRazorComponents().AddInteractiveServerComponents().AddInteractiveWebAssemblyComponents()
             .AddAuthenticationStateSerialization(options =>
             {
                 options.SerializeAllClaims = true;
@@ -74,8 +72,7 @@ public static class ServiceRegistration
 
         // Factory + tenant DbContext
         services.AddScoped<IDbContextFactory, DbContextFactory>();
-        services.AddScoped<ShardingSingleDbContext>(sp =>
-            sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
+        //services.AddScoped(sp => sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
 
         // App services
         services.AddScoped<INotificationHub, SendHubNotification>();

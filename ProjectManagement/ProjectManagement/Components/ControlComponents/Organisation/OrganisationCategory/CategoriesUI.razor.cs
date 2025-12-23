@@ -13,7 +13,6 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private int PageNr = 0;
 
         private List<ListOrganisationCategoryDTO> Categories { get; set; } = [];
-        //private IReadOnlyList<ListOrganisationCategoryDTO> _roots = Array.Empty<ListOrganisationCategoryDTO>();
         private ILookup<int?, ListOrganisationCategoryDTO> _byParent = default!;
 
         private ListOrganisationCategoryDTO? SelectedCategory;

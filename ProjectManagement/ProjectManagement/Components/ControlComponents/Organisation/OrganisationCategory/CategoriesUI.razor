@@ -23,10 +23,8 @@
             </AuthorizeView>
         </div>
 
-        <CategoryTree Categories="Categories"
-                      SelectedId="SelectedCategory?.Id"
-                      OnSelect="OnTreeSelect"
-                      OnContext="OnTreeContext" />
+        <CategoryTree Categories="Categories" SelectedId="SelectedCategory?.Id"
+                      OnSelect="OnTreeSelect" OnContext="OnTreeContext" />
 
     </div>
 
@@ -37,8 +35,7 @@
         }
         else if (SelectedCategory != null)
         {
-            <OrganisationsUI Callback="() => SelectedCategory = null"
-                             Category="SelectedCategory" />
+            <OrganisationsUI Callback="() => SelectedCategory = null" Category="SelectedCategory"  />
         }
     </div>
 </div>

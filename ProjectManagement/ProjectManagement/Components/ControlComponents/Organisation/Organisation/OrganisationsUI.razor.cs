@@ -54,7 +54,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 new()
                 {
                     Label = $"ℹ️ {ResourceLoc.details}",
-                    OnClickAsync = () => { OrganisationDetails(item); return Task.CompletedTask; }
+                    OnClickAsync = () => { OrganisationDetails(item); 
+                        return Task.CompletedTask; }
                 }
             };
 
@@ -83,7 +84,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private void UpdateForm(ShortListOrganisationDTO model)
         {
-            // MHD.Modal.AddModal<OrganisationFormUI>(...);
+            MHD.Modal.ShowComponent<OrganisationFormUI>(
+    model.Id != 0
+        ? AppLoc[LocalizerConst.Update, model.Name] : AppLoc[LocalizerConst.New, ResourceLoc.category], new Dictionary<string, object> {
+        [nameof(OrganisationFormUI.ID)] = model.Id,
+        [nameof(OrganisationFormUI.CategoryID)] = Category.Id,
+        [nameof(OrganisationFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, RefreshAsync)
+    }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
         }
 
         private void Remove(ShortListOrganisationDTO organisation) =>
@@ -109,6 +116,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private async Task RefreshAsync(bool load)
         {
             if (load) await GetAsync();
+            MHD.Modal.Close();
+
         }
     }
 }

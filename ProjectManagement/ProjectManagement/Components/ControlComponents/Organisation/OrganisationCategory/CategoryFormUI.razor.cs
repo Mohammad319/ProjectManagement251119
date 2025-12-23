@@ -17,7 +17,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         protected override void OnInitialized()
         {
             OrganisationCategory.CopyPropertiesTo(PostOffer);
-            PostOffer.CategoryId = PostOffer.CategoryId;
+            PostOffer.CategoryId = OrganisationCategory.ParentCategoryId;
 
         }
 

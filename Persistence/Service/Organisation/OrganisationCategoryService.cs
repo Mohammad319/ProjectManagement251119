@@ -2,22 +2,22 @@
 using Domain.DTO.Category;
 using Domain.Entities.Organisation;
 using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Organisation;
 using System.ComponentModel.DataAnnotations;
 
 namespace Persistence.Service.Organisation
 {
-    public sealed class OrganisationCategoryService(ShardingSingleDbContext db) : IOrganisationCategoryService
+    public sealed class OrganisationCategoryService(IDbContextFactory dbFactory) : IOrganisationCategoryService
     {
-
-        // ---------------- Commands ----------------
-
         public async Task<int> CreateAsync(PostOrganisationCategoryDTO dto, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
             if (dto.CategoryId.HasValue)
             {
-                var parent = await db.OrganisationCategory.FindAsync(dto.CategoryId);
+                var parent = await db.OrganisationCategory.FindAsync([dto.CategoryId.Value], ct);
+
                 if (parent == null || parent.ParentCategoryId.HasValue)
                     throw new ValidationException("Only one level of hierarchy is allowed.");
             }
@@ -30,7 +30,9 @@ namespace Persistence.Service.Organisation
 
         public async Task<bool> UpdateAsync(PutOrganisationCategoryDTO dto, CancellationToken ct = default)
         {
-            var entity = await db.OrganisationCategory.FindAsync(dto.Id, ct);
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            var entity = await db.OrganisationCategory.FindAsync([dto.Id], ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -40,10 +42,12 @@ namespace Persistence.Service.Organisation
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
             if (await db.OrganisationCategory.AnyAsync(x => x.ParentCategoryId == id, ct))
                 return false;
 
-            var entity = await db.OrganisationCategory.FindAsync(id, ct);
+            var entity = await db.OrganisationCategory.FindAsync([id], ct);
             if (entity == null) return false;
 
             db.OrganisationCategory.Remove(entity);
@@ -51,11 +55,11 @@ namespace Persistence.Service.Organisation
             return true;
         }
 
-        // ---------------- Queries ----------------
-
-        public Task<List<ListOrganisationCategoryDTO>> GetAllAsync(CancellationToken ct = default)
+        public async Task<List<ListOrganisationCategoryDTO>> GetAllAsync(CancellationToken ct = default)
         {
-            return db.OrganisationCategory
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            return await db.OrganisationCategory
                 .AsNoTracking()
                 .OrderBy(x => x.Name)
                 .Select(x => new ListOrganisationCategoryDTO
