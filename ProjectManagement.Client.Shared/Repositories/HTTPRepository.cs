@@ -1,5 +1,4 @@
-﻿using ProjectManagement.Client.Shared.Exception;
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -8,65 +7,62 @@ using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories
 {
-    public class HTTPRepository(HttpClient httpClient)
+    public class HTTPRepository(IHttpClientFactory factory)
     {
-        private readonly HttpClient _httpClient = httpClient;
+        private readonly HttpClient _httpClient = factory.CreateClient("Api");
 
-        private static async Task HandleError(HttpResponseMessage response)
+        private static async Task<T> ReadAsync<T>(HttpResponseMessage response)
         {
-            if (!response.IsSuccessStatusCode)
-            {
-                var reason = response.ReasonPhrase ?? "HTTP Error";
-                var message = await response.Content.ReadAsStringAsync();
-                throw new HttpResponseException(reason, message, response.StatusCode);
-            }
+            // ❗ لا معالجة أخطاء هنا
+            // Handlers قامت بكل شيء (Dialog / Redirect / TraceId)
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<T>()
+                   ?? throw new InvalidOperationException("Empty response body.");
         }
-        private static async Task<R> ReturnResultOrThrowAsync<R>(HttpResponseMessage response)
+
+        public async Task<T> GetAsync<T>(string url)
         {
-            await HandleError(response);
-            return await response.Content.ReadFromJsonAsync<R>();
+            var response = await _httpClient.GetAsync(url);
+            return await ReadAsync<T>(response);
         }
-        public async Task<R> PostAsync<R, T>(T data, string url)
+
+        public async Task<TResponse> PostAsync<TResponse, TRequest>(TRequest data, string url)
         {
             var response = await _httpClient.PostAsJsonAsync(url, data);
-            return await ReturnResultOrThrowAsync<R>(response);
+            return await ReadAsync<TResponse>(response);
         }
 
-        public async Task<R> PutAsync<R, T>(T data, string url)
+        public async Task<TResponse> PutAsync<TResponse, TRequest>(TRequest data, string url)
         {
             var response = await _httpClient.PutAsJsonAsync(url, data);
-            return await ReturnResultOrThrowAsync<R>(response);
+            return await ReadAsync<TResponse>(response);
         }
 
-        public Task<bool> PutAsync<T>(T data, string url) => PutAsync<bool, T>(data, url);
+        public Task<bool> PutAsync<T>(T data, string url)
+            => PutAsync<bool, T>(data, url);
 
-        public async Task<R> DeleteAsync<R>(string url)
+        public async Task<T> DeleteAsync<T>(string url)
         {
             var response = await _httpClient.DeleteAsync(url);
-            return await ReturnResultOrThrowAsync<R>(response);
+            return await ReadAsync<T>(response);
         }
-
-        public Task<bool> DeleteAsync(string url) => DeleteAsync<bool>(url);
-
         public Task<bool> DeleteAsync<T>(string url, T obj) => DeleteAsync<bool, T>(url, obj);
+        public Task<bool> DeleteAsync(string url)
+            => DeleteAsync<bool>(url);
 
-        public async Task<R> DeleteAsync<R, T>(string url, T obj)
+        public async Task<T> DeleteAsync<T, TBody>(string url, TBody body)
         {
-            var request = new HttpRequestMessage
+            var request = new HttpRequestMessage(HttpMethod.Delete, url)
             {
-                Method = HttpMethod.Delete,
-                RequestUri = new Uri(url, UriKind.Relative),
-                Content = new StringContent(JsonSerializer.Serialize(obj), Encoding.UTF8, "application/json")
+                Content = new StringContent(
+                    JsonSerializer.Serialize(body),
+                    Encoding.UTF8,
+                    "application/json")
             };
 
             var response = await _httpClient.SendAsync(request);
-            return await ReturnResultOrThrowAsync<R>(response);
-        }
-
-        public async Task<R> GetAsync<R>(string url)
-        {
-            var response = await _httpClient.GetAsync(url);
-            return await ReturnResultOrThrowAsync<R>(response);
+            return await ReadAsync<T>(response);
         }
     }
 }

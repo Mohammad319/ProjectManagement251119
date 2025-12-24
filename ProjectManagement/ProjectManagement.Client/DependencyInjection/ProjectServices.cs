@@ -1,4 +1,6 @@
 ﻿using Blazored.LocalStorage;
+using BlazorMHD.UI.Core.Services;
+using pax.BlazorChartJs;
 
 namespace ProjectManagement.Client.DependencyInjection
 {
@@ -10,12 +12,15 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddApplicationServices();
             services.AddBlazoredLocalStorage();
             services.AddLocalization();
-            //services.ServicesMHD();
             services.AddSingleton<ContextMenuService>();
+            services.AddChartJs(options =>
+            {
+                options.ChartJsLocation = "https://cdn.jsdelivr.net/npm/chart.js";
+                options.ChartJsPluginDatalabelsLocation = "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2";
+            });
 
-
+            services.BlazorMHD();
             return services;
         }
     }
-
 }

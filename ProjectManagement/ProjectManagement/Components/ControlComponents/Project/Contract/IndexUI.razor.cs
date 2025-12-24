@@ -44,7 +44,6 @@ new Dictionary<string, object> { [nameof(ContractFormUI.Contract)] = model, [nam
 
         protected async override Task OnInitializedAsync()
         {
-            throw new NotImplementedException();
             ContractList = await MicroBus.Send(new GetContractQuery());
         }
     }

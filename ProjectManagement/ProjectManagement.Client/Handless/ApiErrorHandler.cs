@@ -11,6 +11,11 @@ namespace ProjectManagement.Client.Handless
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
+            if (request.RequestUri?.ToString().Contains("api/client-logs", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return await base.SendAsync(request, ct); // لا Dialog ولا parsing
+            }
+
             HttpResponseMessage response;
 
             try

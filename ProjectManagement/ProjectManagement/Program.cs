@@ -230,6 +230,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapControllers();
 app.MapHub<NotificationHub>("/notification");
+app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

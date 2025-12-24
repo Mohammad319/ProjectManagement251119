@@ -23,11 +23,11 @@ public static class ServiceRegistration
             });
 
         services.AddHttpClient();
-        services.AddScoped(sp =>
-        {
-            var navigationManager = sp.GetRequiredService<NavigationManager>();
-            return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
-        });
+        //services.AddScoped(sp =>
+        //{
+        //    var navigationManager = sp.GetRequiredService<NavigationManager>();
+        //    return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
+        //});
 
         services.AddApiVersioning();
         services.AddRazorPages();

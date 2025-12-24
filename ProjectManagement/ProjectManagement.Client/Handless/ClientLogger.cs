@@ -8,7 +8,7 @@
     }
     public class ClientLogger(IHttpClientFactory factory, NavigationManager nav) : IClientLogger
     {
-        private readonly HttpClient _http = factory.CreateClient("Api");
+        private readonly HttpClient _http = factory.CreateClient("Log"); // ✅ بدل Api
 
         public async Task ErrorAsync(string message, string? traceId = null, Exception? ex = null)
         {
@@ -28,7 +28,7 @@
             }
             catch
             {
-                // لا تفجّر التطبيق لو فشل إرسال اللوج
+                // تجاهل
             }
         }
     }

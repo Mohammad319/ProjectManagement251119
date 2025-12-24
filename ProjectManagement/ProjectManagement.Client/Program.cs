@@ -1,47 +1,66 @@
-﻿using BlazorMHD.UI.Core.Services;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+﻿using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.JSInterop;
-using pax.BlazorChartJs;
 using ProjectManagement.Client.DependencyInjection;
+using ProjectManagement.Client.Handless;
+using ProjectManagement.Client.Helper;
+using ProjectManagement.Client.Shared.Error;
+using ProjectManagement.Client.Shared.Repositories;
 using System.Globalization;
+using System.Net.Http.Headers;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.Services.AddScoped(sp => new HttpClient
+
+// ✅ Handlers + Dialog + ClientLogger
+builder.Services.AddScoped<CorrelationIdHandler>();
+builder.Services.AddScoped<UnauthorizedRedirectHandler>();
+builder.Services.AddScoped<ApiErrorHandler>();
+
+builder.Services.AddScoped<IErrorDialog, UiErrorDialog>();
+builder.Services.AddScoped<IClientLogger, ClientLogger>();
+
+//// ✅ HttpClientFactory + named client Api
+
+builder.Services.AddHttpClient("Api", client =>
 {
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+})
+
+.AddHttpMessageHandler<CorrelationIdHandler>()
+.AddHttpMessageHandler<UnauthorizedRedirectHandler>()
+.AddHttpMessageHandler<ApiErrorHandler>()
+;
+builder.Services.AddHttpClient("Log", client =>
+{
+    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
+
+//builder.Services.AddScoped(sp =>sp.GetRequiredService<IHttpClientFactory>().CreateClient("Api"));
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthenticationStateDeserialization();
 builder.Services.AddClientServices();
 
-
-builder.Services.AddChartJs(options =>
-{
-    options.ChartJsLocation = "https://cdn.jsdelivr.net/npm/chart.js";
-    options.ChartJsPluginDatalabelsLocation = "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2";
-});
-builder.Services.AddChartJs();
-
-builder.Services.BlazorMHD();
-
 var host = builder.Build();
 
-var js = host.Services.GetRequiredService<IJSRuntime>();
-var cultureName = await js.InvokeAsync<string>("blazorCulture.get");
-
-CultureInfo culture;
-if (!string.IsNullOrWhiteSpace(cultureName))
+// ✅ حماية culture حتى لا يكسر التشغيل لو JS غير موجود
+try
 {
-    culture = new CultureInfo(cultureName);
-}
-else
-{
-    culture = new CultureInfo("en-US"); // الافتراضي
-}
+    var js = host.Services.GetRequiredService<IJSRuntime>();
+    var cultureName = await js.InvokeAsync<string>("blazorCulture.get");
 
-CultureInfo.DefaultThreadCurrentCulture = culture;
-CultureInfo.DefaultThreadCurrentUICulture = culture;
+    var culture = !string.IsNullOrWhiteSpace(cultureName)
+        ? new CultureInfo(cultureName)
+        : new CultureInfo("en-US");
+
+    CultureInfo.DefaultThreadCurrentCulture = culture;
+    CultureInfo.DefaultThreadCurrentUICulture = culture;
+}
+catch
+{
+    // ignore
+}
 
 await host.RunAsync();
