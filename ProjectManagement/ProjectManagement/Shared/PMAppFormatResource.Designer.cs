@@ -232,6 +232,15 @@ namespace ProjectManagement.Shared {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Separator.
+        /// </summary>
+        public static string separator {
+            get {
+                return ResourceManager.GetString("separator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Third-Party Licenses.
         /// </summary>
         public static string TabLicenses {

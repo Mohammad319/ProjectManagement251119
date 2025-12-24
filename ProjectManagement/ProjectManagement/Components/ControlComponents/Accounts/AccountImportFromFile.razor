@@ -1,5 +1,6 @@
 ﻿@using Application.Feature.Account.Commands
 @using BlazorMHD.UI.Core.DesignSystem
+@using ProjectManagement.Shared
 @using ProjectManagement.Shared.DTO.Account
 @using System.IO
 
@@ -37,7 +38,7 @@
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">Separator</label>
+            <label class="@CssClasses.Form.Label">@PMAppFormatResource.separator</label>
             <input type="text" class="@CssClasses.Input.Text"
                    placeholder="," @bind="Separator" />
         </div>
@@ -53,7 +54,7 @@
 
             <button class="@CssClasses.Btn.Solid.Success"
                     @onclick="Save"
-                    disabled="@(!CanSave)">
+                    disabled="@(CanSave == false)">
                 @ResourceApp.save
             </button>
 

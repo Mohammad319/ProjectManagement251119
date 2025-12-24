@@ -14,13 +14,11 @@
 
 @if (Mode == ViewMode.Details && SelectedDepartment is not null)
 {
-    <DepartmentDetailsUI DepartmentList="SelectedDepartment"
-                        OnClickCallback="BackToList" />
+    <DepartmentDetailsUI DepartmentList="SelectedDepartment" OnClickCallback="BackToList" />
 }
 else if (Mode == ViewMode.Users)
 {
-    <UsersIndex DepartmentId="SelectedDepartmentIdForUsers"
-                OnClickCallback="BackToList" />
+    <UsersIndex DepartmentId="SelectedDepartmentIdForUsers" OnClickCallback="BackToList" />
 }
 else
 {
@@ -180,7 +178,6 @@ else
         var ok = await MicroBus.Send(new DeleteDepartmentCommand(department.Id));
         if (ok)
         {
-            // الأفضل إعادة تحميل لضمان التزامن (خصوصًا لو فيه أكثر من مستخدم/تحديثات)
             await ReloadDepartmentsAsync();
         }
         StateHasChanged();
