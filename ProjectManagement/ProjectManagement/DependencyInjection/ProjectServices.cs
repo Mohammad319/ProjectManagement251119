@@ -72,7 +72,7 @@ public static class ServiceRegistration
 
         // Factory + tenant DbContext
         services.AddScoped<IDbContextFactory, DbContextFactory>();
-        //services.AddScoped(sp => sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
+        services.AddScoped(sp => sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
 
         // App services
         services.AddScoped<INotificationHub, SendHubNotification>();

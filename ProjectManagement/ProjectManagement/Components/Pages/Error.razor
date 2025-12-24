@@ -1,4 +1,4 @@
-﻿@page "/Error"
+﻿@* @page "/Error"
 @using System.Diagnostics
 
 <PageTitle>Error</PageTitle>
@@ -34,3 +34,39 @@
     protected override void OnInitialized() =>
         RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
 }
+ *@
+@page "/error"
+@inject NavigationManager Nav
+
+<h3>حدث خطأ</h3>
+
+<div class="alert alert-danger">
+    <p>نعتذر، حدث خطأ غير متوقع أثناء معالجة طلبك.</p>
+
+    @if (!string.IsNullOrWhiteSpace(TraceId))
+    {
+        <p class="mb-0">
+            <strong>رقم التتبع (TraceId):</strong> @TraceId
+        </p>
+    }
+</div>
+
+<div class="d-flex gap-2">
+    <button class="btn btn-primary" @onclick="GoHome">العودة للرئيسية</button>
+    <button class="btn btn-outline-secondary" @onclick="Reload">تحديث الصفحة</button>
+</div>
+
+@code {
+    private string? TraceId;
+
+    protected override void OnInitialized()
+    {
+        var uri = new Uri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        TraceId = query["traceId"];
+    }
+
+    private void GoHome() => Nav.NavigateTo("/", forceLoad: true);
+    private void Reload() => Nav.NavigateTo(Nav.Uri, forceLoad: true);
+}
+

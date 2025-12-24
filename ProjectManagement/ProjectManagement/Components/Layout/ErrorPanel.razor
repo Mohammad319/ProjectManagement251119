@@ -1,0 +1,7 @@
+﻿@inject IHttpContextAccessor HttpContextAccessor
+
+<div class="alert alert-danger">
+    <h5>حدث خطأ أثناء عرض الصفحة</h5>
+    <p>حاول تحديث الصفحة. إذا استمر الخطأ تواصل مع الدعم.</p>
+    <small>TraceId: @HttpContextAccessor.HttpContext?.TraceIdentifier</small>
+</div>

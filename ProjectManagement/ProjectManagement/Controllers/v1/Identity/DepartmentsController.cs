@@ -10,6 +10,8 @@ namespace ProjectManagement.Server.Controllers.v1.Identity
     [ApiVersion("1.0")]
     public class DepartmentsController(IAuthRepository dataAccess) : BaseApiController
     {
+ 
+
         [HttpGet, Authorize(Roles = PMRolesConst.Tenant.Users)]
         public async Task<IActionResult> GetAsListAll()
         {

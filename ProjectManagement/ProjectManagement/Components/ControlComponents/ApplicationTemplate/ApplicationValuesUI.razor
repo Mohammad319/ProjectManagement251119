@@ -92,7 +92,7 @@
     [Parameter] public EventCallback<ApplicationValuesModel> CallbackUpdate { get; set; }
     protected async override Task OnInitializedAsync()
     {
-        Applications = await ExHandlers.RunCheckTokenAsync(() => Repo.Application.GetApplicationsAsync(true));
+        Applications = await Repo.Application.GetApplicationsAsync(true);
         if (ApplicationValues.Application != null)
         {
             Application = ApplicationValues.Application;
@@ -143,12 +143,12 @@
       ApplicationValues.ApplicationId = Application.Id; 
         if (ApplicationValues.Id == 0)
         {
-            ApplicationValues.Id = await ExHandlers.RunCheckTokenAsync(() => Repo.Application.CreateAsync(ApplicationValues));
+            ApplicationValues.Id = await Repo.Application.CreateAsync(ApplicationValues);
             ApplicationValues.Application = Application;
             if (ApplicationValues.Id > 0)
                 await CallbackUpdate.InvokeAsync(ApplicationValues);
         }
-        else if (await ExHandlers.RunCheckTokenAsync(() => Repo.Application.UpdateAsync(ApplicationValues)))
+        else if (await Repo.Application.UpdateAsync(ApplicationValues))
             await CallbackUpdate.InvokeAsync(ApplicationValues);
 
         await CallbackUpdate.InvokeAsync(null);
