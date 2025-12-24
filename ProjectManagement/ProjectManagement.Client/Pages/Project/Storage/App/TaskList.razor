@@ -184,8 +184,8 @@ else if (_tasks != null)
     protected override async Task OnInitializedAsync()
     {
         await Refresh();
-        Config = await ExHandlers.RunCheckTokenAsync(Repo.Resource.GetConfigForm);
-        Statuses = (await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync())).ToList();
+        Config = await Repo.Resource.GetConfigForm();
+        Statuses = (await Repo.Task.GetAsync()).ToList();
         _loading = false;
     }
 }

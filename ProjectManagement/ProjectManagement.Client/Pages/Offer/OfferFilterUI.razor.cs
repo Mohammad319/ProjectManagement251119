@@ -105,12 +105,12 @@ namespace ProjectManagement.Client.Pages.Offer
         {
             if (Post.Type == CalculationItemType.task)
             {
-                ResourceTypes = await ExHandlers.RunCheckTokenAsync(Repo.ResType.GetLocalAsync);
-                Statues = (await _httpRepository.GetAsync<List<ListOrderDTO>>(PMAPIConst.ResourceStatus + $"?id={null}")).ToList(); ;
+                ResourceTypes = await Repo.ResType.GetLocalAsync();
+                Statues = [.. (await _httpRepository.GetAsync<List<ListOrderDTO>>(PMAPIConst.ResourceStatus + $"?id={null}"))]; ;
             }
             else
             {
-                TGSStatuses = [.. (await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync()))];
+                TGSStatuses = [.. await Repo.Task.GetAsync()];
             }
         }
         protected async override Task OnInitializedAsync()
@@ -126,7 +126,7 @@ namespace ProjectManagement.Client.Pages.Offer
 
             };
             FoldersList = await Repo.Folder.GetByVisible(true);
-            Organisations = await ExHandlers.RunCheckTokenAsync(() => Repo.Org.GetVisibleOrIdAsync());
+            Organisations = await Repo.Org.GetVisibleOrIdAsync();
         }
     }
 }

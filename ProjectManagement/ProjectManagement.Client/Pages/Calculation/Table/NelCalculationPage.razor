@@ -201,7 +201,7 @@
             Type = TemporaryData.ItemsType!.Value
         };
 
-        bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Storage.CreateItem(post));
+        bool result = await Repo.Storage.CreateItem(post);
         if (result)
         {
             SelectedData.Reset();

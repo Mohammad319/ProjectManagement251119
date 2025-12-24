@@ -1,7 +1,6 @@
 ﻿using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
-using ProjectManagement.Client.Handless;
 using ProjectManagement.Client.Services;
 using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Folder;
@@ -27,6 +26,5 @@ namespace ProjectManagement.Client.Pages
         [Inject] protected CalculationService CalcService { get; set; } = default!;
         [Inject] protected FolderService Folder { get; set; } = default!;
         [Inject] protected IUnitOfWorkService UoWService { get; set; } = default!;
-        [Inject] protected IExceptionHandlers ExHandlers { get; set; } = default!;
     }
 }

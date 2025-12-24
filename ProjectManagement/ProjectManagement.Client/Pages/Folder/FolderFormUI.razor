@@ -44,7 +44,7 @@
         btnSubmitDisabled = true;
         if (FolderForm.Id != Guid.Empty)
         {
-            if (await ExHandlers.RunCheckTokenAsync(() => _folderRepo.UpdateAsync(FolderForm.Id, PostFolder)))
+            if (await _folderRepo.UpdateAsync(FolderForm.Id, PostFolder))
             {
                 FolderForm.Color = PostFolder.Color;
                 FolderForm.Name = PostFolder.Name;
@@ -56,7 +56,7 @@
         }
         else
         {
-            FolderForm.Id = await ExHandlers.RunCheckTokenAsync(() => _folderRepo.CreateAsync(PostFolder));
+            FolderForm.Id = await _folderRepo.CreateAsync(PostFolder);
             if (FolderForm.Id != Guid.Empty)
             {
                 FolderForm.Color = PostFolder.Color;

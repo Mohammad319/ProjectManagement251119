@@ -58,7 +58,7 @@
 
     protected async override Task OnInitializedAsync()
     {
-        Organisations = await ExHandlers.RunCheckTokenAsync(() => Repo.Org.GetVisibleOrIdAsync());
+        Organisations = await Repo.Org.GetVisibleOrIdAsync();
     }
 
     async Task SaveAsync()

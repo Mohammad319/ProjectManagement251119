@@ -124,7 +124,7 @@
     async Task SaveConfirm()
     {
         wait = true;
-        bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Task.CreateAsync(Sections, Calc.Id));
+        bool result = await Repo.Task.CreateAsync(Sections, Calc.Id);
         MHD.Notifications(ToastType.Add, result);
         workbook = null;
         wait = false;
@@ -161,7 +161,7 @@
 
     protected async override Task OnInitializedAsync()
     {
-        Statuses = await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync(null));
+        Statuses = await Repo.Task.GetAsync(null);
     }
 
     void Close() => Modal.Close();

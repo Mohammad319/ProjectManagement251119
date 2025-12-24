@@ -1,6 +1,5 @@
 ﻿using BlazorMHD.UI.Core.Services;
 using Microsoft.Extensions.Localization;
-using ProjectManagement.Client.Handless;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Pages.Calculation.Form;
 using ProjectManagement.Client.Pages.Calculation.Table;
@@ -30,7 +29,6 @@ namespace ProjectManagement.Client.Services.Calculation
         IStringLocalizer<ResourceLoc> Localizer,
         IStorageRepository Storage,
         MhdServices Mhd,
-        IExceptionHandlers ExHandlers,
         DialogService dialogService
     ) : IContextMenuBuilderService
     {
@@ -161,7 +159,7 @@ namespace ProjectManagement.Client.Services.Calculation
 
             if (item.Data.Type != TaskType.CodeName && (item.Tasks == null || item.Tasks.Count == 0))
             {
-                list.Add(NewMenuItem(Icons.NewResource,AppLoc[LocalizerConst.New, ResourceLoc.resource],() => OpenResourceForm(new() { TaskId = item.Id })
+                list.Add(NewMenuItem(Icons.NewResource, AppLoc[LocalizerConst.New, ResourceLoc.resource], () => OpenResourceForm(new() { TaskId = item.Id })
                 ));
 
                 list.Add(NewMenuItem(
@@ -363,7 +361,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 Type = TemporaryData.ItemsType!.Value
             };
 
-            bool result = await ExHandlers.RunCheckTokenAsync(() => Storage.CreateItem(post));
+            bool result = await Storage.CreateItem(post);
             if (result)
             {
                 SelectedData.Reset();

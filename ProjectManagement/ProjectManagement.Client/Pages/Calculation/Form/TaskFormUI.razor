@@ -263,7 +263,7 @@
         TaskUpdate.OnlyCodeText = TaskUpdate.Metadata.Type == TaskType.CodeName;
 
         if (Task.Id == 0) PostList.Add(TaskUpdate);
-        Statuses = (await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync())).ToList();
+        Statuses = (await Repo.Task.GetAsync()).ToList();
         if (Calc.Opportunities == null)
             Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
     }
@@ -295,7 +295,7 @@
             if (Task.Id > 0)
             {
                 CheckTaskType(TaskUpdate);
-                hasSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Task.UpdateAsync(TaskUpdate, Task.Id));
+                hasSuccess = await Repo.Task.UpdateAsync(TaskUpdate, Task.Id);
             }
             else
             {
@@ -309,7 +309,7 @@
                     maxOrder += 100;
                     item.Metadata.IsOH = Calc.OHFactors;
                 }
-                hasSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Task.CreateAsync(PostList, Calc.Id));
+                hasSuccess = await Repo.Task.CreateAsync(PostList, Calc.Id);
             }
             MHD.Notifications(Task.Id == 0 ? ToastType.Add : ToastType.Update, hasSuccess);
         }

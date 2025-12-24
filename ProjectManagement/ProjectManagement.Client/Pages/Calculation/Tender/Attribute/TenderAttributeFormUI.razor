@@ -80,11 +80,11 @@
             if (TenderAttribute.Id == 0)
             {
                 Post.TendersValues = TendersValues;
-                isSuccess = (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.CreateAsync(CalcId, Post))) > 0;
+                isSuccess = (await Repo.Tender.CreateAsync(CalcId, Post)) > 0;
             }
             else
             {
-                isSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.UpdateAsync(TenderAttribute.Id, CalcId, Post));
+                isSuccess = await Repo.Tender.UpdateAsync(TenderAttribute.Id, CalcId, Post);
             }
              MHD.Notifications(TenderAttribute.Id == 0 ? ToastType.Add : ToastType.Update, isSuccess);
             await Callback.InvokeAsync(isSuccess);

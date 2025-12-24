@@ -119,11 +119,11 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
         {
             if (Post.Type == CalculationItemType.task)
             {
-                Config = await ExHandlers.RunCheckTokenAsync(Repo.Resource.GetConfigForm);
+                Config = await Repo.Resource.GetConfigForm();
             }
             else
             {
-                TGSStatuses = [.. (await ExHandlers.RunCheckTokenAsync(() => Repo.Task.GetAsync()))];
+                TGSStatuses = [.. await Repo.Task.GetAsync()];
             }
         }
         protected async override Task OnInitializedAsync()

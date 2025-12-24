@@ -135,7 +135,7 @@
     [Parameter] public EventCallback CallBack { get; set; }
     async Task HandleSubmitAsync()
     {
-        projects = await ExHandlers.RunCheckTokenAsync(() => Repo.Project.FilterAsync(projectFilter));
+        projects = await Repo.Project.FilterAsync(projectFilter);
         IsLoading = false;
     }
 
@@ -160,7 +160,7 @@
     {
         IsLoading = true;
         @* Statuses = await Repo.Status.GetLocalAsync(); *@
-        Customers = await ExHandlers.RunCheckTokenAsync(() => Repo.Org.GetVisibleOrIdAsync());
+        Customers = await Repo.Org.GetVisibleOrIdAsync();
         IsLoading = false;
     }
 }

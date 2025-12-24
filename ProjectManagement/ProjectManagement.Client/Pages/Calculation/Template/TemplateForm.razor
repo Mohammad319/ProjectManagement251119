@@ -81,10 +81,10 @@
         {
             if (TempForm.Id > 0)
             {
-                refresh = await ExHandlers.RunCheckTokenAsync(() => Repo.Template.UpdateAsync(TemplateUpdate, TempForm.Id));
+                refresh = await Repo.Template.UpdateAsync(TemplateUpdate, TempForm.Id);
                 Calc.RefreshCalculation();
             }
-            else if (await ExHandlers.RunCheckTokenAsync(() => Repo.Template.CreateAsync(TemplateUpdate)) != null)
+            else if (await Repo.Template.CreateAsync(TemplateUpdate) != null)
                 refresh = true;
         }
         catch (Exception ex)

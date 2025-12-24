@@ -1,7 +1,5 @@
-﻿using ProjectManagement.Client.Handless;
-using ProjectManagement.Client.Helper;
+﻿using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
-using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Client.Shared.Calculation;
 using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
@@ -15,7 +13,6 @@ namespace ProjectManagement.Client.Services.Calculation
     public class CalculationService(
         ITemplateRepository templateRepo,
         ICalculationRepository calcRepo,
-        IExceptionHandlers exceptionHandlers,
         FolderState folderState, MhdServices mhdServices)
     {
         public bool ShowComments { get; set; } = true;
@@ -25,9 +22,7 @@ namespace ProjectManagement.Client.Services.Calculation
 
         private async Task<CalculationMVVM?> NewCalculation(int id)
         {
-            var calculation = await exceptionHandlers.RunCheckTokenAsync(
-                () => calcRepo.GetPageAsync(id, folderState.OtherDepartment)
-            );
+            var calculation = await calcRepo.GetPageAsync(id, folderState.OtherDepartment);
 
             if (calculation is null)
                 return null;
@@ -38,9 +33,7 @@ namespace ProjectManagement.Client.Services.Calculation
 
             if (calculation.TemplateId > 0)
             {
-                calculation.Template = await exceptionHandlers.RunCheckTokenAsync(
-                    () => templateRepo.GetByIdAsync(calculation.TemplateId.Value)
-                ) ?? new();
+                calculation.Template = await templateRepo.GetByIdAsync(calculation.TemplateId.Value) ?? new();
             }
             else
             {

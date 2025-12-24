@@ -139,7 +139,7 @@ RenderFragment RenderForm() => __builder =>
     void Refresh() => Calc.RefreshCalculation();
     protected async override Task OnInitializedAsync()
     {
-        List = await ExHandlers.RunCheckTokenAsync(() => Repo.Template.GetAsync());
+        List = await Repo.Template.GetAsync();
         if ( (List == null || !List.Any()))
         {
             MHD.MessageOk(ResourceApp.thereIsNoElements,
@@ -155,7 +155,7 @@ RenderFragment RenderForm() => __builder =>
     }
     async Task SetDefaultAsync(TemplateMVVM newTemplate)
     {
-        var tempNew = await ExHandlers.RunCheckTokenAsync(() => Repo.Template.SetDefaultAsync(Calc.Id, newTemplate.Id));
+        var tempNew = await Repo.Template.SetDefaultAsync(Calc.Id, newTemplate.Id);
         Calc.Template = tempNew != null ? tempNew : new TemplateMVVM();
         Calc.TemplateId = newTemplate.Id;
         Template.FreezCol();
@@ -167,7 +167,7 @@ RenderFragment RenderForm() => __builder =>
         btnSubmitDisabled = true;
         try
         {
-            if (await ExHandlers.RunCheckTokenAsync(() => Repo.Template.UpdateAsync(Form, Calc.TemplateId.Value)))
+            if (await Repo.Template.UpdateAsync(Form, Calc.TemplateId.Value))
                 Form.CopyPropertiesTo(Calc.Template);
             Refresh();
         }

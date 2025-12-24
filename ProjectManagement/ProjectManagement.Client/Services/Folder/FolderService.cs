@@ -1,6 +1,5 @@
 ﻿using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Handless;
 using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
@@ -12,10 +11,9 @@ namespace ProjectManagement.Client.Services.Folder
     public class FolderService(
         IFolderRepository folderRepo,
         MhdServices mhd,
-        IExceptionHandlers exHandlers,
         IProjectRepository projectRepo,
         ICalculationRepository calcRepo,
-        FolderState folderState,DialogService dialogService)
+        FolderState folderState, DialogService dialogService)
     {
         public FolderState State => folderState;
 
@@ -30,7 +28,7 @@ namespace ProjectManagement.Client.Services.Folder
 
         public async Task LoadFoldersAsync(Func<Task<List<FolderMVVM>>> loadFunc)
         {
-            var folders = await exHandlers.RunCheckTokenAsync(loadFunc) ?? [];
+            var folders = await loadFunc() ?? [];
             folderState.SetFolders(folders);
             _isLoaded = true;
         }
@@ -75,7 +73,7 @@ namespace ProjectManagement.Client.Services.Folder
 
         private async Task ConfirmRemoveAsync(FolderMVVM folder)
         {
-            bool result = await exHandlers.RunCheckTokenAsync(() => folderRepo.DeleteAsync(folder.Id));
+            bool result = await folderRepo.DeleteAsync(folder.Id);
             if (result)
             {
                 folderState.RemoveFolder(folder);
@@ -109,8 +107,8 @@ namespace ProjectManagement.Client.Services.Folder
             if (folder is null) return;
 
             folder.Projects ??= folderState.OtherDepartment
-                ? await exHandlers.RunCheckTokenAsync(() => projectRepo.GetOtherDepartmentAsync(folder.Id))
-                : await exHandlers.RunCheckTokenAsync(() => projectRepo.GetByFolderIdAsync(folder.Id));
+                ? await projectRepo.GetOtherDepartmentAsync(folder.Id)
+                : await projectRepo.GetByFolderIdAsync(folder.Id);
 
             if (folder.Projects != null)
                 folder.Projects = folder.Projects.OrderByDescending(x => x.Order).ToList();
@@ -130,8 +128,8 @@ namespace ProjectManagement.Client.Services.Folder
             if (project is null) return;
 
             project.Calculations ??= folderState.OtherDepartment
-                ? await exHandlers.RunCheckTokenAsync(() => calcRepo.GetShareCalculationsAsync(project.Id))
-                : await exHandlers.RunCheckTokenAsync(() => calcRepo.GetAsync(project.Id));
+                ? await calcRepo.GetShareCalculationsAsync(project.Id)
+                : await calcRepo.GetAsync(project.Id);
 
             if (project.Calculations != null)
                 project.Calculations = project.Calculations.OrderByDescending(x => x.Order).ToList();

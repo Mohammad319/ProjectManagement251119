@@ -89,21 +89,19 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 
             if (Project.Id != Guid.Empty)
             {
-                ProjectUpdate = await ExHandlers.RunCheckTokenAsync(() =>
-                    Repo.Project.GetToPostAsync(Project.Id))
-                    ?? new PostProjectDTO();
+                ProjectUpdate = await Repo.Project.GetToPostAsync(Project.Id)?? new PostProjectDTO();
             }
 
             ProjectUpdate.Notes ??= [];
             ProjectUpdate.Responsibles ??= [];
             ProjectUpdate.Contacts ??= [];
 
-            Config = await ExHandlers.RunCheckTokenAsync(() =>
+            Config = await
                 Repo.Project.GetConfig(
                     ProjectUpdate.ProcurementMethodsId,
                     ProjectUpdate.ContractId,
                     ProjectUpdate.CompensationId,
-                    ProjectUpdate.TypeId));
+                    ProjectUpdate.TypeId);
 
             IsLoading = false;
         }
@@ -121,12 +119,11 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             bool result;
 
             if (Project.Id != Guid.Empty)
-                result = await ExHandlers.RunCheckTokenAsync(() =>
-                    Repo.Project.UpdateAsync(Project.Id, entity));
+                result = await
+                    Repo.Project.UpdateAsync(Project.Id, entity);
             else
             {
-                resultInfo.Item2.Id = await ExHandlers.RunCheckTokenAsync(() =>
-                    Repo.Project.CreateAsync(entity));
+                resultInfo.Item2.Id = await Repo.Project.CreateAsync(entity);
 
                 result = resultInfo.Item2.Id != Guid.Empty;
             }

@@ -1,5 +1,4 @@
-﻿using ProjectManagement.Client.Handless;
-using ProjectManagement.Client.Services;
+﻿using ProjectManagement.Client.Services;
 using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Services.Folder;
@@ -17,8 +16,6 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<TaskService>();
             services.AddScoped<MhdServices>();
             services.AddScoped<IContextMenuBuilderService, ContextMenuBuilderService>();
-            services.AddScoped<Handless.ILogger, Logger>();
-            services.AddScoped<IExceptionHandlers, ExceptionHandlers>();
             services.AddScoped<IUnitOfWorkService, UnitOfWorkService>();
 
 

@@ -91,4 +91,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Handless\" />
+  </ItemGroup>
+
 </Project>

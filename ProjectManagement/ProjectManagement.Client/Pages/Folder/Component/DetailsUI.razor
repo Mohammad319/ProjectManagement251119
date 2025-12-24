@@ -22,6 +22,6 @@
 
     protected async override Task OnInitializedAsync()
     {
-        FolderD = await ExHandlers.RunCheckTokenAsync(() => Repo.Folder.DetailsAsync(Id));
+        FolderD = await Repo.Folder.DetailsAsync(Id);
     }
 }

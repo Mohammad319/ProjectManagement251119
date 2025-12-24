@@ -67,7 +67,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (user.IsInRole(PMRolesConst.Tenant.Admin))
             {
                 Admin = true;
-                Folder.State.SetDepartments(await ExHandlers.RunCheckTokenAsync(() => Repo.Departments.GetDepartmentsAsListAsync()));
+                Folder.State.SetDepartments(await Repo.Departments.GetDepartmentsAsListAsync());
             }
             else
             {
@@ -83,7 +83,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (Folder.State.OtherDepartment)
             {
                 Folder.State.SetDepartments(
-                    await ExHandlers.RunCheckTokenAsync(() => Repo.Departments.GetDepartmentsAsListAsync()));
+                    await Repo.Departments.GetDepartmentsAsListAsync());
             }
             else
             {

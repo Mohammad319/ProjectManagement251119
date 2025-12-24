@@ -330,8 +330,7 @@
 
     async Task ConfirmRemoveAsync(ListCalculationMVVM calculation)
     {
-        bool result = await ExHandlers.RunCheckTokenAsync(
-            () => Repo.Calculation.DeleteAsync(calculation.Id));
+        bool result = await Repo.Calculation.DeleteAsync(calculation.Id);
 
         if (result)
         {

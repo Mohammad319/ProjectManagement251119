@@ -80,11 +80,11 @@
             PropertyCopier.CopyPropertiesTo(Post, Opportunity);
 
             if (Opportunity.Id == 0){
-                bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Opportunity.CreateAsync(Post, Calc.Id)) > 0;
+                bool result = await Repo.Opportunity.CreateAsync(Post, Calc.Id) > 0;
                  MHD.Notifications(ToastType.Add, result);
             }
             else {
-                bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Opportunity.UpdateAsync(Post, Opportunity.Id));
+                bool result = await Repo.Opportunity.UpdateAsync(Post, Opportunity.Id);
                  MHD.Notifications(ToastType.Update, result);
             }
         }

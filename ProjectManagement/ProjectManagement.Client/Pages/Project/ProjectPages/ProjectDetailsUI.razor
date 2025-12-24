@@ -23,6 +23,6 @@
 
     protected async override Task OnInitializedAsync()
     {
-        ProjectDetails = await ExHandlers.RunCheckTokenAsync(() => Repo.Project.DetailsAsync(ProjectId));
+        ProjectDetails = await Repo.Project.DetailsAsync(ProjectId);
     }
 }

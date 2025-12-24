@@ -199,7 +199,7 @@ else
 
     async Task ConfirmRemoveAsync(TenderAttributeListDTO tender)
     {
-        if (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.DeleteAttributeAsync(tender.Id, Calculation.Id)))
+        if (await Repo.Tender.DeleteAttributeAsync(tender.Id, Calculation.Id))
         {
             result?.Attributes.Remove(tender);
             StateHasChanged();
@@ -216,7 +216,7 @@ else
 
     async Task ConfirmRemoveAsync(TenderListDTO tender)
     {
-        if (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.DeleteAsync(tender.Id, Calculation.Id)))
+        if (await Repo.Tender.DeleteAsync(tender.Id, Calculation.Id))
         {
             result?.Tenders.Remove(tender);
             StateHasChanged();

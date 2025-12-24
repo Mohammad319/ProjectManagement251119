@@ -1,7 +1,6 @@
 ﻿
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Handless;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
@@ -11,17 +10,12 @@ using ProjectManagement.Client.Shared.Repositories.Offer;
 using ProjectManagement.Shared.DTO.Hub;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.Project;
-using ProjectManagement.Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 {
     public class ResourceService(IResourceRepository Repo, IStorageRepository Storage,
-        FolderState _folderState,MhdServices Mhd, IExceptionHandlers ExHandlers, ContextMenuService ContextMenuService,
-        IContextMenuBuilderService context,IOfferRepository Offer,DialogService dialogService) : IDisposable
+        FolderState _folderState, MhdServices Mhd, ContextMenuService ContextMenuService,
+        IContextMenuBuilderService context, IOfferRepository Offer, DialogService dialogService) : IDisposable
     {
         public async Task HandleOfferAsync(ResourceListMVVM res)
         {
@@ -54,8 +48,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 OldCalcID = _folderState.Calculation.Id,
                 IsOH = _folderState.Calculation.OHFactors
             };
-            bool result = await 
-                ExHandlers.RunCheckTokenAsync(() => Storage.CreateItem(post));
+            bool result = await Storage.CreateItem(post);
             Mhd.Notifications(ToastType.Delete, result);
         }
 
@@ -134,7 +127,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                     var list = obj.FromJsonWeb<HubDataDto>();
                     var zz = list.GetData<List<ResourceListMVVM>>();
                     foreach (var res in zz)
-                    _folderState.Calculation.Add(zz);
+                        _folderState.Calculation.Add(zz);
                 }
                 catch (Exception ex)
                 {
@@ -168,7 +161,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         }
         public async Task ConfirmedRemoveAsync(List<int> items)
         {
-            bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.DeleteAsync(_folderState.Calculation.Id, items));
+            bool result = await Repo.DeleteAsync(_folderState.Calculation.Id, items);
             SelectedData.Reset();
             Mhd.Notifications(ToastType.Delete, result);
             if (result) dialogService.Close();

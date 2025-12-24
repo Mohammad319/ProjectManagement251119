@@ -155,15 +155,15 @@
     {
         DepartmentSelected = department;
         Users = null;
-        Users = await ExHandlers.RunCheckTokenAsync(() => Repo.Departments.GetUsersAsListAsync(department.Id));
+        Users = await Repo.Departments.GetUsersAsListAsync(department.Id);
         page = 1;
     }
     protected async override Task OnInitializedAsync()
     {
-        Departments = await ExHandlers.RunCheckTokenAsync(() => Repo.Departments.GetDepartmentsAsListAsync());
+        Departments = await Repo.Departments.GetDepartmentsAsListAsync();
         int UserDepartment = await GetUserDepartment();
         Departments.RemoveAll(x => x.Id == UserDepartment);
-        list = await ExHandlers.RunCheckTokenAsync(() => Repo.ShareCalc.GetAsync(ListCalculation.Id));
+        list = await Repo.ShareCalc.GetAsync(ListCalculation.Id);
     }
     void Remove(ListShareCalcDTO project)
     {
@@ -172,7 +172,7 @@
 
     async Task ConfirmRemoveAsync(ListShareCalcDTO project)
     {
-        bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.ShareCalc.RemoveAsync(project.Id));
+        bool result = await Repo.ShareCalc.RemoveAsync(project.Id);
         if (result)
         {
             list.Remove(project);

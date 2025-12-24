@@ -73,7 +73,7 @@ else
         int? id = null;
         if (int.TryParse(idstr, out int value))
             id = value;
-        List = await ExHandlers.RunCheckTokenAsync(() =>Repo.Template.GetAsync(id));
+        List = await Repo.Template.GetAsync(id);
     }
     protected async override Task OnInitializedAsync()
     {
@@ -101,7 +101,7 @@ else
     {
         Loading = true;
         if (refrsh)
-            List = await ExHandlers.RunCheckTokenAsync(() =>Repo.Template.GetAsync(null));
+            List = await Repo.Template.GetAsync(null);
         
         Form = null;
         Loading = false;

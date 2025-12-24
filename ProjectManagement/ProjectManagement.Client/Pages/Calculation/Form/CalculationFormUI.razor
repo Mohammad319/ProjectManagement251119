@@ -412,9 +412,7 @@
     {
         if (Calculation.Id > 0)
         {
-            CalculationUpdate = await ExHandlers.RunCheckTokenAsync(
-                () => Repo.Calculation.GetPostAsync(Calculation.Id)
-            ) ?? new CalculationPostDTO();
+            CalculationUpdate = await Repo.Calculation.GetPostAsync(Calculation.Id) ?? new CalculationPostDTO();
         }
 
         CalculationUpdate.Notes ??= [];
@@ -422,14 +420,13 @@
         CalculationUpdate.Contacts ??= [];
         CalculationUpdate.Income ??= [];
 
-        Config = await ExHandlers.RunCheckTokenAsync(
-            () => Repo.Calculation.GetConfig(
+        Config = await Repo.Calculation.GetConfig(
                 CalculationUpdate.ProcurementMethodsId,
                 CalculationUpdate.ContractId,
                 CalculationUpdate.CompensationId,
                 CalculationUpdate.TypeId,
                 CalculationUpdate.StatusId
-            ));
+            );
     }
 
     async Task HandleSubmitAsync()

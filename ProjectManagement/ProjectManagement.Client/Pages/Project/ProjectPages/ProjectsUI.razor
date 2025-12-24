@@ -208,9 +208,7 @@
         if (refresh && Folder.State.FolderSelected is not null)
         {
             Folder.State.FolderSelected.Projects =
-                await ExHandlers.RunCheckTokenAsync(
-                    () => Repo.Project.GetByFolderIdAsync(Folder.State.FolderSelected.Id, IaVisible)
-                );
+                await Repo.Project.GetByFolderIdAsync(Folder.State.FolderSelected.Id, IaVisible);
 
             if (Folder.State.FolderSelected.Projects != null)
                 Folder.State.FolderSelected.Projects =
@@ -271,7 +269,7 @@
 
     async Task ConfirmRemoveAsync(ListProjectMVVM project)
     {
-        bool result = await ExHandlers.RunCheckTokenAsync(() => Repo.Project.DeleteAsync(project.Id));
+        bool result = await Repo.Project.DeleteAsync(project.Id);
         if (result)
         {
             Folder.State.FolderSelected!.Projects.Remove(project);

@@ -120,7 +120,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                     ResourceUpdate.ResType = ResTypeSelected.Type;
                 if (Resource.Id > 0)
                 {
-                    hasSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Resource.UpdateAsync(ResourceUpdate, Resource.Id));
+                    hasSuccess = await Repo.Resource.UpdateAsync(ResourceUpdate, Resource.Id);
                 }
                 else if (Resource.Id == 0)
                 {
@@ -132,7 +132,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                         item.Order = maxOrder;
                         maxOrder += 100;
                     }
-                    hasSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Resource.CreateAsync([ResourceUpdate], Resource.TaskId));
+                    hasSuccess = await Repo.Resource.CreateAsync([ResourceUpdate], Resource.TaskId);
                 }
                 MHD.Notifications(Resource.Id == 0 ? ToastType.Add : ToastType.Update, hasSuccess);
             }
@@ -152,7 +152,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             messageStore = new(editContext);
             if (Calc.Opportunities == null)
                 Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
-            Config = await ExHandlers.RunCheckTokenAsync(Repo.Resource.GetConfigForm);
+            Config = await Repo.Resource.GetConfigForm();
             PropertyCopier.CopyPropertiesTo(Resource, ResourceUpdate);
             ResourceUpdate.Data = Resource.Data;
             if (Resource.Id > 0)

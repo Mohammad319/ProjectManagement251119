@@ -79,7 +79,7 @@
             {
                 AttributesValue.Add(item.Id, 0);
             }
-        Companies = await ExHandlers.RunCheckTokenAsync(() => Repo.Org.GetVisibleOrIdAsync());
+        Companies = await Repo.Org.GetVisibleOrIdAsync();
         if (TenderList.Id > 0)
         {
             var t = await Repo.Tender.DetailsAsync(TenderList.Id, CalcId);
@@ -102,12 +102,11 @@
             if (TenderList.CompanyId == 0)
             {
                 Income.AttributesValue = AttributesValue;
-                isSuccess = (await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.CreateAsync(
-                    CalcId, CompanyId, Income))) > 0;
+                isSuccess = (await Repo.Tender.CreateAsync(CalcId, CompanyId, Income)) > 0;
             }
             else
             {
-                isSuccess = await ExHandlers.RunCheckTokenAsync(() => Repo.Tender.UpdateAsync(0, CalcId, Income));
+                isSuccess = await Repo.Tender.UpdateAsync(0, CalcId, Income);
             }
              MHD.Notifications(TenderList.CompanyId == 0 ? ToastType.Add : ToastType.Update, isSuccess);
             await Callback.InvokeAsync(isSuccess);

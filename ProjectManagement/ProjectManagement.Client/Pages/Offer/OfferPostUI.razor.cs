@@ -26,7 +26,7 @@ namespace ProjectManagement.Client.Pages.Offer
         {
             PropertyCopier.CopyPropertiesTo(Offer, PostOffer);
             PostOffer.ResourceId = Resource.Id;
-            Organisations = await ExHandlers.RunCheckTokenAsync(() => Repo.Org.GetVisibleOrIdAsync(Offer.OrganisationId.HasValue ? Offer.OrganisationId.Value : 0));
+            Organisations = await Repo.Org.GetVisibleOrIdAsync(Offer.OrganisationId.HasValue ? Offer.OrganisationId.Value : 0);
         }
         void Change(ListOfferMVVM offer)
         {
@@ -44,7 +44,7 @@ namespace ProjectManagement.Client.Pages.Offer
             {
                 ListOfferMVVM offer = new();
                 Change(offer);
-                offer.Id = await ExHandlers.RunCheckTokenAsync(() => Repo.Offer.AddAsync(PostOffer));
+                offer.Id = await Repo.Offer.AddAsync(PostOffer);
                 offer.Date = DateTime.Now;
                 MHD.Notifications(ToastType.Add, offer.Id > 0);
                 Modal.Close();
@@ -52,7 +52,7 @@ namespace ProjectManagement.Client.Pages.Offer
             else
             {
                 Change(Offer);
-                bool res = await ExHandlers.RunCheckTokenAsync(() => Repo.Offer.UpdateAsync(Offer.Id, PostOffer));
+                bool res = await Repo.Offer.UpdateAsync(Offer.Id, PostOffer);
                 MHD.Notifications(ToastType.Update, res);
                 Modal.Close();
             }
