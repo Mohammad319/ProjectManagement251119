@@ -357,4 +357,10 @@
   <data name="select" xml:space="preserve">
     <value>Select</value>
   </data>
+  <data name="qualitySystems" xml:space="preserve">
+    <value>Quality systems</value>
+  </data>
+  <data name="environmentalSystems" xml:space="preserve">
+    <value>Environmental systems</value>
+  </data>
 </root>

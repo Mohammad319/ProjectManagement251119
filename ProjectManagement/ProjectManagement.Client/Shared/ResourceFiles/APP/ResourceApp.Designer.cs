@@ -313,6 +313,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Environmental systems.
+        /// </summary>
+        public static string environmentalSystems {
+            get {
+                return ResourceManager.GetString("environmentalSystems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error.
         /// </summary>
         public static string error {
@@ -579,6 +588,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.APP {
         public static string print {
             get {
                 return ResourceManager.GetString("print", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quality systems.
+        /// </summary>
+        public static string qualitySystems {
+            get {
+                return ResourceManager.GetString("qualitySystems", resourceCulture);
             }
         }
         

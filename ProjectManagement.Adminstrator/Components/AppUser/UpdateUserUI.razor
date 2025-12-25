@@ -128,7 +128,7 @@
     async Task<int> GetUserTenant()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var claim = authState.User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.Tentan);
+        var claim = authState.User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.Tenant);
         if (claim == null) return 0;
         return Convert.ToInt32(claim.Value);
     }

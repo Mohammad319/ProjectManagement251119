@@ -26,7 +26,7 @@ namespace ProjectManagement.SignalR
         public override Task OnConnectedAsync()
         {
             var isAuth = Context.User?.Identity?.IsAuthenticated == true;
-            var tenant = Context.User?.FindFirst(PMClaimsConst.Tentan)?.Value;
+            var tenant = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value;
             Console.WriteLine($"[Hub] Connected. IsAuth={isAuth}, TenantClaim={tenant ?? "null"}");
             return base.OnConnectedAsync();
         }

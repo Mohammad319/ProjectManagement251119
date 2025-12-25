@@ -16,7 +16,7 @@ public sealed class TenantContextMiddleware(RequestDelegate next)
 
         if (user?.Identity?.IsAuthenticated == true)
         {
-            tenantContext.TenantId = GetIntClaim(user, PMClaimsConst.Tentan);
+            tenantContext.TenantId = GetIntClaim(user, PMClaimsConst.Tenant);
             tenantContext.UserId = GetNullableIntClaim(user, PMClaimsConst.UserId);
             tenantContext.DepartmentId = GetNullableIntClaim(user, PMClaimsConst.DepartmentId);
         }

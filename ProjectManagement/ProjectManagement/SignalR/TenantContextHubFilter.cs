@@ -34,7 +34,7 @@ public sealed class TenantContextHubFilter : IHubFilter
         if (tenant.TenantId > 0) return;
         if (user?.Identity?.IsAuthenticated != true) return;
 
-        tenant.TenantId = GetIntClaim(user, PMClaimsConst.Tentan);
+        tenant.TenantId = GetIntClaim(user, PMClaimsConst.Tenant);
         tenant.UserId = GetNullableIntClaim(user, PMClaimsConst.UserId);
         tenant.DepartmentId = GetNullableIntClaim(user, PMClaimsConst.DepartmentId);
     }

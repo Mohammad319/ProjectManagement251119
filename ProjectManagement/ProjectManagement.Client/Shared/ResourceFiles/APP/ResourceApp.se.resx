@@ -357,4 +357,10 @@
   <data name="select" xml:space="preserve">
     <value>välja</value>
   </data>
+  <data name="qualitySystems" xml:space="preserve">
+    <value>Kvalitetssystem</value>
+  </data>
+  <data name="environmentalSystems" xml:space="preserve">
+    <value>Miljösystem</value>
+  </data>
 </root>

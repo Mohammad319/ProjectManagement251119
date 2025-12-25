@@ -13,7 +13,7 @@ namespace ProjectManagement.Server.Controllers
     {
         protected int? GetTenantId()
         {
-            var tenantIdClaim = User?.FindFirst(PMClaimsConst.Tentan)?.Value;
+            var tenantIdClaim = User?.FindFirst(PMClaimsConst.Tenant)?.Value;
             if (int.TryParse(tenantIdClaim, out var tenantId))
             {
                 return tenantId;

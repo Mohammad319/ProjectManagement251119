@@ -3,15 +3,11 @@ using Persistence.Factory;
 using Persistence.Interceptors;
 using ProjectManagement.Services;
 
-namespace ProjectManagement.Middleware;
+namespace ProjectManagement.Factories;
 
-public sealed class DbContextFactory(
-    TenantContext tenantContext,
-    ITenantConnectionStringProvider connProvider,
-    ITenantDbContextOptionsCache optionsCache,
-    TenantAuditSaveChangesInterceptor interceptor,
-    ITenantContextResolver resolver)
-    : IDbContextFactory
+public sealed class DbContextFactory(TenantContext tenantContext,ITenantConnectionStringProvider connProvider,
+    ITenantDbContextOptionsCache optionsCache,TenantAuditSaveChangesInterceptor interceptor,
+    ITenantContextResolver resolver) : IDbContextFactory
 {
     public async Task<ShardingSingleDbContext> CreateDbContextAsync(CancellationToken ct = default)
     {
@@ -24,13 +20,15 @@ public sealed class DbContextFactory(
         var conn = await connProvider.GetAsync(tenantContext.TenantId, ct);
         var options = optionsCache.GetOrCreate(tenantContext.TenantId, conn, interceptor);
 
-        return new ShardingSingleDbContext(options)
+        var db = new ShardingSingleDbContext(options)
         {
             TenantId = tenantContext.TenantId,
             CurrentUserId = tenantContext.UserId,
         };
+
+        return db;
     }
 
     public ShardingSingleDbContext CreateDbContext()
-        => CreateDbContextAsync().GetAwaiter().GetResult();
+    => Task.Run(() => CreateDbContextAsync(CancellationToken.None)).GetAwaiter().GetResult();
 }

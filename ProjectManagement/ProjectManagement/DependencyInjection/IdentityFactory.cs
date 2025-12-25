@@ -3,8 +3,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Components.Account;
+using ProjectManagement.Middleware;
 
-namespace ProjectManagement.Middleware.Identity;
+namespace ProjectManagement.DependencyInjection;
 
 public static class IdentityFactory
 {

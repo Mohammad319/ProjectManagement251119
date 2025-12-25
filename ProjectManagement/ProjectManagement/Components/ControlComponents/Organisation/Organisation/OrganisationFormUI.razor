@@ -108,7 +108,7 @@
                         <button type="button"
                                 class="@CssClasses.Btn.Solid.Primary mt-6"
                                 @onclick="() => PostCompany.Notes.Add(string.Empty)">
-                            New Note
+                            @AppLoc[LocalizerConst.New, CalcResource.note];
                         </button>
                     </div>
                 </div>
@@ -161,7 +161,7 @@
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">Quality systems</label>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.qualitySystems</label>
                         <InputSelect @bind-Value="PostCompany.QualitySystems" class="@CssClasses.Input.Text">
                             <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
                             <option value="@YesNoUnkown.no">@ResourceApp.no</option>
@@ -171,7 +171,7 @@
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">Environmental systems</label>
+                        <label class="@CssClasses.Form.Label">@ResourceApp.environmentalSystems</label>
                         <InputSelect @bind-Value="PostCompany.EnvironmentalSystems" class="@CssClasses.Input.Text">
                             <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
                             <option value="@YesNoUnkown.no">@ResourceApp.no</option>

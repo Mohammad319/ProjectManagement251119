@@ -68,14 +68,15 @@ else
 
 
 @code {
-    List<TemplateListDTO>? List;
-    TemplateModelDTO? Form;
+    List<TemplateListDTO>? List = default;
+    TemplateModelDTO Form= default!;
     bool Loading = true;
-    [CascadingParameter] private Task<AuthenticationState> _authentication { get; set; }
+    [CascadingParameter] private Task<AuthenticationState> _authentication { get; set; } = default!;
     List<ListDTO>? Departments;
     async Task FormUI(int id) {
-        Form = await MicroBus.Send(new GetTemplateByIdQuery(id,null));
-        //await Repo.Templates.GetByIdAsync(id);
+        var formm = await MicroBus.Send(new GetTemplateByIdQuery(id,null));
+        if (formm!=null)
+            Form = formm;
         Form.Id = id;
     }
     async Task GetAsync(string idstr)
@@ -90,7 +91,7 @@ else
         var role = (await _authentication).User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role);
         if (role.Value == PMRolesConst.Tenant.Admin)
             Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
-        await GetAsync(null);
+        await GetAsync(string.Empty);
         Loading = false;
         StateHasChanged();
     }
@@ -110,7 +111,7 @@ else
 
         if (await MicroBus.Send(new DeleteTemplateCommand(st.Id, departmentId)))
         {
-            List.Remove(st);
+            List?.Remove(st);
             StateHasChanged();
             MHD.Notifications(ToastType.Delete, true);
         }
@@ -126,7 +127,7 @@ else
         if (refrsh)
             List = await MicroBus.Send(new GetTemplatesByUserQuery(null));
         
-        Form = null;
+        Form = default!;
         Loading = false;
     }
     }

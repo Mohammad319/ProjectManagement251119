@@ -35,14 +35,9 @@
 
     public class PMClaimsConst
     {
-        public const string Tentan = "tenant";
+        public const string Tenant = "tenant";
         public const string UserId = "UserId";
         public const string DepartmentId = "DepartmentId";
-        public const string Full_name = "full_name";
-
-        
-
-
-
+        public const string FullName = "full_name";
     }
 }

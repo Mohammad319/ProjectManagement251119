@@ -3,15 +3,8 @@ using ProjectManagement.Components.Pages;
 
 namespace ProjectManagement.Services
 {
-    public class AppErrorDialog
+    public class AppErrorDialog(DialogService dialog)
     {
-        private readonly DialogService _dialog;
-
-        public AppErrorDialog(DialogService dialog)
-        {
-            _dialog = dialog;
-        }
-
         public void Show(string title, string message, string? traceId = null)
         {
             var parameters = new Dictionary<string, object?>
@@ -22,7 +15,7 @@ namespace ProjectManagement.Services
             };
 
             // نفس أسلوبك تمامًا
-            _dialog.ShowComponent<ErrorDialogUI>(
+            dialog.ShowComponent<ErrorDialogUI>(
                 title,
                 parameters!,
                 DialogSize.Medium

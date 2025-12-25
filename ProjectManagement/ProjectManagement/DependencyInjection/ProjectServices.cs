@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Server.Circuits;
+﻿using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.SignalR;
 using Persistence.Context;
 using Persistence.Factory;
 using Persistence.Interceptors;
 using ProjectManagement.BlazorServer;
 using ProjectManagement.Client.DependencyInjection;
-using ProjectManagement.Middleware;
+using ProjectManagement.Factories;
 using ProjectManagement.Services;
 using ProjectManagement.SignalR;
 
@@ -72,7 +71,10 @@ public static class ServiceRegistration
 
         // Factory + tenant DbContext
         services.AddScoped<IDbContextFactory, DbContextFactory>();
-        services.AddScoped(sp => sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
+        //services.AddScoped(sp => sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
+        services.AddScoped(sp =>Task.Run(() => sp.GetRequiredService<IDbContextFactory>()
+        .CreateDbContextAsync(CancellationToken.None)).GetAwaiter().GetResult()
+);
 
         // App services
         services.AddScoped<INotificationHub, SendHubNotification>();

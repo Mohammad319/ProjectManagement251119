@@ -28,7 +28,7 @@ public sealed class TenantContextResolver(
         if (user?.Identity?.IsAuthenticated != true)
             return;
 
-        tenantContext.TenantId = GetIntClaim(user, PMClaimsConst.Tentan);
+        tenantContext.TenantId = GetIntClaim(user, PMClaimsConst.Tenant);
         tenantContext.UserId = GetNullableIntClaim(user, PMClaimsConst.UserId);
         tenantContext.DepartmentId = GetNullableIntClaim(user, PMClaimsConst.DepartmentId);
     }

@@ -13,7 +13,6 @@ using ProjectManagement.Components;
 using ProjectManagement.Components.Account;
 using ProjectManagement.DependencyInjection;
 using ProjectManagement.Middleware;
-using ProjectManagement.Middleware.Identity;
 using ProjectManagement.Services;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.SignalR;
@@ -216,7 +215,7 @@ app.UseSerilogRequestLogging(opts =>
         var userId = http.User.FindFirst(PMClaimsConst.UserId)?.Value;
         if (!string.IsNullOrWhiteSpace(userId)) ctx.Set("UserId", userId);
 
-        var tenantId = http.User.FindFirst(PMClaimsConst.Tentan)?.Value;
+        var tenantId = http.User.FindFirst(PMClaimsConst.Tenant)?.Value;
         if (!string.IsNullOrWhiteSpace(tenantId)) ctx.Set("TenantID", tenantId);
     };
 });

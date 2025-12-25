@@ -1,7 +1,6 @@
 ﻿using Application.Feature.Organisation.OrganisationCategory;
 using Domain.DTO.Category;
 using Domain.Entities.Organisation;
-using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Organisation;
 using System.ComponentModel.DataAnnotations;

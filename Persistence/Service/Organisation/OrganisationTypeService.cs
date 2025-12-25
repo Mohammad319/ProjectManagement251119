@@ -1,20 +1,19 @@
 ﻿using Application.Feature.Organisation.OrganisationType;
 using Domain.DTO.Category;
 using Domain.Entities.Organisation;
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Persistence.Service.Organisation
 {
-    public sealed class OrganisationTypeService(ShardingSingleDbContext db) : IOrganisationTypeService
+    public sealed class OrganisationTypeService(Factory.IDbContextFactory dbFactory) : IOrganisationTypeService
     {
-
         // ---------------- Commands ----------------
 
         public async Task<int> CreateAsync(PostOrganisationTypeDTO dto, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
             var entity = OrganisationTypeEntity.Create(dto);
             db.OrganisationType.Add(entity);
             await db.SaveChangesAsync(ct);
@@ -23,6 +22,7 @@ namespace Persistence.Service.Organisation
 
         public async Task<bool> UpdateAsync(int id, PostOrganisationTypeDTO dto, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
             var entity = await db.OrganisationType.FindAsync(id, ct);
             if (entity == null) return false;
 
@@ -33,6 +33,8 @@ namespace Persistence.Service.Organisation
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
             var entity = await db.OrganisationType
                 .Include(x => x.Organisations)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
@@ -49,9 +51,11 @@ namespace Persistence.Service.Organisation
 
         // ---------------- Queries ----------------
 
-        public Task<List<ListOrganisationTypeDTO>> GetAllAsync(bool isVisible, CancellationToken ct = default)
+        public async Task<List<ListOrganisationTypeDTO>> GetAllAsync(bool isVisible, CancellationToken ct = default)
         {
-            return db.OrganisationType
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+
+            return await db.OrganisationType
                 .AsNoTracking()
                 .Where(x => x.IsVisible == isVisible)
                 .OrderBy(x => x.Name)
@@ -64,8 +68,9 @@ namespace Persistence.Service.Organisation
                 .ToListAsync(ct);
         }
 
-        public Task<List<ListDTO>> GetAsListAsync(int? typeId, int? organisationId, CancellationToken ct = default)
+        public async Task<List<ListDTO>> GetAsListAsync(int? typeId, int? organisationId, CancellationToken ct = default)
         {
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
             var q = db.OrganisationType.AsNoTracking();
 
             if (typeId.HasValue)
@@ -77,7 +82,7 @@ namespace Persistence.Service.Organisation
             if (!typeId.HasValue && !organisationId.HasValue)
                 q = q.Where(x => x.IsVisible);
 
-            return q
+            return await q
                 .OrderBy(x => x.Name)
                 .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
                 .ToListAsync(ct);
