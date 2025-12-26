@@ -19,6 +19,11 @@ builder.Services.AddScoped<IErrorDialog, UiErrorDialog>();
 builder.Services.AddScoped<IClientLogger, ClientLogger>();
 
 //// ✅ HttpClientFactory + named client Api
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
+    Timeout = TimeSpan.FromSeconds(30)
+});
 
 builder.Services.AddHttpClient("Api", client =>
 {
