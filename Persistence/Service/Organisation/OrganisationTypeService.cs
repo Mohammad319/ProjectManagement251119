@@ -1,12 +1,13 @@
 ﻿using Application.Feature.Organisation.OrganisationType;
 using Domain.DTO.Category;
 using Domain.Entities.Organisation;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Persistence.Service.Organisation
 {
-    public sealed class OrganisationTypeService(Factory.IDbContextFactory dbFactory) : IOrganisationTypeService
+    public sealed class OrganisationTypeService(IDbContextFactoryTenant dbFactory) : IOrganisationTypeService
     {
         // ---------------- Commands ----------------
 

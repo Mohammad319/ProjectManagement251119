@@ -1,15 +1,18 @@
 ﻿using Application.Services.CalculationItems.Tender;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems.Tender
 {
-    public sealed class TenderAttributeQueryService(ShardingSingleDbContext db) : ITenderAttributeQueryService
+    public sealed class TenderAttributeQueryService(IDbContextFactoryTenant dbFactory) : ITenderAttributeQueryService
     {
         public async Task<List<TenderAttributeListDTO>> GetAttributesAsync(
             int calculationId,
             CancellationToken ct = default)
         {
-            return await db.AttributeNameTender
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            return await context.AttributeNameTender
                 .Where(x => x.CalculationId == calculationId)
                 .Select(x => new TenderAttributeListDTO
                 {

@@ -1,15 +1,18 @@
 ﻿using Application.Services.CalculationItems.Tender;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems.Tender
 {
-    public sealed class TenderQueryService(ShardingSingleDbContext db) : ITenderQueryService
+    public sealed class TenderQueryService(IDbContextFactoryTenant dbFactory) : ITenderQueryService
     {
         public async Task<List<TenderListDTO>> GetTenderListAsync(
             int calculationId,
             CancellationToken ct = default)
         {
-            return await db.Tenders
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            return await context.Tenders
                 .Where(x => x.CalculationId == calculationId)
                 .Select(x => new TenderListDTO
                 {
@@ -25,7 +28,9 @@ namespace Persistence.Service.CalculationItems.Tender
             int tenderId, int CalculationId,
             CancellationToken ct = default)
         {
-            return await db.Tenders.Where(x => x.Id == tenderId && x.CalculationId == CalculationId).Select(
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            return await context.Tenders.Where(x => x.Id == tenderId && x.CalculationId == CalculationId).Select(
                 x => new TenderDetailsDTO()
                 {
                     Id = x.Id,

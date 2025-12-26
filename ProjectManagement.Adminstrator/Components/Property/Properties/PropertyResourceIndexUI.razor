@@ -12,14 +12,14 @@
 <button @onclick="() => UpdateForm()" class="@CsS.Btn.Outline.Success" title="إضافة" aria-label="إضافة">
                     @((MarkupString)Icons.Plus)
                 </button>
-<Grid TItem="ResourceAttribute" Items="PropertiesList?.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
+<MhdTable TItem="ResourceAttribute" Items="PropertiesList?.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH"></th>
         <th style="width:200px;" class="@CssClasses.Table.TH">@CalcResource.code</th>
         <th class="@CssClasses.Table.TH">@CalcResource.name</th>
     </HeaderTemplate>
     <ChildContent>
-        <Column>
+        <MhdTableColumn>
             <Template Context="status">
                 <div class="@CssClasses.Layout.FlexItemsCenter">
                     <button @onclick="() => UpdateForm(status)" class="@CsS.Btn.Outline.Warning"
@@ -33,17 +33,17 @@
                     </button>
                 </div>
             </Template>
-        </Column>
-        <Column Title="" ValueSelector="@(c => "p" + c.Id)"></Column>
-        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+        </MhdTableColumn>
+        <MhdTableColumn Title="" ValueSelector="@(c => "p" + c.Id)"></MhdTableColumn>
+        <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
     </ChildContent>
-</Grid>
+</MhdTable>
 @code {
     [Parameter] public int GroupId { get; set; } = new();
     List<ResourceAttribute> PropertiesList = new(); 
 
     void Remove(ResourceAttribute model) =>
-MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
     async Task ConfirmRemoveAsync(ResourceAttribute model)
     {
@@ -60,14 +60,14 @@ MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
         ResourceAttribute up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
         up.AttributeSetId = GroupId;
-        Modal.AddModal<PropertyResourceFormUI>(model.Id == 0 ? 
+        Modal.ShowComponent<PropertyResourceFormUI>(model.Id == 0 ? 
             AppLoc[LocalizerConst.New, ""] :
                     AppLoc[LocalizerConst.Update,"(p" + model.Id + ") ," + model.DisplayName], new Dictionary<string, object>
                     {
                         [nameof(PropertyResourceFormUI.GroupId)] = GroupId,
                         [nameof(PropertyResourceFormUI.ResourceProp)] = up,
                         [nameof(PropertyResourceFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-                    } , SizeMHD.Medium);
+                    } , DialogSize.Medium);
     }
 
     async Task BtnUpdate(bool IsSuccess)
@@ -77,7 +77,7 @@ MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
             PropertiesList = null;
             PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);
         }
-        Modal.CloseLastModal();
+        Modal.Close();
         StateHasChanged();
     }
     List<ResourceAttributeSet> Groups = new();

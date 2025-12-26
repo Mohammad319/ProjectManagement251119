@@ -51,7 +51,7 @@
         }
         else result = await service.UpdateAsync(Model);
 
-        MHD.Notifications(Model.Id == 0 ? ToastType.Add : ToastType.update, result);
+        MHD.Notifications(Model.Id == 0 ? ToastType.Add : ToastType.Update, result);
         await Callback.InvokeAsync(result);
     }
 }

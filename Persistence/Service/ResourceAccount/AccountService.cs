@@ -1,15 +1,17 @@
 ﻿using Application.Feature.Account;
 using Domain.Entities.Calculation;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.General;
 
 namespace Persistence.Service.ResourceAccount
 {
-    public sealed class AccountService(ShardingSingleDbContext db) : IAccountService
+    public sealed class AccountService(IDbContextFactoryTenant dbFactory) : IAccountService
     {
-        public Task<List<AccountManageDTO>> GetAccountsByGroupAsync(int groupId, CancellationToken ct = default)
+        public async Task<List<AccountManageDTO>> GetAccountsByGroupAsync(int groupId, CancellationToken ct = default)
         {
-            return db.Accounts
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.Accounts
                 .AsNoTracking()
                 .Where(x => x.AccountGroupId == groupId)
                 .OrderBy(x => x.Code)
@@ -24,9 +26,11 @@ namespace Persistence.Service.ResourceAccount
                 .ToListAsync(ct);
         }
 
-        public Task<List<ListDTO>> GetAccountsAsListAsync(int groupId, CancellationToken ct = default)
+        public async Task<List<ListDTO>> GetAccountsAsListAsync(int groupId, CancellationToken ct = default)
         {
-            return db.Accounts
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            return await context.Accounts
                 .AsNoTracking()
                 .Where(x => x.AccountGroupId == groupId)
                 .OrderBy(x => x.Code)
@@ -39,6 +43,8 @@ namespace Persistence.Service.ResourceAccount
         }
         public async Task<int> CreateAsync(PostAccountDTO dto, CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             var entity = new AccountEntity(
                 code: dto.Account,
                 name: dto.Name,
@@ -47,14 +53,16 @@ namespace Persistence.Service.ResourceAccount
                 data: dto.Data
             );
 
-            db.Accounts.Add(entity);
-            await db.SaveChangesAsync(ct);
+            context.Accounts.Add(entity);
+            await context.SaveChangesAsync(ct);
             return entity.Id;
         }
 
         public async Task<bool> UpdateAsync(int id, PostAccountDTO dto, CancellationToken ct = default)
         {
-            var existing = await db.Accounts.FirstOrDefaultAsync(x => x.Id == id, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var existing = await context.Accounts.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (existing is null) return false;
 
             existing.Update(
@@ -65,17 +73,19 @@ namespace Persistence.Service.ResourceAccount
                 data: dto.Data
             );
 
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             return true;
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            var existing = await db.Accounts.FindAsync([id], ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var existing = await context.Accounts.FindAsync([id], ct);
             if (existing is null) return false;
 
-            db.Accounts.Remove(existing);
-            await db.SaveChangesAsync(ct);
+            context.Accounts.Remove(existing);
+            await context.SaveChangesAsync(ct);
             return true;
         }
     }

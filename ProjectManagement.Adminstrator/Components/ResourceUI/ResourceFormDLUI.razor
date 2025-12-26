@@ -184,13 +184,13 @@
             await ResourceService.CreateAsync(model);
 
         await CallBack.InvokeAsync(true);
-        MHD.Modal.CloseLastModal();
+        MHD.Modal.Close();
     }
 
-    void GoBack() => MHD.Modal.CloseLastModal();
+    void GoBack() => MHD.Modal.Close();
     void CalcResourceForm(ResourceEXDto Resource)
     {
-        MHD.Modal.AddModal<CalcResCostUI>(Resource.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
+        MHD.Modal.ShowComponent<CalcResCostUI>(Resource.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
             new Dictionary<string, object>
             {
                 [nameof(CalcResCostUI.Resource)] = Resource,

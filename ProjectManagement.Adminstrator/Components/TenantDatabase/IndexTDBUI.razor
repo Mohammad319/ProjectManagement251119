@@ -44,7 +44,7 @@
             TenantDatabaseEntity post = new TenantDatabaseEntity();
         PropertyCopier.CopyPropertiesTo(model, post);
 
-        Modal.AddModal<IndexTDBFormUI>(model.Id == 0 ?
+        Modal.ShowComponent<IndexTDBFormUI>(model.Id == 0 ?
         AppLoc[LocalizerConst.New, AppControll.tenant] : ResourceApp.update,
             new Dictionary<string, object>
             {
@@ -54,13 +54,13 @@
     }
     async Task CallBack(bool newLoading)
     {
-        Modal.CloseLastModal();
+        Modal.Close();
         if (newLoading)
             Tenants = await context.TenantDatabase.ToListAsync();
     }
     void Remove(TenantDatabaseEntity obj)
     {
-        MHD.DeleteMessage(obj.Name, () => RemoveAsync(obj));
+        MHD.DeleteMessage(obj.Name, EventCallback.Factory.Create(this, () => RemoveAsync(obj)));
     }
     async Task RemoveAsync(TenantDatabaseEntity obj)
     {

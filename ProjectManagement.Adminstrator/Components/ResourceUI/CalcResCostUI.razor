@@ -102,7 +102,7 @@
         Resource.Data.Cost = CalcResCost.CalcCost();
         if(await ResourceService.UpdateAsync(Resource))
         {
-            MHD.Modal.CloseLastModal();
+            MHD.Modal.Close();
             await CallBack.InvokeAsync(true);  
         }
     }

@@ -29,7 +29,7 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
         [Required]
-        public double? Quantity { get; set; }
+        public double Quantity { get; set; }
         public double? CO2 { get; set; }
         private ResourceData? _metadata;
         public ResourceData Metadata

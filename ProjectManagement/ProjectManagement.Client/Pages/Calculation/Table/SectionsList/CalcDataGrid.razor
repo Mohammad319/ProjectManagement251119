@@ -1,4 +1,4 @@
-﻿@using Microsoft.Extensions.Localization
+﻿﻿@using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @using Calculation.Table.Header
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows
@@ -80,8 +80,7 @@
             border-right: none !important;
             padding: 0 2px;
             line-height: 15px;
-                /* vertical-align: middle; */
-
+            /* vertical-align: middle; */
         }
 
         .divNetCalc th {
@@ -156,7 +155,7 @@
 
     .divNetCalc tbody tr:hover td {
         /* لو تحب تضيف ظل بسيط للصف بالكامل */
-          box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.5); 
+        box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.5);
     }
 
 </style>
@@ -246,7 +245,7 @@
     {
         Calc.AllFlatItems = Calc.BuildFlatList(Calc.Tasks.Where(x => x.TaskId == null)).ToList();
         if (virtualizeComponent != null)
-        await virtualizeComponent.RefreshDataAsync();
+            await virtualizeComponent.RefreshDataAsync();
         StateHasChanged();
     }
 
@@ -346,8 +345,8 @@
             }
             Calc.AllFlatItems.RemoveRange(index + 1, removeCount);
         }
-        if(virtualizeComponent!=null)
-        await virtualizeComponent.RefreshDataAsync();
+        if (virtualizeComponent != null)
+            await virtualizeComponent.RefreshDataAsync();
     }
 
     public void Dispose()

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Components.Authorization;
 using ProjectManagement.Adminstrator.Handless;
 using System.Security.Claims;
 
@@ -43,7 +42,7 @@ namespace ProjectManagement.Client.Adminstrator.Handless
         /// </summary>
         public async Task<T> RunCheckTokenAsync<T>(Func<Task<T>> operation)
         {
-            loadingService.New();
+            loadingService.Begin();
             try
             {
                 var result = await operation.Invoke();
@@ -55,7 +54,7 @@ namespace ProjectManagement.Client.Adminstrator.Handless
             }
             finally
             {
-                loadingService.Close();
+                loadingService.End();
             }
 
             return default;

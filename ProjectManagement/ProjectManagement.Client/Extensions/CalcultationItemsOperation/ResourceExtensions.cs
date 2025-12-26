@@ -1,10 +1,6 @@
 ﻿using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 {

@@ -547,7 +547,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.APP {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Last update.
+        ///   Looks up a localized string similar to Last Update.
         /// </summary>
         public static string lastUpdate {
             get {

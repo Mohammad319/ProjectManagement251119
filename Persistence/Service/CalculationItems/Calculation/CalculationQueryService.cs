@@ -2,6 +2,7 @@
 {
     using global::Application.Feature.Calculation.Calculation;
     using Microsoft.EntityFrameworkCore;
+    using Persistence.Factory;
     using ProjectManagement.Shared.DTO.Calculation;
     using ProjectManagement.Shared.DTO.Offer;
     using System;
@@ -10,7 +11,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public sealed class CalculationQueryService(ShardingSingleDbContext context) : ICalculationQueryService
+    public sealed class CalculationQueryService(IDbContextFactoryTenant dbFactory) : ICalculationQueryService
     {
 
         // -------------------------------------------------
@@ -20,8 +21,10 @@
             Guid projectId,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             return await context.Calculations
                 .AsNoTracking()
                 .Where(x =>
@@ -41,7 +44,7 @@
                     StartDate = x.StartDate,
                     Status = x.Status.Name
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
         }
 
         // -------------------------------------------------
@@ -51,8 +54,10 @@
             Guid projectId,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             return await context.Calculations
                 .AsNoTracking()
                 .Where(x =>
@@ -68,7 +73,7 @@
                     TenderDeadline = x.TenderDeadline,
                     TenderQA = x.TenderQA,
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
         }
 
         // -------------------------------------------------
@@ -76,8 +81,10 @@
         // -------------------------------------------------
         public async Task<CalculationDetailsDTO?> GetDetailsAsync(
             int id,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             return await context.Calculations
                 .AsNoTracking()
                 .Where(x => x.Id == id)
@@ -115,7 +122,7 @@
                     OverviewInfo = x.Metadata.OverviewInfo,
                     Responsibles = x.Metadata.Responsibles
                 })
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(ct);
         }
 
         // -------------------------------------------------
@@ -123,8 +130,10 @@
         // -------------------------------------------------
         public async Task<CalculationPostDTO?> GetPostModelAsync(
             int id,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             return await context.Calculations
                 .AsNoTracking()
                 .Where(x => x.Id == id)
@@ -166,7 +175,7 @@
                     Responsibles = x.Metadata.Responsibles,
                     Priority = x.Metadata.Priority
                 })
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(ct);
         }
 
         // -------------------------------------------------
@@ -176,8 +185,10 @@
             int id,
             int userId,
             int? departmentId,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             var calculationDto = await context.Calculations
                 .AsNoTracking()
                 .Where(x =>
@@ -197,7 +208,7 @@
                     Customer = x.Organisation != null ? x.Organisation.Name : string.Empty,
                     Contract = x.Contract != null ? x.Contract.Name : string.Empty,
                 })
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(ct);
 
             if (calculationDto is null)
                 return null;
@@ -228,7 +239,7 @@
                             : string.Empty
                     }
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
 
             var offersByResource = offers
                 .GroupBy(o => o.ResourceId)
@@ -276,7 +287,7 @@
                         Offers = new List<ListOfferDTO>()
                     }).ToList()
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
 
             // ربط Offers بالـ Resources
             foreach (var t in tasks)
@@ -299,14 +310,16 @@
         public async Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(
             int id,
             int? departmentId,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             var priceList = await context.Calculations
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
                             (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId))
                 .Select(x => x.HourlyPriceFactorData.HourlyPrice)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(ct);
 
             return priceList ?? [];
         }

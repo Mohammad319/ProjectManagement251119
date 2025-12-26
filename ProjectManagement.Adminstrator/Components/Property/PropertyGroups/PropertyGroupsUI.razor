@@ -13,13 +13,13 @@
 <button @onclick="UpdateForm" class="@CsS.Btn.Outline.Success" title="إضافة">
     @((MarkupString)Icons.Plus)
 </button>
-<Grid TItem="ResourceAttributeSet" Items="ActionsTasks">
+<MhdTable TItem="ResourceAttributeSet" Items="ActionsTasks">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH"></th>
         <th class="@CssClasses.Table.TH">@CalcResource.name</th>
     </HeaderTemplate>
     <ChildContent>
-        <Column>
+        <MhdTableColumn>
             <Template Context="status">
                 <div class="@CssClasses.Layout.FlexItemsCenter">
                     <button @onclick="() => Properties(status)" class="@CsS.Btn.Outline.Primary" title="Property" aria-label="Property">
@@ -33,10 +33,10 @@
                     </button>
                 </div>
             </Template>
-        </Column>
-        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+        </MhdTableColumn>
+        <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
     </ChildContent>
-</Grid>
+</MhdTable>
 @code {
     List<ResourceAttributeSet> ActionsTasks;
     void UpdateForm() => UpdateForm(new ResourceAttributeSet() { DisplayName = "name" });
@@ -45,23 +45,23 @@
         ResourceAttributeSet up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
 
-        Modal.AddModal<PropertyGroupsFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+        Modal.ShowComponent<PropertyGroupsFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
             AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
                 {
                 [nameof(PropertyGroupsFormUI.Model)] = up,
                 [nameof(PropertyGroupsFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
                 }
-            , SizeMHD.Medium);
+            , DialogSize.Medium);
     }
     void Properties(ResourceAttributeSet model)
     {
-        Modal.AddModal<PropertyResourceIndexUI>("Property", new Dictionary<string, object>
+        Modal.ShowComponent<PropertyResourceIndexUI>("Property", new Dictionary<string, object>
             {
             [nameof(PropertyResourceIndexUI.GroupId)] = model.Id,
-            } , SizeMHD.Medium);
+            } , DialogSize.Medium);
     }
     void Remove(ResourceAttributeSet model) =>
-    MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+    MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
     async Task ConfirmRemoveAsync(ResourceAttributeSet model)
     {
@@ -75,7 +75,7 @@
     }
     async Task BtnUpdate(bool IsSuccess)
     {
-        Modal.ClearModal();
+        Modal.Close();
         if (IsSuccess)
         {
             ActionsTasks = await GroupPropertiesService.GetAllAsync();

@@ -236,7 +236,7 @@
             </button>
             <button type="button"
                     class="@CsS.Btn.Outline.Secondary"
-                    @onclick="MHD.Modal.CloseLastModal">
+                    @onclick="MHD.Modal.Close">
                 @ResourceApp.cancel
             </button>
         </div>
@@ -267,7 +267,7 @@
     {
         if (await TaskResourceService.UpdateAssignmentAsync(Task.Id, Resource.Id, TaskResource, CancellationToken.None))
         {
-            MHD.Modal.CloseLastModal();
+            MHD.Modal.Close();
         }
         else
         {

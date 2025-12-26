@@ -1,23 +1,25 @@
 ﻿using Application.Feature.Calculation.Task;
 using Domain.Entities.Calculation;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems
 {
-    public sealed class TaskQueryService(ShardingSingleDbContext dataAccess) : ITaskQueryService
+    public sealed class TaskQueryService(IDbContextFactoryTenant dbFactory) : ITaskQueryService
     {
         public async Task<List<TaskListDTO>> GetByFilterAsync(
             FilterCalculationItemsDto filter,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
             IQueryable<TaskEntity> query;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             // ⚠ نفترض أن عندك عمود Data في الجدول يمثل Task.Metadata كـ JSON
             // ونستخدم FromSqlInterpolated لتفادي الحقن
             if (!string.IsNullOrWhiteSpace(filter.Code) &&
                 !string.IsNullOrWhiteSpace(filter.Unit))
             {
-                query = dataAccess.Tasks
+                query = context.Tasks
                     .FromSqlInterpolated($"""
                         SELECT * FROM Tasks 
                         WHERE JSON_VALUE(Data, '$.Code') LIKE '%' + {filter.Code} + '%'
@@ -26,7 +28,7 @@ namespace Persistence.Service.CalculationItems
             }
             else if (!string.IsNullOrWhiteSpace(filter.Code))
             {
-                query = dataAccess.Tasks
+                query = context.Tasks
                     .FromSqlInterpolated($"""
                         SELECT * FROM Tasks 
                         WHERE JSON_VALUE(Data, '$.Code') LIKE '%' + {filter.Code} + '%'
@@ -34,7 +36,7 @@ namespace Persistence.Service.CalculationItems
             }
             else if (!string.IsNullOrWhiteSpace(filter.Unit))
             {
-                query = dataAccess.Tasks
+                query = context.Tasks
                     .FromSqlInterpolated($"""
                         SELECT * FROM Tasks 
                         WHERE JSON_VALUE(Data, '$.Unit') LIKE '%' + {filter.Unit} + '%'
@@ -42,7 +44,7 @@ namespace Persistence.Service.CalculationItems
             }
             else
             {
-                query = dataAccess.Tasks.AsQueryable();
+                query = context.Tasks.AsQueryable();
             }
 
             query = ApplyFilter(query, filter);
@@ -63,7 +65,7 @@ namespace Persistence.Service.CalculationItems
                     TaskId = x.ParentTaskId,
                     StatusId = x.StatusId,
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
 
             return tasks;
         }

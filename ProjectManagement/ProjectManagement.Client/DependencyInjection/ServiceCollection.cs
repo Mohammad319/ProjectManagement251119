@@ -18,7 +18,6 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<IContextMenuBuilderService, ContextMenuBuilderService>();
             services.AddScoped<IUnitOfWorkService, UnitOfWorkService>();
 
-
             return services;
         }
     }

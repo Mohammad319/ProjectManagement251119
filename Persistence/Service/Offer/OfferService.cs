@@ -1,21 +1,20 @@
-﻿using Application.Interfaces;
+﻿using Application.Feature.Offer;
+using Application.Interfaces;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Shared.DTO.Offer;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Hub;
-using Persistence.Context;
-using Application.Feature.Offer;
-using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.DTO.Offer;
 
 namespace Persistence.Service.Offer
 {
-    public sealed class OfferService(ShardingSingleDbContext db, INotificationHub hub) : IOfferService
+    public sealed class OfferService(IDbContextFactoryTenant dbFactory, INotificationHub hub) : IOfferService
     {
 
         // ---------------- Commands ----------------
 
         public async Task<int> CreateAsync(PostOfferDTO dto, CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             var entity = new OfferEntity(
                 resourceId: dto.ResourceId,
                 organisationId: dto.OrganisationId,
@@ -28,8 +27,8 @@ namespace Persistence.Service.Offer
                 comment: dto.Comment
             );
 
-            db.Offers.Add(entity);
-            await db.SaveChangesAsync(ct);
+            context.Offers.Add(entity);
+            await context.SaveChangesAsync(ct);
 
             await NotifyAsync(entity.Resource.Task.CalculationId, OperationType.Add, entity.ResourceId);
             return entity.Id;
@@ -37,7 +36,8 @@ namespace Persistence.Service.Offer
 
         public async Task<bool> UpdateAsync(int id, PostOfferDTO dto, CancellationToken ct = default)
         {
-            var offer = await db.Offers.FindAsync(id);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var offer = await context.Offers.FindAsync(id);
             if (offer == null) return false;
 
             offer.Update(
@@ -51,15 +51,16 @@ namespace Persistence.Service.Offer
                 comment: dto.Comment
             );
 
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             await NotifyAsync(offer.Resource.Task.CalculationId, OperationType.Update, 0);
             return true;
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            var offer = await db.Offers
-                .Include(x => x.Resource)
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var offer = await context.Offers
+                .Include(x => x.Resource).ThenInclude(x => x.Task)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (offer == null) return false;
@@ -67,8 +68,8 @@ namespace Persistence.Service.Offer
             if (offer.Resource.PrimaryOfferId == id)
                 offer.Resource.PrimaryOfferId = null;
 
-            db.Offers.Remove(offer);
-            await db.SaveChangesAsync(ct);
+            context.Offers.Remove(offer);
+            await context.SaveChangesAsync(ct);
 
             await NotifyAsync(offer.Resource.Task.CalculationId, OperationType.Remove, id);
             return true;
@@ -76,7 +77,8 @@ namespace Persistence.Service.Offer
 
         public async Task<bool> SetPrimaryOfferAsync(int resourceId, int? offerId, CancellationToken ct = default)
         {
-            var resource = await db.Resources
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var resource = await context.Resources
                 .Include(x => x.Offers)
                 .FirstOrDefaultAsync(x => x.Id == resourceId, ct);
 
@@ -94,14 +96,15 @@ namespace Persistence.Service.Offer
                 resource.Metadata.BaseCost = offer.Metadata.BaseCost;
             }
 
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             await NotifyAsync(resource.Task.CalculationId, OperationType.Update, resourceId);
             return true;
         }
 
         public async Task<bool> CalcAvgOfferAsync(int calcId, int organisationId, double avg, CancellationToken ct = default)
         {
-            var offers = await db.Offers
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var offers = await context.Offers
                 .Where(x => x.OrganisationId == organisationId &&
                             x.Resource.Task.CalculationId == calcId)
                 .ToListAsync(ct);
@@ -113,7 +116,7 @@ namespace Persistence.Service.Offer
             foreach (var o in offers)
                 o.SetBaseCost((o.Metadata.Cost * avg) / sum);
 
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             await NotifyAsync(calcId, OperationType.Update, 0);
             return true;
         }
@@ -122,7 +125,9 @@ namespace Persistence.Service.Offer
 
         public async Task<List<ListOfferCalcInfo>> GetByFilterAsync(OfferFilterDTO f, CancellationToken ct = default)
         {
-            IQueryable<OfferEntity> q = db.Offers.AsNoTracking();
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            IQueryable<OfferEntity> q = context.Offers.AsNoTracking();
 
             if (f.CalculationID > 0)
                 q = q.Where(x => x.Resource.Task.CalculationId == f.CalculationID);

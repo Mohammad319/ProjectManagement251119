@@ -1,11 +1,12 @@
 ﻿using Application.Extention;
 using Application.Services.CalculationItems.Storage;
 using Domain.Entities.Calculation;
+using Persistence.Factory;
 using System.Text.Json;
 
 namespace Persistence.Service.CalculationItems.Storage
 {
-    public sealed class StorageCommandService(ShardingSingleDbContext db) : IStorageCommandService
+    public sealed class StorageCommandService(IDbContextFactoryTenant dbFactory) : IStorageCommandService
     {
         public async Task<bool> CreateAsync(
             CalculationItemType type,
@@ -17,11 +18,13 @@ namespace Persistence.Service.CalculationItems.Storage
             CancellationToken ct = default)
         {
             object? obj = null;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             if (type == CalculationItemType.task)
             {
+
                 // جلب التسك مع الأبناء والموارد
-                var tasks = await db.Tasks
+                var tasks = await context.Tasks
                     .FromSqlRaw("EXEC GetRecursiveTasks {0}", id)
                     .IgnoreQueryFilters()
                     .AsNoTracking()
@@ -31,7 +34,7 @@ namespace Persistence.Service.CalculationItems.Storage
 
                 var taskIds = tasks.Select(t => t.Id).ToList();
 
-                var resources = await db.Resources
+                var resources = await context.Resources
                     .Where(r => taskIds.Contains(r.TaskId))
                     .AsNoTracking()
                     .ToListAsync(ct);
@@ -46,7 +49,7 @@ namespace Persistence.Service.CalculationItems.Storage
             }
             else if (type == CalculationItemType.resource)
             {
-                obj = await db.Resources
+                obj = await context.Resources
                     .AsNoTracking()
                     .Where(x => x.Id == id)
                     .Select(x => new
@@ -74,18 +77,19 @@ namespace Persistence.Service.CalculationItems.Storage
                 departmentId ?? 0,
                 userId);
 
-            db.Storages.Add(st);
-            await db.SaveChangesAsync(ct);
+            context.Storages.Add(st);
+            await context.SaveChangesAsync(ct);
             return true;
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            var st = await db.Storages.FindAsync(id);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var st = await context.Storages.FindAsync(id);
             if (st == null) return false;
 
-            db.Storages.Remove(st);
-            await db.SaveChangesAsync(ct);
+            context.Storages.Remove(st);
+            await context.SaveChangesAsync(ct);
             return true;
         }
     }

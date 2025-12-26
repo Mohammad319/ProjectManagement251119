@@ -17,7 +17,7 @@
         aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
     @((MarkupString)Icons.GetVisibleIcon(IsVisible))
 </button>
-<Grid TItem="TaskUnitGroup" Items="FallsList">
+<MhdTable TItem="TaskUnitGroup" Items="FallsList">
     <HeaderTemplate>
         <th style="width:200px;" class="@CssClasses.Table.TH">
 
@@ -25,7 +25,7 @@
         <th class="@CssClasses.Table.TH">@CalcResource.name</th>
     </HeaderTemplate>
     <ChildContent>
-        <Column>
+        <MhdTableColumn>
             <Template Context="status">
                 <div class="@CssClasses.Layout.FlexItemsCenter">
                     <button @onclick="() => UpdateForm(status)" class="@CsS.Btn.Outline.Warning"
@@ -39,10 +39,10 @@
                     </button>
                 </div>
             </Template>
-        </Column>
-        <Column Title="" ValueSelector="c => c.DisplayName"></Column>
+        </MhdTableColumn>
+        <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
     </ChildContent>
-</Grid>
+</MhdTable>
 @code {
     bool IsVisible = true;
     List<TaskUnitGroup>? FallsList;
@@ -51,16 +51,16 @@
     {
         TaskUnitGroup up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
-        Modal.AddModal<UnitsGroupFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New] :
+        Modal.ShowComponent<UnitsGroupFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New] :
                     AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
                     {
                         [nameof(UnitsGroupFormUI.GroupId)] = up.Id,
                         [nameof(UnitsGroupFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
                     }
-                    , SizeMHD.XL);
+                    , DialogSize.ExtraLarge);
     }
     void Remove(TaskUnitGroup model) =>
-    MHD.DeleteMessage(model.DisplayName, () => ConfirmRemoveAsync(model));
+    MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
     async Task ConfirmRemoveAsync(TaskUnitGroup model)
     {
@@ -79,7 +79,7 @@
         {
             FallsList = null;
             FallsList = await ExHandlers.RunCheckTokenAsync(() => UnitGroupsService.GetAllAsync());
-            MHD.Modal.CloseLastModal();
+            MHD.Modal.Close();
         }
         StateHasChanged();
     }

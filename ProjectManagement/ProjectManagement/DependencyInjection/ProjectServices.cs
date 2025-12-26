@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.SignalR;
-using Persistence.Context;
 using Persistence.Factory;
 using Persistence.Interceptors;
 using ProjectManagement.BlazorServer;
@@ -70,11 +69,8 @@ public static class ServiceRegistration
         services.AddScoped<TenantAuditSaveChangesInterceptor>();
 
         // Factory + tenant DbContext
-        services.AddScoped<IDbContextFactory, DbContextFactory>();
-        //services.AddScoped(sp => sp.GetRequiredService<IDbContextFactory>().CreateDbContext());
-        services.AddScoped(sp =>Task.Run(() => sp.GetRequiredService<IDbContextFactory>()
-        .CreateDbContextAsync(CancellationToken.None)).GetAwaiter().GetResult()
-);
+        services.AddScoped<IDbContextFactoryTenant, DbContextFactory>();
+        //services.AddScoped(sp => sp.GetRequiredService<IDbContextFactoryTenant>().CreateDbContext());
 
         // App services
         services.AddScoped<INotificationHub, SendHubNotification>();

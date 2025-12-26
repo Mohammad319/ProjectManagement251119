@@ -1,10 +1,6 @@
-﻿using DocumentFormat.OpenXml.Office2021.DocumentTasks;
-using ProjectManagement.Client.Helper;
+﻿using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.Enums;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 {
@@ -23,7 +19,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         public static bool AddTasks(this CalculationMVVM calculation, List<TaskListMVVM> tasks)
         {
             if (tasks == null) return false;
-            
+
             calculation.Tasks ??= [];
             calculation.Tasks.InsertRange(0, tasks);
 
@@ -33,7 +29,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 task.Tasks ??= [];
                 task.Resources ??= [];
             }
-            if (!tasks.Any(x=>x.TaskId==null)) calculation.BuildTaskHierarchy();
+            if (!tasks.Any(x => x.TaskId == null)) calculation.BuildTaskHierarchy();
             return true;
         }
         public static bool RemoveTasks(this CalculationMVVM calculation, List<int> taskIds)

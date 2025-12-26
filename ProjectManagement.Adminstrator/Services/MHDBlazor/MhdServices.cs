@@ -1,5 +1,4 @@
-﻿using BlazorMHD.Component.Toasts;
-using BlazorMHD.Model;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Adminstrator.Constants;
 
@@ -7,106 +6,220 @@ namespace ProjectManagement.Client.Adminstrator.Services.MHDBlazor
 {
     public enum ToastType
     {
-        Delete, Add, update, Info, Danger
+        Delete, Add, Update, Info, Danger
     }
-    public class MhdServices(MHDService Service, IStringLocalizer<ResourceApp> appLocalizer)
+    public class MhdServices(DialogService modal, LoadingService loading, ToastService ToasterService,
+        IStringLocalizer<ResourceApp> appLocalizer)
     {
-        public DialogService Modal => Service.DialogService;
-        public LoadingService Loading => Service.LoadingService;
-        public MhdMessageBoxService Message => Service.Message;
-        public void DeleteMessage(string itemName, Func<object> func)
+        private readonly IStringLocalizer<ResourceApp> _appLocalizer = appLocalizer;
+        public DialogService Modal => modal;
+        public LoadingService Loading => loading;
+       public void DeleteMessage(string? itemName, EventCallback? onYes = null)
         {
-            MhdMessageBoxModel msg = new()
+            var title = ResourceApp.delete;
+            var message = string.IsNullOrEmpty(itemName)
+                ? _appLocalizer[ResourceApp.deleteConfirmMsg]
+                : _appLocalizer[LocalizerConst.deleteConfirmMsg, itemName];
+
+            var model = new DialogModel
             {
-                Title = ResourceApp.delete,
-                Message = string.IsNullOrEmpty(itemName) ?
-            appLocalizer[ResourceApp.deleteConfirmMsg] : appLocalizer[LocalizerConst.deleteConfirmMsg, itemName],
-                State = MhdState.Danger,
+                Title = _appLocalizer[title],
+                Content = builder =>
+                {
+                    builder.OpenElement(0, "p");
+                    builder.AddAttribute(1, "class", "text-sm leading-relaxed text-slate-700 dark:text-slate-300");
+                    builder.AddContent(2, message);
+                    builder.CloseElement();
+                },
+                CloseOnOverlayClick = false,
                 Buttons =
-           [
-               new (){ Color = MhdState.Danger, Text =ResourceApp.yes ,Func = func},
-                   new() { Color = MhdState.Primary, Text = ResourceApp.no, Func = null }
-           ]
+                {
+                    new DialogButtonModel
+                    {
+                        Text = ResourceApp.yes,
+                        State = MhdState.Danger,
+                        IsPrimary = true,
+                        OnClick = onYes ?? EventCallback.Factory.Create(this, () => Modal.Close())
+                    },
+                    new DialogButtonModel
+                    {
+                        Text = ResourceApp.no,
+                        State = MhdState.Secondary,
+                        OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
+                    }
+                },
+                Size = DialogSize.Medium,
+                State = MhdState.Danger,
             };
 
-            Service.Message.AddMessage(msg);
+            Modal.Show(model);
+        }
+        public void MessageYesNo(
+    string title,
+    string message,
+    MhdState state = MhdState.Danger,
+    EventCallback? onYes = null)
+        {
+            DialogModel model = new()
+            {
+                Size = DialogSize.Medium,
+                State = state,
+                Title = title,
+                Content = builder =>
+                {
+                    builder.OpenElement(0, "p");
+                    builder.AddAttribute(1, "class", "text-sm text-slate-500 dark:text-slate-400");
+                    builder.AddContent(2, message);
+                    builder.CloseElement();
+                },
+                CloseOnOverlayClick = false,
+                Buttons =
+                {
+                    new DialogButtonModel
+                    {
+                        Text = _appLocalizer[ResourceApp.yes],
+                        State = state,
+                        IsPrimary = true,
+                        OnClick = onYes ?? EventCallback.Factory.Create(this, () => Modal.Close())
+                    },
+                    new DialogButtonModel
+                    {
+                        Text = _appLocalizer[ResourceApp.no],
+                        State = MhdState.Neutral,
+                        IsPrimary = false,
+                        OnClick = EventCallback.Factory.Create(this, () => Modal.Close())
+                    }
+                },
+
+            };
+
+            modal.Show(model);
         }
 
-        public void MessageYesNo(string title, string message, MhdState state =
-            MhdState.Danger, Func<object> func = null)
+        public void MessageOk(
+         string title,
+         string message,
+         MhdState state = MhdState.Danger,
+         EventCallback? onOk = null)
         {
-            MhdMessageBoxModel msg = new()
+            // لو مافي كولباك، نستخدم ShowSimple
+            if (onOk == null || !onOk.Value.HasDelegate)
+            {
+                Modal.ShowSimple(title, message, _appLocalizer["ok"]);
+                return;
+            }
+
+            var model = new DialogModel
             {
                 Title = title,
-                Message = message,
-                State = MhdState.Danger,
+                State = state,
+                Content = builder =>
+                {
+                    builder.OpenElement(0, "p");
+                    builder.AddAttribute(1, "class", "text-sm text-slate-500 dark:text-slate-400");
+                    builder.AddContent(2, message);
+                    builder.CloseElement();
+                },
+                CloseOnOverlayClick = true,
                 Buttons =
-               [
-                   new (){ Color = MhdState.Primary, Text =ResourceApp.yes ,Func = func},
-                   new() { Color = MhdState.Primary, Text = ResourceApp.no, Func = null }
-               ]
+                {
+                    new DialogButtonModel
+                    {
+                        Text = _appLocalizer["ok"],
+                        State = state,
+                        IsPrimary = true,
+                        OnClick = onOk
+                    }
+                }
             };
-            Service.Message.AddMessage(msg);
+
+            Modal.Show(model);
         }
+
+
+        #region Notifications القديمة (بالتوست)
+
         public void Notifications(ToastType type = ToastType.Delete, bool isSuccess = false, string name = "")
         {
             if (isSuccess)
             {
-                int time = 3;
-                if (type == ToastType.Delete)
-                    Service.ToasterService.AddToast(Toast.New(name, ResourceApp.HasBeenRemoved, MhdState.Success, time));
-                else if (type == ToastType.Add)
-                    Service.ToasterService.AddToast(Toast.New(name, ResourceApp.HasBeenAdded, MhdState.Success, time));
-                else if (type == ToastType.update)
-                    Service.ToasterService.AddToast(Toast.New(name, ResourceApp.HasBeedUpdated, MhdState.Success, time));
-                else if (type == ToastType.Info)
-                    Service.ToasterService.AddToast(Toast.New(name, ResourceApp.completedSuccessfully, MhdState.Success, time));
+                int time = 6;
 
+                if (type == ToastType.Delete)
+                    ToasterService.Show(name, ResourceApp.HasBeenRemoved, MhdState.Danger, time);
+                if (type == ToastType.Add)
+                    ToasterService.Show(name, ResourceApp.HasBeenAdded, MhdState.Success, time);
+                if (type == ToastType.Update)
+                    ToasterService.Show(name, ResourceApp.HasBeedUpdated, MhdState.Success, time);
+                if (type == ToastType.Info)
+                    ToasterService.Show(name, ResourceApp.completedSuccessfully, MhdState.Success, time);
             }
             else
             {
                 if (type == ToastType.Delete)
-                    MessageOk(ResourceApp.error, ResourceApp.ItemIsCurrentlyInUseCannotBeDeleted_, MhdState.Danger);
-                else if (type == ToastType.update || type == ToastType.Add || type == ToastType.Info)
-                    MessageOk(ResourceApp.error, ResourceApp.AnUnexpectedErrorHasOccurred, MhdState.Danger);
+                {
+                    MessageOk(
+                        _appLocalizer[ResourceApp.error],
+                        _appLocalizer[ResourceApp.ItemIsCurrentlyInUseCannotBeDeleted_],
+                        MhdState.Danger);
+                }
+                else if (type is ToastType.Update or ToastType.Add or ToastType.Info)
+                {
+                    MessageOk(
+                        _appLocalizer[ResourceApp.error],
+                        _appLocalizer[ResourceApp.AnUnexpectedErrorHasOccurred],
+                        MhdState.Danger);
+                }
             }
         }
 
-        public void MessageOk(string title, string message, MhdState state = MhdState.Danger,
-            Func<object> func = null)
+        #endregion
+
+        #region ToastMessage الجديدة/القديمة
+
+        public void ToastMessage(string? itemName, ToastType type = ToastType.Add, bool isSuccess = true)
         {
-            MhdMessageBoxModel msg = new()
-            {
-                Title = title,
-                Message = message,
-                State = state,
-                Buttons =
-               [
-                   new (){ Color = MhdState.Primary, Text =appLocalizer["ok"] ,Func = func},
-               ]
-            };
-            Service.Message.AddMessage(msg);
+            ToastMessage(itemName, type, isSuccess ? MhdState.Success : MhdState.Danger);
         }
-        public void ToastMessage(string itemName, ToastType type = ToastType.Add, bool IsSuccess = true)
-        {
-            ToastMessage(itemName, type, IsSuccess ? MhdState.Success : MhdState.Danger);
-        }
-        public void ToastMessage(string itemName, ToastType type, MhdState state)
+
+        public void ToastMessage(string? itemName, ToastType type, MhdState state)
         {
             int time = 20;
-            string msg = appLocalizer[ResourceApp.completedSuccessfully];
-            if (string.IsNullOrEmpty(itemName))
-                Service.ToasterService.AddToast(Toast.New("", appLocalizer[ResourceApp.completedSuccessfully], state, time));
 
-            else if (type == ToastType.Delete)
-                Service.ToasterService.AddToast(Toast.New(itemName, appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time));
+            if (string.IsNullOrEmpty(itemName))
+            {
+                //ToasterService.AddToast(
+                //    Toast.New("",
+                //        _appLocalizer[ResourceApp.completedSuccessfully],
+                //        state,
+                //        time));
+
+                return;
+            }
+
+            if (type == ToastType.Delete)
+            {
+                if (type == ToastType.Add)
+                    ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], MhdState.Success, time);
+
+            }
             else if (type == ToastType.Add)
-                Service.ToasterService.AddToast(Toast.New(itemName, appLocalizer[LocalizerConst.hasBeenAddedSuccessfully, itemName], state, time));
-            else if (type == ToastType.update)
-                Service.ToasterService.AddToast(Toast.New(itemName, appLocalizer[LocalizerConst.hasBeenUpdatedSuccessfully, itemName], state, time));
+            {
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenAddedSuccessfully, itemName], state, time);
+
+            }
+            else if (type == ToastType.Update)
+            {
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenUpdatedSuccessfully, itemName], state, time);
+
+            }
             else if (type == ToastType.Info)
-                Service.ToasterService.AddToast(Toast.New(itemName,
-                    appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time));
+            {
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time);
+
+            }
         }
+
+        #endregion
     }
 }

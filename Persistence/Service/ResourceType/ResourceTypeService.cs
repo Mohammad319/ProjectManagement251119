@@ -1,42 +1,49 @@
 ﻿using Application.Feature.ResourceType;
 using Persistence.Context;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.ResourceType;
 
 namespace Persistence.Service.ResourceType
 {
-    public sealed class ResourceTypeService(ShardingSingleDbContext db) : IResourceTypeService
+    public sealed class ResourceTypeService(IDbContextFactoryTenant dbFactory) : IResourceTypeService
     {
 
         // ---------------- Commands (Type) ----------------
 
         public async Task<int> CreateTypeAsync(PostResourceTypeDTO dto, CancellationToken ct = default)
         {
-            var max = await db.ResourceTypes.MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var max = await context.ResourceTypes.MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
             var entity = Domain.Entities.ResourceType.ResourceTypeEntity.Create(dto, max + 100);
 
-            db.ResourceTypes.Add(entity);
-            await db.SaveChangesAsync(ct);
+            context.ResourceTypes.Add(entity);
+            await context.SaveChangesAsync(ct);
             return entity.Id;
         }
 
         public async Task<bool> UpdateTypeAsync(int id, PostResourceTypeDTO dto, CancellationToken ct = default)
         {
-            var entity = await db.ResourceTypes.FindAsync(id, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var entity = await context.ResourceTypes.FindAsync(id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             return true;
         }
 
         public async Task<bool> DeleteTypeAsync(int id, CancellationToken ct = default)
         {
-            var entity = await db.ResourceTypes.FindAsync(id, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var entity = await context.ResourceTypes.FindAsync(id, ct);
             if (entity == null) return false;
 
-            db.ResourceTypes.Remove(entity);
-            await db.SaveChangesAsync(ct);
+            context.ResourceTypes.Remove(entity);
+            await context.SaveChangesAsync(ct);
             return true;
         }
 
@@ -44,45 +51,53 @@ namespace Persistence.Service.ResourceType
 
         public async Task<int> CreateSortAsync(int resourceTypeId, PostResourceSortDTO dto, CancellationToken ct = default)
         {
-            bool typeExists = await db.ResourceTypes.AnyAsync(x => x.Id == resourceTypeId, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            bool typeExists = await context.ResourceTypes.AnyAsync(x => x.Id == resourceTypeId, ct);
             if (!typeExists) return 0;
 
-            var max = await db.ResourceSorts
+            var max = await context.ResourceSorts
                 .Where(x => x.ResourceTypeId == resourceTypeId)
                 .MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
 
             var entity = Domain.Entities.ResourceType.ResourceSortEntity.Create(dto, resourceTypeId, max + 100);
 
-            db.ResourceSorts.Add(entity);
-            await db.SaveChangesAsync(ct);
+            context.ResourceSorts.Add(entity);
+            await context.SaveChangesAsync(ct);
             return entity.Id;
         }
 
         public async Task<bool> UpdateSortAsync(int id, PostResourceSortDTO dto, CancellationToken ct = default)
         {
-            var entity = await db.ResourceSorts.FindAsync(id, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var entity = await context.ResourceSorts.FindAsync(id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             return true;
         }
 
         public async Task<bool> DeleteSortAsync(int id, CancellationToken ct = default)
         {
-            var entity = await db.ResourceSorts.FindAsync(id, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var entity = await context.ResourceSorts.FindAsync(id, ct);
             if (entity == null) return false;
 
-            db.ResourceSorts.Remove(entity);
-            await db.SaveChangesAsync(ct);
+            context.ResourceSorts.Remove(entity);
+            await context.SaveChangesAsync(ct);
             return true;
         }
 
         // ---------------- Queries ----------------
 
-        public Task<List<ResourceTypeModel>> GetTypesAsync(bool isVisible, CancellationToken ct = default)
+        public async Task<List<ResourceTypeModel>> GetTypesAsync(bool isVisible, CancellationToken ct = default)
         {
-            return db.ResourceTypes
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            return await context.ResourceTypes
                 .AsNoTracking()
                 .Where(x => x.IsVisible == isVisible)
                 .OrderBy(x => x.SortOrder)
@@ -108,9 +123,11 @@ namespace Persistence.Service.ResourceType
                 .ToListAsync(ct);
         }
 
-        public Task<List<ResourceSortModel>> GetSortsAsync(int resourceTypeId, CancellationToken ct = default)
+        public async Task<List<ResourceSortModel>> GetSortsAsync(int resourceTypeId, CancellationToken ct = default)
         {
-            return db.ResourceSorts
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            return await context.ResourceSorts
                 .AsNoTracking()
                 .Where(x => x.ResourceTypeId == resourceTypeId)
                 .OrderBy(x => x.SortOrder)
@@ -140,8 +157,9 @@ namespace Persistence.Service.ResourceType
         {
             // بديل نظيف لـ GetVisualResourcesQuery القديم :contentReference[oaicite:3]{index=3}
             var result = new ResourceFormDTO();
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            result.ResourceTypes = await db.ResourceTypes
+            result.ResourceTypes = await context.ResourceTypes
                 .AsNoTracking()
                 .Where(x => x.IsVisible)
                 .OrderBy(x => x.SortOrder)
@@ -186,13 +204,13 @@ namespace Persistence.Service.ResourceType
                 })
                 .ToListAsync(ct);
 
-            result.Statues = await db.ResourceStatus
+            result.Statues = await context.ResourceStatus
                 .AsNoTracking()
                 .OrderBy(x => x.SortOrder)
                 .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
                 .ToListAsync(ct);
 
-            result.AccountGroups = await db.AccountGroup
+            result.AccountGroups = await context.AccountGroup
                 .AsNoTracking()
                 .OrderBy(x => x.Name)
                 .Select(x => new AccountGroupsListDto

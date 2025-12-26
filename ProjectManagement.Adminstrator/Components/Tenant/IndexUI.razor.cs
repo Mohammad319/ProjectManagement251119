@@ -12,7 +12,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         [Parameter] public EventCallback<bool> Callback { get; set; }
         List<GetTenantsDTO> Tenants;
         GetTenantsDTO DetailsPage;
-        void UpdateForm(GetTenantsDTO model) => Modal.AddModal<FormUI>(model.Id == 0 ?
+        void UpdateForm(GetTenantsDTO model) => Modal.ShowComponent<FormUI>(model.Id == 0 ?
             AppLoc[LocalizerConst.New, AppControll.tenant] : ResourceApp.update,
                 new Dictionary<string, object>
                 {
@@ -22,7 +22,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
 
         void Remove(GetTenantsDTO obj)
         {
-            MHD.DeleteMessage(obj.Name, () => RemoveAsync(obj));
+            MHD.DeleteMessage(obj.Name, EventCallback.Factory.Create(this, () => RemoveAsync(obj)));
         }
         async System.Threading.Tasks.Task RemoveAsync(GetTenantsDTO obj)
         {
@@ -36,7 +36,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         void TenantBlock(int id, bool block)
         {
             MHD.MessageYesNo(AppControll.block, block ?
-                AppControll.confirmTenantBlock : AppControll.confirmTenantBlockout, MhdState.Warning, () => ConfirmBlockAsync(id, block));
+                AppControll.confirmTenantBlock : AppControll.confirmTenantBlockout, MhdState.Warning, EventCallback.Factory.Create(this, () => ConfirmBlockAsync(id, block)));
         }
         async System.Threading.Tasks.Task ConfirmBlockAsync(int id, bool block)
         {
@@ -45,7 +45,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         }
         async System.Threading.Tasks.Task CallBack(bool refresh)
         {
-            Modal.CloseLastModal();
+            Modal.Close();
             if (refresh)
                 await GetTenantsAsync();
         }

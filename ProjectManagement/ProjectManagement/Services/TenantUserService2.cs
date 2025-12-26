@@ -3,7 +3,7 @@ using Domain.DTO.User;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
+using Persistence.Factory;
 using ProjectManagement.Shared.Constant;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,7 +12,7 @@ namespace ProjectManagement.Services;
 
 public sealed class TenantUserService(
     UserManager<ApplicationUser> userManager,
-    ShardingSingleDbContext shContext,
+    IDbContextFactoryTenant dbFactory,
     ITenantContext currentTenant) : ITenantUserService
 {
     private static string GenerateRandomPassword(int length = 12)
@@ -54,7 +54,7 @@ public sealed class TenantUserService(
         return result.Succeeded ? newUser : null;
     }
 
-    public async Task<bool> RegisterAsync(TenantUserDto request)
+    public async Task<bool> RegisterAsync(TenantUserDto request, CancellationToken ct = default)
     {
         if (request is null) return false;
         if (string.IsNullOrEmpty(request.Role)) request.Role = PMRolesConst.Tenant.Admin;
@@ -68,8 +68,9 @@ public sealed class TenantUserService(
         try
         {
             await userManager.AddToRoleAsync(identityUser, request.Role);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var localUser = await shContext.User
+            var localUser = await context.User
                 .FirstOrDefaultAsync(x => x.Email == request.Email);
 
             if (localUser is null)
@@ -85,8 +86,8 @@ public sealed class TenantUserService(
                     UserName = request.Email,
                 };
 
-                shContext.User.Add(localUser);
-                await shContext.SaveChangesAsync();
+                context.User.Add(localUser);
+                await context.SaveChangesAsync();
 
                 identityUser.UserId = localUser.Id;
                 await userManager.UpdateAsync(identityUser);
@@ -102,7 +103,7 @@ public sealed class TenantUserService(
         }
     }
 
-    public async Task<bool> RecreateUserAsync(TenantUserDto tenantUser)
+    public async Task<bool> RecreateUserAsync(TenantUserDto tenantUser, CancellationToken ct = default)
     {
         if (tenantUser is null) return false;
         if (string.IsNullOrEmpty(tenantUser.Role)) tenantUser.Role = PMRolesConst.Tenant.Admin;
@@ -113,19 +114,20 @@ public sealed class TenantUserService(
         if (authUser is null) return false;
 
         await userManager.AddToRoleAsync(authUser, tenantUser.Role);
+        await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-        var userEntity = await shContext.User.FirstOrDefaultAsync(x => x.Id == tenantUser.Id);
+        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == tenantUser.Id);
         if (userEntity != null)
         {
             userEntity.ExternalAuthId = authUser.Id;
-            shContext.User.Update(userEntity);
-            await shContext.SaveChangesAsync();
+            context.User.Update(userEntity);
+            await context.SaveChangesAsync();
         }
 
         return true;
     }
 
-    public async Task<bool> UpdateUserAsync(TenantUserDto user)
+    public async Task<bool> UpdateUserAsync(TenantUserDto user, CancellationToken ct = default)
     {
         if (user is null) return false;
 
@@ -146,8 +148,9 @@ public sealed class TenantUserService(
 
         await userManager.UpdateAsync(oldUser);
         await userManager.UpdateSecurityStampAsync(oldUser);
+        await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-        var userEntity = await shContext.User.FirstOrDefaultAsync(x => x.Id == user.Id);
+        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == user.Id);
         if (userEntity != null)
         {
             userEntity.DepartmentId = user.DepartmentId;
@@ -155,8 +158,8 @@ public sealed class TenantUserService(
             userEntity.LastName = user.Lastname;
             userEntity.ExternalAuthId = user.IdAuth;
 
-            shContext.User.Update(userEntity);
-            await shContext.SaveChangesAsync();
+            context.User.Update(userEntity);
+            await context.SaveChangesAsync();
         }
 
         var roles = await userManager.GetRolesAsync(oldUser);
@@ -178,30 +181,32 @@ public sealed class TenantUserService(
         return result.Succeeded;
     }
 
-    public async Task<bool> RemoveAsync(string id, bool onlyfromregister, int userid)
+    public async Task<bool> RemoveAsync(string id, bool onlyfromregister, int userid, CancellationToken ct = default)
     {
         var deletedFromAuth = true;
 
         if (!string.IsNullOrWhiteSpace(id))
             deletedFromAuth = await DeleteUserFromAuthAsync(id);
+        await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-        var u = await shContext.User.FirstOrDefaultAsync(x => x.ExternalAuthId == id || x.Id == userid);
+        var u = await context.User.FirstOrDefaultAsync(x => x.ExternalAuthId == id || x.Id == userid);
 
         if (!onlyfromregister && u != null && deletedFromAuth)
         {
-            var calcs = shContext.Calculations.Where(x => x.IsPrivate && x.CreatedBy == u.Id);
-            shContext.Calculations.RemoveRange(calcs);
+            var calcs = context.Calculations.Where(x => x.IsPrivate && x.CreatedBy == u.Id);
+            context.Calculations.RemoveRange(calcs);
 
-            shContext.User.Remove(u);
-            await shContext.SaveChangesAsync();
+            context.User.Remove(u);
+            await context.SaveChangesAsync();
         }
 
         return true;
     }
 
-    public async Task<List<TenantUserDto>> GetAllTenantUsersAsync(int? department)
+    public async Task<List<TenantUserDto>> GetAllTenantUsersAsync(int? department, CancellationToken ct = default)
     {
-        var tenantUsersQuery = shContext.User.AsQueryable();
+        await using var context = await dbFactory.CreateDbContextAsync(ct);
+        var tenantUsersQuery = context.User.AsQueryable();
 
         if (department.HasValue)
             tenantUsersQuery = tenantUsersQuery.Where(x => x.DepartmentId == department.Value);

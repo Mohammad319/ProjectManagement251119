@@ -1,15 +1,17 @@
 ﻿using Application.Services.CalculationItems.CalcShare;
 using Domain.Entities.Calculation;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems.ShareCalc
 {
-    public sealed class ShareCalcCommandService(ShardingSingleDbContext db) : IShareCalcService
+    public sealed class ShareCalcCommandService(IDbContextFactoryTenant dbFactory) : IShareCalcService
     {
 
-        public Task<IEnumerable<ListShareCalcDTO>> GetAsync(int calculationId, int? departmentId, int userId, CancellationToken ct = default)
+        public async Task<IEnumerable<ListShareCalcDTO>> GetAsync(int calculationId, int? departmentId, int userId, CancellationToken ct = default)
         {
-            return db.ShareCalc.AsNoTracking().Where(x => x.CalculationId == calculationId &&
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.ShareCalc.AsNoTracking().Where(x => x.CalculationId == calculationId &&
                             x.Calculation.Project.Folder.DepartmentId == departmentId)
                 .Select(x => new ListShareCalcDTO
                 {
@@ -31,6 +33,7 @@ namespace Persistence.Service.CalculationItems.ShareCalc
 
         public async Task<int> CreateAsync(PostShareCalcDTO dto, int fromUser, int fromDepartment, CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             // ملاحظة: dto غالبًا يحتوي CalculationId + DepartmentId + taps
             var data = new ShareCalcData
             {
@@ -49,14 +52,15 @@ namespace Persistence.Service.CalculationItems.ShareCalc
                 metadata: data
             );
 
-            db.ShareCalc.Add(entity);
-            await db.SaveChangesAsync(ct);
+            context.ShareCalc.Add(entity);
+            await context.SaveChangesAsync(ct);
             return entity.Id;
         }
 
         public async Task<bool> UpdateAsync(UpdateShareCalcDTO dto, int fromUser, int fromDepartment, CancellationToken ct = default)
         {
-            var entity = await db.ShareCalc.FirstOrDefaultAsync(x => x.Id == dto.Id, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var entity = await context.ShareCalc.FirstOrDefaultAsync(x => x.Id == dto.Id, ct);
             if (entity == null) return false;
 
             // إن كنت تريد منع تعديل غير المالك/قسم مختلف، ضع قواعدك هنا
@@ -72,45 +76,48 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             //    Tap6 = dto.Tap6
             //});
 
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             return true;
         }
         public async Task<int> UpsertAsync(ShareCalcUpsertDTO dto, int userId, int? departmentId, CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             var data = new ShareCalcData { Tabs = dto.ResolveTabs() };
 
             if (dto.Id is null or 0)
             {
                 var entity = new ShareCalcEntity(dto.CalculationId, dto.DepartmentId, userId, data);
-                db.ShareCalc.Add(entity);
-                await db.SaveChangesAsync(ct);
+                context.ShareCalc.Add(entity);
+                await context.SaveChangesAsync(ct);
                 return entity.Id;
             }
 
-            var existing = await db.ShareCalc.FirstOrDefaultAsync(x => x.Id == dto.Id.Value, ct);
+            var existing = await context.ShareCalc.FirstOrDefaultAsync(x => x.Id == dto.Id.Value, ct);
             if (existing == null) return 0;
 
             existing.Update(dto.DepartmentId, data);
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             return existing.Id;
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            var entity = await db.ShareCalc.FindAsync(id);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var entity = await context.ShareCalc.FindAsync(id);
             if (entity == null) return false;
 
-            db.ShareCalc.Remove(entity);
-            await db.SaveChangesAsync(ct);
+            context.ShareCalc.Remove(entity);
+            await context.SaveChangesAsync(ct);
             return true;
         }
         public async Task<bool> DeleteAsync(int id, int departmentId, int userId, CancellationToken ct = default)
         {
-            var entity = await db.ShareCalc.FindAsync(id);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var entity = await context.ShareCalc.FindAsync(id);
             if (entity == null) return false;
 
-            db.ShareCalc.Remove(entity);
-            await db.SaveChangesAsync(ct);
+            context.ShareCalc.Remove(entity);
+            await context.SaveChangesAsync(ct);
             return true;
         }
     }

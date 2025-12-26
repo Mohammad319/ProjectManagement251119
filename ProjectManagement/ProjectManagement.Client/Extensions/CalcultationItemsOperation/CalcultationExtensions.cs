@@ -1,7 +1,5 @@
 ﻿using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
-using System.Linq;
-using System.Numerics;
 
 namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 {
@@ -13,8 +11,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             calc.Factors ??= [];
             calc.QuanityList ??= [];
 
-            foreach (var task in calc.Tasks.Where(x => !x.TaskId.HasValue)) task.CalcVaribles(calc.QuanityList,null);
-            foreach(TaskListMVVM task in calc.Tasks.Where(x=>x.Data.Type != TaskType.CodeName && x.Resources.Count > 0))
+            foreach (var task in calc.Tasks.Where(x => !x.TaskId.HasValue)) task.CalcVaribles(calc.QuanityList, null);
+            foreach (TaskListMVVM task in calc.Tasks.Where(x => x.Data.Type != TaskType.CodeName && x.Resources.Count > 0))
                 foreach (var res in task.Resources)
                 {
                     res.CalcVaribles(calc?.QuanityList, task?.Data?.Quantity, task?.Data?.Cap);
@@ -28,14 +26,15 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                                 x.ResId == res.ResourceTypeId &&
                                 x.ResourceType == res.ResType
                             );
-                        if (factors != null) {
-                        if(res.ResName!= factors.ResName || res.Sort != factors.Sort)
+                        if (factors != null)
+                        {
+                            if (res.ResName != factors.ResName || res.Sort != factors.Sort)
                             {
                                 factors.ResName = res.ResName;
                                 factors.Sort = res.Sort;
                             }
                             factors.AddResValue(task.Data.IsOH, res.NetCostTotaly);
-                        } 
+                        }
                         else calc.Factors.Add(Factors.AddNewFactor(task.Data.IsOH, res));
                     }
                 }

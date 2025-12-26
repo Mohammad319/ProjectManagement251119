@@ -1,8 +1,9 @@
-﻿using ProjectManagement.Shared.DTO.Calculation.Template;
+﻿using Persistence.Factory;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace Application.Services.CalculationItems.TemplateTable
 {
-    public sealed class TemplateQueryService(ShardingSingleDbContext context) : ITemplateQueryService
+    public sealed class TemplateQueryService(IDbContextFactoryTenant dbFactory) : ITemplateQueryService
     {
 
         // مكافئ GetTemplateByIdQuery القديم :contentReference[oaicite:1]{index=1}
@@ -11,6 +12,7 @@ namespace Application.Services.CalculationItems.TemplateTable
             int? departmentId,
             CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.Templates
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
@@ -37,6 +39,7 @@ namespace Application.Services.CalculationItems.TemplateTable
             int? departmentId,
             CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.Templates
                 .AsNoTracking()
                 .Where(x => x.DepartmentId == departmentId)

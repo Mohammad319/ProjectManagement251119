@@ -1,7 +1,7 @@
 ﻿namespace Persistence.Factory
 {
 
-    public interface IDbContextFactory
+    public interface IDbContextFactoryTenant
     {
         ShardingSingleDbContext CreateDbContext();
         Task<ShardingSingleDbContext> CreateDbContextAsync(CancellationToken ct = default);

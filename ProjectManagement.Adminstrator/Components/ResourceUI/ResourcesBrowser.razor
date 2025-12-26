@@ -102,7 +102,7 @@
     private List<ResourceDefinition> resourcesToShow = new();
     private HashSet<int> expanded = new();
     private HashSet<int> selectedFolderIds = new();
-    void CalcModeal(ResourceDefinition model) => MHD.Modal.AddModal<CalcResCostUI>(model.Name,
+    void CalcModeal(ResourceDefinition model) => MHD.Modal.ShowComponent<CalcResCostUI>(model.Name,
     new Dictionary<string, object>
     {
         [nameof(CalcResCostUI.Resource)] = model,
@@ -138,7 +138,7 @@
             };
         await ContextService.ShowMenuAsync(list);
     }
-    void UpdateForm(ResourceDefinition model) => MHD.Modal.AddModal<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
+    void UpdateForm(ResourceDefinition model) => MHD.Modal.ShowComponent<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
 new Dictionary<string, object>
 {
 [nameof(ResourceFormDLUI.model)] = model,
@@ -152,13 +152,13 @@ new Dictionary<string, object>
 
     private void AddFolder(int? parentID) => UpdateForm(new ResourceCategory() { DisplayName = "", ParentCategoryId = parentID });
     void UpdateForm(ResourceCategory model) =>
-    Modal.AddModal<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+    Modal.ShowComponent<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
         AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
         {
             [nameof(FolderFormUI.Form)] = model,
             [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-        }, SizeMHD.Medium);
-    void Remove(ResourceCategory model) => MHD.DeleteMessage(model.DisplayName, () => DeleteFolder(model.Id));
+        }, DialogSize.Medium);
+    void Remove(ResourceCategory model) => MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => DeleteFolder(model.Id)));
     private async Task DeleteFolder(int id)
     {
         try
@@ -183,7 +183,7 @@ new Dictionary<string, object>
 
     async Task BtnUpdate(bool IsSuccess)
     {
-        Modal.ClearModal();
+        Modal.Close();
         if (IsSuccess)
         {
             Folders = await ResourceFolderService.GetAllAsync();

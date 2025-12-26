@@ -1,6 +1,7 @@
 ﻿using Application.Services.CalculationItems.Storage;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Enums;
@@ -8,7 +9,7 @@ using System.Text.Json;
 
 namespace Persistence.Service.CalculationItems.Storage
 {
-    public sealed class StorageQueryService(ShardingSingleDbContext db) : IStorageQueryService
+    public sealed class StorageQueryService(IDbContextFactoryTenant dbFactory) : IStorageQueryService
     {
         public async Task<IEnumerable<StorageDTO<object>>> GetAsync(
             CalculationItemType type,
@@ -16,7 +17,8 @@ namespace Persistence.Service.CalculationItems.Storage
             StorageSort sort,
             CancellationToken ct = default)
         {
-            var data = await db.Storages
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var data = await context.Storages
                 .Where(x =>
                     x.StorageType == type &&
                     x.StorageLevel == level &&

@@ -60,13 +60,13 @@
                     new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () =>{ Delete_Click(item); return Task.CompletedTask; } }
             });
     void UpdateUser(ApplicationUser user) =>
-        Modal.AddModal<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Id], new Dictionary<string, object>
+        Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Id], new Dictionary<string, object>
         {
             [nameof(UpdateUserUI.UserForm)] = user,
             [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack),
         });
     void RegisterModal() =>
-    Modal.AddModal<UpdateUserUI>(ResourceIdentity.register, new Dictionary<string, object>
+    Modal.ShowComponent<UpdateUserUI>(ResourceIdentity.register, new Dictionary<string, object>
     {
         [nameof(UpdateUserUI.UserForm)] = new ApplicationUser(){Id = string.Empty},
         [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack),
@@ -75,7 +75,7 @@
     async Task CallBack(bool refresh)
     {
         if (refresh) await GetUsersAsync();
-        Modal.CloseLastModal();
+        Modal.Close();
     }
     private async Task RemoveAsync(ApplicationUser deleteConfirmed)
     {
@@ -85,22 +85,22 @@
     }
     bool Remove(ApplicationUser user)
     {
-        MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email], MhdState.Warning, () => RemoveAsync(user));
+        MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
         return true;
     }
     void Delete_Click(ApplicationUser user)
     {
-        MHD.DeleteMessage(user.Email, () => Remove(user));
+        MHD.DeleteMessage(user.Email, EventCallback.Factory.Create(this, () => Remove(user)));
 
     }
     List<ApplicationUser>? Users;
 
     async Task GetUsersAsync()
     {
-        MHD.Loading.New();
+        MHD.Loading.Begin();
         Users = null;
         Users = await  UsersService.GetUsersAsync(null);
-        MHD.Loading.Close();
+        MHD.Loading.End();
         StateHasChanged();
     }
     protected async override Task OnInitializedAsync()

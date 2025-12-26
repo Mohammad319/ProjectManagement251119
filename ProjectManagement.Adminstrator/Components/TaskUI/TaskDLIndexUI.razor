@@ -132,7 +132,7 @@ else
 }
 
 @code {
-    void TaskChoiceResourceBin(ProjectTaskListItemDto model,ResourceTaskIndexDto resourceId) => MHD.Modal.AddModal<TaskResourceUI>
+    void TaskChoiceResourceBin(ProjectTaskListItemDto model,ResourceTaskIndexDto resourceId) => MHD.Modal.ShowComponent<TaskResourceUI>
     (model.DisplayName + " Resource",
 new Dictionary<string, object>
 {
@@ -143,7 +143,7 @@ new Dictionary<string, object>
     private string errorMessage;
     List<int> ColspanTaskIDs = [];
     private void ConfirmDelete(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
-    => MHD.DeleteMessage(res.DisplayName, () => RemoveAsync(task,res));
+    => MHD.DeleteMessage(res.DisplayName, EventCallback.Factory.Create(this, () => RemoveAsync(task, res)));
 
     async Task RemoveAsync(ProjectTaskListItemDto task,ResourceTaskIndexDto res)
     {
@@ -188,7 +188,7 @@ new Dictionary<string, object>
     private void OpenEditor(int id)
     {
         var title = id == 0 ? ResourceApp.newItem : ResourceApp.update;
-        MHD.Modal.AddModal<TaskDLFormUI>(title, new Dictionary<string, object>
+        MHD.Modal.ShowComponent<TaskDLFormUI>(title, new Dictionary<string, object>
         {
             [nameof(TaskDLFormUI.TaskId)] = id,
             [nameof(TaskDLFormUI.Saved)] = EventCallback.Factory.Create<bool>(this, ReloadAsync),
@@ -197,27 +197,27 @@ new Dictionary<string, object>
 
     private void OpenConditions(int id, string name)
     {
-        MHD.Modal.AddModal<QuestionConditionListUI>($"Questions for Task {name}",
+        MHD.Modal.ShowComponent<QuestionConditionListUI>($"Questions for Task {name}",
             new Dictionary<string, object> { [nameof(QuestionConditionListUI.TaskId)] = id });
     }
 
     private void OpenGroups(int id, string name)
     {
-        MHD.Modal.AddModal<TaskGroupsFormUI>($"Questions for Task {name}",
+        MHD.Modal.ShowComponent<TaskGroupsFormUI>($"Questions for Task {name}",
             new Dictionary<string, object> { [nameof(TaskGroupsFormUI.ID)] = id });
     }
 
     private void OpenTaskFolders(int id, string name)
     {
         // Wichtig: ParentTaskId an Child übergeben (Child erwartet ParentTaskId, nicht ProjectTask)
-        MHD.Modal.AddModal<TaskFolders>(ResourceLoc.resource, new Dictionary<string, object>
+        MHD.Modal.ShowComponent<TaskFolders>(ResourceLoc.resource, new Dictionary<string, object>
         {
             [nameof(TaskFolders.TaskId)] = id
         });
     }
 
     private void ConfirmDelete(int id, string name)
-        => MHD.DeleteMessage(name, () => DeleteAsync(id));
+        => MHD.DeleteMessage(name, EventCallback.Factory.Create(this, () => DeleteAsync(id)));
 
     private async Task DeleteAsync(int id)
     {

@@ -1,13 +1,8 @@
 ﻿using Application.Feature.Calculation.TaskStatus.Commands;
 using Application.Feature.Calculation.TaskStatus.Queries;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
-
-using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Client.Shared.ResourceFiles;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ProjectManagement.Components.ControlComponents.TaskStatus
 {

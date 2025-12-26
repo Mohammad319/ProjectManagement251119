@@ -7,7 +7,7 @@ using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Persistence.Service.Organisation
 {
-    public sealed class OrganisationService(IDbContextFactory dbFactory) : IOrganisationService
+    public sealed class OrganisationService(IDbContextFactoryTenant dbFactory) : IOrganisationService
     {
         public async Task<int> CreateAsync(PostOrganisationDTO dto, CancellationToken ct = default)
         {

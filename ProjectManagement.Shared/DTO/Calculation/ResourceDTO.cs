@@ -3,7 +3,6 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Enums;
-using ProjectManagement.Shared.ValueObjects.Calculation;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -33,7 +32,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
         [Required]
-        public double? Quantity { get; set; }
+        public double Quantity { get; set; }
         public double? CO2 { get; set; }
         public decimal Cost { get; set; }
         public decimal? BaseCost { get; set; }
@@ -42,7 +41,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
         //public CostValue Cost { get; private set; } = null!;
 
-        [JsonIgnore]public List<string> Formulas { get; set; } = [];
+        [JsonIgnore] public List<string> Formulas { get; set; } = [];
         [JsonIgnore] public bool IsAdded { get; set; }
         [JsonIgnore] public int? GroupId { get; set; } = null;
         [JsonIgnore] public List<ResourcePropertyBindDto> Properties { get; set; } = [];

@@ -1,10 +1,4 @@
-﻿using AuthPermissions.Context;
-using Domain.DTO.User;
-using Domain.Entities.Users;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
-using ProjectManagement.Shared.Constant;
+﻿using Domain.DTO.User;
 
 namespace ProjectManagement.Services
 {
@@ -24,11 +18,11 @@ namespace ProjectManagement.Services
 
     public interface ITenantUserService
     {
-        Task<bool> RecreateUserAsync(TenantUserDto tenantUser);
-        Task<List<TenantUserDto>> GetAllTenantUsersAsync(int? department);
-        Task<bool> UpdateUserAsync(TenantUserDto user);
-        Task<bool> RegisterAsync(TenantUserDto request);
-        Task<bool> RemoveAsync(string id, bool onlyfromregister, int userid);
+        Task<bool> RecreateUserAsync(TenantUserDto tenantUser, CancellationToken ct = default);
+        Task<List<TenantUserDto>> GetAllTenantUsersAsync(int? department, CancellationToken ct = default);
+        Task<bool> UpdateUserAsync(TenantUserDto user, CancellationToken ct = default);
+        Task<bool> RegisterAsync(TenantUserDto request, CancellationToken ct = default);
+        Task<bool> RemoveAsync(string id, bool onlyfromregister, int userid, CancellationToken ct = default);
     }
 
 }

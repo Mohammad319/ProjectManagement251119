@@ -7,7 +7,7 @@ namespace ProjectManagement.Factories;
 
 public sealed class DbContextFactory(TenantContext tenantContext,ITenantConnectionStringProvider connProvider,
     ITenantDbContextOptionsCache optionsCache,TenantAuditSaveChangesInterceptor interceptor,
-    ITenantContextResolver resolver) : IDbContextFactory
+    ITenantContextResolver resolver) : IDbContextFactoryTenant
 {
     public async Task<ShardingSingleDbContext> CreateDbContextAsync(CancellationToken ct = default)
     {

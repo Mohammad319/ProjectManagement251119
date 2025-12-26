@@ -26,7 +26,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         bool Loading = false;
         [Parameter] public EventCallback<bool> Callback { get; set; }
         void UserRoleDialog(ApplicationUser user) =>
-    Modal.AddModal<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Email], new Dictionary<string, object>
+    Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Email], new Dictionary<string, object>
     {
         [nameof(UpdateUserUI.UserForm)] = user,
         [nameof(UpdateUserUI.TenantId)] = TenantPut.Id,
@@ -40,7 +40,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
                 await GetUsersAsync();
                 Loading = false;
             }
-            Modal.CloseLastModal();
+            Modal.Close();
         }
         private async Task RemoveAsync(ApplicationUser deleteConfirmed)
         {
@@ -52,7 +52,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         }
         void Remove(ApplicationUser user)
         {
-            MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email], MhdState.Warning, () => RemoveAsync(user));
+            MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
         }
 
         async Task GetUsersAsync()

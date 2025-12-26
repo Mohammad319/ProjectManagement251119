@@ -1,16 +1,18 @@
 ﻿using Application.Extention;
 using Application.Feature.Calculation.Resource;
 using Domain.Entities.Calculation;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 namespace Persistence.Service.CalculationItems
 {
-    public sealed class ResourceQueryService(ShardingSingleDbContext dataAccess) : IResourceQueryService
+    public sealed class ResourceQueryService(IDbContextFactoryTenant dbFactory) : IResourceQueryService
     {
         public async Task<List<ResourceListDTO>> GetByFilterAsync(
             FilterCalculationItemsDto filter,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
-            var query = dataAccess.Resources
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            var query = context.Resources
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -25,7 +27,7 @@ namespace Persistence.Service.CalculationItems
                 .Include(x => x.ResourceSort)
                 .Include(x => x.ResourceType);
 
-            var resultList = await query.ToListAsync(cancellationToken);
+            var resultList = await query.ToListAsync(ct);
 
             // فلترة Unit على الـ Metadata في الذاكرة (لو Unit مخزنة في JSON)
             if (!string.IsNullOrWhiteSpace(filter.Unit))

@@ -10,18 +10,18 @@
     <button @onclick="() => UpdateForm()" class="@CssClasses.Btn.Outline.Success">@((MarkupString)Icons.Plus)</button>
     <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.Outline.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
 </div>
-<Grid TItem="ActionTypeEntity" Items="ActionTypesList?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)">
+<MhdTable TItem="ActionTypeEntity" Items="ActionTypesList?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)">
 
-        <Column>
+        <MhdTableColumn>
             <Template Context="status">
                 <div class="@CssClasses.Layout.FlexItemsCenter">
                     <button @onclick="() => UpdateForm(status)" class="@CssClasses.Btn.Outline.Warning">@Icons.Edit</button>
                     <button @onclick="() => Remove(status)" class="@CssClasses.Btn.Outline.Danger">@Icons.Delete</button>
                 </div>
             </Template>
-        </Column>
-        <Column Title="" ValueSelector="c => c.Name"></Column>
-</Grid>
+        </MhdTableColumn>
+        <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
+</MhdTable>
 
 
 @code {
@@ -34,16 +34,16 @@
         ActionTypeEntity up = new() { Name=""};
         PropertyCopier.CopyPropertiesTo(model, up);
 
-        Modal.AddModal<ActionTypeFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+        Modal.ShowComponent<ActionTypeFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
                     AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>
                         {
                             [nameof(ActionTypeFormUI.Model)] = up,
                             [nameof(ActionTypeFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
                         }
-                    , SizeMHD.Medium);
+                    , DialogSize.Medium);
     }
     void Remove(ActionTypeEntity model) =>
-    MHD.DeleteMessage(model.Name, () => ConfirmRemoveAsync(model));
+    MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
     async Task ConfirmRemoveAsync(ActionTypeEntity model)
     {
@@ -58,7 +58,7 @@
     }
     async Task BtnUpdate(bool IsSuccess)
     {
-        Modal.ClearModal();
+        Modal.Close();
         if (IsSuccess)
         {
             ActionTypesList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync());

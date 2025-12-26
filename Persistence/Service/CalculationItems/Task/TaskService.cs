@@ -3,17 +3,15 @@ using Application.Feature.Calculation.Task;
 using Application.Interfaces;
 using Application.Mapping.CalcItems;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
+using Persistence.Factory;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
-using ProjectManagement.Shared.Enums;
 
 namespace Persistence.Service.CalculationItems
 {
-    public class TaskService(ShardingSingleDbContext context, INotificationHub notification) : ITaskService
+    public class TaskService(IDbContextFactoryTenant dbFactory, INotificationHub notification) : ITaskService
     {
 
         // -----------------------------------------------------
@@ -26,15 +24,16 @@ namespace Persistence.Service.CalculationItems
             int targetCalcId,
             bool isOH,
             bool deleteOriginal = false,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
             if (taskItems is null || taskItems.Count == 0)
                 return false;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var resultDtos = new List<TaskListDTO>();
 
             // ✅ نحسب الـ Order في الـ Target Calculation (وليس المصدر)
-            double order = await GetMaxOrderAsync(targetCalcId, parentTaskId, cancellationToken);
+            double order = await GetMaxOrderAsync(targetCalcId, parentTaskId, ct);
 
             foreach (var item in taskItems)
             {
@@ -46,7 +45,7 @@ namespace Persistence.Service.CalculationItems
                     deleteOriginal: deleteOriginal,
                     parentTaskId: parentTaskId,
                     order: order,
-                    cancellationToken: cancellationToken);
+                    ct: ct);
 
                 if (clonedTasks is not null && clonedTasks.Any())
                 {
@@ -71,17 +70,18 @@ namespace Persistence.Service.CalculationItems
         public async Task<bool> CreateAsync(
             IReadOnlyList<TaskPostDTO> tasks,
             int targetCalcId,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
             if (tasks is null || tasks.Count == 0)
                 return false;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             int? parentTaskId = tasks.FirstOrDefault()?.ParentTaskId;
 
             if (parentTaskId.HasValue && parentTaskId > 0)
             {
                 var parentTask = await context.Tasks
-                    .FirstOrDefaultAsync(x => x.Id == parentTaskId && x.CalculationId == targetCalcId, cancellationToken);
+                    .FirstOrDefaultAsync(x => x.Id == parentTaskId && x.CalculationId == targetCalcId, ct);
 
                 if (parentTask == null)
                     return false;
@@ -97,7 +97,7 @@ namespace Persistence.Service.CalculationItems
             else
             {
                 bool calcExists = await context.Calculations
-                    .AnyAsync(x => x.Id == targetCalcId, cancellationToken);
+                    .AnyAsync(x => x.Id == targetCalcId, ct);
 
                 if (!calcExists)
                     return false;
@@ -108,13 +108,13 @@ namespace Persistence.Service.CalculationItems
                 .ToList();
 
             context.Tasks.AddRange(entities);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(ct);
 
             var entityIds = entities.Select(e => e.Id).ToList();
-            await LoadTaskNavigationAsync(entityIds, cancellationToken);
+            await LoadTaskNavigationAsync(entityIds, ct);
 
             entities = TaskExtention.FlattenTasks(entities);
-            await NotifyTasks(OperationType.AddRange, targetCalcId, entities, cancellationToken);
+            await NotifyTasks(OperationType.AddRange, targetCalcId, entities, ct);
 
             return true;
         }
@@ -129,7 +129,7 @@ namespace Persistence.Service.CalculationItems
             IReadOnlyList<ResourceTaskItemDTO> items,
             double order = 100,
             bool isOH = false,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
             if (items is null || items.Count == 0)
                 return false;
@@ -137,6 +137,7 @@ namespace Persistence.Service.CalculationItems
             // في الكوماند القديمة: إذا 0 نعتبره null
             if (parentTaskId == 0)
                 parentTaskId = null;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             double? maxOrder = 0;
 
@@ -151,7 +152,7 @@ namespace Persistence.Service.CalculationItems
                     .Include(x => x.Tasks)
                     .FirstOrDefaultAsync(
                         x => x.Id == parentTaskId && x.CalculationId == targetCalcId,
-                        cancellationToken);
+                        ct);
 
                 if (parent == null)
                     return false;
@@ -169,7 +170,7 @@ namespace Persistence.Service.CalculationItems
                 var calc = await context.Calculations
                     .AsNoTracking()
                     .Include(c => c.Tasks)
-                    .FirstOrDefaultAsync(x => x.Id == targetCalcId, cancellationToken);
+                    .FirstOrDefaultAsync(x => x.Id == targetCalcId, ct);
 
                 if (calc == null)
                     return false;
@@ -198,7 +199,7 @@ namespace Persistence.Service.CalculationItems
                     var task = await context.Tasks
                         .FirstOrDefaultAsync(
                             x => x.Id == item.Id && x.CalculationId == sourceCalcId,
-                            cancellationToken);
+                            ct);
 
                     if (task == null)
                         continue;
@@ -218,7 +219,7 @@ namespace Persistence.Service.CalculationItems
                         .FromSqlRaw("EXEC GetRecursiveTasks {0}", item.Id)
                         .IgnoreQueryFilters()
                         .AsNoTracking()
-                        .ToListAsync(cancellationToken);
+                        .ToListAsync(ct);
 
                     if (tasks == null || tasks.Count == 0)
                         continue;
@@ -228,7 +229,7 @@ namespace Persistence.Service.CalculationItems
                     var resources = await context.Resources
                         .Where(r => taskIds.Contains(r.TaskId))
                         .AsNoTracking()
-                        .ToListAsync(cancellationToken);
+                        .ToListAsync(ct);
 
                     foreach (var t in tasks)
                     {
@@ -247,12 +248,12 @@ namespace Persistence.Service.CalculationItems
                     var originalRoot = await context.Tasks
                         .FirstOrDefaultAsync(
                             x => x.Id == item.Id && x.CalculationId == sourceCalcId,
-                            cancellationToken);
+                            ct);
 
                     if (originalRoot != null)
                     {
                         context.Tasks.Remove(originalRoot);
-                        await context.SaveChangesAsync(cancellationToken);
+                        await context.SaveChangesAsync(ct);
                     }
 
                     // إعداد خصائص الجذر في الـ Calculation الجديدة
@@ -273,18 +274,18 @@ namespace Persistence.Service.CalculationItems
 
                     TaskExtention.SetNetCalcId(root);
 
-                    await context.Tasks.AddAsync(root, cancellationToken);
+                    await context.Tasks.AddAsync(root, ct);
                     movedEntities.Add(root);
                 }
             }
 
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(ct);
 
             // تحميل الـ Navigation المطلوبة (Status / Opportunity)
             foreach (var item in movedEntities)
             {
-                await context.Tasks.Entry(item).Reference(p => p.Status).LoadAsync(cancellationToken);
-                await context.Tasks.Entry(item).Reference(p => p.Opportunity).LoadAsync(cancellationToken);
+                await context.Tasks.Entry(item).Reference(p => p.Status).LoadAsync(ct);
+                await context.Tasks.Entry(item).Reference(p => p.Opportunity).LoadAsync(ct);
             }
 
             // تجهيز DTOs للإرسال عبر الـ Hub
@@ -326,8 +327,10 @@ namespace Persistence.Service.CalculationItems
         public async Task<bool> DeleteAsync(
             IEnumerable<int> taskIds,
             int calcId,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             if (taskIds is null)
                 return false;
 
@@ -335,7 +338,7 @@ namespace Persistence.Service.CalculationItems
 
             foreach (var id in taskIds)
             {
-                var tasksToDelete = await GetTaskWithChildrenAsync(id, cancellationToken);
+                var tasksToDelete = await GetTaskWithChildrenAsync(id, ct);
                 if (tasksToDelete is not null && tasksToDelete.Any())
                 {
                     deletedTaskIds.Add(id);
@@ -343,7 +346,7 @@ namespace Persistence.Service.CalculationItems
                 }
             }
 
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(ct);
 
             await notification.SendNotificationAsync(
                 calcId.ToString(),
@@ -360,18 +363,20 @@ namespace Persistence.Service.CalculationItems
         public async Task<bool> NewOrderAsync(
             int taskId,
             double newOrder,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             var taskWithCalcId = await context.Tasks
                 .Where(x => x.Id == taskId)
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(ct);
 
             if (taskWithCalcId == null)
                 return false;
 
             taskWithCalcId.Task.SortOrder = newOrder;
-            return await UpdateTaskAsync(taskWithCalcId.CalcId, taskWithCalcId.Task, cancellationToken);
+            return await UpdateTaskAsync(taskWithCalcId.CalcId, taskWithCalcId.Task, ct);
         }
 
         // -----------------------------------------------------
@@ -380,12 +385,13 @@ namespace Persistence.Service.CalculationItems
         public async Task<bool> UpdateAsync(
             int taskId,
             TaskPostDTO dto,
-            CancellationToken cancellationToken = default)
+            CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             var taskWithCalcId = await context.Tasks
                 .Where(x => x.Id == taskId)
                 .Select(x => new { Task = x, CalcId = x.CalculationId })
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(ct);
 
             if (taskWithCalcId == null)
                 return false;
@@ -403,7 +409,7 @@ namespace Persistence.Service.CalculationItems
                 dto.Metadata.Type == TaskType.CodeName)
             {
                 bool hasResources = await context.Resources
-                    .AnyAsync(x => x.TaskId == task.Id, cancellationToken);
+                    .AnyAsync(x => x.TaskId == task.Id, ct);
 
                 if (hasResources)
                     return false;
@@ -418,7 +424,7 @@ namespace Persistence.Service.CalculationItems
                 };
             }
 
-            return await UpdateTaskAsync(taskWithCalcId.CalcId, task, cancellationToken);
+            return await UpdateTaskAsync(taskWithCalcId.CalcId, task, ct);
         }
 
         // -----------------------------------------------------
@@ -427,12 +433,13 @@ namespace Persistence.Service.CalculationItems
         private async Task<bool> UpdateTaskAsync(
             int calcId,
             TaskEntity task,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             context.Tasks.Update(task);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(ct);
 
-            await LoadTaskNavigationAsync([task.Id], cancellationToken);
+            await LoadTaskNavigationAsync([task.Id], ct);
 
             var taskDto = task.MapToTaskListDTO();
 
@@ -450,13 +457,15 @@ namespace Persistence.Service.CalculationItems
         // -----------------------------------------------------
         private async Task<List<TaskEntity>> GetTaskWithChildrenAsync(
             int rootTaskId,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             return await context.Tasks
                 .FromSqlRaw("EXEC GetRecursiveTasks {0}", rootTaskId)
                 .IgnoreQueryFilters()
                 .AsNoTracking()
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
         }
 
         // -----------------------------------------------------
@@ -467,6 +476,8 @@ namespace Persistence.Service.CalculationItems
             int? parentTaskId,
             CancellationToken ct)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             if (parentTaskId.HasValue)
             {
                 var max = await context.Tasks
@@ -498,18 +509,19 @@ namespace Persistence.Service.CalculationItems
             bool deleteOriginal,
             int? parentTaskId,
             double order,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
-            var tasks = await GetTaskWithChildrenAsync(rootTaskId, cancellationToken);
+            var tasks = await GetTaskWithChildrenAsync(rootTaskId, ct);
             if (tasks == null || tasks.Count == 0)
                 return null;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var taskIds = tasks.Select(t => t.Id).ToList();
 
             var resources = await context.Resources
                 .Where(r => taskIds.Contains(r.TaskId))
                 .AsNoTracking()
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
 
             foreach (var task in tasks)
                 task.Resources = [.. resources.Where(r => r.TaskId == task.Id)];
@@ -527,10 +539,10 @@ namespace Persistence.Service.CalculationItems
             // ✅ استعمل الـ order اللي تم تمريره
             rootTask.SortOrder = order;
 
-            await context.Tasks.AddAsync(rootTask, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
+            await context.Tasks.AddAsync(rootTask, ct);
+            await context.SaveChangesAsync(ct);
 
-            await LoadTaskReferencesAsync(tasks, cancellationToken);
+            await LoadTaskReferencesAsync(tasks, ct);
 
             // ملاحظة: deleteOriginal يمكن استخدامه لاحقاً في CutAsync لحذف النسخة الأصلية
             return tasks;
@@ -541,16 +553,17 @@ namespace Persistence.Service.CalculationItems
         // -----------------------------------------------------
         private async Task LoadTaskNavigationAsync(
             List<int> taskIds,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
             if (taskIds == null || taskIds.Count == 0)
                 return;
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             await context.Tasks
                 .Where(t => taskIds.Contains(t.Id))
                 .Include(t => t.Status)
                 .Include(t => t.Opportunity)
-                .LoadAsync(cancellationToken);
+                .LoadAsync(ct);
         }
 
         // -----------------------------------------------------
@@ -558,15 +571,15 @@ namespace Persistence.Service.CalculationItems
         // -----------------------------------------------------
         public async Task LoadTaskReferencesAsync(
             List<TaskEntity> tasks,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
             if (tasks == null || tasks.Count == 0)
                 return;
 
             List<int> taskIds = [.. tasks.Select(t => t.Id)];
 
-            await LoadTaskNavigationAsync(taskIds, cancellationToken);
-
+            await LoadTaskNavigationAsync(taskIds, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             List<ResourceEntity> allResources = await context.Resources
                 .Where(r => taskIds.Contains(r.TaskId))
                 .Include(r => r.Status)
@@ -574,7 +587,7 @@ namespace Persistence.Service.CalculationItems
                 .Include(r => r.ResourceType)
                 .Include(r => r.ResourceSort)
                 .AsNoTracking()
-                .ToListAsync(cancellationToken);
+                .ToListAsync(ct);
 
             var resourceLookup = allResources
                 .GroupBy(r => r.TaskId)
@@ -593,7 +606,7 @@ namespace Persistence.Service.CalculationItems
             OperationType operationType,
             int calcId,
             List<TaskEntity> tasks,
-            CancellationToken cancellationToken)
+            CancellationToken ct)
         {
             var dtos = tasks.MapToTaskListDTOs();
 

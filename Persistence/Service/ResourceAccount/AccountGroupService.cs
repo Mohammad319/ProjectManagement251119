@@ -1,17 +1,17 @@
 ﻿using Application.Feature.Account;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using Persistence.Context;
+using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.General;
 
 namespace Persistence.Service.ResourceAccount
 {
-    public sealed class AccountGroupService(ShardingSingleDbContext db) : IAccountGroupService
+    public sealed class AccountGroupService(IDbContextFactoryTenant dbFactory) : IAccountGroupService
     {
-        public Task<List<ListDTO>> GetGroupsAsListAsync(CancellationToken ct = default)
+        public async Task<List<ListDTO>> GetGroupsAsListAsync(CancellationToken ct = default)
         {
-            return db.AccountGroup
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.AccountGroup
                 .AsNoTracking()
                 .OrderBy(x => x.Name)
                 .Select(x => new ListDTO
@@ -22,9 +22,10 @@ namespace Persistence.Service.ResourceAccount
                 .ToListAsync(ct);
         }
 
-        public Task<List<ListAccountGroupIncludeAccountDTO>> GetGroupsWithAccountsAsync(CancellationToken ct = default)
+        public async Task<List<ListAccountGroupIncludeAccountDTO>> GetGroupsWithAccountsAsync(CancellationToken ct = default)
         {
-            return db.AccountGroup
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.AccountGroup
                 .AsNoTracking()
                 .OrderBy(x => x.Name)
                 .Select(x => new ListAccountGroupIncludeAccountDTO
@@ -45,15 +46,17 @@ namespace Persistence.Service.ResourceAccount
         }
         public async Task<int> CreateAsync(PostAccountGroupDTO dto, CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
             var entity = new AccountGroupEntity(dto.Name);
-            db.AccountGroup.Add(entity);
-            await db.SaveChangesAsync(ct);
+            context.AccountGroup.Add(entity);
+            await context.SaveChangesAsync(ct);
             return entity.Id;
         }
 
         public async Task<List<int>> CreateRangeAsync(List<PostAccountGroupWithAccountsDTO> items, CancellationToken ct = default)
         {
             var groups = new List<AccountGroupEntity>();
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             foreach (var item in items)
             {
@@ -70,28 +73,32 @@ namespace Persistence.Service.ResourceAccount
                 groups.Add(group);
             }
 
-            db.AccountGroup.AddRange(groups);
-            await db.SaveChangesAsync(ct);
+            context.AccountGroup.AddRange(groups);
+            await context.SaveChangesAsync(ct);
             return groups.Select(x => x.Id).ToList();
         }
 
         public async Task<bool> UpdateAsync(int id, PostAccountGroupDTO dto, CancellationToken ct = default)
         {
-            var existing = await db.AccountGroup.FirstOrDefaultAsync(x => x.Id == id, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var existing = await context.AccountGroup.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (existing is null) return false;
 
             existing.Update(dto.Name);
-            await db.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
             return true;
         }
 
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
-            var existing = await db.AccountGroup.FindAsync([id], ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var existing = await context.AccountGroup.FindAsync([id], ct);
             if (existing is null) return false;
 
-            db.AccountGroup.Remove(existing);
-            await db.SaveChangesAsync(ct);
+            context.AccountGroup.Remove(existing);
+            await context.SaveChangesAsync(ct);
             return true;
         }
     }

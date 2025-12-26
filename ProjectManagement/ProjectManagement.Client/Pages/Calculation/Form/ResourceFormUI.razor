@@ -9,8 +9,7 @@
 @using ProjectManagement.Shared.Enums
 
 @inherits AppComponentBase
-<EditForm id="resForm" Model="ResourceUpdate"
-          OnValidSubmit="async()=> await HandleSubmitAsync()">
+<EditForm id="resForm" Model="ResourceUpdate" OnValidSubmit="async()=> await HandleSubmitAsync()">
 
     @if (Resource.Id == 0 && PostList.Count > 1)
     {
@@ -27,7 +26,7 @@
         </div>
     }
 
-    <DataAnnotationsValidator />
+    @* <DataAnnotationsValidator /> *@
 
     @* PANEL 1: الاسم + مجموعة الحساب + الحساب *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">

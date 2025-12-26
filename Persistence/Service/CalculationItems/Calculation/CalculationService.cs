@@ -305,15 +305,13 @@
 using Application.Feature.Calculation.Calculation;
 using Application.Interfaces;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
-using Persistence.Context;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems
 {
-    public sealed class CalculationService(IDbContextFactory dbFactory, INotificationHub notification)
+    public sealed class CalculationService(IDbContextFactoryTenant dbFactory, INotificationHub notification)
         : ICalculationService
     {
         public async Task<int> CreateAsync(

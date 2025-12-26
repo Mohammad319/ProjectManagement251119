@@ -1,4 +1,4 @@
-﻿/*.calcPage {
+﻿﻿ /*.calcPage {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -9,8 +9,6 @@
     flex-direction: column;
     overflow: auto;
 }*/
-
-
 .calcPage {
     display: flex;
     flex-direction: column;

@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Persistence.Service.Organisation
 {
-    public sealed class OrganisationCategoryService(IDbContextFactory dbFactory) : IOrganisationCategoryService
+    public sealed class OrganisationCategoryService(IDbContextFactoryTenant dbFactory) : IOrganisationCategoryService
     {
         public async Task<int> CreateAsync(PostOrganisationCategoryDTO dto, CancellationToken ct = default)
         {
