@@ -28,9 +28,7 @@ namespace Domain.Entities.Calculation
 
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
-        [Required]
-        public double Quantity { get; set; }
-        public double? CO2 { get; set; }
+
         private ResourceData? _metadata;
         public ResourceData Metadata
         {
@@ -93,9 +91,6 @@ namespace Domain.Entities.Calculation
             Note = dto.Note;
             Unit = dto.Unit;
 
-            Quantity = dto.Quantity;
-            CO2 = dto.CO2;
-
             Metadata = dto.Data;
 
             // --------- العلاقات ---------
@@ -135,8 +130,6 @@ namespace Domain.Entities.Calculation
                 IsActive = r.IsActive,
                 Unit = r.Unit,
                 Note = r.Note,
-                Quantity = r.Quantity,
-                CO2 = r.CO2,
                 Cost = new CostValue(
                     r.Cost.Cost,
                     r.Cost.BaseCost,

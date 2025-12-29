@@ -155,11 +155,11 @@
 
     <TopContent>
         <div class="divNetCalc"
-             style="--net-text-color:@Template.NetColor[2];
-                    --net-border-color:@Template.NetColor[1];
-                    --net-header-bg:@Template.NetColor[3];
-                    --net-note-color:@Template.NetColor[7];
-                    --net-border-style:@Template.NetColor[0];">
+             style="--net-text-color:@Template?.NetCalc.Color.Text;
+                    --net-border-color:@Template?.NetCalc.Color.Border;
+                    --net-header-bg:@Template?.NetCalc.Color.Header;
+                    --net-note-color:@Template?.NetCalc.Color.Note;
+                    --net-border-style:@Template?.NetCalc.Color.BorderStyle;">
             <CalcDataGrid></CalcDataGrid>
         </div>
     </TopContent>
@@ -179,8 +179,8 @@
     }
     void ItemsOnlyOH()
     {
-        Calc.OHFactors = !Calc.OHFactors;
-        Calc.RefreshCalculation();
+        Calc?.OHFactors = !Calc.OHFactors;
+        Calc?.RefreshCalculation();
     }
     void UnSelectedAll()
     {

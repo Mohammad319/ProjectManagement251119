@@ -41,20 +41,17 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
 
                 // item بالشكل: "columnIndex||newWidth"
                 string[] arr = item.Split("||", StringSplitOptions.RemoveEmptyEntries);
-
-                if (arr.Length < 2)
-                    return;
+                if (arr.Length < 2) return;
 
                 int headerIndex = int.Parse(arr[0]);
                 int newWidth = int.Parse(arr[1]);
-
                 // حساب رقم العمود الفعلي حسب NetOrder
-                int colIndex = Template.NetOrder[headerIndex - 2];
-                Template.NetWidth[colIndex] = newWidth;
-
-                if (Calc.TemplateId > 0)
+                //int colIndex = Template.NetOrder[headerIndex - 2];
+               // Template.NetWidth[colIndex] = newWidth;
+                Template?.NetColumnsToUse?.FirstOrDefault(c => c.Id == headerIndex)?.Width = newWidth;
+                if (Calc?.TemplateId > 0)
                 {
-                    Template.StyleNetCalc = "";
+                    Template?.StyleNetCalc = "";
                     TemplateListPostDTO temp = new();
                     Template.CopyPropertiesTo(temp);
                     await Repo.Template.UpdateAsync(temp, Calc.TemplateId.Value);

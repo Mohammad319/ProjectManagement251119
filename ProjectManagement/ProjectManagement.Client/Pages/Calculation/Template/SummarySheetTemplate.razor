@@ -12,18 +12,18 @@
     <style>
         /* نفس الحدود الخاصة بالـ SummarySheet بناءً على الألوان المختارة */
         #summarySheet table {
-            border-top: 1px @Temp.SSColor[0] @Temp.SSColor[1];
-            border-left: 1px @Temp.SSColor[0] @Temp.SSColor[1];
+            border-top: 1px @Temp.SummarySheet.Color.BorderStyle @Temp.SummarySheet.Color.Border;
+            border-left: 1px @Temp.SummarySheet.Color.BorderStyle @Temp.SummarySheet.Color.Border;
             border-collapse: collapse;
         }
 
         #summarySheet td,
         #summarySheet th {
-            border-right: 1px @Temp.SSColor[0] @Temp.SSColor[1];
+            border-right: 1px @Temp.SummarySheet.Color.BorderStyle @Temp.SummarySheet.Color.Border;
         }
 
         #summarySheet tr {
-            border-bottom: 1px @Temp.SSColor[0] @Temp.SSColor[1];
+            border-bottom: 1px @Temp.SummarySheet.Color.BorderStyle @Temp.SummarySheet.Color.Border;
         }
     </style>
 
@@ -56,26 +56,27 @@
                     <table class="min-w-max text-[11px]">
                         <thead class="bg-slate-100 dark:bg-slate-800/80">
                             <tr>
-                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+
+                                @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <th class="px-2 py-1 font-semibold whitespace-nowrap text-left">
-                                        @CalcLoc[TemplateConst.SSCTitles[i]]
+                                        @CalcLoc[item.Name]
                                     </th>
                                 }
                             </tr>
                         </thead>
                         <tbody>
                             <tr class="bg-white dark:bg-slate-900/80">
-                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <td class="px-2 py-1">
                                         <div class="flex items-center gap-1">
                                             <input type="number"
                                                    class="w-16 border border-slate-300 dark:border-slate-600 rounded
-                                                                  bg-white dark:bg-slate-900
-                                                                  px-1 py-0 text-[11px] text-right
-                                                                  focus:outline-none focus:ring-1 focus:ring-blue-400"
-                                                   @bind="Temp.SSWidth[i]" />
+                                                                          bg-white dark:bg-slate-900
+                                                                          px-1 py-0 text-[11px] text-right
+                                                                          focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                                   @bind="item.Width" />
 
                                             <span class="text-[10px] text-slate-400">
                                                 px
@@ -91,9 +92,7 @@
 
             <!-- إعداد الألوان -->
             <div class="pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
-                <div class="mb-2 text-[11px] text-slate-500 dark:text-slate-400">
-                    .colorsAndBorders
-                </div>
+                <div class="mb-2 text-[11px] text-slate-500 dark:text-slate-400"></div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
@@ -102,7 +101,7 @@
                         <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-200">
                             @AppFormatResource.borderType
                         </label>
-                        <select @bind="Temp.SSColor[0]"
+                        <select @bind="Temp.SummarySheet.Color.BorderStyle"
                                 class="w-full border border-slate-300 dark:border-slate-600 rounded
                                            bg-white dark:bg-slate-900
                                            px-2 py-1 text-[11px]
@@ -126,9 +125,9 @@
                             <input type="color"
                                    class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
                                               bg-transparent cursor-pointer"
-                                   @bind="Temp.SSColor[1]" />
+                                   @bind="Temp.SummarySheet.Color.Border" />
                             <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                @Temp.SSColor[1]
+                                @Temp.SummarySheet.Color.Border
                             </span>
                         </div>
                     </div>
@@ -142,9 +141,9 @@
                             <input type="color"
                                    class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
                                               bg-transparent cursor-pointer"
-                                   @bind="Temp.SSColor[2]" />
+                                   @bind="Temp.SummarySheet.Color.Text" />
                             <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                @Temp.SSColor[2]
+                                @Temp.SummarySheet.Color.Text
                             </span>
                         </div>
                     </div>
@@ -158,9 +157,9 @@
                             <input type="color"
                                    class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
                                               bg-transparent cursor-pointer"
-                                   @bind="Temp.SSColor[3]" />
+                                   @bind="Temp.SummarySheet.Color.Header" />
                             <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                @Temp.SSColor[3]
+                                @Temp.SummarySheet.Color.Header
                             </span>
                         </div>
                     </div>
@@ -174,9 +173,9 @@
                             <input type="color"
                                    class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
                                               bg-transparent cursor-pointer"
-                                   @bind="Temp.SSColor[4]" />
+                                   @bind="Temp.SummarySheet.Color.Factor" />
                             <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                @Temp.SSColor[4]
+                                @Temp.SummarySheet.Color.Factor
                             </span>
                         </div>
                     </div>
@@ -190,9 +189,9 @@
                             <input type="color"
                                    class="h-8 w-12 rounded border border-slate-300 dark:border-slate-600
                                               bg-transparent cursor-pointer"
-                                   @bind="Temp.SSColor[5]" />
+                                   @bind="Temp.SummarySheet.Color.Sum" />
                             <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                                @Temp.SSColor[5]
+                                @Temp.SummarySheet.Color.Sum
                             </span>
                         </div>
                     </div>
@@ -212,21 +211,24 @@
 
                 <div class="overflow-x-auto rounded bg-slate-50/70 dark:bg-slate-900/70 p-2">
                     <table class="min-w-max text-[11px]"
-                           style="color:@Temp.SSColor[2];">
-                        <thead style="background-color:@Temp.SSColor[3];">
+                           style="color:@Temp.SummarySheet.Color.Text;">
+                        <thead style="background-color:@Temp.SummarySheet.Color.Header;">
                             <tr>
-                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                @foreach (var item in Temp.SummarySheet.Columns)
                                 {
-                                    <th style="width:@(Temp.SSWidth[i])px"
+                                    <th class="px-2 py-1 font-semibold whitespace-nowrap text-left">
+                                        @CalcLoc[item.Name]
+                                    </th>
+                                    <th style="width:@(item.Width + "px")"
                                         class="px-2 py-1 font-semibold whitespace-nowrap text-left">
-                                        @CalcLoc[TemplateConst.SSCTitles[i]]
+                                        @CalcLoc[item.Name]
                                     </th>
                                 }
                             </tr>
                         </thead>
                         <tbody>
                             <!-- سطر مثال للفكتور -->
-                            <tr style="background-color:@Temp.SSColor[4];">
+                            <tr style="background-color:@Temp.SummarySheet.Color.Factor;">
                                 @for (int i = 0; i < Temp.SSWidth.Count; i++)
                                 {
                                     <td class="px-2 py-1 whitespace-nowrap">
@@ -236,7 +238,7 @@
                             </tr>
 
                             <!-- سطر مثال للمجموع -->
-                            <tr style="background-color:@Temp.SSColor[5]; font-weight:600;">
+                            <tr style="background-color:@Temp.SummarySheet.Color.Sum; font-weight:600;">
                                 @for (int i = 0; i < Temp.SSWidth.Count; i++)
                                 {
                                     <td class="px-2 py-1 whitespace-nowrap">

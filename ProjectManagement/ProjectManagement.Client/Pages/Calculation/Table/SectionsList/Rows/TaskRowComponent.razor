@@ -4,7 +4,7 @@
 
 <tr @onclick="@(() => OnClick.InvokeAsync(Task))" @oncontextmenu:preventDefault
     @oncontextmenu="@(() => OnContextClick.InvokeAsync(Task))"
-    style="@Task.Style(Template.NetColor[ColorIndex], ActiveParent)">
+    style="@Task.Style(Color, ActiveParent)">
     <td>
         @if ((Task.Resources?.Any() ?? false) || (Task.Tasks?.Any() ?? false))
         {
@@ -28,15 +28,15 @@
         }
     </td>
 
-    @foreach (int i in Template.NetOrder)
+    @foreach (var i in Template.NetColumnsToUse)
     {
-        @Colmuns[i].TaskRender(Task)
+        @Colmuns[i.Id].TaskRender(Task)
     }
 </tr>
 
 @if (Task.Data.UpperNote != null && CalcService.ShowComments)
 {
-    @Note(Task.Data.UpperNote, 3, Template.NetOrder.Count)
+    @Note(Task.Data.UpperNote, 3, Template.NetColumnsToUse.Count)
 }
 
 @code {
@@ -46,7 +46,8 @@
 
     [Parameter] public TaskListMVVM Task { get; set; } = default!;
     [Parameter] public bool ActiveParent { get; set; }
-    [Parameter] public int ColorIndex { get; set; } = 5;
+    [Parameter] public string Color { get; set; } = TemplateConstBase.Task;
+
     [Parameter] public int Left { get; set; } = 0;
     [Parameter] public List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = default!;
 

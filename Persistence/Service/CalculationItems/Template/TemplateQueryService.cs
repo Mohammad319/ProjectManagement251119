@@ -22,19 +22,16 @@ namespace Application.Services.CalculationItems.TemplateTable
                     Name = x.Name,
                     Currency = x.Metadata.Currency,
                     DateFormat = x.Metadata.DateFormat,
-                    FreezList = x.Metadata.FreezList,
                     MathRound = x.Metadata.MathRound,
-                    NetColor = x.Metadata.NetColor,
-                    NetOrder = x.Metadata.NetOrder,
-                    NetWidth = x.Metadata.NetWidth,
-                    SSColor = x.Metadata.SSColor,
-                    SSOrder = x.Metadata.SSOrder,
-                    SSWidth = x.Metadata.SSWidth,
+                    //SSColor = x.Metadata.SSColor,
+                    //SSOrder = x.Metadata.SSOrder,
+                    //SSWidth = x.Metadata.SSWidth,
+                    NetCalc = x.Metadata.NetCalc,
+                    SummarySheet = x.Metadata.SummarySheet,
                 })
                 .FirstOrDefaultAsync(ct);
         }
 
-        // مكافئ GetTemplatesByUserQuery القديم :contentReference[oaicite:2]{index=2}
         public async Task<List<TemplateListDTO>> GetByUserAsync(
             int? departmentId,
             CancellationToken ct = default)

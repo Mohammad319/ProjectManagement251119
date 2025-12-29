@@ -11,7 +11,7 @@ namespace ProjectManagement.Client.Constant
 
         public static Collection<string> SSCTitles { get; } =
         [ "name","sort", "netCal", "netCalOH", "sum", "earnings", "ev","price","priceOG",""
-        ,"keyValue", "kv", "unit", "OH", "factor"]; //, "priceWithProjectOH", "keyValue", "kv", "unit"
+        ,"keyValue", "kv", "unit", "OH", "factor"];
 
 
         public static List<string> NetTitle { get; set; } = ["code","active","account","name","status",

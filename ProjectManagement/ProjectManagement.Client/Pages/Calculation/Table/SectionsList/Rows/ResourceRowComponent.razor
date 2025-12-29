@@ -3,18 +3,18 @@
 @inherits AppComponentBase
 
 <tr @onclick="Click" @oncontextmenu="Context" @oncontextmenu:preventDefault
-    style="@Resource.Style(Template.NetColor[6], Resource.Active)">
+    style="@Resource.Style(Template?.NetCalc?.Color?.Resource, Resource.Active)">
     <td>
     </td>
-    @foreach (int i in Template.NetOrder)
+    @foreach (var i in Template.NetColumnsToUse)
     {
-        @Colmuns[i].ResRender(Resource)
+        @Colmuns[i.Id].ResRender(Resource)
     }
 </tr>
 
 @if (Resource.Data.UpperNote != null && CalcService.ShowComments)
 {
-    @Note(Resource.Data.UpperNote, 3, Template.NetOrder.Count)
+    @Note(Resource.Data.UpperNote, 3, Template.NetColumnsToUse.Count)
 }
 
 @code {

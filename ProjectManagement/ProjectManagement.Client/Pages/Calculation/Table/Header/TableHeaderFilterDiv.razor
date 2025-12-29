@@ -215,7 +215,7 @@
     </div>
 }
 
-<tr style="@($"background-color:{Template.NetColor[3]};font-size:11px;font-weight:normal;height:30px;")"
+<tr style="@($"background-color:{Template?.NetCalc.Color.Header};font-size:11px;font-weight:normal;height:30px;")"
     id="headerFilter">
     @if (TemplateConst.Col0 > PMValuesConst.MinWidthCol)
     {
@@ -229,10 +229,10 @@
         </td>
     }
 
-    @foreach (int i in Template.NetOrder)
+    @foreach (var obj in Template.NetColumnsToUse)//Template.NetOrder)
     {
-        int d = i;
-        string type = TemplateConst.NetTitle[d];
+        //int d = i;
+        string type = obj.Name;// TemplateConst.NetTitle[obj.Id];
 
         <td @onclick="(e) => EnterCodeClick(e, type)">
             @if (type == "status")

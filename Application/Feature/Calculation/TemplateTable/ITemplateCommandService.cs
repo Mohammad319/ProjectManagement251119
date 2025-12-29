@@ -1,7 +1,4 @@
-﻿using Application.Interfaces;
-using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Shared.DTO.Calculation.Template;
+﻿using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace Application.Services.CalculationItems.TemplateTable
 {

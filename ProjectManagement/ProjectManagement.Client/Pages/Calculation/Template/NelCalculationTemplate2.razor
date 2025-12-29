@@ -1,6 +1,7 @@
 ﻿@using Microsoft.Extensions.Localization
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.SharedComponent
+@using ProjectManagement.Shared.Constants
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inherits AppComponentBase
 
@@ -16,19 +17,19 @@
         }
 
         #netTable table {
-            border-top: 1px @Temp.NetColor[0] @Temp.NetColor[1];
-            border-left: 1px @Temp.NetColor[0] @Temp.NetColor[1];
+            border-top: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
+            border-left: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
             border-collapse: collapse;
         }
 
         #netTable td,
         #netTable th {
-            border-right: 1px @Temp.NetColor[0] @Temp.NetColor[1];
+            border-right: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
             padding: 4px 6px;
         }
 
         #netTable tr {
-            border-bottom: 1px @Temp.NetColor[0] @Temp.NetColor[1];
+            border-bottom: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
         }
     </style>
 
@@ -58,24 +59,18 @@
                     </tr>
                 </thead>
 
-                <ReorderableTBody TItem="int"
-                                  Items="Temp.NetOrder"
-                                  RowClass="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                <ReorderableTBody TItem="NetColumnState" Items="Temp.NetCalc.Columns.Where(x => x.Visible).OrderBy(x => x.Order).ToList()"
+                RowClass="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                     <RowTemplate Context="colId">
-                        @{
-                            rowIndex ??= -1;
-                            rowIndex++;
-                        }
-
                         <td class="text-center align-middle">
                             <span class="mr-1 cursor-move opacity-40 group-hover:opacity-90 select-none">
                                 ⋮⋮
                             </span>
-                             @(rowIndex + 1)
+                        @(colId.Id + 1)
                         </td>
 
                         <td class="align-middle">
-                            @CalcLoc[TemplateConst.NetTitle[colId]]
+                            @CalcLoc[colId.Name]
                         </td>
 
                         <!-- العرض -->
@@ -83,35 +78,21 @@
                             <div class="flex items-center justify-between gap-1">
                                 <input class="@CssClasses.Input.Number w-[60px] text-center"
                                        type="number"
-                                       @bind="Temp.NetWidth[colId]" />
+                                       @bind="colId.Width" />
                             </div>
                         </td>
 
                         <!-- Freez -->
                         <td class="text-center align-middle">
-                            @if (Temp.FreezList.Any(x => x == colId))
-                            {
-                                <button type="button"
-                                        class="@CssClasses.Btn.IconButton.Danger !px-2 !py-1 text-[11px]"
-                                        @onclick="() => Temp.FreezList.Remove(colId)">
-                                    📍
+                                <button type="button" class="@CssClasses.Btn.IconButton.Danger !px-2 !py-1 text-[11px]"
+                                        @onclick="() => colId.Frozen = !colId.Frozen">
+                                    @(colId.Frozen ? "📍" : "📌")
                                 </button>
-                            }
-                            else
-                            {
-                                <button type="button"
-                                        class="@CssClasses.Btn.IconButton.Success !px-2 !py-1 text-[11px]"
-                                        @onclick="() => Temp.FreezList.Add(colId)">
-                                    📌
-                                </button>
-                            }
                     </td>
-
-                        <!-- نقل للجدول المخفي -->
                         <td class="text-center align-middle">
                             <button type="button"
                                     class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
-                                    @onclick="async () => await RemoveAsync(Temp.NetOrder.IndexOf(colId))">
+                                    @onclick="async () => await RemoveAsync(colId)">
                                 <span>@((MarkupString)Icons.ChevronRight)</span>
                             </button>
                         </td>
@@ -122,7 +103,6 @@
                 private int? rowIndex;
                 protected override void OnParametersSet()
                 {
-                    // نعيد ضبط العداد في كل Render
                     rowIndex = null;
                 }
             }
@@ -157,24 +137,20 @@
                 <tbody>
                     @if (TableVisible)
                     {
-                        for (int i = 0; i < Temp.NetWidth.Count; i++)
+                    @foreach (var item in Temp.NetCalc.Columns.Where(x=>!x.Visible))
                         {
-                            int d = i;
-                            if (!Temp.NetOrder.Any(x => x == d))
-                            {
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                                    <td class="text-center align-middle">
-                                        <button type="button"
-                                                class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
-                                                @onclick="async () => await AddAsync(d)">
-                                            <span>@((MarkupString)Icons.ChevronLeft)</span>
-                                        </button>
-                                    </td>
-                                    <td class="align-middle">
-                                        @CalcLoc[TemplateConst.NetTitle[i]]
-                                    </td>
-                                </tr>
-                            }
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                            <td class="text-center align-middle">
+                                <button type="button"
+                                        class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
+                                        @onclick="async () => await AddAsync(item)">
+                                    <span>@((MarkupString)Icons.ChevronLeft)</span>
+                                </button>
+                            </td>
+                            <td class="align-middle">
+                                @CalcLoc[item.Name]
+                            </td>
+                        </tr>
                         }
                     }
                 </tbody>
@@ -194,7 +170,7 @@
                         @AppFormatResource.borderType
                         </td>
                         <td class="py-1 align-middle">
-                            <select @bind="Temp.NetColor[0]"
+                            <select @bind="Temp.NetCalc.Color.BorderStyle"
                                     class="@CssClasses.Input.Select w-full text-[11px]">
                                 @foreach (var item in TemplateConst.BorderStyles)
                                 {
@@ -214,7 +190,7 @@
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
-                                   @bind="Temp.NetColor[1]" />
+                                   @bind="Temp.NetCalc.Color.Border" />
                         </td>
                     </tr>
 
@@ -225,7 +201,7 @@
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
-                                   @bind="Temp.NetColor[2]" />
+                                   @bind="Temp.NetCalc.Color.Text" />
                         </td>
                     </tr>
 
@@ -236,7 +212,7 @@
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
-                                   @bind="Temp.NetColor[3]" />
+                                   @bind="Temp.NetCalc.Color.Header" />
                         </td>
                     </tr>
 
@@ -247,7 +223,7 @@
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
-                                   @bind="Temp.NetColor[4]" />
+                                   @bind="Temp.NetCalc.Color.Task" />
                         </td>
                     </tr>
 
@@ -258,7 +234,7 @@
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
-                                   @bind="Temp.NetColor[5]" />
+                                   @bind="Temp.NetCalc.Color.SubTask" />
                         </td>
                     </tr>
 
@@ -269,7 +245,7 @@
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
-                                   @bind="Temp.NetColor[6]" />
+                                   @bind="Temp.NetCalc.Color.Resource" />
                         </td>
                     </tr>
 
@@ -280,7 +256,7 @@
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
-                                   @bind="Temp.NetColor[7]" />
+                                   @bind="Temp.NetCalc.Color.Note" />
                         </td>
                     </tr>
                 </tbody>
@@ -294,20 +270,26 @@
 
     private bool TableVisible = true;
 
-    async Task AddAsync(int i)
+    async Task AddAsync(NetColumnState item)
     {
         TableVisible = false;
         await Task.Delay(1);
-        Temp.NetOrder.Insert(0, i);
+        if (item != null)
+        {
+            item.Visible = true;
+        }
         TableVisible = true;
     }
 
-    async Task RemoveAsync(int i)
+    async Task RemoveAsync(NetColumnState item)
     {
         TableVisible = false;
         await Task.Delay(1);
-        Temp.FreezList.Remove(Temp.NetOrder[i]);
-        Temp.NetOrder.RemoveAt(i);
+        if (item != null)
+        {
+            item.Frozen = false;
+            item.Visible = false;
+        }
         await Task.Delay(1);
         TableVisible = true;
     }

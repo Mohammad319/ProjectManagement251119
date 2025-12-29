@@ -88,15 +88,15 @@
                 <div class="inline-block min-w-full align-middle">
                     <table id="tableFactor"
                            class="border-collapse text-[11px] md:text-[11px] w-full"
-                           style="min-width:1200px;color:@Template.SSColor[2];">
+                           style="min-width:1200px;color:@Template?.SummarySheet.Color.Text;">
                         <thead class="sticky top-0 z-10 shadow-sm"
-                               style="background-color:@Template.SSColor[3];">
+                               style="background-color:@Template?.SummarySheet.Color.Header;">
                             <tr class="h-6">
-                                @for (int i = 0; i < Template.SSWidth.Count; i++)
+                                @foreach (var item in Template?.SummarySheet?.Columns)
                                 {
-                                    <th style="width:@(Template.SSWidth[i])px"
+                                    <th style="width:@(item.Width + "px")"
                                         class="px-2 py-0.5 font-semibold whitespace-nowrap border-b border-slate-200/70 dark:border-slate-700/70 text-left align-middle">
-                                        @CalcLoc[TemplateConst.SSCTitles[i]]
+                                        @CalcLoc[item.Name]
                                     </th>
                                 }
                             </tr>
@@ -107,7 +107,7 @@
                                 @foreach (var factors in Calc.Factors)
                                 {
                                     <tr @key="factors.ResId"
-                                        style="background-color:@Template.SSColor[4];"
+                                        style="background-color:@Template.SummarySheet.Color.Factor;"
                                         class="h-5 align-middle hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors">
                                         <!-- اسم المورد -->
                                         <td class="px-2 py-0 align-middle whitespace-nowrap">
@@ -143,7 +143,7 @@
                                                             class="inline-flex items-center justify-center rounded p-0.5 transition"
                                                             title="@ResourceApp._lock"
                                                             @onclick="() => { EarningOnChange = true; factors.IsLocked = !factors.IsLocked; }">
-                                                        <span class="text-[10px] @CssClasses.Btn.Span" style="color:@Template.SSColor[2];">
+                                                        <span class="text-[10px] @CssClasses.Btn.Span" style="color:@Template.SummarySheet.Color.Text;">
                                                             @((MarkupString)Icons.IsLocked(factors.IsLocked))
                                                         </span>
                                                     </button>
@@ -154,7 +154,7 @@
                                                                               bg-transparent dark:bg-transparent
                                                                               px-1 text-[11px] leading-none
                                                                               focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                           style="color:@Template.SSColor[2];"
+                                                           style="color:@Template.SummarySheet.Color.Text;"
                                                            @onchange="(e) =>
                                                            {
                                                                if (double.TryParse(e.Value?.ToString(), out var v))
@@ -186,7 +186,7 @@
                                                 @if (factors.NetCostTotalyOH > 0)
                                                 {
                                                     <select class="h-4 w-full min-w-[90px] border bg-transparent dark:bg-transparent rounded pl-1 pr-5 text-[11px] leading-none focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                            style="color:@Template.SSColor[2];"
+                                                            style="color:@Template.SummarySheet.Color.Text;"
                                                             @bind:get="factors.Selected"
                                                             @bind:set="(value) => { factors.Selected = value; SomeHasChanged(); }">
                                                         <option value="all">All</option>
@@ -208,7 +208,7 @@
                                                                           bg-transparent dark:bg-transparent
                                                                           px-1 text-[11px] leading-none
                                                                           focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                       style="color:@Template.SSColor[2];"
+                                                       style="color:@Template.SummarySheet.Color.Text;"
                                                        @onchange="(e) =>
                                                        {
                                                            if (double.TryParse(e.Value?.ToString(), out var v))
@@ -226,7 +226,7 @@
                                                                            pl-1 pr-5 text-[11px] leading-none
                                                                           
                                                                            focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                        style="color:@Template.SSColor[2];"
+                                                        style="color:@Template.SummarySheet.Color.Text;"
                                                         @bind:get="factors.DivisionKey"
                                                         @bind:set="(value) => { factors.DivisionKey = value; SomeHasChanged(); }">
                                                     @for (int i = 0; i < factors.KVName.Count; i++)
@@ -248,7 +248,7 @@
                                                                               bg-transparent dark:bg-transparent
                                                                               px-1 text-[11px] leading-none
                                                                               focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                           style="color:@Template.SSColor[2];"
+                                                           style="color:@Template.SummarySheet.Color.Text;"
                                                            value="@factors.Unit"
                                                            @onchange="@((e) =>
                                                            {
@@ -317,7 +317,7 @@
 
                             @if (Calc.Factors.Count != 0)
                             {
-                                <tr style="background-color:@Template.SSColor[5];"
+                                <tr style="background-color:@Template.SummarySheet.Color.Sum;"
                                     class="h-5 align-middle font-semibold">
                                     <td class="px-2 py-0 align-middle" colspan="2">@CalcResource.sum</td>
 
@@ -342,7 +342,7 @@
                                                                   bg-transparent dark:bg-transparent
                                                                   px-1 text-[11px] leading-none
                                                                   focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                   style="color:@Template.SSColor[2];"
+                                                   style="color:@Template.SummarySheet.Color.Text;"
                                                    value="@Format(Calc.ProfitDecision)"
                                                    @onchange="(e) =>
                                                    {

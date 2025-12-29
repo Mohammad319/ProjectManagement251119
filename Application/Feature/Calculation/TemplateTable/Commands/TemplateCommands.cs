@@ -7,21 +7,13 @@ namespace Application.Feature.Calculation.TemplateTable.Commands
     // ----------------------------------------------------------
     // CREATE TEMPLATE
     // ----------------------------------------------------------
-    public sealed record CreateTemplateCommand(TemplateListPostDTO Dto, int? DepartmentId)
-        : IRequest<TemplateModelDTO>;
+    public sealed record CreateTemplateCommand(TemplateListPostDTO Dto, int? DepartmentId) : IRequest<TemplateModelDTO>;
 
-    public sealed class CreateTemplateCommandHandler
-        : IRequestHandler<CreateTemplateCommand, TemplateModelDTO>
+    public sealed class CreateTemplateCommandHandler(ITemplateCommandService service)
+                : IRequestHandler<CreateTemplateCommand, TemplateModelDTO>
     {
-        private readonly ITemplateCommandService _service;
-
-        public CreateTemplateCommandHandler(ITemplateCommandService service)
-        {
-            _service = service;
-        }
-
         public Task<TemplateModelDTO> Handle(CreateTemplateCommand request, CancellationToken ct)
-            => _service.CreateAsync(request.Dto, request.DepartmentId, ct);
+            => service.CreateAsync(request.Dto, request.DepartmentId, ct);
     }
 
     // ----------------------------------------------------------

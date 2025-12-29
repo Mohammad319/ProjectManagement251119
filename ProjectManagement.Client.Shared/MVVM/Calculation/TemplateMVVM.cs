@@ -1,7 +1,5 @@
-﻿using ProjectManagement.Client.Constant;
-using ProjectManagement.Client.Shared.Constants;
+﻿using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation.Template;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -13,14 +11,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double Format(double x) => UiStyles.Format(x, MathRound);
         public int Id { get; set; }
         public string Name { get; set; }
-
-        public void ReOrder(int index, int target)
-        {
-            int s = NetOrder[index];
-            NetOrder[index] = NetOrder[target];
-            NetOrder[target] = s;
-        }
-
         static string SetFreezCol(int ColNum, int w)
         {
             string className = "divNetCalc";
@@ -34,51 +24,26 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public string StyleNetCalc { get; set; } = string.Empty;
 
-        public int NoteColspanLeft = 0;
-        public int NoteColspanLeftPX = 0;
-        public int StartCol1 = 35; //50
+        public int StartCol1 { get; set; }
 
         public string FreezCol()
         {
-            int w = StartCol1;
-
-            // مهم: إعادة تصفير القيم لتفادي التراكم مع كل استدعاء
             StyleNetCalc = string.Empty;
-            NoteColspanLeft = 0;
-            NoteColspanLeftPX = 0;
-
+            int startCol = StartCol1;
             var sb = new StringBuilder();
-
-            foreach (var item in NetOrder)
+            sb.Append(SetFreezCol(1, 0));
+            foreach (var item in NetColumnsToUse.Where(x => x.Frozen))
             {
-                NoteColspanLeft++;
-                NoteColspanLeftPX += NetWidth[item];
+                if (item.Frozen)
+                {
+                    item.StartPX = startCol;
+                    startCol = startCol + item.Width;
+                    sb.Append(SetFreezCol(item.Id + 2, item.StartPX));
+                }
+                sb.Append($" .colH{item.Id + 2}" + "{" +
+    "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}");
 
-                if (CalcConst.NetCall[item].TN == nameof(TaskListMVVM.Name))
-                    break;
             }
-
-            sb.Append(SetFreezCol(1, 0)); // أول عمود
-
-            List<int> ColmunsNum = new();
-            foreach (var freezindex in FreezList)
-                ColmunsNum.Add(NetOrder.IndexOf(freezindex));
-
-            ColmunsNum = ColmunsNum.Where(x => x > -1).OrderBy(x => x).ToList();
-
-            foreach (var indexOfNetOrder in ColmunsNum)
-            {
-                int ColNum = indexOfNetOrder + 2;
-                sb.Append(SetFreezCol(ColNum, w));
-                w += NetWidth[NetOrder[indexOfNetOrder]];
-            }
-
-            for (int i = 0; i < NetOrder.Count; i++)
-            {
-                sb.Append($" .colH{i + 2}" + "{" +
-                          "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}");
-            }
-
             StyleNetCalc = sb.ToString();
             return StyleNetCalc;
         }

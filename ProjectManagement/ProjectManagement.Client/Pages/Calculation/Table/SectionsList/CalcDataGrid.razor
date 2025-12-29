@@ -175,13 +175,13 @@
                 <th id="h1" class="draggable-table"></th>
             }
 
-            @for (int i = 0; i < Template.NetOrder.Count; i++)
+            @foreach (var item in Template.NetColumnsToUse)
             {
-                if (Template.NetWidth[i] > PMValuesConst.MinWidthCol)
+                if (item.Visible)
                 {
-                    <th id="@("h" + (i + 2))" class="@("colH" + (i + 2)) draggable-table"
-                        style="width:@(Template.NetWidth[Template.NetOrder[i]])px;">
-                        @CalcLoc[TemplateConst.NetTitle[Template.NetOrder[i]]]
+                    <th id="@("h" + (item.Id + 2))" class="@("colH" + (item.Id + 2)) draggable-table"
+                        style="width:@(item.Width)px;">
+                        @CalcLoc[item.Name]
                     </th>
                 }
             }
@@ -204,7 +204,7 @@
                                       Task="item.Task"
                                       ActiveParent="true"
                                       OnCollapseToggle="ToggleCollSpan"
-                                      ColorIndex="4"
+                                      Color="@TemplateConstBase.Task"
                                       Left="@(item.Depth * 10)"
                                       Colmuns="Columns" />
                 }
