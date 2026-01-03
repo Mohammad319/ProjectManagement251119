@@ -106,11 +106,11 @@ namespace ProjectManagement.Client.Shared.Calculation
             if (filter.Status.Count != 0 && !task.FilterVisible)
                 task.FilterVisible = FilterStatus(filter.Status, filter.StatusFilterType, task.Status);
             if (filter.Code.Count != 0 && !task.FilterVisible)
-                task.FilterVisible = Filter(filter.Code, filter.CodeFilterType, task.Data.Code);
+                task.FilterVisible = Filter(filter.Code, filter.CodeFilterType, task.Metadata.Code);
             if (filter.Name.Count != 0 && !task.FilterVisible)
                 task.FilterVisible = Filter(filter.Name, filter.NameFilterType, task.Name);
             if (filter.Unit.Count != 0 && !task.FilterVisible)
-                task.FilterVisible = Filter(filter.Unit, filter.UnitFilterType, task.Data.Unit);
+                task.FilterVisible = Filter(filter.Unit, filter.UnitFilterType, task.Metadata.Unit);
 
             if (!task.FilterVisible)
             {

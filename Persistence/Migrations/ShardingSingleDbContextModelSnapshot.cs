@@ -453,9 +453,6 @@ namespace Persistence.Migrations
                     b.Property<int?>("AccountId")
                         .HasColumnType("int");
 
-                    b.Property<double?>("CO2")
-                        .HasColumnType("float");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -477,9 +474,6 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("PrimaryOfferId")
                         .HasColumnType("int");
-
-                    b.Property<double>("Quantity")
-                        .HasColumnType("float");
 
                     b.Property<int>("ResType")
                         .HasColumnType("int");
@@ -743,9 +737,6 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("ParentTaskId")
                         .HasColumnType("int");
-
-                    b.Property<double?>("Quantity")
-                        .HasColumnType("float");
 
                     b.Property<double>("SortOrder")
                         .HasColumnType("float");
@@ -1830,12 +1821,12 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("FirstName")
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("LastName")
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -1862,6 +1853,9 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("DepartmentId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("UpdatedBy");
 
@@ -2090,39 +2084,7 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("ProjectManagement.Shared.ValueObjects.Calculation.CostValue", "Cost", b1 =>
-                        {
-                            b1.Property<int>("ResourceEntityId")
-                                .HasColumnType("int");
-
-                            b1.Property<decimal?>("BaseCost")
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("BaseCost");
-
-                            b1.Property<double?>("ChangeFactor1")
-                                .HasColumnType("float")
-                                .HasColumnName("ChangeFactor1");
-
-                            b1.Property<double?>("ChangeFactor2")
-                                .HasColumnType("float")
-                                .HasColumnName("ChangeFactor2");
-
-                            b1.Property<decimal>("Cost")
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("Cost");
-
-                            b1.HasKey("ResourceEntityId");
-
-                            b1.ToTable("Resources");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ResourceEntityId");
-                        });
-
                     b.Navigation("Account");
-
-                    b.Navigation("Cost")
-                        .IsRequired();
 
                     b.Navigation("Opportunity");
 
@@ -2239,39 +2201,7 @@ namespace Persistence.Migrations
                         .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.OwnsOne("ProjectManagement.Shared.ValueObjects.Calculation.CostValue", "Cost", b1 =>
-                        {
-                            b1.Property<int>("TaskEntityId")
-                                .HasColumnType("int");
-
-                            b1.Property<decimal?>("BaseCost")
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("BaseCost");
-
-                            b1.Property<double?>("ChangeFactor1")
-                                .HasColumnType("float")
-                                .HasColumnName("ChangeFactor1");
-
-                            b1.Property<double?>("ChangeFactor2")
-                                .HasColumnType("float")
-                                .HasColumnName("ChangeFactor2");
-
-                            b1.Property<decimal>("Cost")
-                                .HasColumnType("decimal(18,2)")
-                                .HasColumnName("Cost");
-
-                            b1.HasKey("TaskEntityId");
-
-                            b1.ToTable("Tasks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("TaskEntityId");
-                        });
-
                     b.Navigation("Calculation");
-
-                    b.Navigation("Cost")
-                        .IsRequired();
 
                     b.Navigation("Opportunity");
 
@@ -2325,13 +2255,13 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Calculation.TenderAttributeDefinitionEntity", "TenderAttribute")
                         .WithMany("TendersAttributes")
                         .HasForeignKey("TenderAttributeId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Calculation.TenderEntity", "Tender")
                         .WithMany("TendersAttributes")
                         .HasForeignKey("TenderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Tender");
@@ -2361,7 +2291,7 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Tenders")
                         .HasForeignKey("OrganisationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Calculation");

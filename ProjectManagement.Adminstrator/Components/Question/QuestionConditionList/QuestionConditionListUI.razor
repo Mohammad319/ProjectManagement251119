@@ -177,7 +177,7 @@
     {
         @if (editing is null)
         {
-                <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Bottom(Size.S1)" @onclick="NewCondition">
+                <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Bottom1" @onclick="NewCondition">
                     Add Condition
                 </button>
 
@@ -190,7 +190,7 @@
         }
         else
         {
-                    <div class="@CsS.Layout.FlexWrap @CsS.Spacing.M.Bottom(Size.S1)">
+                    <div class="@CsS.Layout.FlexWrap @CsS.Spacing.M.Bottom1">
                         <button class="@CsS.Btn.Outline.Primary" @onclick="SaveConditionAsync">Save</button>
                         <button class="@CsS.Btn.Outline.Danger" @onclick="CancelEdit">Cancel</button>
                     </div>

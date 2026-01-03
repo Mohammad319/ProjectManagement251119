@@ -8,35 +8,6 @@
 @using ProjectManagement.Adminstrator.Components.Units
 @rendermode InteractiveServer
 @attribute [Authorize]
-<style>
-    .mainContainer {
-    }
-
-    .flex-container {
-        display: flex;
-        height: calc(100vh - 37px);
-        overflow: auto;
-    }
-
-    .b {
-        flex-grow: 0;
-        flex-shrink: 0;
-        flex-basis: 3px;
-        background-color: lightgray;
-        cursor: ew-resize;
-        transition: background-color 1s,width 2s;
-    }
-
-        .b:hover {
-            background-color: darkgray;
-        }
-
-    .contentContainer {
-        overflow: auto;
-        width: 100%;
-        height: 100%;
-    }
-</style>
 
     <div class="w-full p-2 dark:bg-gray-900 overflow-hidden">
         <div class="flex items-start">

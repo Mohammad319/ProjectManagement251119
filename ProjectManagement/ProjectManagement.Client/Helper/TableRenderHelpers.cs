@@ -48,7 +48,7 @@ namespace ProjectManagement.Client.Helper
             string round = Format(x);
             return new()
             {
-                new() { Title = "الكود", TaskRender = t => RenderTextTd(t.Data.Code), ResRender = r => EmptyTd() },
+                new() { Title = "الكود", TaskRender = t => RenderTextTd(t.Metadata.Code), ResRender = r => EmptyTd() },
 
                 new() { Title = "فعال", TaskRender = t => RenderCheckboxTd(t.Active), ResRender = r => RenderCheckboxTd(r.Active) },
 
@@ -80,9 +80,9 @@ namespace ProjectManagement.Client.Helper
 
                 new() { Title = "التكلفة", TaskRender = t => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.Cost) },
 
-                new() { Title = "عامل تغيير 1", TaskRender = t => RenderTextTd(t.ChangeFactor1), ResRender = r => RenderTextTd(r.ChangeFactor1) },
+                new() { Title = "عامل تغيير 1", TaskRender = t => RenderTextTd(t.Metadata.ChangeFactor1), ResRender = r => RenderTextTd(r.ChangeFactor1) },
 
-                new() { Title = "عامل تغيير 2", TaskRender = t => RenderTextTd(t.ChangeFactor2), ResRender = r => RenderTextTd(r.ChangeFactor2) },
+                new() { Title = "عامل تغيير 2", TaskRender = t => RenderTextTd(t.Metadata.ChangeFactor2), ResRender = r => RenderTextTd(r.ChangeFactor2) },
 
                 new() { Title = "الطاقة", TaskRender = t => RenderTextTd(t.Cap),
                         ResRender = r => (r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.MachinesAndEquipments)

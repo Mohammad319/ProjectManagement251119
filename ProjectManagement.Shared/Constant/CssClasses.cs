@@ -2,47 +2,16 @@
 
 namespace ProjectManagement.Shared.Constant
 {
-    public enum Size
-    {
-        Auto,
-        S0_5,
-        S1,
-        S2,
-        S3,
-        S4,
-        S5,
-        S6,
-        S8,
-        S10,
-        S12,
-        S16,
-        S20,
-        S24,
-        S32,
-        S40,
-        S48,
-        S56,
-        S64
-    }
     /// <summary>
     /// أنماط الأزرار المستخدمة في التطبيق
     /// </summary>
 
     public static class CssClasses
     {
-        public static class ElSize
-        {
-            public const string Small = "px-1 py-0.5 text-sm";
-            public const string XSmall = "px-0.5 py-0 text-sm";
-        }
-        public static string Multi(string[] s)
-        {
-            return string.Join(" ", s.Where(x => !string.IsNullOrWhiteSpace(x)));
-        }
         public static class Components
         {
             public const string Card = "bg-white dark:bg-gray-800 rounded-lg shadow p-3";
-            public const string CardTight = "bg-white dark:bg-gray-800 rounded-lg shadow p-2";
+            //public const string CardTight = "bg-white dark:bg-gray-800 rounded-lg shadow p-2";
             public const string ChartWrap = "w-full h-full";
         }
         public static class Btn
@@ -53,7 +22,7 @@ namespace ProjectManagement.Shared.Constant
                 public const string Primary = "px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500";
                 public const string Danger = "px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500";
                 public const string Success = "px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 dark:bg-green-500";
-                public const string Secondary = "px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 dark:bg-gray-500";
+                //public const string Secondary = "px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 dark:bg-gray-500";
             }
 
             public static string Span =
@@ -139,8 +108,6 @@ namespace ProjectManagement.Shared.Constant
 
         public static class Grid
         {
-            public static string Make(int mdCols = 4, int gap = 2) => $"grid grid-cols-1 md:grid-cols-{mdCols} gap-{gap}";
-
             public static class Col
             {
                 public const string MD3 = "grid grid-cols-1 md:grid-cols-3 gap-2";
@@ -162,10 +129,6 @@ namespace ProjectManagement.Shared.Constant
                 public const string MD10 = "md:col-span-10";
             }
 
-            public static string ColSpans(params (string size, int count)[] spans)
-            {
-                return string.Join(" ", spans.Select(s => $"{s.size}:col-span-{s.count}"));
-            }
         }
         public static class Input
         {
@@ -216,63 +179,29 @@ namespace ProjectManagement.Shared.Constant
 
         public static class Spacing
         {
-            private static string ToValue(Size size) =>
-                size switch
-                {
-                    Size.Auto => "auto",
-                    Size.S0_5 => "0.5",
-                    Size.S1 => "1",
-                    Size.S2 => "2",
-                    Size.S3 => "3",
-                    Size.S4 => "4",
-                    Size.S5 => "5",
-                    Size.S6 => "6",
-                    Size.S8 => "8",
-                    Size.S10 => "10",
-                    Size.S12 => "12",
-                    Size.S16 => "16",
-                    Size.S20 => "20",
-                    Size.S24 => "24",
-                    Size.S32 => "32",
-                    Size.S40 => "40",
-                    Size.S48 => "48",
-                    Size.S56 => "56",
-                    Size.S64 => "64",
-                    _ => "0"
-                };
-            public static class M // Margin
+            public static class M 
             {
-                public static string All(Size s) => $"m-{ToValue(s)}";
-                public static string Top(Size s) => $"mt-{ToValue(s)}";
-                public static string Bottom(Size s) => $"mb-{ToValue(s)}";
-                public static string Left(Size s) => $"ml-{ToValue(s)}";
-                public static string Right(Size s) => $"mr-{ToValue(s)}";
-                public static string X(Size s) => $"mx-{ToValue(s)}";
-                public static string Y(Size s) => $"my-{ToValue(s)}";
+                public static string All2 => $"m-2";
+                public static string All5 => $"m-5";
+                public static string Y1 => $"my-1";
+                public static string Right1 => $"mr-1";
+                public static string Top1 => $"mt-1";
+                public static string Top2 => $"mt-2";
+                public static string Top3 => $"mt-3";
+                public static string Top4 => $"mt-4";
+                public static string Bottom1 => $"mb-1";
+                public static string Bottom2 => $"mb-2";
+                public static string Bottom3 => $"mb-3";
+                public static string LeftAuto => $"ml-auto";
+                public static string Left1 => $"ml-1";
+                public static string Left2 => $"ml-2";
             }
-            public static class P // Small
+            public static class P
             {
-                public static string All(Size s) => $"p-{ToValue(s)}";
-                public static string Top(Size s) => $"pt-{ToValue(s)}";
-                public static string Bottom(Size s) => $"pb-{ToValue(s)}";
-                public static string Left(Size s) => $"pl-{ToValue(s)}";
-                public static string Right(Size s) => $"pr-{ToValue(s)}";
-                public static string X(Size s) => $"px-{ToValue(s)}";
-                public static string Y(Size s) => $"py-{ToValue(s)}";
-            }
-            public static class W // Width
-            {
-                public static string Full => "w-full";
-                public static string Screen => "w-screen";
-                public static string Auto => "w-auto";
-                public static string Value(Size s) => $"w-{ToValue(s)}";
-            }
-            public static class H // Height
-            {
-                public static string Full => "h-full";
-                public static string Screen => "h-screen";
-                public static string Auto => "h-auto";
-                public static string Value(Size s) => $"h-{ToValue(s)}";
+                public static string All2 => $"p-2";
+                public static string X1 => $"px-1";
+                public static string Top3 => $"pt-3";
+                public static string Top0_5 => $"pt-0.5";
             }
         }
 
@@ -297,12 +226,17 @@ namespace ProjectManagement.Shared.Constant
 
             public const string FlexItemsCenter = "flex items-center gap-1";
             public const string FlexWrap = "flex flex-wrap gap-2";
-            public static string FlexMinWidth(int w) => $"flex-1 min-w-[{w}px]";
-            public static string FlexWidth(int w) => $"w-[{w}px]";
+            public static string FlexMinWidth280 => $"flex-1 min-w-[280px]";
+            public static string FlexMinWidth350 => $"flex-1 min-w-[350px]";
+            public static string FlexMinWidth150 => $"flex-1 min-w-[150px]";
+            public static string FlexWidth160 => $"w-[160px]";
+            public static string FlexWidth130 => $"w-[130px]";
+            public static string FlexWidth110 => $"w-[110px]";
+            public static string FlexWidth200 => $"w-[200px]";
         }
         public static class Modal
         {
-            public const string Body = "space-y-0 ";//max-h-[90vh] overflow-y-auto
+            public const string Body = "space-y-0 ";
             public const string Footer = "mt-1 flex justify-end gap-1";
         }
 
@@ -338,7 +272,6 @@ namespace ProjectManagement.Shared.Constant
             public const string Active = Base + "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-white dark:bg-gray-800";
             public const string Inactive = Base + "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700";
 
-            public static string Btn(bool isActive) => isActive ? Active : Inactive;
             public const string UL = "flex mb-1";
         }
     }

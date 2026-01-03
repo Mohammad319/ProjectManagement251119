@@ -36,8 +36,8 @@
     </div>
 
     <!-- From units -->
-    <div class="@CsS.Spacing.M.Top(Size.S4)">
-        <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom(Size.S2)">
+    <div class="@CsS.Spacing.M.Top4">
+        <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom2">
             <h3 class="@NewCC.Text.H5">
                 Available units
             </h3>
@@ -48,7 +48,7 @@
             {
                 var selected = HasKey(u);
 
-                <div class="@CsS.Spacing.M.Bottom(Size.S1) rounded-lg border px-3 py-2 bg-gray-50 dark:bg-gray-900/60 border-gray-200 dark:border-gray-700 @CsS.Layout.FlexJustifyBetween">
+                <div class="@CsS.Spacing.M.Bottom1 rounded-lg border px-3 py-2 bg-gray-50 dark:bg-gray-900/60 border-gray-200 dark:border-gray-700 @CsS.Layout.FlexJustifyBetween">
                     <span class="@NewCC.Text.Sm">@u</span>
 
                     @if (!selected)
@@ -73,8 +73,8 @@
     </div>
 
     <!-- Selected keys -->
-    <div class="@CsS.Spacing.M.Top(Size.S4)">
-        <h3 class="@NewCC.Text.H5 @CsS.Spacing.M.Bottom(Size.S1)">Selected pairs (Keys)</h3>
+    <div class="@CsS.Spacing.M.Top4">
+        <h3 class="@NewCC.Text.H5 @CsS.Spacing.M.Bottom1">Selected pairs (Keys)</h3>
 
         @if (_model.Keys.Count == 0)
         {
@@ -85,9 +85,9 @@
             <div class="@CsS.Layout.FlexWrap">
                 @foreach (var k in _model.Keys)
                 {
-                    <span class="@CsS.Background.Primary @CsS.Spacing.M.Right(Size.S1) @CsS.Spacing.M.Bottom(Size.S1)">
+                    <span class="@CsS.Background.Primary @CsS.Spacing.M.Right1 @CsS.Spacing.M.Bottom1">
                         @k
-                        <button class="@CsS.Spacing.M.Left(Size.S1) rounded-full px-1 hover:bg-blue-200 dark:hover:bg-blue-800/60"
+                        <button class="@CsS.Spacing.M.Left1 rounded-full px-1 hover:bg-blue-200 dark:hover:bg-blue-800/60"
                                 title="Removal"
                                 disabled="@_isSaving"
                                 @onclick="() => RemoveKey(k)">
@@ -101,7 +101,7 @@
 
     @if (!string.IsNullOrWhiteSpace(_error))
     {
-        <div class="@CsS.Spacing.M.Top(Size.S2) text-red-600 text-sm">
+        <div class="@CsS.Spacing.M.Top2 text-red-600 text-sm">
             @_error
         </div>
     }

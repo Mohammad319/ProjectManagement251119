@@ -416,7 +416,7 @@ namespace Persistence.Service.CalculationItems
 
                 task.StatusId = null;
                 task.OpportunityId = null;
-                task.Metadata = new TaskData
+                task.Metadata = new TaskMetadata
                 {
                     IsOH = dto.Metadata.IsOH,
                     Type = TaskType.CodeName,

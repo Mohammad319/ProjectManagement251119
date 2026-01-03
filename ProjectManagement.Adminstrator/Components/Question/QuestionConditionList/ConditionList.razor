@@ -39,7 +39,7 @@ else
     {
         <div class="@NewCC.Card.Panel">
             <!-- Header: logic + actions -->
-            <div class="@CsS.Layout.FlexJustifyBetween @CsS.Spacing.M.Bottom(Size.S1)">
+            <div class="@CsS.Layout.FlexJustifyBetween @CsS.Spacing.M.Bottom1">
                 <div class="@NewCC.Text.Sm">
                     <b>Logic:</b>
                     C↔R=@c.OptionResourceLogic,
@@ -62,7 +62,7 @@ else
             <div class="@CsS.Grid.Col.MD3 @NewCC.Text.Sm">
                 <!-- Choice Requirements -->
                 <div class="@NewCC.Card.SubPanel">
-                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Choice Requirements</div>
+                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom1">Choice Requirements</div>
                     @if (c.OptionRules.Count == 0)
                     {
                         <div class="@NewCC.Text.MutedXs">— none —</div>
@@ -71,7 +71,7 @@ else
                     {
                         @foreach (var set in GroupBySetKey(c.OptionRules, r => r.GroupKey))
                         {
-                            <div class="@CsS.Spacing.M.Bottom(Size.S1)">
+                            <div class="@CsS.Spacing.M.Bottom1">
                                 <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
                                     SetKey=@set.Key (OR)
                                 </div>
@@ -90,7 +90,7 @@ else
 
                 <!-- Resource Requirements -->
                 <div class="@NewCC.Card.SubPanel">
-                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Resource Requirements</div>
+                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom1">Resource Requirements</div>
                     @if (c.ResourceRules.Count == 0)
                     {
                         <div class="@NewCC.Text.MutedXs">— none —</div>
@@ -99,7 +99,7 @@ else
                     {
                         @foreach (var set in GroupBySetKey(c.ResourceRules, r => r.GroupKey))
                         {
-                            <div class="@CsS.Spacing.M.Bottom(Size.S1)">
+                            <div class="@CsS.Spacing.M.Bottom1">
                                 <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
                                     SetKey=@set.Key (OR)
                                 </div>
@@ -118,7 +118,7 @@ else
 
                 <!-- Numeric Requirements -->
                 <div class="@NewCC.Card.SubPanel">
-                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Numeric Requirements</div>
+                    <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom1">Numeric Requirements</div>
                     @if (c.NumericRules.Count == 0)
                     {
                         <div class="@NewCC.Text.MutedXs">— none —</div>
@@ -127,7 +127,7 @@ else
                     {
                         @foreach (var set in GroupBySetKey(c.NumericRules, r => r.GroupKey))
                         {
-                            <div class="@CsS.Spacing.M.Bottom(Size.S1)">
+                            <div class="@CsS.Spacing.M.Bottom1">
                                 <div class="@NewCC.Text.Size11 @CsS.Text.Secondary">
                                     SetKey=@set.Key (OR)
                                 </div>
@@ -156,7 +156,7 @@ else
                 else
                 {
                     <div class="@NewCC.Card.SubPanel">
-                        <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom(Size.S1)">Resource Assignments</div>
+                        <div class="@NewCC.Text.SemiBold @CsS.Spacing.M.Bottom1">Resource Assignments</div>
                         <div class="@NewCC.Text.Sm">
                             @foreach (var a in c.Assignments)
                             {

@@ -5,7 +5,6 @@ using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Enums;
-using ProjectManagement.Shared.ValueObjects.Calculation;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -14,28 +13,25 @@ namespace Domain.Entities.Calculation
     [Index(nameof(TenantId), nameof(TaskId))]
     public sealed class ResourceEntity : IntBaseEntity
     {
-        public ResourceTypesEnum ResType { get; set; }
-
+        private ResourceMetadata? _metadata;
+        public ResourceMetadata Metadata
+        {
+            get => _metadata ??= new ResourceMetadata();
+            set => _metadata = value;
+        }
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; set; } = string.Empty;
-        public CostValue Cost { get; private set; } = null!;
-
-        public double SortOrder { get; set; }
-
         public bool IsActive { get; set; } = true;
-        [MaxLength(FieldLengths.Comment)]
-        public string? Note { get; set; }
 
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
-
-        private ResourceData? _metadata;
-        public ResourceData Metadata
-        {
-            get => _metadata ??= new ResourceData();
-            set => _metadata = value;
-        }
-
+        public ResourceTypesEnum ResType { get; set; }
+        /// <summary>
+        /// SortOrder of task in UI display.
+        /// </summary>
+        public double SortOrder { get; set; }
+        [MaxLength(FieldLengths.Comment)]
+        public string? Note { get; set; }
 
         // -----------------------
         // Relations
@@ -100,26 +96,6 @@ namespace Domain.Entities.Calculation
             ResourceSortId = dto.ResourceSortId;
             ResourceTypeId = dto.ResourceTypeId;
             PrimaryOfferId = dto.OfferId;
-
-            // --------- التكلفة (CostValue) ---------
-            if (Cost is null)
-            {
-                Cost = new CostValue(
-                    dto.Cost,
-                    dto.BaseCost,
-                    dto.ChangeFactor1,
-                    dto.ChangeFactor2
-                );
-            }
-            else
-            {
-                Cost.Set(
-                    dto.Cost,
-                    dto.BaseCost,
-                    dto.ChangeFactor1,
-                    dto.ChangeFactor2
-                );
-            }
         }
         public static ResourceEntity CloneForTask(ResourceEntity r)
         {
@@ -130,12 +106,6 @@ namespace Domain.Entities.Calculation
                 IsActive = r.IsActive,
                 Unit = r.Unit,
                 Note = r.Note,
-                Cost = new CostValue(
-                    r.Cost.Cost,
-                    r.Cost.BaseCost,
-                    r.Cost.ChangeFactor1,
-                    r.Cost.ChangeFactor2
-                ),
                 Metadata = r.Metadata.Clone(),
                 SortOrder = r.SortOrder,
             };

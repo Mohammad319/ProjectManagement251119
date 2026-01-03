@@ -158,7 +158,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     StatusId = ra.Resource.StatusId,
                     CalcResCost = ra.Resource.CalcResCost,
                     MenuId = ra.Resource.MenuId,
-                    Data = new Base.Calculation.ResourceData()
+                    Data = new Base.Calculation.ResourceMetadata()
                     {
                         CapWaste = cawaste,
                         ChangeFactor1 = ra.Resource.Data.ChangeFactor1,

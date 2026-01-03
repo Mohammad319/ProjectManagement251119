@@ -82,7 +82,7 @@ public static class ProjectTaskProjection
                                 TextDefault = b.TextValue,
                             }).ToList(),
 
-                        Data = new ResourceData
+                        Data = new ResourceMetadata
                         {
                             ChangeFactor1 = z.a.ChangeFactor1,
                             ChangeFactor2 = z.a.ChangeFactor2,
@@ -233,7 +233,7 @@ public static class ProjectTaskProjection
                                 CapRole = z.a.CapacityRoles,
                                 CalcResCost = z.a.Resource.CalcResCost ?? new(),
                                 MenuId = z.a.MenuId,
-                                Data = new ResourceData
+                                Data = new ResourceMetadata
                                 {
                                     ChangeFactor1 = z.a.ChangeFactor1,
                                     ChangeFactor2 = z.a.ChangeFactor2,

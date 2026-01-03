@@ -65,7 +65,7 @@
     <div class="@NewCC.Card.Panel">
         <div class="@CsS.Layout.FlexItemsCenter">
             <h5 class="@NewCC.Text.H5">Choice Requirements</h5>
-            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddChoiceReq">Add</button>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddChoiceReq">Add</button>
         </div>
 
         @if (Condition?.OptionRules == null || Condition.OptionRules.Count == 0)
@@ -76,7 +76,7 @@
         {
             @foreach (var r in Condition.OptionRules)
             {
-                <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
+                <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom2" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
                     <div class="@CsS.Grid.Span.MD4">
                         <label class="@CsS.Form.Label">Group</label>
                         <select class="@CsS.Input.Select" value="@r.QuestionGroupId" @onchange="e => OnChoiceGroupChanged(r, e)">
@@ -116,7 +116,7 @@
     <div class="@NewCC.Card.Panel">
         <div class="@CsS.Layout.FlexItemsCenter">
             <h5 class="@NewCC.Text.H5">Resource Requirements</h5>
-            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddResReq">Add</button>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddResReq">Add</button>
         </div>
 
         @if (Condition?.ResourceRules == null || Condition.ResourceRules.Count == 0)
@@ -127,7 +127,7 @@
         {
             @foreach (var r in Condition.ResourceRules)
             {
-                <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)">
+                <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom2">
                     <div class="@CsS.Grid.Span.MD4">
                         <label class="@CsS.Form.Label">Group</label>
                         <select class="@CsS.Input.Select" value="@r.SelectorId" @onchange="e => OnResGroupChanged(r, e)">
@@ -167,7 +167,7 @@
     <div class="@NewCC.Card.Panel">
         <div class="@CsS.Layout.FlexItemsCenter">
             <h5 class="@NewCC.Text.H5">Numeric Requirements</h5>
-            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddNumReq">Add</button>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddNumReq">Add</button>
         </div>
 
         @if (Condition?.NumericRules == null || Condition.NumericRules.Count == 0)
@@ -178,7 +178,7 @@
         {
             @foreach (var r in Condition.NumericRules)
             {
-                <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom(Size.S2)">
+                <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom2">
                     <div class="@CsS.Grid.Span.MD2">
                         <label class="@CsS.Form.Label">Group</label>
                         <select class="@CsS.Input.Select" value="@r.NumericQuestionId" @onchange="e => OnNumericGroupChanged(r, e)">
@@ -217,7 +217,7 @@
     <div class="@NewCC.Card.Panel">
         <div class="@CsS.Layout.FlexItemsCenter">
             <h5 class="@NewCC.Text.H5">Variable Requirements</h5>
-            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddVarReq">Add</button>
+            <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddVarReq">Add</button>
         </div>
 
         @if (Condition?.VariableRules == null || Condition.VariableRules.Count == 0)
@@ -228,7 +228,7 @@
         {
             @foreach (var r in Condition.VariableRules)
             {
-                <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom(Size.S2)" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
+                <div class="@CsS.Grid.Col.MD6 @CsS.Spacing.M.Bottom2" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
                     <div class="@CsS.Grid.Span.MD2">
                         <label class="@CsS.Form.Label">Variable</label>
                         <select class="@CsS.Input.Select" value="@r.VariableName"

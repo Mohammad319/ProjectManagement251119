@@ -88,7 +88,7 @@ else
                         isMenuRow = true;
                     }
 
-                    current.Data ??= new ProjectManagement.Shared.Base.Calculation.ResourceData();
+                    current.Data ??= new ProjectManagement.Shared.Base.Calculation.ResourceMetadata();
 
                     var hasFormulas = current.Formulas is { Count: > 0 };
                     var expanded = _expanded.Contains(current.Id);

@@ -16,8 +16,8 @@ namespace ProjectManagement.Client.Pages
         // 🟩 Common Services
         [Inject] protected DialogService Modal { get; set; } = default!;
         protected MhdServices MHD => UoWService.Mhd;
-        protected CalculationMVVM? Calc => Folder.State.Calculation;
-        protected TemplateMVVM? Template => Folder?.State?.Calculation?.Template;
+        protected CalculationMVVM Calc => Folder?.State?.Calculation ?? default!;
+        protected TemplateMVVM Template => Folder?.State?.Calculation?.Template?? default!;
         // 🟩 Repository
         [Inject] protected IUnitOfWorkRepository Repo { get; set; } = default!;
 

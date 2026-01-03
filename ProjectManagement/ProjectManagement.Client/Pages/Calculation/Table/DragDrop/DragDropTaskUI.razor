@@ -28,7 +28,7 @@
                         ⋮⋮
                     </span>
                     <span class="text-xs md:text-sm text-slate-700 dark:text-slate-100">
-                        @task.Data.Code
+                        @task.Metadata.Code
                     </span>
                 </div>
 
@@ -41,7 +41,7 @@
                 <div class="basis-[120px] shrink-0 flex items-center justify-end">
                     <input type="checkbox"
                            disabled
-                           checked="@task.Data.IsActive"
+                           checked="@task.Metadata.IsActive"
                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500
                                           dark:border-gray-600 dark:bg-gray-800" />
                 </div>

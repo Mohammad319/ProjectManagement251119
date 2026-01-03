@@ -14,7 +14,7 @@
 
 <EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
     <!-- شبكة: 5 أعمدة من md+ مع gap=1 -->
-    <div class="@CsS.Grid.Make(mdCols: 5, gap: 1)">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-1">
 
         <!-- Date 1 -->
         <div class="@CsS.Form.Field">
@@ -59,11 +59,11 @@
         <!-- Tools -->
         <div>
             <label class="@CC.Text.LabelXs">@AppControll.Delete_older_from_Month_Day</label>
-            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Y(Size.S1)">
+            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Y1">
                 <input type="number" placeholder="MM" class="@CsS.Input.Text" @bind="month" />
-                <input type="number" placeholder="DD" class="@CsS.Input.Text @CsS.Spacing.M.Left(Size.S1)" @bind="day" />
+                <input type="number" placeholder="DD" class="@CsS.Input.Text @CsS.Spacing.M.Left1" @bind="day" />
 
-                <div class="@CsS.Layout.Inline @CsS.Spacing.M.Left(Size.S2)">
+                <div class="@CsS.Layout.Inline @CsS.Spacing.M.Left2">
                     <button type="button"
                             class="@CsS.Btn.Outline.Danger"
                             title="Delete older"
@@ -86,7 +86,7 @@
 </EditForm>
 
 <!-- جدول ضمن بطاقة -->
-<div class="@CsS.Spacing.M.Top(Size.S2) @CC.Card.Panel overflow-hidden">
+<div class="@CsS.Spacing.M.Top2 @CC.Card.Panel overflow-hidden">
     <div class="overflow-x-auto min-w-0">
         <table class="table-fixed w-full text-sm">
             <!-- عدّل النسب هنا عند الحاجة -->
@@ -146,7 +146,7 @@
 </div>
 
 <!-- Pagination -->
-<div class="@CsS.Spacing.M.Top(Size.S2) @CsS.Layout.FlexItemsCenter">
+<div class="@CsS.Spacing.M.Top2 @CsS.Layout.FlexItemsCenter">
     <button class="@CsS.Btn.Outline.Info"
             disabled="@(NectBtnActive || IsLoading)"
             @onclick="async () => { Filter.PageNr = Filter.PageNr + 1; await GetTaskAsync(); }">

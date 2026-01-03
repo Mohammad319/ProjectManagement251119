@@ -36,7 +36,9 @@
                 <!-- صف العناوين (Sticky Header) -->
                 <tr class="text-xs uppercase tracking-wide">
                     <th class="px-2 py-2 text-center align-middle w-[80px] sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
-                        @* عمود التعليق + أزرار *@
+                        <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                            <span role="button" @onclick="() => UpdateForm(new OpportunityModel())" class="text-outline-success">@((MarkupString)Icons.Plus)</span>
+                        </AuthorizeView>
                     </th>
                     <th class="px-2 py-2 text-center align-middle sticky top-0 z-10 bg-slate-100 dark:bg-slate-800">
                         @ResourceLoc.opportunitiesRisks

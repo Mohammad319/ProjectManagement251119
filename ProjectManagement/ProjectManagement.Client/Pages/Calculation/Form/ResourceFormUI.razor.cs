@@ -146,7 +146,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         protected async override Task OnInitializedAsync()
         {
             ResourceUpdate = new();
-            ResourceUpdate.Data = new ResourceData();
+            ResourceUpdate.Data = new ResourceMetadata();
             editContext = new(ResourceUpdate);
             editContext.OnValidationRequested += HandleValidationRequested;
             messageStore = new(editContext);

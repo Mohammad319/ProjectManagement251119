@@ -229,20 +229,20 @@
                         <tbody>
                             <!-- سطر مثال للفكتور -->
                             <tr style="background-color:@Temp.SummarySheet.Color.Factor;">
-                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <td class="px-2 py-1 whitespace-nowrap">
-                                        @GetPreviewCellContent(i, isSumRow: false)
+                                        @GetPreviewCellContent(item.Name, isSumRow: false)
                                     </td>
                                 }
                             </tr>
 
                             <!-- سطر مثال للمجموع -->
                             <tr style="background-color:@Temp.SummarySheet.Color.Sum; font-weight:600;">
-                                @for (int i = 0; i < Temp.SSWidth.Count; i++)
+                                @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <td class="px-2 py-1 whitespace-nowrap">
-                                        @GetPreviewCellContent(i, isSumRow: true)
+                                        @GetPreviewCellContent(item.Name, isSumRow: true)
                                     </td>
                                 }
                             </tr>
@@ -262,10 +262,8 @@
     /// نص بسيط لكل خلية في المعاينة، حسب رقم العمود ونوع الصف (فكتور / مجموع)
     /// حتى تعطي إحساس حقيقي بشكل الورقة
     /// </summary>
-    private string GetPreviewCellContent(int colIndex, bool isSumRow)
+    private string GetPreviewCellContent(string titleKey, bool isSumRow)
     {
-        // حسب العناوين القياسية، نعرض محتوى مناسب
-        var titleKey = TemplateConst.SSCTitles[colIndex];
         var title = CalcLoc[titleKey];
 
         if (isSumRow)
@@ -293,4 +291,5 @@
             return "Sample";
         }
     }
+
 }

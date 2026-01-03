@@ -7,6 +7,7 @@ using ProjectManagement.Client.Shared.Error;
 using ProjectManagement.Client.Shared.Repositories;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -47,6 +48,10 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthenticationStateDeserialization();
 builder.Services.AddClientServices();
+//builder.Services.AddOidcAuthentication(options =>
+//{
+//    options.UserOptions.RoleClaim = ClaimTypes.Role;
+//});
 
 var host = builder.Build();
 

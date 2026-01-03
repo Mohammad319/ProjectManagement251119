@@ -8,7 +8,7 @@
 
 <div class="@CsS.Layout.FlexWrap">
     <!-- Seitenleiste: Ordner -->
-    <div class="@CsS.Layout.FlexWidth(208)">
+    <div class="@CssClasses.Layout.FlexWidth200">
         @if (Folders is null)
         {
             <div>Lädt Ordner …</div>
@@ -22,7 +22,7 @@
             @foreach (var f in Folders)
             {
                 <div role="button">
-                    <button class="@CsS.Multi([CsS.Btn.Outline.Primary, CsS.Spacing.M.Bottom(Size.S2)])"
+                    <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Bottom2"
                             style="width:100%; text-align:left;"
                             @onclick="() => LoadResourcesAsync(f.Id, f.DisplayName)">
                         @f.DisplayName
@@ -33,7 +33,7 @@
     </div>
 
     <!-- Ressourcen-Tabelle -->
-    <div class="@CsS.Multi([CsS.Layout.FlexMinWidth(360), CsS.Spacing.P.All(Size.S2)])">
+    <div class="@CsS.Layout.FlexMinWidth350 @CsS.Spacing.P.All2">
         <table class="@CsS.Table.Tab">
             <thead class="@CsS.Table.Thead">
                 <tr>
@@ -84,7 +84,7 @@
                                             @onclick="() => ToggleAssignAsync(r)">
                                         @(r.IsAssigned ? "-" : "+")
                                     </button>
-                                    <span class="@CsS.Spacing.M.Left(Size.S2)">@r.Name</span>
+                                    <span class="@CsS.Spacing.M.Left2">@r.Name</span>
                                 </div>
                             </td>
 

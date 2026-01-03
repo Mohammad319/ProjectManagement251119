@@ -39,7 +39,7 @@ namespace ProjectManagement.Client.Helper
                         Name = !string.IsNullOrWhiteSpace(name) ? name : "Task",
                         Tasks = new(),
                         Colspan = false,
-                        Metadata = new TaskData
+                        Metadata = new TaskMetadata
                         {
                             Code = code,
                             Unit = unit,

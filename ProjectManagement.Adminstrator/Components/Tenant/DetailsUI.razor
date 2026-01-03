@@ -10,7 +10,7 @@
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
-<h3 class="CsS.Spacing.M.Bottom(Size.S2)">
+<h3 class="CsS.Spacing.M.Bottom2">
     <button class="@CsS.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync()">
         @ResourceApp.back
     </button>
@@ -19,7 +19,7 @@
 @if (TenantPut != null)
 {
     <!-- بطاقة تفاصيل التينانت -->
-    <div class="@CC.Card.Panel @CsS.Spacing.M.Bottom(Size.S3)">
+    <div class="@CC.Card.Panel @CsS.Spacing.M.Bottom3">
         <table class="@CsS.Table.Tab">
             <tbody class="@CsS.Table.TBody">
                 <tr class="@CsS.Table.Tr">
@@ -71,7 +71,7 @@
 
     <!-- أزرار إدارية -->
     <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
-        <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom(Size.S2)" @onclick="(e) => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
+        <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom2" @onclick="(e) => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
             New User
         </button>
     </AuthorizeView>

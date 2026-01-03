@@ -23,7 +23,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         {
             PostStorygeDTO post = new()
             {
-                Items = [new ResourceTaskItemDTO(dusection.Id, dusection.Data.Quantity)],
+                Items = [new ResourceTaskItemDTO(dusection.Id, dusection.Metadata.Quantity)],
                 Type = CalculationItemType.task,
                 copyType = CopyType.Copy,
                 WithCildren = true,

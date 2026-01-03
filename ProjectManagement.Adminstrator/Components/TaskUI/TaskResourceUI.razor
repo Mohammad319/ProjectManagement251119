@@ -115,7 +115,7 @@
         @if (TaskResource?.ResType == ResourceTypesEnum.MachinesAndEquipments
             || TaskResource?.ResType == ResourceTypesEnum.Worker)
         {
-            <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top(Size.S2)">
+            <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top2">
                 <div class="@CsS.Layout.FlexJustifyBetween">
                     <h5 class="@CC.Text.H5">Roles</h5>
                     <button type="button"
@@ -191,7 +191,7 @@
         }
 
         <!-- بطاقة: الصيغ -->
-        <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top(Size.S2)">
+        <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top2">
             <div class="@CsS.Layout.FlexJustifyBetween">
                 <h5 class="@CC.Text.H5">@CalcResource.Formulas</h5>
                 <button class="@CsS.Btn.Outline.Primary"
@@ -209,7 +209,7 @@
             {
                 @foreach (var eq in TaskResource.Formulas.Select((value, index) => new { value, index }))
                 {
-                    <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Top(Size.S2)">
+                    <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Top2">
                         <input class="@CsS.Input.Text flex-1"
                                placeholder="Formula"
                                value="@TaskResource.Formulas[eq.index]"
@@ -227,7 +227,7 @@
     }
 
     <!-- تذييل المودال -->
-    <div class="@CsS.Modal.Footer @CsS.Spacing.M.Top(Size.S3)">
+    <div class="@CsS.Modal.Footer @CsS.Spacing.M.Top3">
         <div class="@CsS.Layout.ButtonGroup">
             <button type="button"
                     class="@CsS.Btn.Outline.Success"

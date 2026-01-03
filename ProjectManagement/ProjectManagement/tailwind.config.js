@@ -1,26 +1,23 @@
-﻿module.exports = {
-    darkMode: 'class',
+﻿/** @type {import('tailwindcss').Config} */
+module.exports = {
     content: [
-        // صفحات Razor
-        "./Pages/**/*.{razor,cshtml}",
-        "./Components/**/*.{razor,cshtml}",
-        "./Areas/**/*.{razor,cshtml}",
-        "./Shared/**/*.{razor,cshtml}",
-
-        // ملفات HTML (إن وجدت)
-        "./wwwroot/**/*.html",
-
-        // سكربتاتك فقط (ليس node_modules)
-        "./wwwroot/js/**/*.{js,ts}",
-        // لو عندك مشروع Client منفصل، فعّل السطر التالي مع المسار الصحيح:
-        // "./Client/**/*.{js,ts}"
-        "./ProjectManagement.Client/**/*.{razor,cshtml}",   // ✅ أضِف هذا السطر
+        "./**/*.{razor,html,cshtml,cs}",
+        "../ProjectManagement/**/*.{razor,html,cshtml,cs}",
+        "../ProjectManagement.Client/**/*.{razor,html,cshtml,cs}",
+        "../ProjectManagement.Shared/**/*.{razor,html,cshtml,cs}",
+        "../BlazorMHD.UI/**/*.{razor,html,cshtml,cs}"
     ],
-    theme: { extend: {} },
-    plugins: [],
+    darkMode: "class",
     safelist: [
-        "bg-blue-100", "text-blue-700",
-        "dark:bg-blue-900/50", "dark:text-blue-300",
-        "dark:text-gray-300", "dark:hover:bg-gray-800", "dark:hover:text-blue-400",
+        // arbitrary width/min-width
+        "min-w-[150px]", "min-w-[280px]", "min-w-[350px]",
+        "w-[110px]", "w-[130px]", "w-[160px]", "w-[200px]",
+
+        // content utilities
+        "after:content-['*']",
     ],
+    theme: {
+        extend: {},
+    },
+    plugins: [],
 };

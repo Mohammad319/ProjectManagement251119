@@ -8,27 +8,6 @@ using System.Linq;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
-    public interface ICalcRow
-    {
-        string ResName { get; }
-        double? Quantity { get; }
-        string QuantityParam { get; }
-        string Unit { get; }
-        double ChangeFactor1 { get; }
-        double ChangeFactor2 { get; }
-        double? BaseCost { get; }
-        double NetCostQ { get; }
-        double NetCostTotaly { get; }
-        double ApriceTotally { get; }
-        double? TotalCO2 { get; }
-        string Status { get; }
-        string StatusColor { get; }
-        int? StatusId { get; }
-        bool FilterVisible { get; set; }
-        bool HasUpdated { get; set; }
-        bool IsDragOver { get; set; }
-    }
-
     public class ListCalculationMVVM : ListCalculationDTO
     {
         public bool IsDragOver { get; set; }

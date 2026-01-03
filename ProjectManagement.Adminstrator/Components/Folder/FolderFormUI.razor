@@ -12,7 +12,7 @@
     <ValidationSummary class="@CsS.Text.Error" />
 
     <!-- شبكة مرنة: عمود واحد على الشاشات الصغيرة، و ColumnsMd على md+ -->
-    <div class="@CsS.Grid.Make(mdCols: ColumnsMd, gap: 2)">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 
         <!-- Name -->
         <div>
@@ -33,13 +33,13 @@
         </div>
 
         <!-- Note: يمتد كامل السطر -->
-        <div class="@CsS.Grid.ColSpans(("md", ColumnsMd))">
+        <div>
             <label class="@CsS.Form.Label">Note</label>
             <InputTextArea class="@CsS.Input.Text" @bind-Value="folder.Note" />
         </div>
 
         <!-- الأزرار: تمتد كامل السطر، ومصطفة يسار (بدّل لـ يمين بإضافة ml-auto) -->
-        <div class="@CsS.Grid.ColSpans(("md", ColumnsMd)) @CsS.Layout.FlexWrap">
+        <div>
             <button type="submit" class="@CsS.Btn.Outline.Primary">💾 Save</button>
             <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="Cancel">↩ Cancel</button>
         </div>

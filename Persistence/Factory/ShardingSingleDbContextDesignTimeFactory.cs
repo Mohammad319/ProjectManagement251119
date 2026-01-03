@@ -7,11 +7,10 @@ namespace Persistence.Factory
         public ShardingSingleDbContext CreateDbContext(string[] args)
         {
             var conn = Environment.GetEnvironmentVariable("TENANT_TEMPLATE_CONN")
-                       ?? "Server=.;Database=TenantTemplateDb;Trusted_Connection=True;TrustServerCertificate=True;";
+                       ?? @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=db962510648;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False;MultipleActiveResultSets=True";
 
             var options = new DbContextOptionsBuilder<ShardingSingleDbContext>()
-                .UseSqlServer(conn)
-                .Options;
+                .UseSqlServer(conn).Options;
 
             return new ShardingSingleDbContext(options) { TenantId = 1 };
         }

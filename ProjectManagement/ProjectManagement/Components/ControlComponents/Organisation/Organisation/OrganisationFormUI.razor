@@ -30,7 +30,7 @@
                     {
                         <li class="mr-2" role="presentation">
                             <button type="button"
-                                    class="@(CssClasses.Tabs.Btn(Part == tab.Id))"
+                                    class="@(Part == tab.Id ? CssClasses.Tabs.Active : CssClasses.Tabs.Inactive)"
                                     @onclick="() => Part = tab.Id">
                                 @tab.Label
                             </button>

@@ -44,7 +44,7 @@
 </div>
 @if (_loading)
 {
-    <div style="@CsS.Spacing.P.Top(Size.S5)">
+    <div style="@CsS.Spacing.P.Top3">
         <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
     </div>
  
@@ -123,7 +123,7 @@ else if (_tasks != null)
                 Order = Task.SortOrder,
                 StatusId = Task.StatusId,
                 
-                Metadata = new ProjectManagement.Shared.Base.Calculation.TaskData
+                Metadata = new ProjectManagement.Shared.Base.Calculation.TaskMetadata
                 {
                     QuantityParam = ConstValues.FixedQ,
                     Quantity = Task.Quantity ?? 0,
@@ -146,7 +146,7 @@ else if (_tasks != null)
                     IsActive = res.Active,
                     StatusId = res.StatusId,
                 // Metadata = res.Metadata,
-                    Data = new ResourceData()
+                    Data = new ResourceMetadata()
                     {
                     Note = res.Data.Note,
                     ChangeFactor1= res.Data.ChangeFactor1,

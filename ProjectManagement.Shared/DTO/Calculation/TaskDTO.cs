@@ -7,7 +7,6 @@ using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Shared.DTO.Calculation
 {
-
     public class TaskPostDTO : TaskBase
     {
         public int Id { get; set; }
@@ -17,7 +16,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? StatusId { get; set; }
         public int? OpportunityId { get; set; }
-        public bool OnlyCodeText = false;
+        public bool OnlyCodeText { get; set; } = false;
 
         public string Note { get; set; }
         public double? Quantity { get; set; }
@@ -33,21 +32,22 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public TaskType Type { get; set; }
         public bool IsOH { get; set; }
 
-        TaskData data = new();
-        public TaskData Metadata { get { data ??= new TaskData(); return data; } set { data = value; } }
+        TaskMetadata data = new();
+        public TaskMetadata Metadata { get { data ??= new TaskMetadata(); return data; } set { data = value; } }
         public List<ResourcePostDTO> Resources { get; set; }
         public List<TaskPostDTO> Tasks { get; set; }
         [JsonIgnore] public bool Colspan { get; set; }
 
-        public decimal Cost { get; private set; }
-        public decimal? BaseCost { get; private set; }
+        public double ActuallyQuantity { get; set; } = 0;
+        public double WorkedQ { get; set; } = 0;
+
     }
     public class TaskStorageDTO : TaskBase
     {
         public int Id { get; set; }
         public int? TaskId { get; set; }
-        TaskData data = new();
-        public TaskData Data { get { data ??= new TaskData(); return data; } set { data = value; } }
+        TaskMetadata data = new();
+        public TaskMetadata Data { get { data ??= new TaskMetadata(); return data; } set { data = value; } }
         public List<ResourceStorageListDTO> Resources { get; set; }
         public List<TaskStorageDTO> Tasks { get; set; }
         [JsonIgnore] public bool Colspan { get; set; }
@@ -55,7 +55,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
     public class TaskListDTO : TaskBase
     {
-        public TaskData Data { get; set; } = new();
+        public TaskMetadata Metadata { get; set; } = new();
         public int Id { get; set; }
         public int? TaskId { get; set; }
 

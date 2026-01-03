@@ -157,7 +157,7 @@ namespace ProjectManagement.Client.Services.Calculation
         {
             var list = new List<MenuItem>();
 
-            if (item.Data.Type != TaskType.CodeName && (item.Tasks == null || item.Tasks.Count == 0))
+            if (item.Metadata.Type != TaskType.CodeName && (item.Tasks == null || item.Tasks.Count == 0))
             {
                 list.Add(NewMenuItem(Icons.NewResource, AppLoc[LocalizerConst.New, ResourceLoc.resource], () => OpenResourceForm(new() { TaskId = item.Id })
                 ));
@@ -201,7 +201,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     () => TemporaryData.Copy(
                         CalcService.Calculation.Id,
                         item.Id,
-                        item.Data.Quantity,
+                        item.Metadata.Quantity,
                         CalculationItemType.task)
                 ),
             ]);

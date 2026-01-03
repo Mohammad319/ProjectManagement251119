@@ -34,9 +34,9 @@
     }
 </tr>
 
-@if (Task.Data.UpperNote != null && CalcService.ShowComments)
+@if (Task.Metadata.UpperNote != null && CalcService.ShowComments)
 {
-    @Note(Task.Data.UpperNote, 3, Template.NetColumnsToUse.Count)
+    @Note(Task.Metadata.UpperNote, 3, Template.NetColumnsToUse.Count)
 }
 
 @code {

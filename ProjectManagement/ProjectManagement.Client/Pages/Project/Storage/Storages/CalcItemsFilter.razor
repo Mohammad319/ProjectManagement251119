@@ -140,18 +140,18 @@
                     @if (Post.Type == CalculationItemType.task){
                         foreach (var task in (List as List<TaskListMVVM>)) {
                         <tr class="@UiStyles.ClassTask">
-                                <td><span @onclick="()=> Add(task.Id,task.Data.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
+                                <td><span @onclick="()=> Add(task.Id,task.Metadata.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
                                     @((MarkupString)(Post.Items.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus))
                     </span>
                 </td>
-                                <td>@task.Data.Code</td>
-                                <td><input type="checkbox" disabled checked="@task.Data.IsActive" /></td>
+                                <td>@task.Metadata.Code</td>
+                                <td><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
                                 <td>@task.Name</td>
-                                <td>@task.Data.Quantity / @task.BaseCost</td>
-                                <td>@task.Data.Unit</td>
-                                <td>@task.Data.ChangeFactor1</td>
-                                <td>@task.Data.ChangeFactor2</td>
-                                <td>@task.Data.Cap</td>
+                                <td>@task.Metadata.Quantity / @task.BaseCost</td>
+                                <td>@task.Metadata.Unit</td>
+                                <td>@task.Metadata.ChangeFactor1</td>
+                                <td>@task.Metadata.ChangeFactor2</td>
+                                <td>@task.Metadata.Cap</td>
                                 <td></td>
                             </tr>
                                     }

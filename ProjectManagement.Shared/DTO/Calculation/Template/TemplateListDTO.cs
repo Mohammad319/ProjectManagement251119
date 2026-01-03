@@ -44,19 +44,17 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         [MaxLength(5)] public string Currency { get; set; } = "€";
         [MaxLength(15)] public string DateFormat { get; set; } = "dd.MM.yyyy";
 
-        public List<int> SSWidth { get; set; } = [100, 80, 60, 60, 60, 100, 60, 60, 90, 80, 60, 60, 120, 80, 80];
         public List<NetColumnState> NetColumnsToUse { get; set; }
         public NetCalc NetCalc { get; set; } = new NetCalc();
         public SummarySheet SummarySheet { get; set; } = new SummarySheet();
 
-
         public TemplateData()
         {
             NetColumnsToUse = [.. NetCalc.Columns.Where(x=> x.Visible).OrderBy(x=> x.Order)];
-            for (int i = 0; i < NetColumnsToUse.Count; i++)
-            {
-                NetColumnsToUse[i].Id = i;
-            }
+            //for (int i = 0; i < NetColumnsToUse.Count; i++)
+            //{
+            //    NetColumnsToUse[i].Id = i;
+            //}
         }
 
     }

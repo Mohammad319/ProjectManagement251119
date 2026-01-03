@@ -11,7 +11,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (SelectedData.ExistItem(CalculationItemType.task, task.Id))
                 return CSS.SelectedItem;
 
-            return task.Data.IsActive && parentActive ? $"background-color:{color};"
+            return task.Metadata.IsActive && parentActive ? $"background-color:{color};"
                 : $"background-color:{color};color:rgba(180, 180, 180, 0.5);";
         }
 
@@ -56,16 +56,16 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
         public static void CalcVaribles(this TaskListMVVM task, List<QuanityListDTO> quantityList, double? parentQuantity)
         {
-            if (task.Data.Type == TaskType.CodeName) task.Data.Quantity = null;
-            else if (!string.IsNullOrEmpty(task.Data.QuantityParam))
+            if (task.Metadata.Type == TaskType.CodeName) task.Metadata.Quantity = null;
+            else if (!string.IsNullOrEmpty(task.Metadata.QuantityParam))
             {
-                QuanityListDTO param = quantityList.FirstOrDefault(x => x.Name == task.Data.QuantityParam);
-                if (param != null) task.Data.Quantity = param.Quantity;
-                else task.Data.QuantityParam = ConstValues.FixedQ;
+                QuanityListDTO param = quantityList.FirstOrDefault(x => x.Name == task.Metadata.QuantityParam);
+                if (param != null) task.Metadata.Quantity = param.Quantity;
+                else task.Metadata.QuantityParam = ConstValues.FixedQ;
             }
-            else task.Data.Quantity = task.Data.ChangeFactor1 * task.Data.ChangeFactor2 * (parentQuantity ?? 0);
+            else task.Metadata.Quantity = task.Metadata.ChangeFactor1 * task.Metadata.ChangeFactor2 * (parentQuantity ?? 0);
             if (task.Tasks != null) foreach (var subTask in task.Tasks)
-                    subTask.CalcVaribles(quantityList, task.Data.Quantity ?? parentQuantity);
+                    subTask.CalcVaribles(quantityList, task.Metadata.Quantity ?? parentQuantity);
         }
     }
 }

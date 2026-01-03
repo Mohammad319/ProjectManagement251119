@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class db251216 : Migration
+    public partial class db251230 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -316,8 +316,8 @@ namespace Persistence.Migrations
                     Email = table.Column<string>(type: "nvarchar(254)", maxLength: 254, nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: true),
-                    FirstName = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
-                    LastName = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
+                    FirstName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -834,22 +834,17 @@ namespace Persistence.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Quantity = table.Column<double>(type: "float", nullable: true),
-                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Unit = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    Unit = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: true),
                     Type = table.Column<int>(type: "int", nullable: false),
-                    IsOH = table.Column<bool>(type: "bit", nullable: false),
                     SortOrder = table.Column<double>(type: "float", nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    IsOH = table.Column<bool>(type: "bit", nullable: false),
                     ParentTaskId = table.Column<int>(type: "int", nullable: true),
                     OpportunityId = table.Column<int>(type: "int", nullable: true),
                     CalculationId = table.Column<int>(type: "int", nullable: false),
                     StatusId = table.Column<int>(type: "int", nullable: true),
-                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    BaseCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    ChangeFactor1 = table.Column<double>(type: "float", nullable: true),
-                    ChangeFactor2 = table.Column<double>(type: "float", nullable: true),
                     TenantId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -1001,7 +996,7 @@ namespace Persistence.Migrations
                         column: x => x.OrganisationId,
                         principalTable: "Organisation",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1021,13 +1016,14 @@ namespace Persistence.Migrations
                         name: "FK_TenderAttributeBind_AttributeNameTender_TenderAttributeId",
                         column: x => x.TenderAttributeId,
                         principalTable: "AttributeNameTender",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_TenderAttributeBind_Tenders_TenderId",
                         column: x => x.TenderId,
                         principalTable: "Tenders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1066,19 +1062,13 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ResType = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    BaseCost = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    ChangeFactor1 = table.Column<double>(type: "float", nullable: true),
-                    ChangeFactor2 = table.Column<double>(type: "float", nullable: true),
-                    SortOrder = table.Column<double>(type: "float", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Unit = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: true),
-                    Quantity = table.Column<double>(type: "float", nullable: false),
-                    CO2 = table.Column<double>(type: "float", nullable: true),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    Unit = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: true),
+                    ResType = table.Column<int>(type: "int", nullable: false),
+                    SortOrder = table.Column<double>(type: "float", nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     TaskId = table.Column<int>(type: "int", nullable: false),
                     OpportunityId = table.Column<int>(type: "int", nullable: true),
                     AccountId = table.Column<int>(type: "int", nullable: true),
@@ -1785,6 +1775,12 @@ namespace Persistence.Migrations
                 name: "IX_User_DepartmentId",
                 table: "User",
                 column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_User_Email",
+                table: "User",
+                column: "Email",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_User_TenantId_Id",

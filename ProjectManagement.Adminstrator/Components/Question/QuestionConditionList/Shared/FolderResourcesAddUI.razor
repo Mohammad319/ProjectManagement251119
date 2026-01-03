@@ -7,11 +7,11 @@
 @inject IResourceCategoryService ResourceCategoryService
 
 <div class="@CsS.Layout.FlexWrap">
-    <div class="@CC.Layout.FlexWidth(208)">
+    <div class="@CC.Layout.FlexWidth200">
         @if (Folders != null) foreach (var r in Folders)
             {
                 <div role="button">
-                    <button type="button" class="@CC.Multi([CC.Btn.Outline.Primary, CC.Spacing.M.Bottom(Size.S2)])" style="width:100%; text-align:left;"
+                    <button type="button" class="@CC.Btn.Outline.Primary @CC.Spacing.M.Bottom2" style="width:100%; text-align:left;"
                             @onclick="async () => { await LoadResourcesAsync(r); }">
                         @r.DisplayName
                     </button>
@@ -19,7 +19,7 @@
             }
     </div>
 
-    <div class="@CC.Multi([CsS.Layout.FlexMinWidth(360), CC.Spacing.P.All(Size.S2)])">
+    <div class="@CsS.Layout.FlexMinWidth350 @CC.Spacing.P.All2">
         <table class="@CsS.Table.Tab">
             <thead class="@CsS.Table.Thead">
                 <tr><th class="@CsS.Table.TH">@CalcResource.name</th></tr>
@@ -37,7 +37,7 @@
                                             @onclick="async ()=> await AddDelete(r)">
                                         @(ResIds.Any(x => x == r.Id) ? "-" : "+")
                                     </button>
-                                    <span class="@CC.Spacing.M.Left(Size.S2)">@r.Name</span>
+                                    <span class="@CC.Spacing.M.Left2">@r.Name</span>
                                 </div>
                             </td>
                         </tr>

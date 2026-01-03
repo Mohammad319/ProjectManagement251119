@@ -47,14 +47,6 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
 {
     public void Configure(EntityTypeBuilder<ResourceEntity> builder)
     {
-        builder.OwnsOne(r => r.Cost, owned =>
-        {
-            owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
-            owned.Property(x => x.Cost).HasColumnName("Cost");
-            owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
-            owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
-        });
-
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 
@@ -89,13 +81,13 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 {
     public void Configure(EntityTypeBuilder<TaskEntity> builder)
     {
-        builder.OwnsOne(t => t.Cost, owned =>
-        {
-            owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
-            owned.Property(x => x.Cost).HasColumnName("Cost");
-            owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
-            owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
-        });
+        //builder.OwnsOne(t => t.Cost, owned =>
+        //{
+        //    owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
+        //    owned.Property(x => x.Cost).HasColumnName("Cost");
+        //    owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
+        //    owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
+        //});
 
         builder.Property(e => e.Metadata)
             .HasJsonConversion();

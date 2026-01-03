@@ -139,8 +139,8 @@ else
         <ValidationSummary />
 
             <!-- Header: Task name + actions -->
-            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom(Size.S1)">
-                <div class="@CsS.Layout.FlexMinWidth(280)">
+            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom1">
+                <div class="@CsS.Layout.FlexMinWidth280">
                     <label class="@CsS.Form.Label">@CalcResource.name</label>
                     <input class="@CsS.Input.Text" value="@Task?.Name" readonly />
                 </div>
@@ -155,7 +155,7 @@ else
             <section class="@NewCC.Card.Panel">
                 <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
                     <h4 class="@NewCC.Text.SemiBold">Choice Groups</h4>
-                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddChoiceGroup">Add Group</button>
+                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddChoiceGroup">Add Group</button>
                 </div>
 
                 @if (Task.QuestionGroups?.Count > 0)
@@ -197,10 +197,10 @@ else
 
                             @if (g.Options?.Count > 0)
                             {
-                                <div class="@CsS.Spacing.M.Top(Size.S2)">
+                                <div class="@CsS.Spacing.M.Top2">
                                     @foreach (var o in g.Options)
                                     {
-                                        <div class="@NewCC.Card.SoftMuted @CsS.Spacing.P.All(Size.S2) @CsS.Spacing.M.Bottom(Size.S2)">
+                                        <div class="@NewCC.Card.SoftMuted @CsS.Spacing.P.All2 @CsS.Spacing.M.Bottom2">
                                             <div class="@CsS.Grid.Col.MD12">
                                                 <div class="@CsS.Grid.Span.MD4">
                                                     <label class="@CsS.Form.Label">Option Label</label>
@@ -208,7 +208,7 @@ else
                                                 </div>
 
                                                 <div class="@CsS.Grid.Span.MD6">
-                                                    <label class="@NewCC.Text.LabelXs @CsS.Spacing.M.Bottom(Size.S1)">
+                                                    <label class="@NewCC.Text.LabelXs @CsS.Spacing.M.Bottom1">
                                                         Reveal Section Keys (comma-separated)
                                                     </label>
                                                     <input class="@CsS.Input.Text"
@@ -244,7 +244,7 @@ else
             <section class="@NewCC.Card.Panel">
                 <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
                     <h4 class="@NewCC.Text.SemiBold">Numeric Groups</h4>
-                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddNumericGroup">Add Group</button>
+                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddNumericGroup">Add Group</button>
                 </div>
 
                 @if (Task.NumericQuestions?.Count > 0)
@@ -296,7 +296,7 @@ else
             <section class="@NewCC.Card.Panel">
                 <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
                     <h4 class="@NewCC.Text.SemiBold">Resource Choice Groups</h4>
-                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.Left(Size.Auto)" @onclick="AddResourceGroup">Add Group</button>
+                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddResourceGroup">Add Group</button>
                 </div>
 
                 @if (Task.ResourceSelectors?.Count > 0)
@@ -325,7 +325,7 @@ else
                                 </div>
                             </div>
 
-                            <div class="@CsS.Spacing.M.Top(Size.S2)">
+                            <div class="@CsS.Spacing.M.Top2">
                                 <FolderResourcesAddUI TaskId="Task.Id"
                                                       ResIds="g.Items.Select(x => x.ResourceId).ToList()"
                                                       OnSave="(e)=>AddDelete(g,e)" />
@@ -334,7 +334,7 @@ else
                                 {
                                     foreach (var it in g.Items)
                                     {
-                                        <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom(Size.S2)">
+                                        <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom2">
                                             <div class="@CsS.Grid.Span.MD10">
                                                 <label class="@CsS.Form.Label">Resource</label>
                                                 <ResourceAutocomplete MinChars="2" PageSize="20"

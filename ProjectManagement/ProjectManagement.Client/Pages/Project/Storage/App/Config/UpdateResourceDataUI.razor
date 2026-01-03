@@ -21,19 +21,19 @@ else
         <ValidationSummary />
 
         <div class="@CssClasses.Layout.FlexWrap">
-            <div class="@CssClasses.Layout.FlexMinWidth(300)">
+            <div class="@CssClasses.Layout.FlexMinWidth350">
                 <label class="@CssClasses.Form.Label" for="res-name">@CalcResource.name</label>
                 <InputText id="res-name" @bind-Value="ResourceUpdate.Name" class="@CssClasses.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Name)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexMinWidth(150)">
+            <div class="@CssClasses.Layout.FlexMinWidth150">
                 <label class="@CssClasses.Form.Label" for="res-cost">@CalcResource.cost</label>
                 <InputNumber id="res-cost" @bind-Value="ResourceUpdate.Cost" class="@CssClasses.Input.Number" />
                 <ValidationMessage For="@(() => ResourceUpdate.Cost)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexMinWidth(150)">
+            <div class="@CssClasses.Layout.FlexMinWidth150">
                 <label class="@CssClasses.Form.Label" for="res-co2">@CalcResource.co2</label>
                 <InputNumber id="res-co2" @bind-Value="ResourceUpdate.Co2" class="@CssClasses.Input.Number" />
                 <ValidationMessage For="@(() => ResourceUpdate.Co2)" />
@@ -41,7 +41,7 @@ else
 
             @if (!isRefreshing && Config.AccountGroups is not null)
             {
-                <div class="@CssClasses.Layout.FlexWidth(selectWidth)">
+                <div class="@CssClasses.Layout.FlexWidth160">
                     <label class="@CssClasses.Form.Label" for="res-acct-group">@CalcResource.accountGroups</label>
                     <InputSelect id="res-acct-group" class="@CssClasses.Input.Select" @bind-Value="accountGroupId" @bind-Value:after="OnGroupChanged">
                         <option value="">—</option>
@@ -54,7 +54,7 @@ else
 
                 @if (AccountGroupSelected?.Accounts is not null)
                 {
-                    <div class="@CssClasses.Layout.FlexWidth(selectWidth)">
+                    <div class="@CssClasses.Layout.FlexWidth160">
                         <label class="@CssClasses.Form.Label" for="res-account">@CalcResource.account</label>
                         <InputSelect id="res-account" class="@CssClasses.Input.Select" @bind-Value="ResourceUpdate.AccountId">
                             <option value="">—</option>
@@ -71,7 +71,7 @@ else
         <div class="@CssClasses.Layout.FlexWrap">
             @if (Config.ResourceTypes is not null)
             {
-                <div class="@CssClasses.Layout.FlexWidth(selectWidth)">
+                <div class="@CssClasses.Layout.FlexWidth160">
                     <label class="@CssClasses.Form.Label" for="res-type">@CalcResource.resourceType</label>
                     <InputSelect id="res-type" class="@CssClasses.Input.Select" @bind-Value="ResourceUpdate.ResourceTypeId" @bind-Value:after="OnTypeChanged">
                         <option value="">—</option>
@@ -86,7 +86,7 @@ else
 
             @if (ResTypeSelected?.ResourcesSort is not null && ResTypeSelected.ResourcesSort.Any())
             {
-                <div class="@CssClasses.Layout.FlexWidth(selectWidth)">
+                <div class="@CssClasses.Layout.FlexWidth160">
                     <label class="@CssClasses.Form.Label" for="res-sort">@CalcResource.resourceSort</label>
                     <InputSelect id="res-sort" class="@CssClasses.Input.Select" @bind-Value="ResourceUpdate.ResourceSortId">
                         <option value="">—</option>
@@ -98,7 +98,7 @@ else
                 </div>
             }
 
-            <div class="@CssClasses.Layout.FlexWidth(selectWidth)">
+            <div class="@CssClasses.Layout.FlexWidth160">
                 <label class="@CssClasses.Form.Label" for="res-status">@CalcResource.status</label>
                 <InputSelect id="res-status" @bind-Value="ResourceUpdate.StatusId" class="@CssClasses.Input.Select">
                     <option value="">—</option>

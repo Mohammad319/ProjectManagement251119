@@ -33,7 +33,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 CapRole = res.CapacityRoles,
                 Id = res.Resource.Id,
                 Name = res.Resource.Name,
-                Data = new ResourceData()
+                Data = new ResourceMetadata()
                 {
                     ChangeFactor1 = res.ChangeFactor1,
                     ChangeFactor2 = res.ChangeFactor2,

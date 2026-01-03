@@ -57,7 +57,7 @@
                 {
                     Id = resource.Id,
                     Name = resource.Name,
-                    Data = new ResourceData
+                    Data = new ResourceMetadata
                     {
                         Cost = resource?.Data?.Cost ?? 0,
                         ChangeFactor1 = resource?.Data?.ChangeFactor1 ?? 0,
@@ -134,7 +134,7 @@
     {
         @foreach (var a in Condition.Assignments)
         {
-            <div class="@NewCC.Card.SubPanel @CsS.Spacing.M.Bottom(Size.S2)">
+            <div class="@NewCC.Card.SubPanel @CsS.Spacing.M.Bottom2">
                 <div class="@CsS.Grid.Col.MD12">
                     <div class="@CsS.Grid.Span.MD3">
                         <label class="@CsS.Form.Label">Resource</label>
@@ -193,7 +193,7 @@
                 @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
                         a.Resource?.ResType == ResourceTypesEnum.Worker)
                 {
-                    <div class="@NewCC.Card.SoftMuted @CsS.Spacing.M.Top(Size.S2)">
+                    <div class="@NewCC.Card.SoftMuted @CsS.Spacing.M.Top2">
                         <div class="@CsS.Layout.Inline">
                             <div></div>
                             <div>@AppControll.min</div>
@@ -233,8 +233,8 @@
 
                 @if (a.Expressions is not null && a.Expressions.Count > 0)
                 {
-                    <div class="@NewCC.Text.H5 @CsS.Spacing.M.Top(Size.S2)">Formulas</div>
-                    <div class="@CsS.Grid.Col.MD4  @CsS.Spacing.M.Bottom(Size.S2)">
+                    <div class="@NewCC.Text.H5 @CsS.Spacing.M.Top2">Formulas</div>
+                    <div class="@CsS.Grid.Col.MD4  @CsS.Spacing.M.Bottom2">
                         @for (int i = 0; i < a.Expressions.Count; i++)
                         {
                             int d = i;
@@ -265,10 +265,10 @@
                     @* Choice Bindings *@
                     @if (OptBindsByRA.TryGetValue(a.Id, out var obList) && obList.Count > 0)
                     {
-                        <div class="@CsS.Spacing.M.Top(Size.S1)">
+                        <div class="@CsS.Spacing.M.Top1">
                             @foreach (var b in obList)
                             {
-                                <section class="@NewCC.Card.SoftMuted p-3 @CsS.Spacing.M.Bottom(Size.S1)">
+                                <section class="@NewCC.Card.SoftMuted p-3 @CsS.Spacing.M.Bottom1">
                                     <div class="">
                                         <div class="@CsS.Layout.FlexJustifyBetween">
                                             <div class="@CsS.Layout.Inline">
@@ -322,7 +322,7 @@
                                                                    placeholder="expr…"
                                                                    aria-label="Equation"
                                                                    @bind="b.Formulas[idx]" />
-                                                        <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All(Size.S2)"
+                                                        <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
                                                                     title="Remove this equation"
                                                                     @onclick="() => RemoveOptionEq(a.Id, b, idx)">✕
                                                             </button>
@@ -340,15 +340,15 @@
                     @* Numeric Bindings *@
                     @if (NumBindsByRA.TryGetValue(a.Id, out var nbList) && nbList.Count > 0)
                     {
-                        <div class="@CsS.Spacing.M.Top(Size.S4)">
-                            <div class="@CsS.Layout.FlexItemsCenter @CssClassesV3.Text.SemiBold @CssClassesV3.Text.Sm @CsS.Spacing.M.Bottom(Size.S2)">
+                        <div class="@CsS.Spacing.M.Top4">
+                            <div class="@CsS.Layout.FlexItemsCenter @CssClassesV3.Text.SemiBold @CssClassesV3.Text.Sm @CsS.Spacing.M.Bottom2">
                                 <div class="@NewCC.Text.Size12 @NewCC.Text.Uppercase @CsS.Text.Secondary">Numeric Bindings</div>
                                 <span class="@CssClassesV3.Text.Size11 + @CsS.Background.Light">@nbList.Count</span>
                             </div>
 
                             @foreach (var b in nbList)
                             {
-                                <section class="@NewCC.Card.SoftMuted p-3 @CsS.Spacing.M.Bottom(Size.S3)">
+                                <section class="@NewCC.Card.SoftMuted p-3 @CsS.Spacing.M.Bottom3">
                                     <div class="">
                                         <div class="@CsS.Layout.FlexJustifyBetween">
                                             <div class="@CsS.Layout.Inline">
@@ -391,7 +391,7 @@
                                                                    placeholder="expr…"
                                                                    aria-label="Equation"
                                                                    @bind="b.Formulas[idx]" />
-                                                        <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All(Size.S2)"
+                                                        <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
                                                                     title="Remove this equation"
                                                                     @onclick="() => RemoveNumericEq(a.Id, b, idx)">
                                                                 ✕

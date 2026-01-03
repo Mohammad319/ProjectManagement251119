@@ -259,7 +259,7 @@
                     OpportunityId = t.OpportunityId,
                     Order = t.SortOrder,
                     StatusId = t.StatusId,
-                    Data = t.Metadata,
+                    Metadata = t.Metadata,
                     Status = t.Status != null ? t.Status.Name : string.Empty,
                     StatusColor = t.Status != null ? t.Status.Color : string.Empty,
                     Opportunity = t.Opportunity != null ? t.Opportunity.OpportunityType : string.Empty,

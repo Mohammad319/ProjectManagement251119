@@ -226,10 +226,10 @@ app.UseAuthorization();
 app.UseTenantContext();
 app.UseAntiforgery();
 
+app.UseStaticFiles();     // يخدم wwwroot الخاص بالـ Host
 app.MapStaticAssets();
 app.MapControllers();
 app.MapHub<NotificationHub>("/notification");
-app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

@@ -12,7 +12,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
     public class ResFromData : ResourceBase
     {
-        public ResourceData Data { get; set; } = new();
+        public ResourceMetadata Data { get; set; } = new();
 
         public string Note => Data.Note;
         public List<string> UpperNote => Data.UpperNote;
@@ -27,7 +27,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double? CO2 => Data.CO2;
     }
 
-    public class ResourceListMVVM : ResFromData , ICalcRow
+    public class ResourceListMVVM : ResFromData
     {
         public int Version { get; set; } = 0;
 

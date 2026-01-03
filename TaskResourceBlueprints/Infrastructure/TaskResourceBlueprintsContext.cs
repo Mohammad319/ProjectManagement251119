@@ -61,7 +61,7 @@ public class TaskResourceBlueprintsContext : DbContext
 
         // Ignore non-entity types
         modelBuilder.Ignore<RoleDTO>();
-        modelBuilder.Ignore<ResourceData>();
+        modelBuilder.Ignore<ResourceMetadata>();
         modelBuilder.Ignore<ExternalVariable>();
         modelBuilder.Ignore<Equation>();
 

@@ -24,7 +24,7 @@
 
     @if (OrgID > 0)
     {
-        <div class="@CssClasses.Grid.Col.MD3  @CssClasses.Spacing.P.Top(Size.S3)">
+        <div class="@CssClasses.Grid.Col.MD3  @CssClasses.Spacing.P.Top3">
                 <label class="@CssClasses.Form.Label">
                     Basecost (AVG)
                 </label>
@@ -34,7 +34,7 @@
                        step="0.01"
                        @bind="Basecost" />
         </div>
-        <div class="@CssClasses.Form.Field @CssClasses.Spacing.P.Top(Size.S0_5)">
+        <div class="@CssClasses.Form.Field @CssClasses.Spacing.P.Top0_5">
             <span class="@CssClasses.Text.Secondary text-[11px]">
                 @ResourceLoc.Message_EnterNewAverageCost
             </span>

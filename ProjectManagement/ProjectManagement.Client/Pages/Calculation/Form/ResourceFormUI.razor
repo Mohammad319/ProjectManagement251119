@@ -31,7 +31,7 @@
     @* PANEL 1: الاسم + مجموعة الحساب + الحساب *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
         <div class="@CssClasses.Layout.FlexWrap">
-            <div class="@CssClasses.Layout.FlexMinWidth(400)">
+            <div class="@CssClasses.Layout.FlexMinWidth350">
                 <label class="@CssClasses.Form.Label">@CalcResource.name </label>
                 <InputText @bind-Value="ResourceUpdate.Name" class="@CssClasses.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Name)" />
@@ -39,7 +39,7 @@
 
             @if (!Refresh && Config.AccountGroups != null)
             {
-                <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                <div class="@CssClasses.Layout.FlexWidth160">
                     <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
                     <select @onchange="ChangeGroupAccount"
                             value="@AccountGroupSelected.Id"
@@ -57,7 +57,7 @@
 
                 @if (ResourceUpdate != null && AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
                 {
-                    <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                    <div class="@CssClasses.Layout.FlexWidth160">
                         <label class="@CssClasses.Form.Label">@CalcResource.account </label>
                         <InputSelect @bind-Value="ResourceUpdate.AccountId"
                                      class="@CssClasses.Input.Select">
@@ -80,7 +80,7 @@
     @* PANEL 2: الكمية + الوحدة + التكاليف + عوامل التغيير + Waste/Cap + Active *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
         <div class="@CssClasses.Layout.FlexWrap">
-            <div class="@CssClasses.Layout.FlexWidth(InputNumber + (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? 130 : 0))">
+            <div class="@(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? CssClasses.Layout.FlexWidth110 : CssClasses.Layout.FlexWidth200)">
                 <label class="@CssClasses.Form.Label">@CalcResource.quantity</label>
                 <div class="w-full @CssClasses.Layout.ButtonGroup">
                     <InputSelect class="@CssClasses.Input.Select"
@@ -103,13 +103,13 @@
                 </div>
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+            <div class="@CssClasses.Layout.FlexWidth110">
                 <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
                 <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@CssClasses.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+            <div class="@CssClasses.Layout.FlexWidth110">
                 <label class="@CssClasses.Form.Label">@CalcResource.cost </label>
                 @if (Resource.OfferId.HasValue && Resource.OfferId > 0)
                 {
@@ -122,7 +122,7 @@
                 }
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+            <div class="@CssClasses.Layout.FlexWidth110">
                 <label class="@CssClasses.Form.Label">@CalcResource.baseCost </label>
                 @if (Resource.OfferId.HasValue && Resource.OfferId > 0)
                 {
@@ -135,19 +135,19 @@
                 }
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(130)">
+            <div class="@CssClasses.Layout.FlexWidth130">
                 <label class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
                 <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="@CssClasses.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(130)">
+            <div class="@CssClasses.Layout.FlexWidth130">
                 <label class="@CssClasses.Form.Label">@CalcResource.changeFactor2 </label>
                 <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="@CssClasses.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(130)">
+            <div class="@CssClasses.Layout.FlexWidth130">
                 <div class="@CssClasses.Form.CheckWrapperM">
                     <InputCheckbox @bind-Value="ResourceUpdate.IsActive" class="@CssClasses.Input.Check" />
                     <label class="@CssClasses.Form.CheckLabel">@CalcResource.active </label>
@@ -158,7 +158,7 @@
               || ResourceUpdate.ResType == ResourceTypesEnum.Worker
               || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
             {
-                <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+                <div class="@CssClasses.Layout.FlexWidth110">
                     <label class="@CssClasses.Form.Label" for="waste">
                         @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
                     </label>
@@ -177,7 +177,7 @@
         <div class="@CssClasses.Layout.FlexWrap">
             @if (Config.ResourceTypes != null)
             {
-                <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                <div class="@CssClasses.Layout.FlexWidth160">
                     <label class="@CssClasses.Form.Label">@CalcResource.resourceType</label>
                     <InputSelect class="@CssClasses.Input.Select"
                                  @bind-Value:get="ResourceUpdate.ResourceTypeId"
@@ -196,7 +196,7 @@
 
             @if (ResTypeSelected != null && ResTypeSelected.ResourcesSort != null && ResTypeSelected.ResourcesSort.Any())
             {
-                <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+                <div class="@CssClasses.Layout.FlexWidth160">
                     <label class="@CssClasses.Form.Label">@CalcResource.resourceSort </label>
                     <InputSelect class="@CssClasses.Input.Select"
                                  @bind-Value:get="ResourceUpdate.ResourceSortId"
@@ -213,7 +213,7 @@
                 </div>
             }
 
-            <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+            <div class="@CssClasses.Layout.FlexWidth160">
                 <label class="@CssClasses.Form.Label">@CalcResource.status</label>
                 <InputSelect @bind-Value="ResourceUpdate.StatusId" class="@CssClasses.Input.Select">
                     @if (Config.Statues != null)
@@ -228,13 +228,13 @@
                 <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(InputNumber)">
+            <div class="@CssClasses.Layout.FlexWidth110">
                 <label class="@CssClasses.Form.Label">@CalcResource.co2 </label>
                 <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="@CssClasses.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.CO2)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth(Selectwidth)">
+            <div class="@CssClasses.Layout.FlexWidth160">
                 <label class="@CssClasses.Form.Label">@CalcResource.opportunity</label>
                 <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="@CssClasses.Input.Select">
                     <option></option>

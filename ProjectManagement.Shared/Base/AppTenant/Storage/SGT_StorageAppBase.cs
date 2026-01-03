@@ -12,7 +12,7 @@ namespace ProjectManagement.Shared.Base.AppTenant.Storage
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; }
         public double Order { get; set; }
-        TaskData data = new();
-        public TaskData Data { get { data ??= new TaskData(); return data; } set { data = value; } }
+        TaskMetadata data = new();
+        public TaskMetadata Data { get { data ??= new TaskMetadata(); return data; } set { data = value; } }
     }
 }

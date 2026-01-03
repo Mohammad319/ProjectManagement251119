@@ -174,8 +174,17 @@
             {
                 <th id="h1" class="draggable-table"></th>
             }
-
-            @foreach (var item in Template.NetColumnsToUse)
+            @for (int i = 0; i < Template.NetColumnsToUse.Count; i++)
+            {
+                if (Template.NetColumnsToUse[i].Visible)
+                {
+                    <th id="@("h" + (i + 2))" class="@("colH" + (i + 2)) draggable-table"
+                        style="width:@(Template.NetColumnsToUse[i].Width)px;">
+                        @CalcLoc[Template.NetColumnsToUse[i].Name]
+                    </th>
+                }
+            }
+@*             @foreach (var item in Template.NetColumnsToUse)
             {
                 if (item.Visible)
                 {
@@ -184,7 +193,7 @@
                         @CalcLoc[item.Name]
                     </th>
                 }
-            }
+            } *@
         </tr>
     </thead>
     <tbody>
@@ -237,7 +246,7 @@
     private Action? _onChangeHandler;
 
     void OnClick(TaskListMVVM task) =>
-        TableRenderHelpers.HandleItemSelected(task.Id, task.Data.Quantity, CalculationItemType.task);
+        TableRenderHelpers.HandleItemSelected(task.Id, task.Metadata.Quantity, CalculationItemType.task);
 
 
 

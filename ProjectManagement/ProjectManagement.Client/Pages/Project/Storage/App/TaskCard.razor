@@ -31,7 +31,7 @@
             <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
                 @Task.DisplayName  @Task.TotalCost<span class="opacity-70">/ Unit: @Task.UnitCode</span>
             </h3>
-            <div class="@CssClasses.Layout.FlexWidth(160)">
+            <div class="@CssClasses.Layout.FlexWidth160">
                 <select @bind="Task.StatusId" class="@CsS.Input.Select @CsS.Btn.Size.XSmall">
                     <option></option>
                     @if (Statuses != null)
@@ -263,7 +263,7 @@
                 CostStorageValue = totalStorageCost,
                 CostUserValue = totalUserCost,
                 
-                Data = new ProjectManagement.Shared.Base.Calculation.ResourceData
+                Data = new ProjectManagement.Shared.Base.Calculation.ResourceMetadata
                 {
                     Unit = Task.UnitCode ?? Task.UnitCode,
                     Quantity = Task.Quantity ?? 0,

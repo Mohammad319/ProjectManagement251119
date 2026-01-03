@@ -6,25 +6,7 @@ using System.Collections.Generic;
 
 namespace ProjectManagement.Shared.Base.Calculation
 {
-    public class TaskData2
-    {
-        public List<string> UpperNote { get; set; } = [];
-        public string QuantityParam { get; set; }
-
-        [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public double? Cap { get; set; }
-        public bool IsActive { get; set; } = true;
-
-        public bool PriceSubInPrecent { get; set; }
-        public double? PriceSubDB { get; set; }
-        public double? PriceSubTaxDB { get; set; }
-        public double? MinPrice { get; set; }
-        public double? CeilingPrice { get; set; }
-        public bool HasVoice { get; set; }
-        [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Responsible { get; set; }
-    }
-    public class TaskData
+    public class TaskMetadata
     {
         [AllowNull, MaxLength(500)]
         public string Note { get; set; }
@@ -35,6 +17,8 @@ namespace ProjectManagement.Shared.Base.Calculation
         public string Unit { get; set; }
         public double ChangeFactor1 { get; set; } = 1;
         public double ChangeFactor2 { get; set; } = 1;
+        public double ActuallyQuantity { get; set; } = 0;
+        public double WorkedQ { get; set; } = 0;
 
         [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public double? Cap { get; set; }
@@ -53,9 +37,9 @@ namespace ProjectManagement.Shared.Base.Calculation
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Responsible { get; set; }
 
-        public TaskData Clone()
+        public TaskMetadata Clone()
         {
-            return new TaskData
+            return new TaskMetadata
             {
                 UpperNote = [.. UpperNote],
                 QuantityParam = QuantityParam,
@@ -67,7 +51,11 @@ namespace ProjectManagement.Shared.Base.Calculation
                 MinPrice = MinPrice,
                 CeilingPrice = CeilingPrice,
                 HasVoice = HasVoice,
-                Responsible = Responsible
+                Responsible = Responsible,
+                ChangeFactor1 = ChangeFactor1,
+                ChangeFactor2 = ChangeFactor2,
+                ActuallyQuantity = ActuallyQuantity,
+                WorkedQ = WorkedQ,
             };
         }
     }

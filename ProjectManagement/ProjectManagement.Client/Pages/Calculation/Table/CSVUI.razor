@@ -21,7 +21,7 @@
             <input type="number" class="@CssClasses.Input.Number" placeholder="@ResourceApp.StartFromRow" @bind="RowStart" />
         </div>
         <div>
-            <div class="@CssClasses.Layout.FlexItemsCenter @CssClasses.Spacing.M.All(Size.S5)">
+            <div class="@CssClasses.Layout.FlexItemsCenter @CssClasses.Spacing.M.All5">
                 <InputFile type="file"  OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)"></InputFile>
                 @if (workbook != null)
                 {

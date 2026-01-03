@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.ValueObjects.Calculation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -13,38 +12,29 @@ namespace Domain.Entities.Calculation
     [Index(nameof(TenantId), nameof(CalculationId))]
     public sealed class TaskEntity : IntBaseEntity
     {
-        private TaskData? _metadata;
-        public TaskData Metadata
+        private TaskMetadata? _metadata;
+        public TaskMetadata Metadata
         {
-            get => _metadata ??= new TaskData();
+            get => _metadata ??= new TaskMetadata();
             set => _metadata = value;
         }
-
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; set; } = string.Empty;
-
-        public double? Quantity { get; set; }
-
-        [MaxLength(FieldLengths.Comment)]
-        public string? Note { get; set; }
+        public bool IsActive { get; set; } = true;
 
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
-
-        public bool IsActive { get; set; } = true;
-
-        [MaxLength(FieldLengths.Code)]
-        public string? Code { get; set; }
-
         public TaskType Type { get; set; }
-
-        public bool IsOH { get; set; }
-
         /// <summary>
         /// SortOrder of task in UI display.
         /// </summary>
         public double SortOrder { get; set; }
+        [MaxLength(FieldLengths.Comment)]
+        public string? Note { get; set; }
+        [MaxLength(FieldLengths.Code)]
 
+        public string? Code { get; set; }
+        public bool IsOH { get; set; }
         /// <summary>
         /// Parent task reference for hierarchical structure (optional).
         /// </summary>
@@ -93,12 +83,6 @@ namespace Domain.Entities.Calculation
         public ICollection<ResourceEntity> Resources { get; set; } = [];
 
         // -----------------------
-        // Cost (Value Object)
-        // -----------------------
-
-        public CostValue Cost { get; private set; } = null!;
-
-        // -----------------------
         // Methods
         // -----------------------
 
@@ -125,12 +109,12 @@ namespace Domain.Entities.Calculation
                 Code = t.Code,
                 StatusId = t.StatusId,
                 Type = t.Type,
-                Quantity = t.Quantity,
                 Unit = t.Unit,
                 Note = t.Note,
                 IsActive = t.IsActive,
                 SortOrder = t.SortOrder,
-                Metadata = t.Metadata.Clone()
+                Metadata = t.Metadata.Clone(),
+               
             };
 
             foreach (var r in t.Resources)
@@ -148,39 +132,17 @@ namespace Domain.Entities.Calculation
                 throw new ValidationException("Task name is required.");
 
             Name = dto.Name;
-            Quantity = dto.Quantity;
             Note = dto.Note;
             Unit = dto.Unit;
             IsActive = dto.IsActive;
             Code = dto.Code;
             Type = dto.Type;
             IsOH = dto.IsOH;
-
             Metadata = dto.Metadata;
 
             OpportunityId = dto.OpportunityId;
             StatusId = dto.StatusId;
             ParentTaskId = dto.ParentTaskId;
-
-            // CostValue
-            if (Cost is null)
-            {
-                Cost = new CostValue(
-                    dto.Cost,
-                    dto.BaseCost,
-                    dto.ChangeFactor1,
-                    dto.ChangeFactor2
-                );
-            }
-            else
-            {
-                Cost.Set(
-                    dto.Cost,
-                    dto.BaseCost,
-                    dto.ChangeFactor1,
-                    dto.ChangeFactor2
-                );
-            }
         }
     }
 }

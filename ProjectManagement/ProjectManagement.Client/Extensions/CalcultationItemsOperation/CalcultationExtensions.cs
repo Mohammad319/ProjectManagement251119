@@ -12,10 +12,10 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             calc.QuanityList ??= [];
 
             foreach (var task in calc.Tasks.Where(x => !x.TaskId.HasValue)) task.CalcVaribles(calc.QuanityList, null);
-            foreach (TaskListMVVM task in calc.Tasks.Where(x => x.Data.Type != TaskType.CodeName && x.Resources.Count > 0))
+            foreach (TaskListMVVM task in calc.Tasks.Where(x => x.Metadata.Type != TaskType.CodeName && x.Resources.Count > 0))
                 foreach (var res in task.Resources)
                 {
-                    res.CalcVaribles(calc?.QuanityList, task?.Data?.Quantity, task?.Data?.Cap);
+                    res.CalcVaribles(calc?.QuanityList, task?.Metadata?.Quantity, task?.Metadata?.Cap);
 
                     if (res.Active)
                     {
@@ -33,9 +33,9 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                                 factors.ResName = res.ResName;
                                 factors.Sort = res.Sort;
                             }
-                            factors.AddResValue(task.Data.IsOH, res.NetCostTotaly);
+                            factors.AddResValue(task.Metadata.IsOH, res.NetCostTotaly);
                         }
-                        else calc.Factors.Add(Factors.AddNewFactor(task.Data.IsOH, res));
+                        else calc.Factors.Add(Factors.AddNewFactor(task.Metadata.IsOH, res));
                     }
                 }
         }
@@ -71,7 +71,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
             // الجزء الثاني: ربط Factors بالـ Resources
             foreach (var resource in tasks
-                .Where(t => t?.Data?.Quantity.HasValue == true)
+                .Where(t => t?.Metadata?.Quantity.HasValue == true)
                 .SelectMany(t => t!.Resources ?? Enumerable.Empty<ResourceListMVVM>()))
             {
                 var factor = factors.FirstOrDefault(x =>

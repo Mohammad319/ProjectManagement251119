@@ -14,7 +14,7 @@ namespace Persistence.Service.CalculationItems
             IQueryable<TaskEntity> query;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // ⚠ نفترض أن عندك عمود Data في الجدول يمثل Task.Metadata كـ JSON
+            // ⚠ نفترض أن عندك عمود Metadata في الجدول يمثل Task.Metadata كـ JSON
             // ونستخدم FromSqlInterpolated لتفادي الحقن
             if (!string.IsNullOrWhiteSpace(filter.Code) &&
                 !string.IsNullOrWhiteSpace(filter.Unit))
@@ -58,7 +58,7 @@ namespace Persistence.Service.CalculationItems
                 .Select(x => new TaskListDTO
                 {
                     Id = x.Id,
-                    Data = x.Metadata,
+                    Metadata = x.Metadata,
                     Name = x.Name,
                     StatusColor = x.Status != null ? x.Status.Color : string.Empty,
                     Status = x.Status != null ? x.Status.Name : string.Empty,

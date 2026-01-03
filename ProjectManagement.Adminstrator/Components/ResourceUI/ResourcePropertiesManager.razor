@@ -23,7 +23,7 @@
         @foreach (var set in propertySets)
         {
             <div class="@CC.Card.Panel">
-                <div class="@CsS.Layout.FlexJustifyBetween @CsS.Layout.FlexItemsCenter @CsS.Spacing.P.All(Size.S2)">
+                <div class="@CsS.Layout.FlexJustifyBetween @CsS.Layout.FlexItemsCenter @CsS.Spacing.P.All2">
                     <h3 class="@CC.Text.Size12">@set.DisplayName (@set.Attributes.Count)</h3>
                     <div class="@CsS.Layout.Inline">
                         <button class="@CsS.Btn.Outline.Secondary" @onclick="() => LinkAllInSetAsync(set)">تحديد الكل</button>
@@ -37,14 +37,14 @@
                         var bind = GetBind(p.Id);
                         var isLinked = bind is not null;
 
-                        <div class="@CsS.Layout.FlexItemsCenter @CsS.Layout.FlexJustifyBetween @CsS.Spacing.P.All(Size.S2) hover:bg-gray-100 dark:hover:bg-gray-800/40">
+                        <div class="@CsS.Layout.FlexItemsCenter @CsS.Layout.FlexJustifyBetween @CsS.Spacing.P.All2 hover:bg-gray-100 dark:hover:bg-gray-800/40">
                             <div class="@CsS.Layout.FlexItemsCenter">
                                 <input class="@CsS.Input.Check"
                                        type="checkbox"
                                        checked="@isLinked"
                                        @onchange="async e => await ToggleBindAsync(p, ((ChangeEventArgs)e).Value is bool b && b)" />
 
-                                <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Left(Size.S2)">
+                                <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Left2">
                                     <span class="@CC.Text.Sm">(@("p" + p.Id)) @p.DisplayName</span>
                                 </div>
                             </div>

@@ -16,7 +16,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Name { get; set; }
         public double Order { get; set; }
         public bool IsActive { get; set; } = true;
-        public ResourceData Data { get; set; } = new();
+        public ResourceMetadata Data { get; set; } = new();
         public int? OfferId { get; set; }
         public int? AccountId { get; set; }
         public int? StatusId { get; set; }
@@ -40,6 +40,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public double? ChangeFactor2 { get; set; }
 
         //public CostValue Cost { get; private set; } = null!;
+        public double ActuallyQuantity { get; set; } = 0;
+        public double WorkedQ { get; set; } = 0;
 
         [JsonIgnore] public List<string> Formulas { get; set; } = [];
         [JsonIgnore] public bool IsAdded { get; set; }
@@ -52,12 +54,12 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int Id { get; set; }
         public int GroupId { get; set; }
 
-        public ResourceData Data { get; set; } = new();
+        public ResourceMetadata Data { get; set; } = new();
         [JsonIgnore] public bool Colspan = false;
     }
     public class ResourceListDTO : ResourceBase
     {
-        public ResourceData Data { get; set; } = new();
+        public ResourceMetadata Data { get; set; } = new();
         public int TaskId { get; set; }
         public int? OfferId { get; set; }
         public int? OpportunityId { get; set; }

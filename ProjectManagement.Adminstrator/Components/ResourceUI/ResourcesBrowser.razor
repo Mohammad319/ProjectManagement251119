@@ -13,10 +13,10 @@
 @inject IResourceCategoryService ResourceFolderService
 
 <div class="@CsS.Layout.FlexWrap">
-    <div class="@CsS.Layout.FlexWidth(208) @CC.Card.Panel">
+    <div class="@CssClasses.Layout.FlexWidth200 @CC.Card.Panel">
         @if (EnableFolderContext)
         {
-            <div class="@CsS.Layout.FlexItemsCenter CsS.Spacing.M.Bottom(Size.S2)">
+            <div class="@CsS.Layout.FlexItemsCenter CsS.Spacing.M.Bottom2">
                 <button class="@CsS.Btn.Outline.Primary" @onclick="() => AddFolder(null)">
                     @((MarkupString)Icons.Plus)
                 </button>
@@ -33,7 +33,7 @@
                 : EventCallback<ResourceCategory>.Empty)
     </div>
 
-    <div class="@CsS.Layout.FlexMinWidth(360) @CsS.Spacing.M.All(Size.S2)">
+    <div class="@CsS.Layout.FlexMinWidth350 @CsS.Spacing.M.All2">
         @if (!selectedFolderIds.Any())
                 {
         <p class="@CC.Text.MutedXs">Select one or more folders to see resources.</p>
