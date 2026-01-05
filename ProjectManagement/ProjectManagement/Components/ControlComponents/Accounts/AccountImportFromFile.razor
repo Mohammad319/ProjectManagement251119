@@ -1,44 +1,40 @@
-﻿@using Application.Feature.Account.Commands
-@using BlazorMHD.UI.Core.DesignSystem
-@using ProjectManagement.Shared
-@using ProjectManagement.Shared.DTO.Account
-@using System.IO
+﻿@inherits AppComponentBase
 
 <div class="@CssClasses.Modal.Body">
     <div class="@CssClasses.Grid.Col.MD4">
         <div>
-            <label class="@CssClasses.Form.Label">@ResourceApp.StartFromRow</label>
+            <label class="@CssClasses.Form.Label">@AppLoc[nameof(ResourceApp.StartFromRow)]</label>
             <input type="number" min="1" step="1" class="@CssClasses.Input.Text"
-                   placeholder="@ResourceApp.StartFromRow" @bind="RowStart" />
+                   placeholder="@AppLoc[nameof(ResourceApp.StartFromRow)]" @bind="RowStart" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.accountGroups</label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.accountGroups)]</label>
             <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="GroupCol" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.name</label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.name)]</label>
             <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="NameCol" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.code</label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.code)]</label>
             <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="CodeCol" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.comment</label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.comment)]</label>
             <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="Comment1Col" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.comment 2</label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.comment)] 2</label>
             <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="Comment2Col" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@PMAppFormatResource.separator</label>
+            <label class="@CssClasses.Form.Label">@FormatLoc[nameof(PMAppFormatResource.separator)]</label>
             <input type="text" class="@CssClasses.Input.Text"
                    placeholder="," @bind="Separator" />
         </div>
@@ -49,18 +45,18 @@
             <button class="@CssClasses.Btn.Solid.Primary"
                     @onclick="ImportByFormatAsync"
                     disabled="@(!CanImport)">
-                @ResourceApp.import
+                @AppLoc[nameof(ResourceApp.import)]
             </button>
 
             <button class="@CssClasses.Btn.Solid.Success"
                     @onclick="Save"
                     disabled="@(CanSave == false)">
-                @ResourceApp.save
+                @AppLoc[nameof(ResourceApp.save)]
             </button>
 
             @if (IsBusy)
             {
-                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading></BlazorMHD.UI.Components.Feedback.Loading.MhdLoading>
+                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
             }
         </div>
     </div>
@@ -69,10 +65,10 @@
         <thead class="@CssClasses.Table.Thead">
             <tr>
                 <th class="@CssClasses.Table.TH" style="width:52px;"></th>
-                <th class="@CssClasses.Table.TH">@CalcResource.accountGroups</th>
-                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                <th class="@CssClasses.Table.TH" style="width:140px;">@CalcResource.code</th>
-                <th class="@CssClasses.Table.TH">@CalcResource.comment</th>
+                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.accountGroups)]</th>
+                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.name)]</th>
+                <th class="@CssClasses.Table.TH" style="width:140px;">@CalcLoc[nameof(CalcResource.code)]</th>
+                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.comment)]</th>
             </tr>
         </thead>
 
@@ -82,7 +78,7 @@
                 <tr class="@CssClasses.Table.Tr">
                     <td class="@CssClasses.Table.Td" colspan="5">
                         <div class="p-4 text-sm text-slate-400">
-                            @ResourceApp.ThereAreNoItemsToDisplay
+                            @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
                         </div>
                     </td>
                 </tr>
@@ -94,7 +90,7 @@
                     <tr class="@CssClasses.Table.Tr">
                         <td class="@CssClasses.Table.Td">
                             <button class="@CssClasses.Btn.IconButton.Danger"
-                                    title="@ResourceApp.delete"
+                                    title="@AppLoc[nameof(ResourceApp.delete)]"
                                     @onclick="() => RemoveGroup(group)">
                                 @((MarkupString)Icons.DeleteSVG)
                             </button>
@@ -111,7 +107,7 @@
                         <tr class="@CssClasses.Table.Tr">
                             <td class="@CssClasses.Table.Td">
                                 <button class="@CssClasses.Btn.IconButton.Danger"
-                                        title="@ResourceApp.delete"
+                                        title="@AppLoc[nameof(ResourceApp.delete)]"
                                         @onclick="() => RemoveAccount(group, account)">
                                     @((MarkupString)Icons.DeleteSVG)
                                 </button>

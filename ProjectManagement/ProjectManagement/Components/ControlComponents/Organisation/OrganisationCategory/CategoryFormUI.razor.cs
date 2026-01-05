@@ -1,5 +1,4 @@
 ﻿using Application.Feature.Organisation.OrganisationCategory.Commands;
-using DocumentFormat.OpenXml.Vml.Office;
 using Domain.DTO.Category;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.DTO.Organisation;
@@ -18,7 +17,12 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             OrganisationCategory.CopyPropertiesTo(PostOffer);
             PostOffer.CategoryId = OrganisationCategory.ParentCategoryId;
+        }
 
+        private async Task Cancel()
+        {
+            if (Callback.HasDelegate)
+                await Callback.InvokeAsync(false);
         }
 
         private async Task HandleSubmitAsync()
@@ -32,21 +36,29 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
                 if (OrganisationCategory.Id == 0)
                 {
-                    result = await MicroBus.Send(new CreateOrganisationCategoryCommand(PostOffer)) > 0;
+                    result = await Dispatcher.Send(
+                        new CreateOrganisationCategoryCommand(PostOffer)) > 0;
                 }
                 else
                 {
                     PutOrganisationCategoryDTO entity = new();
                     PostOffer.CopyPropertiesTo(entity);
-                    result = await MicroBus.Send(new UpdateOrganisationCategoryCommand(entity));
+
+                    result = await Dispatcher.Send(
+                        new UpdateOrganisationCategoryCommand(entity));
                 }
 
-                MHD.Notifications(OrganisationCategory.Id == 0 ? ToastType.Add : ToastType.Update, result);
-                await Callback.InvokeAsync(result);
+                MHD.Notifications(
+                    OrganisationCategory.Id == 0 ? ToastType.Add : ToastType.Update,
+                    result);
+
+                if (Callback.HasDelegate)
+                    await Callback.InvokeAsync(result);
             }
             finally
             {
                 IsLoading = false;
+                await InvokeAsync(StateHasChanged); // ✅ آمن في Blazor Server
             }
         }
     }

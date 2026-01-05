@@ -1,11 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Shared.Model.Application
+@using ProjectManagement.Client.Shared.Repositories
 @using ProjectManagement.Client.Shared.ViewModel
 @using ProjectManagement.Shared.Base.Application
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 @inject ICommandDispatcher MicroBus
-
+@inject IUnitOfWorkRepository Repo
 <div class="d-flex justify-content-between mt-1">
     <div>
         <select @onchange="Change2" class="form-select">

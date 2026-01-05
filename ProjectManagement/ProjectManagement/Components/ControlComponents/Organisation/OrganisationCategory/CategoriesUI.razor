@@ -1,11 +1,9 @@
 ﻿@using Domain.DTO.Category
 @using Domain.Entities.Organisation
+@using Microsoft.AspNetCore.Components.Authorization
 @using ProjectManagement.Components.ControlComponents.Organisation.OrganisationsType
+@inherits AppComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
 
 <div class="flex flex-row gap-1">
     <div class="flex flex-col">
@@ -18,14 +16,15 @@
 
                 <button @onclick="() => PageNr = 1"
                         class="@CssClasses.Btn.Outline.Secondary">
-                    Category Type
+                    @FormatLoc[nameof(PMAppFormatResource.categoryType)]
                 </button>
             </AuthorizeView>
         </div>
 
-        <CategoryTree Categories="Categories" SelectedId="SelectedCategory?.Id"
-                      OnSelect="OnTreeSelect" OnContext="OnTreeContext" />
-
+        <CategoryTree Categories="Categories"
+                      SelectedId="SelectedCategory?.Id"
+                      OnSelect="OnTreeSelect"
+                      OnContext="OnTreeContext" />
     </div>
 
     <div class="flex-1">
@@ -33,9 +32,10 @@
         {
             <OrganisationsTypeUI />
         }
-        else if (SelectedCategory != null)
+        else if (SelectedCategory is not null)
         {
-            <OrganisationsUI Callback="() => SelectedCategory = null" Category="SelectedCategory"  />
+            <!-- بدل lambda: نستخدم method لتفادي أخطاء EventCallback -->
+            <OrganisationsUI Callback="OnOrganisationsClosed" Category="SelectedCategory" />
         }
     </div>
 </div>

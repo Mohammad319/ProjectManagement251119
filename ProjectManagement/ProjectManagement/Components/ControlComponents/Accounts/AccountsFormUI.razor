@@ -1,143 +1,82 @@
-﻿@using Application.Interfaces
-@using ProjectManagement.Shared
+﻿@inherits AppComponentBase
 
 <EditForm id="accountForm"
           Model="@EditModel"
-          OnValidSubmit="HandleSubmitAsync">
+          OnValidSubmit="HandleSubmitAsync"
+          class="@CssClasses.Modal.Body">
 
     <DataAnnotationsValidator />
 
-    <!-- BODY (scroll) -->
-    <div class="flex-1 overflow-y-auto">
+    <div class="@CssClasses.Grid.Col.MD3">
 
-        <ValidationSummary class="text-xs text-rose-600 bg-rose-50 dark:bg-rose-900/20 p-2 rounded-md" />
+        <div>
+            <label class="@CssClasses.Form.Label">
+                @CalcLoc[nameof(CalcResource.name)]
+            </label>
+            <InputText class="@CssClasses.Input.Text"
+                       @bind-Value="EditModel.Name" />
+        </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3 space-y-3">
+        <div>
+            <label class="@CssClasses.Form.Label">
+                @CalcLoc[nameof(CalcResource.code)]
+            </label>
+            <InputText class="@CssClasses.Input.Text"
+                       @bind-Value="EditModel.Account" />
+        </div>
 
-            <!-- Toolbar (compact) -->
-            <div class="flex items-center justify-between gap-2">
-                <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                    @CalcResource.account
-                </div>
+        <div class="flex items-center gap-2 mt-2">
+            <InputCheckbox @bind-Value="EditModel.IsVisible" />
+            <label class="text-sm">
+                @AppLoc[nameof(ResourceApp.visible)]
+            </label>
+        </div>
 
-                <div class="flex items-center gap-2">
-                    <label class="inline-flex items-center gap-2 text-xs text-gray-700 dark:text-gray-200 select-none">
-                        <InputCheckbox class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400"
-                                       @bind-Value="EditModel.IsVisible" />
-                        <span>@ResourceApp.isVisible</span>
-                    </label>
+        <!-- Comments -->
+        <div class="mt-4">
+            <label class="@CssClasses.Form.Label">
+                @CalcLoc[nameof(CalcResource.comment)]
+            </label>
 
-                    <button type="button"
-                            class="inline-flex items-center gap-2 px-2 py-1 text-xs rounded-md
-                                   bg-blue-600 text-white hover:bg-blue-700
-                                   dark:bg-blue-500 dark:hover:bg-blue-600 transition"
-                            @onclick="AddComment">
-                        @((MarkupString)Icons.Plus)
-                        <span>@CalcResource.comment</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Fields (compact) -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
-
-                <div class="md:col-span-2 space-y-1">
-                    <label class="block text-xs text-gray-700 dark:text-gray-300 text-right">
-                        @CalcResource.account
-                    </label>
-                    <InputText class="w-full border border-gray-300 rounded px-2 py-1 text-sm
-                                      focus:outline-none focus:ring-2 focus:ring-blue-500
-                                      dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                               @bind-Value="EditModel.Account" />
-                    <ValidationMessage For="@(() => EditModel.Account)" class="text-xs text-rose-600" />
-                </div>
-
-                <div class="md:col-span-2 space-y-1">
-                    <label class="block text-xs text-gray-700 dark:text-gray-300 text-right">
-                        @CalcResource.name
-                    </label>
-                    <InputText class="w-full border border-gray-300 rounded px-2 py-1 text-sm
-                                      focus:outline-none focus:ring-2 focus:ring-blue-500
-                                      dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                               @bind-Value="EditModel.Name" />
-                    <ValidationMessage For="@(() => EditModel.Name)" class="text-xs text-rose-600" />
-                </div>
-            </div>
-
-            <!-- Comments (scrollable area inside body if needed) -->
-            <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                    <div class="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                        @CalcResource.comment
-                    </div>
-
-                    @if (EditModel?.Data?.Comments is not null)
-                    {
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            @EditModel.Data.Comments.Count
-                        </div>
-                    }
-                </div>
-
-                @if (EditModel?.Data?.Comments is not null && EditModel.Data.Comments.Count > 0)
+            @if (EditModel.Data?.Comments is { Count: > 0 })
+            {
+                @for (int i = 0; i < EditModel.Data.Comments.Count; i++)
                 {
-                    <div class="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-                        @for (var i = 0; i < EditModel.Data.Comments.Count; i++)
-                        {
-                            var idx = i;
+                    <div class="flex gap-2 mb-2">
+                        <InputText class="@CssClasses.Input.Text"
+                                   @bind-Value="EditModel.Data.Comments[i]" />
 
-                            <div class="flex items-center gap-2">
-
-                                <!-- Comment Input -->
-                                <InputText class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm
-                                          focus:outline-none focus:ring-2 focus:ring-blue-500
-                                          dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                           @bind-Value="EditModel.Data.Comments[idx]" />
-
-                                <!-- Delete Button -->
-                                <button type="button"
-                                        class="inline-flex items-center justify-center w-8 h-8 rounded-md
-                                       border border-red-300 text-red-600
-                                       hover:bg-red-100 hover:ring-1 hover:ring-red-300
-                                       dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40
-                                       transition-all duration-150"
-                                        title="@ResourceApp.delete"
-                                        @onclick="() => RemoveComment(idx)">
-                                    @((MarkupString)Icons.DeleteSVG)
-                                </button>
-                            </div>
-                        }
+                        <button type="button"
+                                class="@CssClasses.Btn.IconButton.Danger"
+                                title="@AppLoc[nameof(ResourceApp.delete)]"
+                                @onclick="() => RemoveComment(i)">
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
                     </div>
                 }
-            </div>
+            }
 
+            <button type="button"
+                    class="@CssClasses.Btn.Outline.Primary mt-2"
+                    @onclick="AddComment">
+                @AppLoc[LocalizerConst.New,""]
+            </button>
         </div>
     </div>
-
-    <!-- FOOTER (sticky) -->
-    <div class="shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80
-                backdrop-blur px-3 py-2 flex justify-end gap-2">
-
-        <button type="submit"
-                form="accountForm"
-                class="px-3 py-1.5 text-sm rounded-md border border-green-600 text-green-600
-                       hover:bg-green-600 hover:text-white
-                       dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white
-                       transition"
-                disabled="@IsLoading"
-                aria-busy="@IsLoading">
-            @ResourceApp.save
-        </button>
-
-        <button type="button"
-                class="px-3 py-1.5 text-sm rounded-md border border-gray-500 text-gray-600
-                       hover:bg-gray-500 hover:text-white
-                       dark:border-gray-400 dark:text-gray-300 dark:hover:bg-gray-400 dark:hover:text-white
-                       transition"
-                data-bs-dismiss="modal"
-                @onclick="CloseModal"
-                disabled="@IsLoading">
-            @ResourceApp.cancel
-        </button>
-    </div>
 </EditForm>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit"
+            form="accountForm"
+            class="@CssClasses.Btn.Outline.Success"
+            disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.save)]
+    </button>
+
+    <button type="button"
+            class="@CssClasses.Btn.Outline.Secondary"
+            @onclick="CloseModal"
+            disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.cancel)]
+    </button>
+</div>

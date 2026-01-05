@@ -1,4 +1,6 @@
 ﻿@using ProjectManagement.Shared.DTO.Account
+@using ProjectManagement.Components.Shared
+@inherits AppComponentBase
 
 <div class="flex-1 p-1 overflow-auto">
     @if (GroupSelected > 0)
@@ -6,32 +8,40 @@
         <div class="@CssClasses.Layout.FlexItemsCenter pb-1 gap-2">
             <button class="@CssClasses.Btn.IconButton.Success mt-1 flex items-center gap-2"
                     @onclick="CreateForm"
-                    title="@ResourceApp.newItem"
-                    aria-label="@ResourceApp.newItem">
+                    title="@AppLoc[nameof(ResourceApp.newItem)]"
+                    aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
                 @((MarkupString)Icons.Plus2)
             </button>
 
             <button class="@CssClasses.Btn.IconButton.Secondary mt-1"
                     @onclick="ToggleVisibleFilter"
-                    title="@ResourceApp.isVisible"
-                    aria-label="@ResourceApp.isVisible">
+                    title="@AppLoc[nameof(ResourceApp.isVisible)]"
+                    aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
                 @((MarkupString)Icons.GetVisibleIcon(IsVisibleOnly))
             </button>
         </div>
 
         @if (IsLoading)
         {
-           <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading></BlazorMHD.UI.Components.Feedback.Loading.MhdLoading>
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
         }
         else if (Accounts is { Count: > 0 })
         {
             <table class="@CssClasses.Table.Tab">
                 <thead class="@CssClasses.Table.Thead">
                     <tr>
-                        <th class="@CssClasses.Table.TH" style="width:105px;">@CalcResource.account</th>
-                        <th class="@CssClasses.Table.TH" style="width:105px;">@ResourceApp.isVisible</th>
-                        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                        <th class="@CssClasses.Table.TH">@CalcResource.comment</th>
+                        <th class="@CssClasses.Table.TH" style="width:105px;">
+                            @CalcLoc[nameof(CalcResource.account)]
+                        </th>
+                        <th class="@CssClasses.Table.TH" style="width:105px;">
+                            @AppLoc[nameof(ResourceApp.isVisible)]
+                        </th>
+                        <th class="@CssClasses.Table.TH">
+                            @CalcLoc[nameof(CalcResource.name)]
+                        </th>
+                        <th class="@CssClasses.Table.TH">
+                            @CalcLoc[nameof(CalcResource.comment)]
+                        </th>
                     </tr>
                 </thead>
 
@@ -51,7 +61,6 @@
                             <td class="@CssClasses.Table.Td">@account.Name</td>
 
                             <td class="@CssClasses.Table.Td">
-                                @* إذا عندك Comments ضمن Metadata/Data عدّل حسب DTO *@
                                 @if (account.Metadata?.Comments is { Count: > 0 })
                                 {
                                     @foreach (var comm in account.Metadata.Comments)
@@ -60,7 +69,6 @@
                                     }
                                 }
                             </td>
-
                         </tr>
                     }
                 </tbody>
@@ -69,7 +77,7 @@
         else
         {
             <div class="p-3 text-sm text-slate-400">
-                @ResourceApp.ThereAreNoItemsToDisplay
+                @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
             </div>
         }
     }

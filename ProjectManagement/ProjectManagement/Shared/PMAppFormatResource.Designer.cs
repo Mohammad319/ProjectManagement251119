@@ -61,6 +61,15 @@ namespace ProjectManagement.Shared {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string add {
+            get {
+                return ResourceManager.GetString("add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Align-Items.
         /// </summary>
         public static string alignItems {
@@ -102,6 +111,15 @@ namespace ProjectManagement.Shared {
         public static string borderType {
             get {
                 return ResourceManager.GetString("borderType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Category Type.
+        /// </summary>
+        public static string categoryType {
+            get {
+                return ResourceManager.GetString("categoryType", resourceCulture);
             }
         }
         

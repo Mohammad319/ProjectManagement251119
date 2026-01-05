@@ -1,5 +1,7 @@
-﻿@using ProjectManagement.Shared.DTO.Identity
-@inherits AppComponentBase
+﻿@inherits AppComponentBase
+
+@using ProjectManagement.Shared.DTO.Identity
+@using ProjectManagement.Client.Shared.Constants
 
 @if (DepartmentList is null)
 {
@@ -12,59 +14,48 @@
         </div>
     </div>
 }
-else
-{
-    <div class="@CssClasses.Modal.Body">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h4 class="m-0">@DepartmentList.Name</h4>
-        </div>
 
-        <hr />
+<div class="@CssClasses.Modal.Body">
 
-        <dl class="@CssClasses.Grid.Col.MD3">
-            <dt>@CalcResource.name</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.Name</dd>
-
-            <dt>@ResourceLoc.description</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@FormatText(DepartmentList.Description)</dd>
-
-            <dt>@ResourceApp.created</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@FormatDate(DepartmentList.Created)</dd>
-
-            <dt>@ResourceApp.lastUpdate</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@FormatDate(DepartmentList.LastModified)</dd>
-
-            <dt>@ResourceIdentity.User</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.UsersCount</dd>
-
-            <dt>@ResourceLoc.folder</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.FoldersCount</dd>
-
-            <dt>@CalcResource.project</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@DepartmentList.ProjectsCount</dd>
-        </dl>
+    <div class="mb-3">
+        <h5 class="mb-1">
+            @AppLoc[nameof(ResourceApp.department)]
+        </h5>
+        <strong>@DepartmentList.Name</strong>
     </div>
 
-    <div class="@CssClasses.Modal.Footer">
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Back">
+    @if (!string.IsNullOrWhiteSpace(DepartmentList.Description))
+    {
+        <div class="mb-3">
+            <label class="@CssClasses.Form.Label">
+                @AppLoc[nameof(ResourceLoc.description)]
+            </label>
+            <div class="form-control bg-light">
+                @DepartmentList.Description
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <button class="@CssClasses.Btn.Outline.Secondary"
+                @onclick="Back">
             @((MarkupString)Icons.Back)
         </button>
     </div>
-}
+
+</div>
 
 @code {
-    [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
-    [Parameter] public DepartmentDetailsDTO? DepartmentList { get; set; }
 
-    private Task Back() => OnClickCallback.InvokeAsync(false);
+    [Parameter, EditorRequired]
+    public DepartmentDetailsDTO DepartmentList { get; set; } = default!;
 
-    private static string FormatText(string? value)
-        => string.IsNullOrWhiteSpace(value) ? "-" : value;
+    [Parameter]
+    public EventCallback<bool> OnClickCallback { get; set; }
 
-    private static string FormatDate(DateTime? value)
-        => value.HasValue ? value.Value.ToString("yyyy-MM-dd HH:mm") : "-";
-
-    // إذا Created/LastModified عندك DateTimeOffset بدل DateTime:
-    // private static string FormatDate(DateTimeOffset? value)
-    //     => value.HasValue ? value.Value.ToString("yyyy-MM-dd HH:mm") : "-";
+    private async Task Back()
+    {
+        if (OnClickCallback.HasDelegate)
+            await OnClickCallback.InvokeAsync(false);
+    }
 }

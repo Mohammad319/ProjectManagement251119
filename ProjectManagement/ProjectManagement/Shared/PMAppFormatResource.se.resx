@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="add" xml:space="preserve">
+    <value>Kategori­slag</value>
+  </data>
   <data name="alignItems" xml:space="preserve">
     <value>Align-Items</value>
   </data>
@@ -131,6 +134,9 @@
   </data>
   <data name="borderType" xml:space="preserve">
     <value>Kanttyp</value>
+  </data>
+  <data name="categoryType" xml:space="preserve">
+    <value>Kategorityp</value>
   </data>
   <data name="cell" xml:space="preserve">
     <value>Cell</value>

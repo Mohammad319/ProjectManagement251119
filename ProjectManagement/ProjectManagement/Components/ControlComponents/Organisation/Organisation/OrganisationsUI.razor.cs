@@ -13,26 +13,29 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
     public partial class OrganisationsUI
     {
         [Inject] public AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
-        [Inject] public ICommandDispatcher MicroBus { get; set; } = default!;
-        [Inject] public ContextMenuService ContextService { get; set; } = default!;
-        [Inject] public MhdServices MHD { get; set; } = default!;
-        [Inject] public IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
-
         [Parameter] public ListOrganisationCategoryDTO? Category { get; set; }
         [Parameter] public EventCallback Callback { get; set; }
 
         private bool IsVisible = true;
         private List<ShortListOrganisationDTO> Organistion { get; set; } = [];
 
+        private int? _lastCategoryId;
+
         protected override async Task OnParametersSetAsync()
         {
+            if (Category?.Id == _lastCategoryId) return;
+
+            _lastCategoryId = Category?.Id;
             await GetAsync();
         }
 
         private async Task GetAsync()
         {
             if (Category?.Id is null || Category.Id <= 0) return;
-            Organistion = await MicroBus.Send(new GetOrganisationsQuery(Category.Id, IsVisible)) ?? [];
+
+            Organistion =
+                await Dispatcher.Send(new GetOrganisationsQuery(Category.Id, IsVisible))
+                ?? [];
         }
 
         private async Task<bool> CanManageAsync()
@@ -40,7 +43,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
 
-            if (user.Identity?.IsAuthenticated != true) return false;
+            if (user.Identity?.IsAuthenticated != true)
+                return false;
 
             return PMRolesConst.Tenant.AdminSuperManger
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
@@ -54,8 +58,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 new()
                 {
                     Label = $"ℹ️ {ResourceLoc.details}",
-                    OnClickAsync = () => { OrganisationDetails(item); 
-                        return Task.CompletedTask; }
+                    OnClickAsync = () =>
+                    {
+                        OrganisationDetails(item);
+                        return Task.CompletedTask;
+                    }
                 }
             };
 
@@ -63,14 +70,22 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             {
                 list.Add(new()
                 {
-                    Label = $"✏️ {ResourceApp.edit}",
-                    OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; }
+                    Label = $"✏️ {AppLoc[nameof(ResourceApp.edit)]}",
+                    OnClickAsync = () =>
+                    {
+                        UpdateForm(item);
+                        return Task.CompletedTask;
+                    }
                 });
 
                 list.Add(new()
                 {
-                    Label = $"🗑️ {ResourceApp.delete}",
-                    OnClickAsync = () => { Remove(item); return Task.CompletedTask; }
+                    Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
+                    OnClickAsync = () =>
+                    {
+                        Remove(item);
+                        return Task.CompletedTask;
+                    }
                 });
             }
 
@@ -79,32 +94,42 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private void OrganisationDetails(ShortListOrganisationDTO obj)
         {
-            // MHD.Modal.AddModal<OrganisationDetailsUI>(...);
+            // لاحقًا
         }
 
         private void UpdateForm(ShortListOrganisationDTO model)
         {
             MHD.Modal.ShowComponent<OrganisationFormUI>(
-    model.Id != 0
-        ? AppLoc[LocalizerConst.Update, model.Name] : AppLoc[LocalizerConst.New, ResourceLoc.category], new Dictionary<string, object> {
-        [nameof(OrganisationFormUI.ID)] = model.Id,
-        [nameof(OrganisationFormUI.CategoryID)] = Category.Id,
-        [nameof(OrganisationFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, RefreshAsync)
-    }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+                model.Id != 0
+                    ? AppLoc[LocalizerConst.Update, model.Name]
+                    : AppLoc[LocalizerConst.New, ResourceLoc.category],
+                new Dictionary<string, object>
+                {
+                    [nameof(OrganisationFormUI.ID)] = model.Id,
+                    [nameof(OrganisationFormUI.CategoryID)] = Category!.Id,
+                    [nameof(OrganisationFormUI.Callback)] =
+                        EventCallback.Factory.Create<bool>(this, RefreshAsync)
+                },
+                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
         }
 
-        private void Remove(ShortListOrganisationDTO organisation) =>
-            MHD.DeleteMessage(organisation.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(organisation)));
+        private void Remove(ShortListOrganisationDTO organisation)
+        {
+            MHD.DeleteMessage(
+                organisation.Name,
+                EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(organisation)));
+        }
 
         private async Task ConfirmRemoveAsync(ShortListOrganisationDTO organisation)
         {
-            var result = await MicroBus.Send(new DeleteOrganisationCommand(organisation.Id));
+            var result = await Dispatcher.Send(
+                new DeleteOrganisationCommand(organisation.Id));
 
             if (result)
                 Organistion.RemoveAll(x => x.Id == organisation.Id);
 
             MHD.Notifications(ToastType.Delete, result);
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task ReverseElements()
@@ -115,9 +140,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private async Task RefreshAsync(bool load)
         {
-            if (load) await GetAsync();
-            MHD.Modal.Close();
+            if (load)
+                await GetAsync();
 
+            MHD.Modal.Close();
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

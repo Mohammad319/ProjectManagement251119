@@ -1,7 +1,4 @@
-﻿@using ContextMenuMHD
-@using Domain.Entities.Calculation
-@using ProjectManagement.Client.Services.MHDBlazor
-@using ProjectManagement.Client.Shared.Model.Project.Calculation
+﻿@inherits AppComponentBase
 
 <div class="flex h-full gap-4">
     <!-- Sidebar -->
@@ -13,27 +10,19 @@
                 <div class="flex items-center gap-1">
                     <button class="@CssClasses.Btn.IconButton.Success"
                             @onclick="CreateForm"
-                            title="@ResourceApp.newItem"
-                            aria-label="@ResourceApp.newItem">
+                            title="@AppLoc[nameof(ResourceApp.newItem)]"
+                            aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
                         @((MarkupString)Icons.Plus)
                     </button>
 
                     <button class="@CssClasses.Btn.IconButton.Primary"
                             @onclick="ImportForm"
-                            title="@ResourceApp.importFromFile"
-                            aria-label="@ResourceApp.importFromFile">
+                            title="@AppLoc[nameof(ResourceApp.importFromFile)]"
+                            aria-label="@AppLoc[nameof(ResourceApp.importFromFile)]">
                         @((MarkupString)Icons.ImportFromFile)
                     </button>
                 </div>
             </div>
-
-            <!-- Search (اختياري) -->
-            @* لو تحب إضافة بحث لاحقًا *@
-            @* <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-700">
-                <input class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800 px-3 py-2 text-sm"
-                       placeholder="@ResourceApp.search"
-                       @bind="_search" />
-            </div> *@
 
             <!-- List -->
             <nav class="flex-1 overflow-y-auto px-2 py-2 space-y-1">
@@ -68,7 +57,6 @@
                             </span>
 
                             <span class="flex items-center gap-2 opacity-70 group-hover:opacity-100">
-                                @* مؤشر/أيقونة خفيفة بدل النقطة فقط *@
                                 <span class="text-xs">
                                     @((MarkupString)Icons.DotsVertical)
                                 </span>
@@ -83,16 +71,18 @@
                         <div class="mx-auto mb-2 h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                             @((MarkupString)Icons.Folder)
                         </div>
+
                         <div class="text-sm font-semibold text-slate-700 dark:text-slate-100">
-                            @ResourceApp.ThereAreNoItemsToDisplay
+                            @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
                         </div>
+
                         <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            @ResourceApp.useTheButtonAboveToAddNewItem
+                            @AppLoc[nameof(ResourceApp.useTheButtonAboveToAddNewItem)]
                         </div>
 
                         <button class="@CssClasses.Btn.Outline.Primary mt-4"
                                 @onclick="CreateForm">
-                            @ResourceApp.newItem
+                            @AppLoc[nameof(ResourceApp.newItem)]
                         </button>
                     </div>
                 }
@@ -109,13 +99,13 @@
         else
         {
             <div class="h-full rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-white/40 dark:bg-slate-900/40
-                            flex items-center justify-center px-6 text-slate-500 dark:text-slate-400 text-sm">
+                                flex items-center justify-center px-6 text-slate-500 dark:text-slate-400 text-sm">
                 <div class="text-center">
                     <div class="mx-auto mb-2 h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                         @((MarkupString)Icons.Mouse)
                     </div>
                     <div class="font-medium text-slate-700 dark:text-slate-100">
-                        @ResourceApp.selectAccountGroupHint
+                        @AppLoc[nameof(ResourceApp.selectAccountGroupHint)]
                     </div>
                 </div>
             </div>

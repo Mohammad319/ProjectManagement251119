@@ -11,16 +11,14 @@
 @using ProjectManagement.Shared.DTO.General
 @using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Shared.Models.Account
+@inherits AppComponentBase
 
-@inject ICommandDispatcher MicroBus
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
 @inject UserManager<ApplicationUser> _userManager
 @inject ITenantUserService TenantUserService
 
 @if (Form is not null)
 {
-        <div class="flex flex-col min-h-full">
+    <div class="flex flex-col min-h-full">
         <!-- المحتوى -->
         <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync" id="userForm" class="space-y-3">
             <DataAnnotationsValidator />
@@ -113,26 +111,26 @@
                     </InputSelect>
                 </div>
             </div>
-        
+
         </EditForm>
     </div>
-        <div class="@CssClasses.Modal.Footer">
-            <button type="submit"
-                    form="userForm"
-                    class="@CssClasses.Btn.Outline.Success"
-                    disabled="@IsBusy">
-                @ResourceApp.save
-            </button>
 
-            <button type="button"
-                    class="@CssClasses.Btn.Outline.Secondary"
-                    disabled="@IsBusy"
-                    @onclick="Cancel">
-                @ResourceApp.cancel
-            </button>
-        </div>
-    }
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit"
+                form="userForm"
+                class="@CssClasses.Btn.Outline.Success"
+                disabled="@IsBusy">
+            @AppLoc[nameof(ResourceApp.save)]
+        </button>
 
+        <button type="button"
+                class="@CssClasses.Btn.Outline.Secondary"
+                disabled="@IsBusy"
+                @onclick="Cancel">
+            @AppLoc[nameof(ResourceApp.cancel)]
+        </button>
+    </div>
+}
 
 @code {
     [Parameter] public EventCallback<bool> Callback { get; set; }
@@ -159,7 +157,7 @@
             if (DepartmentId == 0) DepartmentId = null;
 
             // load lookups
-            Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
+            Departments = await Dispatcher.Send(new GetDepartmentsAsListQuery());
 
             // build form
             Form = new TenantUserDto
@@ -187,7 +185,7 @@
         finally
         {
             IsLoading = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -224,11 +222,21 @@
         Form.LockoutEnd = null;
     }
 
-    private Task Cancel() => Callback.InvokeAsync(false);
+    private async Task Cancel()
+    {
+        if (Callback.HasDelegate)
+            await Callback.InvokeAsync(false);
+    }
 
     private async Task HandleSubmitAsync()
     {
-        if (Form is null) { await Callback.InvokeAsync(false); return; }
+        if (Form is null)
+        {
+            if (Callback.HasDelegate)
+                await Callback.InvokeAsync(false);
+            return;
+        }
+
         if (IsSaving) return;
 
         // rules
@@ -252,12 +260,13 @@
             else
                 ok = await TenantUserService.UpdateUserAsync(Form);
 
-            await Callback.InvokeAsync(ok);
+            if (Callback.HasDelegate)
+                await Callback.InvokeAsync(ok);
         }
         finally
         {
             IsSaving = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

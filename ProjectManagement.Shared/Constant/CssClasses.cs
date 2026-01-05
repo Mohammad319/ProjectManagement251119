@@ -1,19 +1,16 @@
-﻿using System.Linq;
-
-namespace ProjectManagement.Shared.Constant
+﻿namespace ProjectManagement.Shared.Constant
 {
     /// <summary>
     /// أنماط الأزرار المستخدمة في التطبيق
     /// </summary>
-
     public static class CssClasses
     {
         public static class Components
         {
             public const string Card = "bg-white dark:bg-gray-800 rounded-lg shadow p-3";
-            //public const string CardTight = "bg-white dark:bg-gray-800 rounded-lg shadow p-2";
             public const string ChartWrap = "w-full h-full";
         }
+
         public static class Btn
         {
             public static class Solid
@@ -22,18 +19,17 @@ namespace ProjectManagement.Shared.Constant
                 public const string Primary = "px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500";
                 public const string Danger = "px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500";
                 public const string Success = "px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 dark:bg-green-500";
-                //public const string Secondary = "px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 dark:bg-gray-500";
             }
 
-            public static string Span =
-            "text-sm md:text-base " +
-            "text-gray-600 dark:text-gray-300 " +
-            "p-1 rounded-md " +
-            "hover:bg-gray-100 dark:hover:bg-gray-700 " +
-            "transition cursor-pointer";
+            public const string Span =
+                "text-sm md:text-base " +
+                "text-gray-600 dark:text-gray-300 " +
+                "p-1 rounded-md " +
+                "hover:bg-gray-100 dark:hover:bg-gray-700 " +
+                "transition cursor-pointer";
+
             public static class IconButton
             {
-                // أساس مشترك لكل أزرار الأيقونات
                 public const string Base =
                     "inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] " +
                     "transition-all duration-150 hover:scale-105 active:scale-95";
@@ -58,12 +54,10 @@ namespace ProjectManagement.Shared.Constant
                     "hover:bg-gray-100 hover:ring-1 hover:ring-gray-300 " +
                     "dark:border-gray-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:ring-gray-500";
 
-
-
                 public const string Warning =
-        Base + " border-yellow-300 text-yellow-600 " +
-        "hover:bg-yellow-100 hover:ring-1 hover:ring-yellow-300 " +
-        "dark:border-yellow-500 dark:text-yellow-300 dark:hover:bg-yellow-800 dark:hover:ring-yellow-500";
+                    Base + " border-yellow-300 text-yellow-600 " +
+                    "hover:bg-yellow-100 hover:ring-1 hover:ring-yellow-300 " +
+                    "dark:border-yellow-500 dark:text-yellow-300 dark:hover:bg-yellow-800 dark:hover:ring-yellow-500";
             }
 
             public static class Outline
@@ -98,7 +92,9 @@ namespace ProjectManagement.Shared.Constant
                     "hover:bg-green-600 hover:text-white " +
                     "dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ";
             }
+
             public const string Link = "text-[18px] text-neutral-800 underline hover:text-neutral-900 transition dark:text-neutral-300 dark:hover:text-neutral-100 ";
+
             public static class Size
             {
                 public const string Small = "px-1 py-0.5 text-sm";
@@ -114,9 +110,9 @@ namespace ProjectManagement.Shared.Constant
                 public const string MD4 = "grid grid-cols-1 md:grid-cols-4 gap-2";
                 public const string MD6 = "grid grid-cols-1 md:grid-cols-6 gap-2";
                 public const string MD8 = "grid grid-cols-1 md:grid-cols-8 gap-2";
-
                 public const string MD12 = "grid grid-cols-1 md:grid-cols-12 gap-2";
             }
+
             public static class Span
             {
                 public const string MD1 = "md:col-span-1";
@@ -128,8 +124,8 @@ namespace ProjectManagement.Shared.Constant
                 public const string MD9 = "md:col-span-9";
                 public const string MD10 = "md:col-span-10";
             }
-
         }
+
         public static class Input
         {
             public const string Range = "w-full";
@@ -141,32 +137,25 @@ namespace ProjectManagement.Shared.Constant
 
             public const string Check = "h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400";
             public const string Switch = "h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400";
-
         }
+
         public static class Form
         {
             public const string Label = "block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300";
-
-            // وسم مطلوب (اختياري تُلحقه بالـ Label)
             public const string RequiredMark = "after:content-['*'] after:ml-1 after:text-red-600 dark:after:text-red-400";
-
-            // حاوية الحقل (لترتيب المسافات العمودية بين العناصر)
             public const string Field = "flex flex-col gap-1";
-
-            // رسائل التحقق/الخطأ
             public const string Error = "text-sm text-red-600 dark:text-red-400";
 
-            // Check / Switch wrappers: خياران واضحان بدل M
             public const string CheckWrapper = "flex items-center mt-auto gap-2";
             public const string CheckWrapperSpaced = "flex items-center gap-2 mt-1 md:mt-6";
 
-            // تسمية الـ Check/Switch (بدون أي اعتماد خارجي)
             public const string CheckLabel = "select-none dark:text-white";
             public const string SwitchLabel = "select-none dark:text-white";
 
-
-            public const string CheckWrapperM = "flex items-center gap-2 mt-1 md:mt-6";
+            // ✅ إبقاء الاسم القديم لمنع كسر المكونات
+            public const string CheckWrapperM = CheckWrapperSpaced;
         }
+
         public static class Table
         {
             public const string Tab = "min-w-full divide-y divide-gray-200 dark:divide-gray-600";
@@ -179,29 +168,30 @@ namespace ProjectManagement.Shared.Constant
 
         public static class Spacing
         {
-            public static class M 
+            public static class M
             {
-                public static string All2 => $"m-2";
-                public static string All5 => $"m-5";
-                public static string Y1 => $"my-1";
-                public static string Right1 => $"mr-1";
-                public static string Top1 => $"mt-1";
-                public static string Top2 => $"mt-2";
-                public static string Top3 => $"mt-3";
-                public static string Top4 => $"mt-4";
-                public static string Bottom1 => $"mb-1";
-                public static string Bottom2 => $"mb-2";
-                public static string Bottom3 => $"mb-3";
-                public static string LeftAuto => $"ml-auto";
-                public static string Left1 => $"ml-1";
-                public static string Left2 => $"ml-2";
+                public const string All2 = "m-2";
+                public const string All5 = "m-5";
+                public const string Y1 = "my-1";
+                public const string Right1 = "mr-1";
+                public const string Top1 = "mt-1";
+                public const string Top2 = "mt-2";
+                public const string Top3 = "mt-3";
+                public const string Top4 = "mt-4";
+                public const string Bottom1 = "mb-1";
+                public const string Bottom2 = "mb-2";
+                public const string Bottom3 = "mb-3";
+                public const string LeftAuto = "ml-auto";
+                public const string Left1 = "ml-1";
+                public const string Left2 = "ml-2";
             }
+
             public static class P
             {
-                public static string All2 => $"p-2";
-                public static string X1 => $"px-1";
-                public static string Top3 => $"pt-3";
-                public static string Top0_5 => $"pt-0.5";
+                public const string All2 = "p-2";
+                public const string X1 = "px-1";
+                public const string Top3 = "pt-3";
+                public const string Top0_5 = "pt-0.5";
             }
         }
 
@@ -214,26 +204,28 @@ namespace ProjectManagement.Shared.Constant
             public const string JustifyCenter = "justify-center";
             public const string TextRight = "text-right";
             public const string PlaceSelfEnd = "place-self-end";
-
         }
+
         public static class Layout
         {
             public const string WideContainer = "container mx-auto px-4 max-w-7xl";
             public const string Container = "container mx-auto px-4";
             public const string ButtonGroup = "inline-flex";
             public const string Inline = "inline-flex gap-2";
-            public const string FlexJustifyBetween = "flex items-center gap-1" + " " + Util.JustifyBetween;
+            public const string FlexJustifyBetween = "flex items-center gap-1 justify-between";
 
             public const string FlexItemsCenter = "flex items-center gap-1";
             public const string FlexWrap = "flex flex-wrap gap-2";
-            public static string FlexMinWidth280 => $"flex-1 min-w-[280px]";
-            public static string FlexMinWidth350 => $"flex-1 min-w-[350px]";
-            public static string FlexMinWidth150 => $"flex-1 min-w-[150px]";
-            public static string FlexWidth160 => $"w-[160px]";
-            public static string FlexWidth130 => $"w-[130px]";
-            public static string FlexWidth110 => $"w-[110px]";
-            public static string FlexWidth200 => $"w-[200px]";
+
+            public const string FlexMinWidth280 = "flex-1 min-w-[280px]";
+            public const string FlexMinWidth350 = "flex-1 min-w-[350px]";
+            public const string FlexMinWidth150 = "flex-1 min-w-[150px]";
+            public const string FlexWidth160 = "w-[160px]";
+            public const string FlexWidth130 = "w-[130px]";
+            public const string FlexWidth110 = "w-[110px]";
+            public const string FlexWidth200 = "w-[200px]";
         }
+
         public static class Modal
         {
             public const string Body = "space-y-0 ";
@@ -251,6 +243,7 @@ namespace ProjectManagement.Shared.Constant
             public const string Success = "text-green-600 dark:text-green-400";
             public const string Warning = "text-yellow-600 dark:text-yellow-400";
         }
+
         public static class Background
         {
             public const string Base = "inline-flex items-center px-2 py-0.5 text-xs font-medium rounded";
@@ -268,12 +261,11 @@ namespace ProjectManagement.Shared.Constant
 
         public static class Tabs
         {
-            const string Base = "inline-block px-4 py-2 text-sm font-medium transition-all rounded-t-md ";
+            private const string Base = "inline-block px-4 py-2 text-sm font-medium transition-all rounded-t-md ";
             public const string Active = Base + "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-white dark:bg-gray-800";
             public const string Inactive = Base + "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700";
 
             public const string UL = "flex mb-1";
         }
     }
-
 }

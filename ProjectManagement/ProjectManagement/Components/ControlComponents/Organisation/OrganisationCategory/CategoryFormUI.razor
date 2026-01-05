@@ -1,20 +1,37 @@
-﻿@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using ProjectManagement.Client.Shared.Constants
+@using ProjectManagement.Client.Shared.ResourceFiles.APP
+@inherits AppComponentBase
 
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@PostOffer" OnValidSubmit="async () => await HandleSubmitAsync()">
-    <DataAnnotationsValidator />
-        <div class="mb-0">
-            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
-            <InputText class="@CssClasses.Input.Text" @bind-Value="@PostOffer.Name" />
-            <ValidationMessage For=@(() => PostOffer.Name) />
+<div class="@CssClasses.Modal.Body">
+
+    <EditForm Model="PostOffer" OnValidSubmit="HandleSubmitAsync">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label class="@CssClasses.Form.Label">
+                @AppLoc[nameof(CalcResource.name)]
+            </label>
+            <InputText class="@CssClasses.Input.Text"
+                       @bind-Value="PostOffer.Name"
+                       disabled="@IsLoading" />
+            <ValidationMessage For="() => PostOffer.Name" />
         </div>
 
-</EditForm>
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
-            @ResourceApp.save
-        </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
-    </div>
+        <div class="@CssClasses.Modal.Footer">
+            <button type="submit"
+                    class="@CssClasses.Btn.Outline.Success"
+                    disabled="@IsLoading">
+                @AppLoc[nameof(ResourceApp.save)]
+            </button>
+
+            <button type="button"
+                    class="@CssClasses.Btn.Outline.Secondary"
+                    disabled="@IsLoading"
+                    @onclick="Cancel">
+                @AppLoc[nameof(ResourceApp.cancel)]
+            </button>
+        </div>
+    </EditForm>
+
+</div>

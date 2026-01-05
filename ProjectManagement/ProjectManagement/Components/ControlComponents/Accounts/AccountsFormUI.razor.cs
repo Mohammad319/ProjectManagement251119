@@ -1,8 +1,6 @@
 ﻿using Application.Feature.Account.Commands;
-using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Logging;
 using ProjectManagement.Shared.DTO.Account;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts;
@@ -14,22 +12,19 @@ public partial class AccountsFormUI
     /// </summary>
     [Parameter] public int Id { get; set; }
 
-    /// <summary>
-    /// Model passed from parent (for Update preload, for Create pass new()).
-    /// </summary>
-    [Parameter, EditorRequired] public required PostAccountDTO Model { get; set; }
-
+    [Parameter, EditorRequired]
+    public required PostAccountDTO Model { get; set; }
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
-    [Inject] private DialogService DialogService { get; set; } = default!;
-    [Inject] private ICommandDispatcher Dispatcher { get; set; } = default!;
-    [Inject] private MhdServices MHD { get; set; } = default!;
     [Inject] private ILogger<AccountsFormUI> Logger { get; set; } = default!;
 
     private PostAccountDTO EditModel { get; set; } = new();
-    private bool IsLoading { get; set; }
+    private bool IsLoading;
 
-    protected override async Task OnInitializedAsync()
+    /// <summary>
+    /// ✅ أفضل من OnInitializedAsync عند فتح المودال عدة مرات
+    /// </summary>
+    protected override void OnParametersSet()
     {
         EditModel = new PostAccountDTO
         {
@@ -72,6 +67,7 @@ public partial class AccountsFormUI
             await InvokeAsync(StateHasChanged);
         }
     }
+
     private void AddComment()
     {
         EditModel.Data ??= new AccountData();
@@ -81,7 +77,7 @@ public partial class AccountsFormUI
 
     private void RemoveComment(int index)
     {
-        if (EditModel?.Data?.Comments is null) return;
+        if (EditModel.Data?.Comments is null) return;
         if (index < 0 || index >= EditModel.Data.Comments.Count) return;
 
         EditModel.Data.Comments.RemoveAt(index);

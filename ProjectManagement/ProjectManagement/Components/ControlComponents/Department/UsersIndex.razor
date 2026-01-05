@@ -28,29 +28,30 @@
                     <div class="@CssClasses.Layout.FlexItemsCenter" style="gap:8px; flex-wrap:wrap">
                         <button class="@CssClasses.Btn.Outline.Warning"
                                 disabled="@IsBusy"
-                                title="@ResourceApp.edit"
+                                title="@AppLoc[nameof(ResourceApp.edit)]"
                                 @onclick="() => EditUser(user)">
                             @((MarkupString)Icons.Edit)
                         </button>
 
                         <button class="@CssClasses.Btn.Outline.Danger"
                                 disabled="@IsBusy"
-                                title="@ResourceApp.delete"
+                                title="@AppLoc[nameof(ResourceApp.delete)]"
                                 @onclick="() => AskDeleteUser(user)">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
 
                         <button class="@CssClasses.Btn.Outline.Danger"
                                 disabled="@IsBusy"
+                                title="@AppLoc["removeOnlyFromRegister"]"
                                 @onclick="() => AskRemoveOnlyFromRegister(user)">
-                            remove only from register
+                            @AppLoc["removeOnlyFromRegister"]
                         </button>
                     </div>
                 </Template>
             </MhdTableColumn>
 
             <MhdTableColumn Title="@ResourceIdentity.email" ValueSelector="u => u.Email" Sortable="true" />
-            <MhdTableColumn Title="@CalcResource.name" ValueSelector="@(u => (u.Firstname +" " + u.Lastname))" />
+            <MhdTableColumn Title="@CalcResource.name" ValueSelector="@(u => (u.Firstname + " " + u.Lastname))" />
             <MhdTableColumn Title="Role" ValueSelector="u => u.Role" />
             <MhdTableColumn Title="LockoutStart" ValueSelector="u => u.LockoutStart" />
             <MhdTableColumn Title="LockoutEnd" ValueSelector="u => u.LockoutEnd" />
@@ -60,5 +61,5 @@
 }
 else if (!IsLoading)
 {
-    <div class="text-muted">@ResourceApp.notFoundData</div>
+    <div class="text-muted">@AppLoc[nameof(ResourceApp.notFoundData)]</div>
 }

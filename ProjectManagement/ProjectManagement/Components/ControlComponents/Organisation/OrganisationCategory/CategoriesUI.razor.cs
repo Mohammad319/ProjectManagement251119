@@ -2,6 +2,7 @@
 using Application.Feature.Organisation.OrganisationCategory.Queries;
 using Domain.DTO.Category;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Shared.Constant;
@@ -25,21 +26,14 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private void RebuildIndex()
         {
             _byParent = Categories.ToLookup(x => x.ParentCategoryId);
-            //_roots = _byParent[null].ToList();
         }
 
         private async Task LoadCategoriesAsync()
         {
-            Categories = await MicroBus.Send(new GetOrganisationCategoryQuery()) ?? [];
+            Categories = await Dispatcher.Send(new GetOrganisationCategoryQuery()) ?? [];
             RebuildIndex();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged); // ✅ بدل StateHasChanged داخل async
         }
-
-        //private void SelectCategory(ListOrganisationCategoryDTO cat)
-        //{
-        //    PageNr = 2;
-        //    SelectedCategory = cat;
-        //}
 
         private async Task<bool> CanManageAsync()
         {
@@ -76,7 +70,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
             list.Add(new MenuItem
             {
-                Label = $"✏️ {ResourceApp.update}",
+                Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
                 {
                     ModalForm(item);
@@ -86,7 +80,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
             list.Add(new MenuItem
             {
-                Label = $"🗑️ {ResourceApp.delete}",
+                Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>
                 {
                     Remove(item);
@@ -112,10 +106,15 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             MHD.DeleteMessage(category.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(category)));
         }
+        private Task OnOrganisationsClosed()
+        {
+            SelectedCategory = null;
+            return Task.CompletedTask;
+        }
 
         private async Task ConfirmRemoveAsync(ListOrganisationCategoryDTO st)
         {
-            bool result = await MicroBus.Send(new DeleteOrganisationCategoryCommand(st.Id));
+            bool result = await Dispatcher.Send(new DeleteOrganisationCategoryCommand(st.Id));
 
             if (result)
             {
@@ -124,7 +123,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             }
 
             MHD.Notifications(ToastType.Delete, result);
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged); // ✅
         }
 
         private async Task CallbackAsync(bool isSuccess)
@@ -134,14 +133,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (isSuccess)
                 await LoadCategoriesAsync();
 
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged); // ✅
         }
 
         private void OnTreeSelect(ListOrganisationCategoryDTO cat)
         {
-            // إذا بدك تمنع اختيار root فقط:
-            // if (cat.ParentCategoryId is null) return;
-
             PageNr = 2;
             SelectedCategory = cat;
         }
@@ -150,6 +146,5 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             await Context(cat);
         }
-
     }
 }

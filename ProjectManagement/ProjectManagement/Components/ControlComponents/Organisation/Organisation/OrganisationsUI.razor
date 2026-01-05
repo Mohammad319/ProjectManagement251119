@@ -3,9 +3,11 @@
 @using Domain.DTO.Category
 @using Domain.Entities.Organisation
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Shared.DTO.Offer
 @using ProjectManagement.Shared.DTO.Organisation
+@inherits AppComponentBase
 
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 
@@ -13,45 +15,59 @@
 {
     <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
-            <button class="@CssClasses.Btn.IconButton.Success" @onclick="() => UpdateForm(new ShortListOrganisationDTO())">
+            <button class="@CssClasses.Btn.IconButton.Success"
+                    @onclick="() => UpdateForm(new ShortListOrganisationDTO())"
+                    title="@FormatLoc[nameof(PMAppFormatResource.add)]">
                 @((MarkupString)Icons.Plus)
             </button>
         </AuthorizeView>
 
-        <button class="@CssClasses.Btn.IconButton.Secondary" @onclick="ReverseElements">
+        <button class="@CssClasses.Btn.IconButton.Secondary"
+                @onclick="ReverseElements"
+                title="@AppLoc[nameof(ResourceApp.filter)]">
             @((MarkupString)Icons.GetVisibleIcon(IsVisible))
         </button>
     </div>
 
     <br />
 
-    <table class="@CssClasses.Table.Tab">
-        <thead class="@CssClasses.Table.Thead">
-            <tr>
-                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                <th class="@CssClasses.Table.TH" style="width:150px;">@CalcResource.status</th>
-                <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.category</th>
-                <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.baseCategory</th>
-            </tr>
-        </thead>
-
-        <tbody class="@CssClasses.Table.TBody">
-            @foreach (var organistion in Organistion)
-            {
-                <tr class="@CssClasses.Table.Tr">
-                    <td class="@CssClasses.Table.Td"
-                        @oncontextmenu:preventDefault
-                        @oncontextmenu="() => Context(organistion)">
-                        <button class="@CssClasses.Btn.Link" @onclick="() => OrganisationDetails(organistion)">
-                            @organistion.Name
-                        </button>
-                    </td>
-
-                    <td class="@CssClasses.Table.Td">@organistion.Type</td>
-                    <td class="@CssClasses.Table.Td">@organistion.SubCategory</td>
-                    <td class="@CssClasses.Table.Td">@organistion.Category</td>
+    @if (Organistion.Count == 0)
+    {
+        <div class="text-muted">
+            @AppLoc[nameof(ResourceApp.notFoundData)]
+        </div>
+    }
+    else
+    {
+        <table class="@CssClasses.Table.Tab">
+            <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+                    <th class="@CssClasses.Table.TH" style="width:150px;">@CalcResource.status</th>
+                    <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.category</th>
+                    <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.baseCategory</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+
+            <tbody class="@CssClasses.Table.TBody">
+                @foreach (var organistion in Organistion)
+                {
+                    <tr class="@CssClasses.Table.Tr">
+                        <td class="@CssClasses.Table.Td"
+                            @oncontextmenu:preventDefault
+                            @oncontextmenu="() => Context(organistion)">
+                            <button class="@CssClasses.Btn.Link"
+                                    @onclick="() => OrganisationDetails(organistion)">
+                                @organistion.Name
+                            </button>
+                        </td>
+
+                        <td class="@CssClasses.Table.Td">@organistion.Type</td>
+                        <td class="@CssClasses.Table.Td">@organistion.SubCategory</td>
+                        <td class="@CssClasses.Table.Td">@organistion.Category</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 }

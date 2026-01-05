@@ -10,27 +10,25 @@ using ProjectManagement.Shared.DTO.General;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts;
 
-public partial class AccountGroupsUI : IDisposable
+public partial class AccountGroupsUI
 {
     private int? GroupSelected;
     private List<ListDTO>? Groups;
 
-    [Inject] private DialogService DialogService { get; set; } = default!;
-    [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
-    [Inject] private ICommandDispatcher MicroBus { get; set; } = default!;
-    [Inject] private MhdServices MHD { get; set; } = default!;
-    [Inject] private ContextMenuService ContextService { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        Groups = await MicroBus.Send(new GetAccountGroupsQuery());
+        Groups = await LoadGroupsAsync();
     }
 
-    private async Task ChangeAccountGroupSelectedAsync(ListDTO ags)
+    private Task<List<ListDTO>> LoadGroupsAsync() =>
+        Dispatcher.Send(new GetAccountGroupsQuery());
+
+    private async Task ChangeAccountGroupSelectedAsync(ListDTO item)
     {
         GroupSelected = null;
         await InvokeAsync(StateHasChanged);
-        GroupSelected = ags.Id;
+
+        GroupSelected = item.Id;
     }
 
     private void ImportForm() =>
@@ -46,7 +44,8 @@ public partial class AccountGroupsUI : IDisposable
             {
                 [nameof(AccountGroupsFormUI.Id)] = 0,
                 [nameof(AccountGroupsFormUI.Model)] = new PostAccountGroupDTO(),
-                [nameof(AccountGroupsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, Callback)
+                [nameof(AccountGroupsFormUI.OnSaved)] =
+                    EventCallback.Factory.Create<bool>(this, RefreshAsync)
             });
     }
 
@@ -57,34 +56,35 @@ public partial class AccountGroupsUI : IDisposable
             new Dictionary<string, object>
             {
                 [nameof(AccountGroupsFormUI.Id)] = item.Id,
-                [nameof(AccountGroupsFormUI.Model)] = new PostAccountGroupDTO { Name = item.Name },
-                [nameof(AccountGroupsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, Callback)
+                [nameof(AccountGroupsFormUI.Model)] =
+                    new PostAccountGroupDTO { Name = item.Name },
+                [nameof(AccountGroupsFormUI.OnSaved)] =
+                    EventCallback.Factory.Create<bool>(this, RefreshAsync)
             });
     }
 
-    private async Task Callback(bool refresh)
+    private async Task RefreshAsync(bool refresh)
     {
         if (!refresh) return;
 
-        Groups = null;
-        Groups = await MicroBus.Send(new GetAccountGroupsQuery());
+        Groups = await LoadGroupsAsync();
         await InvokeAsync(StateHasChanged);
     }
 
-    private void Remove(ListDTO organisation) =>
+    private void Remove(ListDTO item) =>
         MHD.DeleteMessage(
-            organisation.Name,
-            EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(organisation)));
+            item.Name,
+            EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(item)));
 
-    private async Task ConfirmRemoveAsync(ListDTO account)
+    private async Task ConfirmRemoveAsync(ListDTO item)
     {
-        var result = await MicroBus.Send(new DeleteAccountGroupCommand(account.Id));
+        var result = await Dispatcher.Send(new DeleteAccountGroupCommand(item.Id));
+
         if (result)
         {
-            Groups?.Remove(account);
+            Groups?.Remove(item);
 
-            // لو كان المحدد هو المحذوف، نظّفه
-            if (GroupSelected == account.Id)
+            if (GroupSelected == item.Id)
                 GroupSelected = null;
 
             await InvokeAsync(StateHasChanged);
@@ -95,11 +95,11 @@ public partial class AccountGroupsUI : IDisposable
 
     private async Task GroupContextM(ListDTO item)
     {
-        await ContextService.ShowMenuAsync(new()
-        {
+        await ContextService.ShowMenuAsync(
+        [
             new MenuItem
             {
-                Label = $"✏️ {ResourceApp.update}",
+                Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
                 {
                     EditForm(item);
@@ -108,21 +108,16 @@ public partial class AccountGroupsUI : IDisposable
             },
             new MenuItem
             {
-                Label = $"🗑️ {ResourceApp.delete}",
+                Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>
                 {
                     Remove(item);
                     return Task.CompletedTask;
                 }
             }
-        });
+        ]);
 
         GroupSelected = item.Id;
         await InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-    {
-        // لا شيء حاليًا
     }
 }

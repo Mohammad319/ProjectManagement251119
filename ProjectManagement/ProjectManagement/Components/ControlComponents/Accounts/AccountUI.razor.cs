@@ -11,22 +11,16 @@ public partial class AccountUI
 {
     [Parameter] public int GroupSelected { get; set; }
 
-    private bool IsVisibleOnly { get; set; } = true;
-    private bool IsLoading { get; set; }
+    private bool IsVisibleOnly = true;
+    private bool IsLoading;
 
-    private List<AccountManageDTO>? Accounts { get; set; }
-
-    [Inject] private ICommandDispatcher MicroBus { get; set; } = default!;
-    [Inject] private DialogService DialogService { get; set; } = default!;
-    [Inject] private ContextMenuService ContextService { get; set; } = default!;
-    [Inject] private MhdServices MHD { get; set; } = default!;
-    [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
-
+    private List<AccountManageDTO>? Accounts;
     private int _lastGroupSelected;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (GroupSelected <= 0) return;
+        if (GroupSelected <= 0)
+            return;
 
         if (_lastGroupSelected != GroupSelected)
         {
@@ -42,12 +36,18 @@ public partial class AccountUI
 
         try
         {
-            // إذا عندك Query يدعم فلترة visible أضفه، وإلا فلتر بالواجهة
-            var result = await MicroBus.Send(new GetAccountQuery(GroupSelected));
-            Accounts = IsVisibleOnly ? result?.
-                //Where(x => x.IsVisible)
-                ToList()
-                : result;
+            var result = await Dispatcher.Send(new GetAccountQuery(GroupSelected));
+
+            if (result is null)
+            {
+                Accounts = null;
+                return;
+            }
+
+            // ✅ فلترة صحيحة
+            Accounts = IsVisibleOnly
+                ? result.Where(x => x.IsVisible).ToList()
+                : result.ToList();
         }
         finally
         {
@@ -62,10 +62,7 @@ public partial class AccountUI
         await LoadAccountsAsync();
     }
 
-    private void CreateForm()
-    {
-        EditForm(new AccountManageDTO());
-    }
+    private void CreateForm() => EditForm(new AccountManageDTO());
 
     private void EditForm(AccountManageDTO item)
     {
@@ -84,8 +81,10 @@ public partial class AccountUI
             {
                 [nameof(AccountsFormUI.Id)] = item.Id,
                 [nameof(AccountsFormUI.Model)] = model,
-                [nameof(AccountsFormUI.OnSaved)] = EventCallback.Factory.Create<bool>(this, OnSavedAsync)
-            }, DialogSize.ExtraLarge);
+                [nameof(AccountsFormUI.OnSaved)] =
+                    EventCallback.Factory.Create<bool>(this, OnSavedAsync)
+            },
+            DialogSize.ExtraLarge);
     }
 
     private async Task OnSavedAsync(bool ok)
@@ -100,7 +99,7 @@ public partial class AccountUI
         [
             new MenuItem
             {
-                Label = $"✏️ {ResourceApp.update}",
+                Label = $"✏️ {AppLoc[nameof(ResourceApp.update)]}",
                 OnClickAsync = () =>
                 {
                     EditForm(item);
@@ -109,7 +108,7 @@ public partial class AccountUI
             },
             new MenuItem
             {
-                Label = $"🗑️ {ResourceApp.delete}",
+                Label = $"🗑️ {AppLoc[nameof(ResourceApp.delete)]}",
                 OnClickAsync = () =>
                 {
                     Remove(item);
@@ -126,7 +125,8 @@ public partial class AccountUI
 
     private async Task ConfirmRemoveAsync(AccountManageDTO account)
     {
-        var result = await MicroBus.Send(new DeleteAccountCommand(account.Id));
+        var result = await Dispatcher.Send(new DeleteAccountCommand(account.Id));
+
         if (result)
         {
             Accounts?.Remove(account);

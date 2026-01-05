@@ -2,21 +2,22 @@
 using BlazorMHD.UI.Core.DesignSystem;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
+using ProjectManagement.Shared;
 using ProjectManagement.Shared.DTO.Account;
+using System.Text;
+
 namespace ProjectManagement.Components.ControlComponents.Accounts;
 
 public partial class AccountImportFromFile
 {
-    [Inject] private ICommandDispatcher MicroBus { get; set; } = default!;
-    [Inject] private ContextMenuService ContextService { get; set; } = default!;
-    [Inject] private MhdServices MHD { get; set; } = default!;
-    [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
-
     private IBrowserFile? File;
     private bool IsBusy;
 
     private readonly List<PostAccountGroupWithAccountsDTO> Groups = [];
+    private readonly Dictionary<string, PostAccountGroupWithAccountsDTO> _groupMap = new(StringComparer.Ordinal);
 
     private int RowStart = 1;
 
@@ -31,30 +32,29 @@ public partial class AccountImportFromFile
 
     private bool CanImport => File is not null && !IsBusy;
     private bool CanSave => Groups.Count > 0 && !IsBusy;
-
     private void OnFileSelection(InputFileChangeEventArgs e) => File = e.File;
 
     private void Save()
     {
         MHD.MessageYesNo(
-            ResourceApp.save,
-            ResourceApp.DoYouWanTtoSaveTheListInDatabase,
+            AppLoc[nameof(ResourceApp.save)],
+            AppLoc[nameof(ResourceApp.DoYouWanTtoSaveTheListInDatabase)],
             MhdState.Primary,
-            EventCallback.Factory.Create(this, SaveConfirm));
+            EventCallback.Factory.Create(this, SaveConfirmAsync));
     }
 
     private async Task ImportByFormatAsync()
     {
-        if (File is null) return;
+        if (File is null || IsBusy) return;
 
         IsBusy = true;
-        await InvokeAsync(StateHasChanged);
+        StateHasChanged();
 
         try
         {
             Groups.Clear();
+            _groupMap.Clear();
 
-            // إذا العمودين نفس بعض: يعني Format2 (حسب منطقك السابق)
             if (GroupCol == NameCol)
                 await ImportHierarchicalAsync();
             else
@@ -63,7 +63,7 @@ public partial class AccountImportFromFile
         finally
         {
             IsBusy = false;
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
         }
     }
 
@@ -115,8 +115,6 @@ public partial class AccountImportFromFile
             group.Accounts.Add(account);
         }
     }
-
-    // Format: group rows separate accounts rows (منطق Import() السابق)
     private async Task ImportHierarchicalAsync()
     {
         using var stream = File!.OpenReadStream(10 * 1024 * 1024);
@@ -168,14 +166,92 @@ public partial class AccountImportFromFile
             Groups.RemoveAt(0);
     }
 
-    private void RemoveGroup(PostAccountGroupWithAccountsDTO group) => Groups.Remove(group);
+    private void RemoveGroup(PostAccountGroupWithAccountsDTO group)
+    {
+        Groups.Remove(group);
+        _groupMap.Remove(group.Name);
+    }
 
     private void RemoveAccount(PostAccountGroupWithAccountsDTO group, PostAccountDTO account) =>
         group.Accounts.Remove(account);
 
-    private async Task SaveConfirm()
+    private async Task SaveConfirmAsync()
     {
-        var command = new CreateRangeAccountGroupCommand(Groups);
-        await MicroBus.Send(command);
+        if (IsBusy || Groups.Count == 0) return;
+
+        IsBusy = true;
+        StateHasChanged();
+
+        try
+        {
+            await Dispatcher.Send(new CreateRangeAccountGroupCommand(Groups));
+        }
+        finally
+        {
+            IsBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private async IAsyncEnumerable<IReadOnlyList<string>> ReadFileRowsAsync()
+    {
+        using var stream = File!.OpenReadStream(10 * 1024 * 1024);
+        using var reader = new StreamReader(stream);
+
+        var toSkip = Math.Max(0, RowStart - 1);
+        for (var i = 0; i < toSkip; i++)
+        {
+            if (await reader.ReadLineAsync() is null)
+                yield break;
+        }
+
+        while (true)
+        {
+            var line = await reader.ReadLineAsync();
+            if (line is null) yield break;
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            yield return SplitCsv(line, Separator);
+        }
+    }
+
+    private static IReadOnlyList<string> SplitCsv(string line, string separator)
+    {
+        var sepChar = string.IsNullOrEmpty(separator) ? ',' : separator[0];
+
+        var result = new List<string>(16);
+        var sb = new StringBuilder();
+        var inQuotes = false;
+
+        for (int i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+
+            if (c == '"')
+            {
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    sb.Append('"');
+                    i++;
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+                continue;
+            }
+
+            if (!inQuotes && c == sepChar)
+            {
+                result.Add(sb.ToString());
+                sb.Clear();
+                continue;
+            }
+
+            sb.Append(c);
+        }
+
+        result.Add(sb.ToString());
+        return result;
     }
 }

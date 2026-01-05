@@ -4,9 +4,7 @@
 @using ProjectManagement.Client.Shared.ResourceFiles
 @using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Shared.Base.Users
-
-@inject ICommandDispatcher MicroBus
-@inject IStringLocalizer<ResourceApp> AppLoc
+@inherits AppComponentBase
 
 @if (editContext is not null)
 {
@@ -33,18 +31,16 @@
 
             <div class="col-12 d-flex justify-content-end gap-2">
                 <button type="submit" class="@CssClasses.Btn.Outline.Success" disabled="@IsSaving">
-                    @ResourceApp.save
+                    @AppLoc[nameof(ResourceApp.save)]
                 </button>
 
                 <button type="button" class="@CssClasses.Btn.Outline.Secondary" disabled="@IsSaving" @onclick="Close">
-                    @ResourceApp.cancel
+                    @AppLoc[nameof(ResourceApp.cancel)]
                 </button>
             </div>
         </div>
     </EditForm>
 }
-
-
 
 @code {
     [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
@@ -86,28 +82,45 @@
         editContext = new EditContext(departmentPost);
     }
 
-    private Task Close() => OnClickCallback.InvokeAsync(false);
+    private async Task Close()
+    {
+        if (OnClickCallback.HasDelegate)
+            await OnClickCallback.InvokeAsync(false);
+    }
 
     private async Task HandleSubmitAsync()
     {
-        if (departmentPost is null) { await OnClickCallback.InvokeAsync(false); return; }
+        if (departmentPost is null)
+        {
+            if (OnClickCallback.HasDelegate)
+                await OnClickCallback.InvokeAsync(false);
+            return;
+        }
+
         if (IsSaving) return;
 
         IsSaving = true;
         try
         {
-            departmentPost.Name = (departmentPost.Name ?? "").Trim();
+            departmentPost.Name = (departmentPost.Name ?? string.Empty).Trim();
             departmentPost.Description = departmentPost.Description?.Trim();
 
+            // Update
             if ((DepartmentList?.Id ?? 0) > 0)
             {
-                var ok = await MicroBus.Send(new UpdateDepartmentCommand(DepartmentList!.Id, departmentPost));
-                await OnClickCallback.InvokeAsync(ok);
+                var ok = await Dispatcher.Send(new UpdateDepartmentCommand(DepartmentList!.Id, departmentPost));
+
+                if (OnClickCallback.HasDelegate)
+                    await OnClickCallback.InvokeAsync(ok);
+
                 return;
             }
 
-            var newId = await MicroBus.Send(new CreateDepartmentCommand(departmentPost));
-            await OnClickCallback.InvokeAsync(newId > 0);
+            // Create
+            var newId = await Dispatcher.Send(new CreateDepartmentCommand(departmentPost));
+
+            if (OnClickCallback.HasDelegate)
+                await OnClickCallback.InvokeAsync(newId > 0);
         }
         finally
         {

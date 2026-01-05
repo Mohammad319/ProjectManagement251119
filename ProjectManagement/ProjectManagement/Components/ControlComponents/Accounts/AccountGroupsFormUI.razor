@@ -1,4 +1,6 @@
-﻿<EditForm id="accountGroupForm"
+﻿@inherits AppComponentBase
+
+<EditForm id="accountGroupForm"
           class="@CssClasses.Modal.Body"
           Model="@EditModel"
           OnValidSubmit="HandleSubmitAsync">
@@ -17,13 +19,13 @@
             class="@CssClasses.Btn.Outline.Success"
             disabled="@IsLoading"
             aria-busy="@IsLoading">
-        @ResourceApp.save
+        @AppLoc[nameof(ResourceApp.save)]
     </button>
 
     <button type="button"
             class="@CssClasses.Btn.Outline.Secondary"
             @onclick="CloseModal"
             disabled="@IsLoading">
-        @ResourceApp.cancel
+        @AppLoc[nameof(ResourceApp.cancel)]
     </button>
 </div>

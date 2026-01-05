@@ -1,16 +1,12 @@
-﻿@using Application.Feature.Identity.Department.Commands
+﻿@inherits AppComponentBase
+
+@using Application.Feature.Identity.Department.Commands
 @using Application.Feature.Identity.Department.Queries
-@using BlazorMHD.UI.Core.Services
 @using Domain.DTO.User
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Shared
 @using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Shared.Models.Account
-
-@inject ICommandDispatcher MicroBus
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
-
 
 @if (Mode == ViewMode.Details && SelectedDepartment is not null)
 {
@@ -96,57 +92,54 @@ else
     private ViewMode Mode = ViewMode.List;
 
     protected override async Task OnInitializedAsync()
-    {
-        await ReloadDepartmentsAsync();
-    }
+        => await ReloadDepartmentsAsync();
 
     private async Task ReloadDepartmentsAsync()
     {
-        Departments = await MicroBus.Send(new GetDepartmentsQuery());
-        StateHasChanged();
+        Departments = await Dispatcher.Send(new GetDepartmentsQuery());
+        await InvokeAsync(StateHasChanged);
     }
 
     private void BackToList(bool _ = false)
     {
-        // reset selection
         SelectedDepartment = null;
         SelectedDepartmentIdForUsers = 0;
         Mode = ViewMode.List;
 
         MHD.Modal.Close();
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
     private void OpenRegisterUser()
     {
         var user = new TenantUserDto();
 
-       MHD.Modal.ShowComponent<UpdateUserUI>(
+        MHD.Modal.ShowComponent<UpdateUserUI>(
             PMResourceIdentity.register,
             new Dictionary<string, object>
             {
                 [nameof(UpdateUserUI.UserForm)] = user,
                 [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
-            }, DialogSize.ExtraLarge);
+            },
+            DialogSize.ExtraLarge);
     }
 
     private void OpenCreateDepartment()
-    {
-        OpenDepartmentModal(new DepartmentDetailsDTO { Id = 0 });
-    }
+        => OpenDepartmentModal(new DepartmentDetailsDTO { Id = 0 });
 
     private void OpenEditDepartment(DepartmentDetailsDTO department)
-    {
-        OpenDepartmentModal(department);
-    }
+        => OpenDepartmentModal(department);
 
     private void OpenDepartmentModal(DepartmentDetailsDTO department)
     {
+        // ✅ تحويل ResourceApp.department إلى AppLoc[nameof(...)]
+        var departmentText = AppLoc[nameof(ResourceApp.department)];
+
         var title = department.Id > 0
             ? AppLoc[LocalizerConst.Update, department.Name]
-            : AppLoc[LocalizerConst.New, ResourceApp.department];
+            : AppLoc[LocalizerConst.New, departmentText];
 
-       MHD.Modal.ShowComponent<CreateDepartment>(
+        MHD.Modal.ShowComponent<CreateDepartment>(
             title,
             new Dictionary<string, object>
             {
@@ -158,7 +151,7 @@ else
 
     private void OpenAdminUsers()
     {
-        SelectedDepartmentIdForUsers = null; // Admin department/users view in your current logic
+        SelectedDepartmentIdForUsers = null;
         Mode = ViewMode.Users;
     }
 
@@ -170,17 +163,18 @@ else
 
     private void AskRemoveDepartment(DepartmentDetailsDTO department)
     {
-        MHD.DeleteMessage(department.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(department)));
+        MHD.DeleteMessage(
+            department.Name,
+            EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(department)));
     }
 
     private async Task ConfirmRemoveAsync(DepartmentDetailsDTO department)
     {
-        var ok = await MicroBus.Send(new DeleteDepartmentCommand(department.Id));
+        var ok = await Dispatcher.Send(new DeleteDepartmentCommand(department.Id));
         if (ok)
-        {
             await ReloadDepartmentsAsync();
-        }
-        StateHasChanged();
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnModalResultAsync(bool isSuccess)

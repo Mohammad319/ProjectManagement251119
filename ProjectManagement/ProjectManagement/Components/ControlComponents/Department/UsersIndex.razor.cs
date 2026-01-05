@@ -1,55 +1,55 @@
 ﻿using Application.Feature.Identity.Department.Queries;
-using AuthPermissions.Context;
 using BlazorMHD.UI.Core.Services;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Identity;
-using Persistence.Context;
 using ProjectManagement.Services;
 
 namespace ProjectManagement.Components.ControlComponents.Department
 {
-
     public partial class UsersIndex
     {
         [Parameter] public int? DepartmentId { get; set; } = null;
         [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
-        [Inject] public ICommandDispatcher MicroBus { get; set; } = default!;
+
         [Inject] public ITenantUserService TenantUserService { get; set; } = default!;
-        [Inject] public ShardingSingleDbContext shContext { get; set; } = default!;
-        [Inject] public UserManager<ApplicationUser> UserManager { get; set; } = default!;
 
         // UI State
         protected List<TenantUserDto>? Users { get; set; }
         protected bool IsLoading { get; set; } = true;
         protected bool IsBusy { get; set; } = false;
 
+        // منع Reload إذا لم يتغير DepartmentId (تحسين بسيط للأداء)
+        private int? _lastDepartmentId;
+
         protected override async Task OnParametersSetAsync()
         {
-            // إذا تغيّر DepartmentId أثناء نفس عمر الكمبوننت (تنقل/فتح جديد)
+            if (_lastDepartmentId == DepartmentId && Users is not null)
+                return;
+
+            _lastDepartmentId = DepartmentId;
             await LoadAsync();
         }
 
-        protected Task Back() => OnClickCallback.InvokeAsync(false);
+        protected async Task Back()
+        {
+            if (OnClickCallback.HasDelegate)
+                await OnClickCallback.InvokeAsync(false);
+        }
 
         protected async Task LoadAsync()
         {
             try
             {
                 IsLoading = true;
-                StateHasChanged();
-                Users = await MicroBus.Send(new GetUserssQuery(DepartmentId));
-                //
-                // أو:
-                // Users = await TenantUserService.GetUsersByDepartmentAsync(DepartmentId);
+                await InvokeAsync(StateHasChanged);
 
-                Users ??= []; // placeholder آمن لحين ربط الـ query الحقيقي
+                Users = await Dispatcher.Send(new GetUserssQuery(DepartmentId));
+                Users ??= [];
             }
             finally
             {
                 IsLoading = false;
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
         }
 
@@ -66,7 +66,7 @@ namespace ProjectManagement.Components.ControlComponents.Department
             finally
             {
                 IsBusy = false;
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
         }
 
@@ -89,19 +89,14 @@ namespace ProjectManagement.Components.ControlComponents.Department
 
             try
             {
-                // استدعِ دالتك الحالية إن كانت موجودة:
-                // await Delete_Click(user);
-                //
-                // أو ضع منطق الحذف هنا (MicroBus / Service ...)
-
+                // ضع منطق الحذف الفعلي عندك هنا (MicroBus أو Service)
                 await Task.CompletedTask;
-
                 await LoadAsync();
             }
             finally
             {
                 IsBusy = false;
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
         }
 
@@ -112,19 +107,14 @@ namespace ProjectManagement.Components.ControlComponents.Department
 
             try
             {
-                // استدعِ دالتك الحالية إن كانت موجودة:
-                // await DeleteOnlyFRomRegister_Click(user);
-                //
-                // أو ضع منطق الإزالة هنا
-
+                // ضع منطق الإزالة الفعلي عندك هنا
                 await Task.CompletedTask;
-
                 await LoadAsync();
             }
             finally
             {
                 IsBusy = false;
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
         }
 
@@ -150,9 +140,9 @@ namespace ProjectManagement.Components.ControlComponents.Department
             MHD.Modal.Close();
 
             if (isSuccess)
-                await LoadAsync();   // إعادة تحميل المستخدمين
+                await LoadAsync();
 
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

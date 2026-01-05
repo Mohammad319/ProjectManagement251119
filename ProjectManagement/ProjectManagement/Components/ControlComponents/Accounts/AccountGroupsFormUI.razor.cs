@@ -20,17 +20,17 @@ public partial class AccountGroupsFormUI
 
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
-    [Inject] private DialogService DialogService { get; set; } = default!;
-    [Inject] private MhdServices Mhd { get; set; } = default!;
-    [Inject] private ICommandDispatcher Dispatcher { get; set; } = default!;
     [Inject] private ILogger<AccountGroupsFormUI> Logger { get; set; } = default!;
+
+    // (Optional) If you prefer injecting AppLoc in code-behind instead of razor:
+    // [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
 
     // Bind this in Razor: Model="@EditModel"
     private PostAccountGroupDTO EditModel { get; set; } = new();
 
     private bool IsLoading { get; set; }
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
         // Defensive copy: prevents editing the same DTO instance passed from parent.
         EditModel = new PostAccountGroupDTO
@@ -52,7 +52,7 @@ public partial class AccountGroupsFormUI
         {
             var ok = await CreateOrUpdateAsync(Id, EditModel);
 
-            Mhd.Notifications(Id == 0 ? ToastType.Add : ToastType.Update, ok);
+            MHD.Notifications(Id == 0 ? ToastType.Add : ToastType.Update, ok);
 
             await OnSaved.InvokeAsync(ok);
 
@@ -62,7 +62,7 @@ public partial class AccountGroupsFormUI
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to save AccountGroup. Id={Id}", Id);
-            Mhd.Notifications(ToastType.Danger, false);
+            MHD.Notifications(ToastType.Danger, false);
             await OnSaved.InvokeAsync(false);
         }
         finally
