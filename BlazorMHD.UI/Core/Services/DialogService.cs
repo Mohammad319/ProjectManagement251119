@@ -36,8 +36,6 @@ public class DialogModel
     public DialogSize Size { get; set; } = DialogSize.Medium;
     public MhdState State { get; set; } = MhdState.Neutral;
 
-    public string? WidthClass { get; set; }
-    public string? MaxHeightClass { get; set; } = "max-h-[80vh]";
 
     // إزاحة السحب لكل نافذة
     public double OffsetX { get; set; }

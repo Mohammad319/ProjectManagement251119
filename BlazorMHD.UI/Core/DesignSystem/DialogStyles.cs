@@ -6,11 +6,8 @@ public static class DialogStyles
 {
     public static string GetHeaderBackground(MhdState state) => state switch
     {
-        // نهاراً: ألوان فاتحة واضحة
-        // ليلاً: نفس التدرّج اللوني لكن بدرجة داكنة وهادئة
-
         MhdState.Primary =>
-            "bg-blue-50    dark:bg-blue-950/25",
+            "bg-blue-50 dark:bg-blue-950/25",
 
         MhdState.Success =>
             "bg-emerald-50 dark:bg-emerald-950/20",
@@ -51,18 +48,15 @@ public static class DialogStyles
     {
         if (model.Size == DialogSize.FullScreen)
         {
-            // Full screen له وضع خاص
             return "bg-white dark:bg-slate-950 " +
                    "border border-slate-200 dark:border-slate-800 " +
                    "w-screen h-screen m-0 rounded-none shadow-xl overflow-hidden flex flex-col";
         }
 
-        var maxHeight = model.MaxHeightClass ?? "max-h-[80vh]";
-
         return
-            "bg-white dark:bg-slate-950 " + // خلفية أغمق شوي من الهيدر عشان يعطينا فصل بصري بسيط
+            "bg-white dark:bg-slate-950 " + 
             "border border-slate-200 dark:border-slate-800 " +
-            $"{maxHeight} rounded-xl shadow-xl overflow-hidden flex flex-col";
+            "max-h-[80vh] rounded-xl shadow-xl overflow-hidden flex flex-col";
     }
 }
 

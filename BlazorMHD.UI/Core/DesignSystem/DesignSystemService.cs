@@ -26,11 +26,10 @@ public class DesignSystemService : IDesignSystemService
 
             // الحجم من Sizes
             Sizes.GetPadding(size),
-            Sizes.GetTextSize(size)
+            Sizes.GetTextSize(size),
+            // الألوان/الستايل حسب الـ Variant و الـ State (من Variants)
+            Variants.Build(variant, state)
         };
-
-        // الألوان/الستايل حسب الـ Variant و الـ State (من Variants)
-        classes.Add(Variants.Build(variant, state));
 
         if (fullWidth)
             classes.Add("w-full");
@@ -67,7 +66,6 @@ public class DesignSystemService : IDesignSystemService
 
     public string GetSurfaceClass()
     {
-        // سطح عام (مثل bg-mhd-surface القديم لكن الآن Tailwind)
         return "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100";
     }
 }

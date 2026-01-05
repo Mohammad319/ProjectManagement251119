@@ -24,13 +24,6 @@ public enum MhdTabMode
     Horizontal,
     Vertical
 }
-public enum MhdButtonVariant
-{
-    Filled,
-    Outline,
-    Ghost,
-    Text
-}
 
 public enum MhdVariant
 {

@@ -3,7 +3,7 @@
 @using BlazorMHD.UI.Core.DesignSystem
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
-
+@inject IDesignSystemService DesignSystemService
 @inject DialogService DialogService
 @implements IDisposable
 
@@ -150,7 +150,7 @@
 
     private string GetButtonClasses(DialogButtonModel button)
     {
-        return ButtonStyles.Get(button.State, button.IsPrimary, MhdSize.Md);
+        return DesignSystemService.GetButtonClass(button.State, MhdVariant.Outline, MhdSize.Md);
     }
 
     // --- السحب ---

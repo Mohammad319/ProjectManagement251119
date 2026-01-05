@@ -1,12 +1,11 @@
 {
   "scripts": {
-    "tw:build": "tailwindcss -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --minify",
-    "tw:watch": "tailwindcss -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --watch"
+    "tw:build": "tailwindcss -c ./tailwind.config.js -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --minify",
+    "tw:watch": "tailwindcss -c ./tailwind.config.js -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --watch"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.20",
+    "tailwindcss": "^3.4.18",
     "postcss": "^8.4.47",
-    "postcss-import": "^16.1.1",
-    "tailwindcss": "^3.4.18"
+    "autoprefixer": "^10.4.20"
   }
 }

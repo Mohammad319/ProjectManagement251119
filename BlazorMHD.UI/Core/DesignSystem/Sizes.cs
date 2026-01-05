@@ -23,15 +23,4 @@ public static class Sizes
         MhdSize.XL => "text-lg",
         _ => "text-sm"
     };
-
-    // Height — مقاربة Tailwind UI Buttons
-    public static string GetHeight(MhdSize size) => size switch
-    {
-        MhdSize.Xs => "h-7",
-        MhdSize.Sm => "h-8",
-        MhdSize.Md => "h-9",
-        MhdSize.LG => "h-10",
-        MhdSize.XL => "h-11",
-        _ => "h-9"
-    };
 }

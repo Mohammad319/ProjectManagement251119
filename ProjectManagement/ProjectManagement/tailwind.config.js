@@ -4,8 +4,6 @@ module.exports = {
         "./**/*.{razor,html,cshtml,cs}",
         "../ProjectManagement/**/*.{razor,html,cshtml,cs}",
         "../ProjectManagement.Client/**/*.{razor,html,cshtml,cs}",
-        "../ProjectManagement.Shared/**/*.{razor,html,cshtml,cs}",
-        "../BlazorMHD.UI/**/*.{razor,html,cshtml,cs}"
     ],
     darkMode: "class",
     safelist: [
