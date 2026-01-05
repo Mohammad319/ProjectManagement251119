@@ -1,4 +1,4 @@
-using AuthPermissions;
+﻿using AuthPermissions;
 using TaskResourceBlueprints;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -67,7 +67,19 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 });
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
+
 var app = builder.Build();
+
+var pathBase = app.Configuration["ASPNETCORE_PATHBASE"];
+if (!string.IsNullOrEmpty(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+
+app.UseStaticFiles();
+
+// مهم جدًا مع MapRazorComponents و Endpoints
+app.UseRouting();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -76,27 +88,37 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
+    // اجعلها Relative حتى تحترم PathBase
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+// اجعلها Relative حتى تحترم PathBase
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();
+
 app.UseMiddleware<GlobalErrorHandling>();
+
 app.UseSerilogRequestLogging(opts =>
 {
     opts.EnrichDiagnosticContext = (ctx, http) =>
     {
         var userId = http.User.FindFirst("UserId")?.Value;
-        if (userId is not null) ctx.Set("UserId", userId);
+        if (!string.IsNullOrEmpty(userId))
+            ctx.Set("UserId", userId);
     };
 });
+
+// static assets الخاصة بـ Razor Components
 app.MapStaticAssets();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
+
