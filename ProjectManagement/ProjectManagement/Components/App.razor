@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@inject NavigationManager Nav
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -27,7 +29,8 @@
     </style>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
+    @* <base href="/" /> *@
+    <base href="@Nav.BaseUri" />
 
     <!-- يطبق dark مبكرًا على <html> لمنع الوميض -->
     <script src="js/theme-init.js"></script>
@@ -38,9 +41,9 @@
     <link href="_content/ContextMenuMHD/css/tailwind-contextmenu.css" rel="stylesheet" />
 
     <!-- Tailwind الناتج -->
-    <link rel="stylesheet" href="/css/custom.css" />
+    <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="_content/BlazorMHD.UI/css/mhd.css" />
-    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="stylesheet" href="css/app.css" />
 
     <ImportMap />
     <HeadOutlet />
@@ -62,15 +65,12 @@
        <script src="js/reorderhelper.js"></script>
     <script>
         (function () {
-            var culture = localStorage['BlazorCulture'];
-            if (culture) {
-                document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
-            }
+          var culture = localStorage['BlazorCulture'];
+          if (culture) {
+            var pb = new URL(document.baseURI).pathname; // مثال: /app1/
+            document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=" + pb;
+          }
         })();
-        window.blazorCulture = {
-            get: () => localStorage['BlazorCulture'],
-            set: (value) => { localStorage['BlazorCulture'] = value; }
-        };
     </script>
 </body>
 
