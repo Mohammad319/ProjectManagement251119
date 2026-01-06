@@ -32,17 +32,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private async Task GetAsync()
         {
             if (Category?.Id is null || Category.Id <= 0) return;
-
-            Organistion =
-                await Dispatcher.Send(new GetOrganisationsQuery(Category.Id, IsVisible))
-                ?? [];
+            Organistion = await Dispatcher.Send(new GetOrganisationsQuery(Category.Id, IsVisible)) ?? [];
         }
 
         private async Task<bool> CanManageAsync()
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-
             if (user.Identity?.IsAuthenticated != true)
                 return false;
 
