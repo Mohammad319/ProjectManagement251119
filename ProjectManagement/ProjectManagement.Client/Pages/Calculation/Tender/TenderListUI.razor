@@ -1,23 +1,18 @@
-﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+﻿@using ProjectManagement.Client.Pages.Calculation.Tender.Attribute
+@using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
-@using Calculation.Tender.Attribute
 @inherits AppComponentBase
 
 @if (FormAttr != null && result != null)
 {
-    <ProjectManagement.Client.Pages.Calculation.Tender.Attribute.TenderAttributeFormUI TenderAttribute="FormAttr"
-                                                                                       CalcId="Calculation.Id"
-                                                                                       Tenders="result.Tenders"
-                                                                                       Callback="CallbackForm">
-    </ProjectManagement.Client.Pages.Calculation.Tender.Attribute.TenderAttributeFormUI>
+    <TenderAttributeFormUI TenderAttribute="FormAttr" CalcId="Calculation.Id" 
+    Tenders="result.Tenders" Callback="CallbackForm">
+    </TenderAttributeFormUI>
 }
 else if (Form != null && result != null)
 {
-    <TenderFormUI TenderList="Form"
-                  CalcId="Calculation.Id"
-                  Callback="CallbackForm"
-                  Attributes="result.Attributes">
-    </TenderFormUI>
+    <TenderFormUI TenderList="Form" CalcId="Calculation.Id" Callback="CallbackForm" 
+    Attributes="result.Attributes"></TenderFormUI>
 }
 else
 {
@@ -184,7 +179,7 @@ else
 
     async Task Get()
     {
-        result = await Repo.Tender.GetAllAsync(Calculation.Id);
+         result = await Repo.Tender.GetAllAsync(Calculation.Id);
     }
 
     protected async override Task OnInitializedAsync()

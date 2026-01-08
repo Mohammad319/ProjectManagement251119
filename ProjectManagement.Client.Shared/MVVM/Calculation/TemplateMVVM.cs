@@ -1,6 +1,5 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation.Template;
-using System.Linq;
 using System.Text;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
@@ -44,17 +43,17 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}");
 
             }
-    //        foreach (var item in NetColumnsToUse)
-    //        {
-    //            if (item.Frozen)
-    //            {
-    //                item.StartPX = startCol;
-    //                startCol = startCol + item.Width;
-    //                sb.Append(SetFreezCol(item.Id + 2, item.StartPX));
-    //            }
-    //            sb.Append($" .colH{item.Id + 2}" + "{" +
-    //"white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}");
-    //        }
+            //        foreach (var item in NetColumnsToUse)
+            //        {
+            //            if (item.Frozen)
+            //            {
+            //                item.StartPX = startCol;
+            //                startCol = startCol + item.Width;
+            //                sb.Append(SetFreezCol(item.Id + 2, item.StartPX));
+            //            }
+            //            sb.Append($" .colH{item.Id + 2}" + "{" +
+            //"white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}");
+            //        }
             StyleNetCalc = sb.ToString();
             return StyleNetCalc;
         }

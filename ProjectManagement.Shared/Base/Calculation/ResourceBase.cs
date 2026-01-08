@@ -22,8 +22,8 @@ namespace ProjectManagement.Shared.Base.Calculation
     }
     public class ResourceMetadata
     {
-        public ResourceParameter Parameters { get; set; } = new ();
-        public ResourceTime Times { get; set; } = new ();
+        public List<ResourceParameter> Parameters { get; set; } = new ();
+        public List<ResourceTime> Times { get; set; } = new ();
         public double? PriceSub { get; set; }
 
         public string Note { get; set; }

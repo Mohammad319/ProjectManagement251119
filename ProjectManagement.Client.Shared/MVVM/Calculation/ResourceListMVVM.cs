@@ -21,10 +21,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string Unit => Data.Unit;
         public double ChangeFactor1 => Data.ChangeFactor1;
         public double ChangeFactor2 => Data.ChangeFactor2;
+        public double? PriceSub => Data.PriceSub;
+
         public double CapWaste => Data.CapWaste;
         public double Cost => Data.Cost;
         public double? BaseCost => Data.BaseCost;
         public double? CO2 => Data.CO2;
+        [JsonIgnore] public double PriceSubTotal =>  Data.PriceSub.HasValue && Quantity .HasValue ? PriceSub.Value * Quantity.Value : 0;
     }
 
     public class ResourceListMVVM : ResFromData

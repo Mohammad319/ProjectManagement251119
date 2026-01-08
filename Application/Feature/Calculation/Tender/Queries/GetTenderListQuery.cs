@@ -11,20 +11,13 @@ namespace Application.Feature.Calculation.Tender.Queries
     // --------- GetTenderList ---------
     public sealed record GetTenderListQuery(
         int CalculationId
-    ) : IRequest<List<TenderListDTO>>;
+    ) : IRequest<TenderAttributeValuesListDTO>;
 
-    public sealed class GetTenderListQueryHandler
-        : IRequestHandler<GetTenderListQuery, List<TenderListDTO>>
+    public sealed class GetTenderListQueryHandler(ITenderQueryService service)
+                : IRequestHandler<GetTenderListQuery, TenderAttributeValuesListDTO>
     {
-        private readonly ITenderQueryService _service;
-
-        public GetTenderListQueryHandler(ITenderQueryService service)
-        {
-            _service = service;
-        }
-
-        public Task<List<TenderListDTO>> Handle(GetTenderListQuery request, CancellationToken cancellationToken)
-            => _service.GetTenderListAsync(request.CalculationId, cancellationToken);
+        public Task<TenderAttributeValuesListDTO> Handle(GetTenderListQuery request, CancellationToken cancellationToken)
+            => service.GetTenderListAsync(request.CalculationId, cancellationToken);
     }
 
     // --------- GetTenderDetails ---------
@@ -48,17 +41,10 @@ namespace Application.Feature.Calculation.Tender.Queries
         int CalculationId
     ) : IRequest<List<TenderAttributeListDTO>>;
 
-    public sealed class GetTenderAttributesQueryHandler
-        : IRequestHandler<GetTenderAttributesQuery, List<TenderAttributeListDTO>>
+    public sealed class GetTenderAttributesQueryHandler(ITenderAttributeQueryService service)
+                : IRequestHandler<GetTenderAttributesQuery, List<TenderAttributeListDTO>>
     {
-        private readonly ITenderAttributeQueryService _service;
-
-        public GetTenderAttributesQueryHandler(ITenderAttributeQueryService service)
-        {
-            _service = service;
-        }
-
         public Task<List<TenderAttributeListDTO>> Handle(GetTenderAttributesQuery request, CancellationToken cancellationToken)
-            => _service.GetAttributesAsync(request.CalculationId, cancellationToken);
+            => service.GetAttributesAsync(request.CalculationId, cancellationToken);
     }
 }

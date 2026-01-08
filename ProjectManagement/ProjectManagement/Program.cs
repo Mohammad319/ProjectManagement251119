@@ -103,11 +103,6 @@ builder.Services.AddScoped<AppErrorDialog>();
 builder.Services.AddTransient<CorrelationIdMiddleware>();
 
 var app = builder.Build();
-var pathBase = app.Configuration["ASPNETCORE_PATHBASE"];
-if (!string.IsNullOrEmpty(pathBase))
-{
-    app.UsePathBase(pathBase);
-}
 
 var isDev = app.Environment.IsDevelopment();
 app.UseStaticFiles();
@@ -163,10 +158,7 @@ app.UseExceptionHandler(errorApp =>
         }
 
         // UI redirect
-        // context.Response.Redirect($"/error?traceId={Uri.EscapeDataString(traceId)}");
-        var pb = context.Request.PathBase.HasValue ? context.Request.PathBase.Value : "";
-        context.Response.Redirect($"{pb}/error?traceId={Uri.EscapeDataString(traceId)}");
-
+        context.Response.Redirect($"/error?traceId={Uri.EscapeDataString(traceId)}");
     });
 });
 
@@ -235,9 +227,9 @@ app.UseTenantContext();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-
 app.MapControllers();
 app.MapHub<NotificationHub>("/notification");
+app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

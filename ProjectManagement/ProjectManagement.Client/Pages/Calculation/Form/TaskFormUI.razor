@@ -98,6 +98,16 @@
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
                     </div>
                 }
+                <div class="@CssClasses.Layout.FlexWidth110">
+                    <label class="@CssClasses.Form.Label">ActuallyQuantity </label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.ActuallyQuantity)" />
+                </div>
+                <div class="@CssClasses.Layout.FlexWidth110">
+                    <label class="@CssClasses.Form.Label">WorkedQ </label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@CssClasses.Input.Text" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.WorkedQ)" />
+                </div>
 
                 <div class="@CssClasses.Layout.FlexWidth110">
                     <label class="@CssClasses.Form.Label">@CalcResource.priceSub </label>

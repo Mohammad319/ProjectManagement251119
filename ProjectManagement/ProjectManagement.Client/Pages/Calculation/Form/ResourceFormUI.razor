@@ -3,6 +3,7 @@
 @using BlazorMHD.UI.Components.Data.Card
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Offer
 @using ProjectManagement.Shared.DTO.ResourceType
@@ -227,7 +228,11 @@
                 </InputSelect>
                 <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
             </div>
-
+            <div class="@CssClasses.Layout.FlexWidth110">
+                <label class="@CssClasses.Form.Label">@CalcResource.priceSub </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.PriceSub" class="@CssClasses.Input.Text" />
+                <ValidationMessage For="@(() => ResourceUpdate.Data.PriceSub)" />
+            </div>
             <div class="@CssClasses.Layout.FlexWidth110">
                 <label class="@CssClasses.Form.Label">@CalcResource.co2 </label>
                 <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="@CssClasses.Input.Text" />
@@ -249,6 +254,110 @@
                 <ValidationMessage For="@(() => ResourceUpdate.OpportunityId)" />
             </div>
         </div>
+    </MhdCard>
+    <MhdCard Elevated="true" Compact="true" Class="mb-2">
+        <div class="flex items-center justify-between mb-2">
+            <label class="@CssClasses.Form.Label">Parameters</label>
+            <button type="button"
+                    class="@CssClasses.Btn.Outline.Primary"
+                    @onclick="AddParameter">
+                @ResourceApp.newItem
+            </button>
+        </div>
+
+        @if (!ResourceUpdate.Data.Parameters.Any())
+        {
+            <div class="@CssClasses.Text.Warning">@ResourceApp.thereIsNoElements</div>
+        }
+        else
+        {
+            @for (int i = 0; i < ResourceUpdate.Data.Parameters.Count; i++)
+            {
+                int idx = i;
+                <div class="@CssClasses.Layout.FlexWrap gap-2 mb-2 items-end">
+                    <div class="flex-1 min-w-[160px]">
+                        <label class="@CssClasses.Form.Label">@CalcResource.name</label>
+                        <InputText class="@CssClasses.Input.Text"
+                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
+                    </div>
+
+                    <div class="w-[120px]">
+                        <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
+                        <InputText class="@CssClasses.Input.Text"
+                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
+                    </div>
+
+                    <div class="w-[120px]">
+                        <label class="@CssClasses.Form.Label">@ResourceLoc.value</label>
+                        <InputNumber class="@CssClasses.Input.Text"
+                                     @bind-Value="ResourceUpdate.Data.Parameters[idx].Value" />
+                    </div>
+
+                    <div class="w-[52px]">
+                        <button type="button"
+                                class="@CssClasses.Btn.Solid.Danger"
+                                @onclick="() => RemoveParameter(idx)">
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </MhdCard>
+    <MhdCard Elevated="true" Compact="true" Class="mb-2">
+        <div class="flex items-center justify-between mb-2">
+            <label class="@CssClasses.Form.Label">Times</label>
+            <button type="button"
+                    class="@CssClasses.Btn.Outline.Primary"
+                    @onclick="AddTime">
+                @ResourceApp.newItem
+            </button>
+        </div>
+
+        @if (!ResourceUpdate.Data.Times.Any())
+        {
+            <div class="@CssClasses.Text.Warning">@ResourceApp.thereIsNoElements</div>
+        }
+        else
+        {
+            @for (int i = 0; i < ResourceUpdate.Data.Times.Count; i++)
+            {
+                int idx = i;
+                <div class="@CssClasses.Layout.FlexWrap gap-2 mb-2 items-end">
+                    <div class="flex-1 min-w-[160px]">
+                        <label class="@CssClasses.Form.Label">@CalcResource.name</label>
+                        <InputText class="@CssClasses.Input.Text"
+                                   @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
+                    </div>
+
+                    <div class="w-[100px]">
+                        <label class="@CssClasses.Form.Label">@ResourceLoc.value</label>
+                        <InputNumber class="@CssClasses.Input.Text"
+                                     @bind-Value="ResourceUpdate.Data.Times[idx].Value" />
+                    </div>
+
+                    <div class="w-[100px]">
+                        <label class="@CssClasses.Form.Label">@CalcResource.quantity</label>
+                        <InputNumber class="@CssClasses.Input.Text"
+                                     @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
+                    </div>
+
+                    <div class="w-[100px]">
+                        <label class="@CssClasses.Form.Label">@CalcResource.cost</label>
+                        <InputNumber class="@CssClasses.Input.Text"
+                                     @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
+                    </div>
+
+                    <div class="w-[52px]">
+                        <button type="button"
+                                class="@CssClasses.Btn.Solid.Danger"
+                                @onclick="() => RemoveTime(idx)">
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
+                    </div>
+                </div>
+            }
+        }
     </MhdCard>
 
     @* PANEL 4: الملاحظات *@
@@ -303,3 +412,38 @@
     <button type="submit" class="@CssClasses.Btn.Outline.Success" form="resForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
     <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">@ResourceApp.cancel</button>
     </div>
+    @code{
+    private void AddParameter()
+    {
+        ResourceUpdate.Data.Parameters.Add(new ResourceParameter
+        {
+            Name = string.Empty,
+            Unit = string.Empty,
+            Value = 1
+        });
+    }
+
+    private void RemoveParameter(int index)
+    {
+        if (index < 0 || index >= ResourceUpdate.Data.Parameters.Count) return;
+        ResourceUpdate.Data.Parameters.RemoveAt(index);
+    }
+
+    private void AddTime()
+    {
+        ResourceUpdate.Data.Times.Add(new ResourceTime
+        {
+            Name = string.Empty,
+            Value = 1,
+            Quantity = 1,
+            Cost = 1
+        });
+    }
+
+    private void RemoveTime(int index)
+    {
+        if (index < 0 || index >= ResourceUpdate.Data.Times.Count) return;
+        ResourceUpdate.Data.Times.RemoveAt(index);
+    }
+
+    }

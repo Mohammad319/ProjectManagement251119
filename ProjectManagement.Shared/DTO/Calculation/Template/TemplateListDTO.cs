@@ -51,10 +51,6 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         public TemplateData()
         {
             NetColumnsToUse = [.. NetCalc.Columns.Where(x=> x.Visible).OrderBy(x=> x.Order)];
-            //for (int i = 0; i < NetColumnsToUse.Count; i++)
-            //{
-            //    NetColumnsToUse[i].Id = i;
-            //}
         }
 
     }
