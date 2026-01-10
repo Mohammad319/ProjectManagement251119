@@ -1,4 +1,4 @@
-﻿﻿@using Microsoft.Extensions.Localization
+﻿﻿﻿@using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @using Calculation.Table.Header
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows
@@ -177,12 +177,12 @@
             }
             @for (int i = 0; i < Template.NetCalc.Columns.Count; i++)
             {
-                    <th id="@("h" + (i + 2))" class="@("colH" + (i + 2)) draggable-table"
-                        style="width:@(Template.NetCalc.Columns[i].Width)px;">
-                        @CalcLoc[NetColumnLoc.Key[Template.NetCalc.Columns[i].Id]]
-                    </th>
+                <th id="@("h" + (i + 2))" class="@("colH" + (i + 2)) draggable-table"
+                    style="width:@(Template.NetCalc.Columns[i].Width)px;">
+                    @CalcLoc[NetColumnLoc.Key[Template.NetCalc.Columns[i].Id]]
+                </th>
             }
-@*             @foreach (var item in Template.NetCalc.Columns)
+            @*             @foreach (var item in Template.NetCalc.Columns)
             {
                 if (item.Visible)
                 {

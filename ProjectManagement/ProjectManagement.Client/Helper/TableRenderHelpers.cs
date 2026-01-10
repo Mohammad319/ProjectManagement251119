@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Globalization;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using ProjectManagement.Client.Pages.Calculation.Table.SectionsList;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
@@ -7,23 +8,55 @@ namespace ProjectManagement.Client.Helper
 {
     public static class TableRenderHelpers
     {
+        private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
+
+        // ----------------- COLLAPSE (Fast + No recursion) -----------------
         public static void ToggleCollapse(TaskListMVVM task, List<TaskListMVVM> allTasks)
         {
-            var list = allTasks.Where(x => x.TaskId == task.Id).ToList();
-            task.CollSpan = !task.CollSpan;
+            if (task is null || allTasks is null || allTasks.Count == 0)
+                return;
 
-            foreach (var item in list)
+            // Build lookup parentId -> children
+            var lookup = new Dictionary<int, List<TaskListMVVM>>(allTasks.Count);
+            for (int i = 0; i < allTasks.Count; i++)
             {
-                item.CollSpan = !item.CollSpan;
-                ToggleCollapse(item, allTasks);
+                var t = allTasks[i];
+                if (t?.TaskId is null) continue;
+
+                int parentId = t.TaskId.Value;
+                if (!lookup.TryGetValue(parentId, out var list))
+                {
+                    list = new List<TaskListMVVM>(4);
+                    lookup[parentId] = list;
+                }
+                list.Add(t);
+            }
+
+            bool newState = !task.CollSpan;
+            task.CollSpan = newState;
+
+            var stack = new Stack<TaskListMVVM>();
+            if (lookup.TryGetValue(task.Id, out var children))
+            {
+                for (int i = 0; i < children.Count; i++)
+                    stack.Push(children[i]);
+            }
+
+            while (stack.Count > 0)
+            {
+                var cur = stack.Pop();
+                cur.CollSpan = newState;
+
+                if (lookup.TryGetValue(cur.Id, out var sub))
+                {
+                    for (int i = 0; i < sub.Count; i++)
+                        stack.Push(sub[i]);
+                }
             }
         }
 
-        //-----------------
-        public static void HandleKeyUp(KeyboardEventArgs e)
-        {
-            TemporaryData.Key = null;
-        }
+        // ----------------- SELECTION -----------------
+        public static void HandleKeyUp(KeyboardEventArgs e) => TemporaryData.Key = null;
 
         public static void HandleItemSelected(int id, double? q, CalculationItemType type)
         {
@@ -33,11 +66,8 @@ namespace ProjectManagement.Client.Helper
                 SelectedData.Reset();
         }
 
-      
-        private static string Format(int digits)
-        {
-            return $"F{digits}";
-        }
+        // ----------------- FORMAT -----------------
+        private static string Format(int digits) => "0." + new string('#', digits);
 
         public static List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> GetColumns(double tax, int x = 2)
         {
@@ -45,115 +75,105 @@ namespace ProjectManagement.Client.Helper
 
             return
             [
-                new() { TaskRender = t => RenderTextTd(t.Metadata.Code), ResRender = r => EmptyTd() },
+                new() { TaskRender = t => RenderTextTd(t.Metadata.Code), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderCheckboxTd(t.Active), ResRender = r => RenderCheckboxTd(r.Active) },
+                new() { TaskRender = t => RenderCheckboxTd(t.Active), ResRender = r => RenderCheckboxTd(r.Active) },
 
-        new() { TaskRender = t => EmptyTd(), ResRender = r => RenderWithTitle(r.AccountCode) },
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderWithTitle(r.AccountCode) },
 
-        new() { TaskRender = t => RenderWithTitle(t.Name), ResRender = r => RenderWithTitle(r.Name) },
+                new() { TaskRender = t => RenderWithTitle(t.Name), ResRender = r => RenderWithTitle(r.Name) },
 
-        new()
-        {
-            TaskRender = t => RenderStatusTd(t.StatusColor, t.Status),
-            ResRender = r => RenderStatusTd(
-                r.StatusColor,
-                r.Status,
-                r.HasOfferSelected() ? 0 : r.HasOffer ? 1 : 2,
-                r.OfferClick
-            )
-        },
+                new()
+                {
+                    TaskRender = t => RenderStatusTd(t.StatusColor, t.Status),
+                    ResRender = r => RenderStatusTd(
+                        r.StatusColor,
+                        r.Status,
+                        r.HasOfferSelected() ? 0 : r.HasOffer ? 1 : 2,
+                        r.OfferClick
+                    )
+                },
 
-        new() { TaskRender = t => EmptyTd(), ResRender = r => RenderTextTd(r.ResType) },
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderTextTd(r.ResType) }, // enum ok
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderTextTd(r.ResName) },
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderTextTd(r.Sort) },
 
-        new() { TaskRender = t => EmptyTd(), ResRender = r => RenderTextTd(r.ResName) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.Quantity), ResRender = r => RenderFormattedTd(round, r.Quantity) },
 
-        new() { TaskRender = t => EmptyTd(), ResRender = r => RenderTextTd(r.Sort) },
+                new() { TaskRender = t => RenderTextTd(t.Unit), ResRender = r => RenderTextTd(r.Unit) },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.Quantity), ResRender = r => RenderFormattedTd(round, r.Quantity) },
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.Cost) },
 
-        new() { TaskRender = t => RenderTextTd(t.Unit), ResRender = r => RenderTextTd(r.Unit) },
+                // ✅ ChangeFactor are numeric => formatted (fast)
+                new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.ChangeFactor1), ResRender = r => RenderFormattedTd(round, r.ChangeFactor1) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.ChangeFactor2), ResRender = r => RenderFormattedTd(round, r.ChangeFactor2) },
 
-        new() { TaskRender = t => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.Cost) },
+                new()
+                {
+                    TaskRender = t => RenderTextTd(t.Cap),
+                    ResRender = r => (r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.MachinesAndEquipments)
+                        ? RenderTextTd(r.CapWaste)
+                        : EmptyTd()
+                },
 
-        new() { TaskRender = t => RenderTextTd(t.Metadata.ChangeFactor1), ResRender = r => RenderTextTd(r.ChangeFactor1) },
+                new()
+                {
+                    TaskRender = _ => EmptyTd(),
+                    ResRender = r => r.ResType == ResourceTypesEnum.Materials ? RenderTextTd(r.CapWaste) : EmptyTd()
+                },
 
-        new() { TaskRender = t => RenderTextTd(t.Metadata.ChangeFactor2), ResRender = r => RenderTextTd(r.ChangeFactor2) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.BaseCost), ResRender = r => RenderFormattedTd(round, r.BaseCost) },
 
-        new()
-        {
-            TaskRender = t => RenderTextTd(t.Cap),
-            ResRender = r => (r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.MachinesAndEquipments)
-                ? RenderTextTd(r.CapWaste)
-                : EmptyTd()
-        },
+                new() { TaskRender = t => RenderTextTd(t.Opportunity), ResRender = r => RenderTextTd(r.Opportunity) },
 
-        new()
-        {
-            TaskRender = t => EmptyTd(),
-            ResRender = r => r.ResType == ResourceTypesEnum.Materials ? RenderTextTd(r.CapWaste) : EmptyTd()
-        },
+                new() { TaskRender = t => RenderFormattedTd(round, t.NetCostQ), ResRender = r => RenderFormattedTd(round, r.NetCostQ) },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.BaseCost), ResRender = r => RenderFormattedTd(round, r.BaseCost) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.NetCostTotaly), ResRender = r => RenderFormattedTd(round, r.NetCostTotaly) },
 
-        new() { TaskRender = t => RenderTextTd(t.Opportunity), ResRender = r => RenderTextTd(r.Opportunity) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceQTax(tax)), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceQ), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.NetCostQ), ResRender = r => RenderFormattedTd(round, r.NetCostQ) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.ApriceTotally), ResRender = r => RenderFormattedTd(round, r.ApriceTotally) },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.NetCostTotaly), ResRender = r => RenderFormattedTd(round, r.NetCostTotaly) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.ApriceTotallyTax(tax)), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceQTax(tax)), ResRender = r => EmptyTd() },
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.Factor) },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceQ), ResRender = r => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.MinPrice), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.CeilingPrice), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.ApriceTotally), ResRender = r => RenderFormattedTd(round, r.ApriceTotally) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceSub), ResRender = r => RenderFormattedTd(round, r.PriceSub) },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.ApriceTotallyTax(tax)), ResRender = r => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceSubTotal), ResRender = r => RenderFormattedTd(round, r.PriceSubTotal) },
 
-        new() { TaskRender = t => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.Factor) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.Diff), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.MinPrice), ResRender = r => EmptyTd() },
+                new() { TaskRender = t => RenderTextTd(t.Responsible), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.CeilingPrice), ResRender = r => EmptyTd() },
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.CO2) },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceSub), ResRender = r => RenderFormattedTd(round, r.PriceSub) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.TotalCO2), ResRender = r => RenderFormattedTd(round, r.TotalCO2) },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceSubTotal), ResRender = r => RenderFormattedTd(round, r.PriceSubTotal) },
+                new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.ActuallyQuantity), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.WorkedQ), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.WorkedQPercent), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderFormattedTd(round, t.Diff), ResRender = r => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceActuallyQuantity), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceWorkedQ), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => RenderTextTd(t.Responsible), ResRender = r => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceSubTax(tax)), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceTotalSubTax(tax)), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceActuallyQuantityTax(tax)), ResRender = _ => EmptyTd() },
+                new() { TaskRender = t => RenderFormattedTd(round, t.PriceWorkedQTax(tax)), ResRender = _ => EmptyTd() },
 
-        new() { TaskRender = t => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.CO2) },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.TotalCO2), ResRender = r => RenderFormattedTd(round, r.TotalCO2) },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.ActuallyQuantity), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.WorkedQ), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.WorkedQPercent), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceActuallyQuantity), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceWorkedQ), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceSubTax(tax)), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceTotalSubTax(tax)), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceActuallyQuantityTax(tax)), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderFormattedTd(round, t.PriceWorkedQTax(tax)), ResRender = r => EmptyTd() },
-
-        new() { TaskRender = t => RenderTextTd(t.Note), ResRender = r => RenderTextTd(r.Note) },
-    ];
+                new() { TaskRender = t => RenderTextTd(t.Note), ResRender = r => RenderTextTd(r.Note) },
+            ];
         }
 
-
-        static RenderFragment RenderTd(string content, string cssClass = null) => __b =>
+        // ----------------- RENDER HELPERS -----------------
+        private static RenderFragment RenderTd(string? content, string? cssClass = null) => __b =>
         {
-            var seq = 0;
+            int seq = 0;
             __b.OpenElement(seq++, "td");
             if (!string.IsNullOrEmpty(cssClass))
                 __b.AddAttribute(seq++, "class", cssClass);
@@ -164,9 +184,9 @@ namespace ProjectManagement.Client.Helper
             __b.CloseElement();
         };
 
-        static RenderFragment RenderWithTitle(string content) => __b =>
+        private static RenderFragment RenderWithTitle(string? content) => __b =>
         {
-            var seq = 0;
+            int seq = 0;
             __b.OpenElement(seq++, "td");
             if (!string.IsNullOrEmpty(content))
             {
@@ -176,14 +196,24 @@ namespace ProjectManagement.Client.Helper
             __b.CloseElement();
         };
 
-        public static RenderFragment RenderTextTd(object value) =>
+        // string fast
+        public static RenderFragment RenderTextTd(string? value) => RenderTd(value);
+
+        // object fallback (enum وغيرها)
+        public static RenderFragment RenderTextTd(object? value) =>
             RenderTd(value?.ToString() ?? string.Empty);
-        public static RenderFragment RenderFormattedTd(string format, object value) 
-            => RenderTextTd(string.Format(format, value));
-      
+
+        // ✅ fastest: double
+        public static RenderFragment RenderFormattedTd(string format, double value) =>
+            RenderTd(value.ToString(format, Inv), cssClass: "num-cell");
+
+        // ✅ supports double?
+        public static RenderFragment RenderFormattedTd(string format, double? value) =>
+            RenderTd(value.HasValue ? value.Value.ToString(format, Inv) : string.Empty, cssClass: "num-cell");
+
         public static RenderFragment RenderCheckboxTd(bool isChecked) => __b =>
         {
-            var seq = 0;
+            int seq = 0;
             __b.OpenElement(seq++, "td");
             __b.OpenElement(seq++, "input");
             __b.AddAttribute(seq++, "type", "checkbox");
@@ -196,7 +226,7 @@ namespace ProjectManagement.Client.Helper
 
         public static RenderFragment RenderStatusTd(string color, string status) => __b =>
         {
-            var seq = 0;
+            int seq = 0;
             __b.OpenElement(seq++, "td");
 
             __b.OpenElement(seq++, "span");
@@ -212,7 +242,8 @@ namespace ProjectManagement.Client.Helper
 
         public static RenderFragment EmptyTd() => RenderTd(string.Empty);
 
-        public static RenderFragment RenderStatusTd(string color, string status, int i, Func<Task> onDetailsClick) => __b =>
+        // ✅ keep Func<Task> (حتى لا تغيّر موديلاتك)
+        public static RenderFragment RenderStatusTd(string color, string status, int i, Func<Task>? onDetailsClick) => __b =>
         {
             int seq = 0;
             __b.OpenElement(seq++, "td");
@@ -221,10 +252,7 @@ namespace ProjectManagement.Client.Helper
             __b.AddAttribute(seq++, "style", "position:static");
 
             if (onDetailsClick != null)
-            {
-                // نمرر الـ Action مباشرة كـ event handler
                 __b.AddAttribute(seq++, "onclick", onDetailsClick);
-            }
 
             __b.AddMarkupContent(seq++,
                 $"<span class='inline-block w-5 text-center [&>svg]:w-3 [&>svg]:h-3'>" +
@@ -235,8 +263,8 @@ namespace ProjectManagement.Client.Helper
 
             __b.AddContent(seq++, status);
 
-            __b.CloseElement(); // span الداخلي
-            __b.CloseElement(); // td
+            __b.CloseElement();
+            __b.CloseElement();
         };
     }
 }

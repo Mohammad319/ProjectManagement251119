@@ -2,10 +2,13 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @inherits AppComponentBase
 
-<tr @onclick="Click" @oncontextmenu="Context" @oncontextmenu:preventDefault
+<tr @key="Resource.Id"
+    @onclick="Click"
+    @oncontextmenu="Context"
+    @oncontextmenu:preventDefault
     style="@Resource.Style(Template.NetCalc?.Color?.Resource, Resource.Active)">
-    <td>
-    </td>
+    <td></td>
+
     @foreach (var col in Template.NetCalc.Columns)
     {
         @Colmuns[(int)col.Id].ResRender(Resource)
@@ -27,6 +30,7 @@
 
     protected override void OnInitialized()
     {
+        // تعيين مرة واحدة
         Resource.OfferClick = async () => await UoWService.Resource.HandleOfferAsync(Resource);
     }
 
@@ -41,10 +45,8 @@
         foreach (var note in notes)
         {
             <tr class="netNote">
-                <td class="NettdDiv  bg-white dark:bg-black" colspan="@col1" style="width:@(TemplateConst.Col0)px;"></td>
-                <td colspan="@col2">
-                    @note
-                </td>
+                <td class="NettdDiv bg-white dark:bg-black" colspan="@col1" style="width:@(TemplateConst.Col0)px;"></td>
+                <td colspan="@col2">@note</td>
             </tr>
         }
     };

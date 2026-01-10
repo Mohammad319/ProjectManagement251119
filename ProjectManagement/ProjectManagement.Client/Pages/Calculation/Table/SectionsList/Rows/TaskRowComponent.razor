@@ -2,28 +2,28 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @inherits AppComponentBase
 
-<tr @onclick="@(() => OnClick.InvokeAsync(Task))" @oncontextmenu:preventDefault
-    @oncontextmenu="@(() => OnContextClick.InvokeAsync(Task))"
+<tr @key="Task.Id"
+    @onclick="RowClick"
+    @oncontextmenu:preventDefault
+    @oncontextmenu="RowContext"
     style="@Task.Style(Color, ActiveParent)">
+
     <td>
         @if ((Task.Resources?.Any() ?? false) || (Task.Tasks?.Any() ?? false))
         {
             <span class="
-        inline-flex items-center justify-center rounded-full
-        border border-slate-400 dark:border-slate-600
-        bg-transparent dark:bg-transparent
-        w-5 h-5 cursor-pointer
-        transition-all duration-200 ease-out
-        hover:opacity-70
-        hover:scale-110
-        hover:shadow-sm
-    "
+                    inline-flex items-center justify-center rounded-full
+                    border border-slate-400 dark:border-slate-600
+                    bg-transparent dark:bg-transparent
+                    w-5 h-5 cursor-pointer
+                    transition-all duration-200 ease-out
+                    hover:opacity-70
+                    hover:scale-110
+                    hover:shadow-sm"
                   style="margin-left:@(Left + "px;")"
-                  @onclick="@(() => OnCollapseToggle.InvokeAsync(Task))"
+                  @onclick="ToggleCollapse"
                   @onclick:stopPropagation="true">
-
                 @((MarkupString)Icons.TopBottom(Task.CollSpan))
-
             </span>
         }
     </td>
@@ -51,15 +51,17 @@
     [Parameter] public int Left { get; set; } = 0;
     [Parameter] public List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = default!;
 
+    private Task RowClick() => OnClick.InvokeAsync(Task);
+    private Task RowContext() => OnContextClick.InvokeAsync(Task);
+    private Task ToggleCollapse() => OnCollapseToggle.InvokeAsync(Task);
+
     public static RenderFragment Note(List<string> notes, int col1, int col2) => __builder =>
     {
         foreach (var note in notes)
         {
             <tr class="netNote">
                 <td class="NettdDiv bg-white dark:bg-black" colspan="@col1" style="width:@(TemplateConst.Col0)px;"></td>
-                <td colspan="@col2">
-                    @note
-                </td>
+                <td colspan="@col2">@note</td>
             </tr>
         }
     };
