@@ -4,6 +4,7 @@
 @using ProjectManagement.Client.Shared.Repositories.ResourceType;
 @using ProjectManagement.Client.Shared.ViewModel;
 @using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.ResourceType;
 
 @inherits AppComponentBase
@@ -229,62 +230,59 @@
         </td>
     }
 
-    @foreach (var obj in Template.NetColumnsToUse)//Template.NetOrder)
+    @foreach (var obj in Template.NetCalc.Columns)//Template.NetOrder)
     {
-        //int d = i;
-        string type = obj.Name;// TemplateConst.NetTitle[obj.Id];
-
-        <td @onclick="(e) => EnterCodeClick(e, type)">
-            @if (type == "status")
+        <td @onclick="(e) => EnterCodeClick(e, obj.Id)">
+            @if (obj.Id  == NetColumnId.Status)
             {
                 foreach (var item1 in Calc.FilterVM.Status)
                 {
                     <div class="chip">@item1</div>
                 }
             }
-            else if (type == "code")
+            else if (obj.Id == NetColumnId.Code)
             {
                 foreach (var item1 in Calc.FilterVM.Code)
                 {
                     <div class="chip">@item1</div>
                 }
             }
-            else if (type == "name")
+            else if (obj.Id == NetColumnId.Name)
             {
                 foreach (var item1 in Calc.FilterVM.Name)
                 {
                     <div class="chip">@item1</div>
                 }
             }
-            else if (type == "account")
+            else if (obj.Id == NetColumnId.Account)
             {
                 foreach (var item1 in Calc.FilterVM.Account)
                 {
                     <div class="chip">@item1</div>
                 }
             }
-            else if (type == "resourceType")
+            else if (obj.Id == NetColumnId.ResourceType)
             {
                 foreach (var item1 in Calc.FilterVM.Resource)
                 {
                     <div class="chip">@item1</div>
                 }
             }
-            else if (type == "resourceTypeSystem")
+            else if (obj.Id == NetColumnId.ResourceTypeSystem)
             {
                 foreach (var item1 in Calc.FilterVM.ResourceTypeSystem)
                 {
                     <div class="chip">@item1</div>
                 }
             }
-            else if (type == "resourceSort")
+            else if (obj.Id == NetColumnId.ResourceSort)
             {
                 foreach (var item1 in Calc.FilterVM.ResourceSort)
                 {
                     <div class="chip">@item1</div>
                 }
             }
-            else if (type == "unit")
+            else if (obj.Id == NetColumnId.Unit)
             {
                 foreach (var item1 in Calc.FilterVM.Unit)
                 {
@@ -342,15 +340,14 @@
         ResourceTypes = await Repo.ResType.GetLocalAsync();
     }
 
-    public async Task EnterCodeClick(MouseEventArgs e1, string i)
+    public async Task EnterCodeClick(MouseEventArgs e1, NetColumnId i)
     {
-        if (i == "status" || i == "code" ||
-            i == "name" || i == "unit" || i == "account" ||
-            i == "resourceType" || i == "resourceSort" || i == "resourceTypeSystem")
+        if (i == NetColumnId.Status || i == NetColumnId.Code ||
+            i == NetColumnId.Name || i == NetColumnId.Unit || i == NetColumnId.Account ||
+            i == NetColumnId.ResourceType || i == NetColumnId.ResourceSort || i == NetColumnId.ResourceTypeSystem)
         {
             display = "none";
 
-            FilterAttrStr = i;
             FilterTypesList1 = new List<FilterType>()
             {
                 FilterType.equals,

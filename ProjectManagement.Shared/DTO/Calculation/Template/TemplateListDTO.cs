@@ -3,7 +3,6 @@ using ProjectManagement.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Text.Json.Serialization;
 namespace ProjectManagement.Shared.DTO.Calculation.Template
 {
@@ -30,13 +29,13 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     }
     public class NetCalc
     {
-        public NetColor Color { get; set; } = new NetColor();
+        public NetColor Color { get; set; } = new();
         public List<NetColumnState> Columns { get; set; } = TemplateDefaults.NetCalc();
     }
     public class SummarySheet
     {
-        public SummarySheetColor Color { get; set; } = new SummarySheetColor();
-        public List<NetColumnState> Columns { get; set; } = TemplateDefaults.SummarySheet();
+        public SummarySheetColor Color { get; set; } = new();
+        public List<SummarySheetColumnState> Columns { get; set; } = TemplateDefaults.SummarySheet();
     }
     public class TemplateData
     {
@@ -44,17 +43,10 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         [MaxLength(5)] public string Currency { get; set; } = "€";
         [MaxLength(15)] public string DateFormat { get; set; } = "dd.MM.yyyy";
 
-        public List<NetColumnState> NetColumnsToUse { get; set; }
         public NetCalc NetCalc { get; set; } = new NetCalc();
         public SummarySheet SummarySheet { get; set; } = new SummarySheet();
-
-        public TemplateData()
-        {
-            NetColumnsToUse = [.. NetCalc.Columns.Where(x=> x.Visible).OrderBy(x=> x.Order)];
-        }
-
     }
-    public class TemplateListPostDTO: TemplateData
+    public class TemplateListPostDTO : TemplateData
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]

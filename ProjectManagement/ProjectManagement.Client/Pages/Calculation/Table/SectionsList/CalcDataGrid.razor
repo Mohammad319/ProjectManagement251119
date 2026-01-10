@@ -5,6 +5,7 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Repositories.Offer
 @using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.Offer
 @using System.Threading
 @using ProjectManagement.Shared.Enums
@@ -174,17 +175,14 @@
             {
                 <th id="h1" class="draggable-table"></th>
             }
-            @for (int i = 0; i < Template.NetColumnsToUse.Count; i++)
+            @for (int i = 0; i < Template.NetCalc.Columns.Count; i++)
             {
-                if (Template.NetColumnsToUse[i].Visible)
-                {
                     <th id="@("h" + (i + 2))" class="@("colH" + (i + 2)) draggable-table"
-                        style="width:@(Template.NetColumnsToUse[i].Width)px;">
-                        @CalcLoc[Template.NetColumnsToUse[i].Name]
+                        style="width:@(Template.NetCalc.Columns[i].Width)px;">
+                        @CalcLoc[NetColumnLoc.Key[Template.NetCalc.Columns[i].Id]]
                     </th>
-                }
             }
-@*             @foreach (var item in Template.NetColumnsToUse)
+@*             @foreach (var item in Template.NetCalc.Columns)
             {
                 if (item.Visible)
                 {

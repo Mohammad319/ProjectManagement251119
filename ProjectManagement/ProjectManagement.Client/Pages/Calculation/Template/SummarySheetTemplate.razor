@@ -60,7 +60,7 @@
                                 @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <th class="px-2 py-1 font-semibold whitespace-nowrap text-left">
-                                        @CalcLoc[item.Name]
+                                        @CalcLoc[NetColumnLoc.SummaryKey[item.Id]]
                                     </th>
                                 }
                             </tr>
@@ -217,11 +217,11 @@
                                 @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <th class="px-2 py-1 font-semibold whitespace-nowrap text-left">
-                                        @CalcLoc[item.Name]
+                                        @CalcLoc[NetColumnLoc.SummaryKey[item.Id]]
                                     </th>
                                     <th style="width:@(item.Width + "px")"
                                         class="px-2 py-1 font-semibold whitespace-nowrap text-left">
-                                        @CalcLoc[item.Name]
+                                        @CalcLoc[NetColumnLoc.SummaryKey[item.Id]]
                                     </th>
                                 }
                             </tr>
@@ -232,7 +232,7 @@
                                 @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <td class="px-2 py-1 whitespace-nowrap">
-                                        @GetPreviewCellContent(item.Name, isSumRow: false)
+                                        @GetPreviewCellContent(item.Id, isSumRow: false)
                                     </td>
                                 }
                             </tr>
@@ -242,7 +242,7 @@
                                 @foreach (var item in Temp.SummarySheet.Columns)
                                 {
                                     <td class="px-2 py-1 whitespace-nowrap">
-                                        @GetPreviewCellContent(item.Name, isSumRow: true)
+                                        @GetPreviewCellContent(item.Id, isSumRow: true)
                                     </td>
                                 }
                             </tr>
@@ -262,18 +262,18 @@
     /// نص بسيط لكل خلية في المعاينة، حسب رقم العمود ونوع الصف (فكتور / مجموع)
     /// حتى تعطي إحساس حقيقي بشكل الورقة
     /// </summary>
-    private string GetPreviewCellContent(string titleKey, bool isSumRow)
+    private string GetPreviewCellContent(SummarySheetColumnId titleKey, bool isSumRow)
     {
-        var title = CalcLoc[titleKey];
+        var title = NetColumnLoc.SummaryKey[titleKey];// CalcLoc[titleKey];
 
         if (isSumRow)
         {
             // صف المجموع
-            if (titleKey.Contains("Name", StringComparison.OrdinalIgnoreCase))
+            if (title.Contains("Name", StringComparison.OrdinalIgnoreCase))
                 return $"{title} (Total)";
-            if (titleKey.Contains("Cost", StringComparison.OrdinalIgnoreCase))
+            if (title.Contains("Cost", StringComparison.OrdinalIgnoreCase))
                 return "123 456.00";
-            if (titleKey.Contains("Factor", StringComparison.OrdinalIgnoreCase))
+            if (title.Contains("Factor", StringComparison.OrdinalIgnoreCase))
                 return "1.23";
 
             return "…";
@@ -281,11 +281,11 @@
         else
         {
             // صف فكتور واحد
-            if (titleKey.Contains("Name", StringComparison.OrdinalIgnoreCase))
+            if (title.Contains("Name", StringComparison.OrdinalIgnoreCase))
                 return $"{title} A";
-            if (titleKey.Contains("Cost", StringComparison.OrdinalIgnoreCase))
+            if (title.Contains("Cost", StringComparison.OrdinalIgnoreCase))
                 return "12 345.00";
-            if (titleKey.Contains("Factor", StringComparison.OrdinalIgnoreCase))
+            if (title.Contains("Factor", StringComparison.OrdinalIgnoreCase))
                 return "1.10";
 
             return "Sample";

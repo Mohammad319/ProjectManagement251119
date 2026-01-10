@@ -28,15 +28,15 @@
         }
     </td>
 
-    @foreach (var i in Template.NetColumnsToUse)
+    @foreach (var col in Template.NetCalc.Columns)
     {
-        @Colmuns[i.Id].TaskRender(Task)
+        @Colmuns[(int)col.Id].TaskRender(Task)
     }
 </tr>
 
 @if (Task.Metadata.UpperNote != null && CalcService.ShowComments)
 {
-    @Note(Task.Metadata.UpperNote, 3, Template.NetColumnsToUse.Count)
+    @Note(Task.Metadata.UpperNote, 3, Template.NetCalc.Columns.Count)
 }
 
 @code {

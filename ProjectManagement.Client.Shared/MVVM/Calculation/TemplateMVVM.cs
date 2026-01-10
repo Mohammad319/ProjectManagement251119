@@ -31,13 +31,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             int startCol = StartCol1;
             var sb = new StringBuilder();
             sb.Append(SetFreezCol(1, 0));
-            for (int i = 0; i < NetColumnsToUse.Count; i++)
+            for (int i = 0; i < NetCalc.Columns.Count; i++)
             {
-                if (NetColumnsToUse[i].Frozen)
+                if (NetCalc.Columns[i].Frozen)
                 {
-                    NetColumnsToUse[i].StartPX = startCol;
-                    startCol = startCol + NetColumnsToUse[i].Width;
-                    sb.Append(SetFreezCol(i + 2, NetColumnsToUse[i].StartPX));
+                    NetCalc.Columns[i].StartPX = startCol;
+                    startCol = startCol + NetCalc.Columns[i].Width;
+                    sb.Append(SetFreezCol(i + 2, NetCalc.Columns[i].StartPX));
                 }
                 sb.Append($" .colH{i + 2}" + "{" +
 "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}");

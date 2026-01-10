@@ -11,11 +11,6 @@
 @if (Temp != null)
 {
     <style>
-        #netTable .inputNr {
-            max-width: 300px;
-            margin: 2px;
-        }
-
         #netTable table {
             border-top: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
             border-left: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
@@ -31,18 +26,33 @@
         #netTable tr {
             border-bottom: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
         }
+
+        #netTable button:disabled {
+            opacity: .35;
+            cursor: not-allowed;
+        }
+
+        .dragHint {
+            cursor: grab;
+            opacity: .5;
+            user-select: none;
+        }
+
+        tr[draggable="true"] .dragHint:active {
+            cursor: grabbing;
+        }
     </style>
 
     <form id="netTable"
           class="pr-2 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
-        <!-- جدول العناصر المرئية -->
-        <div class="flex-1 min-w-[260px] max-w-xl max-h-[60vh] overflow-y-auto overflow-x-auto
-                            bg-white dark:bg-slate-900/60
-                            border border-slate-200 dark:border-slate-700
-                            rounded-lg shadow-sm p-2">
+        <!-- Visible Columns -->
+        <div class="flex-[5] min-w-[330px] max-w-none max-h-[60vh] overflow-y-auto overflow-x-auto
+                bg-white dark:bg-slate-900/60
+                border border-slate-200 dark:border-slate-700
+                rounded-lg shadow-sm p-2">
 
-            <table class="w-full text-xs">
+            <table class="w-full text-xs table-fixed">
                 <thead>
                     <tr>
                         <td colspan="5"
@@ -51,142 +61,182 @@
                         </td>
                     </tr>
                     <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px] text-slate-700 dark:text-slate-200">
-                        <td class="w-[70px] text-center">#</td>
-                        <th class="w-[260px] text-start font-medium">Name</th>
-                        <td class="w-[100px] text-center">Width</td>
-                        <td class="w-[55px] text-center">Freez</td>
-                        <td class="w-[55px] text-center"></td>
+                        <td class="w-[55px] text-center">#</td>
+                        <th class="w-[300px] text-start font-medium">Name</th>
+                        <td class="w-[200px] text-center">Settings</td>
                     </tr>
                 </thead>
 
-                <ReorderableTBody TItem="NetColumnState" Items="Temp.NetCalc.Columns.Where(x => x.Visible).OrderBy(x => x.Order).ToList()"
-                RowClass="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                    <RowTemplate Context="colId">
+                <!-- ✅ سحب وإفلات -->
+                <DragReorderTBody TItem="NetColumnState"
+                                  Items="Temp.NetCalc.Columns"
+                                  RowClass="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+
+                    <RowTemplate Context="col">
+                        @{
+                            var row = Temp.NetCalc.Columns.IndexOf(col);
+                            var isFirst = row <= 0;
+                            var isLast = row >= Temp.NetCalc.Columns.Count - 1;
+
+                            var title = CalcLoc[NetColumnLoc.Key[col.Id]];
+                        }
+
+                        <!-- # + drag -->
                         <td class="text-center align-middle">
-                            <span class="mr-1 cursor-move opacity-40 group-hover:opacity-90 select-none">
-                                ⋮⋮
-                            </span>
-                        @(colId.Id + 1)
+                            <span class="dragHint mr-1">⋮⋮</span>
+                            @(row + 1)
                         </td>
 
-                        <td class="align-middle">
-                            @CalcLoc[colId.Name]
-                        </td>
+                        <!-- Name (fixed 300px + truncate + fixed buttons) -->
+                        <td class="align-middle w-[300px] max-w-[300px]">
+                            <div class="flex items-center gap-2">
 
-                        <!-- العرض -->
-                        <td class="align-middle">
-                            <div class="flex items-center justify-between gap-1">
-                                <input class="@CssClasses.Input.Number w-[60px] text-center"
-                                       type="number"
-                                       @bind="colId.Width" />
+                                <!-- Left buttons (fixed) -->
+                                <div class="flex gap-0.5 shrink-0">
+                                    <button type="button"
+                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            disabled="@isFirst"
+                                            title="Move to top"
+                                            @onclick="() => MoveToTop(col)">
+                                        ⇈
+                                    </button>
+
+                                    <button type="button"
+                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            disabled="@isFirst"
+                                            title="Move up"
+                                            @onclick="() => MoveUp(col)">
+                                        ▲
+                                    </button>
+                                </div>
+
+                                <!-- Text area (flexible, truncates) -->
+                                <div class="flex-1 min-w-0">
+                                    <span class="block truncate font-medium" title="@title">
+                                        @title
+                                    </span>
+                                </div>
+
+                                <!-- Right buttons (fixed) -->
+                                <div class="flex gap-0.5 shrink-0">
+                                    <button type="button"
+                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            disabled="@isLast"
+                                            title="Move down"
+                                            @onclick="() => MoveDown(col)">
+                                        ▼
+                                    </button>
+
+                                    <button type="button"
+                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            disabled="@isLast"
+                                            title="Move to bottom"
+                                            @onclick="() => MoveToBottom(col)">
+                                        ⇊
+                                    </button>
+                                </div>
+
                             </div>
                         </td>
+                        <td class="align-middle">
+                            <div class="flex items-center justify-center gap-2">
 
-                        <!-- Freez -->
-                        <td class="text-center align-middle">
-                                <button type="button" class="@CssClasses.Btn.IconButton.Danger !px-2 !py-1 text-[11px]"
-                                        @onclick="() => colId.Frozen = !colId.Frozen">
-                                    @(colId.Frozen ? "📍" : "📌")
+                                <!-- Width -->
+                                <input class="@CssClasses.Input.Number w-[70px] text-center"
+                                       type="number"
+                                       title="Width"
+                                       @bind="col.Width" />
+
+                                <!-- Freeze -->
+                                <button type="button"
+                                        class="@CssClasses.Btn.IconButton.Danger !px-2 !py-1 text-[11px]"
+                                        title="Freeze column"
+                                        @onclick="() => col.Frozen = !col.Frozen">
+                                    @(col.Frozen ? "📍" : "📌")
                                 </button>
-                    </td>
-                        <td class="text-center align-middle">
-                            <button type="button"
-                                    class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
-                                    @onclick="async () => await RemoveAsync(colId)">
-                                <span>@((MarkupString)Icons.ChevronRight)</span>
-                            </button>
+
+                                <!-- Hide -->
+                                <button type="button"
+                                        class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
+                                        title="Hide column"
+                                        @onclick="async () => await RemoveAsync(col)">
+                                    <span>@((MarkupString)Icons.ChevronRight)</span>
+                                </button>
+
+                            </div>
                         </td>
                     </RowTemplate>
-                </ReorderableTBody>
 
-            @code {
-                private int? rowIndex;
-                protected override void OnParametersSet()
-                {
-                    rowIndex = null;
-                }
-            }
-
-
+                </DragReorderTBody>
             </table>
         </div>
-
-        <!-- جدول العناصر المخفية -->
-        <div class="flex-1 min-w-[230px] max-h-[60vh] max-w-md overflow-auto
-                            bg-white dark:bg-slate-900/60
-                            border border-slate-200 dark:border-slate-700
-                            rounded-lg shadow-sm p-2">
+        <!-- Hidden Columns -->
+        <div class="flex-[4] min-w-[280px] max-w-none max-h-[60vh] overflow-auto
+                bg-white dark:bg-slate-900/60
+                border border-slate-200 dark:border-slate-700
+                rounded-lg shadow-sm p-2">
 
             <table class="w-full text-xs">
                 <thead>
                     <tr>
                         <td colspan="2"
-                            class="bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold
-                                           text-slate-800 dark:text-slate-100">
+                            class="bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-800 dark:text-slate-100">
                             @ResourceApp.hiddenItems
                         </td>
                     </tr>
-                    <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px]
-                                       text-slate-700 dark:text-slate-200">
+                    <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px] text-slate-700 dark:text-slate-200">
                         <th class="w-[50px] text-center"></th>
-                        <th class="w-[260px] text-start font-medium">
-                            Name
-                        </th>
+                        <th class="w-[260px] text-start font-medium">Name</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @if (TableVisible)
                     {
-                    @foreach (var item in Temp.NetCalc.Columns.Where(x=>!x.Visible))
+                        @foreach (var id in HiddenIds)
                         {
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                            <td class="text-center align-middle">
-                                <button type="button"
-                                        class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
-                                        @onclick="async () => await AddAsync(item)">
-                                    <span>@((MarkupString)Icons.ChevronLeft)</span>
-                                </button>
-                            </td>
-                            <td class="align-middle">
-                                @CalcLoc[item.Name]
-                            </td>
-                        </tr>
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                                <td class="text-center align-middle">
+                                    <button type="button"
+                                            class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
+                                            title="Show column"
+                                            @onclick="async () => await AddAsync(id)">
+                                        <span>@((MarkupString)Icons.ChevronLeft)</span>
+                                    </button>
+                                </td>
+                                <td class="align-middle">
+                                    @CalcLoc[NetColumnLoc.Key[id]]
+                                </td>
+                            </tr>
                         }
                     }
                 </tbody>
             </table>
         </div>
 
-        <!-- إعدادات الألوان والحدود -->
-        <div class="w-full md:w-64 lg:w-72 overflow-auto
-                            bg-white dark:bg-slate-900/60
-                            border border-slate-200 dark:border-slate-700
-                            rounded-lg shadow-sm p-3">
+        <!-- Settings -->
+        <div class="flex-[3] min-w-[210px] max-w-none max-h-[60vh] overflow-auto
+                bg-white dark:bg-slate-900/60
+                border border-slate-200 dark:border-slate-700
+                rounded-lg shadow-sm p-3">
 
             <table class="w-full text-xs">
                 <tbody class="align-middle">
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                        @AppFormatResource.borderType
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@AppFormatResource.borderType</td>
                         <td class="py-1 align-middle">
                             <select @bind="Temp.NetCalc.Color.BorderStyle"
                                     class="@CssClasses.Input.Select w-full text-[11px]">
                                 @foreach (var item in TemplateConst.BorderStyles)
                                 {
-                                    <option value="@item">
-                                        <p class="hidden">@Localizer[item]</p>
-                                        @item
-                                    </option>
+                                    <option value="@item">@item</option>
                                 }
                             </select>
                         </td>
                     </tr>
 
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                        @AppFormatResource.bolder
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@AppFormatResource.bolder</td>
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
@@ -195,9 +245,7 @@
                     </tr>
 
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                        @AppFormatResource.font
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@AppFormatResource.font</td>
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
@@ -206,9 +254,7 @@
                     </tr>
 
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                            @ResourceApp.header
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@ResourceApp.header</td>
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
@@ -217,9 +263,7 @@
                     </tr>
 
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                            @ResourceLoc.task
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@ResourceLoc.task</td>
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
@@ -228,9 +272,7 @@
                     </tr>
 
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                            @ResourceLoc.SubTask
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@ResourceLoc.SubTask</td>
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
@@ -239,9 +281,7 @@
                     </tr>
 
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                            @ResourceLoc.resource
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@ResourceLoc.resource</td>
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
@@ -250,9 +290,7 @@
                     </tr>
 
                     <tr>
-                        <td class="py-1 pr-2 align-middle">
-                            @CalcResource.note
-                        </td>
+                        <td class="py-1 pr-2 align-middle">@CalcResource.note</td>
                         <td class="py-1 align-middle">
                             <input type="color"
                                    class="h-7 w-16 rounded border border-slate-300 dark:border-slate-600 bg-transparent"
@@ -266,31 +304,88 @@
 }
 
 @code {
-    [Parameter] public TemplateListPostDTO Temp { get; set; } = new TemplateListPostDTO();
+    [Parameter] public TemplateListPostDTO Temp { get; set; } = new();
 
     private bool TableVisible = true;
 
-    async Task AddAsync(NetColumnState item)
+    private static readonly IReadOnlyDictionary<NetColumnId, NetColumnState> _defaults =
+        TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x);
+
+    private IEnumerable<NetColumnId> HiddenIds =>
+        Enum.GetValues<NetColumnId>()
+            .Where(id => !Temp.NetCalc.Columns.Any(c => c.Id == id));
+
+    private async Task AddAsync(NetColumnId id)
     {
         TableVisible = false;
         await Task.Delay(1);
-        if (item != null)
+
+        if (_defaults.TryGetValue(id, out var def))
         {
-            item.Visible = true;
+            Temp.NetCalc.Columns.Add(new NetColumnState
+            {
+                Id = def.Id,
+                Width = def.Width,
+                Frozen = def.Frozen
+            });
         }
+        else
+        {
+            Temp.NetCalc.Columns.Add(new NetColumnState { Id = id, Width = 80, Frozen = false });
+        }
+
         TableVisible = true;
     }
 
-    async Task RemoveAsync(NetColumnState item)
+    private async Task RemoveAsync(NetColumnState col)
     {
         TableVisible = false;
         await Task.Delay(1);
-        if (item != null)
+
+        if (col != null)
         {
-            item.Frozen = false;
-            item.Visible = false;
+            col.Frozen = false;
+            Temp.NetCalc.Columns.Remove(col);
         }
+
         await Task.Delay(1);
         TableVisible = true;
+    }
+
+    // ===== safe move (no index errors) =====
+    private void MoveUp(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index <= 0) return;
+        list.RemoveAt(index);
+        list.Insert(index - 1, col);
+    }
+
+    private void MoveDown(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index < 0 || index >= list.Count - 1) return;
+        list.RemoveAt(index);
+        list.Insert(index + 1, col);
+    }
+
+    private void MoveToTop(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index <= 0) return;
+        list.RemoveAt(index);
+        list.Insert(0, col);
+    }
+
+    private void MoveToBottom(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index < 0 || index >= list.Count - 1) return;
+        list.RemoveAt(index);
+        list.Add(col);
     }
 }

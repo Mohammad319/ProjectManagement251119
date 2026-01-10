@@ -12,67 +12,74 @@
         max-width: 250px;
     }
 </style>
-    @if (TemplateUpdate != null)
-    {
-        <div>
-            <button type="button" @onclick="HandleSubmitAsync" class="@CssClasses.Btn.Outline.Success" form="netTable" disabled="@btnSubmitDisabled">
-                @ResourceApp.save
-            </button>
-            <button type="button" @onclick="async () => await Callback.InvokeAsync(false)" class="@CssClasses.Btn.Outline.Secondary">
-                @((MarkupString)Icons.Back)
-            </button>
-        </div>
-        <EditForm Model="@TemplateUpdate" id="netTable">
-            <DataAnnotationsValidator />
-            <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-                <div>
-                    <label>@CalcResource.name</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Name" />
-                </div>
-                <div>
-                    <label>@ResourceApp.date</label>
-                    <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="@CssClasses.Input.Text">
-                            <option value="dd.MM.yyyy">dd.MM.yyyy</option>
-                            <option value="dd/MM/yyyy" >dd/MM/yyyy</option>
-                            <option value="dd-MM-yyyy" >dd-MM-yyyy</option>
-                        <option value="dd-MM-yyyy">dd MM yyyy</option>
-                        <option value="dd.MM.yyyy">yyyy.MM.dd</option>
-                        <option value="dd/MM/yyyy">yyyy/MM/dd</option>
-                        <option value="dd-MM-yyyy">yyyy-MM-dd</option>
-                        <option value="dd-MM-yyyy">yyyy MM dd</option>
-                    </InputSelect>
-                </div>
-                <div>
-                    <label>NumberFormat</label>
-                    <InputSelect @bind-Value="TemplateUpdate.MathRound" class="@CssClasses.Input.Text">
-                        <option value="0">0</option>
-                            <option value="1">0.0</option>
-                            <option value="2">0.00</option>
-                            <option value="3">0.000</option>
-                            <option value="4">0.0000</option>
-                            <option value="4">0.00000</option>
-                    </InputSelect>
-                </div>
-                <div>
-                    <label>@CalcResource.Currency</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Currency" />
-                </div>
+
+@if (TemplateUpdate != null)
+{
+    <div>
+        <button type="button" @onclick="HandleSubmitAsync" class="@CssClasses.Btn.Outline.Success" form="netTable" disabled="@btnSubmitDisabled">
+            @ResourceApp.save
+        </button>
+        <button type="button" @onclick="async () => await Callback.InvokeAsync(false)" class="@CssClasses.Btn.Outline.Secondary">
+            @((MarkupString)Icons.Back)
+        </button>
+    </div>
+
+    <EditForm Model="@TemplateUpdate" id="netTable">
+        <DataAnnotationsValidator />
+        <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
+            <div>
+                <label>@CalcResource.name</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Name" />
             </div>
-          
-                    <NelCalculationTemplate2 Temp="TemplateUpdate"></NelCalculationTemplate2>
-                    <SummarySheetTemplate ></SummarySheetTemplate>
-        </EditForm>
-    }
+            <div>
+                <label>@ResourceApp.date</label>
+                <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="@CssClasses.Input.Text">
+                    <option value="dd.MM.yyyy">dd.MM.yyyy</option>
+                    <option value="dd/MM/yyyy">dd/MM/yyyy</option>
+                    <option value="dd-MM-yyyy">dd-MM-yyyy</option>
+                    <option value="dd-MM-yyyy">dd MM yyyy</option>
+                    <option value="dd.MM.yyyy">yyyy.MM.dd</option>
+                    <option value="dd/MM/yyyy">yyyy/MM/dd</option>
+                    <option value="dd-MM-yyyy">yyyy-MM-dd</option>
+                    <option value="dd-MM-yyyy">yyyy MM dd</option>
+                </InputSelect>
+            </div>
+            <div>
+                <label>NumberFormat</label>
+                <InputSelect @bind-Value="TemplateUpdate.MathRound" class="@CssClasses.Input.Text">
+                    <option value="0">0</option>
+                    <option value="1">0.0</option>
+                    <option value="2">0.00</option>
+                    <option value="3">0.000</option>
+                    <option value="4">0.0000</option>
+                    <option value="4">0.00000</option>
+                </InputSelect>
+            </div>
+            <div>
+                <label>@CalcResource.Currency</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Currency" />
+            </div>
+        </div>
+
+        <NelCalculationTemplate2 Temp="TemplateUpdate"></NelCalculationTemplate2>
+
+        <!-- كان ناقص Temp -->
+        <SummarySheetTemplate Temp="TemplateUpdate"></SummarySheetTemplate>
+    </EditForm>
+}
+
 @code {
     TemplateListPostDTO TemplateUpdate = new();
     [Parameter] public TemplateMVVM TempForm { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
     bool btnSubmitDisabled = false;
+
     protected override void OnInitialized()
     {
         TempForm.CopyPropertiesTo(TemplateUpdate);
     }
+
     async Task HandleSubmitAsync()
     {
         bool refresh = false;

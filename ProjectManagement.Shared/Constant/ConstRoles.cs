@@ -1,149 +1,372 @@
-﻿using System.Collections.Generic;
+﻿using ProjectManagement.Shared.DTO.Calculation.Template;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Reflection;
+using System.Text.Json.Serialization;
+
+namespace ProjectManagement.Shared.DTO.Calculation.Template
+{
+    public enum NetColumnId
+    {
+        [Display(Name = "code")]
+        Code = 0,
+
+        [Display(Name = "active")]
+        Active = 1,
+
+        [Display(Name = "account")]
+        Account = 2,
+
+        [Display(Name = "name")]
+        Name = 3,
+
+        [Display(Name = "status")]
+        Status = 4,
+
+        [Display(Name = "resourceTypeSystem")]
+        ResourceTypeSystem = 5,
+
+        [Display(Name = "resourceType")]
+        ResourceType = 6,
+
+        [Display(Name = "resourceSort")]
+        ResourceSort = 7,
+
+        [Display(Name = "quantity")]
+        Quantity = 8,
+
+        [Display(Name = "unit")]
+        Unit = 9,
+
+        [Display(Name = "cost")]
+        Cost = 10,
+
+        [Display(Name = "changeFactor1")]
+        ChangeFactor1 = 11,
+
+        [Display(Name = "changeFactor2")]
+        ChangeFactor2 = 12,
+
+        [Display(Name = "waste")]
+        Waste = 13,
+
+        [Display(Name = "cap")]
+        Cap = 14,
+
+        [Display(Name = "baseCost")]
+        BaseCost = 15,
+
+        [Display(Name = "opportunity")]
+        Opportunity = 16,
+
+        [Display(Name = "netCostQ")]
+        NetCostQ = 17,
+
+        [Display(Name = "totalNetCost")]
+        TotalNetCost = 18,
+
+        [Display(Name = "priceQTax")]
+        PriceQTax = 19,
+
+        [Display(Name = "priceQ")]
+        PriceQ = 20,
+
+        [Display(Name = "priceTotaly")]
+        PriceTotaly = 21,
+
+        [Display(Name = "priceTotallyTax")]
+        PriceTotallyTax = 22,
+
+        [Display(Name = "factor")]
+        Factor = 23,
+
+        [Display(Name = "minPrice")]
+        MinPrice = 24,
+
+        [Display(Name = "ceilingPrice")]
+        CeilingPrice = 25,
+
+        [Display(Name = "priceSub")]
+        PriceSub = 26,
+
+        [Display(Name = "priceTotalSub")]
+        PriceTotalSub = 27,
+
+        [Display(Name = "diff")]
+        Diff = 28,
+
+        [Display(Name = "responsible")]
+        Responsible = 29,
+
+        [Display(Name = "Co2")]
+        Co2 = 30,
+
+        [Display(Name = "totalCo2")]
+        TotalCo2 = 31,
+
+        [Display(Name = "Actually quantity")]
+        ActuallyQuantity = 32,
+
+        [Display(Name = "Worked Q")]
+        WorkedQ = 33,
+
+        [Display(Name = "Worked Q (%)")]
+        WorkedQPercent = 34,
+
+        [Display(Name = "Price Actually quantity")]
+        PriceActuallyQuantity = 35,
+
+        [Display(Name = "Price Worked Q")]
+        PriceWorkedQ = 36,
+
+        [Display(Name = "Price sub Tax")]
+        PriceSubTax = 37,
+
+        [Display(Name = "Price Actually quantity Tax")]
+        PriceActuallyQuantityTax = 38,
+
+        [Display(Name = "Price Worked Q Tax")]
+        PriceWorkedQTax = 39,
+
+        [Display(Name = "note")]
+        Note = 40
+    }
+
+    public enum SummarySheetColumnId
+        {
+            [Display(Name = "name")]
+            Name = 0,
+
+            [Display(Name = "sort")]
+            Sort = 1,
+
+            [Display(Name = "netCal")]
+            NetCal = 2,
+
+            [Display(Name = "netCalOH")]
+            NetCalOH = 3,
+
+            [Display(Name = "sum")]
+            Sum = 4,
+
+            [Display(Name = "earnings")]
+            Earnings = 5,
+
+            [Display(Name = "ev")]
+            Ev = 6,
+
+            [Display(Name = "price")]
+            Price = 7,
+
+            [Display(Name = "priceOG")]
+            PriceOG = 8,
+
+            // كان الاسم فارغ سابقاً
+            [Display(Name = "")]
+            Empty = 9,
+
+            [Display(Name = "keyValue")]
+            KeyValue = 10,
+
+            [Display(Name = "kv")]
+            Kv = 11,
+
+            [Display(Name = "unit")]
+            Unit = 12,
+
+            [Display(Name = "OH")]
+            OH = 13,
+
+            [Display(Name = "factor")]
+            Factor = 14
+        }
+
+    public class TEmpBase {
+        public static readonly Dictionary<NetColumnId, string> CalcNetLoc = new()
+{
+    { NetColumnId.Code, "code" },
+    { NetColumnId.Active, "active" },
+    { NetColumnId.Account, "account" },
+    { NetColumnId.Name, "name" },
+    { NetColumnId.Status, "status" },
+    { NetColumnId.ResourceTypeSystem, "resourceTypeSystem" },
+    { NetColumnId.ResourceType, "resourceType" },
+    { NetColumnId.ResourceSort, "resourceSort" },
+    { NetColumnId.Quantity, "quantity" },
+    { NetColumnId.Unit, "unit" },
+    { NetColumnId.Cost, "cost" },
+    { NetColumnId.ChangeFactor1, "changeFactor1" },
+    { NetColumnId.ChangeFactor2, "changeFactor2" },
+    { NetColumnId.Waste, "waste" },
+    { NetColumnId.Cap, "cap" },
+    { NetColumnId.BaseCost, "baseCost" },
+    { NetColumnId.Opportunity, "opportunity" },
+    { NetColumnId.NetCostQ, "netCostQ" },
+    { NetColumnId.TotalNetCost, "totalNetCost" },
+    { NetColumnId.PriceQTax, "priceQTax" },
+    { NetColumnId.PriceQ, "priceQ" },
+    { NetColumnId.PriceTotaly, "priceTotaly" },
+    { NetColumnId.PriceTotallyTax, "priceTotallyTax" },
+    { NetColumnId.Factor, "factor" },
+    { NetColumnId.MinPrice, "minPrice" },
+    { NetColumnId.CeilingPrice, "ceilingPrice" },
+    { NetColumnId.PriceSub, "priceSub" },
+    { NetColumnId.PriceTotalSub, "priceTotalSub" },
+    { NetColumnId.Diff, "diff" },
+    { NetColumnId.Responsible, "responsible" },
+    { NetColumnId.Co2, "Co2" },
+    { NetColumnId.TotalCo2, "totalCo2" },
+    { NetColumnId.ActuallyQuantity, "Actually quantity" },
+    { NetColumnId.WorkedQ, "Worked Q" },
+    { NetColumnId.WorkedQPercent, "Worked Q (%)" },
+    { NetColumnId.PriceActuallyQuantity, "Price Actually quantity" },
+    { NetColumnId.PriceWorkedQ, "Price Worked Q" },
+    { NetColumnId.PriceSubTax, "Price sub Tax" },
+    { NetColumnId.PriceActuallyQuantityTax, "Price Actually quantity Tax" },
+    { NetColumnId.PriceWorkedQTax, "Price Worked Q Tax" },
+    { NetColumnId.Note, "note" },
+};
+        public static readonly Dictionary<SummarySheetColumnId, string> SummaryLoc = new()
+{
+    { SummarySheetColumnId.Name, "name" },
+    { SummarySheetColumnId.Sort, "sort" },
+    { SummarySheetColumnId.NetCal, "netCal" },
+    { SummarySheetColumnId.NetCalOH, "netCalOH" },
+    { SummarySheetColumnId.Sum, "sum" },
+    { SummarySheetColumnId.Earnings, "earnings" },
+    { SummarySheetColumnId.Ev, "ev" },
+    { SummarySheetColumnId.Price, "price" },
+    { SummarySheetColumnId.PriceOG, "priceOG" },
+    { SummarySheetColumnId.Empty, "" },
+    { SummarySheetColumnId.KeyValue, "keyValue" },
+    { SummarySheetColumnId.Kv, "kv" },
+    { SummarySheetColumnId.Unit, "unit" },
+    { SummarySheetColumnId.OH, "OH" },
+    { SummarySheetColumnId.Factor, "factor" },
+};
+    }
+}
+
+namespace ProjectManagement.Shared.DTO.Calculation.Template
+{
+    public static class EnumDisplayExtensions
+    {
+        public static string DisplayKey(this Enum value)
+        {
+            var member = value.GetType().GetMember(value.ToString()).FirstOrDefault();
+            var attr = member?.GetCustomAttribute<DisplayAttribute>();
+            return attr?.Name ?? value.ToString();
+        }
+    }
+    public static class NetColumnLoc
+    {
+        public static readonly IReadOnlyDictionary<NetColumnId, string> Key =
+            Enum.GetValues<NetColumnId>().ToDictionary(x => x, x => x.DisplayKey());
+
+        public static readonly IReadOnlyDictionary<SummarySheetColumnId, string> SummaryKey =
+            Enum.GetValues<SummarySheetColumnId>().ToDictionary(x => x, x => x.DisplayKey());
+    }
+}
+
 
 namespace ProjectManagement.Shared.Constants
 {
-    public enum NetColumn
+    public sealed class NetColumnState2
     {
-        Code = 0,
-        Active = 1,
-        Account = 2,
-        Name = 3,
-        Status = 4,
-        ResourceTypeSystem = 5,
-        ResourceType = 6,
-        ResourceSort = 7,
-        Quantity = 8,
-        Unit = 9,
-        Cost = 10,
-        ChangeFactor1 = 11,
-        ChangeFactor2 = 12,
-        Waste = 13,
-        Cap = 14,
-        BaseCost = 15,
-        Opportunity = 16,
-        NetCostQ = 17,
-        TotalNetCost = 18,
-        PriceQTax = 19,
-        PriceQ = 20,
-        PriceTotaly = 21,
-        PriceTotallyTax = 22,
-        Factor = 23,
-        MinPrice = 24,
-        CeilingPrice = 25,
-        PriceSub = 26,
-        PriceTotalSub = 27,
-        Diff = 28,
-        Responsible = 29,
-        Co2 = 30,
-        TotalCo2 = 31,
+        public NetColumnId Id { get; set; }   // يُحفظ رقمياً تلقائياً
+        public int Width { get; set; }
+        public bool Frozen { get; set; }
 
-        ActuallyQuantity = 32,
-        WorkedQ = 33,
-        WorkedQPercent = 34,
 
-        PriceActuallyQuantity = 35,
-        PriceWorkedQ = 36,
-        PriceSubTax = 37,
-        PriceTotalSubTax = 38,
-        PriceActuallyQuantityTax = 39,
-        PriceWorkedQTax = 40,
-
-        Note = 41
     }
-
     public sealed class NetColumnState
     {
-        public int Id { get; set; }
+        public NetColumnId Id { get; set; }
         public int Width { get; set; }
-        public int Order { get; set; }
         public bool Frozen { get; set; }
-        public string Name { get; set; }
-        public bool Visible { get; set; } = true;
-        public int StartPX { get; set; }
-
-        public NetColumn? Column { get; set; }  // المفتاح الجديد الآمن
-        public bool IsMigrated { get; set; }    // لمعرفة هل انتقلنا للـ Column أم لا
+        [JsonIgnore]public int StartPX { get; set; }
     }
-
+    public sealed class SummarySheetColumnState
+    {
+        public SummarySheetColumnId Id { get; set; }
+        public int Width { get; set; }
+        public bool Frozen { get; set; }
+    }
     public static class TemplateDefaults
     {
         public static List<NetColumnState> NetCalc()
         {
             return
             [
-                new() { Id = 0,  Name = "code",          Order = 0,  Width = 50,  Frozen = false,  Visible = true  },
-            new() { Id = 1,  Name = "active",            Order = 1,  Width = 50,  Frozen = false, Visible = true  },
-            new() { Id = 2,  Name = "account",           Order = 2,  Width = 70,  Frozen = false,  Visible = true  },
-            new() { Id = 3,  Name = "name",              Order = 3,  Width = 120, Frozen = true, Visible = true  },
-            new() { Id = 4,  Name = "status",            Order = 4,  Width = 100, Frozen = false,  Visible = true },
-            new() { Id = 5,  Name = "resourceTypeSystem",Order = 5,  Width = 180, Frozen = false, Visible = true  },
-            new() { Id = 6,  Name = "resourceType",      Order = 6,  Width = 120, Frozen = false, Visible = true  },
-            new() { Id = 7,  Name = "resourceSort",      Order = 7,  Width = 110, Frozen = false, Visible = true  },
-            new() { Id = 8,  Name = "quantity",          Order = 8,  Width = 70,  Frozen = false, Visible = true  },
-            new() { Id = 9,  Name = "unit",              Order = 9,  Width = 45,  Frozen = false, Visible = true  },
-            new() { Id = 10, Name = "cost",              Order = 10, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 11, Name = "changeFactor1",     Order = 11, Width = 125, Frozen = false, Visible = true  },
-            new() { Id = 12, Name = "changeFactor2",     Order = 12, Width = 125, Frozen = false, Visible = true  },
-            new() { Id = 13, Name = "waste",             Order = 13, Width = 55,  Frozen = false, Visible = true  },
-            new() { Id = 14, Name = "cap",               Order = 14, Width = 45,  Frozen = false, Visible = true  },
-            new() { Id = 15, Name = "baseCost",          Order = 15, Width = 85,  Frozen = false, Visible = true  },
-            new() { Id = 16, Name = "opportunity",       Order = 16, Width = 100, Frozen = false, Visible = true  },
-            new() { Id = 17, Name = "netCostQ",          Order = 17, Width = 80,  Frozen = false, Visible = true  },
-            new() { Id = 18, Name = "totalNetCost",      Order = 18, Width = 100, Frozen = false, Visible = true  },
-            new() { Id = 19, Name = "priceQTax",         Order = 19, Width = 90,  Frozen = false, Visible = true  },
-            new() { Id = 20, Name = "priceQ",            Order = 20, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 21, Name = "priceTotaly",       Order = 21, Width = 90,  Frozen = false, Visible = true  },
-            new() { Id = 22, Name = "priceTotallyTax",   Order = 22, Width = 120, Frozen = false, Visible = true  },
-            new() { Id = 23, Name = "factor",            Order = 23, Width = 130, Frozen = false, Visible = true  },
-            new() { Id = 24, Name = "minPrice",          Order = 24, Width = 70,  Frozen = false, Visible = true  },
-            new() { Id = 25, Name = "ceilingPrice",      Order = 25, Width = 100, Frozen = false, Visible = true  },
-            new() { Id = 26, Name = "priceSub",          Order = 26, Width = 80,  Frozen = false, Visible = true  },
-            new() { Id = 27, Name = "priceTotalSub",     Order = 27, Width = 110, Frozen = false, Visible = true  },
-            new() { Id = 28, Name = "diff",              Order = 28, Width = 85,  Frozen = false, Visible = true  },
-            new() { Id = 29, Name = "responsible",       Order = 29, Width = 100, Frozen = false, Visible = true  },
-            new() { Id = 30, Name = "Co2",               Order = 30, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 31, Name = "totalCo2",          Order = 31, Width = 60,  Frozen = false, Visible = true  },
-
-            new() { Id = 32, Name = "Actually quantity", Order = 32, Width = 90,  Frozen = false, Visible = true  },
-            new() { Id = 33, Name = "Worked Q",          Order = 33, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 34, Name = "Worked Q (%)",      Order = 34, Width = 80,  Frozen = false, Visible = true  },
-
-            new() { Id = 35, Name = "Price Actually quantity ",Order = 35, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 36, Name = "Price Worked Q",          Order = 36, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 37, Name = "Price sub Tax",          Order = 37, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 38, Name = "Price Actually quantity Tax",Order = 38, Width = 60,  Frozen = false, Visible = true  },
-            new() { Id = 39, Name = "Price Worked Q Tax",Order = 39, Width = 60,  Frozen = false, Visible = true  },
-
-            new() { Id = 40, Name = "note",              Order = 40, Width = 80,  Frozen = false, Visible = true  },
-        ];
+                new() { Id = NetColumnId.Code, Width = 50, Frozen = false },
+        new() { Id = NetColumnId.Active, Width = 50, Frozen = false },
+        new() { Id = NetColumnId.Account, Width = 70, Frozen = false },
+        new() { Id = NetColumnId.Name,Width = 120, Frozen = true },
+        new() { Id = NetColumnId.Status, Width = 100, Frozen = false },
+        new() { Id = NetColumnId.ResourceTypeSystem, Width = 180, Frozen = false },
+        new() { Id = NetColumnId.ResourceType, Width = 120, Frozen = false },
+        new() { Id = NetColumnId.ResourceSort, Width = 110, Frozen = false },
+        new() { Id = NetColumnId.Quantity, Width = 70, Frozen = false },
+        new() { Id = NetColumnId.Unit, Width = 45, Frozen = false },
+        new() { Id = NetColumnId.Cost, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.ChangeFactor1, Width = 125, Frozen = false },
+        new() { Id = NetColumnId.ChangeFactor2, Width = 125, Frozen = false },
+        new() { Id = NetColumnId.Waste, Width = 55, Frozen = false },
+        new() { Id = NetColumnId.Cap, Width = 45, Frozen = false },
+        new() { Id = NetColumnId.BaseCost, Width = 85, Frozen = false },
+        new() { Id = NetColumnId.Opportunity, Width = 100, Frozen = false },
+        new() { Id = NetColumnId.NetCostQ, Width = 80, Frozen = false },
+        new() { Id = NetColumnId.TotalNetCost, Width = 100, Frozen = false },
+        new() { Id = NetColumnId.PriceQTax,  Width = 90, Frozen = false },
+        new() { Id = NetColumnId.PriceQ, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.PriceTotaly, Width = 90, Frozen = false },
+        new() { Id = NetColumnId.PriceTotallyTax, Width = 120, Frozen = false },
+        new() { Id = NetColumnId.Factor, Width = 130, Frozen = false },
+        new() { Id = NetColumnId.MinPrice, Width = 70, Frozen = false },
+        new() { Id = NetColumnId.CeilingPrice, Width = 100, Frozen = false },
+        new() { Id = NetColumnId.PriceSub, Width = 80, Frozen = false },
+        new() { Id = NetColumnId.PriceTotalSub, Width = 110, Frozen = false },
+        new() { Id = NetColumnId.Diff, Width = 85, Frozen = false },
+        new() { Id = NetColumnId.Responsible, Width = 100, Frozen = false },
+        new() { Id = NetColumnId.Co2, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.TotalCo2, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.ActuallyQuantity, Width = 90, Frozen = false },
+        new() { Id = NetColumnId.WorkedQ, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.WorkedQPercent, Width = 80, Frozen = false },
+        new() { Id = NetColumnId.PriceActuallyQuantity, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.PriceWorkedQ, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.PriceSubTax, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.PriceActuallyQuantityTax, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.PriceWorkedQTax, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.Note, Width = 80, Frozen = false },
+    ];
         }
 
-        public static List<NetColumnState> SummarySheet()
+        public static List<SummarySheetColumnState> SummarySheet()
         {
             return
             [
-                new() { Id = 0,  Name = "name",        Order = 0,  Width = 100, Frozen = true,  Visible = true },
-            new() { Id = 1,  Name = "sort",        Order = 1,  Width = 80,  Frozen = false, Visible = true },
-            new() { Id = 2,  Name = "netCal",      Order = 2,  Width = 60,  Frozen = false, Visible = true },
-            new() { Id = 3,  Name = "netCalOH",    Order = 3,  Width = 60,  Frozen = false, Visible = true },
-            new() { Id = 4,  Name = "sum",         Order = 4,  Width = 60,  Frozen = false, Visible = true },
-            new() { Id = 5,  Name = "earnings",    Order = 5,  Width = 100, Frozen = false, Visible = true },
-            new() { Id = 6,  Name = "ev",          Order = 6,  Width = 60,  Frozen = false, Visible = true },
-            new() { Id = 7,  Name = "price",       Order = 7,  Width = 60,  Frozen = false, Visible = true },
-            new() { Id = 8,  Name = "priceOG",     Order = 8,  Width = 90,  Frozen = false, Visible = true },
-
-            // لاحظ أن العنوان فارغ في SSCTitles
-            new() { Id = 9,  Name = "",            Order = 9,  Width = 80,  Frozen = false, Visible = false },
-
-            new() { Id = 10, Name = "keyValue",    Order = 10, Width = 60,  Frozen = false, Visible = true },
-            new() { Id = 11, Name = "kv",          Order = 11, Width = 60,  Frozen = false, Visible = true },
-            new() { Id = 12, Name = "unit",        Order = 12, Width = 120, Frozen = false, Visible = true },
-            new() { Id = 13, Name = "OH",          Order = 13, Width = 80,  Frozen = false, Visible = true },
-            new() { Id = 14, Name = "factor",      Order = 14, Width = 80,  Frozen = false, Visible = true },
-        ];
+                new() { Id = SummarySheetColumnId.Name, Width = 100, Frozen = true },
+        new() { Id = SummarySheetColumnId.Sort,  Width = 80, Frozen = false },
+        new() { Id = SummarySheetColumnId.NetCal, Width = 60, Frozen = false },
+        new() { Id = SummarySheetColumnId.NetCalOH, Width = 60, Frozen = false },
+        new() { Id = SummarySheetColumnId.Sum, Width = 60, Frozen = false },
+        new() { Id = SummarySheetColumnId.Earnings, Width = 100, Frozen = false },
+        new() { Id = SummarySheetColumnId.Ev, Width = 60, Frozen = false },
+        new() { Id = SummarySheetColumnId.Price, Width = 60, Frozen = false },
+        new() { Id = SummarySheetColumnId.PriceOG, Width = 90, Frozen = false },
+        new() { Id = SummarySheetColumnId.Empty, Width = 80, Frozen = false },
+        new() { Id = SummarySheetColumnId.KeyValue, Width = 60, Frozen = false },
+        new() { Id = SummarySheetColumnId.Kv, Width = 60, Frozen = false },
+        new() { Id = SummarySheetColumnId.Unit, Width = 120, Frozen = false },
+        new() { Id = SummarySheetColumnId.OH, Width = 80, Frozen = false },
+        new() { Id = SummarySheetColumnId.Factor, Width = 80, Frozen = false },
+    ];
         }
-    
-}
+
+    }
 
 }
 

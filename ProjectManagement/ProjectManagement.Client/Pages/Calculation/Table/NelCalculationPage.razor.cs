@@ -48,7 +48,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
                 // حساب رقم العمود الفعلي حسب NetOrder
                 //int colIndex = Template.NetOrder[headerIndex - 2];
                // Template.NetWidth[colIndex] = newWidth;
-                Template?.NetColumnsToUse?.FirstOrDefault(c => c.Id == headerIndex)?.Width = newWidth;
+                //نةمنىمTemplate?.NetColumnsToUse?.FirstOrDefault(c => c.Id == headerIndex)?.Width = newWidth;
                 if (Calc?.TemplateId > 0)
                 {
                     Template?.StyleNetCalc = "";
