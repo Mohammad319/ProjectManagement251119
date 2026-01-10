@@ -252,7 +252,11 @@
     {
         Calc.AllFlatItems = Calc.BuildFlatList(Calc.Tasks.Where(x => x.TaskId == null)).ToList();
         if (virtualizeComponent != null)
+        {
             await virtualizeComponent.RefreshDataAsync();
+            return;
+        }
+
         StateHasChanged();
     }
 
@@ -305,9 +309,17 @@
 
     private ValueTask<ItemsProviderResult<FlatItem>> LoadItems(ItemsProviderRequest request)
     {
-        var items = Calc.AllFlatItems.Skip(request.StartIndex).Take(request.Count).ToList();
+        var totalCount = Calc.AllFlatItems.Count;
+        if (request.StartIndex >= totalCount)
+        {
+            return new ValueTask<ItemsProviderResult<FlatItem>>(
+                new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), totalCount));
+        }
+
+        var count = Math.Min(request.Count, totalCount - request.StartIndex);
+        var items = Calc.AllFlatItems.GetRange(request.StartIndex, count);
         return new ValueTask<ItemsProviderResult<FlatItem>>(
-            new ItemsProviderResult<FlatItem>(items, Calc.AllFlatItems.Count));
+            new ItemsProviderResult<FlatItem>(items, totalCount));
     }
 
     protected void HandleKeyDown(KeyboardEventArgs e)

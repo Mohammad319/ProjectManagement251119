@@ -98,38 +98,45 @@
     // Type الخاص بالتبويب الحالي (DynamicComponent)
     private Type Tab { get; set; } = typeof(NelCalculationPage);
 
+    private readonly List<BlazorMHD.UI.Core.Navigation.TabItem> _tabs = new();
+
     // قائمة التابات المستخدمة في MhdTabs (نستخدم Text فقط – Content نتركه null)
-    private List<BlazorMHD.UI.Core.Navigation.TabItem> Tabs => new()
+    private IReadOnlyList<BlazorMHD.UI.Core.Navigation.TabItem> Tabs => _tabs;
+
+    protected override void OnInitialized()
     {
-        new ()
+        _tabs.AddRange(new[]
         {
-            Key = "netCal",
-            Text = CalcResource.netCal
-        },
-        new ()
-        {
-            Key = "offers",
-            Text = ResourceLoc.offer
-        },
-        new ()
-        {
-            Key = "hourlyPrice",
-            Text = CalcResource.hourlyPriceList
-        },
-        new ()
-        {
-            Key = "summary",
-            Text = ResourceLoc.summarySheet
-        },
-        new ()
-        {
-            Key = "opportunity",
-            Text = ResourceLoc.opportunitiesRisks
-        },
-        new ()
-        {
-            Key = "chart",
-            Text = "Chart"
-        }
-    };
+            new BlazorMHD.UI.Core.Navigation.TabItem
+            {
+                Key = "netCal",
+                Text = CalcResource.netCal
+            },
+            new BlazorMHD.UI.Core.Navigation.TabItem
+            {
+                Key = "offers",
+                Text = ResourceLoc.offer
+            },
+            new BlazorMHD.UI.Core.Navigation.TabItem
+            {
+                Key = "hourlyPrice",
+                Text = CalcResource.hourlyPriceList
+            },
+            new BlazorMHD.UI.Core.Navigation.TabItem
+            {
+                Key = "summary",
+                Text = ResourceLoc.summarySheet
+            },
+            new BlazorMHD.UI.Core.Navigation.TabItem
+            {
+                Key = "opportunity",
+                Text = ResourceLoc.opportunitiesRisks
+            },
+            new BlazorMHD.UI.Core.Navigation.TabItem
+            {
+                Key = "chart",
+                Text = "Chart"
+            }
+        });
+    }
 }
