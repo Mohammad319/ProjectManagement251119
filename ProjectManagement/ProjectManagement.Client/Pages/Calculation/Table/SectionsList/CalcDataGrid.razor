@@ -1,16 +1,17 @@
-﻿﻿﻿@using Microsoft.Extensions.Localization
+﻿@using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @using Calculation.Table.Header
+@using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Repositories.Offer
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.Offer
-@using System.Threading
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 @inject IStringLocalizer<CalcResource> CalcLoc
+@inject IJSRuntime JS
 
 <style>
     @Template.StyleNetCalc
@@ -23,7 +24,6 @@
         font-size: 12px;
     }
 
-
     .divNetCalc td input:focus {
         outline: none;
         border-color: var(--net-border-color);
@@ -34,7 +34,6 @@
         cursor: grabbing;
     }
 
-    /* مقبض تغيير عرض الأعمدة */
     .resizer {
         position: absolute;
         top: 0;
@@ -49,7 +48,6 @@
             border-right: 2px solid #aba8a6;
         }
 
-    /* ملاحظات الجدول */
     .netNote {
         background-color: var(--net-note-color);
         font-style: italic;
@@ -81,7 +79,6 @@
             border-right: none !important;
             padding: 0 2px;
             line-height: 15px;
-            /* vertical-align: middle; */
         }
 
         .divNetCalc th {
@@ -118,19 +115,16 @@
         font-variant-numeric: tabular-nums;
     }
 
-    /* تأثير هادئ عند المرور على السطر */
     .divNetCalc tbody tr:hover {
         background-color: rgba(0, 0, 0, 0.03);
         transition: background-color 120ms ease-out;
     }
 
-    /* خلايا العمود الأول (NettdDiv) – شريط جانبي أنظف */
     .NettdDiv {
         background-color: #ffffff;
         border-right: 1px solid var(--net-border-color);
     }
 
-    /* جدول قابل للسحب/الترتيب */
     .resizable-table {
         border-radius: 4px;
     }
@@ -155,59 +149,64 @@
             }
 
     .divNetCalc tbody tr:hover td {
-        /* لو تحب تضيف ظل بسيط للصف بالكامل */
         box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.5);
     }
-
 </style>
 
-<table tabindex="0" @onkeydown="HandleKeyDown" @onkeyup="TableRenderHelpers.HandleKeyUp" id="resizeMe"
-       class="resizable-table" style="position:relative;table-layout:fixed;margin:0px;">
+<table tabindex="0"
+       @onkeydown="HandleKeyDown"
+       @onkeyup="TableRenderHelpers.HandleKeyUp"
+       id="resizeMe"
+       class="resizable-table"
+       style="position:relative;table-layout:fixed;margin:0px;">
     <thead>
         <tr id="header-row">
             @if (TH1ISvisible)
             {
-                <th @key="Template.StartCol1" id="h1" class="draggable-table" style="width:@(Template.StartCol1 + "px;")">
-                    <span role="button" @onclick="ShFilter" class="text-outline-info">@((MarkupString)Icons.Filter)</span>
+                <th @key="Template.StartCol1"
+                    id="h1"
+                    class="draggable-table"
+                    style="width:@(Template.StartCol1 + "px;")">
+                    <span role="button" @onclick="ShFilter" class="text-outline-info">
+                        @((MarkupString)Icons.Filter)
+                    </span>
                 </th>
             }
             else
             {
                 <th id="h1" class="draggable-table"></th>
             }
+
             @for (int i = 0; i < Template.NetCalc.Columns.Count; i++)
             {
-                <th id="@("h" + (i + 2))" class="@("colH" + (i + 2)) draggable-table"
+                <th id="@("h" + (i + 2))"
+                    class="@("colH" + (i + 2)) draggable-table"
                     style="width:@(Template.NetCalc.Columns[i].Width)px;">
                     @CalcLoc[NetColumnLoc.Key[Template.NetCalc.Columns[i].Id]]
                 </th>
             }
-            @*             @foreach (var item in Template.NetCalc.Columns)
-            {
-                if (item.Visible)
-                {
-                    <th id="@("h" + (item.Id + 2))" class="@("colH" + (item.Id + 2)) draggable-table"
-                        style="width:@(item.Width)px;">
-                        @CalcLoc[item.Name]
-                    </th>
-                }
-            } *@
         </tr>
     </thead>
+
     <tbody>
         @if (Calc.FilterVM != null)
         {
             <ProjectManagement.Client.Pages.Calculation.Table.Header.TableHeaderFilterDiv />
         }
+
         <Virtualize @ref="virtualizeComponent"
-                    SpacerElement="tr" TItem="FlatItem" Context="item" ItemsProvider="LoadItems"
-                    ItemSize="22" OverscanCount="10">
+                    SpacerElement="tr"
+                    TItem="FlatItem"
+                    Context="item"
+                    ItemsProvider="LoadItems"
+                    ItemSize="22"
+                    OverscanCount="10">
             <ItemContent>
                 @if (item.IsTask && Calc.ShowTasks)
                 {
-                    <TaskRowComponent OnContextClick="UoWService.Task.ContextMenu"
+                    <TaskRowComponent @key="item.Key"
+                                      OnContextClick="UoWService.Task.ContextMenu"
                                       OnClick="OnClick"
-                                      @key="item.VersionKey"
                                       Task="item.Task"
                                       ActiveParent="true"
                                       OnCollapseToggle="ToggleCollSpan"
@@ -217,7 +216,7 @@
                 }
                 else if (item.IsResource && Calc.ShowResources)
                 {
-                    <ResourceRowComponent @key="item.VersionKey"
+                    <ResourceRowComponent @key="item.Key"
                                           Resource="item.Resource"
                                           Left="@(item.Depth * 10)"
                                           Colmuns="Columns" />
@@ -229,85 +228,73 @@
 
 @code {
     private Virtualize<FlatItem>? virtualizeComponent;
-    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    private List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>? Columns;
+
+    private bool TH1ISvisible = false;
+
+    private Action? _onChangeHandler;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            // إذا لديك نسخة JS تتطلب DotNetRef في NelCalculationPage خليه هناك فقط.
+            // هنا تستخدم initializeResizableColumns بدون args كما كان عندك.
             await JS.InvokeVoidAsync("initializeResizableColumns");
         }
-    }
-    private List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>? Columns;
-
-    bool TH1ISvisible = false;
-
-    private Action? _onChangeHandler;
-
-    void OnClick(TaskListMVVM task) =>
-        TableRenderHelpers.HandleItemSelected(task.Id, task.Metadata.Quantity, CalculationItemType.task);
-
-
-
-    async Task ForceReload()
-    {
-        Calc.AllFlatItems = Calc.BuildFlatList(Calc.Tasks.Where(x => x.TaskId == null)).ToList();
-        if (virtualizeComponent != null)
-            await virtualizeComponent.RefreshDataAsync();
-        StateHasChanged();
     }
 
     protected override void OnInitialized()
     {
-        _onChangeHandler = () => _ = ForceReload();
+        _onChangeHandler = () => _ = InvokeAsync(ForceReload);
         Calc.OnChangeInCalculation += _onChangeHandler;
 
         Columns = TableRenderHelpers.GetColumns(Calc.Tax, Template.MathRound);
         Template.FreezCol();
         TH1ISvisible = true;
+
+        // بناء أولي
+        Calc.FlatListDirty = true;
+        _ = InvokeAsync(ForceReload);
     }
 
-    private List<FlatItem> BuildFlatChildren(TaskListMVVM parent, int depth)
+    private void OnClick(TaskListMVVM task) =>
+        TableRenderHelpers.HandleItemSelected(task.Id, task.Metadata.Quantity, CalculationItemType.task);
+
+    private async Task ForceReload()
     {
-        var flat = new List<FlatItem>();
-
-        // الموارد
-        if (parent.Resources != null)
+        if (Calc.AllFlatItems == null || Calc.FlatListDirty)
         {
-            flat.AddRange(parent.Resources
-                .Where(r => r.FilterVisible)
-                .Select(r => new FlatItem
-                {
-                    Resource = r,
-                    Depth = depth + 1,
-                }));
+            // ✅ بدون LINQ + يستخدم RootTasks + بناء سريع
+            Calc.AllFlatItems = Calc.BuildFlatList();
+            Calc.FlatListDirty = false;
+
+            if (Template != null && Calc.MaxDepth > 0)
+                Template.StartCol1 = (Calc.MaxDepth * 10) + 15;
         }
 
-        // المهام الفرعية
-        if (parent.Tasks != null)
-        {
-            foreach (var subTask in parent.Tasks.Where(t => t.FilterVisible))
-            {
-                flat.Add(new FlatItem
-                {
-                    Task = subTask,
-                    Depth = depth + 1,
-                });
+        if (virtualizeComponent != null)
+            await virtualizeComponent.RefreshDataAsync();
 
-                if (subTask.CollSpan)
-                {
-                    flat.AddRange(BuildFlatChildren(subTask, depth + 1));
-                }
-            }
-        }
-
-        return flat;
+        await InvokeAsync(StateHasChanged);
     }
 
     private ValueTask<ItemsProviderResult<FlatItem>> LoadItems(ItemsProviderRequest request)
     {
-        var items = Calc.AllFlatItems.Skip(request.StartIndex).Take(request.Count).ToList();
-        return new ValueTask<ItemsProviderResult<FlatItem>>(
-            new ItemsProviderResult<FlatItem>(items, Calc.AllFlatItems.Count));
+        var list = Calc.AllFlatItems;
+        if (list == null || list.Count == 0)
+            return new ValueTask<ItemsProviderResult<FlatItem>>(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), 0));
+
+        int start = request.StartIndex;
+        if (start < 0 || start >= list.Count)
+            return new ValueTask<ItemsProviderResult<FlatItem>>(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), list.Count));
+
+        int count = Math.Min(request.Count, list.Count - start);
+        // GetRange أسرع من Skip/Take/ToList
+        var items = list.GetRange(start, count);
+
+        return new ValueTask<ItemsProviderResult<FlatItem>>(new ItemsProviderResult<FlatItem>(items, list.Count));
     }
 
     protected void HandleKeyDown(KeyboardEventArgs e)
@@ -316,44 +303,29 @@
             TemporaryData.Key = e.Key;
     }
 
-    void ShFilter()
+    private void ShFilter()
     {
         if (Calc.FilterVM == null)
+        {
             Calc.FilterVM = new();
+        }
         else
         {
             CalcService.GetFilter(null);
             Calc.FilterVM = null;
         }
+
+        // الفلتر يغيّر المعروض => بنيوي
+        Calc.NotifyGridRefresh(flatListDirty: true);
     }
 
-    private async Task ToggleCollSpan(TaskListMVVM task)
+    private Task ToggleCollSpan(TaskListMVVM task)
     {
+        // فتح/إغلاق يغيّر المعروض => بنيوي
         task.CollSpan = !task.CollSpan;
 
-        int index = Calc.AllFlatItems.FindIndex(x => x.Task == task);
-        if (index == -1)
-            return;
-
-        if (task.CollSpan)
-        {
-            var children = BuildFlatChildren(task, Calc.AllFlatItems[index].Depth);
-            Calc.AllFlatItems.InsertRange(index + 1, children);
-        }
-        else
-        {
-            int parentDepth = Calc.AllFlatItems[index].Depth;
-            int removeCount = 0;
-            for (int i = index + 1; i < Calc.AllFlatItems.Count; i++)
-            {
-                if (Calc.AllFlatItems[i].Depth <= parentDepth)
-                    break;
-                removeCount++;
-            }
-            Calc.AllFlatItems.RemoveRange(index + 1, removeCount);
-        }
-        if (virtualizeComponent != null)
-            await virtualizeComponent.RefreshDataAsync();
+        Calc.NotifyGridRefresh(flatListDirty: true);
+        return Task.CompletedTask;
     }
 
     public void Dispose()

@@ -1,5 +1,4 @@
-﻿
-using BlazorMHD.UI.Core.Services;
+﻿using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
@@ -13,16 +12,42 @@ using ProjectManagement.Shared.DTO.Project;
 
 namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 {
-    public class ResourceService(IResourceRepository Repo, IStorageRepository Storage,
-        FolderState _folderState, MhdServices Mhd, ContextMenuService ContextMenuService,
-        IContextMenuBuilderService context, IOfferRepository Offer, DialogService dialogService) : IDisposable
+    public class ResourceService(
+        IResourceRepository Repo,
+        IStorageRepository Storage,
+        FolderState _folderState,
+        MhdServices Mhd,
+        ContextMenuService ContextMenuService,
+        IContextMenuBuilderService context,
+        IOfferRepository Offer,
+        DialogService dialogService) : IDisposable
     {
+        public static bool AffectsCalculation(ResourceListMVVM oldR, ResourceListMVVM newR)
+        {
+            // عدّل حسب منطقك الحقيقي
+            if (oldR.Quantity != newR.Quantity) return true;
+            if (oldR.AccountId != newR.AccountId) return true;
+            if (oldR.ResourceTypeId != newR.ResourceTypeId) return true;
+            if (oldR.ResourceSortId != newR.ResourceSortId) return true;
+
+            if (oldR.Data?.Quantity != newR.Data?.Quantity) return true;
+            if (oldR.Data?.Cost != newR.Data?.Cost) return true;
+            if (oldR.Data?.BaseCost != newR.Data?.BaseCost) return true;
+            if (oldR.Data?.CapWaste != newR.Data?.CapWaste) return true;
+            if (oldR.Data?.CO2 != newR.Data?.CO2) return true;
+            if (oldR.Data?.ChangeFactor1 != newR.Data?.ChangeFactor1) return true;
+            if (oldR.Data?.ChangeFactor2 != newR.Data?.ChangeFactor2) return true;
+
+            return false;
+        }
+
         public async Task HandleOfferAsync(ResourceListMVVM res)
         {
-            if (res.HasOfferSelected()) await Offer.SetOfferToResourceAsync(res.Id, 0);//Minus
+            if (res.HasOfferSelected())
+                await Offer.SetOfferToResourceAsync(res.Id, 0); // Minus
             else if (!res.HasOffer)
             {
-                int id = await Offer.AddAsync(new PostOfferDTO()
+                _ = await Offer.AddAsync(new PostOfferDTO()
                 {
                     BaseCost = res.BaseCost ?? 0,
                     Cost = res.Cost,
@@ -30,11 +55,13 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 });
             }
         }
+
         public async Task Context(ResourceListMVVM res, int taskId)
         {
             var list = context.BuildResourceContextMenu(res, taskId, () => Remove(res), async () => await Duplicate(res));
             await ContextMenuService.ShowMenuAsync(list);
         }
+
         public async Task Duplicate(ResourceListMVVM dusection)
         {
             PostStorygeDTO post = new()
@@ -48,46 +75,78 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 OldCalcID = _folderState.Calculation.Id,
                 IsOH = _folderState.Calculation.OHFactors
             };
+
             bool result = await Storage.CreateItem(post);
             Mhd.Notifications(ToastType.Delete, result);
         }
 
-        public ResourceListMVVM Get(int id) => _folderState.Calculation.Tasks.SelectMany(x => x.Resources).FirstOrDefault(x => x.Id == id);
+        private ResourceListMVVM? Get(int id)
+        {
+            var calc = _folderState.Calculation;
+            if (calc.TryGetResource(id, out var res))
+                return res;
+
+            // fallback
+            return calc.Tasks.SelectMany(x => x.Resources).FirstOrDefault(x => x.Id == id);
+        }
 
         public void FromOfferHub(OperationType ot, object obj)
         {
+            var calc = _folderState.Calculation;
+
             if (ot == OperationType.Remove)
             {
-                var res = _folderState.Calculation.Tasks.SelectMany(x => x.Resources).FirstOrDefault(x => x.Offers.Any(o => x.Id == int.Parse(obj.ToString())));
-                res?.RemoveOffer(int.Parse(obj.ToString()));
+                if (!int.TryParse(obj?.ToString(), out var offerId))
+                    return;
+
+                // ✅ O(1) بدل SelectMany
+                if (calc.TryGetOffer(offerId, out var offer) && offer != null)
+                {
+                    // نحتاج resource owner لإزالة العرض من قائمته
+                    // بما أن كودك الأصلي ينادي res.RemoveOffer(offerId)، نبحث عن resource عبر OfferId بسرعة:
+                    // (لو عندك Offer يحمل ResourceId استخدمه هنا مباشرة. إن لم يكن، نعمل fallback مرة واحدة)
+                    var res = calc.Tasks.SelectMany(t => t.Resources).FirstOrDefault(r => r.Offers.Any(o => o.Id == offerId));
+                    res?.RemoveOffer(offerId);
+                }
+                else
+                {
+                    // fallback safe
+                    var res = calc.Tasks.SelectMany(t => t.Resources).FirstOrDefault(r => r.Offers.Any(o => o.Id == offerId));
+                    res?.RemoveOffer(offerId);
+                }
             }
             else if (ot == OperationType.Update)
             {
                 HubDataDto list = obj.FromJsonWeb<HubDataDto>();
+
                 if (list.Data != null)
                 {
                     List<ListOfferMVVM> listOO = list.GetData<List<ListOfferMVVM>>();
-                    foreach (var newOffer in listOO)
+
+                    for (int i = 0; i < listOO.Count; i++)
                     {
-                        ListOfferMVVM oldoffer = _folderState.Calculation.Tasks.SelectMany(x => x.Resources).SelectMany(x => x.Offers).FirstOrDefault(x => x.Id == newOffer.Id);
-                        if (oldoffer != null) newOffer.CopyPropertiesTo(oldoffer);
+                        var newOffer = listOO[i];
+
+                        // ✅ O(1)
+                        if (calc.TryGetOffer(newOffer.Id, out var oldOffer) && oldOffer != null)
+                            newOffer.CopyPropertiesTo(oldOffer);
                     }
                 }
                 else
                 {
-                    ResourceListMVVM res = _folderState.Calculation.Tasks.SelectMany(x => x.Resources).FirstOrDefault(x => x.Id == list.ParentId);
-                    if (res != null)
+                    var res = Get(list.ParentId);
+                    if (res == null) return;
+
+                    if (string.IsNullOrEmpty(list.Parent))
+                        res.OfferId = null;
+                    else if (int.TryParse(list.Parent, out int offerID))
                     {
-                        if (string.IsNullOrEmpty(list.Parent)) res.OfferId = null;
-                        else if (int.TryParse(list.Parent, out int offerID))
+                        res.OfferId = offerID;
+                        var off = res.Offers.FirstOrDefault(x => x.Id == res.OfferId);
+                        if (off != null)
                         {
-                            res.OfferId = offerID;
-                            ListOfferMVVM off = res.Offers.FirstOrDefault(x => x.Id == res.OfferId);
-                            if (off != null)
-                            {
-                                res.Data.BaseCost = off.BaseCost;
-                                res.Data.Cost = off.Cost;
-                            }
+                            res.Data.BaseCost = off.BaseCost;
+                            res.Data.Cost = off.Cost;
                         }
                     }
                 }
@@ -95,60 +154,89 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             else if (ot == OperationType.Add)
             {
                 var list = obj.FromJsonWeb<HubDataDto>();
-                var zz = list.GetData<ListOfferMVVM>();
+                var offer = list.GetData<ListOfferMVVM>();
+
                 var res = Get(list.ParentId);
-                res.Offers.Add(zz);
+                if (res == null) return;
+
+                res.Offers.Add(offer);
+
+                // تحديث Offer index فوراً
+                calc.OfferById[offer.Id] = offer;
             }
         }
+
         public bool FromHub(OperationType ot, object obj)
         {
+            var calc = _folderState.Calculation;
+
             if (ot == OperationType.RemoveRange)
             {
                 var rlist = obj.FromJsonWeb<IEnumerable<int>>();
-                _folderState.Calculation.RemoveResources(rlist);
+                calc.RemoveResources(rlist);
             }
             else if (ot == OperationType.Update)
             {
                 var newG = obj.FromJsonWeb<ResourceListMVVM>();
                 var oldRes = Get(newG.Id);
+                if (oldRes == null) return false;
+
+                var affects = AffectsCalculation(oldRes, newG);
+
                 newG.OfferClick = oldRes.OfferClick;
-                if (oldRes != null) newG.CopyPropertiesTo(oldRes);
+                newG.CopyPropertiesTo(oldRes);
+
+                calc.LastHubChangeAffectsCalc |= affects;
+                return true;
             }
             else if (ot == OperationType.Add)
             {
                 var list = obj.FromJsonWeb<HubDataDto>();
-                var zz = list.GetData<ResourceListMVVM>();
-                _folderState.Calculation.Add(zz);
+                var res = list.GetData<ResourceListMVVM>();
+                calc.Add(res);
             }
             else if (ot == OperationType.AddRange)
             {
-                try
-                {
-                    var list = obj.FromJsonWeb<HubDataDto>();
-                    var zz = list.GetData<List<ResourceListMVVM>>();
-                    foreach (var res in zz)
-                        _folderState.Calculation.Add(zz);
-                }
-                catch (Exception ex)
-                {
+                var list = obj.FromJsonWeb<HubDataDto>();
+                var resources = list.GetData<List<ResourceListMVVM>>();
 
-                    Mhd.MessageOk("3", ex.Message + "----" + ex.StackTrace.ToString());
-                }
+                // ✅ إصلاح bug + أسرع
+                calc.AddRangeResources(resources);
             }
             else if (ot == OperationType.MoveRange)
             {
                 var list = obj.FromJsonWeb<Tuple<int, List<int>>>();
                 if (list == null) return false;
-                var task = _folderState.Calculation.Tasks.FirstOrDefault(t => t.Id == list.Item1);
-                if (task == null) return false;
-                var resources = _folderState.Calculation.Tasks.SelectMany(x => x.Resources)
-                    .Where(t => list.Item2.Any(b => t.Id == b)).ToList();
-                if (resources == null) return false;
-                _folderState.Calculation.RemoveResources(list.Item2);
 
-                foreach (var resource in resources) resource.TaskId = list.Item1;
-                task.Resources.AddRange(resources);
+                int targetTaskId = list.Item1;
+                var ids = list.Item2;
+
+                if (!calc.TryGetTask(targetTaskId, out var targetTask) || targetTask == null)
+                    return false;
+
+                // اجلب الموارد من index بدل SelectMany
+                var moved = new List<ResourceListMVVM>(ids.Count);
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    if (calc.TryGetResource(ids[i], out var res) && res != null)
+                        moved.Add(res);
+                }
+
+                calc.RemoveResources(ids);
+
+                targetTask.Resources ??= [];
+                for (int i = 0; i < moved.Count; i++)
+                {
+                    moved[i].TaskId = targetTaskId;
+                    targetTask.Resources.Add(moved[i]);
+
+                    // تحديث index
+                    calc.ResourceById[moved[i].Id] = moved[i];
+                }
+
+                calc.FlatListDirty = true;
             }
+
             return true;
         }
 
@@ -159,6 +247,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             else
                 Mhd.DeleteMessage("", EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. SelectedData.SelectedItems.Select(x => x.Id)])));
         }
+
         public async Task ConfirmedRemoveAsync(List<int> items)
         {
             bool result = await Repo.DeleteAsync(_folderState.Calculation.Id, items);

@@ -135,19 +135,19 @@ namespace ProjectManagement.Client.Services.Calculation
         void UnSelectedAll()
         {
             SelectedData.Reset();
-            CalcService.Calculation.RefreshCalculation();
+            CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
         }
 
         void ItemsOnlyActive()
         {
             CalcService.Calculation.OnlyActive = !CalcService.Calculation.OnlyActive;
-            CalcService.Calculation.RefreshCalculation();
+            CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
         }
 
         void ItemsOnlyOH()
         {
             CalcService.Calculation.OHFactors = !CalcService.Calculation.OHFactors;
-            CalcService.Calculation.RefreshCalculation();
+            CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
         }
 
         void ImportFromFile() =>

@@ -107,7 +107,7 @@
 </div>
 
 @code {
-    [Parameter] public List<TabItem> Items { get; set; } = new();
+    [Parameter] public IReadOnlyList<TabItem> Items { get; set; } = default!;
 
     [Parameter] public string? ActiveKey { get; set; }
     [Parameter] public EventCallback<string?> ActiveKeyChanged { get; set; }

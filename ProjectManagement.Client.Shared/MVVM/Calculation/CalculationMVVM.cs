@@ -1,10 +1,12 @@
 ﻿using ProjectManagement.Client.Shared.Model.Project.Calculation;
+using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Client.Shared.ViewModel;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
@@ -13,118 +15,64 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public bool IsDragOver { get; set; }
     }
 
-
-    public class FlatItem
+    public readonly record struct FlatItem(
+        int Index,
+        TaskListMVVM? Task,
+        ResourceListMVVM? Resource,
+        int Depth)
     {
-        public int Index { get; set; } // سنستخدمه لرقم السطر
+        public bool IsTask => Task is not null;
+        public bool IsResource => Resource is not null;
 
-        public TaskListMVVM Task { get; set; }
-        public ResourceListMVVM Resource { get; set; }
+        // مفتاح سريع وثابت لـ Virtualize و @key
+        public long Key =>
+            Task is not null ? (1L << 60) | (uint)Task.Id :
+            Resource is not null ? (2L << 60) | (uint)Resource.Id :
+            0;
 
-        public bool IsTask => Task != null;
-        public bool IsResource => Resource != null;
-
-        public int Depth { get; set; }  // للتحكم في المسافة البادئة Left
-
-        // تحسين: توليد الـ Key مرة واحدة فقط، وعدم إنشاء Guid في كل قراءة
-        private string _versionKey;
-        public string VersionKey
-        {
-            get
-            {
-                if (_versionKey != null)
-                    return _versionKey;
-
-                if (Task is not null)
-                    _versionKey = $"T_{Task.Id}";
-                else if (Resource is not null)
-                    _versionKey = $"R_{Resource.Id}";
-                else
-                    _versionKey = Guid.NewGuid().ToString();
-
-                return _versionKey;
-            }
-        }
+        public string VersionKey =>
+            Task is not null ? $"T_{Task.Id}" :
+            Resource is not null ? $"R_{Resource.Id}" :
+            "X";
     }
-
 
     public class CalculationMVVM
     {
-        public void BuildTaskHierarchy()
-        {
-            var lookup = Tasks.Where(x => x.TaskId != null).GroupBy(x => x.TaskId).ToDictionary(g => g.Key, g => g.ToList());
-            foreach (var task in Tasks)
-            {
-                if (lookup.TryGetValue(task.Id, out var children)) task.Tasks = children;
-                else task.Tasks = [];
-            }
-        }
-        public List<FlatItem> AllFlatItems { get; set; }
-        public List<FlatItem> BuildFlatList(IEnumerable<TaskListMVVM> tasks)
-        {
-            var flat = new List<FlatItem>();
-            int index = 0;
-            BuildFlatListInternal(tasks, depth: 0, flat, ref index);
-            return flat;
-        }
+        [JsonIgnore] public bool LastHubChangeAffectsCalc { get; set; } = false;
+        [JsonIgnore] public bool FlatListDirty { get; set; } = true;
 
-        private void BuildFlatListInternal(
-            IEnumerable<TaskListMVVM> tasks,
-            int depth,
-            List<FlatItem> flat,
-            ref int index)
-        {
-            foreach (var task in tasks.Where(x =>
-                         x.FilterVisible &&
-                         x.IsOH == OHFactors &&
-                         (!OnlyActive || x.Active)))
-            {
-                // صف المهمة نفسها
-                flat.Add(new FlatItem
-                {
-                    Task = task,
-                    Depth = depth,
-                    Index = index++
-                });
+        // ParentId -> Children Tasks
+        [JsonIgnore] public Dictionary<int, List<TaskListMVVM>> ChildrenLookup { get; private set; } = new();
 
-                // لو المهمة ليست مفتوحة (CollSpan=false) لا نضيف أولادها
-                if (!task.CollSpan)
-                    continue;
+        // Root tasks (TaskId == null)
+        [JsonIgnore] public List<TaskListMVVM> RootTasks { get; private set; } = new();
 
-                // الموارد التابعة للمهمة
-                if (task.Resources != null)
-                {
-                    foreach (var r in task.Resources.Where(r => r.FilterVisible))
-                    {
-                        flat.Add(new FlatItem
-                        {
-                            Resource = r,
-                            Depth = depth + 1,
-                            Index = index++
-                        });
-                    }
-                }
+        // أقصى عمق مستخدم لحساب عرض العمود الأول
+        [JsonIgnore] public int MaxDepth { get; private set; }
 
-                // المهام الفرعية
-                if (task.Tasks != null && task.Tasks.Count > 0)
-                {
-                    BuildFlatListInternal(task.Tasks, depth + 1, flat, ref index);
-                }
-            }
-        }
+        // القائمة المسطّحة المستخدمة في Virtualize
+        public List<FlatItem>? AllFlatItems { get; set; }
 
+        // ====== Indexes (أهم تحسين للسرعة) ======
+        [JsonIgnore] public Dictionary<int, TaskListMVVM> TaskById { get; private set; } = new();
+        [JsonIgnore] public Dictionary<int, ResourceListMVVM> ResourceById { get; private set; } = new();
+
+        // OfferId -> Offer (لمنع SelectMany داخل OfferHub)
+        [JsonIgnore] public Dictionary<int, ListOfferMVVM> OfferById { get; private set; } = new();
+
+        // ====== خصائص الحساب ======
         public int Id { get; set; }
         public double Tax { get; set; }
 
-        public string Name { get; set; }
-        public string Code { get; set; }
-        public string Company { get; set; }
-        public string Address { get; set; }
-        public string Customer { get; set; }
-        public string Supervisor { get; set; }
-        public string Inspector { get; set; }
-        public string Compensation { get; set; }
-        public string Contract { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Company { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string Customer { get; set; } = string.Empty;
+        public string Supervisor { get; set; } = string.Empty;
+        public string Inspector { get; set; } = string.Empty;
+        public string Compensation { get; set; } = string.Empty;
+        public string Contract { get; set; } = string.Empty;
 
         public int? TemplateId { get; set; }
 
@@ -135,8 +83,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public bool Tap5 { get; set; } = true;
         public bool Tap6 { get; set; } = true;
 
-        public List<QuanityListDTO> QuanityList { get; set; }
-        public virtual List<TaskListMVVM> Tasks { get; set; }
+        public List<QuanityListDTO> QuanityList { get; set; } = [];
+        public virtual List<TaskListMVVM> Tasks { get; set; } = [];
         public List<Factors> Factors { get; set; } = [];
 
         public double AdditionalCostEarnings { get; set; } = 10;
@@ -150,24 +98,261 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double TenderExcelTax { get; set; }
         public double TenderInclTax { get; set; }
 
-
         public bool OnlyActive { get; set; }
         public bool ShowTasks { get; set; } = true;
         public bool ShowResources { get; set; } = true;
         public bool ShowComment { get; set; } = true;
 
         public bool OHFactors { get; set; }
+
         public List<HourlyPriceListGroupDTO> HourlyPriceList { get; set; } = [];
-        public List<OpportunityModel> Opportunities { get; set; }
+        public List<OpportunityModel> Opportunities { get; set; } = [];
 
         public TemplateMVVM Template { get; set; } = new();
-        public FilterVM FilterVM { get; set; }
-        public event Action OnChangeInCalculation;
-        public void RefreshCalculation()
+        public FilterVM? FilterVM { get; set; }
+
+        // ====== إشعار الجدول بالتحديث ======
+        public event Action? OnChangeInCalculation;
+
+        public void NotifyGridRefresh(bool flatListDirty = false)
         {
+            if (flatListDirty)
+                FlatListDirty = true;
+
             OnChangeInCalculation?.Invoke();
         }
+
+        // ============================================================
+        //  إعادة بناء الشجرة + indexes (يُستدعى عند التغييرات البنيوية)
+        // ============================================================
+        public void RebuildHierarchyAndIndexes()
+        {
+            BuildTaskHierarchy();
+            RebuildIndexes();
+            FlatListDirty = true;
+        }
+
+        // ====== بناء شجرة المهام ======
+        public void BuildTaskHierarchy()
+        {
+            ChildrenLookup = Tasks
+                .Where(x => x.TaskId != null)
+                .GroupBy(x => x.TaskId!.Value)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // ربط children بكل Task
+            for (int i = 0; i < Tasks.Count; i++)
+            {
+                var task = Tasks[i];
+                task.Tasks = ChildrenLookup.TryGetValue(task.Id, out var children)
+                    ? children
+                    : [];
+            }
+
+            RootTasks = Tasks.Where(x => x.TaskId == null).ToList();
+        }
+
+        // ====== بناء indexes ======
+        public void RebuildIndexes()
+        {
+            TaskById = new Dictionary<int, TaskListMVVM>(Tasks.Count);
+            ResourceById = new Dictionary<int, ResourceListMVVM>(Math.Max(16, Tasks.Count * 4));
+            OfferById = new Dictionary<int, ListOfferMVVM>(Math.Max(16, Tasks.Count * 4));
+
+            for (int i = 0; i < Tasks.Count; i++)
+            {
+                var t = Tasks[i];
+                TaskById[t.Id] = t;
+
+                // resources
+                if (t.Resources is not null)
+                {
+                    for (int r = 0; r < t.Resources.Count; r++)
+                    {
+                        var res = t.Resources[r];
+                        ResourceById[res.Id] = res;
+
+                        if (res.Offers is not null)
+                        {
+                            for (int o = 0; o < res.Offers.Count; o++)
+                            {
+                                var off = res.Offers[o];
+                                OfferById[off.Id] = off;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public bool TryGetTask(int id, out TaskListMVVM? task) =>
+            TaskById.TryGetValue(id, out task);
+
+        public bool TryGetResource(int id, out ResourceListMVVM? res) =>
+            ResourceById.TryGetValue(id, out res);
+
+        public bool TryGetOffer(int offerId, out ListOfferMVVM? offer) =>
+            OfferById.TryGetValue(offerId, out offer);
+
+        // ====== عمليات بنيوية تُستخدم من الخدمات ======
+
+        public void AddTasks(IEnumerable<TaskListMVVM> tasks)
+        {
+            Tasks.AddRange(tasks);
+            RebuildHierarchyAndIndexes();
+        }
+
+        public void RemoveTasks(IEnumerable<int> ids)
+        {
+            // إزالة مباشرة من قائمة Tasks (قد تكون كثيرة، لكنه يحدث عادةً أقل من Update)
+            var set = ids is HashSet<int> hs ? hs : new HashSet<int>(ids);
+
+            for (int i = Tasks.Count - 1; i >= 0; i--)
+            {
+                if (set.Contains(Tasks[i].Id))
+                    Tasks.RemoveAt(i);
+            }
+
+            RebuildHierarchyAndIndexes();
+        }
+
+        public void Add(ResourceListMVVM res)
+        {
+            // إضافة مورد إلى task parent
+            if (!TryGetTask(res.TaskId, out var task) || task == null)
+            {
+                // fallback (لو indexes غير جاهزة لأي سبب)
+                task = Tasks.FirstOrDefault(t => t.Id == res.TaskId);
+                if (task == null) return;
+            }
+
+            task.Resources ??= [];
+            task.Resources.Add(res);
+
+            // تحديث indexes بشكل incremental (بدون full rebuild)
+            ResourceById[res.Id] = res;
+            if (res.Offers is not null)
+            {
+                for (int i = 0; i < res.Offers.Count; i++)
+                    OfferById[res.Offers[i].Id] = res.Offers[i];
+            }
+
+            FlatListDirty = true;
+        }
+
+        public void AddRangeResources(IEnumerable<ResourceListMVVM> resources)
+        {
+            foreach (var res in resources)
+                Add(res);
+        }
+
+        public void RemoveResources(IEnumerable<int> ids)
+        {
+            foreach (var id in ids)
+            {
+                if (!TryGetResource(id, out var res) || res == null)
+                    continue;
+
+                // إزالة من parent list
+                if (TryGetTask(res.TaskId, out var task) && task?.Resources is not null)
+                {
+                    for (int i = task.Resources.Count - 1; i >= 0; i--)
+                    {
+                        if (task.Resources[i].Id == id)
+                        {
+                            task.Resources.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+
+                // إزالة من indexes
+                ResourceById.Remove(id);
+
+                if (res.Offers is not null)
+                {
+                    for (int i = 0; i < res.Offers.Count; i++)
+                        OfferById.Remove(res.Offers[i].Id);
+                }
+            }
+
+            FlatListDirty = true;
+        }
+
+        // ====== Invalidate + Calculation ======
+        // بما أنك تحتاج إعادة حساب كاملة عند أي تغيير رقمي:
+        // نُبقي invalidation كامل، لكن ننفذه مرة واحدة بعد تجميع الأحداث (Batching).
+        public void InvalidateAllCaches()
+        {
+            for (int i = 0; i < Tasks.Count; i++)
+            {
+                var t = Tasks[i];
+                t.InvalidateCache();
+
+                if (t.Resources is null) continue;
+                for (int r = 0; r < t.Resources.Count; r++)
+                {
+                    t.Resources[r].InvalidateCache();
+                }
+            }
+        }
+
+        // ====== بناء القائمة المسطّحة ======
+        public List<FlatItem> BuildFlatList()
+        {
+            MaxDepth = 0;
+
+            // capacity تقريبي لتقليل realloc
+            var flat = new List<FlatItem>(Math.Max(256, Tasks.Count * 2));
+
+            int index = 0;
+            BuildFlatListInternal(RootTasks, 0, flat, ref index);
+            return flat;
+        }
+
+        private void BuildFlatListInternal(
+            List<TaskListMVVM> tasks,
+            int depth,
+            List<FlatItem> flat,
+            ref int index)
+        {
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                var task = tasks[i];
+
+                // بدل LINQ Where: if مباشر (أقل GC)
+                if (!task.FilterVisible) continue;
+                if (task.IsOH != OHFactors) continue;
+                if (OnlyActive && !task.Active) continue;
+
+                // صف المهمة
+                flat.Add(new FlatItem(index++, task, null, depth));
+                if (depth > MaxDepth) MaxDepth = depth;
+
+                // لو المهمة مغلقة لا نضيف أولادها
+                if (!task.CollSpan)
+                    continue;
+
+                // الموارد التابعة للمهمة
+                if (task.Resources is not null)
+                {
+                    for (int r = 0; r < task.Resources.Count; r++)
+                    {
+                        var res = task.Resources[r];
+                        if (!res.FilterVisible) continue;
+
+                        flat.Add(new FlatItem(index++, null, res, depth + 1));
+                        if (depth + 1 > MaxDepth) MaxDepth = depth + 1;
+                    }
+                }
+
+                // المهام الفرعية
+                if (task.Tasks is not null && task.Tasks.Count > 0)
+                {
+                    if (depth + 1 > MaxDepth) MaxDepth = depth + 1;
+                    BuildFlatListInternal(task.Tasks, depth + 1, flat, ref index);
+                }
+            }
+        }
     }
-
 }
-

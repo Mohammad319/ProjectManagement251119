@@ -2,24 +2,23 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @inherits AppComponentBase
 
-<tr @key="Task.Id"
-    @onclick="RowClick"
+<tr @onclick="RowClick"
     @oncontextmenu:preventDefault
     @oncontextmenu="RowContext"
     style="@Task.Style(Color, ActiveParent)">
 
     <td>
-        @if ((Task.Resources?.Any() ?? false) || (Task.Tasks?.Any() ?? false))
+        @if ((Task.Resources?.Count > 0) || (Task.Tasks?.Count > 0))
         {
             <span class="
-                    inline-flex items-center justify-center rounded-full
-                    border border-slate-400 dark:border-slate-600
-                    bg-transparent dark:bg-transparent
-                    w-5 h-5 cursor-pointer
-                    transition-all duration-200 ease-out
-                    hover:opacity-70
-                    hover:scale-110
-                    hover:shadow-sm"
+                        inline-flex items-center justify-center rounded-full
+                        border border-slate-400 dark:border-slate-600
+                        bg-transparent dark:bg-transparent
+                        w-5 h-5 cursor-pointer
+                        transition-all duration-200 ease-out
+                        hover:opacity-70
+                        hover:scale-110
+                        hover:shadow-sm"
                   style="margin-left:@(Left + "px;")"
                   @onclick="ToggleCollapse"
                   @onclick:stopPropagation="true">
@@ -34,7 +33,7 @@
     }
 </tr>
 
-@if (Task.Metadata.UpperNote != null && CalcService.ShowComments)
+@if (Task.Metadata?.UpperNote != null && CalcService.ShowComments)
 {
     @Note(Task.Metadata.UpperNote, 3, Template.NetCalc.Columns.Count)
 }
@@ -55,14 +54,26 @@
     private Task RowContext() => OnContextClick.InvokeAsync(Task);
     private Task ToggleCollapse() => OnCollapseToggle.InvokeAsync(Task);
 
-    public static RenderFragment Note(List<string> notes, int col1, int col2) => __builder =>
+    public static RenderFragment Note(List<string> notes, int col1, int col2) => builder =>
     {
+        var seq = 0;
         foreach (var note in notes)
         {
-            <tr class="netNote">
-                <td class="NettdDiv bg-white dark:bg-black" colspan="@col1" style="width:@(TemplateConst.Col0)px;"></td>
-                <td colspan="@col2">@note</td>
-            </tr>
+            builder.OpenElement(seq++, "tr");
+            builder.AddAttribute(seq++, "class", "netNote");
+
+            builder.OpenElement(seq++, "td");
+            builder.AddAttribute(seq++, "class", "NettdDiv bg-white dark:bg-black");
+            builder.AddAttribute(seq++, "colspan", col1);
+            builder.AddAttribute(seq++, "style", $"width:{TemplateConst.Col0}px;");
+            builder.CloseElement();
+
+            builder.OpenElement(seq++, "td");
+            builder.AddAttribute(seq++, "colspan", col2);
+            builder.AddContent(seq++, note);
+            builder.CloseElement();
+
+            builder.CloseElement();
         }
     };
 }

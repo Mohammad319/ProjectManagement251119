@@ -1,96 +1,272 @@
-﻿using ProjectManagement.Client.Shared.MVVM.Calculation;
+﻿using System.Runtime.CompilerServices;
+using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 {
-
     public static class CalcultationExtensions
     {
-        static void InitializeCalculation(CalculationMVVM calc)
+        // مفتاح سريع لتجميع عوامل الموارد (Factor lookup)
+        // SortId عندك غالبًا nullable لذلك نخليه int?
+        private readonly record struct FactorKey(int? SortId, ResourceTypesEnum ResourceType);
+
+        // =============================
+        // ExecuteCalculation (optimized)
+        // =============================
+        public static void ExecuteCalculation(this CalculationMVVM calc)
         {
+            if (calc is null) return;
+
             calc.Factors ??= [];
             calc.QuanityList ??= [];
 
-            foreach (var task in calc.Tasks.Where(x => !x.TaskId.HasValue)) task.CalcVaribles(calc.QuanityList, null);
-            foreach (TaskListMVVM task in calc.Tasks.Where(x => x.Metadata.Type != TaskType.CodeName && x.Resources.Count > 0))
-                foreach (var res in task.Resources)
-                {
-                    res.CalcVaribles(calc?.QuanityList, task?.Metadata?.Quantity, task?.Metadata?.Cap);
+            InitializeCalculationOptimized(calc);
+            ApplyFactorF(calc.Factors);
+            AssignFactorsToResourcesOptimized(calc);
+            FilterFactorsInPlace(calc);
 
-                    if (res.Active)
+            var sum = calc.Sum;
+            if (sum != 0)
+                calc.ProfitDecision = calc.Factors.Sum(x => x.Sum * x.Earnings) / sum;
+            else
+                calc.ProfitDecision = 0;
+        }
+
+        // =========================================================
+        // InitializeCalculationOptimized
+        // =========================================================
+        private static void InitializeCalculationOptimized(CalculationMVVM calc)
+        {
+            var tasks = calc.Tasks;
+            if (tasks is null || tasks.Count == 0)
+                return;
+
+            var quanityList = calc.QuanityList;
+
+            // 1) CalcVaribles للـ root tasks فقط
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                var t = tasks[i];
+                if (!t.TaskId.HasValue)
+                    t.CalcVaribles(quanityList, null);
+            }
+
+            var factors = calc.Factors;
+
+            // index سريع (SortId + ResourceType)
+            var factorIndex = BuildFactorIndex(factors);
+
+            // 2) مرّ على كل Task فيه Resources
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                var task = tasks[i];
+
+                if (task.Metadata?.Type == TaskType.CodeName)
+                    continue;
+
+                var resList = task.Resources;
+                if (resList is null || resList.Count == 0)
+                    continue;
+
+                var taskQty = task.Metadata?.Quantity;
+                var taskCap = task.Metadata?.Cap;
+                var taskIsOH = task.Metadata?.IsOH == true;
+
+                for (int r = 0; r < resList.Count; r++)
+                {
+                    var res = resList[r];
+
+                    res.CalcVaribles(quanityList, taskQty, taskCap);
+
+                    if (!res.Active)
+                        continue;
+
+                    // حاول تطابق دقيق مثل منطقك الأصلي
+                    if (TryGetExactFactor(factors, res, out var existing) && existing is not null)
                     {
-                        Factors? factors = calc?
-                            .Factors?
-                            .FirstOrDefault(x =>
-                                x.SortId == res.ResourceSortId &&
-                                x.ResId == res.ResourceTypeId &&
-                                x.ResourceType == res.ResType
-                            );
-                        if (factors != null)
+                        if (res.ResName != existing.ResName || res.Sort != existing.Sort)
                         {
-                            if (res.ResName != factors.ResName || res.Sort != factors.Sort)
-                            {
-                                factors.ResName = res.ResName;
-                                factors.Sort = res.Sort;
-                            }
-                            factors.AddResValue(task.Metadata.IsOH, res.NetCostTotaly);
+                            existing.ResName = res.ResName;
+                            existing.Sort = res.Sort;
                         }
-                        else calc.Factors.Add(Factors.AddNewFactor(task.Metadata.IsOH, res));
+
+                        existing.AddResValue(taskIsOH, res.NetCostTotaly);
+                    }
+                    else
+                    {
+                        // إنشاء عامل جديد
+                        var newFactor = Factors.AddNewFactor(taskIsOH, res);
+                        factors.Add(newFactor);
+
+                        // تحديث index
+                        var key = new FactorKey(newFactor.SortId, newFactor.ResourceType);
+                        factorIndex[key] = newFactor;
                     }
                 }
+            }
         }
 
-        public static void CalcEarningsForUnlockedRes(this CalculationMVVM Calculation)
+        // =========================================================
+        // CalcEarningsForUnlockedRes (optimized)
+        // =========================================================
+        public static void CalcEarningsForUnlockedRes(this CalculationMVVM calc)
         {
-            double e = ((Calculation.ProfitDecision * Calculation.Sum) - Calculation.Factors.Where(x => x.IsLocked).Sum(x => x.Sum * x.Earnings))
-                / Calculation.Factors.Where(x => !x.IsLocked).Sum(x => x.Sum);
+            if (calc is null) return;
 
-            foreach (Factors item in Calculation.Factors.Where(x => x.EarningsValue > 0 && !x.IsLocked))
-                item.Earnings = e;
-            AssignFactorsToResources(Calculation);
-        }
-
-        public static void AssignFactorsToResources(this CalculationMVVM? calculation)
-        {
-            if (calculation is null)
+            var factors = calc.Factors;
+            if (factors is null || factors.Count == 0)
                 return;
 
-            var factors = calculation.Factors;
-            var tasks = calculation.Tasks;
+            double lockedSumWeighted = 0;
+            double unlockedSum = 0;
 
-            // الجزء الأول: تطبيق FactorF على العوامل ذات التكلفة
-            if (factors is not null)
+            for (int i = 0; i < factors.Count; i++)
             {
-                foreach (var factor in factors.Where(x => x.NetCostTotaly > 0))
-                    factor.FactorF(factors);
+                var f = factors[i];
+                if (f.IsLocked)
+                    lockedSumWeighted += (f.Sum * f.Earnings);
+                else
+                    unlockedSum += f.Sum;
             }
 
-            // إن لم يكن لدينا Tasks أو Factors نخرج
-            if (tasks is null || factors is null)
+            if (unlockedSum == 0)
                 return;
 
-            // الجزء الثاني: ربط Factors بالـ Resources
-            foreach (var resource in tasks
-                .Where(t => t?.Metadata?.Quantity.HasValue == true)
-                .SelectMany(t => t!.Resources ?? Enumerable.Empty<ResourceListMVVM>()))
-            {
-                var factor = factors.FirstOrDefault(x =>
-                    x.SortId == resource.ResourceSortId &&
-                    x.ResourceType == resource.ResType);
+            double e = ((calc.ProfitDecision * calc.Sum) - lockedSumWeighted) / unlockedSum;
 
-                if (factor is not null)
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+                if (!f.IsLocked && f.EarningsValue > 0)
+                    f.Earnings = e;
+            }
+
+            AssignFactorsToResourcesOptimized(calc);
+        }
+
+        // =========================================================
+        // AssignFactorsToResourcesOptimized
+        // - SortId nullable
+        // - ResourceType = ResourceTypesEnum
+        // =========================================================
+        public static void AssignFactorsToResourcesOptimized(this CalculationMVVM calc)
+        {
+            if (calc is null) return;
+
+            var tasks = calc.Tasks;
+            var factors = calc.Factors;
+
+            if (tasks is null || factors is null || factors.Count == 0)
+                return;
+
+            var factorIndex = BuildFactorIndex(factors);
+
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                var t = tasks[i];
+
+                if (t?.Metadata?.Quantity.HasValue != true)
+                    continue;
+
+                var resList = t.Resources;
+                if (resList is null || resList.Count == 0)
+                    continue;
+
+                for (int r = 0; r < resList.Count; r++)
                 {
-                    resource.Factor = factor.Factor;
+                    var res = resList[r];
+                    var key = new FactorKey(res.ResourceSortId, res.ResType);
+
+                    if (factorIndex.TryGetValue(key, out var factor) && factor is not null)
+                    {
+                        res.Factor = factor.Factor;
+                    }
                 }
             }
         }
 
-        public static void ExecuteCalculation(this CalculationMVVM Calculation)
+        // =========================================================
+        // Apply FactorF
+        // =========================================================
+        private static void ApplyFactorF(List<Factors> factors)
         {
-            InitializeCalculation(Calculation);
-            AssignFactorsToResources(Calculation);
-            Calculation.Factors = [.. Calculation.Factors.Where(x => x.NetCostTotaly > 0 || x.NetCostTotalyOH > 0)];
-            Calculation.ProfitDecision = Calculation.Factors.Sum(x => x.Sum * x.Earnings) / Calculation.Sum;
+            if (factors is null || factors.Count == 0)
+                return;
+
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+                if (f.NetCostTotaly > 0)
+                    f.FactorF(factors);
+            }
+        }
+
+        // =========================================================
+        // FilterFactorsInPlace
+        // =========================================================
+        private static void FilterFactorsInPlace(CalculationMVVM calc)
+        {
+            var factors = calc.Factors;
+            if (factors is null || factors.Count == 0)
+                return;
+
+            int write = 0;
+            for (int read = 0; read < factors.Count; read++)
+            {
+                var f = factors[read];
+                if (f.NetCostTotaly > 0 || f.NetCostTotalyOH > 0)
+                    factors[write++] = f;
+            }
+
+            if (write < factors.Count)
+                factors.RemoveRange(write, factors.Count - write);
+        }
+
+        // =========================================================
+        // BuildFactorIndex: (SortId + ResourceType)
+        // SortId nullable
+        // ResourceType = ResourceTypesEnum
+        // =========================================================
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Dictionary<FactorKey, Factors> BuildFactorIndex(List<Factors> factors)
+        {
+            var dict = new Dictionary<FactorKey, Factors>(Math.Max(16, factors.Count * 2));
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+                var key = new FactorKey(f.SortId, f.ResourceType);
+                dict[key] = f;
+            }
+            return dict;
+        }
+
+        // =========================================================
+        // TryGetExactFactor (يحافظ على منطقك الأصلي)
+        // - SortId nullable
+        // - ResId nullable غالباً
+        // - ResourceType = ResourceTypesEnum
+        // =========================================================
+        private static bool TryGetExactFactor(List<Factors> factors, ResourceListMVVM res, out Factors? factor)
+        {
+            factor = null;
+            if (factors is null || factors.Count == 0)
+                return false;
+
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+
+                if (f.SortId == res.ResourceSortId &&
+                    f.ResId == res.ResourceTypeId &&
+                    f.ResourceType.Equals(res.ResType))
+                {
+                    factor = f;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

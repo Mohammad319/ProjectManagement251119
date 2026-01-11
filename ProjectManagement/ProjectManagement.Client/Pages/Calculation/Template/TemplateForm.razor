@@ -89,7 +89,7 @@
             if (TempForm.Id > 0)
             {
                 refresh = await Repo.Template.UpdateAsync(TemplateUpdate, TempForm.Id);
-                Calc.RefreshCalculation();
+                Calc.NotifyGridRefresh(flatListDirty: true);
             }
             else if (await Repo.Template.CreateAsync(TemplateUpdate) != null)
                 refresh = true;

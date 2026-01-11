@@ -47,7 +47,7 @@ namespace ProjectManagement.Client.Pages.Folder
             if (firstRender && !_initializedFromLastSelection)
             {
                 _initializedFromLastSelection = true;
-                await RestoreLastSelection();
+                //await RestoreLastSelection();
             }
         }
         private async Task RestoreLastSelection()

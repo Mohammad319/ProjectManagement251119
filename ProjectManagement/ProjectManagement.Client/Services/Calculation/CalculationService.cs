@@ -29,7 +29,8 @@ namespace ProjectManagement.Client.Services.Calculation
 
             SelectedData.Reset();
             calculation.Id = id;
-            calculation.BuildTaskHierarchy();
+            //calculation.BuildTaskHierarchy();
+            calculation.RebuildHierarchyAndIndexes();
 
             if (calculation.TemplateId > 0)
             {

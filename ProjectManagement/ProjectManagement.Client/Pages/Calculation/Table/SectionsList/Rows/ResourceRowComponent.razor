@@ -2,8 +2,7 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @inherits AppComponentBase
 
-<tr @key="Resource.Id"
-    @onclick="Click"
+<tr @onclick="Click"
     @oncontextmenu="Context"
     @oncontextmenu:preventDefault
     style="@Resource.Style(Template.NetCalc?.Color?.Resource, Resource.Active)">
@@ -15,7 +14,7 @@
     }
 </tr>
 
-@if (Resource.Data.UpperNote != null && CalcService.ShowComments)
+@if (Resource.Data?.UpperNote != null && CalcService.ShowComments)
 {
     @Note(Resource.Data.UpperNote, 3, Template.NetCalc.Columns.Count)
 }
@@ -36,18 +35,53 @@
 
     async Task Context()
     {
-        int tasid = Calc.Tasks.FirstOrDefault(t => t.Resources.Any(r => r.Id == Resource.Id))?.Id ?? 0;
-        await UoWService.Resource.Context(Resource, tasid);
+        // ❗ هذا كان مكلف: FirstOrDefault + Any على كل Task وكل Resources
+        // الأفضل: استخدم TaskId مباشرة إن كانت متاحة على Resource
+        // إذا Resource عنده TaskId استخدمه:
+        // int taskId = Resource.TaskId ?? 0;
+
+        // لو ما عندك TaskId، على الأقل اجعل البحث أسرع:
+        int taskId = 0;
+        for (int i = 0; i < Calc.Tasks.Count; i++)
+        {
+            var t = Calc.Tasks[i];
+            if (t.Resources != null)
+            {
+                for (int j = 0; j < t.Resources.Count; j++)
+                {
+                    if (t.Resources[j].Id == Resource.Id)
+                    {
+                        taskId = t.Id;
+                        i = Calc.Tasks.Count; // break outer
+                        break;
+                    }
+                }
+            }
+        }
+
+        await UoWService.Resource.Context(Resource, taskId);
     }
 
-    public static RenderFragment Note(List<string> notes, int col1, int col2) => __builder =>
+    public static RenderFragment Note(List<string> notes, int col1, int col2) => builder =>
     {
+        var seq = 0;
         foreach (var note in notes)
         {
-            <tr class="netNote">
-                <td class="NettdDiv bg-white dark:bg-black" colspan="@col1" style="width:@(TemplateConst.Col0)px;"></td>
-                <td colspan="@col2">@note</td>
-            </tr>
+            builder.OpenElement(seq++, "tr");
+            builder.AddAttribute(seq++, "class", "netNote");
+
+            builder.OpenElement(seq++, "td");
+            builder.AddAttribute(seq++, "class", "NettdDiv bg-white dark:bg-black");
+            builder.AddAttribute(seq++, "colspan", col1);
+            builder.AddAttribute(seq++, "style", $"width:{TemplateConst.Col0}px;");
+            builder.CloseElement();
+
+            builder.OpenElement(seq++, "td");
+            builder.AddAttribute(seq++, "colspan", col2);
+            builder.AddContent(seq++, note);
+            builder.CloseElement();
+
+            builder.CloseElement();
         }
     };
 }

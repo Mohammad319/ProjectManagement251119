@@ -14,10 +14,11 @@
 @inject IContextMenuBuilderService ContextBuilderService
 @inject ContextMenuService ContextMenuService
 
-<div id="tit"
-     class="flex flex-wrap items-center gap-2 px-2">
+<div id="tit" class="flex flex-wrap items-center gap-2 px-2">
 
-    <span class="@CssClasses.Btn.Span" @onclick="OpenTaskForm" title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">
+    <span class="@CssClasses.Btn.Span"
+          @onclick="OpenTaskForm"
+          title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">
         @Icons.Plus2
     </span>
 
@@ -25,28 +26,37 @@
         <Authorized>
             @if (Calc.Tap1)
             {
-                <span title="@ResourceApp.importFromFile" class="@CssClasses.Btn.Span" @onclick="() => Modal.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge)">
+                <span title="@ResourceApp.importFromFile"
+                      class="@CssClasses.Btn.Span"
+                      @onclick="() => Modal.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge)">
                     @((MarkupString)Icons.ImportFromFile)
                 </span>
 
-                <span class="@CssClasses.Btn.Span" title="@ResourceLoc.template"
+                <span class="@CssClasses.Btn.Span"
+                      title="@ResourceLoc.template"
                       @onclick="() => Modal.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(
-                      ResourceLoc.templates,Icons.Template,
-                                                        new Dictionary<string, object>()
-                                                        {
-                                                            [nameof(Pages.Calculation.Template.TemplateSetDefaultUI.Tab)] = 1,
-                                                        }, DialogSize.ExtraLarge)">
+                      ResourceLoc.templates,
+                                            Icons.Template,
+                                            new Dictionary<string, object>()
+                                            {
+                                                [nameof(Pages.Calculation.Template.TemplateSetDefaultUI.Tab)] = 1,
+                                            },
+                                            DialogSize.ExtraLarge)">
                 @((MarkupString)Icons.Template)
             </span>
 
-            <span title="@ResourceApp.reOrder" class="@CssClasses.Btn.Span" @onclick="() => Modal.ShowComponent<DragDropTaskUI>(ResourceApp.reOrder, Icons.ReorderRows, null, DialogSize.ExtraLarge)">
+            <span title="@ResourceApp.reOrder"
+                  class="@CssClasses.Btn.Span"
+                  @onclick="() => Modal.ShowComponent<DragDropTaskUI>(ResourceApp.reOrder, Icons.ReorderRows, null, DialogSize.ExtraLarge)">
                 @((MarkupString)Icons.ReorderRows)
             </span>
                         }
 
             @if (SelectedData.SelectedItems.Count != 0)
             {
-                <span class="@CssClasses.Btn.Span" @onclick="UnSelectedAll" title="@ResourceLoc.unselectAll">
+                <span class="@CssClasses.Btn.Span"
+                      @onclick="UnSelectedAll"
+                      title="@ResourceLoc.unselectAll">
                     @((MarkupString)Icons.NotSelected)
                 </span>
             }
@@ -55,7 +65,9 @@
                         && (!(TemporaryData.CopyTypeo == CopyType.Move && TemporaryData.OldCalcID == Calc.Id)
                         || TemporaryData.CopyTypeo == CopyType.Copy))
             {
-                <span class="@CssClasses.Btn.Span" @onclick="async () => await PasteItem(0)" title="@ResourceApp.paste">
+                <span class="@CssClasses.Btn.Span"
+                      @onclick="async () => await PasteItem(0)"
+                      title="@ResourceApp.paste">
                     @((MarkupString)Icons.Paste)
                 </span>
             }
@@ -63,7 +75,7 @@
             @if (CalcService.Offer != null)
             {
                 <span class="inline-flex items-center px-2 py-1 text-[11px] md:text-xs
-                                                         rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
+                                 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
                     @(ResourceLoc.offer + $" : {ResourceLoc.category} {CalcService.Offer.SubCategory}>{CalcService.Offer.SubCategory} {ResourceApp.organisation} {CalcService.Offer.Organisation}")
                 </span>
 
@@ -77,8 +89,7 @@
     </AuthorizeView>
 
     <div class="relative">
-        <span class="@CssClasses.Btn.Span"
-              @onclick="ToggleFilterDropdown">
+        <span class="@CssClasses.Btn.Span" @onclick="ToggleFilterDropdown">
             🧾 @ResourceApp.DisplayOptions
         </span>
 
@@ -94,7 +105,7 @@
                            class="rounded" checked
                            @bind-value="Calc.ShowTasks"
                            @bind-value:event="onchange"
-                           @bind-value:after="Calc.RefreshCalculation" />
+                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
                     <span>@ResourceLoc.task</span>
                 </label>
 
@@ -103,7 +114,7 @@
                            class="rounded" checked
                            @bind-value="Calc.ShowResources"
                            @bind-value:event="onchange"
-                           @bind-value:after="Calc.RefreshCalculation" />
+                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
                     <span>@ResourceLoc.resource</span>
                 </label>
 
@@ -112,7 +123,7 @@
                            class="rounded" checked
                            @bind-value="CalcService.ShowComments"
                            @bind-value:event="onchange"
-                           @bind-value:after="Calc.RefreshCalculation" />
+                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
                     <span>@CalcResource.note</span>
                 </label>
 
@@ -121,11 +132,9 @@
                            class="rounded"
                            @bind-value="Calc.OnlyActive"
                            @bind-value:event="onchange"
-                           @bind-value:after="Calc.RefreshCalculation" />
+                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
                     <span>@ResourceLoc.onlyActive</span>
                 </label>
-
-
             </div>
         }
     </div>
@@ -134,13 +143,11 @@
         @(Calc.OHFactors ? "OH" : CalcResource.netCal)
     </span>
 
-    <span class="@CssClasses.Btn.Span" title="CalcResource.quantity"
-          @onclick="() => Modal.ShowComponent<QuantityListUI>(CalcResource.quantity, Icons.ResetQuantity, null, size: BlazorMHD.UI.Core.Services.DialogSize.Medium)">
+    <span class="@CssClasses.Btn.Span"
+          title="CalcResource.quantity"
+          @onclick="() => Modal.ShowComponent<QuantityListUI>(CalcResource.quantity, Icons.ResetQuantity, null, size: DialogSize.Medium)">
         @((MarkupString)Icons.ResetQuantity)
     </span>
-
-
-
 
 </div>
 
@@ -160,33 +167,46 @@
                     --net-header-bg:@Template?.NetCalc.Color.Header;
                     --net-note-color:@Template?.NetCalc.Color.Note;
                     --net-border-style:@Template?.NetCalc.Color.BorderStyle;">
-            <CalcDataGrid></CalcDataGrid>
+            <CalcDataGrid />
         </div>
     </TopContent>
 
     <BottomContent>
         <div class="@CssClasses.Spacing.P.X1">
-            <GetFromStorage ParentID="Calc.Id" CalcType="CalculationItemType.task"></GetFromStorage>
+            <GetFromStorage ParentID="Calc.Id" CalcType="CalculationItemType.task" />
         </div>
     </BottomContent>
 </VerticalSplitter>
 
-
 @code {
+    private bool IsFilterDropdownOpen;
+
+    private void ToggleFilterDropdown()
+    {
+        IsFilterDropdownOpen = !IsFilterDropdownOpen;
+    }
+
     private void OpenTaskForm()
     {
-        Modal.ShowComponent<TaskFormUI>(AppLoc[LocalizerConst.New, ResourceLoc.task], Icons.NewTask, new Dictionary<string, object> { [nameof(TaskFormUI.Task)] = new TaskListMVVM() }, DialogSize.ExtraLarge);
+        Modal.ShowComponent<TaskFormUI>(
+            AppLoc[LocalizerConst.New, ResourceLoc.task],
+            Icons.NewTask,
+            new Dictionary<string, object> { [nameof(TaskFormUI.Task)] = new TaskListMVVM() },
+            DialogSize.ExtraLarge);
     }
-    void ItemsOnlyOH()
+
+    private void ItemsOnlyOH()
     {
-        Calc?.OHFactors = !Calc.OHFactors;
-        Calc?.RefreshCalculation();
+        Calc.OHFactors = !Calc.OHFactors;
+        Calc.NotifyGridRefresh(flatListDirty: true);
     }
-    void UnSelectedAll()
+
+    private void UnSelectedAll()
     {
         SelectedData.Reset();
-        Calc.RefreshCalculation();
+        Calc.NotifyGridRefresh(flatListDirty: false);
     }
+
     private async Task PasteItem(int taskId)
     {
         var post = new PostStorygeDTO
@@ -207,17 +227,9 @@
             SelectedData.Reset();
             MHD.Notifications(ToastType.Info, result);
         }
-        else MHD.Notifications(ToastType.Danger, false); // أو رسالة أو نوع تنبيه حسب الحالة
-    }
-}
-
-
-
-@code {
-    private bool IsFilterDropdownOpen;
-
-    private void ToggleFilterDropdown()
-    {
-        IsFilterDropdownOpen = !IsFilterDropdownOpen;
+        else
+        {
+            MHD.Notifications(ToastType.Danger, false);
+        }
     }
 }

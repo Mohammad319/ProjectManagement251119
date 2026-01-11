@@ -136,7 +136,7 @@ RenderFragment RenderForm() => __builder =>
     List<TemplateMVVM> List;
     bool btnSubmitDisabled = false;
     bool Loading = true;
-    void Refresh() => Calc.RefreshCalculation();
+    void Refresh() => Calc.NotifyGridRefresh(flatListDirty: true);
     protected async override Task OnInitializedAsync()
     {
         List = await Repo.Template.GetAsync();
