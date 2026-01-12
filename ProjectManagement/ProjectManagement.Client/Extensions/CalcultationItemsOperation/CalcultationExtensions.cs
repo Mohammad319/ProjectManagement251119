@@ -1,18 +1,116 @@
-﻿using System.Runtime.CompilerServices;
-using ProjectManagement.Client.Shared.MVVM.Calculation;
+﻿using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.Enums;
+using System.Runtime.CompilerServices;
 
 namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 {
     public static class CalcultationExtensions
     {
-        // مفتاح سريع لتجميع عوامل الموارد (Factor lookup)
-        // SortId عندك غالبًا nullable لذلك نخليه int?
-        private readonly record struct FactorKey(int? SortId, ResourceTypesEnum ResourceType);
+        // مفتاح تجميع/بحث عوامل الموارد (Factor lookup)
+        private readonly record struct FactorKey(int? ResId, int? SortId, ResourceTypesEnum ResourceType);
+        private static void ComputeTaskAggregates(CalculationMVVM calc)
+        {
+            var roots = calc.RootTasks;
+            if (roots is null || roots.Count == 0) return;
+
+            // Post-order بدون recursion (stackين)
+            var s1 = new Stack<TaskListMVVM>(roots.Count);
+            var s2 = new Stack<TaskListMVVM>(roots.Count);
+
+            for (int i = 0; i < roots.Count; i++)
+                s1.Push(roots[i]);
+
+            while (s1.Count > 0)
+            {
+                var t = s1.Pop();
+                s2.Push(t);
+
+                var children = t.Tasks;
+                if (children is null) continue;
+
+                for (int i = 0; i < children.Count; i++)
+                    s1.Push(children[i]);
+            }
+
+            while (s2.Count > 0)
+            {
+                var t = s2.Pop();
+
+                double netQ = 0;
+                double netTot = 0;
+                double apriceTot = 0;
+
+                // nullable totals
+                double totalCo2 = 0;
+                bool hasCo2 = false;
+
+                double baseCost = 0;
+                bool hasBaseCost = false;
+
+                // Children (active فقط)
+                var children = t.Tasks;
+                if (children is not null)
+                {
+                    for (int i = 0; i < children.Count; i++)
+                    {
+                        var c = children[i];
+                        if (!c.Active) continue;
+
+                        netQ += c.Calc_NetCostQ;
+                        netTot += c.Calc_NetCostTotaly;
+                        apriceTot += c.Calc_ApriceTotally;
+
+                        if (c.Calc_TotalCO2.HasValue)
+                        {
+                            totalCo2 += c.Calc_TotalCO2.Value;
+                            hasCo2 = true;
+                        }
+
+                        if (c.Calc_BaseCost.HasValue)
+                        {
+                            baseCost += c.Calc_BaseCost.Value;
+                            hasBaseCost = true;
+                        }
+                    }
+                }
+
+                // Resources (active فقط)
+                var res = t.Resources;
+                if (res is not null)
+                {
+                    for (int i = 0; i < res.Count; i++)
+                    {
+                        var r = res[i];
+                        if (!r.Active) continue;
+
+                        netQ += r.NetCostQ;
+                        netTot += r.NetCostTotaly;
+                        apriceTot += r.ApriceTotally;
+
+                        if (r.TotalCO2.HasValue)
+                        {
+                            totalCo2 += r.TotalCO2.Value;
+                            hasCo2 = true;
+                        }
+
+                        if (r.BaseCost.HasValue)
+                        {
+                            baseCost += r.BaseCost.Value;
+                            hasBaseCost = true;
+                        }
+                    }
+                }
+
+                t.Calc_NetCostQ = netQ;
+                t.Calc_NetCostTotaly = netTot;
+                t.Calc_ApriceTotally = apriceTot;
+                t.Calc_TotalCO2 = hasCo2 ? totalCo2 : null;
+                t.Calc_BaseCost = hasBaseCost ? baseCost : null;
+            }
+        }
 
         // =============================
-        // ExecuteCalculation (optimized)
+        // ExecuteCalculation (FAST)
         // =============================
         public static void ExecuteCalculation(this CalculationMVVM calc)
         {
@@ -21,90 +119,38 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             calc.Factors ??= [];
             calc.QuanityList ??= [];
 
-            InitializeCalculationOptimized(calc);
-            ApplyFactorF(calc.Factors);
-            AssignFactorsToResourcesOptimized(calc);
+            // Index سريع للـQuanityList (بدل FirstOrDefault آلاف المرات)
+            var qIndex = BuildQuantityIndex(calc.QuanityList);
+
+            // إعادة بناء العوامل من الصفر (لتجنب تراكم عوامل قديمة بعد إعادة الحساب)
+            calc.Factors.Clear();
+
+            // 1) احسب كميات الـTasks (DFS) + 2) احسب كميات الموارد واجمع العوامل في نفس المرور
+            InitializeCalculationFast(calc, qIndex);
+
+            // 3) احسب Factor لكل عامل بدون LINQ وبدون O(n^2)
+            ApplyFactorF_Optimized(calc.Factors);
+
+            // 4) وزّع الـFactor على الموارد (O(1) lookup)
+            AssignFactorsToResourcesFast(calc);
+
+            // 5) تنظيف عوامل غير مستخدمة (in-place)
             FilterFactorsInPlace(calc);
 
-            var sum = calc.Sum;
-            if (sum != 0)
-                calc.ProfitDecision = calc.Factors.Sum(x => x.Sum * x.Earnings) / sum;
-            else
-                calc.ProfitDecision = 0;
-        }
-
-        // =========================================================
-        // InitializeCalculationOptimized
-        // =========================================================
-        private static void InitializeCalculationOptimized(CalculationMVVM calc)
-        {
-            var tasks = calc.Tasks;
-            if (tasks is null || tasks.Count == 0)
-                return;
-
-            var quanityList = calc.QuanityList;
-
-            // 1) CalcVaribles للـ root tasks فقط
-            for (int i = 0; i < tasks.Count; i++)
-            {
-                var t = tasks[i];
-                if (!t.TaskId.HasValue)
-                    t.CalcVaribles(quanityList, null);
-            }
-
+            // 6) ProfitDecision بدون LINQ
             var factors = calc.Factors;
-
-            // index سريع (SortId + ResourceType)
-            var factorIndex = BuildFactorIndex(factors);
-
-            // 2) مرّ على كل Task فيه Resources
-            for (int i = 0; i < tasks.Count; i++)
+            double sum = 0;
+            double weighted = 0;
+            for (int i = 0; i < factors.Count; i++)
             {
-                var task = tasks[i];
-
-                if (task.Metadata?.Type == TaskType.CodeName)
-                    continue;
-
-                var resList = task.Resources;
-                if (resList is null || resList.Count == 0)
-                    continue;
-
-                var taskQty = task.Metadata?.Quantity;
-                var taskCap = task.Metadata?.Cap;
-                var taskIsOH = task.Metadata?.IsOH == true;
-
-                for (int r = 0; r < resList.Count; r++)
-                {
-                    var res = resList[r];
-
-                    res.CalcVaribles(quanityList, taskQty, taskCap);
-
-                    if (!res.Active)
-                        continue;
-
-                    // حاول تطابق دقيق مثل منطقك الأصلي
-                    if (TryGetExactFactor(factors, res, out var existing) && existing is not null)
-                    {
-                        if (res.ResName != existing.ResName || res.Sort != existing.Sort)
-                        {
-                            existing.ResName = res.ResName;
-                            existing.Sort = res.Sort;
-                        }
-
-                        existing.AddResValue(taskIsOH, res.NetCostTotaly);
-                    }
-                    else
-                    {
-                        // إنشاء عامل جديد
-                        var newFactor = Factors.AddNewFactor(taskIsOH, res);
-                        factors.Add(newFactor);
-
-                        // تحديث index
-                        var key = new FactorKey(newFactor.SortId, newFactor.ResourceType);
-                        factorIndex[key] = newFactor;
-                    }
-                }
+                var f = factors[i];
+                var s = f.Sum;
+                sum += s;
+                weighted += s * f.Earnings;
             }
+            calc.ProfitDecision = sum != 0 ? (weighted / sum) : 0;
+
+            ComputeTaskAggregates(calc);
         }
 
         // =========================================================
@@ -133,6 +179,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (unlockedSum == 0)
                 return;
 
+            // نفس معادلتك
             double e = ((calc.ProfitDecision * calc.Sum) - lockedSumWeighted) / unlockedSum;
 
             for (int i = 0; i < factors.Count; i++)
@@ -142,33 +189,98 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                     f.Earnings = e;
             }
 
-            AssignFactorsToResourcesOptimized(calc);
+            // إعادة توزيع العوامل على الموارد بعد تغيير earnings
+            AssignFactorsToResourcesFast(calc);
         }
 
         // =========================================================
-        // AssignFactorsToResourcesOptimized
-        // - SortId nullable
-        // - ResourceType = ResourceTypesEnum
+        // InitializeCalculationFast
+        // - يحسب كميات المهام (DFS) باستخدام qIndex
+        // - يحسب كميات الموارد + يجمع Factors في نفس المرور
         // =========================================================
-        public static void AssignFactorsToResourcesOptimized(this CalculationMVVM calc)
+        private static void InitializeCalculationFast(CalculationMVVM calc, Dictionary<string, QuanityListDTO> qIndex)
         {
-            if (calc is null) return;
+            var tasks = calc.Tasks;
+            if (tasks is null || tasks.Count == 0)
+                return;
 
+            // 1) احسب كميات الـroot tasks فقط (ثم recursion يحسب الباقي)
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                var t = tasks[i];
+                if (!t.TaskId.HasValue)
+                    CalcTaskVariablesRecursive(t, qIndex, parentQuantity: null);
+            }
+
+            // 2) اجمع عوامل الموارد
+            var factors = calc.Factors;
+            var factorIndex = new Dictionary<FactorKey, Factors>(256);
+
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                var task = tasks[i];
+                if (task.Metadata?.Type == TaskType.CodeName)
+                    continue;
+
+                var resList = task.Resources;
+                if (resList is null || resList.Count == 0)
+                    continue;
+
+                var taskQty = task.Metadata?.Quantity;
+                var taskCap = task.Metadata?.Cap;
+                bool taskIsOH = task.Metadata?.IsOH == true;
+
+                for (int r = 0; r < resList.Count; r++)
+                {
+                    var res = resList[r];
+
+                    CalcResourceVariables(res, qIndex, taskQty, taskCap);
+
+                    if (!res.Active)
+                        continue;
+
+                    var key = new FactorKey(res.ResourceTypeId, res.ResourceSortId, res.ResType);
+
+                    if (!factorIndex.TryGetValue(key, out var f))
+                    {
+                        f = Factors.AddNewFactor(taskIsOH, res);
+                        factors.Add(f);
+                        factorIndex[key] = f;
+                    }
+                    else
+                    {
+                        // مزامنة الاسم/التصنيف إذا تغيّرت
+                        if (res.ResName != f.ResName) f.ResName = res.ResName;
+                        if (res.Sort != f.Sort) f.Sort = res.Sort;
+
+                        f.AddResValue(taskIsOH, res.NetCostTotaly);
+                    }
+                }
+            }
+        }
+
+        // =========================================================
+        // AssignFactorsToResourcesFast
+        // - يبني index واحد ثم يمر على الموارد ويضع res.Factor
+        // =========================================================
+        public static void AssignFactorsToResourcesFast(CalculationMVVM calc)
+        {
             var tasks = calc.Tasks;
             var factors = calc.Factors;
 
             if (tasks is null || factors is null || factors.Count == 0)
                 return;
 
-            var factorIndex = BuildFactorIndex(factors);
+            var index = new Dictionary<FactorKey, Factors>(Math.Max(16, factors.Count * 2));
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+                index[new FactorKey(f.ResId, f.SortId, f.ResourceType)] = f;
+            }
 
             for (int i = 0; i < tasks.Count; i++)
             {
                 var t = tasks[i];
-
-                if (t?.Metadata?.Quantity.HasValue != true)
-                    continue;
-
                 var resList = t.Resources;
                 if (resList is null || resList.Count == 0)
                     continue;
@@ -176,29 +288,79 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 for (int r = 0; r < resList.Count; r++)
                 {
                     var res = resList[r];
-                    var key = new FactorKey(res.ResourceSortId, res.ResType);
+                    var key = new FactorKey(res.ResourceTypeId, res.ResourceSortId, res.ResType);
 
-                    if (factorIndex.TryGetValue(key, out var factor) && factor is not null)
-                    {
+                    if (index.TryGetValue(key, out var factor) && factor is not null)
                         res.Factor = factor.Factor;
-                    }
                 }
             }
         }
 
         // =========================================================
-        // Apply FactorF
+        // ApplyFactorF_Optimized
+        // - يحسب Factor لكل عنصر في O(n) بدل O(n^2)
+        // - يحاكي منطق OHF/FactorF بدون LINQ
         // =========================================================
-        private static void ApplyFactorF(List<Factors> factors)
+        // داخل CalcultationExtensions.cs :contentReference[oaicite:3]{index=3}
+
+        private static void ApplyFactorF_Optimized(List<Factors> factors)
         {
-            if (factors is null || factors.Count == 0)
-                return;
+            if (factors is null || factors.Count == 0) return;
+
+            // sum(NetCostTotaly) مرة واحدة
+            double sumNetCostAll = 0;
+            for (int i = 0; i < factors.Count; i++)
+                sumNetCostAll += factors[i].NetCostTotaly;
+
+            // مجموع OH لعناصر Selected == "all"
+            double totalOHAll = 0;
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+                if (f.Selected == "all" && f.NetCostTotalyOH > 0)
+                    totalOHAll += f.NetCostTotalyOH * (1 + (f.Earnings / 100));
+            }
+
+            // ✅ تجميع OH المرتبط باستخدام FactorKey بدل string
+            var relatedMap = new Dictionary<FactorKey, double>(Math.Max(16, factors.Count));
 
             for (int i = 0; i < factors.Count; i++)
             {
                 var f = factors[i];
-                if (f.NetCostTotaly > 0)
-                    f.FactorF(factors);
+                if (f.NetCostTotalyOH <= 0) continue;
+
+                var sel = f.Selected;
+                if (string.IsNullOrEmpty(sel) || sel == "all") continue;
+
+                // sel كان بالشكل "ResId,SortId"
+                // ✅ parse سريع بدون Split allocations
+                int comma = sel.IndexOf(',');
+                if (comma <= 0 || comma >= sel.Length - 1) continue;
+
+                if (!int.TryParse(sel.AsSpan(0, comma), out int resId)) continue;
+                if (!int.TryParse(sel.AsSpan(comma + 1), out int sortId)) continue;
+
+                var key = new FactorKey(resId, sortId, f.ResourceType);
+
+                var add = f.NetCostTotalyOH * (1 + (f.Earnings / 100));
+                relatedMap[key] = relatedMap.TryGetValue(key, out var cur) ? (cur + add) : add;
+            }
+
+            // حساب Factor لكل عامل
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+                if (f.NetCostTotaly <= 0) continue;
+
+                double ohShare = (sumNetCostAll != 0)
+                    ? (f.NetCostTotaly * totalOHAll) / sumNetCostAll
+                    : 0;
+
+                // ✅ related OH lookup بدون strings
+                var key = new FactorKey(f.ResId, f.SortId, f.ResourceType);
+                relatedMap.TryGetValue(key, out var relatedOH);
+
+                f.Factor = ((f.NetCostTotaly * (1 + (f.Earnings / 100))) + relatedOH + ohShare) / f.NetCostTotaly;
             }
         }
 
@@ -224,49 +386,97 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         }
 
         // =========================================================
-        // BuildFactorIndex: (SortId + ResourceType)
-        // SortId nullable
-        // ResourceType = ResourceTypesEnum
+        // Quantity index
         // =========================================================
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Dictionary<FactorKey, Factors> BuildFactorIndex(List<Factors> factors)
+        private static Dictionary<string, QuanityListDTO> BuildQuantityIndex(List<QuanityListDTO> list)
         {
-            var dict = new Dictionary<FactorKey, Factors>(Math.Max(16, factors.Count * 2));
-            for (int i = 0; i < factors.Count; i++)
+            var dict = new Dictionary<string, QuanityListDTO>(StringComparer.Ordinal);
+            if (list is null || list.Count == 0) return dict;
+
+            for (int i = 0; i < list.Count; i++)
             {
-                var f = factors[i];
-                var key = new FactorKey(f.SortId, f.ResourceType);
-                dict[key] = f;
+                var q = list[i];
+                if (!string.IsNullOrEmpty(q.Name))
+                    dict[q.Name] = q;
             }
             return dict;
         }
 
         // =========================================================
-        // TryGetExactFactor (يحافظ على منطقك الأصلي)
-        // - SortId nullable
-        // - ResId nullable غالباً
-        // - ResourceType = ResourceTypesEnum
+        // Task variables (DFS) - بدون LINQ
         // =========================================================
-        private static bool TryGetExactFactor(List<Factors> factors, ResourceListMVVM res, out Factors? factor)
+        private static void CalcTaskVariablesRecursive(TaskListMVVM task, Dictionary<string, QuanityListDTO> qIndex, double? parentQuantity)
         {
-            factor = null;
-            if (factors is null || factors.Count == 0)
-                return false;
+            var meta = task.Metadata;
+            if (meta is null) return;
 
-            for (int i = 0; i < factors.Count; i++)
+            if (meta.Type == TaskType.CodeName)
             {
-                var f = factors[i];
-
-                if (f.SortId == res.ResourceSortId &&
-                    f.ResId == res.ResourceTypeId &&
-                    f.ResourceType.Equals(res.ResType))
-                {
-                    factor = f;
-                    return true;
-                }
+                meta.Quantity = null;
+            }
+            else if (!string.IsNullOrEmpty(meta.QuantityParam))
+            {
+                if (qIndex.TryGetValue(meta.QuantityParam, out var param))
+                    meta.Quantity = param.Quantity;
+                else
+                    meta.QuantityParam = ConstValues.FixedQ;
+            }
+            else
+            {
+                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0d);
             }
 
-            return false;
+            if (task.Tasks is null || task.Tasks.Count == 0)
+                return;
+
+            var nextParent = meta.Quantity ?? parentQuantity;
+            for (int i = 0; i < task.Tasks.Count; i++)
+                CalcTaskVariablesRecursive(task.Tasks[i], qIndex, nextParent);
+        }
+
+        // =========================================================
+        // Resource variables - بدون LINQ
+        // =========================================================
+        private static void CalcResourceVariables(
+            ResourceListMVVM resource,
+            Dictionary<string, QuanityListDTO> qIndex,
+            double? taskQuantity,
+            double? cap)
+        {
+            if (resource.Data is null)
+                throw new InvalidOperationException("resource.Data must not be null.");
+
+            var data = resource.Data;
+
+            if (resource.HasCap && cap.HasValue)
+                data.CapWaste = cap.Value;
+
+            var effectiveTaskQuantity = taskQuantity ?? 0d;
+
+            if (!string.IsNullOrEmpty(resource.QuantityParam))
+            {
+                if (qIndex.TryGetValue(resource.QuantityParam, out var matched))
+                {
+                    data.Quantity = matched.Quantity;
+                }
+                else
+                {
+                    data.QuantityParam = ConstValues.FixedQ;
+                }
+            }
+            else
+            {
+                var baseCalc = effectiveTaskQuantity * resource.ChangeFactor1 * resource.ChangeFactor2;
+                var capWaste = data.CapWaste;
+
+                if (resource.HasWast && capWaste != 0)
+                    data.Quantity = baseCalc * (1 + capWaste / 100);
+                else if (resource.HasCap && capWaste != 0)
+                    data.Quantity = baseCalc / capWaste;
+                else
+                    data.Quantity = baseCalc;
+            }
         }
     }
 }

@@ -41,21 +41,33 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             return new TaskMetadata
             {
-                UpperNote = [.. UpperNote],
-                QuantityParam = QuantityParam,
+                Note = Note ?? string.Empty,
+                UpperNote = UpperNote is null ? new() : new List<string>(UpperNote),
+
+                QuantityParam = QuantityParam ?? string.Empty,
+                Quantity = Quantity,
+                Unit = Unit ?? string.Empty,
+
+                ChangeFactor1 = ChangeFactor1,
+                ChangeFactor2 = ChangeFactor2,
+
+                ActuallyQuantity = ActuallyQuantity,
+                WorkedQ = WorkedQ,
+
                 Cap = Cap,
                 IsActive = IsActive,
+                Code = Code ?? string.Empty,
+                Type = Type,
+
+                IsOH = IsOH,
                 PriceSubInPrecent = PriceSubInPrecent,
                 PriceSubDB = PriceSubDB,
                 PriceSubTaxDB = PriceSubTaxDB,
                 MinPrice = MinPrice,
                 CeilingPrice = CeilingPrice,
+
                 HasVoice = HasVoice,
-                Responsible = Responsible,
-                ChangeFactor1 = ChangeFactor1,
-                ChangeFactor2 = ChangeFactor2,
-                ActuallyQuantity = ActuallyQuantity,
-                WorkedQ = WorkedQ,
+                Responsible = Responsible ?? string.Empty,
             };
         }
     }

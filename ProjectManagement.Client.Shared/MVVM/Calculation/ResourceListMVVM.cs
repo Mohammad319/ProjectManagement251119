@@ -1,6 +1,5 @@
 ﻿using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -27,7 +26,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double Cost => Data.Cost;
         public double? BaseCost => Data.BaseCost;
         public double? CO2 => Data.CO2;
-        [JsonIgnore] public double PriceSubTotal =>  Data.PriceSub.HasValue && Quantity .HasValue ? PriceSub.Value * Quantity.Value : 0;
+
+        [JsonIgnore] public double PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? PriceSub.Value * Quantity.Value : 0;
     }
 
     public class ResourceListMVVM : ResFromData
@@ -59,31 +59,34 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double Factor { get; set; } = 1;
 
         public List<ListOfferMVVM> Offers { get; set; } = [];
+
         private double? _netCostQ;
         private double? _netCostTotally;
         private double? _apriceTotally;
         private double? _totalCO2;
 
-        [JsonIgnore]public double NetCostQ => _netCostQ ??= Quantity.HasValue && Quantity > 0? NetCostTotaly / Quantity.Value: 0;
+        [JsonIgnore] public double NetCostQ => _netCostQ ??= Quantity.HasValue && Quantity > 0 ? NetCostTotaly / Quantity.Value : 0;
         [JsonIgnore] public double NetCostTotaly => _netCostTotally ??= (BaseCost ?? 0) + (Quantity * Cost ?? 0);
-        [JsonIgnore]public double ApriceTotally => _apriceTotally ??= Factor * NetCostTotaly;
-        [JsonIgnore]public double? TotalCO2 => _totalCO2 ??= CO2.HasValue ? Quantity * CO2.Value : null;
+        [JsonIgnore] public double ApriceTotally => _apriceTotally ??= Factor * NetCostTotaly;
+        [JsonIgnore] public double? TotalCO2 => _totalCO2 ??= CO2.HasValue ? Quantity * CO2.Value : null;
+
         public void InvalidateCache()
         {
+            _netCostQ = null;         // ✅ مهم
             _netCostTotally = null;
             _apriceTotally = null;
             _totalCO2 = null;
         }
+
         [JsonIgnore] public bool HasOffer => Offers?.Count > 0;
         [JsonIgnore] public bool HasCap => ResType is ResourceTypesEnum.MachinesAndEquipments or ResourceTypesEnum.Worker;
         [JsonIgnore] public bool HasWast => ResType is ResourceTypesEnum.Materials;
 
-        public bool HasOfferSelected() =>OfferId.HasValue && Offers?.Any(x => x.Id == OfferId) == true;
+        public bool HasOfferSelected() => OfferId.HasValue && Offers?.Any(x => x.Id == OfferId) == true;
 
         [JsonIgnore] public bool FilterVisible { get; set; } = true;
         [JsonIgnore] public bool HasUpdated { get; set; }
         [JsonIgnore] public bool IsDragOver { get; set; }
-
 
         public void RemoveOffer(int id)
         {
@@ -95,5 +98,4 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             }
         }
     }
-
 }

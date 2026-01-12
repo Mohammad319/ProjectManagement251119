@@ -48,12 +48,30 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             return new ResourceMetadata
             {
-                UpperNote = [.. UpperNote],
-                QuantityParam = QuantityParam,
+                Parameters = Parameters is null ? new() : new List<ResourceParameter>(Parameters),
+                Times = Times is null ? new() : new List<ResourceTime>(Times),
+                PriceSub = PriceSub,
+
+                Note = Note ?? string.Empty,
+                UpperNote = UpperNote is null ? new() : new List<string>(UpperNote),
+
+                QuantityParam = QuantityParam ?? string.Empty,
+                Quantity = Quantity,
+                Unit = Unit ?? string.Empty,
+
+                ChangeFactor1 = ChangeFactor1,
+                ChangeFactor2 = ChangeFactor2,
+
+                CapWaste = CapWaste,
                 Cap = Cap,
-                Waste = Waste
+                Waste = Waste,
+
+                Cost = Cost,
+                BaseCost = BaseCost,
+                CO2 = CO2,
             };
         }
+
     }
 
     public class ResourceBase

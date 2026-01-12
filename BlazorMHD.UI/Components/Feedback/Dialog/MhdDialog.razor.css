@@ -1,16 +1,14 @@
 ﻿.dialog-animate-in {
-    animation: dialog-fade-in 0.22s ease-out;
+    animation: dialog-fade-in 0.1s ease-out;
 }
-
-/* لو حابب نفس الشي للـ Overlay */
 .dialog-overlay-animate-in {
-    animation: overlay-fade-in 0.22s ease-out;
+    animation: overlay-fade-in 0.1s ease-out;
 }
 
 @keyframes dialog-fade-in {
     from {
         opacity: 0;
-        filter: blur(4px);
+        filter: blur(2px);
     }
 
     to {

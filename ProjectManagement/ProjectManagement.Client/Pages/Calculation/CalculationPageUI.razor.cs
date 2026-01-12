@@ -1,19 +1,22 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using ProjectManagement.Shared.DTO.Calculation;
+using System.Threading;
 
 namespace ProjectManagement.Client.Pages.Calculation
 {
-    public partial class CalculationPageUI
+    public partial class CalculationPageUI : IAsyncDisposable
     {
         bool HeaderVisible { get; set; } = true;
 
         private HubConnection? hubConnection;
 
-        // ====== Batching ======
+        // ====== Batching + Debounce ======
         private readonly object _hubBatchLock = new();
-        private bool _batchScheduled = false;
         private bool _batchStructuralDirty = false;
         private bool _batchAffectsCalc = false;
+
+        private CancellationTokenSource? _hubFlushCts;
+        private const int HubDebounceMs = 25;   // يمكنك ضبطها بين 16 ~ 50 حسب الإحساس
 
         public async ValueTask DisposeAsync()
         {
@@ -41,13 +44,14 @@ namespace ProjectManagement.Client.Pages.Calculation
             Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
         }
 
-        private async Task AddToGroup() => await hubConnection?.SendAsync("AddToGroup", Calc.Id);
+        private async Task AddToGroup()
+            => await hubConnection?.SendAsync("AddToGroup", Calc.Id)!;
 
         void OnHubEvent(ObjectTypHub typ, OperationType ot, object obj)
         {
             if (obj == null) return;
 
-            // 1) طبّق التغيير على البيانات مباشرة (خفيف)
+            // ===== توزيع الحدث =====
             if (typ == ObjectTypHub.task)
                 UoWService.Task.FromHub(ot, obj);
             else if (typ == ObjectTypHub.resource)
@@ -61,7 +65,7 @@ namespace ProjectManagement.Client.Pages.Calculation
             else if (typ == ObjectTypHub.calculation)
                 CalcService.FromHub(ot, obj);
 
-            // 2) حساب flags (هل بنيوي؟ هل رقمي؟)
+            // ===== حساب نوع التغيير =====
             bool structural =
                 (typ == ObjectTypHub.task || typ == ObjectTypHub.resource) &&
                 (ot == OperationType.Add || ot == OperationType.AddRange ||
@@ -70,51 +74,65 @@ namespace ProjectManagement.Client.Pages.Calculation
 
             bool affectsCalc = Calc.LastHubChangeAffectsCalc;
 
-            // 3) اجمعهم ثم schedule flush واحد
+            CancellationToken token;
+
+            // ===== تحديث flags + إعادة جدولة debounce =====
             lock (_hubBatchLock)
             {
                 _batchStructuralDirty |= structural;
                 _batchAffectsCalc |= affectsCalc;
 
-                if (!_batchScheduled)
-                {
-                    _batchScheduled = true;
-                    _ = InvokeAsync(FlushHubBatchAsync);
-                }
+                _hubFlushCts?.Cancel();
+                _hubFlushCts?.Dispose();
+
+                _hubFlushCts = new CancellationTokenSource();
+                token = _hubFlushCts.Token;
             }
+
+            _ = InvokeAsync(async () =>
+            {
+                try
+                {
+                    await Task.Delay(HubDebounceMs, token);
+                    await FlushHubBatchAsync();
+                }
+                catch (TaskCanceledException)
+                {
+                    // تم إلغاء الدفعة بسبب وصول حدث أحدث
+                }
+            });
         }
 
         private async Task FlushHubBatchAsync()
         {
-            // نافذة تجميع صغيرة (تقلل الضغط في UI بشكل كبير)
-            await Task.Delay(50);
-
             bool doStructural;
-            bool doRecalc;
+            bool doCalc;
 
             lock (_hubBatchLock)
             {
                 doStructural = _batchStructuralDirty;
-                doRecalc = _batchAffectsCalc;
+                doCalc = _batchAffectsCalc;
 
                 _batchStructuralDirty = false;
                 _batchAffectsCalc = false;
-                _batchScheduled = false;
 
-                // reset flag المصدر
+                // مهم جدًا: صفّر الفلاج حتى لا “يلوث” الدفعة القادمة
                 Calc.LastHubChangeAffectsCalc = false;
             }
 
-            if (doRecalc)
+            // ===== إعادة الحساب إذا لزم =====
+            if (doCalc)
             {
-                // بما أنك تريد إعادة حساب كاملة:
-                Calc.InvalidateAllCaches();
                 Calc.ExecuteCalculation();
             }
 
+            // ===== إشعار الـGrid =====
+            // structural => إعادة بناء FlatList
+            // numeric فقط => RefreshDataAsync
             Calc.NotifyGridRefresh(flatListDirty: doStructural);
-        }
 
-        public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+            // ===== إعادة رندر الصفحة =====
+            await InvokeAsync(StateHasChanged);
+        }
     }
 }

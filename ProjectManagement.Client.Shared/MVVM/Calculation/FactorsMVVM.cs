@@ -1,25 +1,26 @@
 ﻿using ProjectManagement.Shared.Base.Calculation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
     public class Factors : OHFactors
     {
-        public string Sort { get; set; }
-        public string ResName { get; set; }
+        // تجنب nulls (أفضل للـUI وأقل فروع)
+        public string Sort { get; set; } = string.Empty;
+        public string ResName { get; set; } = string.Empty;
 
         public double NetCostTotaly { get; set; }
         public double NetCostTotalyOH { get; set; }
         public double Factor { get; set; }
 
-        public double Price => EarningsValue + Sum;
-        public double PriceOG => NetCostTotaly * Factor;
         public double Sum => NetCostTotaly + NetCostTotalyOH;
         public double EarningsValue => Sum * (Earnings / 100);
+        public double Price => EarningsValue + Sum;
+        public double PriceOG => NetCostTotaly * Factor;
 
-        public List<string> KVName { get; set; } = ["NetCostTotaly", "NetCostTotalyOH", "Sum", "Price", "PriceOG"];
+        // بدل List لكل instance (Alloc غير لازم)
+        public static readonly string[] KVName = { "NetCostTotaly", "NetCostTotalyOH", "Sum", "Price", "PriceOG" };
 
         public void AddResValue(bool oh, double resNetCost)
         {
@@ -33,13 +34,14 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             NetCostTotalyOH = oh ? res.NetCostTotaly : 0,
             SortId = res.ResourceSortId,
             ResourceType = res.ResType,
-            Sort = res.Sort,
-            ResName = res.ResName,
+            Sort = res.Sort ?? string.Empty,
+            ResName = res.ResName ?? string.Empty,
             ResId = res.ResourceTypeId,
         };
 
         public double KV()
         {
+            // نفس منطقك
             return Key switch
             {
                 0 => 0,
@@ -52,40 +54,90 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             };
         }
 
+        // =========================================================
+        // OHF / FactorF بدون LINQ (لكن ما يزال O(n) لكل استدعاء)
+        // ملاحظة: المسار السريع الحقيقي موجود في CalcultationExtensions
+        // (ApplyFactorF_Optimized) لتجنب O(n^2).
+        // =========================================================
+
         public double OHF(List<Factors> factors)
         {
-            var filtered = factors.Where(x => x.Selected == "all" && x.NetCostTotalyOH > 0);
-            double total = filtered.Sum(x => x.NetCostTotalyOH * (1 + (x.Earnings / 100)));
-            double share = (NetCostTotaly * total) / factors.Sum(x => x.NetCostTotaly);
-            return share;
+            if (factors is null || factors.Count == 0) return 0;
+
+            double totalOHAll = 0;
+            double sumNetCostAll = 0;
+
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var x = factors[i];
+                sumNetCostAll += x.NetCostTotaly;
+
+                if (x.Selected == "all" && x.NetCostTotalyOH > 0)
+                    totalOHAll += x.NetCostTotalyOH * (1 + (x.Earnings / 100));
+            }
+
+            if (sumNetCostAll == 0) return 0;
+
+            // حصتك من OH حسب NetCostTotaly
+            return (NetCostTotaly * totalOHAll) / sumNetCostAll;
         }
 
         public void FactorF(List<Factors> factors)
         {
-            var match = factors.Where(x => x.Selected == $"{ResId},{SortId}");
-            double relatedOH = match.Sum(x => x.NetCostTotalyOH * (1 + (x.Earnings / 100)));
-            Factor = ((NetCostTotaly * (1 + (Earnings / 100))) + relatedOH + OHF(factors)) / NetCostTotaly;
+            if (NetCostTotaly <= 0) { Factor = 0; return; }
+            if (factors is null || factors.Count == 0) { Factor = 1; return; }
+
+            // relatedOH: Selected == $"{ResId},{SortId}"
+            string matchKey = $"{ResId},{SortId}";
+            double relatedOH = 0;
+
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var x = factors[i];
+                if (x.Selected == matchKey && x.NetCostTotalyOH > 0)
+                    relatedOH += x.NetCostTotalyOH * (1 + (x.Earnings / 100));
+            }
+
+            double ohShare = OHF(factors);
+
+            Factor = ((NetCostTotaly * (1 + (Earnings / 100))) + relatedOH + ohShare) / NetCostTotaly;
         }
 
         public string FactorStr(List<Factors> factors)
         {
-            string explanation = "(";
-            double sum = 0;
+            if (NetCostTotaly <= 0) return "NetCostTotaly is 0";
 
-            foreach (var item in factors.Where(x => x.Selected == $"{ResId},{SortId}"))
+            string matchKey = $"{ResId},{SortId}";
+
+            string explanation = "(";
+            double relatedSum = 0;
+
+            if (factors != null)
             {
-                double part = item.NetCostTotalyOH * (1 + (item.Earnings / 100));
-                sum += part;
-                explanation += $"[{F(item.NetCostTotalyOH)} * {1 + (item.Earnings / 100)}] + ";
+                for (int i = 0; i < factors.Count; i++)
+                {
+                    var item = factors[i];
+                    if (item.Selected != matchKey) continue;
+
+                    double part = item.NetCostTotalyOH * (1 + (item.Earnings / 100));
+                    relatedSum += part;
+                    explanation += $"[{F(item.NetCostTotalyOH)} * {1 + (item.Earnings / 100)}] + ";
+                }
             }
 
             if (explanation.Length > 1)
                 explanation = explanation[..^3] + ") + ";
+            else
+                explanation = string.Empty;
 
-            string formula = $"(({F(NetCostTotaly)} * {1 + (Earnings / 100)}) + {explanation}Oh{F(OHF(factors))}) / {F(NetCostTotaly)} = ";
+            double oh = OHF(factors ?? new List<Factors>(0));
+
+            string formula = $"(({F(NetCostTotaly)} * {1 + (Earnings / 100)}) + {explanation}Oh{F(oh)}) / {F(NetCostTotaly)} = ";
+
             double part1 = F(NetCostTotaly * (1 + (Earnings / 100)));
-            double part2 = F(sum);
-            double part3 = F(OHF(factors));
+            double part2 = F(relatedSum);
+            double part3 = F(oh);
+
             double result = F((part1 + part2 + part3) / F(NetCostTotaly));
 
             formula += $"{part1} + {part2} + {part3} / {F(NetCostTotaly)} = {part1 + part2 + part3} / {F(NetCostTotaly)} = {result}";

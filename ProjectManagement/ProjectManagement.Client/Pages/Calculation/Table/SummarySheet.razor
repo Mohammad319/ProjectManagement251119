@@ -230,9 +230,9 @@
                                                         style="color:@Template.SummarySheet.Color.Text;"
                                                         @bind:get="factors.DivisionKey"
                                                         @bind:set="(value) => { factors.DivisionKey = value; SomeHasChanged(); }">
-                                                    @for (int i = 0; i < factors.KVName.Count; i++)
+                                                    @for (int i = 0; i < Factors.KVName.Length; i++)
                                                     {
-                                                        <option value="@(i)">@factors.KVName[i]</option>
+                                                        <option value="@(i)">@Factors.KVName[i]</option>
                                                     }
                                                 </select>
                                             </td>
@@ -293,7 +293,7 @@
 
                                             <!-- DivisionKey name -->
                                             <td class="px-2 py-0 align-middle whitespace-nowrap">
-                                                @factors.KVName[factors.DivisionKey]
+                                                @Factors.KVName[factors.DivisionKey]
                                             </td>
 
                                             <!-- KV + Unit -->

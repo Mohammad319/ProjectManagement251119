@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
@@ -40,6 +41,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     {
         [JsonIgnore] public bool LastHubChangeAffectsCalc { get; set; } = false;
         [JsonIgnore] public bool FlatListDirty { get; set; } = true;
+        [JsonIgnore] public int GridVersion { get; private set; } = 1;
+        public void BumpGridVersion() => GridVersion++;
 
         // ParentId -> Children Tasks
         [JsonIgnore] public Dictionary<int, List<TaskListMVVM>> ChildrenLookup { get; private set; } = new();
@@ -135,21 +138,42 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         // ====== بناء شجرة المهام ======
         public void BuildTaskHierarchy()
         {
-            ChildrenLookup = Tasks
-                .Where(x => x.TaskId != null)
-                .GroupBy(x => x.TaskId!.Value)
-                .ToDictionary(g => g.Key, g => g.ToList());
+            ChildrenLookup = new Dictionary<int, List<TaskListMVVM>>(Math.Max(16, Tasks.Count));
+            RootTasks = new List<TaskListMVVM>(Math.Max(16, Tasks.Count / 3));
+            MaxDepth = 0;
 
-            // ربط children بكل Task
+            // 1) نظّف وربط مبدئي
             for (int i = 0; i < Tasks.Count; i++)
             {
-                var task = Tasks[i];
-                task.Tasks = ChildrenLookup.TryGetValue(task.Id, out var children)
-                    ? children
-                    : [];
+                var t = Tasks[i];
+                t.Tasks ??= [];
+                t.Tasks.Clear();
+
+                if (t.TaskId is null)
+                {
+                    RootTasks.Add(t);
+                }
+                else
+                {
+                    int pid = t.TaskId.Value;
+                    if (!ChildrenLookup.TryGetValue(pid, out var list))
+                    {
+                        list = new List<TaskListMVVM>(4);
+                        ChildrenLookup[pid] = list;
+                    }
+                    list.Add(t);
+                }
             }
 
-            RootTasks = Tasks.Where(x => x.TaskId == null).ToList();
+            // 2) اربط children لكل task
+            for (int i = 0; i < Tasks.Count; i++)
+            {
+                var t = Tasks[i];
+                if (ChildrenLookup.TryGetValue(t.Id, out var children))
+                    t.Tasks = children;
+                else
+                    t.Tasks = [];
+            }
         }
 
         // ====== بناء indexes ======

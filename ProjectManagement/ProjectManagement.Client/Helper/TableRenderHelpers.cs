@@ -10,50 +10,9 @@ namespace ProjectManagement.Client.Helper
     {
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
-        // ----------------- COLLAPSE (Fast + No recursion) -----------------
-        public static void ToggleCollapse(TaskListMVVM task, List<TaskListMVVM> allTasks)
-        {
-            if (task is null || allTasks is null || allTasks.Count == 0)
-                return;
-
-            // Build lookup parentId -> children
-            var lookup = new Dictionary<int, List<TaskListMVVM>>(allTasks.Count);
-            for (int i = 0; i < allTasks.Count; i++)
-            {
-                var t = allTasks[i];
-                if (t?.TaskId is null) continue;
-
-                int parentId = t.TaskId.Value;
-                if (!lookup.TryGetValue(parentId, out var list))
-                {
-                    list = new List<TaskListMVVM>(4);
-                    lookup[parentId] = list;
-                }
-                list.Add(t);
-            }
-
-            bool newState = !task.CollSpan;
-            task.CollSpan = newState;
-
-            var stack = new Stack<TaskListMVVM>();
-            if (lookup.TryGetValue(task.Id, out var children))
-            {
-                for (int i = 0; i < children.Count; i++)
-                    stack.Push(children[i]);
-            }
-
-            while (stack.Count > 0)
-            {
-                var cur = stack.Pop();
-                cur.CollSpan = newState;
-
-                if (lookup.TryGetValue(cur.Id, out var sub))
-                {
-                    for (int i = 0; i < sub.Count; i++)
-                        stack.Push(sub[i]);
-                }
-            }
-        }
+        // ✅ Cache: لا نعيد بناء الأعمدة كل مرة
+        private static readonly Dictionary<(double tax, int x), List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>> _colsCache
+            = new();
 
         // ----------------- SELECTION -----------------
         public static void HandleKeyUp(KeyboardEventArgs e) => TemporaryData.Key = null;
@@ -71,16 +30,17 @@ namespace ProjectManagement.Client.Helper
 
         public static List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> GetColumns(double tax, int x = 2)
         {
+            var key = (tax, x);
+            if (_colsCache.TryGetValue(key, out var cached))
+                return cached;
+
             string round = Format(x);
 
-            return
-            [
+            var cols = new List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>(48)
+            {
                 new() { TaskRender = t => RenderTextTd(t.Metadata.Code), ResRender = _ => EmptyTd() },
-
                 new() { TaskRender = t => RenderCheckboxTd(t.Active), ResRender = r => RenderCheckboxTd(r.Active) },
-
                 new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderWithTitle(r.AccountCode) },
-
                 new() { TaskRender = t => RenderWithTitle(t.Name), ResRender = r => RenderWithTitle(r.Name) },
 
                 new()
@@ -94,17 +54,14 @@ namespace ProjectManagement.Client.Helper
                     )
                 },
 
-                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderTextTd(r.ResType) }, // enum ok
+                new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderTextTd(r.ResType) },
                 new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderTextTd(r.ResName) },
                 new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderTextTd(r.Sort) },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.Quantity), ResRender = r => RenderFormattedTd(round, r.Quantity) },
-
                 new() { TaskRender = t => RenderTextTd(t.Unit), ResRender = r => RenderTextTd(r.Unit) },
-
                 new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.Cost) },
 
-                // ✅ ChangeFactor are numeric => formatted (fast)
                 new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.ChangeFactor1), ResRender = r => RenderFormattedTd(round, r.ChangeFactor1) },
                 new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.ChangeFactor2), ResRender = r => RenderFormattedTd(round, r.ChangeFactor2) },
 
@@ -123,18 +80,15 @@ namespace ProjectManagement.Client.Helper
                 },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.BaseCost), ResRender = r => RenderFormattedTd(round, r.BaseCost) },
-
                 new() { TaskRender = t => RenderTextTd(t.Opportunity), ResRender = r => RenderTextTd(r.Opportunity) },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.NetCostQ), ResRender = r => RenderFormattedTd(round, r.NetCostQ) },
-
                 new() { TaskRender = t => RenderFormattedTd(round, t.NetCostTotaly), ResRender = r => RenderFormattedTd(round, r.NetCostTotaly) },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.PriceQTax(tax)), ResRender = _ => EmptyTd() },
                 new() { TaskRender = t => RenderFormattedTd(round, t.PriceQ), ResRender = _ => EmptyTd() },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.ApriceTotally), ResRender = r => RenderFormattedTd(round, r.ApriceTotally) },
-
                 new() { TaskRender = t => RenderFormattedTd(round, t.ApriceTotallyTax(tax)), ResRender = _ => EmptyTd() },
 
                 new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.Factor) },
@@ -143,15 +97,12 @@ namespace ProjectManagement.Client.Helper
                 new() { TaskRender = t => RenderFormattedTd(round, t.CeilingPrice), ResRender = _ => EmptyTd() },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.PriceSub), ResRender = r => RenderFormattedTd(round, r.PriceSub) },
-
                 new() { TaskRender = t => RenderFormattedTd(round, t.PriceSubTotal), ResRender = r => RenderFormattedTd(round, r.PriceSubTotal) },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.Diff), ResRender = _ => EmptyTd() },
-
                 new() { TaskRender = t => RenderTextTd(t.Responsible), ResRender = _ => EmptyTd() },
 
                 new() { TaskRender = _ => EmptyTd(), ResRender = r => RenderFormattedTd(round, r.CO2) },
-
                 new() { TaskRender = t => RenderFormattedTd(round, t.TotalCO2), ResRender = r => RenderFormattedTd(round, r.TotalCO2) },
 
                 new() { TaskRender = t => RenderFormattedTd(round, t.Metadata.ActuallyQuantity), ResRender = _ => EmptyTd() },
@@ -167,7 +118,10 @@ namespace ProjectManagement.Client.Helper
                 new() { TaskRender = t => RenderFormattedTd(round, t.PriceWorkedQTax(tax)), ResRender = _ => EmptyTd() },
 
                 new() { TaskRender = t => RenderTextTd(t.Note), ResRender = r => RenderTextTd(r.Note) },
-            ];
+            };
+
+            _colsCache[key] = cols;
+            return cols;
         }
 
         // ----------------- RENDER HELPERS -----------------
@@ -196,18 +150,14 @@ namespace ProjectManagement.Client.Helper
             __b.CloseElement();
         };
 
-        // string fast
         public static RenderFragment RenderTextTd(string? value) => RenderTd(value);
 
-        // object fallback (enum وغيرها)
         public static RenderFragment RenderTextTd(object? value) =>
             RenderTd(value?.ToString() ?? string.Empty);
 
-        // ✅ fastest: double
         public static RenderFragment RenderFormattedTd(string format, double value) =>
             RenderTd(value.ToString(format, Inv), cssClass: "num-cell");
 
-        // ✅ supports double?
         public static RenderFragment RenderFormattedTd(string format, double? value) =>
             RenderTd(value.HasValue ? value.Value.ToString(format, Inv) : string.Empty, cssClass: "num-cell");
 
@@ -242,7 +192,6 @@ namespace ProjectManagement.Client.Helper
 
         public static RenderFragment EmptyTd() => RenderTd(string.Empty);
 
-        // ✅ keep Func<Task> (حتى لا تغيّر موديلاتك)
         public static RenderFragment RenderStatusTd(string color, string status, int i, Func<Task>? onDetailsClick) => __b =>
         {
             int seq = 0;

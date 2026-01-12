@@ -1,13 +1,12 @@
-﻿@using Microsoft.Extensions.Localization
+﻿@using System.Globalization
+@using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @using Calculation.Table.Header
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows
 @using ProjectManagement.Client.Shared.MVVM.Calculation
-@using ProjectManagement.Client.Shared.Repositories.Offer
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
-@using ProjectManagement.Shared.DTO.Offer
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 @inject IStringLocalizer<CalcResource> CalcLoc
@@ -43,8 +42,7 @@
         user-select: none;
     }
 
-        .resizer:hover,
-        .resizing {
+        .resizer:hover, .resizing {
             border-right: 2px solid #aba8a6;
         }
 
@@ -72,8 +70,7 @@
             background-color: #ffffff;
         }
 
-        .divNetCalc td,
-        .divNetCalc th {
+        .divNetCalc td, .divNetCalc th {
             border-bottom: 1px var(--net-border-style) var(--net-border-color) !important;
             border-left: 1px var(--net-border-style) var(--net-border-color);
             border-right: none !important;
@@ -200,7 +197,7 @@
                     Context="item"
                     ItemsProvider="LoadItems"
                     ItemSize="22"
-                    OverscanCount="10">
+                    OverscanCount="6">
             <ItemContent>
                 @if (item.IsTask && Calc.ShowTasks)
                 {
@@ -229,18 +226,19 @@
 @code {
     private Virtualize<FlatItem>? virtualizeComponent;
 
-    private List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>? Columns;
-
-    private bool TH1ISvisible = false;
+    private List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Columns = new();
+    private bool TH1ISvisible;
 
     private Action? _onChangeHandler;
+
+    // لتفادي إعادة بناء الأعمدة/الـtemplate بدون داعي
+    private double _lastTax;
+    private int _lastRound;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // إذا لديك نسخة JS تتطلب DotNetRef في NelCalculationPage خليه هناك فقط.
-            // هنا تستخدم initializeResizableColumns بدون args كما كان عندك.
             await JS.InvokeVoidAsync("initializeResizableColumns");
         }
     }
@@ -249,6 +247,9 @@
     {
         _onChangeHandler = () => _ = InvokeAsync(ForceReload);
         Calc.OnChangeInCalculation += _onChangeHandler;
+
+        _lastTax = Calc.Tax;
+        _lastRound = Template.MathRound;
 
         Columns = TableRenderHelpers.GetColumns(Calc.Tax, Template.MathRound);
         Template.FreezCol();
@@ -259,42 +260,68 @@
         _ = InvokeAsync(ForceReload);
     }
 
+    private void EnsureColumnsUpToDate()
+    {
+        // ✅ إعادة بناء الأعمدة فقط إذا تغيّرت tax أو round
+        if (_lastTax != Calc.Tax || _lastRound != Template.MathRound || Columns.Count == 0)
+        {
+            _lastTax = Calc.Tax;
+            _lastRound = Template.MathRound;
+            Columns = TableRenderHelpers.GetColumns(Calc.Tax, Template.MathRound);
+        }
+    }
+
     private void OnClick(TaskListMVVM task) =>
         TableRenderHelpers.HandleItemSelected(task.Id, task.Metadata.Quantity, CalculationItemType.task);
+    private bool _reloadPending;
 
     private async Task ForceReload()
     {
-        if (Calc.AllFlatItems == null || Calc.FlatListDirty)
+        if (_reloadPending) return;
+        _reloadPending = true;
+
+        try
         {
-            // ✅ بدون LINQ + يستخدم RootTasks + بناء سريع
-            Calc.AllFlatItems = Calc.BuildFlatList();
-            Calc.FlatListDirty = false;
+            await Task.Yield(); // يجمع أحداث نفس اللحظة
 
-            if (Template != null && Calc.MaxDepth > 0)
-                Template.StartCol1 = (Calc.MaxDepth * 10) + 15;
+            EnsureColumnsUpToDate();
+
+            if (Calc.AllFlatItems == null || Calc.FlatListDirty)
+            {
+                Calc.AllFlatItems = Calc.BuildFlatList();
+                Calc.FlatListDirty = false;
+
+                if (Calc.MaxDepth > 0)
+                    Template.StartCol1 = (Calc.MaxDepth * 10) + 15;
+            }
+
+            if (virtualizeComponent != null)
+                await virtualizeComponent.RefreshDataAsync();
+
+            await InvokeAsync(StateHasChanged);
         }
-
-        if (virtualizeComponent != null)
-            await virtualizeComponent.RefreshDataAsync();
-
-        await InvokeAsync(StateHasChanged);
+        finally
+        {
+            _reloadPending = false;
+        }
     }
+
 
     private ValueTask<ItemsProviderResult<FlatItem>> LoadItems(ItemsProviderRequest request)
     {
         var list = Calc.AllFlatItems;
         if (list == null || list.Count == 0)
-            return new ValueTask<ItemsProviderResult<FlatItem>>(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), 0));
+            return new(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), 0));
 
         int start = request.StartIndex;
-        if (start < 0 || start >= list.Count)
-            return new ValueTask<ItemsProviderResult<FlatItem>>(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), list.Count));
+        if ((uint)start >= (uint)list.Count)
+            return new(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), list.Count));
 
         int count = Math.Min(request.Count, list.Count - start);
-        // GetRange أسرع من Skip/Take/ToList
-        var items = list.GetRange(start, count);
 
-        return new ValueTask<ItemsProviderResult<FlatItem>>(new ItemsProviderResult<FlatItem>(items, list.Count));
+        // ✅ بدون نسخ (Zero-GC أثناء scroll)
+        IReadOnlyList<FlatItem> slice = new ListSlice<FlatItem>(list, start, count);
+        return new(new ItemsProviderResult<FlatItem>(slice, list.Count));
     }
 
     protected void HandleKeyDown(KeyboardEventArgs e)
@@ -323,7 +350,6 @@
     {
         // فتح/إغلاق يغيّر المعروض => بنيوي
         task.CollSpan = !task.CollSpan;
-
         Calc.NotifyGridRefresh(flatListDirty: true);
         return Task.CompletedTask;
     }
@@ -332,5 +358,29 @@
     {
         if (_onChangeHandler != null)
             Calc.OnChangeInCalculation -= _onChangeHandler;
+    }
+
+    private sealed class ListSlice<T> : IReadOnlyList<T>
+    {
+        private readonly List<T> _list;
+        private readonly int _start;
+        public int Count { get; }
+
+        public ListSlice(List<T> list, int start, int count)
+        {
+            _list = list;
+            _start = start;
+            Count = count;
+        }
+
+        public T this[int index] => _list[_start + index];
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (int i = 0; i < Count; i++)
+                yield return _list[_start + i];
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

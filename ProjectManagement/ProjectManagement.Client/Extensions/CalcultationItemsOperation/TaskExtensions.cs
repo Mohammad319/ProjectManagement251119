@@ -54,18 +54,33 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         }
 
 
-        public static void CalcVaribles(this TaskListMVVM task, List<QuanityListDTO> quantityList, double? parentQuantity)
+        public static void CalcVaribles(
+            this TaskListMVVM task,
+            Dictionary<string, QuanityListDTO> qIndex,
+            double? parentQuantity)
         {
-            if (task.Metadata.Type == TaskType.CodeName) task.Metadata.Quantity = null;
+            if (task.Metadata.Type == TaskType.CodeName)
+            {
+                task.Metadata.Quantity = null;
+            }
             else if (!string.IsNullOrEmpty(task.Metadata.QuantityParam))
             {
-                QuanityListDTO param = quantityList.FirstOrDefault(x => x.Name == task.Metadata.QuantityParam);
-                if (param != null) task.Metadata.Quantity = param.Quantity;
-                else task.Metadata.QuantityParam = ConstValues.FixedQ;
+                if (qIndex.TryGetValue(task.Metadata.QuantityParam, out var param))
+                    task.Metadata.Quantity = param.Quantity;
+                else
+                    task.Metadata.QuantityParam = ConstValues.FixedQ;
             }
-            else task.Metadata.Quantity = task.Metadata.ChangeFactor1 * task.Metadata.ChangeFactor2 * (parentQuantity ?? 0);
-            if (task.Tasks != null) foreach (var subTask in task.Tasks)
-                    subTask.CalcVaribles(quantityList, task.Metadata.Quantity ?? parentQuantity);
+            else
+            {
+                task.Metadata.Quantity = task.Metadata.ChangeFactor1 * task.Metadata.ChangeFactor2 * (parentQuantity ?? 0);
+            }
+
+            if (task.Tasks is not null)
+            {
+                var nextParent = task.Metadata.Quantity ?? parentQuantity;
+                for (int i = 0; i < task.Tasks.Count; i++)
+                    task.Tasks[i].CalcVaribles(qIndex, nextParent);
+            }
         }
     }
 }

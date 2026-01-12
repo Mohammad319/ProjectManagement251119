@@ -42,33 +42,23 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
         public static void CalcVaribles(
             this ResourceListMVVM resource,
-            List<QuanityListDTO>? quantityList,
+            Dictionary<string, QuanityListDTO> qIndex,
             double? taskQuantity,
             double? cap)
         {
-            if (resource is null)
-                throw new ArgumentNullException(nameof(resource));
-
-            // نفترض أن Metadata لازم تكون موجودة
             if (resource.Data is null)
                 throw new InvalidOperationException("resource.Data must not be null.");
 
             var data = resource.Data;
 
-            // cap ممكن تكون null
             if (resource.HasCap && cap.HasValue)
                 data.CapWaste = cap.Value;
 
-            // نحول null إلى 0
             var effectiveTaskQuantity = taskQuantity ?? 0d;
 
             if (!string.IsNullOrEmpty(resource.QuantityParam))
             {
-                // quantityList ممكن تكون null
-                var matched = quantityList?
-                    .FirstOrDefault(q => q.Name == resource.QuantityParam);
-
-                if (matched is not null)
+                if (qIndex.TryGetValue(resource.QuantityParam, out var matched))
                 {
                     data.Quantity = matched.Quantity;
                 }
@@ -80,24 +70,15 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             else
             {
                 var baseCalc = effectiveTaskQuantity * resource.ChangeFactor1 * resource.ChangeFactor2;
-
-                // توحيد استخدام CapWaste من data
                 var capWaste = data.CapWaste;
 
                 if (resource.HasWast && capWaste != 0)
-                {
                     data.Quantity = baseCalc * (1 + capWaste / 100);
-                }
                 else if (resource.HasCap && capWaste != 0)
-                {
                     data.Quantity = baseCalc / capWaste;
-                }
                 else
-                {
                     data.Quantity = baseCalc;
-                }
             }
         }
-
     }
 }
