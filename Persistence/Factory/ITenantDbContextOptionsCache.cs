@@ -4,8 +4,6 @@ namespace Persistence.Factory;
 
 public interface ITenantDbContextOptionsCache
 {
-    DbContextOptions<ShardingSingleDbContext> GetOrCreate(
-        int tenantId,
-        string connectionString,
+    DbContextOptions<ShardingSingleDbContext> GetOrCreate(int tenantId, string connectionString,
         TenantAuditSaveChangesInterceptor interceptor);
 }

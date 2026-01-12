@@ -14,24 +14,24 @@ public static class ServiceRegistration
 {
     public static IServiceCollection AddProjectServices(this IServiceCollection services)
     {
-        services.AddRazorComponents().AddInteractiveServerComponents().AddInteractiveWebAssemblyComponents()
+        // -------------------------
+        // UI (Hybrid: Server + WASM)
+        // -------------------------
+        services.AddRazorComponents()
+            .AddInteractiveServerComponents()
+            .AddInteractiveWebAssemblyComponents()
             .AddAuthenticationStateSerialization(options =>
             {
                 options.SerializeAllClaims = true;
             });
 
+        services.AddRazorPages();       // مهم لبعض سيناريوهات الهوية/الصفحات
         services.AddHttpClient();
-        //services.AddScoped(sp =>
-        //{
-        //    var navigationManager = sp.GetRequiredService<NavigationManager>();
-        //    return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
-        //});
 
+        // API Versioning (يبقى هنا أو في Program — ما يسبب تكرار مثل Controllers)
         services.AddApiVersioning();
-        services.AddRazorPages();
-        services.AddServerSideBlazor();
-        services.AddControllers();
 
+        // Client shared services (من مشروع Client)
         services.AddClientServices();
 
         // -------------------------
@@ -58,21 +58,20 @@ public static class ServiceRegistration
         services.AddMemoryCache();
 
         // -------------------------
-        // Tenant Connection String Provider (Catalog DB)
+        // Tenant connection strings + DbContext options cache
         // -------------------------
         services.AddScoped<ITenantConnectionStringProvider, TenantConnectionStringProvider>();
-
-        // DbContextOptions cache per tenant
         services.AddSingleton<ITenantDbContextOptionsCache, TenantDbContextOptionsCache>();
 
-        // Interceptor must be Scoped
-        services.AddScoped<TenantAuditSaveChangesInterceptor>();
-
-        // Factory + tenant DbContext
+        // -------------------------
+        // Persistence helpers
+        // -------------------------
+        services.AddScoped<TenantAuditSaveChangesInterceptor>(); // Scoped
         services.AddScoped<IDbContextFactoryTenant, DbContextFactory>();
-        //services.AddScoped(sp => sp.GetRequiredService<IDbContextFactoryTenant>().CreateDbContext());
 
+        // -------------------------
         // App services
+        // -------------------------
         services.AddScoped<INotificationHub, SendHubNotification>();
         services.AddScoped<ITenantUserService, TenantUserService>();
 

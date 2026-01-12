@@ -1,30 +1,27 @@
 ﻿namespace ProjectManagement.Middleware
 {
-    using Serilog.Context;
-
     public class CorrelationIdMiddleware : IMiddleware
     {
         private const string HeaderName = "X-Correlation-ID";
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            if (context.Request.Headers.TryGetValue(HeaderName, out var cid) && !string.IsNullOrWhiteSpace(cid))
+            var cid = context.Request.Headers.TryGetValue(HeaderName, out var headerVal) && !string.IsNullOrWhiteSpace(headerVal)
+                ? headerVal.ToString()
+                : context.TraceIdentifier;
+
+            context.TraceIdentifier = cid;
+
+            context.Response.OnStarting(() =>
             {
-                context.TraceIdentifier = cid.ToString();
+                context.Response.Headers[HeaderName] = cid;
+                return Task.CompletedTask;
+            });
 
-                // اختياري: ضعه في LogContext لSerilog
-                using (LogContext.PushProperty("TraceId", context.TraceIdentifier))
-                {
-                    context.Response.Headers[HeaderName] = context.TraceIdentifier;
-                    await next(context);
-                    return;
-                }
+            using (Serilog.Context.LogContext.PushProperty("TraceId", cid))
+            {
+                await next(context);
             }
-
-            // لو ما في header
-            context.Response.Headers[HeaderName] = context.TraceIdentifier;
-            await next(context);
         }
     }
-
 }

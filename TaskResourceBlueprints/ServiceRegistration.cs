@@ -1,16 +1,12 @@
-﻿using TaskResourceBlueprints.Services;
-using Microsoft.Extensions.DependencyInjection;
-using TaskResourceBlueprints.Dto.ProjectTask;
-using TaskResourceBlueprints.Infrastructure;
-using TaskResourceBlueprints.Services;
+﻿using Microsoft.Extensions.DependencyInjection;
+using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
+using TaskResourceBlueprints.Services.Common;
 using TaskResourceBlueprints.Services.ProjectTask;
 using TaskResourceBlueprints.Services.QuestionConditions;
 using TaskResourceBlueprints.Services.Resource;
 using TaskResourceBlueprints.Services.ResourceProperties;
 using TaskResourceBlueprints.Services.TaskGroups;
 using TaskResourceBlueprints.Services.UnitGroups;
-using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
-using TaskResourceBlueprints.Services.Common;
 
 namespace TaskResourceBlueprints
 {
@@ -26,8 +22,8 @@ namespace TaskResourceBlueprints
 
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();
 
-            services.AddScoped<ITaskGroupsQueryService,TaskGroupsQueryService>();
-            services.AddScoped<ITaskConditionsService,TaskConditionsService>();
+            services.AddScoped<ITaskGroupsQueryService, TaskGroupsQueryService>();
+            services.AddScoped<ITaskConditionsService, TaskConditionsService>();
             services.AddScoped<ITaskUnitGroupService, TaskUnitGroupService>();
             services.AddScoped<IResourceBlueprintsService, ResourceBlueprintsService>();
             services.AddScoped<IResourceAttributeService, ResourceAttributeService>();

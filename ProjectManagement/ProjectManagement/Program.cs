@@ -14,64 +14,80 @@ using ProjectManagement.Components.Account;
 using ProjectManagement.DependencyInjection;
 using ProjectManagement.Middleware;
 using ProjectManagement.Services;
-using ProjectManagement.Shared.Constant;
 using ProjectManagement.SignalR;
 using Serilog;
 using System.Diagnostics;
-using TaskResourceBlueprints;
 using TaskResourceBlueprints.Infrastructure;
-
+using TaskResourceBlueprints;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+// -------------------------
+// Settings + Identity helpers
+// -------------------------
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
+// -------------------------
+// Connection strings
+// -------------------------
 var taskResourceBlueprintsDb = builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb")
     ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsDb' not found.");
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddCustomAuthentication(connectionString);
+// -------------------------
+// Layers
+// -------------------------
+builder.Services.AddCustomAuthentication(defaultConnection);
 
 builder.Services.AddApplicationLayer();
 builder.Services.AddPersistenceServices();
 builder.Services.AddAuthPermissionsLayer();
 builder.Services.AddTaskResourceBlueprints();
 
-// ✅ للتطوير فقط (إبقاءه كما لديك)
+// ✅ للتطوير فقط
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// -------------------------
+// DbContextFactory (Blueprints)
+// -------------------------
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
     options.UseSqlServer(taskResourceBlueprintsDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     }));
 
+// -------------------------
+// UI/tenant/services (server + wasm)
+// -------------------------
 builder.Services.AddProjectServices();
 
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
-});
-
+// -------------------------
+// Response compression
+// -------------------------
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/octet-stream"]);
 });
 
+// -------------------------
+// Logging
+// -------------------------
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 
 builder.Host.UseSerilog();
 
+// -------------------------
+// Misc services
+// -------------------------
 builder.Services.BlazorMHD();
 builder.Services.AddHttpContextAccessor();
 
-// ✅ ProblemDetails + traceId
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = ctx =>
@@ -81,6 +97,7 @@ builder.Services.AddProblemDetails(options =>
     };
 });
 
+// Controllers (مرة واحدة فقط)
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -97,16 +114,24 @@ builder.Services.AddControllers()
         };
     });
 
-// (إن كنت تحتاجه للـ UI فقط، اتركه)
+// UI helper
 builder.Services.AddScoped<AppErrorDialog>();
 
+// Middleware as IMiddleware
 builder.Services.AddTransient<CorrelationIdMiddleware>();
 
 var app = builder.Build();
 
 var isDev = app.Environment.IsDevelopment();
+
+// -------------------------
+// Middleware pipeline
+// -------------------------
+app.UseResponseCompression();
+
 app.UseStaticFiles();
-// ✅ correlation id مبكر
+
+// CorrelationId مبكر
 app.UseMiddleware<CorrelationIdMiddleware>();
 
 if (isDev)
@@ -116,11 +141,10 @@ if (isDev)
 }
 else
 {
-    // production HSTS optional
     // app.UseHsts();
 }
 
-// ✅ ExceptionHandler عام (API + UI) — بدل UseWhen/UseExceptionHandler
+// Global exception handler (API + UI)
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
@@ -136,15 +160,18 @@ app.UseExceptionHandler(errorApp =>
         if (ex is not null)
             logger.LogError(ex, "Unhandled exception. TraceId={TraceId} Path={Path}", traceId, context.Request.Path);
 
-        var isApi = context.Request.Path.StartsWithSegments("/api") ||
-                    context.Request.Headers.Accept.ToString().Contains("application/json", StringComparison.OrdinalIgnoreCase);
+        var isApi =
+            context.Request.Path.StartsWithSegments("/api") ||
+            context.Request.Headers.Accept.Any(h =>
+                h.Contains("application/json", StringComparison.OrdinalIgnoreCase) ||
+                h.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase));
 
         if (isApi)
         {
-            var detail = isDev && ex is not null ? ex.Message : "حدث خطأ غير متوقع. حاول لاحقاً.";
-
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/problem+json";
+
+            var detail = isDev ? ex?.ToString() : "An unexpected error occurred.";
 
             await context.Response.WriteAsJsonAsync(new ProblemDetails
             {
@@ -162,74 +189,51 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-app.UseResponseCompression();
 app.UseHttpsRedirection();
 
 app.UseRouting();
 
-// ✅ StatusCodePages للـ API فقط (404/401/403.. بدون HTML)
-app.UseStatusCodePages(async statusCtx =>
+// StatusCodePages للـ API فقط (404/401/403.. بدون HTML)
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/api"), apiApp =>
 {
-    var ctx = statusCtx.HttpContext;
-
-    if (!ctx.Request.Path.StartsWithSegments("/api"))
-        return;
-
-    if (ctx.Response.HasStarted)
-        return;
-
-    // إذا Controller كتب JSON بالفعل، لا تغطيه
-    var contentType = ctx.Response.ContentType ?? "";
-    if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase) ||
-        contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase))
-        return;
-
-    var traceId = Activity.Current?.Id ?? ctx.TraceIdentifier;
-
-    ctx.Response.ContentType = "application/problem+json";
-
-    await ctx.Response.WriteAsJsonAsync(new ProblemDetails
+    apiApp.UseStatusCodePages(async statusCtx =>
     {
-        Status = ctx.Response.StatusCode,
-        Title = "Request failed",
-        Detail = ctx.Response.StatusCode switch
+        var ctx = statusCtx.HttpContext;
+
+        // إذا Controller كتب JSON بالفعل، لا تغطيه
+        var contentType = ctx.Response.ContentType ?? "";
+        if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase) ||
+            contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var traceId = Activity.Current?.Id ?? ctx.TraceIdentifier;
+
+        ctx.Response.ContentType = "application/problem+json";
+
+        await ctx.Response.WriteAsJsonAsync(new ProblemDetails
         {
-            401 => "غير مصرح.",
-            403 => "ليس لديك صلاحية.",
-            404 => "المورد غير موجود.",
-            _ => "تعذر إتمام الطلب."
-        },
-        Instance = ctx.Request.Path
-    }.WithTraceId(traceId));
-});
-
-// ✅ Serilog request logging
-app.UseSerilogRequestLogging(opts =>
-{
-    opts.EnrichDiagnosticContext = (ctx, http) =>
-    {
-        ctx.Set("TraceId", Activity.Current?.Id ?? http.TraceIdentifier);
-        ctx.Set("Path", http.Request.Path.Value ?? "");
-        ctx.Set("Method", http.Request.Method);
-
-        var userId = http.User.FindFirst(PMClaimsConst.UserId)?.Value;
-        if (!string.IsNullOrWhiteSpace(userId)) ctx.Set("UserId", userId);
-
-        var tenantId = http.User.FindFirst(PMClaimsConst.Tenant)?.Value;
-        if (!string.IsNullOrWhiteSpace(tenantId)) ctx.Set("TenantID", tenantId);
-    };
+            Status = ctx.Response.StatusCode,
+            Title = "Request failed",
+            Detail = $"HTTP {(int)ctx.Response.StatusCode}",
+            Instance = ctx.Request.Path
+        }.WithTraceId(traceId));
+    });
 });
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseTenantContext();
+// TenantContext بعد auth (لأن يعتمد على claims)
+app.UseMiddleware<TenantContextMiddleware>();
 app.UseAntiforgery();
 
+// -------------------------
+// Endpoints
+// -------------------------
 app.MapStaticAssets();
+
 app.MapControllers();
 app.MapHub<NotificationHub>("/notification");
-app.MapStaticAssets();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

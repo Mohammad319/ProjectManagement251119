@@ -17,7 +17,7 @@ public static class IdentityFactory
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-        services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
