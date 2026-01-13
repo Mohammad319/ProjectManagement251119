@@ -1,24 +1,24 @@
 ﻿using Microsoft.AspNetCore.Components.Server.Circuits;
-using Microsoft.Extensions.DependencyInjection;
 using ProjectManagement.Services;
 
 namespace ProjectManagement.BlazorServer;
 
 /// <summary>
-/// عند فتح Circuit في Blazor Server، نضمن تعبئة TenantContext عبر resolver.
+/// عند فتح Circuit في Blazor Server، نضمن تعبئة TenantContext عبر resolver
+/// داخل نفس Scope الخاص بالـ circuit (بدون Task.Run).
 /// </summary>
-public sealed class TenantCircuitHandler(IServiceScopeFactory scopeFactory) : CircuitHandler
+public sealed class TenantCircuitHandler(ITenantContextResolver resolver) : CircuitHandler
 {
-    public override Task OnCircuitOpenedAsync(Circuit circuit, CancellationToken cancellationToken)
+    public override async Task OnCircuitOpenedAsync(Circuit circuit, CancellationToken cancellationToken)
     {
-        // لا نحجب فتح الـ circuit، نملأ tenant في الخلفية داخل scope.
-        _ = Task.Run(async () =>
-        {
-            using var scope = scopeFactory.CreateScope();
-            var resolver = scope.ServiceProvider.GetRequiredService<ITenantContextResolver>();
-            await resolver.EnsureResolvedAsync(cancellationToken);
-        }, cancellationToken);
+        await resolver.EnsureResolvedAsync(cancellationToken).ConfigureAwait(false);
+        await base.OnCircuitOpenedAsync(circuit, cancellationToken).ConfigureAwait(false);
+    }
 
-        return Task.CompletedTask;
+    // اختياري لكنه مفيد: عند عودة الاتصال (reconnect)
+    public override async Task OnConnectionUpAsync(Circuit circuit, CancellationToken cancellationToken)
+    {
+        await resolver.EnsureResolvedAsync(cancellationToken).ConfigureAwait(false);
+        await base.OnConnectionUpAsync(circuit, cancellationToken).ConfigureAwait(false);
     }
 }

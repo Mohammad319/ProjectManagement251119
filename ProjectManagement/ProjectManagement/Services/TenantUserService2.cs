@@ -193,8 +193,9 @@ public sealed class TenantUserService(
 
         if (!onlyfromregister && u != null && deletedFromAuth)
         {
-            var calcs = context.Calculations.Where(x => x.IsPrivate && x.CreatedBy == u.Id);
-            context.Calculations.RemoveRange(calcs);
+            await context.Calculations
+                .Where(x => x.IsPrivate && x.CreatedBy == u.Id)
+                .ExecuteDeleteAsync(ct);
 
             context.User.Remove(u);
             await context.SaveChangesAsync();
@@ -206,25 +207,38 @@ public sealed class TenantUserService(
     public async Task<List<TenantUserDto>> GetAllTenantUsersAsync(int? department, CancellationToken ct = default)
     {
         await using var context = await dbFactory.CreateDbContextAsync(ct);
+
         var tenantUsersQuery = context.User.AsQueryable();
 
         if (department.HasValue)
             tenantUsersQuery = tenantUsersQuery.Where(x => x.DepartmentId == department.Value);
 
-        var tenantUsers = await tenantUsersQuery.AsNoTracking().ToListAsync();
+        // 1) اسحب مستخدمي التينانت من DB (خفيف)
+        var tenantUsers = await tenantUsersQuery
+            .AsNoTracking()
+            .ToListAsync(ct);
 
-        var authUsers = await userManager.Users
+        // 2) اسحب من Identity فقط الأعمدة المطلوبة (بدون تحميل entity كاملة)
+        var authDict = await userManager.Users
             .Where(x => x.TenantId == currentTenant.TenantId)
             .AsNoTracking()
-            .ToListAsync();
+            .Select(x => new
+            {
+                x.Id,
+                x.LockoutEnabled,
+                x.LockoutEnd,
+                x.LockoutStart
+            })
+            .ToDictionaryAsync(x => x.Id, x => x, StringComparer.Ordinal, ct);
 
-        var authDict = authUsers.ToDictionary(x => x.Id, x => x);
+        // 3) Merge
+        var result = new List<TenantUserDto>(tenantUsers.Count);
 
-        return tenantUsers.Select(tUser =>
+        foreach (var tUser in tenantUsers)
         {
-            authDict.TryGetValue(tUser.ExternalAuthId ?? "", out var appUser);
+            authDict.TryGetValue(tUser.ExternalAuthId ?? string.Empty, out var appUser);
 
-            return new TenantUserDto
+            result.Add(new TenantUserDto
             {
                 Id = tUser.Id,
                 Firstname = tUser.FirstName,
@@ -237,7 +251,9 @@ public sealed class TenantUserService(
                 LockoutEnabled = appUser?.LockoutEnabled ?? false,
                 LockoutEnd = appUser?.LockoutEnd,
                 LockoutStart = appUser?.LockoutStart
-            };
-        }).ToList();
+            });
+        }
+
+        return result;
     }
 }

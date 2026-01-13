@@ -47,7 +47,7 @@ public static class ServiceRegistration
         services.AddScoped<ITenantContextResolver, TenantContextResolver>();
 
         // CircuitHandler: يضمن تعبئة TenantContext في Blazor Server circuits
-        services.AddSingleton<CircuitHandler, TenantCircuitHandler>();
+        services.AddScoped<CircuitHandler, TenantCircuitHandler>();
 
         // HubFilter: يضمن تعبئة TenantContext قبل كل Hub method invocation
         services.AddSingleton<IHubFilter, TenantContextHubFilter>();

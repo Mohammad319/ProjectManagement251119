@@ -1,41 +1,60 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using Persistence.Context;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Persistence.Interceptors;
-
+using System.Security.Cryptography;
+using System.Text;
 namespace Persistence.Factory;
 
-/// <summary>
-/// كاش لـ DbContextOptions لكل Tenant لتقليل overhead إنشاء options builder كل مرة.
-/// </summary>
 public sealed class TenantDbContextOptionsCache(IMemoryCache cache) : ITenantDbContextOptionsCache
 {
-    private static readonly MemoryCacheEntryOptions CacheOptions = new()
-    {
-        SlidingExpiration = TimeSpan.FromMinutes(30),
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6),
-    };
-
     public DbContextOptions<ShardingSingleDbContext> GetOrCreate(
         int tenantId,
         string connectionString,
         TenantAuditSaveChangesInterceptor interceptor)
     {
-        var key = $"tenant-db-options:{tenantId}:{connectionString.GetHashCode()}";
+        if (tenantId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(tenantId));
 
-        return cache.GetOrCreate(key, entry =>
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new ArgumentException("Connection string is empty.", nameof(connectionString));
+
+        // ✅ Cache BASE options only (no interceptors)
+        var baseKey = BuildKey(tenantId, connectionString);
+
+        var baseOptions = cache.GetOrCreate(baseKey, entry =>
         {
-            entry.SetOptions(CacheOptions);
+            // نفس سياسة الكاش التي عندك تقريبًا (تقدر تعدلها لاحقًا حسب رغبتك)
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(6);
+            entry.SlidingExpiration = TimeSpan.FromMinutes(30);
 
-            var builder = new DbContextOptionsBuilder<ShardingSingleDbContext>()
-                .UseSqlServer(connectionString, sql =>
-                {
-                    sql.EnableRetryOnFailure();
-                    sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                })
-                .AddInterceptors(interceptor);
+            var builder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
+
+            builder.UseSqlServer(connectionString, sql =>
+            {
+                sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                sql.EnableRetryOnFailure();
+            });
+
+            // حافظنا على نفس الروح الموجودة عندك
+            builder.EnableDetailedErrors(false);
+            builder.EnableSensitiveDataLogging(false);
 
             return builder.Options;
         })!;
+
+        // ✅ Per-call clone + add the scoped interceptor (safe)
+        var finalBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>(baseOptions);
+        finalBuilder.AddInterceptors(interceptor);
+
+        return finalBuilder.Options;
+    }
+
+    private static string BuildKey(int tenantId, string connectionString)
+        => $"TenantDbOptions:{tenantId}:{Sha256Short(connectionString)}";
+
+    private static string Sha256Short(string value)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+        // 12 bytes => 24 hex chars (مفتاح صغير وكافي)
+        return Convert.ToHexString(bytes, 0, 12);
     }
 }
