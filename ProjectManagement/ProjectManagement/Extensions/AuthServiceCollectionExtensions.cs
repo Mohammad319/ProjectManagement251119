@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Components.Account;
-using ProjectManagement.Middleware;
+using ProjectManagement.Identity;
 
-namespace ProjectManagement.DependencyInjection;
+namespace ProjectManagement.Extensions;
 
-public static class IdentityFactory
+public static class AuthRegistration
 {
     public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, string connectionString)
     {

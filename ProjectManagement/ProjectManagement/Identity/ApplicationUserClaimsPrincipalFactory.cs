@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using ProjectManagement.Shared.Constant;
 using System.Security.Claims;
 
-namespace ProjectManagement.Middleware;
+namespace ProjectManagement.Identity;
 
 public sealed class ApplicationUserClaimsPrincipalFactory(
     UserManager<ApplicationUser> userManager,
@@ -41,7 +41,7 @@ public sealed class ApplicationUserClaimsPrincipalFactory(
         var fullName = $"{user.Firstname} {user.Lastname}".Trim();
         if (!string.IsNullOrWhiteSpace(fullName))
         {
-            identity.AddClaim(new Claim( PMClaimsConst.FullName, fullName));
+            identity.AddClaim(new Claim(PMClaimsConst.FullName, fullName));
         }
 
         return identity;

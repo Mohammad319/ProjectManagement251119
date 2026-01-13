@@ -1,6 +1,6 @@
 ﻿namespace ProjectManagement.Middleware
 {
-    public class CorrelationIdMiddleware : IMiddleware
+    public sealed class CorrelationIdMiddleware : IMiddleware
     {
         private const string HeaderName = "X-Correlation-ID";
 

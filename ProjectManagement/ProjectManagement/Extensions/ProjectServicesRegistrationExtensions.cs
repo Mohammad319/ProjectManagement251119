@@ -4,13 +4,12 @@ using Persistence.Factory;
 using Persistence.Interceptors;
 using ProjectManagement.BlazorServer;
 using ProjectManagement.Client.DependencyInjection;
-using ProjectManagement.Factories;
 using ProjectManagement.Services;
 using ProjectManagement.SignalR;
 
-namespace ProjectManagement.DependencyInjection;
+namespace ProjectManagement.Extensions;
 
-public static class ServiceRegistration
+public static class ProjectServicesRegistrationExtensions
 {
     public static IServiceCollection AddProjectServices(this IServiceCollection services)
     {

@@ -1,9 +1,8 @@
 ﻿using Persistence.Context;
 using Persistence.Factory;
 using Persistence.Interceptors;
-using ProjectManagement.Services;
 
-namespace ProjectManagement.Factories;
+namespace ProjectManagement.Services;
 
 public sealed class DbContextFactory(
     TenantContext tenantContext,
