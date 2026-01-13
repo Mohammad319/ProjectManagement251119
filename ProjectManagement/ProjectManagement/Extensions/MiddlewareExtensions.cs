@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Middleware;
+using ProjectManagement.Services;
 
 namespace ProjectManagement.Extensions;
 
@@ -11,7 +12,28 @@ public static class MiddlewareExtensions
         var isDev = app.Environment.IsDevelopment();
 
         app.UseResponseCompression();
-        app.UseStaticFiles();
+
+        // Static file caching (important for Blazor WASM startup):
+        // - /_framework assets are fingerprinted -> cache aggressively
+        // - other static assets get a shorter cache
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            OnPrepareResponse = ctx =>
+            {
+                var path = ctx.Context.Request.Path;
+
+                if (path.StartsWithSegments("/_framework", StringComparison.OrdinalIgnoreCase))
+                {
+                    // One year + immutable for fingerprinted files
+                    ctx.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
+                }
+                else
+                {
+                    // Reasonable default; tweak as you like
+                    ctx.Context.Response.Headers.CacheControl = "public,max-age=604800"; // 7 days
+                }
+            }
+        });
 
         // CorrelationId early
         app.UseMiddleware<CorrelationIdMiddleware>();
@@ -33,7 +55,41 @@ public static class MiddlewareExtensions
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // TenantContext after auth (depends on claims) :contentReference[oaicite:9]{index=9}
+        app.MapPost("/internal/tenants/reload", async (
+            HttpRequest req,
+            IConfiguration config,
+            ITenantConnectionStringStore store) =>
+                {
+                    var secret = config["TenantReload:Secret"];
+                    var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
+
+                    if (string.IsNullOrWhiteSpace(secret) || header != secret)
+                        return Results.Unauthorized();
+
+                    await store.ReloadAsync(req.HttpContext.RequestAborted);
+                    return Results.Ok(new { status = "reloaded" });
+                })
+        .WithTags("Internal")
+        .DisableAntiforgery();
+        app.MapPost("/internal/tenants/reload/{tenantId:int}", async (
+            int tenantId,
+            HttpRequest req,
+            IConfiguration config,
+            ITenantConnectionStringStore store) =>
+                {
+                    var secret = config["TenantReload:Secret"];
+                    var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
+
+                    if (string.IsNullOrWhiteSpace(secret) || header != secret)
+                        return Results.Unauthorized();
+
+                    await store.ReloadTenantAsync(tenantId, req.HttpContext.RequestAborted);
+                    return Results.Ok(new { status = "reloaded", tenantId });
+                })
+        .WithTags("Internal")
+        .DisableAntiforgery();
+
+        // TenantContext after auth (depends on claims)
         app.UseMiddleware<TenantContextMiddleware>();
 
         app.UseAntiforgery();

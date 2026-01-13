@@ -32,17 +32,14 @@ namespace Persistence.Service.CalculationItems
             // فلترة Unit على الـ Metadata في الذاكرة (لو Unit مخزنة في JSON)
             if (!string.IsNullOrWhiteSpace(filter.Unit))
             {
-                resultList = resultList
+                resultList = [.. resultList
                     .Where(x =>
                         !string.IsNullOrEmpty(x.Metadata.Unit) &&
-                        x.Metadata.Unit.Contains(filter.Unit, StringComparison.CurrentCultureIgnoreCase))
-                    .ToList();
+                        x.Metadata.Unit.Contains(filter.Unit, StringComparison.CurrentCultureIgnoreCase))];
             }
 
             // تحويل إلى DTO باستعمال الامتداد الموجود عندك
-            return resultList
-                .Select(x => x.MapToResourceListDTO())
-                .ToList();
+            return [.. resultList.Select(x => x.MapToResourceListDTO())];
         }
 
         private static IQueryable<ResourceEntity> ApplyBaseFilter(

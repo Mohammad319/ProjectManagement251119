@@ -1,0 +1,5 @@
+﻿إعداد افتراضي ممتاز (لأغلب الأنظمة)
+ضع داخل connection string:
+Max Pool Size=50;Min Pool Size=0;Connect Timeout=5;TrustServerCertificate=True;
+
+

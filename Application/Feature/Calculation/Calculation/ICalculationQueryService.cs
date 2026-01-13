@@ -5,7 +5,7 @@ namespace Application.Feature.Calculation.Calculation
 {
     public interface ICalculationQueryService
     {
-        Task<IEnumerable<ListCalculationDTO>> GetAllAsync(
+        Task<IReadOnlyList<ListCalculationDTO>> GetAllAsync(
             Guid projectId,
             int userId,
             int? departmentId,

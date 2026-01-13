@@ -13,11 +13,10 @@
 
     public sealed class CalculationQueryService(IDbContextFactoryTenant dbFactory) : ICalculationQueryService
     {
-
         // -------------------------------------------------
         // GetAllCalculations (بنفس منطق GetAllCalculationsQuery)
         // -------------------------------------------------
-        public async Task<IEnumerable<ListCalculationDTO>> GetAllAsync(
+        public async Task<IReadOnlyList<ListCalculationDTO>> GetAllAsync(
             Guid projectId,
             int userId,
             int? departmentId,
@@ -31,6 +30,7 @@
                     x.ProjectId == projectId &&
                     (departmentId == null || x.Project.Folder.DepartmentId == departmentId) &&
                     (!x.IsPrivate || x.CreatedBy == userId))
+                .OrderBy(x => x.SortOrder)
                 .Select(x => new ListCalculationDTO
                 {
                     Id = x.Id,
@@ -189,8 +189,10 @@
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            // 1) Header
             var calculationDto = await context.Calculations
                 .AsNoTracking()
+                .TagWith("CalculationPage.Header")
                 .Where(x =>
                     x.Id == id &&
                     (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId) &&
@@ -213,9 +215,10 @@
             if (calculationDto is null)
                 return null;
 
-            // العروض
+            // 2) Offers (كما عندك لكن مع TagWith)
             var offers = await context.Offers
                 .AsNoTracking()
+                .TagWith("CalculationPage.Offers")
                 .Where(o => o.Resource.Task.CalculationId == id)
                 .Select(o => new
                 {
@@ -233,8 +236,8 @@
                             ? o.Organisation.OrganisationCategory.Name
                             : string.Empty,
                         Category = (o.Organisation != null &&
-                                          o.Organisation.OrganisationCategory != null &&
-                                          o.Organisation.OrganisationCategory.ParentCategory != null)
+                                    o.Organisation.OrganisationCategory != null &&
+                                    o.Organisation.OrganisationCategory.ParentCategory != null)
                             ? o.Organisation.OrganisationCategory.ParentCategory.Name
                             : string.Empty
                     }
@@ -243,13 +246,12 @@
 
             var offersByResource = offers
                 .GroupBy(o => o.ResourceId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(x => x.Offer).ToList());
+                .ToDictionary(g => g.Key, g => (IReadOnlyList<ListOfferDTO>)g.Select(x => x.Offer).ToList());
 
-            // المهام + الموارد (كما في GetCalculationPageQuery)
+            // 3) Tasks فقط (بدون Resources)
             var tasks = await context.Tasks
                 .AsNoTracking()
+                .TagWith("CalculationPage.Tasks")
                 .Where(t => t.CalculationId == id)
                 .Select(t => new TaskListDTO
                 {
@@ -259,11 +261,29 @@
                     OpportunityId = t.OpportunityId,
                     Order = t.SortOrder,
                     StatusId = t.StatusId,
-                    Metadata = t.Metadata,
+                    Metadata = t.Metadata, // ✅ تحتاجها كاملة
                     Status = t.Status != null ? t.Status.Name : string.Empty,
                     StatusColor = t.Status != null ? t.Status.Color : string.Empty,
                     Opportunity = t.Opportunity != null ? t.Opportunity.OpportunityType : string.Empty,
-                    Resources = t.Resources.Select(r => new ResourceListDTO
+                    Resources = new List<ResourceListDTO>()
+                })
+                .ToListAsync(ct);
+
+            if (tasks.Count == 0)
+            {
+                calculationDto.Tasks = [];
+                return calculationDto;
+            }
+
+            var taskIds = tasks.Select(t => t.Id).ToList();
+            var resources = await context.Resources
+                .AsNoTracking()
+                .TagWith("CalculationPage.Resources")
+                .Where(r => taskIds.Contains(r.TaskId))
+                .Select(r => new
+                {
+                    r.TaskId,
+                    Resource = new ResourceListDTO
                     {
                         Name = r.Name,
                         Active = r.IsActive,
@@ -276,7 +296,7 @@
                         OfferId = r.PrimaryOfferId,
                         Order = r.SortOrder,
                         OpportunityId = r.OpportunityId,
-                        Data = r.Metadata,
+                        Data = r.Metadata, // ✅ تحتاجها كاملة
                         Opportunity = r.Opportunity != null ? r.Opportunity.OpportunityType : string.Empty,
                         StatusColor = r.Status != null ? r.Status.Color : string.Empty,
                         Status = r.Status != null ? r.Status.Name : string.Empty,
@@ -285,22 +305,34 @@
                         Account = r.Account != null ? r.Account.Name : string.Empty,
                         AccountCode = r.Account != null ? r.Account.Code : string.Empty,
                         Offers = new List<ListOfferDTO>()
-                    }).ToList()
+                    }
                 })
                 .ToListAsync(ct);
 
-            // ربط Offers بالـ Resources
+            // 4) اربط Resources -> Tasks
+            var resourcesByTask = resources
+                .GroupBy(x => x.TaskId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Resource).ToList());
+
+            foreach (var t in tasks)
+            {
+                if (resourcesByTask.TryGetValue(t.Id, out var list))
+                    t.Resources = list;
+                else
+                    t.Resources = [];
+            }
+
+            // 5) اربط Offers -> Resources
             foreach (var t in tasks)
             {
                 foreach (var r in t.Resources)
                 {
                     if (offersByResource.TryGetValue(r.Id, out var list))
-                        r.Offers = list;
+                        r.Offers = list.ToList(); // DTO expects List
                 }
             }
 
             calculationDto.Tasks = tasks;
-
             return calculationDto;
         }
 

@@ -13,64 +13,38 @@ public static class ProjectServicesRegistrationExtensions
 {
     public static IServiceCollection AddProjectServices(this IServiceCollection services)
     {
-        // -------------------------
-        // UI (Hybrid: Server + WASM)
-        // -------------------------
+        services.AddSingleton<ITenantConnectionStringStore, TenantConnectionStringStore>();
+        services.AddHostedService<TenantPreloadHostedService>();
+
         services.AddRazorComponents()
             .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents()
             .AddAuthenticationStateSerialization(options =>
             {
-                options.SerializeAllClaims = true;
+                options.SerializeAllClaims = false;
             });
 
-        services.AddRazorPages();       // مهم لبعض سيناريوهات الهوية/الصفحات
+        services.AddRazorPages();
         services.AddHttpClient();
-
-        // API Versioning (يبقى هنا أو في Program — ما يسبب تكرار مثل Controllers)
         services.AddApiVersioning();
-
-        // Client shared services (من مشروع Client)
         services.AddClientServices();
 
-        // -------------------------
-        // Tenant Context (Hybrid)
-        // -------------------------
-        // TenantContext يُعبّى في 3 أماكن:
-        // 1) HTTP Requests عبر TenantContextMiddleware
-        // 2) Hub invocations عبر TenantContextHubFilter
-        // 3) Blazor Server Circuits عبر TenantContextResolver + TenantCircuitHandler
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
 
         services.AddScoped<ITenantContextResolver, TenantContextResolver>();
-
-        // CircuitHandler: يضمن تعبئة TenantContext في Blazor Server circuits
         services.AddScoped<CircuitHandler, TenantCircuitHandler>();
-
-        // HubFilter: يضمن تعبئة TenantContext قبل كل Hub method invocation
         services.AddSingleton<IHubFilter, TenantContextHubFilter>();
 
-        // -------------------------
-        // Cache
-        // -------------------------
         services.AddMemoryCache();
 
-        // -------------------------
-        // Tenant connection strings + DbContext options cache
-        // -------------------------
         services.AddScoped<ITenantConnectionStringProvider, TenantConnectionStringProvider>();
-        services.AddSingleton<ITenantDbContextOptionsCache, TenantDbContextOptionsCache>();
+        services.AddSingleton<ITenantDbContextFactoryCache, TenantDbContextFactoryCache>();
 
-        // -------------------------
-        // Persistence helpers
-        // -------------------------
-        services.AddScoped<TenantAuditSaveChangesInterceptor>(); // Scoped
+        // Interceptor is stateless (reads TenantId/UserId from DbContext), so it is safe as Singleton.
+        services.AddSingleton<TenantAuditSaveChangesInterceptor>();
         services.AddScoped<IDbContextFactoryTenant, DbContextFactory>();
 
-        // -------------------------
-        // App services
-        // -------------------------
         services.AddScoped<INotificationHub, SendHubNotification>();
         services.AddScoped<ITenantUserService, TenantUserService>();
 

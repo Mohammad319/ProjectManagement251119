@@ -25,25 +25,50 @@ namespace Persistence.Service.ResourceAccount
         public async Task<List<ListAccountGroupIncludeAccountDTO>> GetGroupsWithAccountsAsync(CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            return await context.AccountGroup
+
+            var groups = await context.AccountGroup
                 .AsNoTracking()
-                .OrderBy(x => x.Name)
-                .Select(x => new ListAccountGroupIncludeAccountDTO
+                .OrderBy(g => g.Name)
+                .Select(g => new ListAccountGroupIncludeAccountDTO
                 {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Accounts = x.Accounts
-                        .OrderBy(a => a.Code) // ✅ بدل OrderByDescending(y => y)
-                        .Select(a => new ListAccountDTO
-                        {
-                            Id = a.Id,
-                            Account = a.Code,
-                            Name = a.Name
-                        })
-                        .ToList()
+                    Id = g.Id,
+                    Name = g.Name,
+                    Accounts = new List<ListAccountDTO>()
                 })
                 .ToListAsync(ct);
+
+            if (groups.Count == 0)
+                return groups;
+
+            var groupIds = groups.Select(g => g.Id).ToList();
+
+            var accounts = await context.Accounts
+                .AsNoTracking()
+                .Where(a => groupIds.Contains(a.AccountGroupId))
+                .OrderBy(a => a.Code)
+                .Select(a => new
+                {
+                    a.AccountGroupId,
+                    Dto = new ListAccountDTO
+                    {
+                        Id = a.Id,
+                        Account = a.Code,
+                        Name = a.Name
+                    }
+                })
+                .ToListAsync(ct);
+
+            var accByGroup = accounts
+                .GroupBy(x => x.AccountGroupId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Dto).ToList());
+
+            foreach (var g in groups)
+                if (accByGroup.TryGetValue(g.Id, out var list))
+                    g.Accounts = list;
+
+            return groups;
         }
+
         public async Task<int> CreateAsync(PostAccountGroupDTO dto, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
