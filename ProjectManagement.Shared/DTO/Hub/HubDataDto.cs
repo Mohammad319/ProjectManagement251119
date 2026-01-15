@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 
 namespace ProjectManagement.Shared.DTO.Hub
 {
@@ -9,8 +10,15 @@ namespace ProjectManagement.Shared.DTO.Hub
         public object Data { get; set; }
         public T GetData<T>()
         {
-            return JsonSerializer.Deserialize<T>(Data.ToString(),
-                new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            if (Data is null)
+                throw new InvalidOperationException("HubDataDto.Data is null.");
+
+            var json = Data as string ?? Data.ToString();
+            if (string.IsNullOrWhiteSpace(json))
+                throw new InvalidOperationException("HubDataDto.Data is empty or not a valid JSON string.");
+
+            return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
         }
+
     }
 }

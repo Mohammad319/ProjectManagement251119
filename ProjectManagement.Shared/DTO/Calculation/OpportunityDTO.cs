@@ -17,6 +17,6 @@ namespace ProjectManagement.Shared.DTO.Calculation
     }
     public class PostOpportunityDTO : OpportunityBase
     {
-        public OpportunityData Data { get; set; } = new();
+        public OpportunityData Metadata { get; set; } = new();
     }
 }

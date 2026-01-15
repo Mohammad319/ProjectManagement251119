@@ -30,7 +30,34 @@ namespace Persistence.Service.Offer
             context.Offers.Add(entity);
             await context.SaveChangesAsync(ct);
 
-            await NotifyAsync(entity.Resource.Task.CalculationId, OperationType.Add, entity.ResourceId);
+            var offer = await context.Offers.Where(x => x.Id == entity.Id).Select(x => new
+            {
+                CalcID = x.Resource.Task.CalculationId,
+                Offer = new ListOfferDTO()
+                {
+                    Id = x.Id,
+                    BaseCost = x.Metadata.BaseCost,
+                    Cost = x.Metadata.Cost,
+                    Organisation = x.Organisation.Name,
+                    Comment = x.Comment,
+                    Date = x.Date,
+                    OrganisationId = x.OrganisationId,
+                    SubCategory = x.Organisation.OrganisationCategory.Name,
+                    Category = x.Organisation.OrganisationCategory.ParentCategory.Name,
+
+                    //UCDepartment = x.ContactOrganisation.Department,
+                    //UCMobile = x.ContactOrganisation.Mobile,
+                    //UCStatus = x.ContactOrganisation.Status.ToString(),
+                    //UCTelefone = x.ContactOrganisation.Telefone,
+                    //ContactId = x.ContactOrganisation.Id,
+                    //UCLastName = x.ContactOrganisation.LastName,
+                    //UCFirstName = x.ContactOrganisation.FirstName,
+                }
+            }).FirstOrDefaultAsync(cancellationToken: ct);
+            await hub.SendNotificationAsync(offer.CalcID.ToString(), ObjectTypHub.Offer,
+                OperationType.Add,
+    new HubDataDto { ParentId = dto.ResourceId, Data = offer.Offer }
+);
             return entity.Id;
         }
 
@@ -52,7 +79,25 @@ namespace Persistence.Service.Offer
             );
 
             await context.SaveChangesAsync(ct);
-            await NotifyAsync(offer.Resource.Task.CalculationId, OperationType.Update, 0);
+            var result = await context.Offers.Where(x => x.Id == offer.Id).Select(x => new
+            {
+                CalcID = x.Resource.Task.CalculationId,
+                Offer = new ListOfferDTO()
+                {
+                    Id = x.Id,
+                    BaseCost = x.Metadata.BaseCost,
+                    Cost = x.Metadata.Cost,
+                    Organisation = x.Organisation.Name,
+                    Comment = x.Comment,
+                    Date = x.Date,
+                    OrganisationId = x.OrganisationId,
+                    SubCategory = x.Organisation.OrganisationCategory.Name,
+                    Category = x.Organisation.OrganisationCategory.ParentCategory.Name
+                }
+            }).FirstOrDefaultAsync(cancellationToken: ct);
+            List<ListOfferDTO> ll = [result.Offer];
+            await hub.SendNotificationAsync(result.CalcID.ToString(), ObjectTypHub.Offer,
+                OperationType.Update, new HubDataDto() { Data = ll, ParentId = 0 });
             return true;
         }
 
@@ -64,14 +109,17 @@ namespace Persistence.Service.Offer
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
             if (offer == null) return false;
-
+            var calculationId = offer.Resource.Task.CalculationId;
             if (offer.Resource.PrimaryOfferId == id)
                 offer.Resource.PrimaryOfferId = null;
 
             context.Offers.Remove(offer);
             await context.SaveChangesAsync(ct);
 
-            await NotifyAsync(offer.Resource.Task.CalculationId, OperationType.Remove, id);
+
+            await hub.SendNotificationAsync(calculationId.ToString(), ObjectTypHub.Offer,
+                OperationType.Remove, id);
+
             return true;
         }
 
@@ -83,7 +131,10 @@ namespace Persistence.Service.Offer
                 .FirstOrDefaultAsync(x => x.Id == resourceId, ct);
 
             if (resource == null) return false;
-
+            var calculationId = await context.Tasks
+                .Where(r => r.Id == resource.TaskId)
+                .Select(r => r.CalculationId)
+                .SingleAsync(ct);
             var offer = offerId.HasValue
                 ? resource.Offers.FirstOrDefault(o => o.Id == offerId)
                 : null;
@@ -97,7 +148,8 @@ namespace Persistence.Service.Offer
             }
 
             await context.SaveChangesAsync(ct);
-            await NotifyAsync(resource.Task.CalculationId, OperationType.Update, resourceId);
+            await hub.SendNotificationAsync(calculationId.ToString(), ObjectTypHub.Offer, OperationType.Update, new HubDataDto() { Parent = offerId.ToString(), ParentId = resourceId });
+
             return true;
         }
 
@@ -117,7 +169,24 @@ namespace Persistence.Service.Offer
                 o.SetBaseCost((o.Metadata.Cost * avg) / sum);
 
             await context.SaveChangesAsync(ct);
-            await NotifyAsync(calcId, OperationType.Update, 0);
+            List<ListOfferDTO> result = await context.Offers.Where(x => x.OrganisationId == organisationId &&
+x.Resource.Task.CalculationId == calcId).Select(x => new ListOfferDTO()
+{
+    Id = x.Id,
+    BaseCost = x.Metadata.BaseCost,
+    Cost = x.Metadata.Cost,
+    Organisation = x.Organisation.Name,
+    Comment = x.Comment,
+    Date = x.Date,
+    OrganisationId = x.OrganisationId,
+    SubCategory = x.Organisation.OrganisationCategory.Name,
+    Category = x.Organisation.OrganisationCategory.ParentCategory.Name
+}
+).ToListAsync(cancellationToken: ct);
+
+            var tt = new HubDataDto() { Data = result, ParentId = 0 };
+            await hub.SendNotificationAsync(calcId.ToString(), ObjectTypHub.Offer, OperationType.Update, tt);
+
             return true;
         }
 
@@ -164,16 +233,6 @@ namespace Persistence.Service.Offer
                     CalcCode = x.Resource.Task.Calculation.Code
                 })
                 .ToListAsync(ct);
-        }
-
-        private Task NotifyAsync(int calcId, OperationType type, int parentId)
-        {
-            return hub.SendNotificationAsync(
-                calcId.ToString(),
-                ObjectTypHub.Offer,
-                type,
-                new HubDataDto { ParentId = parentId }
-            );
         }
     }
 }

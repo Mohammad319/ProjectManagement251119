@@ -15,7 +15,7 @@ namespace Application.Feature.Expression
             OrganisationId = x.OrganisationId,
             Code = x.Code,
             TemplateId = x.TemplateId,
-            Factors = x.HourlyPriceFactorData.Factors,
+            Factors = x.Factors,
             QuanityList = x.Metadata.QuanityList,
             Compensation = x.Compensation == null ? string.Empty : x.Compensation.Name,
             Customer = x.Organisation == null ? string.Empty : x.Organisation.Name,

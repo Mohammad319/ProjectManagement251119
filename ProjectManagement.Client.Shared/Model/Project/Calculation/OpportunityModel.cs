@@ -7,7 +7,7 @@ namespace ProjectManagement.Client.Shared.Model.Project.Calculation
     {
         public int Id { get; set; }
         public bool ShowComment { get; set; }
-        public OpportunityData Data { get; set; } = new();
+        public OpportunityData Metadata { get; set; } = new();
 
     }
 }

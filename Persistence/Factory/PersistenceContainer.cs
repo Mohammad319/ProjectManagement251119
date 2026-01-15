@@ -24,6 +24,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Persistence.Service;
 using Persistence.Service.Application;
 using Persistence.Service.CalculationItems;
+using Persistence.Service.CalculationItems.Calculation;
 using Persistence.Service.CalculationItems.Opportunity;
 using Persistence.Service.CalculationItems.Project;
 using Persistence.Service.CalculationItems.ShareCalc;

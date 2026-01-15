@@ -162,7 +162,7 @@
                         @if (Calc.Opportunities != null)
                             foreach (var opportunity in Calc.Opportunities)
                             {
-                                <option value="@opportunity.Id">@opportunity.OpportunitiesRisks @opportunity.Type</option>
+                                <option value="@opportunity.Id">@opportunity.OpportunitiesRisks @opportunity.OpportunityType</option>
                             }
                     </InputSelect>
                     <ValidationMessage For="@(() => TaskUpdate.OpportunityId)" />

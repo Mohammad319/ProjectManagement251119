@@ -13,11 +13,13 @@ namespace Persistence.Service.Folder
         public async Task<Guid> CreateAsync(PostFolderDTO dto, int userId, int departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            double nextOrder =
-                await context.Folders
-                    .Where(x => x.DepartmentId == departmentId || x.CreatedBy == userId)
-                    .MaxAsync(x => (double?)x.SortOrder, ct)
-                ?? 0;
+
+            var nextOrder = await context.Folders
+                .AsNoTracking()
+                .Where(x => x.DepartmentId == departmentId || x.CreatedBy == userId)
+                .OrderByDescending(x => x.SortOrder)
+                .Select(x => (double?)x.SortOrder)
+                .FirstOrDefaultAsync(ct) ?? 0;
 
             var entity = new FolderEntity(
                 name: dto.Name,
@@ -31,6 +33,7 @@ namespace Persistence.Service.Folder
             await context.SaveChangesAsync(ct);
             return entity.Id;
         }
+
 
 
         public async Task<bool> UpdateAsync(Guid id, PostFolderDTO dto, int userId, int? departmentId, CancellationToken ct = default)
@@ -99,20 +102,19 @@ namespace Persistence.Service.Folder
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var query = context.Folders.AsNoTracking().Where(x => x.IsVisible == isVisible);
-
-            if (departmentId.HasValue)
-                query = query.Where(x => x.DepartmentId == departmentId);
-
-            return await query.Select(x => new ListFolderDTO
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Color = x.Color,
-                Order = x.SortOrder
-            }).ToListAsync(ct);
+            return await context.Folders
+                .AsNoTracking()
+                .Where(x => x.IsVisible == isVisible && (!departmentId.HasValue || x.DepartmentId == departmentId))
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new ListFolderDTO
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Color = x.Color,
+                    Order = x.SortOrder
+                })
+                .ToListAsync(ct);
         }
-
         public async Task<List<ListFolderDTO>> GetFromOtherDepartmentAsync(int departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);

@@ -13,7 +13,6 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    [Index(nameof(TenantId), nameof(ProjectId))]
     public sealed class CalculationEntity : AuditableSoftDeletableEntity<int>
     {
         private CalculationData? _metadata;
@@ -23,7 +22,8 @@ namespace Domain.Entities.Calculation
             private set => _metadata = value;
         }
         private CalculationHourlyPriceFactorData? _hourlyPriceFactor;
-
+        public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; }
+        public List<OHFactors> Factors { get; set; }
         public CalculationEntity()
         {
             Tasks = [];
@@ -33,8 +33,18 @@ namespace Domain.Entities.Calculation
             Applications = [];
             AttributesTender = [];
             Tenders = [];
+            HourlyPrice = [];
+            Factors = [];
         }
+        // Denormalized for query performance
+        public int DepartmentId { get; private set; }
+        public void AssignDepartment(int departmentId)
+        {
+            if (departmentId <= 0)
+                throw new ArgumentOutOfRangeException(nameof(departmentId));
 
+            DepartmentId = departmentId;
+        }
         // -----------------------
         // Basic fields
         // -----------------------
@@ -65,11 +75,7 @@ namespace Domain.Entities.Calculation
 
 
 
-        public CalculationHourlyPriceFactorData HourlyPriceFactorData
-        {
-            get => _hourlyPriceFactor ??= new CalculationHourlyPriceFactorData();
-            private set => _hourlyPriceFactor = value;
-        }
+
 
         public bool IsPrivate { get; private set; }
         public bool IsVisible { get; private set; } = true;
@@ -167,6 +173,7 @@ namespace Domain.Entities.Calculation
         // =========================================================
         // Factory + Update methods
         // =========================================================
+  
 
         public static CalculationEntity CreateCopy(CalculationEntity original, Guid newProjectId, int userId)
         {
@@ -184,7 +191,8 @@ namespace Domain.Entities.Calculation
                 Tax = original.Tax,
                 PublicationDate = original.PublicationDate,
                 DecisionDate = original.DecisionDate,
-                HourlyPriceFactorData = new(),//original.HourlyPriceFactorData.Clone(),
+                HourlyPrice = original.HourlyPrice,//original.HourlyPriceFactorData.Clone(),
+                Factors = original.Factors,
                 Metadata = new(),//original.Metadata.Clone(),
                 CreatedBy = userId,
                 CreatedAt = DateTime.UtcNow
@@ -202,11 +210,11 @@ namespace Domain.Entities.Calculation
         }
         public void UpdateFactors(List<OHFactors> factors)
         {
-            HourlyPriceFactorData.Factors = factors;
+            Factors = factors;
         }
         public void UpdateHourlyPriceList(List<HourlyPriceListGroupDTO> hourlyPriceList)
         {
-            HourlyPriceFactorData.HourlyPrice = hourlyPriceList;
+            HourlyPrice = hourlyPriceList;
         }
         public void Update(CalculationPostDTO dto)
         {

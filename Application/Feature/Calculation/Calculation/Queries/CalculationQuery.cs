@@ -16,11 +16,11 @@ public sealed record GetAllCalculationsQuery(
 public sealed class GetAllCalculationsQueryHandler(ICalculationQueryService service)
             : IRequestHandler<GetAllCalculationsQuery, IEnumerable<ListCalculationDTO>>
 {
-    public Task<IEnumerable<ListCalculationDTO>> Handle(
+    public async Task<IEnumerable<ListCalculationDTO>> Handle(
             GetAllCalculationsQuery request,
             CancellationToken cancellationToken)
     {
-        return service.GetAllAsync(
+        return await service.GetAllAsync(
             request.ProjectId,
             request.UserId,
             request.DepartmentId,
@@ -41,9 +41,8 @@ public sealed record GetAllCalculationsByDepartmentQuery(
 public sealed class GetAllCalculationsByDepartmentQueryHandler(ICalculationQueryService service)
             : IRequestHandler<GetAllCalculationsByDepartmentQuery, IEnumerable<ListCalculationDTO>>
 {
-    public Task<IEnumerable<ListCalculationDTO>> Handle(
-            GetAllCalculationsByDepartmentQuery request,
-            CancellationToken cancellationToken)
+    public Task<IEnumerable<ListCalculationDTO>> Handle(GetAllCalculationsByDepartmentQuery request,
+        CancellationToken cancellationToken)
     {
         return service.GetByDepartmentAsync(
             request.ProjectId,

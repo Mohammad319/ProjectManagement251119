@@ -6,6 +6,7 @@ using ProjectManagement.Shared.DTO.Project;
 
 namespace Persistence.Configurations;
 
+
 public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntity>
 {
     public void Configure(EntityTypeBuilder<ProjectEntity> builder)
@@ -15,6 +16,8 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
 
         builder.Property(e => e.Metadata)
             .HasJsonConversion<ProjectData>();
+
+        // ---------------- العلاقات ----------------
 
         builder.HasMany(x => x.Calculations)
             .WithOne(x => x.Project)
@@ -51,6 +54,17 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
             .WithMany(x => x.Projects)
             .HasForeignKey(x => x.OrganisationId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // ---------------- Indexes (تحسين الأداء) ----------------
+
+        // يغطي أغلب استعلامات: GetByFolder + IsVisible + OrderBy SortOrder
+        builder.HasIndex(x => new { x.TenantId, x.FolderId, x.IsVisible, x.SortOrder });
+
+        // لو عندك استعلامات تجيب مشاريع مستخدم معيّن (أو داخل CreateAsync عندك فلترة CreatedBy)
+        builder.HasIndex(x => new { x.TenantId, x.CreatedBy });
+
+        // (اختياري) إذا عندك ترتيب عام داخل التينانت بدون FolderId
+        // builder.HasIndex(x => new { x.TenantId, x.SortOrder });
 
         // تحسين أداء شائع في SaaS (اختياري) لو TenantId موجود على ProjectEntity:
         // builder.HasIndex(x => new { x.TenantId, x.Id });

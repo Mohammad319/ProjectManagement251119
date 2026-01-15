@@ -25,9 +25,9 @@ namespace Persistence.Service.CalculationItems.Opportunity
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var entity = new OpportunityEntity(
                 dto.OpportunitiesRisks,
-                dto.Type,
+                dto.OpportunityType,
                 calculationId,
-                dto.Data ?? new OpportunityData()
+                dto.Metadata ?? new OpportunityData()
             );
 
             context.Opportunity.Add(entity);
@@ -56,8 +56,8 @@ namespace Persistence.Service.CalculationItems.Opportunity
 
             entity.Update(
                 dto.OpportunitiesRisks,
-                dto.Type,
-                dto.Data ?? new OpportunityData()
+                dto.OpportunityType,
+                dto.Metadata ?? new OpportunityData()
             );
 
             await context.SaveChangesAsync(ct);

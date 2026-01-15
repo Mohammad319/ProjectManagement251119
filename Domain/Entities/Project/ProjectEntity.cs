@@ -51,6 +51,8 @@ namespace Domain.Entities.Project
 
         // ترتيب العرض العام
         public double SortOrder { get; set; }
+        public int DepartmentId { get; private set; }
+
 
         private ProjectData? _metadata;
         public ProjectData Metadata

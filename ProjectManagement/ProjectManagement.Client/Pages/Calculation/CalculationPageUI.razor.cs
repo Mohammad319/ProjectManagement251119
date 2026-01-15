@@ -67,7 +67,7 @@ namespace ProjectManagement.Client.Pages.Calculation
 
             // ===== حساب نوع التغيير =====
             bool structural =
-                (typ == ObjectTypHub.task || typ == ObjectTypHub.resource) &&
+                (typ == ObjectTypHub.task || typ == ObjectTypHub.resource || typ == ObjectTypHub.Offer) &&
                 (ot == OperationType.Add || ot == OperationType.AddRange ||
                  ot == OperationType.Remove || ot == OperationType.RemoveRange ||
                  ot == OperationType.MoveRange);

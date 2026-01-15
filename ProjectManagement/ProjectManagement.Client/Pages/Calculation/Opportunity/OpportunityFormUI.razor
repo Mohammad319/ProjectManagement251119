@@ -15,38 +15,38 @@
 
         <div>
             <label class="@CssClasses.Form.Label">@CalcResource.risk:</label>
-            <InputText class="@CssClasses.Input.Text" @bind-Value="@Post.Type" />
-            <ValidationMessage For="@(() => Post.Type)" />
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@Post.OpportunityType" />
+            <ValidationMessage For="@(() => Post.OpportunityType)" />
         </div>
 
         <div>
             <label class="@CssClasses.Form.Label">@ResourceLoc.probabilityWorth:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.ProbabilityWorth" />
-            <ValidationMessage For="@(() => Post.Data.ProbabilityWorth)" />
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.ProbabilityWorth" />
+            <ValidationMessage For="@(() => Post.Metadata.ProbabilityWorth)" />
         </div>
 
         <div>
             <label class="@CssClasses.Form.Label">@ResourceLoc.probability:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.ProbabilityPercent" />
-            <ValidationMessage For="@(() => Post.Data.ProbabilityPercent)" />
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.ProbabilityPercent" />
+            <ValidationMessage For="@(() => Post.Metadata.ProbabilityPercent)" />
         </div>
 
         <div>
             <label class="@CssClasses.Form.Label">@ResourceLoc.probabilityBest:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.ProbabilityBest" />
-            <ValidationMessage For="@(() => Post.Data.ProbabilityBest)" />
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.ProbabilityBest" />
+            <ValidationMessage For="@(() => Post.Metadata.ProbabilityBest)" />
         </div>
 
         <div>
             <label class="@CssClasses.Form.Label">@ResourceLoc.value:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Data.Value" />
-            <ValidationMessage For="@(() => Post.Data.Value)" />
+            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.Value" />
+            <ValidationMessage For="@(() => Post.Metadata.Value)" />
         </div>
 
         <div class="@CssClasses.Grid.Span.MD2">
             <label class="@CssClasses.Form.Label">@CalcResource.note:</label>
-            <InputTextArea class="@CssClasses.Input.Text" @bind-Value="@Post.Data.Comment" />
-            <ValidationMessage For="@(() => Post.Data.Comment)" />
+            <InputTextArea class="@CssClasses.Input.Text" @bind-Value="@Post.Metadata.Comment" />
+            <ValidationMessage For="@(() => Post.Metadata.Comment)" />
         </div>
 
     </div>

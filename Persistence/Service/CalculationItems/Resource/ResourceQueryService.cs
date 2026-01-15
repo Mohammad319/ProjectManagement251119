@@ -1,8 +1,10 @@
 ﻿using Application.Extention;
 using Application.Feature.Calculation.Resource;
 using Domain.Entities.Calculation;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
+
 namespace Persistence.Service.CalculationItems
 {
     public sealed class ResourceQueryService(IDbContextFactoryTenant dbFactory) : IResourceQueryService
@@ -12,56 +14,42 @@ namespace Persistence.Service.CalculationItems
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var query = context.Resources
+
+            IQueryable<ResourceEntity> query = context.Resources
                 .AsNoTracking()
-                .AsQueryable();
+                .ApplyFilterSqlOnly(filter)
+                .IncludeResourceLookups(); // لو الماب يعتمد على navigation properties
 
-            query = ApplyBaseFilter(query, filter);
-            query = ApplyOptionalFilter(query, filter);
+            // ✅ تحميل بعد تقليل النتائج قدر الإمكان من SQL
+            var list = await query.ToListAsync(ct);
 
-            // نحتاج Include لبعض الـ navigation لو بتستخدمها في الماب
-            query = query
-                .Include(x => x.Account)
-                .Include(x => x.Status)
-                .Include(x => x.Opportunity)
-                .Include(x => x.ResourceSort)
-                .Include(x => x.ResourceType);
-
-            var resultList = await query.ToListAsync(ct);
-
-            // فلترة Unit على الـ Metadata في الذاكرة (لو Unit مخزنة في JSON)
+            // ✅ فلترة Unit في الذاكرة لأن Unit داخل JSON
             if (!string.IsNullOrWhiteSpace(filter.Unit))
             {
-                resultList = [.. resultList
+                list = [.. list
                     .Where(x =>
                         !string.IsNullOrEmpty(x.Metadata.Unit) &&
                         x.Metadata.Unit.Contains(filter.Unit, StringComparison.CurrentCultureIgnoreCase))];
             }
 
-            // تحويل إلى DTO باستعمال الامتداد الموجود عندك
-            return [.. resultList.Select(x => x.MapToResourceListDTO())];
+            return list.Select(x => x.MapToResourceListDTO()).ToList();
         }
+    }
 
-        private static IQueryable<ResourceEntity> ApplyBaseFilter(
-            IQueryable<ResourceEntity> query,
+    internal static class ResourceQueryExtensions
+    {
+        // هذه الفلاتر فقط اللي نضمن أنها تترجم SQL
+        internal static IQueryable<ResourceEntity> ApplyFilterSqlOnly(
+            this IQueryable<ResourceEntity> query,
             FilterCalculationItemsDto filter)
         {
             if (filter.CalculationID > 0)
-                return query.Where(x => x.Task.CalculationId == filter.CalculationID);
+                query = query.Where(x => x.Task.CalculationId == filter.CalculationID);
+            else if (filter.ProjectID.HasValue)
+                query = query.Where(x => x.Task.Calculation.ProjectId == filter.ProjectID);
+            else if (filter.FolderID.HasValue)
+                query = query.Where(x => x.Task.Calculation.Project.FolderId == filter.FolderID);
 
-            if (filter.ProjectID.HasValue)
-                return query.Where(x => x.Task.Calculation.ProjectId == filter.ProjectID);
-
-            if (filter.FolderID.HasValue)
-                return query.Where(x => x.Task.Calculation.Project.FolderId == filter.FolderID);
-
-            return query;
-        }
-
-        private static IQueryable<ResourceEntity> ApplyOptionalFilter(
-            IQueryable<ResourceEntity> query,
-            FilterCalculationItemsDto filter)
-        {
             if (filter.ResType.HasValue)
                 query = query.Where(x => x.ResType == filter.ResType);
 
@@ -84,6 +72,16 @@ namespace Persistence.Service.CalculationItems
                 query = query.Where(x => x.StatusId == filter.Status);
 
             return query;
+        }
+
+        internal static IQueryable<ResourceEntity> IncludeResourceLookups(this IQueryable<ResourceEntity> query)
+        {
+            return query
+                .Include(x => x.Account)
+                .Include(x => x.Status)
+                .Include(x => x.Opportunity)
+                .Include(x => x.ResourceSort)
+                .Include(x => x.ResourceType);
         }
     }
 }

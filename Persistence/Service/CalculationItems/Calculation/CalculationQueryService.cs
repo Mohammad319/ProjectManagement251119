@@ -1,8 +1,10 @@
-﻿namespace Persistence.Service.CalculationItems
+﻿namespace Persistence.Service.CalculationItems.Calculation
 {
+    using Domain.Entities.Calculation;
     using global::Application.Feature.Calculation.Calculation;
     using Microsoft.EntityFrameworkCore;
     using Persistence.Factory;
+    using ProjectManagement.Shared.Base.Calculation;
     using ProjectManagement.Shared.DTO.Calculation;
     using ProjectManagement.Shared.DTO.Offer;
     using System;
@@ -11,11 +13,8 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    public sealed class CalculationQueryService(IDbContextFactoryTenant dbFactory) : ICalculationQueryService
+    public sealed partial class CalculationQueryService(IDbContextFactoryTenant dbFactory) : ICalculationQueryService
     {
-        // -------------------------------------------------
-        // GetAllCalculations (بنفس منطق GetAllCalculationsQuery)
-        // -------------------------------------------------
         public async Task<IReadOnlyList<ListCalculationDTO>> GetAllAsync(
             Guid projectId,
             int userId,
@@ -26,30 +25,14 @@
 
             return await context.Calculations
                 .AsNoTracking()
-                .Where(x =>
+                .Where(x => !x.IsDeleted && 
                     x.ProjectId == projectId &&
-                    (departmentId == null || x.Project.Folder.DepartmentId == departmentId) &&
                     (!x.IsPrivate || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
-                .Select(x => new ListCalculationDTO
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Code = x.Code,
-                    Order = x.SortOrder,
-                    TenderDeadline = x.TenderDeadline,
-                    TenderQA = x.TenderQA,
-                    IsPrivate = x.IsPrivate,
-                    EndDate = x.EndDate,
-                    StartDate = x.StartDate,
-                    Status = x.Status.Name
-                })
+                .Select(ListCalculationProjection)
                 .ToListAsync(ct);
         }
 
-        // -------------------------------------------------
-        // GetAllCalculationsByDepartment
-        // -------------------------------------------------
         public async Task<IEnumerable<ListCalculationDTO>> GetByDepartmentAsync(
             Guid projectId,
             int userId,
@@ -76,9 +59,6 @@
                 .ToListAsync(ct);
         }
 
-        // -------------------------------------------------
-        // GetCalculationDetails
-        // -------------------------------------------------
         public async Task<CalculationDetailsDTO?> GetDetailsAsync(
             int id,
             CancellationToken ct = default)
@@ -92,15 +72,15 @@
                 {
                     TenderQA = x.TenderQA,
                     TenderDeadline = x.TenderDeadline,
-                    Compensation = x.Compensation.Name,
-                    Contract = x.Contract.Name,
                     Priority = x.Metadata.Priority,
                     Procurement = x.Procurement,
-                    ProcurementMethods = x.ProcurementMethods.Name,
                     Name = x.Name,
                     Tax = x.Tax,
                     TimeMonth = x.Metadata.TimeMonth,
-                    Type = x.Type.Name,
+                    Compensation = x.Compensation != null ? x.Compensation.Name : string.Empty,
+                    Contract = x.Contract != null ? x.Contract.Name : string.Empty,
+                    ProcurementMethods = x.ProcurementMethods != null ? x.ProcurementMethods.Name : string.Empty,
+                    Type = x.Type != null ? x.Type.Name : string.Empty,
                     Order = x.SortOrder,
                     ClientsManager = x.Metadata.ClientsManager,
                     Code = x.Code,
@@ -115,7 +95,7 @@
                     StartDate = x.StartDate,
                     Supervisor = x.Metadata.Supervisor,
                     PublicationDate = x.PublicationDate,
-                    HourlyPrice = x.HourlyPriceFactorData.HourlyPrice,
+                    HourlyPrice = x.HourlyPrice,
                     Maps = x.Metadata.Maps,
                     Notes = x.Metadata.Notes,
                     Inspector = x.Metadata.Inspector,
@@ -125,9 +105,6 @@
                 .FirstOrDefaultAsync(ct);
         }
 
-        // -------------------------------------------------
-        // GetCalculationPost (للنماذج في UI)
-        // -------------------------------------------------
         public async Task<CalculationPostDTO?> GetPostModelAsync(
             int id,
             CancellationToken ct = default)
@@ -167,7 +144,7 @@
                     Income = x.Metadata.Income,
                     Supervisor = x.Metadata.Supervisor,
                     PublicationDate = x.PublicationDate,
-                    HourlyPrice = x.HourlyPriceFactorData.HourlyPrice,
+                    HourlyPrice = x.HourlyPrice,
                     Maps = x.Metadata.Maps,
                     Notes = x.Metadata.Notes,
                     Inspector = x.Metadata.Inspector,
@@ -178,167 +155,6 @@
                 .FirstOrDefaultAsync(ct);
         }
 
-        // -------------------------------------------------
-        // GetCalculationPage (الهيد + Tasks + Resources + Offers)
-        // -------------------------------------------------
-        public async Task<CalculationPageDTO?> GetPageAsync(
-            int id,
-            int userId,
-            int? departmentId,
-            CancellationToken ct = default)
-        {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            // 1) Header
-            var calculationDto = await context.Calculations
-                .AsNoTracking()
-                .TagWith("CalculationPage.Header")
-                .Where(x =>
-                    x.Id == id &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId) &&
-                    (!x.IsPrivate || x.CreatedBy == userId))
-                .Select(x => new CalculationPageDTO
-                {
-                    Tax = x.Tax,
-                    Name = x.Name,
-                    OrganisationId = x.OrganisationId,
-                    Code = x.Code,
-                    TemplateId = x.TemplateId,
-                    Factors = x.HourlyPriceFactorData.Factors,
-                    QuanityList = x.Metadata.QuanityList,
-                    Compensation = x.Compensation != null ? x.Compensation.Name : string.Empty,
-                    Customer = x.Organisation != null ? x.Organisation.Name : string.Empty,
-                    Contract = x.Contract != null ? x.Contract.Name : string.Empty,
-                })
-                .FirstOrDefaultAsync(ct);
-
-            if (calculationDto is null)
-                return null;
-
-            // 2) Offers (كما عندك لكن مع TagWith)
-            var offers = await context.Offers
-                .AsNoTracking()
-                .TagWith("CalculationPage.Offers")
-                .Where(o => o.Resource.Task.CalculationId == id)
-                .Select(o => new
-                {
-                    o.ResourceId,
-                    Offer = new ListOfferDTO
-                    {
-                        Id = o.Id,
-                        BaseCost = o.Metadata.BaseCost,
-                        Cost = o.Metadata.Cost,
-                        Comment = o.Metadata.Comment,
-                        Date = o.Date,
-                        OrganisationId = o.OrganisationId,
-                        Organisation = o.Organisation != null ? o.Organisation.Name : string.Empty,
-                        SubCategory = (o.Organisation != null && o.Organisation.OrganisationCategory != null)
-                            ? o.Organisation.OrganisationCategory.Name
-                            : string.Empty,
-                        Category = (o.Organisation != null &&
-                                    o.Organisation.OrganisationCategory != null &&
-                                    o.Organisation.OrganisationCategory.ParentCategory != null)
-                            ? o.Organisation.OrganisationCategory.ParentCategory.Name
-                            : string.Empty
-                    }
-                })
-                .ToListAsync(ct);
-
-            var offersByResource = offers
-                .GroupBy(o => o.ResourceId)
-                .ToDictionary(g => g.Key, g => (IReadOnlyList<ListOfferDTO>)g.Select(x => x.Offer).ToList());
-
-            // 3) Tasks فقط (بدون Resources)
-            var tasks = await context.Tasks
-                .AsNoTracking()
-                .TagWith("CalculationPage.Tasks")
-                .Where(t => t.CalculationId == id)
-                .Select(t => new TaskListDTO
-                {
-                    TaskId = t.ParentTaskId,
-                    Id = t.Id,
-                    Name = t.Name,
-                    OpportunityId = t.OpportunityId,
-                    Order = t.SortOrder,
-                    StatusId = t.StatusId,
-                    Metadata = t.Metadata, // ✅ تحتاجها كاملة
-                    Status = t.Status != null ? t.Status.Name : string.Empty,
-                    StatusColor = t.Status != null ? t.Status.Color : string.Empty,
-                    Opportunity = t.Opportunity != null ? t.Opportunity.OpportunityType : string.Empty,
-                    Resources = new List<ResourceListDTO>()
-                })
-                .ToListAsync(ct);
-
-            if (tasks.Count == 0)
-            {
-                calculationDto.Tasks = [];
-                return calculationDto;
-            }
-
-            var taskIds = tasks.Select(t => t.Id).ToList();
-            var resources = await context.Resources
-                .AsNoTracking()
-                .TagWith("CalculationPage.Resources")
-                .Where(r => taskIds.Contains(r.TaskId))
-                .Select(r => new
-                {
-                    r.TaskId,
-                    Resource = new ResourceListDTO
-                    {
-                        Name = r.Name,
-                        Active = r.IsActive,
-                        Id = r.Id,
-                        ResType = r.ResType,
-                        ResourceSortId = r.ResourceSortId,
-                        ResourceTypeId = r.ResourceTypeId,
-                        AccountId = r.AccountId,
-                        StatusId = r.StatusId,
-                        OfferId = r.PrimaryOfferId,
-                        Order = r.SortOrder,
-                        OpportunityId = r.OpportunityId,
-                        Data = r.Metadata, // ✅ تحتاجها كاملة
-                        Opportunity = r.Opportunity != null ? r.Opportunity.OpportunityType : string.Empty,
-                        StatusColor = r.Status != null ? r.Status.Color : string.Empty,
-                        Status = r.Status != null ? r.Status.Name : string.Empty,
-                        Sort = r.ResourceSort != null ? r.ResourceSort.Name : string.Empty,
-                        ResName = r.ResourceType != null ? r.ResourceType.Name : string.Empty,
-                        Account = r.Account != null ? r.Account.Name : string.Empty,
-                        AccountCode = r.Account != null ? r.Account.Code : string.Empty,
-                        Offers = new List<ListOfferDTO>()
-                    }
-                })
-                .ToListAsync(ct);
-
-            // 4) اربط Resources -> Tasks
-            var resourcesByTask = resources
-                .GroupBy(x => x.TaskId)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.Resource).ToList());
-
-            foreach (var t in tasks)
-            {
-                if (resourcesByTask.TryGetValue(t.Id, out var list))
-                    t.Resources = list;
-                else
-                    t.Resources = [];
-            }
-
-            // 5) اربط Offers -> Resources
-            foreach (var t in tasks)
-            {
-                foreach (var r in t.Resources)
-                {
-                    if (offersByResource.TryGetValue(r.Id, out var list))
-                        r.Offers = list.ToList(); // DTO expects List
-                }
-            }
-
-            calculationDto.Tasks = tasks;
-            return calculationDto;
-        }
-
-        // -------------------------------------------------
-        // HourlyPriceList (قراءة)
-        // -------------------------------------------------
         public async Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(
             int id,
             int? departmentId,
@@ -349,11 +165,26 @@
             var priceList = await context.Calculations
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
-                            (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId))
-                .Select(x => x.HourlyPriceFactorData.HourlyPrice)
+                            (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value))
                 .FirstOrDefaultAsync(ct);
 
-            return priceList ?? [];
+            return priceList?.HourlyPrice ?? [];
         }
+
+        private static readonly System.Linq.Expressions.Expression<Func<CalculationEntity, ListCalculationDTO>>
+            ListCalculationProjection =
+                x => new ListCalculationDTO
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Code = x.Code,
+                    Order = x.SortOrder,
+                    TenderDeadline = x.TenderDeadline,
+                    TenderQA = x.TenderQA,
+                    IsPrivate = x.IsPrivate,
+                    EndDate = x.EndDate,
+                    StartDate = x.StartDate,
+                    Status = x.Status != null ? x.Status.Name : string.Empty
+                };
     }
 }

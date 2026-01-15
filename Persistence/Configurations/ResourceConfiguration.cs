@@ -1,10 +1,7 @@
 ﻿using Domain.Entities.Calculation;
 using Domain.Entities.ResourceType;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Persistence.Serialization;
-using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.ResourceType;
 
 namespace Persistence.Configurations;
@@ -47,6 +44,19 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
 {
     public void Configure(EntityTypeBuilder<ResourceEntity> builder)
     {
+        builder.HasIndex(x => new { x.TenantId, x.TaskId, x.SortOrder });
+
+        builder.HasIndex(x => new { x.TenantId, x.ResourceTypeId });
+        builder.HasIndex(x => new { x.TenantId, x.ResourceSortId });
+        builder.HasIndex(x => new { x.TenantId, x.AccountId });
+        builder.HasIndex(x => new { x.TenantId, x.StatusId });
+        builder.HasIndex(x => new { x.TenantId, x.OpportunityId });
+
+        // اختياري حسب الاستخدام
+        //builder.HasIndex(x => new { x.TenantId, x.ResType });
+    //    builder.Property(x => x.UnitIndexed)
+    //.HasComputedColumnSql("JSON_VALUE([Metadata],'$.Unit')", stored: true);
+
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 

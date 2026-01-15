@@ -7,6 +7,7 @@ internal sealed class FolderConfiguration : IEntityTypeConfiguration<FolderEntit
 {
     public void Configure(EntityTypeBuilder<FolderEntity> builder)
     {
+        // العلاقات
         builder.HasOne(x => x.Department)
             .WithMany(x => x.Folders)
             .HasForeignKey(x => x.DepartmentId)
@@ -16,5 +17,15 @@ internal sealed class FolderConfiguration : IEntityTypeConfiguration<FolderEntit
             .WithOne(x => x.Folder)
             .HasForeignKey(x => x.FolderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // ---------------- Indexes ----------------
+        builder.HasIndex(x => new { x.TenantId, x.DepartmentId, x.IsVisible, x.SortOrder });
+
+        // (اختياري) إذا كثير تبحث بالاسم أو تسوي فلترة بالاسم
+        // builder.HasIndex(x => x.Name);
+
+        // (اختياري) لو تبي تمنع تكرار الاسم داخل نفس القسم
+        //builder.HasIndex(x => new {  x.DepartmentId, x.Name }).IsUnique();
     }
 }
+

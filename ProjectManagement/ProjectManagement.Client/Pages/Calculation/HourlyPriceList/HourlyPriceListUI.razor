@@ -320,6 +320,7 @@
 
     private void AddGroup()
     {
+        IsEditMode = true;
         Calc.HourlyPriceList ??= new List<HourlyPriceListGroupDTO>();
 
         Calc.HourlyPriceList.Add(new HourlyPriceListGroupDTO
@@ -398,6 +399,7 @@
     private async Task SaveAsync()
     {
         bool result = await Repo.Calculation.UpdateAsync(Calc.Id, Calc.HourlyPriceList);
+        IsEditMode = false;
         MHD.Notifications(ToastType.Update, result);
     }
 

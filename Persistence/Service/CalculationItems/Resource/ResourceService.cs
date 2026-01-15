@@ -2,21 +2,28 @@
 using Application.Feature.Calculation.Resource;
 using Application.Interfaces;
 using Domain.Entities.Calculation;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
+using System.Linq;
 
 namespace Persistence.Service
 {
     public class ResourceService(IDbContextFactoryTenant dbFactory, INotificationHub notification) : IResourceService
     {
-
         // -----------------------------------------------------
         // Copy
         // -----------------------------------------------------
-        public async Task<bool> CopyAsync(IReadOnlyList<ResourceTaskItemDTO> Items, int parentTaskId, int sourceCalcId, CancellationToken ct = default)
+        public async Task<bool> CopyAsync(
+            IReadOnlyList<ResourceTaskItemDTO> items,
+            int parentTaskId,
+            int sourceCalcId,
+            CancellationToken ct = default)
         {
+            if (items is null || items.Count == 0) return true;
+
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var parent = await context.Tasks
@@ -28,22 +35,25 @@ namespace Persistence.Service
                 })
                 .FirstOrDefaultAsync(ct);
 
-            if (parent is null)
-                return false;
+            if (parent is null) return false;
 
-            List<ResourceEntity> entities = [];
+            var ids = items.Select(x => x.Id).Distinct().ToList();
+
+            // ✅ تحميل مرة واحدة بدل استعلام لكل عنصر
+            var sourceResources = await context.Resources
+                .AsNoTracking()
+                .Where(r => ids.Contains(r.Id))
+                .ToListAsync(ct);
+
+            var valueById = items.ToDictionary(x => x.Id, x => x.Value);
+
+            var entities = new List<ResourceEntity>(sourceResources.Count);
+
             double nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 0;
 
-            foreach (var item in Items)
+            foreach (var res in sourceResources)
             {
-                var res = await context.Resources
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.Id == item.Id, ct);
-
-                if (res == null)
-                    continue;
-
-                // نحوله لنسخة جديدة
+                // نسخة جديدة
                 res.Id = 0;
                 res.PrimaryOfferId = null;
 
@@ -52,7 +62,7 @@ namespace Persistence.Service
                     if (!string.IsNullOrEmpty(res.Metadata.QuantityParam))
                         res.Metadata.QuantityParam = PMValuesConst.FixedQ;
 
-                    res.Metadata.Quantity = item.Value;
+                    res.Metadata.Quantity = valueById.TryGetValue(res.Id, out var v) ? v : res.Metadata.Quantity;
                     res.OpportunityId = null;
                 }
 
@@ -63,18 +73,17 @@ namespace Persistence.Service
                 entities.Add(res);
             }
 
+            if (entities.Count == 0) return true;
+
             context.Resources.AddRange(entities);
             await context.SaveChangesAsync(ct);
+            context.ChangeTracker.Clear();
 
             var newIds = entities.Select(x => x.Id).ToList();
 
             var loadedEntities = await context.Resources
                 .Where(r => newIds.Contains(r.Id))
-                .Include(r => r.Account)
-                .Include(r => r.Status)
-                .Include(r => r.Opportunity)
-                .Include(r => r.ResourceSort)
-                .Include(r => r.ResourceType)
+                .IncludeResourceLookups()
                 .ToListAsync(ct);
 
             var resourceDtos = loadedEntities.Select(ResourceExtention.MapToResourceListDTO).ToList();
@@ -92,8 +101,10 @@ namespace Persistence.Service
         // -----------------------------------------------------
         // Create
         // -----------------------------------------------------
-        public async Task<bool> CreateAsync(IReadOnlyList<ResourcePostDTO> Items, int parentTaskId, CancellationToken ct = default)
+        public async Task<bool> CreateAsync(IReadOnlyList<ResourcePostDTO> items, int parentTaskId, CancellationToken ct = default)
         {
+            if (items is null || items.Count == 0) return true;
+
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var parent = await context.Tasks
@@ -105,37 +116,26 @@ namespace Persistence.Service
                 })
                 .FirstOrDefaultAsync(ct);
 
-            if (parent == null)
-                return false;
+            if (parent is null) return false;
 
-            List<ResourceEntity> entities = [];
+            var entities = new List<ResourceEntity>(items.Count);
             double nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 0;
 
-            foreach (var dto in Items)
+            foreach (var dto in items)
             {
-                // نفترض لديك إما:
-                //  - امتداد Parse(dto, parentTaskId) محدث يتعامل مع CostValue
-                //  أو تستخدم دالة Create في الكيان
-                // هنا أستخدم نمط Create على الكيان (أنصح به):
-
                 var resource = ResourceEntity.Create(parentTaskId, dto, nextOrder);
                 nextOrder += 100;
-
                 entities.Add(resource);
             }
 
             context.Resources.AddRange(entities);
             await context.SaveChangesAsync(ct);
-
+            context.ChangeTracker.Clear();
             var newIds = entities.Select(x => x.Id).ToList();
 
             var loadedEntities = await context.Resources
                 .Where(r => newIds.Contains(r.Id))
-                .Include(r => r.Account)
-                .Include(r => r.Status)
-                .Include(r => r.Opportunity)
-                .Include(r => r.ResourceSort)
-                .Include(r => r.ResourceType)
+                .IncludeResourceLookups()
                 .ToListAsync(ct);
 
             var resourceDtos = loadedEntities.Select(ResourceExtention.MapToResourceListDTO).ToList();
@@ -153,30 +153,35 @@ namespace Persistence.Service
         // -----------------------------------------------------
         // Cut (Move)
         // -----------------------------------------------------
-        public async Task<bool> CutAsync(int TaskId, int sourceCalcId, IReadOnlyList<ResourceTaskItemDTO> items, CancellationToken ct = default)
+        public async Task<bool> CutAsync(int taskId, int sourceCalcId, IReadOnlyList<ResourceTaskItemDTO> items, CancellationToken ct = default)
         {
+            if (items is null || items.Count == 0) return true;
+
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var parent = await context.Tasks
-                .Where(x => x.Id == TaskId)
+                .Where(x => x.Id == taskId)
                 .Select(x => new
                 {
                     CalID = x.CalculationId,
-                    Max = x.Resources.Max(x => (double?)x.SortOrder),
+                    Max = x.Resources.Max(r => (double?)r.SortOrder),
                 })
                 .FirstOrDefaultAsync(ct);
 
-            if (parent == null)
-                return false;
+            if (parent is null) return false;
 
-            List<ResourceEntity> entities = [];
+            var ids = items.Select(x => x.Id).Distinct().ToList();
 
-            foreach (var item in items)
+            // ✅ تحميل مرة واحدة بدل FindAsync داخل loop
+            var resources = await context.Resources
+                .Where(r => ids.Contains(r.Id))
+                .ToListAsync(ct);
+
+            var moved = new List<ResourceEntity>(resources.Count);
+
+            foreach (var resource in resources)
             {
-                var resource = await context.Resources.FindAsync(item.Id);
-
-                if (resource == null || resource.TaskId == TaskId)
-                    continue;
+                if (resource.TaskId == taskId) continue;
 
                 if (parent.CalID != sourceCalcId)
                 {
@@ -189,12 +194,15 @@ namespace Persistence.Service
                 }
 
                 resource.SortOrder = parent.Max.HasValue ? parent.Max.Value + 100 : 0;
-                resource.TaskId = TaskId;
+                parent = parent with { Max = resource.SortOrder }; // تحديث max للعنصر التالي
+                resource.TaskId = taskId;
 
-                entities.Add(resource);
+                moved.Add(resource);
             }
 
-            context.Resources.UpdateRange(entities);
+            if (moved.Count == 0) return true;
+
+            context.Resources.UpdateRange(moved);
             await context.SaveChangesAsync(ct);
 
             if (sourceCalcId == parent.CalID)
@@ -203,34 +211,28 @@ namespace Persistence.Service
                     sourceCalcId.ToString(),
                     ObjectTypHub.resource,
                     OperationType.MoveRange,
-                    Tuple.Create(TaskId, entities.Select(x => x.Id)));
+                    Tuple.Create(taskId, moved.Select(x => x.Id)));
             }
             else
             {
-                foreach (var item in entities)
-                {
-                    context.Resources.Entry(item).Reference(p => p.Account).Load();
-                    context.Resources.Entry(item).Reference(p => p.Status).Load();
-                    context.Resources.Entry(item).Reference(p => p.Opportunity).Load();
-                    context.Resources.Entry(item).Reference(p => p.ResourceSort).Load();
-                    context.Resources.Entry(item).Reference(p => p.ResourceType).Load();
-                }
+                var movedLoaded = await context.Resources
+                    .Where(r => moved.Select(x => x.Id).Contains(r.Id))
+                    .IncludeResourceLookups()
+                    .ToListAsync(ct);
 
-                List<ResourceListDTO> listHub = [];
-                foreach (var item in entities)
-                    listHub.Add(item.MapToResourceListDTO());
+                var listHub = movedLoaded.Select(x => x.MapToResourceListDTO()).ToList();
 
                 await notification.SendNotificationAsync(
                     sourceCalcId.ToString(),
                     ObjectTypHub.resource,
                     OperationType.RemoveRange,
-                    entities.Select(x => x.Id));
+                    moved.Select(x => x.Id));
 
                 await notification.SendNotificationAsync(
                     parent.CalID.ToString(),
                     ObjectTypHub.resource,
                     OperationType.AddRange,
-                    TaskId,
+                    taskId,
                     listHub);
             }
 
@@ -242,71 +244,68 @@ namespace Persistence.Service
         // -----------------------------------------------------
         public async Task<bool> DeleteAsync(IEnumerable<int> resourceIds, int calcId, CancellationToken ct = default)
         {
+            var ids = resourceIds?.Where(id => id > 0).Distinct().ToList() ?? new();
+            if (ids.Count == 0) return true;
+
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            List<int> deletedItems = [];
 
-            foreach (int id in resourceIds)
+            const int batchSize = 1000;
+            var anyDeleted = false;
+
+            for (int i = 0; i < ids.Count; i += batchSize)
             {
-                var res = await context.Resources
-                    .FirstOrDefaultAsync(x => x.Id == id && x.Task.CalculationId == calcId, ct);
+                var batch = ids.Skip(i).Take(batchSize).ToList();
 
-                if (res == null)
-                    continue;
+                var affected = await context.Resources
+                    .Where(x => batch.Contains(x.Id) && x.Task.CalculationId == calcId)
+                    .ExecuteDeleteAsync(ct);
 
-                context.Resources.Remove(res);
-                deletedItems.Add(id);
+                anyDeleted |= affected > 0;
             }
 
-            await context.SaveChangesAsync(ct);
+            if (!anyDeleted) return true;
 
             await notification.SendNotificationAsync(
                 calcId.ToString(),
                 ObjectTypHub.resource,
                 OperationType.RemoveRange,
-                deletedItems);
+                ids);
 
             return true;
         }
 
+
+
         // -----------------------------------------------------
         // New Order
         // -----------------------------------------------------
-        public async Task<bool> NewOrderAsync(int Id, double NewOrder, CancellationToken ct = default)
+        public async Task<bool> NewOrderAsync(int id, double newOrder, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             var resource = await context.Resources
-                .Where(x => x.Id == Id)
-                .Select(x => new
-                {
-                    Res = x,
-                    CalID = x.Task.CalculationId,
-                })
+                .Where(x => x.Id == id)
+                .Select(x => new { Res = x, CalID = x.Task.CalculationId })
                 .FirstOrDefaultAsync(ct);
 
-            if (resource == null)
-                return false;
+            if (resource is null) return false;
 
-            resource.Res.SortOrder = NewOrder;
-            context.Resources.Update(resource.Res);
+            resource.Res.SortOrder = newOrder;
             await context.SaveChangesAsync(ct);
 
             var fullResource = await context.Resources
-                .Where(x => x.Id == Id)
+                .Where(x => x.Id == id)
                 .Include(x => x.Offers)
-                .Include(x => x.Account)
-                .Include(x => x.Status)
-                .Include(x => x.ResourceType)
-                .Include(x => x.ResourceSort)
-                .Include(x => x.Opportunity)
+                .IncludeResourceLookups()
                 .FirstOrDefaultAsync(ct);
 
-            var dto = fullResource.MapToResourceListDTO();
+            if (fullResource is null) return false;
 
             await notification.SendNotificationAsync(
                 resource.CalID.ToString(),
                 ObjectTypHub.resource,
                 OperationType.Update,
-                dto);
+                fullResource.MapToResourceListDTO());
 
             return true;
         }
@@ -317,44 +316,48 @@ namespace Persistence.Service
         public async Task<bool> UpdateAsync(int resourceId, ResourcePostDTO res, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            // نجيب الكيان مع الـ Task للحصول على CalcId
+
             var entity = await context.Resources
                 .Include(x => x.Task)
                 .FirstOrDefaultAsync(x => x.Id == resourceId, ct);
 
-            if (entity == null)
-                return false;
+            if (entity is null) return false;
 
             var calcId = entity.Task.CalculationId;
 
-            // نحدّث الكيان في مكانه باستخدام الدالة الموجودة في ResourceEntity
             entity.Update(res);
-
-            // نحافظ على QuantityParam لو عندك منطق خاص لها
             entity.Metadata.QuantityParam = res.Data.QuantityParam;
 
-            context.Resources.Update(entity);
             await context.SaveChangesAsync(ct);
 
             var fullResource = await context.Resources
                 .Where(x => x.Id == entity.Id)
-                .Include(x => x.ResourceType)
-                .Include(x => x.ResourceSort)
                 .Include(x => x.Offers)
-                .Include(x => x.Account)
-                .Include(x => x.Status)
-                .Include(x => x.Opportunity)
+                .IncludeResourceLookups()
                 .FirstOrDefaultAsync(ct);
 
-            var dto = fullResource.MapToResourceListDTO();
+            if (fullResource is null) return false;
 
             await notification.SendNotificationAsync(
                 calcId.ToString(),
                 ObjectTypHub.resource,
                 OperationType.Update,
-                dto);
+                fullResource.MapToResourceListDTO());
 
             return true;
+        }
+    }
+
+    internal static class ResourceIncludeExtensions
+    {
+        internal static IQueryable<ResourceEntity> IncludeResourceLookups(this IQueryable<ResourceEntity> query)
+        {
+            return query
+                .Include(r => r.Account)
+                .Include(r => r.Status)
+                .Include(r => r.Opportunity)
+                .Include(r => r.ResourceSort)
+                .Include(r => r.ResourceType);
         }
     }
 }

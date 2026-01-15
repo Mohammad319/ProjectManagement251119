@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         [MaxLength(500, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string OpportunitiesRisks { get; set; }
         [MaxLength(500, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Type { get; set; }
+        public string OpportunityType { get; set; }
 
     }
 }
