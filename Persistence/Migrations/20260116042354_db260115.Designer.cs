@@ -12,8 +12,8 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260101145411_db251230")]
-    partial class db251230
+    [Migration("20260116042354_db260115")]
+    partial class db260115
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -253,10 +253,17 @@ namespace Persistence.Migrations
                     b.Property<int?>("DeletedBy")
                         .HasColumnType("int");
 
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("HourlyPriceFactorData")
+                    b.Property<string>("Factors")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HourlyPrice")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -356,9 +363,22 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
+                    b.HasIndex("TenantId", "DepartmentId")
+                        .HasDatabaseName("IX_Calculations_Tenant_Department");
+
                     b.HasIndex("TenantId", "Id");
 
-                    b.HasIndex("TenantId", "ProjectId");
+                    b.HasIndex("TenantId", "ProjectId")
+                        .HasDatabaseName("IX_Calculations_Tenant_Project");
+
+                    b.HasIndex("TenantId", "StatusId")
+                        .HasDatabaseName("IX_Calculations_Tenant_Status");
+
+                    b.HasIndex("TenantId", "Id", "DepartmentId")
+                        .HasDatabaseName("IX_Calculations_Tenant_Id_Department");
+
+                    b.HasIndex("TenantId", "ProjectId", "DepartmentId", "SortOrder")
+                        .HasDatabaseName("IX_Calculations_Tenant_Project_Department_Order");
 
                     b.ToTable("Calculations");
                 });
@@ -406,7 +426,10 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ResourceId");
 
-                    b.ToTable("Offers");
+                    b.HasIndex("TenantId", "OrganisationId", "Date")
+                        .HasDatabaseName("IX_Offers_Tenant_Org_Date");
+
+                    b.ToTable("Offers", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.OpportunityEntity", b =>
@@ -509,8 +532,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("OpportunityId");
 
-                    b.HasIndex("PrimaryOfferId");
-
                     b.HasIndex("ResourceSortId");
 
                     b.HasIndex("ResourceTypeId");
@@ -519,11 +540,29 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TaskId");
 
+                    b.HasIndex("TenantId", "AccountId")
+                        .HasDatabaseName("IX_Resources_Tenant_Account");
+
                     b.HasIndex("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "OpportunityId")
+                        .HasDatabaseName("IX_Resources_Tenant_Opportunity");
+
+                    b.HasIndex("TenantId", "ResourceSortId")
+                        .HasDatabaseName("IX_Resources_Tenant_ResourceSort");
+
+                    b.HasIndex("TenantId", "ResourceTypeId")
+                        .HasDatabaseName("IX_Resources_Tenant_ResourceType");
+
+                    b.HasIndex("TenantId", "StatusId")
+                        .HasDatabaseName("IX_Resources_Tenant_Status");
 
                     b.HasIndex("TenantId", "TaskId");
 
-                    b.ToTable("Resources");
+                    b.HasIndex("TenantId", "TaskId", "SortOrder")
+                        .HasDatabaseName("IX_Resources_Tenant_Task_Sort");
+
+                    b.ToTable("Resources", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.ShareCalcEntity", b =>
@@ -771,7 +810,13 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "Id");
 
-                    b.ToTable("Tasks");
+                    b.HasIndex("TenantId", "CalculationId", "StatusId")
+                        .HasDatabaseName("IX_Tasks_Tenant_Calc_Status");
+
+                    b.HasIndex("TenantId", "CalculationId", "ParentTaskId", "SortOrder")
+                        .HasDatabaseName("IX_Tasks_Tenant_Calc_Parent_Sort");
+
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.TaskStatusEntity", b =>
@@ -886,7 +931,14 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "Id");
 
-                    b.ToTable("Templates");
+                    b.HasIndex("TenantId", "Name");
+
+                    b.HasIndex("TenantId", "DepartmentId", "Id");
+
+                    b.ToTable("Templates", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Templates_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.TenderAttributeBindEntity", b =>
@@ -1039,6 +1091,8 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "DepartmentId", "IsVisible", "SortOrder");
 
                     b.ToTable("Folders");
                 });
@@ -1410,6 +1464,9 @@ namespace Persistence.Migrations
                     b.Property<int?>("DepartmentEntityId")
                         .HasColumnType("int");
 
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -1492,7 +1549,16 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
+                    b.HasIndex("TenantId", "CreatedBy")
+                        .HasDatabaseName("IX_Projects_Tenant_CreatedBy");
+
+                    b.HasIndex("TenantId", "DepartmentId")
+                        .HasDatabaseName("IX_Projects_Tenant_Department");
+
                     b.HasIndex("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "FolderId", "IsVisible", "SortOrder")
+                        .HasDatabaseName("IX_Projects_Tenant_Folder_Visible_Order");
 
                     b.ToTable("Projects");
                 });
@@ -1943,13 +2009,11 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Entities.Project.CompensationEntity", "Compensation")
                         .WithMany("Calculations")
-                        .HasForeignKey("CompensationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("CompensationId");
 
                     b.HasOne("Domain.Entities.Project.ContractEntity", "Contract")
                         .WithMany("Calculations")
-                        .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ContractId");
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
                         .WithMany()
@@ -1963,13 +2027,11 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Calculations")
-                        .HasForeignKey("OrganisationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OrganisationId");
 
                     b.HasOne("Domain.Entities.Project.ProcurementMethodEntity", "ProcurementMethods")
                         .WithMany("Calculations")
-                        .HasForeignKey("ProcurementMethodsId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ProcurementMethodsId");
 
                     b.HasOne("Domain.Entities.Project.ProjectEntity", "Project")
                         .WithMany("Calculations")
@@ -1979,18 +2041,15 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Project.StatusEntity", "Status")
                         .WithMany("Calculations")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("StatusId");
 
                     b.HasOne("Domain.Entities.Calculation.TemplateEntity", "Template")
                         .WithMany("Calculations")
-                        .HasForeignKey("TemplateId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("TemplateId");
 
                     b.HasOne("Domain.Entities.Project.TypeEntity", "Type")
                         .WithMany("Calculations")
-                        .HasForeignKey("TypeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("TypeId");
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
                         .WithMany()
@@ -2028,13 +2087,12 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Offers")
-                        .HasForeignKey("OrganisationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OrganisationId");
 
                     b.HasOne("Domain.Entities.Calculation.ResourceEntity", "Resource")
                         .WithMany("Offers")
                         .HasForeignKey("ResourceId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Organisation");
@@ -2057,16 +2115,11 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Entities.Calculation.AccountEntity", "Account")
                         .WithMany("Resources")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("AccountId");
 
                     b.HasOne("Domain.Entities.Calculation.OpportunityEntity", "Opportunity")
                         .WithMany("Resources")
                         .HasForeignKey("OpportunityId");
-
-                    b.HasOne("Domain.Entities.Calculation.OfferEntity", "PrimaryOffer")
-                        .WithMany()
-                        .HasForeignKey("PrimaryOfferId");
 
                     b.HasOne("Domain.Entities.ResourceType.ResourceSortEntity", "ResourceSort")
                         .WithMany("Resources")
@@ -2078,8 +2131,7 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Calculation.StatusResourcesEntity", "Status")
                         .WithMany("Resources")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("StatusId");
 
                     b.HasOne("Domain.Entities.Calculation.TaskEntity", "Task")
                         .WithMany("Resources")
@@ -2090,8 +2142,6 @@ namespace Persistence.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("Opportunity");
-
-                    b.Navigation("PrimaryOffer");
 
                     b.Navigation("ResourceSort");
 
@@ -2197,12 +2247,12 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Calculation.TaskEntity", "ParentTask")
                         .WithMany("Tasks")
-                        .HasForeignKey("ParentTaskId");
+                        .HasForeignKey("ParentTaskId")
+                        .OnDelete(DeleteBehavior.ClientCascade);
 
                     b.HasOne("Domain.Entities.Calculation.TaskStatusEntity", "Status")
                         .WithMany("Tasks")
-                        .HasForeignKey("StatusId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("StatusId");
 
                     b.Navigation("Calculation");
 
@@ -2239,7 +2289,8 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Users.DepartmentEntity", "Department")
                         .WithMany()
-                        .HasForeignKey("DepartmentId");
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
                         .WithMany()
@@ -2258,13 +2309,13 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Calculation.TenderAttributeDefinitionEntity", "TenderAttribute")
                         .WithMany("TendersAttributes")
                         .HasForeignKey("TenderAttributeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Calculation.TenderEntity", "Tender")
                         .WithMany("TendersAttributes")
                         .HasForeignKey("TenderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Tender");
@@ -2294,7 +2345,7 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Tenders")
                         .HasForeignKey("OrganisationId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Calculation");
@@ -2453,13 +2504,11 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Entities.Project.CompensationEntity", "Compensation")
                         .WithMany("Projects")
-                        .HasForeignKey("CompensationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("CompensationId");
 
                     b.HasOne("Domain.Entities.Project.ContractEntity", "Contract")
                         .WithMany("Projects")
-                        .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ContractId");
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
                         .WithMany()
@@ -2483,18 +2532,15 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Projects")
-                        .HasForeignKey("OrganisationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("OrganisationId");
 
                     b.HasOne("Domain.Entities.Project.ProcurementMethodEntity", "ProcurementMethod")
                         .WithMany("Projects")
-                        .HasForeignKey("ProcurementMethodId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ProcurementMethodId");
 
                     b.HasOne("Domain.Entities.Project.TypeEntity", "ProjectType")
                         .WithMany("Projects")
-                        .HasForeignKey("ProjectTypeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("ProjectTypeId");
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
                         .WithMany()
@@ -2558,8 +2604,7 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Entities.Calculation.AccountEntity", "Account")
                         .WithMany("ResourceSorts")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("AccountId");
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
                         .WithMany()
@@ -2590,8 +2635,7 @@ namespace Persistence.Migrations
                 {
                     b.HasOne("Domain.Entities.Calculation.AccountEntity", "Account")
                         .WithMany("ResourceTypes")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("AccountId");
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
                         .WithMany()

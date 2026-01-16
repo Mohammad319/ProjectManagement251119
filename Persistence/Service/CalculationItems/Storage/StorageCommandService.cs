@@ -1,6 +1,7 @@
 ﻿using Application.Extention;
 using Application.Services.CalculationItems.Storage;
 using Domain.Entities.Calculation;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using System.Text.Json;
 
@@ -8,6 +9,9 @@ namespace Persistence.Service.CalculationItems.Storage
 {
     public sealed class StorageCommandService(IDbContextFactoryTenant dbFactory) : IStorageCommandService
     {
+        // (اختياري) إعدادات JSON أخف وأوضح (قلّلها/عدّلها حسب حاجتك)
+        private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
         public async Task<bool> CreateAsync(
             CalculationItemType type,
             AuthorityStorage level,
@@ -17,34 +21,43 @@ namespace Persistence.Service.CalculationItems.Storage
             int? departmentId,
             CancellationToken ct = default)
         {
-            object? obj = null;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            object? obj = null;
 
             if (type == CalculationItemType.task)
             {
-
-                // جلب التسك مع الأبناء والموارد
+                // جلب التسك مع الأبناء
                 var tasks = await context.Tasks
-                    .FromSqlRaw("EXEC GetRecursiveTasks {0}", id)
+                    .FromSqlInterpolated($"EXEC GetRecursiveTasks {id}")
                     .IgnoreQueryFilters()
                     .AsNoTracking()
                     .ToListAsync(ct);
 
-                if (tasks is null) return false;
+                if (tasks.Count == 0)
+                    return false;
 
+                // IDs مرة واحدة
                 var taskIds = tasks.Select(t => t.Id).ToList();
 
+                // جلب الموارد مرة واحدة
                 var resources = await context.Resources
                     .Where(r => taskIds.Contains(r.TaskId))
                     .AsNoTracking()
                     .ToListAsync(ct);
 
+                // تجميع الموارد حسب TaskId مرة واحدة (O(n))
+                var resourcesByTaskId = resources
+                    .GroupBy(r => r.TaskId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // ربط الموارد بدون Where داخل loop
                 foreach (var t in tasks)
-                    t.Resources = resources.Where(r => r.TaskId == t.Id).ToList();
+                    t.Resources = resourcesByTaskId.TryGetValue(t.Id, out var list) ? list : [];
 
                 TaskExtention.BuildTaskHierarchy(tasks);
 
-                var root = tasks.First(x => x.Id == id);
+                var root = tasks.First(t => t.Id == id);
                 obj = TaskExtention.Reset(root);
             }
             else if (type == CalculationItemType.resource)
@@ -70,7 +83,7 @@ namespace Persistence.Service.CalculationItems.Storage
                 return false;
 
             var st = new StorageEntity(
-                JsonSerializer.Serialize(obj),
+                JsonSerializer.Serialize(obj, JsonOptions),
                 type,
                 sort,
                 level,
@@ -85,13 +98,13 @@ namespace Persistence.Service.CalculationItems.Storage
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var st = await context.Storages.FindAsync(id);
-            if (st == null) return false;
 
-            context.Storages.Remove(st);
-            await context.SaveChangesAsync(ct);
-            return true;
+            // أفضل من FindAsync هنا: حذف بدون تحميل كامل
+            var deleted = await context.Storages
+                .Where(x => x.Id == id)
+                .ExecuteDeleteAsync(ct);
+
+            return deleted > 0;
         }
     }
-
 }

@@ -5,17 +5,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Persistence.Configurations;
 
-internal sealed class UserConfiguration : IEntityTypeConfiguration<UserEntity>
-{
-    public void Configure(EntityTypeBuilder<UserEntity> builder)
-    {
-        builder.HasIndex(u => u.Email).IsUnique();
-
-        builder.Property(u => u.FirstName).HasMaxLength(30);
-        builder.Property(u => u.LastName).HasMaxLength(30);
-    }
-}
-
 internal sealed class TenderConfiguration : IEntityTypeConfiguration<TenderEntity>
 {
     public void Configure(EntityTypeBuilder<TenderEntity> builder)
@@ -30,12 +19,12 @@ internal sealed class TenderConfiguration : IEntityTypeConfiguration<TenderEntit
         builder.HasOne(x => x.Organisation)
             .WithMany(x => x.Tenders)
             .HasForeignKey(x => x.OrganisationId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(x => x.TendersAttributes)
             .WithOne(x => x.Tender)
             .HasForeignKey(x => x.TenderId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
@@ -49,12 +38,12 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
             .WithMany(x => x.TendersAttributes)
             .HasForeignKey(x => x.TenderId)
             .HasPrincipalKey(x => x.Id)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.TenderAttribute)
             .WithMany(x => x.TendersAttributes)
             .HasForeignKey(x => x.TenderAttributeId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }
 

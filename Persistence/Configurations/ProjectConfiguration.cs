@@ -33,40 +33,40 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
         builder.HasOne(x => x.ProcurementMethod)
             .WithMany(x => x.Projects)
             .HasForeignKey(x => x.ProcurementMethodId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.ProjectType)
             .WithMany(x => x.Projects)
             .HasForeignKey(x => x.ProjectTypeId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.Compensation)
             .WithMany(x => x.Projects)
             .HasForeignKey(x => x.CompensationId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.Contract)
             .WithMany(x => x.Projects)
             .HasForeignKey(x => x.ContractId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.Organisation)
             .WithMany(x => x.Projects)
             .HasForeignKey(x => x.OrganisationId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         // ---------------- Indexes (تحسين الأداء) ----------------
 
-        // يغطي أغلب استعلامات: GetByFolder + IsVisible + OrderBy SortOrder
-        builder.HasIndex(x => new { x.TenantId, x.FolderId, x.IsVisible, x.SortOrder });
+        // Folder + visibility + order (ممتاز)
+        builder.HasIndex(x => new { x.TenantId, x.FolderId, x.IsVisible, x.SortOrder })
+            .HasDatabaseName("IX_Projects_Tenant_Folder_Visible_Order");
 
-        // لو عندك استعلامات تجيب مشاريع مستخدم معيّن (أو داخل CreateAsync عندك فلترة CreatedBy)
-        builder.HasIndex(x => new { x.TenantId, x.CreatedBy });
+        // CreatedBy queries
+        builder.HasIndex(x => new { x.TenantId, x.CreatedBy })
+            .HasDatabaseName("IX_Projects_Tenant_CreatedBy");
 
-        // (اختياري) إذا عندك ترتيب عام داخل التينانت بدون FolderId
-        // builder.HasIndex(x => new { x.TenantId, x.SortOrder });
-
-        // تحسين أداء شائع في SaaS (اختياري) لو TenantId موجود على ProjectEntity:
-        // builder.HasIndex(x => new { x.TenantId, x.Id });
+        // ✅ إضافة مهمة إذا عندك فلترة كثيرة حسب Department
+        builder.HasIndex(x => new { x.TenantId, x.DepartmentId })
+            .HasDatabaseName("IX_Projects_Tenant_Department");
     }
 }

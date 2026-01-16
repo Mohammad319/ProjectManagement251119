@@ -21,7 +21,6 @@ namespace Domain.Entities.Calculation
             get => _metadata ??= new CalculationData();
             private set => _metadata = value;
         }
-        private CalculationHourlyPriceFactorData? _hourlyPriceFactor;
         public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; }
         public List<OHFactors> Factors { get; set; }
         public CalculationEntity()
@@ -30,7 +29,6 @@ namespace Domain.Entities.Calculation
             SharesCalc = [];
             Offers = [];
             Opportunities = [];
-            Applications = [];
             AttributesTender = [];
             Tenders = [];
             HourlyPrice = [];

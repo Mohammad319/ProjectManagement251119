@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class db251230 : Migration
+    public partial class db260115 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -154,6 +154,9 @@ namespace Persistence.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HourlyPrice = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Factors = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DepartmentId = table.Column<int>(type: "int", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     Tax = table.Column<double>(type: "float", nullable: false),
@@ -165,7 +168,6 @@ namespace Persistence.Migrations
                     SortOrder = table.Column<double>(type: "float", nullable: false),
                     PublicationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DecisionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    HourlyPriceFactorData = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsPrivate = table.Column<bool>(type: "bit", nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
                     OrganisationId = table.Column<int>(type: "int", nullable: true),
@@ -193,8 +195,7 @@ namespace Persistence.Migrations
                         name: "FK_Calculations_CalcProjectType_TypeId",
                         column: x => x.TypeId,
                         principalTable: "CalcProjectType",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -551,8 +552,7 @@ namespace Persistence.Migrations
                         name: "FK_ResourceTypes_Accounts_AccountId",
                         column: x => x.AccountId,
                         principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ResourceTypes_User_CreatedBy",
                         column: x => x.CreatedBy,
@@ -713,11 +713,13 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Templates", x => x.Id);
+                    table.CheckConstraint("CK_Templates_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
                     table.ForeignKey(
                         name: "FK_Templates_Department_DepartmentId",
                         column: x => x.DepartmentId,
                         principalTable: "Department",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Templates_User_CreatedBy",
                         column: x => x.CreatedBy,
@@ -804,8 +806,7 @@ namespace Persistence.Migrations
                         name: "FK_ResourceSorts_Accounts_AccountId",
                         column: x => x.AccountId,
                         principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_ResourceSorts_ResourceTypes_ResourceTypeId",
                         column: x => x.ResourceTypeId,
@@ -865,8 +866,7 @@ namespace Persistence.Migrations
                         name: "FK_Tasks_TaskStatus_StatusId",
                         column: x => x.StatusId,
                         principalTable: "TaskStatus",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Tasks_Tasks_ParentTaskId",
                         column: x => x.ParentTaskId,
@@ -887,6 +887,7 @@ namespace Persistence.Migrations
                     TenderDeadline = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TenderQA = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SortOrder = table.Column<double>(type: "float", nullable: false),
+                    DepartmentId = table.Column<int>(type: "int", nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProjectTypeId = table.Column<int>(type: "int", nullable: true),
                     FolderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -913,20 +914,17 @@ namespace Persistence.Migrations
                         name: "FK_Projects_CalcProjectType_ProjectTypeId",
                         column: x => x.ProjectTypeId,
                         principalTable: "CalcProjectType",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_Compensations_CompensationId",
                         column: x => x.CompensationId,
                         principalTable: "Compensations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_Contracts_ContractId",
                         column: x => x.ContractId,
                         principalTable: "Contracts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_Department_DepartmentEntityId",
                         column: x => x.DepartmentEntityId,
@@ -942,14 +940,12 @@ namespace Persistence.Migrations
                         name: "FK_Projects_Organisation_OrganisationId",
                         column: x => x.OrganisationId,
                         principalTable: "Organisation",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_ProcurementMethod_ProcurementMethodId",
                         column: x => x.ProcurementMethodId,
                         principalTable: "ProcurementMethod",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_User_CreatedBy",
                         column: x => x.CreatedBy,
@@ -996,64 +992,7 @@ namespace Persistence.Migrations
                         column: x => x.OrganisationId,
                         principalTable: "Organisation",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TenderAttributeBind",
-                columns: table => new
-                {
-                    TenderId = table.Column<int>(type: "int", nullable: false),
-                    TenderAttributeId = table.Column<int>(type: "int", nullable: false),
-                    Value = table.Column<double>(type: "float", nullable: false),
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    TenantId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TenderAttributeBind", x => new { x.TenderAttributeId, x.TenderId });
-                    table.ForeignKey(
-                        name: "FK_TenderAttributeBind_AttributeNameTender_TenderAttributeId",
-                        column: x => x.TenderAttributeId,
-                        principalTable: "AttributeNameTender",
-                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_TenderAttributeBind_Tenders_TenderId",
-                        column: x => x.TenderId,
-                        principalTable: "Tenders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Offers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Comment = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    OrganisationId = table.Column<int>(type: "int", nullable: true),
-                    ResourceId = table.Column<int>(type: "int", nullable: false),
-                    CalculationEntityId = table.Column<int>(type: "int", nullable: true),
-                    TenantId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Offers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Offers_Calculations_CalculationEntityId",
-                        column: x => x.CalculationEntityId,
-                        principalTable: "Calculations",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Offers_Organisation_OrganisationId",
-                        column: x => x.OrganisationId,
-                        principalTable: "Organisation",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -1085,12 +1024,6 @@ namespace Persistence.Migrations
                         name: "FK_Resources_Accounts_AccountId",
                         column: x => x.AccountId,
                         principalTable: "Accounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Resources_Offers_PrimaryOfferId",
-                        column: x => x.PrimaryOfferId,
-                        principalTable: "Offers",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Resources_Opportunity_OpportunityId",
@@ -1106,8 +1039,7 @@ namespace Persistence.Migrations
                         name: "FK_Resources_ResourceStatus_StatusId",
                         column: x => x.StatusId,
                         principalTable: "ResourceStatus",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Resources_ResourceTypes_ResourceTypeId",
                         column: x => x.ResourceTypeId,
@@ -1117,6 +1049,67 @@ namespace Persistence.Migrations
                         name: "FK_Resources_Tasks_TaskId",
                         column: x => x.TaskId,
                         principalTable: "Tasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TenderAttributeBind",
+                columns: table => new
+                {
+                    TenderId = table.Column<int>(type: "int", nullable: false),
+                    TenderAttributeId = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<double>(type: "float", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    TenantId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TenderAttributeBind", x => new { x.TenderAttributeId, x.TenderId });
+                    table.ForeignKey(
+                        name: "FK_TenderAttributeBind_AttributeNameTender_TenderAttributeId",
+                        column: x => x.TenderAttributeId,
+                        principalTable: "AttributeNameTender",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_TenderAttributeBind_Tenders_TenderId",
+                        column: x => x.TenderId,
+                        principalTable: "Tenders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Offers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrganisationId = table.Column<int>(type: "int", nullable: true),
+                    ResourceId = table.Column<int>(type: "int", nullable: false),
+                    CalculationEntityId = table.Column<int>(type: "int", nullable: true),
+                    TenantId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Offers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Offers_Calculations_CalculationEntityId",
+                        column: x => x.CalculationEntityId,
+                        principalTable: "Calculations",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Offers_Organisation_OrganisationId",
+                        column: x => x.OrganisationId,
+                        principalTable: "Organisation",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Offers_Resources_ResourceId",
+                        column: x => x.ResourceId,
+                        principalTable: "Resources",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1247,14 +1240,34 @@ namespace Persistence.Migrations
                 column: "TemplateId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Calculations_Tenant_Department",
+                table: "Calculations",
+                columns: new[] { "TenantId", "DepartmentId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Calculations_Tenant_Id_Department",
+                table: "Calculations",
+                columns: new[] { "TenantId", "Id", "DepartmentId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Calculations_Tenant_Project",
+                table: "Calculations",
+                columns: new[] { "TenantId", "ProjectId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Calculations_Tenant_Project_Department_Order",
+                table: "Calculations",
+                columns: new[] { "TenantId", "ProjectId", "DepartmentId", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Calculations_Tenant_Status",
+                table: "Calculations",
+                columns: new[] { "TenantId", "StatusId" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Calculations_TenantId_Id",
                 table: "Calculations",
                 columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Calculations_TenantId_ProjectId",
-                table: "Calculations",
-                columns: new[] { "TenantId", "ProjectId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Calculations_TypeId",
@@ -1337,6 +1350,11 @@ namespace Persistence.Migrations
                 column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Folders_TenantId_DepartmentId_IsVisible_SortOrder",
+                table: "Folders",
+                columns: new[] { "TenantId", "DepartmentId", "IsVisible", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Folders_TenantId_Id",
                 table: "Folders",
                 columns: new[] { "TenantId", "Id" });
@@ -1360,6 +1378,11 @@ namespace Persistence.Migrations
                 name: "IX_Offers_ResourceId",
                 table: "Offers",
                 column: "ResourceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Offers_Tenant_Org_Date",
+                table: "Offers",
+                columns: new[] { "TenantId", "OrganisationId", "Date" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Offers_TenantId_Id",
@@ -1502,6 +1525,21 @@ namespace Persistence.Migrations
                 column: "ProjectTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Projects_Tenant_CreatedBy",
+                table: "Projects",
+                columns: new[] { "TenantId", "CreatedBy" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_Tenant_Department",
+                table: "Projects",
+                columns: new[] { "TenantId", "DepartmentId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_Tenant_Folder_Visible_Order",
+                table: "Projects",
+                columns: new[] { "TenantId", "FolderId", "IsVisible", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Projects_TenantId_Id",
                 table: "Projects",
                 columns: new[] { "TenantId", "Id" });
@@ -1522,11 +1560,6 @@ namespace Persistence.Migrations
                 column: "OpportunityId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Resources_PrimaryOfferId",
-                table: "Resources",
-                column: "PrimaryOfferId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Resources_ResourceSortId",
                 table: "Resources",
                 column: "ResourceSortId");
@@ -1545,6 +1578,36 @@ namespace Persistence.Migrations
                 name: "IX_Resources_TaskId",
                 table: "Resources",
                 column: "TaskId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_Tenant_Account",
+                table: "Resources",
+                columns: new[] { "TenantId", "AccountId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_Tenant_Opportunity",
+                table: "Resources",
+                columns: new[] { "TenantId", "OpportunityId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_Tenant_ResourceSort",
+                table: "Resources",
+                columns: new[] { "TenantId", "ResourceSortId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_Tenant_ResourceType",
+                table: "Resources",
+                columns: new[] { "TenantId", "ResourceTypeId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_Tenant_Status",
+                table: "Resources",
+                columns: new[] { "TenantId", "StatusId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_Tenant_Task_Sort",
+                table: "Resources",
+                columns: new[] { "TenantId", "TaskId", "SortOrder" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Resources_TenantId_Id",
@@ -1697,6 +1760,16 @@ namespace Persistence.Migrations
                 column: "StatusId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Tenant_Calc_Parent_Sort",
+                table: "Tasks",
+                columns: new[] { "TenantId", "CalculationId", "ParentTaskId", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Tenant_Calc_Status",
+                table: "Tasks",
+                columns: new[] { "TenantId", "CalculationId", "StatusId" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_TenantId_CalculationId",
                 table: "Tasks",
                 columns: new[] { "TenantId", "CalculationId" });
@@ -1732,9 +1805,19 @@ namespace Persistence.Migrations
                 column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Templates_TenantId_DepartmentId_Id",
+                table: "Templates",
+                columns: new[] { "TenantId", "DepartmentId", "Id" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Templates_TenantId_Id",
                 table: "Templates",
                 columns: new[] { "TenantId", "Id" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Templates_TenantId_Name",
+                table: "Templates",
+                columns: new[] { "TenantId", "Name" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Templates_UpdatedBy",
@@ -1869,40 +1952,35 @@ namespace Persistence.Migrations
                 table: "Calculations",
                 column: "StatusId",
                 principalTable: "CalculationStatus",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Calculations_Compensations_CompensationId",
                 table: "Calculations",
                 column: "CompensationId",
                 principalTable: "Compensations",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Calculations_Contracts_ContractId",
                 table: "Calculations",
                 column: "ContractId",
                 principalTable: "Contracts",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Calculations_Organisation_OrganisationId",
                 table: "Calculations",
                 column: "OrganisationId",
                 principalTable: "Organisation",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Calculations_ProcurementMethod_ProcurementMethodsId",
                 table: "Calculations",
                 column: "ProcurementMethodsId",
                 principalTable: "ProcurementMethod",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Calculations_Projects_ProjectId",
@@ -1917,8 +1995,7 @@ namespace Persistence.Migrations
                 table: "Calculations",
                 column: "TemplateId",
                 principalTable: "Templates",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+                principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Calculations_User_CreatedBy",
@@ -2007,79 +2084,11 @@ namespace Persistence.Migrations
                 principalTable: "User",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Offers_Resources_ResourceId",
-                table: "Offers",
-                column: "ResourceId",
-                principalTable: "Resources",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_AccountGroup_User_CreatedBy",
-                table: "AccountGroup");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_AccountGroup_User_UpdatedBy",
-                table: "AccountGroup");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Accounts_User_CreatedBy",
-                table: "Accounts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Accounts_User_UpdatedBy",
-                table: "Accounts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_CalcProjectType_User_CreatedBy",
-                table: "CalcProjectType");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_CalcProjectType_User_UpdatedBy",
-                table: "CalcProjectType");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Calculations_User_CreatedBy",
-                table: "Calculations");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Calculations_User_DeletedBy",
-                table: "Calculations");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Calculations_User_UpdatedBy",
-                table: "Calculations");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_CalculationStatus_User_CreatedBy",
-                table: "CalculationStatus");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_CalculationStatus_User_UpdatedBy",
-                table: "CalculationStatus");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Compensations_User_CreatedBy",
-                table: "Compensations");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Compensations_User_UpdatedBy",
-                table: "Compensations");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Contracts_User_CreatedBy",
-                table: "Contracts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Contracts_User_UpdatedBy",
-                table: "Contracts");
-
             migrationBuilder.DropForeignKey(
                 name: "FK_Department_User_CreatedBy",
                 table: "Department");
@@ -2088,136 +2097,11 @@ namespace Persistence.Migrations
                 name: "FK_Department_User_UpdatedBy",
                 table: "Department");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_Folders_User_CreatedBy",
-                table: "Folders");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Folders_User_UpdatedBy",
-                table: "Folders");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Organisation_User_CreatedBy",
-                table: "Organisation");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Organisation_User_UpdatedBy",
-                table: "Organisation");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrganisationCategory_User_CreatedBy",
-                table: "OrganisationCategory");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrganisationCategory_User_UpdatedBy",
-                table: "OrganisationCategory");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrganisationType_User_CreatedBy",
-                table: "OrganisationType");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_OrganisationType_User_UpdatedBy",
-                table: "OrganisationType");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ProcurementMethod_User_CreatedBy",
-                table: "ProcurementMethod");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ProcurementMethod_User_UpdatedBy",
-                table: "ProcurementMethod");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_User_CreatedBy",
-                table: "Projects");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_User_DeletedBy",
-                table: "Projects");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_User_UpdatedBy",
-                table: "Projects");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ResourceSorts_User_CreatedBy",
-                table: "ResourceSorts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ResourceSorts_User_UpdatedBy",
-                table: "ResourceSorts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ResourceStatus_User_CreatedBy",
-                table: "ResourceStatus");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ResourceStatus_User_UpdatedBy",
-                table: "ResourceStatus");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ResourceTypes_User_CreatedBy",
-                table: "ResourceTypes");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_ResourceTypes_User_UpdatedBy",
-                table: "ResourceTypes");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_TaskStatus_User_CreatedBy",
-                table: "TaskStatus");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_TaskStatus_User_UpdatedBy",
-                table: "TaskStatus");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Templates_User_CreatedBy",
-                table: "Templates");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Templates_User_UpdatedBy",
-                table: "Templates");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Accounts_AccountGroup_AccountGroupId",
-                table: "Accounts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Folders_Department_DepartmentId",
-                table: "Folders");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_Department_DepartmentEntityId",
-                table: "Projects");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Templates_Department_DepartmentId",
-                table: "Templates");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Offers_Calculations_CalculationEntityId",
-                table: "Offers");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Opportunity_Calculations_CalculationId",
-                table: "Opportunity");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Tasks_Calculations_CalculationId",
-                table: "Tasks");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Offers_Organisation_OrganisationId",
-                table: "Offers");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Offers_Resources_ResourceId",
-                table: "Offers");
-
             migrationBuilder.DropTable(
                 name: "ApplicationValues");
+
+            migrationBuilder.DropTable(
+                name: "Offers");
 
             migrationBuilder.DropTable(
                 name: "ShareCalc");
@@ -2232,22 +2116,40 @@ namespace Persistence.Migrations
                 name: "Applications");
 
             migrationBuilder.DropTable(
+                name: "Resources");
+
+            migrationBuilder.DropTable(
                 name: "AttributeNameTender");
 
             migrationBuilder.DropTable(
                 name: "Tenders");
 
             migrationBuilder.DropTable(
-                name: "User");
+                name: "ResourceSorts");
 
             migrationBuilder.DropTable(
-                name: "AccountGroup");
+                name: "ResourceStatus");
 
             migrationBuilder.DropTable(
-                name: "Department");
+                name: "Tasks");
+
+            migrationBuilder.DropTable(
+                name: "ResourceTypes");
+
+            migrationBuilder.DropTable(
+                name: "Opportunity");
+
+            migrationBuilder.DropTable(
+                name: "TaskStatus");
+
+            migrationBuilder.DropTable(
+                name: "Accounts");
 
             migrationBuilder.DropTable(
                 name: "Calculations");
+
+            migrationBuilder.DropTable(
+                name: "AccountGroup");
 
             migrationBuilder.DropTable(
                 name: "CalculationStatus");
@@ -2271,10 +2173,10 @@ namespace Persistence.Migrations
                 name: "Folders");
 
             migrationBuilder.DropTable(
-                name: "ProcurementMethod");
+                name: "Organisation");
 
             migrationBuilder.DropTable(
-                name: "Organisation");
+                name: "ProcurementMethod");
 
             migrationBuilder.DropTable(
                 name: "OrganisationCategory");
@@ -2283,31 +2185,10 @@ namespace Persistence.Migrations
                 name: "OrganisationType");
 
             migrationBuilder.DropTable(
-                name: "Resources");
+                name: "User");
 
             migrationBuilder.DropTable(
-                name: "Offers");
-
-            migrationBuilder.DropTable(
-                name: "ResourceSorts");
-
-            migrationBuilder.DropTable(
-                name: "ResourceStatus");
-
-            migrationBuilder.DropTable(
-                name: "Tasks");
-
-            migrationBuilder.DropTable(
-                name: "ResourceTypes");
-
-            migrationBuilder.DropTable(
-                name: "Opportunity");
-
-            migrationBuilder.DropTable(
-                name: "TaskStatus");
-
-            migrationBuilder.DropTable(
-                name: "Accounts");
+                name: "Department");
 
             migrationBuilder.DropSequence(
                 name: "OrderSeq");

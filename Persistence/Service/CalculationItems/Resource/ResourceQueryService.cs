@@ -4,6 +4,7 @@ using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
+using System.Collections.Generic;
 
 namespace Persistence.Service.CalculationItems
 {
@@ -23,16 +24,7 @@ namespace Persistence.Service.CalculationItems
             // ✅ تحميل بعد تقليل النتائج قدر الإمكان من SQL
             var list = await query.ToListAsync(ct);
 
-            // ✅ فلترة Unit في الذاكرة لأن Unit داخل JSON
-            if (!string.IsNullOrWhiteSpace(filter.Unit))
-            {
-                list = [.. list
-                    .Where(x =>
-                        !string.IsNullOrEmpty(x.Metadata.Unit) &&
-                        x.Metadata.Unit.Contains(filter.Unit, StringComparison.CurrentCultureIgnoreCase))];
-            }
-
-            return list.Select(x => x.MapToResourceListDTO()).ToList();
+            return [.. list.Select(x => x.MapToResourceListDTO())];
         }
     }
 
@@ -49,7 +41,10 @@ namespace Persistence.Service.CalculationItems
                 query = query.Where(x => x.Task.Calculation.ProjectId == filter.ProjectID);
             else if (filter.FolderID.HasValue)
                 query = query.Where(x => x.Task.Calculation.Project.FolderId == filter.FolderID);
-
+            if (!string.IsNullOrWhiteSpace(filter.Unit))
+            {
+                query = query.Where(x => x.Unit == filter.Unit);
+            }
             if (filter.ResType.HasValue)
                 query = query.Where(x => x.ResType == filter.ResType);
 

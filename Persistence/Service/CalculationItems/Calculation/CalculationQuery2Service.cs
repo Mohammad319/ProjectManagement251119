@@ -124,11 +124,11 @@ namespace Persistence.Service.CalculationItems.Calculation
                         OpportunityId = row.TaskOpportunityId,
                         Order = row.TaskOrder,
                         StatusId = row.TaskStatusId,
-                        Metadata = new TaskMetadata(), // loaded later once per task
+                        Metadata = new TaskMetadata(),
                         Status = row.TaskStatusName,
                         StatusColor = row.TaskStatusColor,
                         Opportunity = row.TaskOpportunity,
-                        Resources = new List<ResourceListDTO>()
+                        Resources = []
                     };
 
                     tasks[row.TaskId] = taskDto;

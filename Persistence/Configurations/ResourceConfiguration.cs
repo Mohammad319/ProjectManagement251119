@@ -11,12 +11,12 @@ internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<Resou
     public void Configure(EntityTypeBuilder<ResourceTypeEntity> builder)
     {
         builder.Property(e => e.Metadata)
-            .HasJsonConversion<ResourceTypeData>();
+            .HasJsonConversion();
 
         builder.HasOne(x => x.Account)
             .WithMany(x => x.ResourceTypes)
             .HasForeignKey(x => x.AccountId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
     }
 }
 
@@ -36,7 +36,7 @@ internal sealed class ResourceSortConfiguration : IEntityTypeConfiguration<Resou
         builder.HasOne(x => x.Account)
             .WithMany(x => x.ResourceSorts)
             .HasForeignKey(x => x.AccountId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
     }
 }
 
@@ -44,18 +44,25 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
 {
     public void Configure(EntityTypeBuilder<ResourceEntity> builder)
     {
-        builder.HasIndex(x => new { x.TenantId, x.TaskId, x.SortOrder });
+        builder.ToTable("Resources");
 
-        builder.HasIndex(x => new { x.TenantId, x.ResourceTypeId });
-        builder.HasIndex(x => new { x.TenantId, x.ResourceSortId });
-        builder.HasIndex(x => new { x.TenantId, x.AccountId });
-        builder.HasIndex(x => new { x.TenantId, x.StatusId });
-        builder.HasIndex(x => new { x.TenantId, x.OpportunityId });
+        builder.HasIndex(x => new { x.TenantId, x.TaskId, x.SortOrder })
+            .HasDatabaseName("IX_Resources_Tenant_Task_Sort");
 
-        // اختياري حسب الاستخدام
-        //builder.HasIndex(x => new { x.TenantId, x.ResType });
-    //    builder.Property(x => x.UnitIndexed)
-    //.HasComputedColumnSql("JSON_VALUE([Metadata],'$.Unit')", stored: true);
+        builder.HasIndex(x => new { x.TenantId, x.ResourceTypeId })
+            .HasDatabaseName("IX_Resources_Tenant_ResourceType");
+
+        builder.HasIndex(x => new { x.TenantId, x.ResourceSortId })
+            .HasDatabaseName("IX_Resources_Tenant_ResourceSort");
+
+        builder.HasIndex(x => new { x.TenantId, x.AccountId })
+            .HasDatabaseName("IX_Resources_Tenant_Account");
+
+        builder.HasIndex(x => new { x.TenantId, x.StatusId })
+            .HasDatabaseName("IX_Resources_Tenant_Status");
+
+        builder.HasIndex(x => new { x.TenantId, x.OpportunityId })
+            .HasDatabaseName("IX_Resources_Tenant_Opportunity");
 
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
@@ -73,12 +80,12 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
         builder.HasOne(x => x.Account)
             .WithMany(x => x.Resources)
             .HasForeignKey(x => x.AccountId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.Status)
             .WithMany(x => x.Resources)
             .HasForeignKey(x => x.StatusId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.Opportunity)
             .WithMany(x => x.Resources)
@@ -91,13 +98,7 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 {
     public void Configure(EntityTypeBuilder<TaskEntity> builder)
     {
-        //builder.OwnsOne(t => t.Cost, owned =>
-        //{
-        //    owned.Property(x => x.BaseCost).HasColumnName("BaseCost");
-        //    owned.Property(x => x.Cost).HasColumnName("Cost");
-        //    owned.Property(x => x.ChangeFactor1).HasColumnName("ChangeFactor1");
-        //    owned.Property(x => x.ChangeFactor2).HasColumnName("ChangeFactor2");
-        //});
+        builder.ToTable("Tasks");
 
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
@@ -105,12 +106,30 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
         builder.HasOne(x => x.Status)
             .WithMany(x => x.Tasks)
             .HasForeignKey(x => x.StatusId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.Opportunity)
+    .WithMany(x => x.Tasks)
+    .HasForeignKey(x => x.OpportunityId)
+    .OnDelete(DeleteBehavior.ClientSetNull);
+
+        builder.HasOne(x => x.ParentTask)
             .WithMany(x => x.Tasks)
-            .HasForeignKey(x => x.OpportunityId)
-            .OnDelete(DeleteBehavior.ClientSetNull);
+            .HasForeignKey(x => x.ParentTaskId)
+            .OnDelete(DeleteBehavior.ClientCascade);
+
+        builder.HasOne(x => x.Calculation)
+            .WithMany(c => c.Tasks)
+            .HasForeignKey(x => x.CalculationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ✅ مهم جدًا (شجرة + ترتيب داخل Calculation) + Tenant filter
+        builder.HasIndex(x => new { x.TenantId, x.CalculationId, x.ParentTaskId, x.SortOrder })
+            .HasDatabaseName("IX_Tasks_Tenant_Calc_Parent_Sort");
+
+        // ✅ اختياري إذا لديك فلترة كثيرة على Status ضمن Calculation
+        builder.HasIndex(x => new { x.TenantId, x.CalculationId, x.StatusId })
+            .HasDatabaseName("IX_Tasks_Tenant_Calc_Status");
     }
 }
 
@@ -118,19 +137,27 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<OfferEntity>
 {
     public void Configure(EntityTypeBuilder<OfferEntity> builder)
     {
+        builder.ToTable("Offers");
+
         builder.HasOne(o => o.Resource)
             .WithMany(r => r.Offers)
             .HasForeignKey(o => o.ResourceId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // كان عندك تعريفان لعلاقة Organisation (واحد Restrict وواحد SetNull)
-        // نخليها واحدة واضحة:
         builder.HasOne(o => o.Organisation)
             .WithMany(p => p.Offers)
             .HasForeignKey(o => o.OrganisationId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
+
+        // ✅ يخدم OfferService.GetByFilterAsync (Organisation filter + Date sort)
+        builder.HasIndex(x => new { x.TenantId, x.OrganisationId, x.Date })
+            .HasDatabaseName("IX_Offers_Tenant_Org_Date");
+
+        // ✅ اختياري إذا عندك شاشة تعرض عروض مورد معيّن مرتبة بالتاريخ:
+        // builder.HasIndex(x => new { x.TenantId, x.ResourceId, x.Date })
+        //     .HasDatabaseName("IX_Offers_Tenant_Resource_Date");
     }
 }

@@ -8,7 +8,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Project
-{public static class ProjectMappingExtensions
+{
+    public static class ProjectMappingExtensions
 {
     public static ProjectData ToMetadata(this PostProjectDTO dto)
     {
@@ -126,4 +127,5 @@ namespace Domain.Entities.Project
 
         public void UpdateOrder(double newOrder) => SortOrder = newOrder;
     }
+
 }

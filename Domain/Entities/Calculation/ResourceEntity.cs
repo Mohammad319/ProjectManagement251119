@@ -68,8 +68,7 @@ namespace Domain.Entities.Calculation
         public ResourceTypeEntity? ResourceType { get; set; }
 
         public int? PrimaryOfferId { get; set; }
-        [JsonIgnore]
-        public OfferEntity? PrimaryOffer { get; set; }
+        //public OfferEntity? PrimaryOffer { get; set; }
         [JsonIgnore]
         public ICollection<OfferEntity> Offers { get; set; } = [];
 

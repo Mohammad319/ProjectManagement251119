@@ -13,39 +13,8 @@ namespace Persistence.Service.CalculationItems
         {
             IQueryable<TaskEntity> query;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            // ⚠ نفترض أن عندك عمود Metadata في الجدول يمثل Task.Metadata كـ JSON
-            // ونستخدم FromSqlInterpolated لتفادي الحقن
-            if (!string.IsNullOrWhiteSpace(filter.Code) &&
-                !string.IsNullOrWhiteSpace(filter.Unit))
-            {
-                query = context.Tasks
-                    .FromSqlInterpolated($"""
-                        SELECT * FROM Tasks 
-                        WHERE JSON_VALUE(Data, '$.Code') LIKE '%' + {filter.Code} + '%'
-                          AND JSON_VALUE(Data, '$.Unit') LIKE '%' + {filter.Unit} + '%'
-                    """);
-            }
-            else if (!string.IsNullOrWhiteSpace(filter.Code))
-            {
-                query = context.Tasks
-                    .FromSqlInterpolated($"""
-                        SELECT * FROM Tasks 
-                        WHERE JSON_VALUE(Data, '$.Code') LIKE '%' + {filter.Code} + '%'
-                    """);
-            }
-            else if (!string.IsNullOrWhiteSpace(filter.Unit))
-            {
-                query = context.Tasks
-                    .FromSqlInterpolated($"""
-                        SELECT * FROM Tasks 
-                        WHERE JSON_VALUE(Data, '$.Unit') LIKE '%' + {filter.Unit} + '%'
-                    """);
-            }
-            else
-            {
                 query = context.Tasks.AsQueryable();
-            }
+            
 
             query = ApplyFilter(query, filter);
 
@@ -53,7 +22,6 @@ namespace Persistence.Service.CalculationItems
             query = query.Include(x => x.Status);
 
             var tasks = await query
-                // تختار الترتيب اللي يناسبك: Id أو SortOrder
                 .OrderByDescending(x => x.SortOrder)
                 .Select(x => new TaskListDTO
                 {
@@ -74,18 +42,31 @@ namespace Persistence.Service.CalculationItems
             IQueryable<TaskEntity> query,
             FilterCalculationItemsDto filter)
         {
+            // هذا الجزء منطقي كـ "نطاق واحد فقط" (Calculation أو Project أو Folder)
             if (filter.CalculationID > 0)
                 query = query.Where(x => x.CalculationId == filter.CalculationID);
             else if (filter.ProjectID.HasValue)
-                query = query.Where(x => x.Calculation.ProjectId == filter.ProjectID);
+                query = query.Where(x => x.Calculation.ProjectId == filter.ProjectID.Value);
             else if (filter.FolderID.HasValue)
-                query = query.Where(x => x.Calculation.Project.FolderId == filter.FolderID);
+                query = query.Where(x => x.Calculation.Project.FolderId == filter.FolderID.Value);
+
+
+            if (!string.IsNullOrWhiteSpace(filter.Code))
+            {
+                var q = filter.Code.Trim();
+                query = query.Where(x => x.Code != null && EF.Functions.Contains(x.Code, q));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Unit))
+            {
+                var q = filter.Unit.Trim();
+                query = query.Where(x => x.Unit != null && EF.Functions.Contains(x.Unit, q));
+            }
 
             if (!string.IsNullOrWhiteSpace(filter.Name))
             {
-                // EF لا يترجم Contains مع StringComparison
-                // نتركها بسيطة، والـ collation في DB يتكفل بحساسية الأحرف.
-                query = query.Where(x => x.Name.Contains(filter.Name));
+                var q = filter.Name.Trim();
+                query = query.Where(x => EF.Functions.Contains(x.Name, q));
             }
 
             if (filter.Status > 0)
