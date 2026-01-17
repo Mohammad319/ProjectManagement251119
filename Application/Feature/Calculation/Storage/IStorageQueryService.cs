@@ -1,9 +1,4 @@
-﻿using Application.Interfaces;
-using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.DTO.Project;
-using System.Text.Json;
+﻿using ProjectManagement.Shared.DTO.Project;
 
 namespace Application.Services.CalculationItems.Storage
 {
@@ -15,6 +10,4 @@ namespace Application.Services.CalculationItems.Storage
             StorageSort sort,
             CancellationToken ct = default);
     }
-
-
 }

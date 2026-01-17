@@ -4,9 +4,7 @@
     using global::Application.Feature.Calculation.Calculation;
     using Microsoft.EntityFrameworkCore;
     using Persistence.Factory;
-    using ProjectManagement.Shared.Base.Calculation;
     using ProjectManagement.Shared.DTO.Calculation;
-    using ProjectManagement.Shared.DTO.Offer;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -25,7 +23,7 @@
 
             return await context.Calculations
                 .AsNoTracking()
-                .Where(x => !x.IsDeleted && 
+                .Where(x => !x.IsDeleted &&
                     x.ProjectId == projectId &&
                     (!x.IsPrivate || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)

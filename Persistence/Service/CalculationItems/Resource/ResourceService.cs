@@ -2,14 +2,12 @@
 using Application.Feature.Calculation.Resource;
 using Application.Interfaces;
 using Domain.Entities.Calculation;
-using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
-using System.Linq;
 
-namespace Persistence.Service
+namespace Persistence.Service.CalculationItems.Resource
 {
     public class ResourceService(IDbContextFactoryTenant dbFactory, INotificationHub notification) : IResourceService
     {
@@ -188,7 +186,7 @@ namespace Persistence.Service
                     if (!string.IsNullOrEmpty(resource.Metadata.QuantityParam))
                         resource.Metadata.QuantityParam = PMValuesConst.FixedQ;
 
-                    resource.Offers = null;
+                    resource.Offers = [];
                     resource.PrimaryOfferId = null;
                     resource.OpportunityId = null;
                 }
@@ -244,7 +242,7 @@ namespace Persistence.Service
         // -----------------------------------------------------
         public async Task<bool> DeleteAsync(IEnumerable<int> resourceIds, int calcId, CancellationToken ct = default)
         {
-            var ids = resourceIds?.Where(id => id > 0).Distinct().ToList() ?? new();
+            var ids = resourceIds?.Where(id => id > 0).Distinct().ToList() ?? [];
             if (ids.Count == 0) return true;
 
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -345,19 +343,6 @@ namespace Persistence.Service
                 fullResource.MapToResourceListDTO());
 
             return true;
-        }
-    }
-
-    internal static class ResourceIncludeExtensions
-    {
-        internal static IQueryable<ResourceEntity> IncludeResourceLookups(this IQueryable<ResourceEntity> query)
-        {
-            return query
-                .Include(r => r.Account)
-                .Include(r => r.Status)
-                .Include(r => r.Opportunity)
-                .Include(r => r.ResourceSort)
-                .Include(r => r.ResourceType);
         }
     }
 }

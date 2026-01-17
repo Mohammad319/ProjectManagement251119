@@ -141,7 +141,7 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations.FindAsync(new object[] { id }, cancellationToken);
+            var calculation = await db.Calculations.FindAsync([id], cancellationToken);
             if (calculation is null)
                 return false;
 

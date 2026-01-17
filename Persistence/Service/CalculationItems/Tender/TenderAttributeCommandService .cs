@@ -1,12 +1,15 @@
-﻿using Domain.Entities.Calculation;
+﻿#nullable enable
+
+using Application;
+using Application.Services.CalculationItems.Tender;
+using Domain.Entities.Calculation;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 
-namespace Application.Services.CalculationItems.Tender
+namespace Persistence.Service.CalculationItems.Tender
 {
     public sealed class TenderAttributeCommandService(IDbContextFactoryTenant dbFactory) : ITenderAttributeCommandService
     {
-
         // -------------------------------------------------------
         // Create Attribute + bind initial values
         // -------------------------------------------------------
@@ -15,17 +18,19 @@ namespace Application.Services.CalculationItems.Tender
             int calculationId,
             CancellationToken ct = default)
         {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            await using var tx = await context.Database.BeginTransactionAsync(ct);
+
             var attr = new TenderAttributeDefinitionEntity(
                 calculationId: calculationId,
-                name: dto.Name,
+                name: dto.Name ?? string.Empty,
                 note: dto.Note
             );
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             context.AttributeNameTender.Add(attr);
-            await context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct); // للحصول على attr.Id
 
-            if (dto.TendersValues is not null)
+            if (dto.TendersValues is not null && dto.TendersValues.Count > 0)
             {
                 foreach (var x in dto.TendersValues)
                 {
@@ -39,6 +44,7 @@ namespace Application.Services.CalculationItems.Tender
                 await context.SaveChangesAsync(ct);
             }
 
+            await tx.CommitAsync(ct);
             return attr.Id;
         }
 
@@ -56,12 +62,12 @@ namespace Application.Services.CalculationItems.Tender
             var attr = await context.AttributeNameTender
                 .FirstOrDefaultAsync(x => x.Id == id && x.CalculationId == calculationId, ct);
 
-            if (attr == null)
+            if (attr is null)
                 return false;
 
-            attr.Update(dto.Name, dto.Note);
-
+            attr.Update(dto.Name ?? string.Empty, dto.Note);
             await context.SaveChangesAsync(ct);
+
             return true;
         }
 
@@ -75,21 +81,19 @@ namespace Application.Services.CalculationItems.Tender
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            var attr = await context.AttributeNameTender
+                .FirstOrDefaultAsync(x => x.Id == id && x.CalculationId == calculationId, ct);
+
+            if (attr is null)
+                return false;
+
+            // حذف binds + attr في SaveChanges واحد
             var binds = await context.TenderAttributeBind
                 .Where(x => x.TenderAttributeId == id)
                 .ToListAsync(ct);
 
             if (binds.Count > 0)
-            {
                 context.TenderAttributeBind.RemoveRange(binds);
-                await context.SaveChangesAsync(ct);
-            }
-
-            var attr = await context.AttributeNameTender
-                .FirstOrDefaultAsync(x => x.Id == id && x.CalculationId == calculationId, ct);
-
-            if (attr == null)
-                return false;
 
             context.AttributeNameTender.Remove(attr);
             await context.SaveChangesAsync(ct);

@@ -3,7 +3,7 @@ using Domain.Entities.Calculation;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 
-namespace Persistence.Service.CalculationItems
+namespace Persistence.Service.CalculationItems.Task
 {
     public sealed class TaskQueryService(IDbContextFactoryTenant dbFactory) : ITaskQueryService
     {

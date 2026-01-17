@@ -1,5 +1,4 @@
 ﻿using Application.Interfaces;
-using Application.Services.CalculationItems.CalcShare;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Application.Feature.Calculation.CalcShare.Commands

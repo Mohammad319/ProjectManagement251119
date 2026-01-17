@@ -1,11 +1,10 @@
-﻿using Domain.Entities.Calculation;
-using ProjectManagement.Shared.DTO.Calculation;
+﻿using ProjectManagement.Shared.DTO.Calculation;
 
-namespace Application.Services.CalculationItems.CalcShare
+namespace Application.Feature.Calculation.CalcShare
 {
     public interface IShareCalcService
     {
-        Task<IEnumerable<ListShareCalcDTO>> GetAsync(int calculationId, int? departmentId, int userId, CancellationToken ct = default);
+        Task<IReadOnlyList<ListShareCalcDTO>> GetAsync(int calculationId, int? departmentId, int userId, CancellationToken ct = default);
         Task<int> CreateAsync(PostShareCalcDTO dto, int fromUser, int fromDepartment, CancellationToken ct = default);
         Task<bool> UpdateAsync(UpdateShareCalcDTO dto, int fromUser, int fromDepartment, CancellationToken ct = default);
         Task<bool> DeleteAsync(int id, int departmentId, int userId, CancellationToken ct = default);

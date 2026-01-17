@@ -9,7 +9,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 
-namespace Persistence.Service.CalculationItems
+namespace Persistence.Service.CalculationItems.Task
 {
     public class TaskService(IDbContextFactoryTenant dbFactory, INotificationHub notification) : ITaskService
     {
@@ -47,7 +47,7 @@ namespace Persistence.Service.CalculationItems
                     order: order,
                     ct: ct);
 
-                if (clonedTasks is not null && clonedTasks.Any())
+                if (clonedTasks is not null && clonedTasks.Count != 0)
                 {
                     resultDtos.AddRange(clonedTasks.MapToTaskListDTOs());
                 }
@@ -76,7 +76,7 @@ namespace Persistence.Service.CalculationItems
                 return false;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            int? parentTaskId = tasks.FirstOrDefault()?.ParentTaskId;
+            int? parentTaskId = tasks?.FirstOrDefault()?.ParentTaskId;
 
             if (parentTaskId.HasValue && parentTaskId > 0)
             {
@@ -233,7 +233,7 @@ namespace Persistence.Service.CalculationItems
 
                     foreach (var t in tasks)
                     {
-                        t.Resources = resources.Where(r => r.TaskId == t.Id).ToList();
+                        t.Resources = [.. resources.Where(r => r.TaskId == t.Id)];
                     }
 
                     // الجذر (Root) هو التاسك اللي ParentTaskId == null
@@ -339,7 +339,7 @@ namespace Persistence.Service.CalculationItems
             foreach (var id in taskIds)
             {
                 var tasksToDelete = await GetTaskWithChildrenAsync(id, ct);
-                if (tasksToDelete is not null && tasksToDelete.Any())
+                if (tasksToDelete is not null && tasksToDelete.Count != 0)
                 {
                     deletedTaskIds.Add(id);
                     context.Tasks.RemoveRange(tasksToDelete);
@@ -551,7 +551,7 @@ namespace Persistence.Service.CalculationItems
         // -----------------------------------------------------
         // Helper: load navigation props (Status / Opportunity)
         // -----------------------------------------------------
-        private async Task LoadTaskNavigationAsync(
+        private async ValueTask LoadTaskNavigationAsync(
             List<int> taskIds,
             CancellationToken ct)
         {
@@ -569,7 +569,7 @@ namespace Persistence.Service.CalculationItems
         // -----------------------------------------------------
         // Helper: load task references + resources
         // -----------------------------------------------------
-        public async Task LoadTaskReferencesAsync(
+        public async ValueTask LoadTaskReferencesAsync(
             List<TaskEntity> tasks,
             CancellationToken ct)
         {
@@ -596,13 +596,13 @@ namespace Persistence.Service.CalculationItems
             foreach (var task in tasks)
                 task.Resources = resourceLookup.TryGetValue(task.Id, out var resList)
                     ? resList
-                    : new List<ResourceEntity>();
+                    : [];
         }
 
         // -----------------------------------------------------
         // Helper: notify hub about list of tasks
         // -----------------------------------------------------
-        private async Task NotifyTasks(
+        private async ValueTask NotifyTasks(
             OperationType operationType,
             int calcId,
             List<TaskEntity> tasks,

@@ -1,9 +1,6 @@
-﻿using Domain.Entities.Calculation;
-using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.Enums;
-using System;
+﻿using ProjectManagement.Shared.Base.Calculation;
 
-namespace Persistence.Service.CalculationItems;
+namespace Persistence.Service.CalculationItems.Calculation;
 
 /// <summary>
 /// Flat row for optimized Calculation Page query (Task + Resource + Offer).

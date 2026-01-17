@@ -79,7 +79,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var opp = await context.Opportunity.FindAsync(new object?[] { id }, cancellationToken: ct);
+            var opp = await context.Opportunity.FindAsync([id], cancellationToken: ct);
             if (opp == null)
                 return false;
 

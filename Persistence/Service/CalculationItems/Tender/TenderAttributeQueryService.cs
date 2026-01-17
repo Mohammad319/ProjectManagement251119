@@ -1,4 +1,6 @@
-﻿using Application.Services.CalculationItems.Tender;
+﻿#nullable enable
+
+using Application.Services.CalculationItems.Tender;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 
@@ -14,14 +16,14 @@ namespace Persistence.Service.CalculationItems.Tender
 
             return await context.AttributeNameTender
                 .Where(x => x.CalculationId == calculationId)
+                .AsNoTracking()
                 .Select(x => new TenderAttributeListDTO
                 {
                     Id = x.Id,
-                    Name = x.Name,
+                    Name = x.Name ?? string.Empty,
                     Note = x.Note
                 })
                 .ToListAsync(ct);
         }
     }
-
 }

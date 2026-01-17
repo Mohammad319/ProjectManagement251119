@@ -7,10 +7,10 @@ namespace Persistence.Service.CalculationItems.Calculation
     public sealed partial class CalculationQueryService
     {
         public async Task<CalculationPageDTO?> GetPageAsync(
-    int id,
-    int userId,
-    int? departmentId,
-    CancellationToken ct = default)
+            int id,
+            int userId,
+            int? departmentId,
+            CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -31,9 +31,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                     TemplateId = x.TemplateId,
                     Factors = x.Factors,
                     QuanityList = x.Metadata.QuanityList,
-                    Compensation = x.Compensation != null ? x.Compensation.Name : string.Empty,
-                    Customer = x.Organisation != null ? x.Organisation.Name : string.Empty,
-                    Contract = x.Contract != null ? x.Contract.Name : string.Empty,
+                    Compensation = x.Compensation == null ? string.Empty : x.Compensation.Name,
+                    Customer = x.Organisation == null ? string.Empty : x.Organisation.Name,
+                    Contract = x.Contract == null ? string.Empty : x.Contract.Name,
                 })
                 .FirstOrDefaultAsync(ct);
 
@@ -41,6 +41,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 return null;
 
             // 2) Flat query WITHOUT heavy metadata (TaskMetadata/ResourceMetadata are text-heavy)
+            // NOTE: Avoid ?. inside expression trees; use ternary/== null pattern for EF translation.
             var rows = await (
                 from t in context.Tasks.AsNoTracking().TagWith("CalcPageOptimized.Flat.NoMetadata")
                 where t.CalculationId == id
@@ -61,50 +62,94 @@ namespace Persistence.Service.CalculationItems.Calculation
                     TaskName = t.Name,
                     TaskOrder = t.SortOrder,
                     TaskStatusId = t.StatusId,
-                    TaskStatusName = t.Status != null ? t.Status.Name : string.Empty,
-                    TaskStatusColor = t.Status != null ? t.Status.Color : string.Empty,
+                    TaskStatusName = t.Status == null ? string.Empty : (t.Status.Name ?? string.Empty),
+                    TaskStatusColor = t.Status == null ? string.Empty : (t.Status.Color ?? string.Empty),
                     TaskOpportunityId = t.OpportunityId,
-                    TaskOpportunity = t.Opportunity != null ? t.Opportunity.OpportunityType : string.Empty,
-                    TaskMetadata = default!, // will be loaded later (once per task)
+                    TaskOpportunity = t.Opportunity == null ? string.Empty : (t.Opportunity.OpportunityType ?? string.Empty),
+                    TaskMetadata = default!, // loaded later once per task
 
                     // Resource (nullable)
                     ResourceId = (int?)r.Id,
-                    ResourceName = r != null ? r.Name : null,
-                    ResourceIsActive = r != null ? r.IsActive : null,
-                    ResType = r != null ? (ResourceTypesEnum?)r.ResType : null,
-                    ResourceSortId = r != null ? r.ResourceSortId : null,
-                    ResourceTypeId = r != null ? r.ResourceTypeId : null,
-                    ResourceAccountId = r != null ? r.AccountId : null,
-                    ResourceStatusId = r != null ? r.StatusId : null,
-                    ResourcePrimaryOfferId = r != null ? r.PrimaryOfferId : null,
-                    ResourceOrder = r != null ? r.SortOrder : null,
-                    ResourceOpportunityId = r != null ? r.OpportunityId : null,
-                    ResourceOpportunity = r != null && r.Opportunity != null ? r.Opportunity.OpportunityType : string.Empty,
-                    ResourceStatusColor = r != null && r.Status != null ? r.Status.Color : string.Empty,
-                    ResourceStatus = r != null && r.Status != null ? r.Status.Name : string.Empty,
-                    ResourceSort = r != null && r.ResourceSort != null ? r.ResourceSort.Name : string.Empty,
-                    ResourceTypeName = r != null && r.ResourceType != null ? r.ResourceType.Name : string.Empty,
-                    ResourceAccount = r != null && r.Account != null ? r.Account.Name : string.Empty,
-                    ResourceAccountCode = r != null && r.Account != null ? r.Account.Code : string.Empty,
-                    ResourceMetadata = default, // will be loaded later (once per resource)
+                    ResourceName = r.Name,
+                    ResourceIsActive = r.IsActive,
+                    ResType = r.ResType,
+                    ResourceSortId = r.ResourceSortId,
+                    ResourceTypeId = r.ResourceTypeId,
+                    ResourceAccountId = r.AccountId,
+                    ResourceStatusId = r.StatusId,
+                    ResourcePrimaryOfferId = r.PrimaryOfferId,
+                    ResourceOrder = r.SortOrder,
+                    ResourceOpportunityId = r.OpportunityId,
+
+                    ResourceOpportunity =
+                        r == null
+                            ? string.Empty
+                            : (r.Opportunity == null ? string.Empty : (r.Opportunity.OpportunityType ?? string.Empty)),
+
+                    ResourceStatusColor =
+                        r == null
+                            ? string.Empty
+                            : (r.Status == null ? string.Empty : (r.Status.Color ?? string.Empty)),
+
+                    ResourceStatus =
+                        r == null
+                            ? string.Empty
+                            : (r.Status == null ? string.Empty : (r.Status.Name ?? string.Empty)),
+
+                    ResourceSort =
+                        r == null
+                            ? string.Empty
+                            : (r.ResourceSort == null ? string.Empty : (r.ResourceSort.Name ?? string.Empty)),
+
+                    ResourceTypeName =
+                        r == null
+                            ? string.Empty
+                            : (r.ResourceType == null ? string.Empty : (r.ResourceType.Name ?? string.Empty)),
+
+                    ResourceAccount =
+                        r == null
+                            ? string.Empty
+                            : (r.Account == null ? string.Empty : (r.Account.Name ?? string.Empty)),
+
+                    ResourceAccountCode =
+                        r == null
+                            ? string.Empty
+                            : (r.Account == null ? string.Empty : (r.Account.Code ?? string.Empty)),
+
+                    ResourceMetadata = default!, // loaded later once per resource
 
                     // Offer (nullable) - keep costs
                     OfferId = (int?)o.Id,
-                    OfferBaseCost = o != null ? o.Metadata.BaseCost : 0,
-                    OfferCost = o != null ? o.Metadata.Cost : 0,
-                    OfferComment = o != null ? o.Metadata.Comment : null,
-                    OfferDate = o != null ? o.Date : null,
-                    OfferOrganisationId = o != null ? o.OrganisationId : null,
-                    OfferOrganisation = o != null && o.Organisation != null ? o.Organisation.Name : string.Empty,
-                    OfferSubCategory = o != null && o.Organisation != null && o.Organisation.OrganisationCategory != null
-                        ? o.Organisation.OrganisationCategory.Name
-                        : string.Empty,
-                    OfferCategory = o != null
-                        && o.Organisation != null
-                        && o.Organisation.OrganisationCategory != null
-                        && o.Organisation.OrganisationCategory.ParentCategory != null
-                            ? o.Organisation.OrganisationCategory.ParentCategory.Name
-                            : string.Empty,
+                    OfferBaseCost = o == null ? 0 : o.Metadata.BaseCost,
+                    OfferCost = o == null ? 0 : o.Metadata.Cost,
+                    OfferComment = o.Metadata.Comment,
+                    OfferDate = o.Date,
+                    OfferOrganisationId = o.OrganisationId,
+
+                    OfferOrganisation =
+                        o == null
+                            ? string.Empty
+                            : (o.Organisation == null ? string.Empty : (o.Organisation.Name ?? string.Empty)),
+
+                    OfferSubCategory =
+                        o == null
+                            ? string.Empty
+                            : (o.Organisation == null
+                                ? string.Empty
+                                : (o.Organisation.OrganisationCategory == null
+                                    ? string.Empty
+                                    : (o.Organisation.OrganisationCategory.Name ?? string.Empty))),
+
+                    OfferCategory =
+                        o == null
+                            ? string.Empty
+                            : (o.Organisation == null
+                                ? string.Empty
+                                : (o.Organisation.OrganisationCategory == null
+                                    ? string.Empty
+                                    : (o.Organisation.OrganisationCategory.ParentCategory == null
+                                        ? string.Empty
+                                        : (o.Organisation.OrganisationCategory.ParentCategory.Name ?? string.Empty)))),
                 }
             ).ToListAsync(ct);
 
@@ -124,7 +169,10 @@ namespace Persistence.Service.CalculationItems.Calculation
                         OpportunityId = row.TaskOpportunityId,
                         Order = row.TaskOrder,
                         StatusId = row.TaskStatusId,
+
+                        // initialized; later overwritten by loaded metadata
                         Metadata = new TaskMetadata(),
+
                         Status = row.TaskStatusName,
                         StatusColor = row.TaskStatusColor,
                         Opportunity = row.TaskOpportunity,
@@ -132,7 +180,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     };
 
                     tasks[row.TaskId] = taskDto;
-                    resourceMaps[row.TaskId] = new Dictionary<int, ResourceListDTO>(capacity: 8);
+                    resourceMaps[row.TaskId] = new(capacity: 8);
                 }
 
                 // Task without resources
@@ -157,15 +205,18 @@ namespace Persistence.Service.CalculationItems.Calculation
                         OfferId = row.ResourcePrimaryOfferId,
                         Order = row.ResourceOrder ?? 0,
                         OpportunityId = row.ResourceOpportunityId,
-                        Data = new ResourceMetadata(), // loaded later once per resource
-                        Opportunity = row.ResourceOpportunity ?? string.Empty,
-                        StatusColor = row.ResourceStatusColor ?? string.Empty,
-                        Status = row.ResourceStatus ?? string.Empty,
-                        Sort = row.ResourceSort ?? string.Empty,
-                        ResName = row.ResourceTypeName ?? string.Empty,
-                        Account = row.ResourceAccount ?? string.Empty,
-                        AccountCode = row.ResourceAccountCode ?? string.Empty,
-                        Offers = new List<ListOfferDTO>()
+
+                        // initialized; later overwritten by loaded metadata
+                        Data = new ResourceMetadata(),
+
+                        Opportunity = row.ResourceOpportunity,
+                        StatusColor = row.ResourceStatusColor,
+                        Status = row.ResourceStatus,
+                        Sort = row.ResourceSort,
+                        ResName = row.ResourceTypeName,
+                        Account = row.ResourceAccount,
+                        AccountCode = row.ResourceAccountCode,
+                        Offers = []
                     };
 
                     resMap[resId] = resDto;
@@ -183,9 +234,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                         Comment = row.OfferComment,
                         Date = row.OfferDate ?? default,
                         OrganisationId = row.OfferOrganisationId ?? 0,
-                        Organisation = row.OfferOrganisation ?? string.Empty,
-                        SubCategory = row.OfferSubCategory ?? string.Empty,
-                        Category = row.OfferCategory ?? string.Empty
+                        Organisation = row.OfferOrganisation,
+                        SubCategory = row.OfferSubCategory,
+                        Category = row.OfferCategory
                     });
                 }
             }
@@ -193,7 +244,6 @@ namespace Persistence.Service.CalculationItems.Calculation
             // 4) Load heavy metadata ONCE per Task and ONCE per Resource, then inject into DTOs
             var taskIds = tasks.Keys.ToArray();
 
-            // Collect all resource DTOs + ids
             var allResourceDtos = tasks.Values.SelectMany(t => t.Resources).ToList();
             var resourceIds = allResourceDtos.Select(r => r.Id).Distinct().ToArray();
 
@@ -228,198 +278,6 @@ namespace Persistence.Service.CalculationItems.Calculation
                 {
                     if (resMeta.TryGetValue(r.Id, out var meta))
                         r.Data = meta;
-                }
-            }
-
-            header.Tasks = tasks.Values
-                .OrderBy(t => t.Order)
-                .ToList();
-
-            return header;
-        }
-
-        public async Task<CalculationPageDTO?> GetPageAsyncOld(
-            int id,
-            int userId,
-            int? departmentId,
-            CancellationToken ct = default)
-        {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            // 1) Header (same auth logic as original)
-            var header = await context.Calculations
-                .AsNoTracking()
-                .TagWith("CalcPageOptimized.Header")
-                .Where(x =>
-                    x.Id == id &&
-                    (!departmentId.HasValue || x.Project.Folder.DepartmentId == departmentId.Value) &&
-                    (!x.IsPrivate || x.CreatedBy == userId))
-                .Select(x => new CalculationPageDTO
-                {
-                    Tax = x.Tax,
-                    Name = x.Name,
-                    OrganisationId = x.OrganisationId,
-                    Code = x.Code,
-                    TemplateId = x.TemplateId,
-                    Factors = x.Factors,
-                    QuanityList = x.Metadata.QuanityList,
-                    Compensation = x.Compensation != null ? x.Compensation.Name : string.Empty,
-                    Customer = x.Organisation != null ? x.Organisation.Name : string.Empty,
-                    Contract = x.Contract != null ? x.Contract.Name : string.Empty,
-                })
-                .FirstOrDefaultAsync(ct);
-
-            if (header is null)
-                return null;
-
-            // 2) Flat query: Tasks LEFT JOIN Resources LEFT JOIN Offers
-            var rows = await (
-                from t in context.Tasks.AsNoTracking().TagWith("CalcPageOptimized.Flat")
-                where t.CalculationId == id
-
-                join r in context.Resources.AsNoTracking()
-                    on t.Id equals r.TaskId into rg
-                from r in rg.DefaultIfEmpty()
-
-                    // IMPORTANT: join on nullable key to support LEFT JOIN (r can be null)
-                join o in context.Offers.AsNoTracking()
-                    on (int?)r.Id equals (int?)o.ResourceId into og
-                from o in og.DefaultIfEmpty()
-
-                select new CalcPageFlatRow
-                {
-                    // Task
-                    TaskId = t.Id,
-                    ParentTaskId = t.ParentTaskId,
-                    TaskName = t.Name,
-                    TaskOrder = t.SortOrder,
-                    TaskStatusId = t.StatusId,
-                    TaskStatusName = t.Status != null ? t.Status.Name : string.Empty,
-                    TaskStatusColor = t.Status != null ? t.Status.Color : string.Empty,
-                    TaskOpportunityId = t.OpportunityId,
-                    TaskOpportunity = t.Opportunity != null ? t.Opportunity.OpportunityType : string.Empty,
-                    TaskMetadata = t.Metadata,
-
-                    // Resource (nullable)
-                    ResourceId = (int?)r.Id,
-                    ResourceName = r != null ? r.Name : null,
-                    ResourceIsActive = r != null ? r.IsActive : null,
-                    ResType = r != null ? (ResourceTypesEnum?)r.ResType : null,
-                    ResourceSortId = r != null ? r.ResourceSortId : null,
-                    ResourceTypeId = r != null ? r.ResourceTypeId : null,
-                    ResourceAccountId = r != null ? r.AccountId : null,
-                    ResourceStatusId = r != null ? r.StatusId : null,
-                    ResourcePrimaryOfferId = r != null ? r.PrimaryOfferId : null,
-                    ResourceOrder = r != null ? r.SortOrder : null,
-                    ResourceOpportunityId = r != null ? r.OpportunityId : null,
-                    ResourceOpportunity = r != null && r.Opportunity != null ? r.Opportunity.OpportunityType : string.Empty,
-                    ResourceStatusColor = r != null && r.Status != null ? r.Status.Color : string.Empty,
-                    ResourceStatus = r != null && r.Status != null ? r.Status.Name : string.Empty,
-                    ResourceSort = r != null && r.ResourceSort != null ? r.ResourceSort.Name : string.Empty,
-                    ResourceTypeName = r != null && r.ResourceType != null ? r.ResourceType.Name : string.Empty,
-                    ResourceAccount = r != null && r.Account != null ? r.Account.Name : string.Empty,
-                    ResourceAccountCode = r != null && r.Account != null ? r.Account.Code : string.Empty,
-                    ResourceMetadata = r != null ? r.Metadata : null,
-
-                    // Offer (nullable)
-                    OfferId = (int?)o.Id,
-                    OfferBaseCost = o != null ? o.Metadata.BaseCost : 0,
-                    OfferCost = o != null ? o.Metadata.Cost : 0,
-                    OfferComment = o != null ? o.Metadata.Comment : null,
-                    OfferDate = o != null ? o.Date : null,
-                    OfferOrganisationId = o != null ? o.OrganisationId : null,
-                    OfferOrganisation = o != null && o.Organisation != null ? o.Organisation.Name : string.Empty,
-                    OfferSubCategory = o != null && o.Organisation != null && o.Organisation.OrganisationCategory != null
-                        ? o.Organisation.OrganisationCategory.Name
-                        : string.Empty,
-                    OfferCategory = o != null
-                        && o.Organisation != null
-                        && o.Organisation.OrganisationCategory != null
-                        && o.Organisation.OrganisationCategory.ParentCategory != null
-                            ? o.Organisation.OrganisationCategory.ParentCategory.Name
-                            : string.Empty,
-                }
-            ).ToListAsync(ct);
-
-            // 3) Grouping: build TaskListDTO -> ResourceListDTO -> Offers
-            var tasks = new Dictionary<int, TaskListDTO>(capacity: Math.Max(rows.Count, 16));
-            var resourceMaps = new Dictionary<int, Dictionary<int, ResourceListDTO>>(capacity: Math.Max(rows.Count, 16));
-
-            foreach (var row in rows)
-            {
-                if (!tasks.TryGetValue(row.TaskId, out var taskDto))
-                {
-                    taskDto = new TaskListDTO
-                    {
-                        TaskId = row.ParentTaskId,
-                        Id = row.TaskId,
-                        Name = row.TaskName,
-                        OpportunityId = row.TaskOpportunityId,
-                        Order = row.TaskOrder,
-                        StatusId = row.TaskStatusId,
-                        Metadata = row.TaskMetadata,
-                        Status = row.TaskStatusName,
-                        StatusColor = row.TaskStatusColor,
-                        Opportunity = row.TaskOpportunity,
-                        Resources = new List<ResourceListDTO>()
-                    };
-
-                    tasks[row.TaskId] = taskDto;
-                    resourceMaps[row.TaskId] = [];
-                }
-
-                // Task without resources
-                if (!row.ResourceId.HasValue)
-                    continue;
-
-                var resId = row.ResourceId.Value;
-                var resMap = resourceMaps[row.TaskId];
-
-                if (!resMap.TryGetValue(resId, out var resDto))
-                {
-                    resDto = new ResourceListDTO
-                    {
-                        Id = resId,
-                        Name = row.ResourceName ?? string.Empty,
-                        Active = row.ResourceIsActive ?? false,
-                        ResType = row.ResType ?? default,
-                        ResourceSortId = row.ResourceSortId,
-                        ResourceTypeId = row.ResourceTypeId,
-                        AccountId = row.ResourceAccountId,
-                        StatusId = row.ResourceStatusId,
-                        OfferId = row.ResourcePrimaryOfferId,
-                        Order = row.ResourceOrder ?? 0,
-                        OpportunityId = row.ResourceOpportunityId,
-                        Data = row.ResourceMetadata ?? new ResourceMetadata(),
-                        Opportunity = row.ResourceOpportunity ?? string.Empty,
-                        StatusColor = row.ResourceStatusColor ?? string.Empty,
-                        Status = row.ResourceStatus ?? string.Empty,
-                        Sort = row.ResourceSort ?? string.Empty,
-                        ResName = row.ResourceTypeName ?? string.Empty,
-                        Account = row.ResourceAccount ?? string.Empty,
-                        AccountCode = row.ResourceAccountCode ?? string.Empty,
-                        Offers = new List<ListOfferDTO>()
-                    };
-
-                    resMap[resId] = resDto;
-                    taskDto.Resources.Add(resDto);
-                }
-
-                // Offer (if exists)
-                if (row.OfferId.HasValue)
-                {
-                    resDto.Offers.Add(new ListOfferDTO
-                    {
-                        Id = row.OfferId.Value,
-                        BaseCost = 0,
-                        Cost = 0,
-                        Comment = row.OfferComment,
-                        Date = row.OfferDate ?? default,
-                        OrganisationId = row.OfferOrganisationId ?? 0,
-                        Organisation = row.OfferOrganisation ?? string.Empty,
-                        SubCategory = row.OfferSubCategory ?? string.Empty,
-                        Category = row.OfferCategory ?? string.Empty
-                    });
                 }
             }
 
