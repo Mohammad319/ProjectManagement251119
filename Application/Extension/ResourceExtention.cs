@@ -1,7 +1,6 @@
 ﻿using Domain.Entities.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
-using System.Linq;
 
 namespace Application.Extention
 {
@@ -31,7 +30,7 @@ namespace Application.Extention
                 Account = r.Account?.Name ?? string.Empty,
                 AccountCode = r.Account?.Code ?? string.Empty,
                 TaskId = r.TaskId,
-                Offers = r.Offers == null ? []: r.Offers.Select(of => MapToListOfferDTO(of)).ToList(),
+                Offers = r.Offers == null ? [] : r.Offers.Select(of => MapToListOfferDTO(of)).ToList(),
             };
         }
         public static ListOfferDTO MapToListOfferDTO(OfferEntity of)

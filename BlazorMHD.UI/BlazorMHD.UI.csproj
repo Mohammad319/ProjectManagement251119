@@ -30,20 +30,13 @@
   </ItemGroup>
 
   <!-- ✅ تثبيت npm مرة واحدة فقط إذا node_modules غير موجود -->
-  <Target Name="TailwindInstall"
-          BeforeTargets="Build"
-          Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')">
+  <Target Name="TailwindInstall" BeforeTargets="Build" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')">
     <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
   <!-- ✅ يبني Tailwind فقط عند تغيّر Inputs -->
-  <Target Name="TailwindBuild"
-          BeforeTargets="Build"
-          DependsOnTargets="TailwindInstall"
-          Inputs="tailwind.config.js;package-lock.json;wwwroot\app.tailwind.css;@(TailwindContent)"
-          Outputs="wwwroot\css\mhd.css">
-    <Exec Command="npx tailwindcss -c ./tailwind.config.js -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/mhd.css $(TailwindMinify)"
-          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  <Target Name="TailwindBuild" BeforeTargets="Build" DependsOnTargets="TailwindInstall" Inputs="tailwind.config.js;package-lock.json;wwwroot\app.tailwind.css;@(TailwindContent)" Outputs="wwwroot\css\mhd.css">
+    <Exec Command="npx tailwindcss -c ./tailwind.config.js -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/mhd.css $(TailwindMinify)" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
   <ItemGroup>
@@ -51,7 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup>

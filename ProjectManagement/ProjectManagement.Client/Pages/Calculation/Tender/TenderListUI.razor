@@ -31,17 +31,28 @@ else
                     <div class="flex flex-wrap gap-2">
                         <!-- زر إنشاء خاصية -->
                         <button @onclick="() => FormAttr = new TenderAttributeListDTO()"
-                                class="@CssClasses.Btn.Outline.Success">
+                                class="@CssClasses.Btn.Outline.Success flex items-center gap-2">
 
-                            @((MarkupString)Icons.Plus)
-                           @AppLoc[LocalizerConst.New, ResourceApp.attribute]
+                            <span class="text-lg leading-none">
+                                @((MarkupString)Icons.Plus)
+                            </span>
+
+                            <span>
+                                @AppLoc[LocalizerConst.New, ResourceApp.attribute]
+                            </span>
                         </button>
 
                         <!-- زر إنشاء عطاء -->
-                        <button @onclick="() => Form = new TenderListDTO()" class="@CssClasses.Btn.Outline.Success">
+                        <button @onclick="() => Form = new TenderListDTO()"
+                                class="@CssClasses.Btn.Outline.Success flex items-center gap-2">
 
-                            @((MarkupString)Icons.Plus)
-                            @AppLoc[LocalizerConst.New, ResourceLoc.tender]
+                            <span class="text-lg leading-none">
+                                @((MarkupString)Icons.Plus)
+                            </span>
+
+                            <span>
+                                @AppLoc[LocalizerConst.New, ResourceLoc.tender]
+                            </span>
                         </button>
                     </div>
                 </div>

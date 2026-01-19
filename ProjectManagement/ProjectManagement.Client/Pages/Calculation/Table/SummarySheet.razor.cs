@@ -17,6 +17,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         {
             EarningOnChange = true;
             CalcultationExtensions.AssignFactorsToResourcesFast(Calculation);
+            //Calculation.AssignFactorsToResources();
 
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();

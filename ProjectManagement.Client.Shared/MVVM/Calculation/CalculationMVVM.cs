@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
@@ -195,6 +194,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                     {
                         var res = t.Resources[r];
                         ResourceById[res.Id] = res;
+                        res.TaskId = t.Id;
 
                         if (res.Offers is not null)
                         {
@@ -229,7 +229,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public void RemoveTasks(IEnumerable<int> ids)
         {
             // إزالة مباشرة من قائمة Tasks (قد تكون كثيرة، لكنه يحدث عادةً أقل من Update)
-            var set = ids is HashSet<int> hs ? hs : new HashSet<int>(ids);
+            var set = ids is HashSet<int> hs ? hs : [.. ids];
 
             for (int i = Tasks.Count - 1; i >= 0; i--)
             {

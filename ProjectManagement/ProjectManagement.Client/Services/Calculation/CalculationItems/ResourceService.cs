@@ -26,9 +26,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         {
             // عدّل حسب منطقك الحقيقي
             if (oldR.Quantity != newR.Quantity) return true;
-            if (oldR.AccountId != newR.AccountId) return true;
+            //if (oldR.AccountId != newR.AccountId) return true;
             if (oldR.ResourceTypeId != newR.ResourceTypeId) return true;
-            if (oldR.ResourceSortId != newR.ResourceSortId) return true;
+            //if (oldR.ResourceSortId != newR.ResourceSortId) return true;
 
             if (oldR.Data?.Quantity != newR.Data?.Quantity) return true;
             if (oldR.Data?.Cost != newR.Data?.Cost) return true;

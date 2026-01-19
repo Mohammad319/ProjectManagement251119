@@ -1,104 +1,152 @@
-﻿﻿@using ProjectManagement.Client.Shared.MVVM.Calculation;
-@using ProjectManagement.Client.Shared.Model.Project;
-@using ProjectManagement.Client.Shared.Repositories.Calculation;
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.Model.Project
+@using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Client.Shared.Repositories.Organisation
 @using ProjectManagement.Shared.DTO.Calculation
-@using ProjectManagement.Shared.DTO.Offer;
+@using ProjectManagement.Shared.DTO.Offer
 @using ProjectManagement.Shared.DTO.Organisation
-@using ProjectManagement.Shared.Base.Calculation;
-@using System.Text.Json;
+@using ProjectManagement.Shared.Base.Calculation
+@using System.Text.Json
 @inherits AppComponentBase
 
-@if (Income != null)
+@if (Income is not null)
 {
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@Income" OnValidSubmit="async()=> await HandleSubmitAsync()">
+    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@Income" OnValidSubmit="HandleSubmitAsync">
         <div class="@CssClasses.Grid.Col.MD3">
-                @if (Companies != null)
-                {
+            @if (Companies is not null)
+            {
                 <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
-                        <select class="@CssClasses.Input.Text" @onchange=" (e)=>  OnChangeCompany(e)">
-                            <option value="" selected></option>
-                            @foreach (var cat in Companies)
-                            {
-                                <option value="@cat.Id">@cat.Name</option>
-                            }
-                        </select>
-                    </div>
-                }
+                    <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
+                    <select class="@CssClasses.Input.Text" @onchange="OnChangeCompany">
+                        <option value="" selected></option>
+                        @foreach (var cat in Companies)
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+
             <div class="@CssClasses.Grid.Span.MD2">
-                <label class="@CssClasses.Form.Label">@CalcResource.note </label>
+                <label class="@CssClasses.Form.Label">@CalcResource.note</label>
                 <InputTextArea @bind-Value="Income.Note" class="@CssClasses.Input.Text" />
-                <ValidationMessage For=@(() => Income.Note) />
+                <ValidationMessage For="@(() => Income.Note)" />
             </div>
         </div>
     </EditForm>
+
     <div class="@CssClasses.Modal.Footer">
         <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@Loading">
             @ResourceApp.save
         </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="() => Callback.InvokeAsync(false)">
+            @ResourceApp.cancel
+        </button>
     </div>
 }
+
 @code {
-    [Parameter] public List<TenderAttributeListDTO> Attributes { get; set; }
-    int CompanyId;
+    // لو ممكن يجيك null من الأب خليه nullable، وإلا عطه قيمة افتراضية
+    [Parameter] public List<TenderAttributeListDTO> Attributes { get; set; } = new();
+
     [Parameter] public EventCallback<bool> Callback { get; set; }
-    bool Loading = false;
-    List<ListDTO> Companies;
-    [Parameter] public TenderListDTO TenderList { get; set; }
+
+    // لو TenderList ممكن يجي null من الأب خليه TenderListDTO?
+    // إذا متأكد دايمًا موجود: عطه default جديد
+    [Parameter] public TenderListDTO TenderList { get; set; } = new();
+
     [Parameter] public int CalcId { get; set; }
 
-    TenderPostDTO Income { get; set; }
+    private int CompanyId;
+    private bool Loading = false;
 
-    Dictionary<int, double> AttributesValue = new Dictionary<int, double>();
-    void OnChange(ChangeEventArgs ev, int i)
+    private List<ListDTO>? Companies;
+
+    // نهيئه من البداية لتجنب null
+    private TenderPostDTO? Income;
+
+    private Dictionary<int, double> AttributesValue { get; } = new();
+
+    private void OnChange(ChangeEventArgs ev, int i)
     {
-        if (string.IsNullOrEmpty(ev.Value.ToString()))
+        var raw = ev?.Value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(raw))
         {
             AttributesValue[i] = 0;
+            return;
+        }
+
+        if (double.TryParse(raw, out var v))
+            AttributesValue[i] = v;
+        else
+            AttributesValue[i] = 0;
+    }
+
+    private void OnChangeCompany(ChangeEventArgs e)
+    {
+        var raw = e?.Value?.ToString();
+
+        if (string.IsNullOrWhiteSpace(raw) || Income is null)
+        {
+            CompanyId = 0;
+            return;
+        }
+
+        if (int.TryParse(raw, out var id))
+        {
+            CompanyId = id;
+
+            // مهم: حدث Income.CompanyId حسب الاختيار الحالي
+            Income.CompanyId = id;
         }
         else
         {
-            AttributesValue[i] = Convert.ToDouble(ev.Value.ToString());
+            CompanyId = 0;
         }
     }
 
-    void OnChangeCompany(ChangeEventArgs e)
+    protected override async Task OnInitializedAsync()
     {
-        Income.CompanyId = CompanyId;
-        CompanyId = 0;
-        if (e == null || string.IsNullOrEmpty(e.Value.ToString())) return;
-        CompanyId = int.Parse(e.Value.ToString());
-    }
-
-    protected async override Task OnInitializedAsync()
-    {
+        // تهيئة قيم AttributesValue
         if (TenderList.Id == 0)
+        {
             foreach (var item in Attributes)
-            {
-                AttributesValue.Add(item.Id, 0);
-            }
+                AttributesValue[item.Id] = 0;
+        }
+
         Companies = await Repo.Org.GetVisibleOrIdAsync();
+
         if (TenderList.Id > 0)
         {
             var t = await Repo.Tender.DetailsAsync(TenderList.Id, CalcId);
-            Income = new TenderPostDTO()
-                {
-                    CompanyId = TenderList.CompanyId,
-                    Note = t.Note,
-                };
+
+            Income = new TenderPostDTO
+            {
+                CompanyId = TenderList.CompanyId,
+                Note = t.Note,
+            };
+
+            CompanyId = TenderList.CompanyId;
         }
-        else Income = new TenderPostDTO();
+        else
+        {
+            Income = new TenderPostDTO();
+        }
+
         Loading = false;
-        StateHasChanged();
     }
-    async Task HandleSubmitAsync()
+
+    private async Task HandleSubmitAsync()
     {
+        if (Income is null) return;
+
         Loading = true;
+
         try
         {
             bool isSuccess;
+
             if (TenderList.CompanyId == 0)
             {
                 Income.AttributesValue = AttributesValue;
@@ -108,14 +156,18 @@
             {
                 isSuccess = await Repo.Tender.UpdateAsync(0, CalcId, Income);
             }
-             MHD.Notifications(TenderList.CompanyId == 0 ? ToastType.Add : ToastType.Update, isSuccess);
+
+            MHD.Notifications(TenderList.CompanyId == 0 ? ToastType.Add : ToastType.Update, isSuccess);
             await Callback.InvokeAsync(isSuccess);
         }
         catch
         {
-             MHD.Notifications(TenderList.CompanyId == 0 ? ToastType.Add : ToastType.Update, false);
-            // Console.WriteLine(ex.Message);
+            MHD.Notifications(TenderList.CompanyId == 0 ? ToastType.Add : ToastType.Update, false);
+            await Callback.InvokeAsync(false);
         }
-        await Callback.InvokeAsync(false);
+        finally
+        {
+            Loading = false;
+        }
     }
 }

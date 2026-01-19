@@ -6,7 +6,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
     public class Factors : OHFactors
     {
-        // تجنب nulls (أفضل للـUI وأقل فروع)
         public string Sort { get; set; } = string.Empty;
         public string ResName { get; set; } = string.Empty;
 
@@ -19,7 +18,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double Price => EarningsValue + Sum;
         public double PriceOG => NetCostTotaly * Factor;
 
-        // بدل List لكل instance (Alloc غير لازم)
         public static readonly string[] KVName = { "NetCostTotaly", "NetCostTotalyOH", "Sum", "Price", "PriceOG" };
 
         public void AddResValue(bool oh, double resNetCost)
@@ -82,27 +80,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             return (NetCostTotaly * totalOHAll) / sumNetCostAll;
         }
 
-        public void FactorF(List<Factors> factors)
-        {
-            if (NetCostTotaly <= 0) { Factor = 0; return; }
-            if (factors is null || factors.Count == 0) { Factor = 1; return; }
-
-            // relatedOH: Selected == $"{ResId},{SortId}"
-            string matchKey = $"{ResId},{SortId}";
-            double relatedOH = 0;
-
-            for (int i = 0; i < factors.Count; i++)
-            {
-                var x = factors[i];
-                if (x.Selected == matchKey && x.NetCostTotalyOH > 0)
-                    relatedOH += x.NetCostTotalyOH * (1 + (x.Earnings / 100));
-            }
-
-            double ohShare = OHF(factors);
-
-            Factor = ((NetCostTotaly * (1 + (Earnings / 100))) + relatedOH + ohShare) / NetCostTotaly;
-        }
-
+      
         public string FactorStr(List<Factors> factors)
         {
             if (NetCostTotaly <= 0) return "NetCostTotaly is 0";

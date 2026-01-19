@@ -62,7 +62,7 @@ namespace ProjectManagement.Client.Pages.Calculation
                 Calc.HourlyPriceList = obj.FromJsonWeb<List<HourlyPriceListGroupDTO>>();
             else if (typ == ObjectTypHub.Opportunity)
                 CalcService.FromOperationHub(ot, obj);
-            else if (typ == ObjectTypHub.calculation)
+            else if (typ == ObjectTypHub.calculation) 
                 CalcService.FromHub(ot, obj);
 
             // ===== حساب نوع التغيير =====
@@ -75,7 +75,6 @@ namespace ProjectManagement.Client.Pages.Calculation
             bool affectsCalc = Calc.LastHubChangeAffectsCalc;
 
             CancellationToken token;
-
             // ===== تحديث flags + إعادة جدولة debounce =====
             lock (_hubBatchLock)
             {

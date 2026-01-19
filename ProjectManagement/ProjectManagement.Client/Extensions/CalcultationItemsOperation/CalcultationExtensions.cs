@@ -123,7 +123,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             var qIndex = BuildQuantityIndex(calc.QuanityList);
 
             // إعادة بناء العوامل من الصفر (لتجنب تراكم عوامل قديمة بعد إعادة الحساب)
-            calc.Factors.Clear();
+            //calc.Factors.Clear();
 
             // 1) احسب كميات الـTasks (DFS) + 2) احسب كميات الموارد واجمع العوامل في نفس المرور
             InitializeCalculationFast(calc, qIndex);
@@ -213,8 +213,23 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
 
             // 2) اجمع عوامل الموارد
-            var factors = calc.Factors;
-            var factorIndex = new Dictionary<FactorKey, Factors>(256);
+            // 2) اجمع عوامل الموارد (استخدم الموجود من REST API وأنشئ فقط عند عدم الوجود)
+            var factors = calc.Factors ??= new List<Factors>();
+
+            // index من الموجود
+            var factorIndex = new Dictionary<FactorKey, Factors>(Math.Max(256, factors.Count * 2));
+
+            // ✅ صفّر قيم التجميع فقط (لا تلمس Earnings/IsLocked/Selected...)
+            for (int i = 0; i < factors.Count; i++)
+            {
+                var f = factors[i];
+
+                f.NetCostTotaly = 0;
+                f.NetCostTotalyOH = 0;
+                f.Factor = 0; // سيتحسب لاحقًا في ApplyFactorF_Optimized
+
+                factorIndex[new FactorKey(f.ResId, f.SortId, f.ResourceType)] = f;
+            }
 
             for (int i = 0; i < tasks.Count; i++)
             {
@@ -243,20 +258,23 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
                     if (!factorIndex.TryGetValue(key, out var f))
                     {
+                        // ✅ أنشئ فقط إذا غير موجود في REST API
                         f = Factors.AddNewFactor(taskIsOH, res);
                         factors.Add(f);
                         factorIndex[key] = f;
                     }
                     else
                     {
-                        // مزامنة الاسم/التصنيف إذا تغيّرت
-                        if (res.ResName != f.ResName) f.ResName = res.ResName;
-                        if (res.Sort != f.Sort) f.Sort = res.Sort;
+                        // ✅ حدّث الاسم/التصنيف لو تغيروا
+                        if (res.ResName != f.ResName) f.ResName = res.ResName ?? string.Empty;
+                        if (res.Sort != f.Sort) f.Sort = res.Sort ?? string.Empty;
 
+                        // ✅ اجمع في نفس الـ factor القادم من REST (يحافظ على Earnings=22)
                         f.AddResValue(taskIsOH, res.NetCostTotaly);
                     }
                 }
             }
+
         }
 
         // =========================================================

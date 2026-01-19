@@ -29,7 +29,7 @@ namespace ProjectManagement.Client.Services.Calculation
 
             SelectedData.Reset();
             calculation.Id = id;
-            //calculation.BuildTaskHierarchy();
+            calculation.BuildTaskHierarchy();
             calculation.RebuildHierarchyAndIndexes();
 
             if (calculation.TemplateId > 0)
@@ -110,8 +110,30 @@ namespace ProjectManagement.Client.Services.Calculation
             if (calcN is null) return;
 
             // احتفظ بالـ Tasks الحالية
-            calcN.Tasks = folderState.Calculation.Tasks;
-            calcN.CopyPropertiesTo(folderState.Calculation);
+            foreach (var item in calcN.Factors)
+            {
+                var neuF = folderState.Calculation.Factors
+                    .FirstOrDefault(x => x.ResourceType == item.ResourceType &&
+                    x.ResId == item.ResId && x.SortId == item.SortId);
+                if(neuF != null)
+                {
+                    neuF.Factor = item.Factor;
+                    //neuF.NetCostTotaly = item.NetCostTotaly;
+                    //neuF.NetCostTotalyOH = item.NetCostTotalyOH;
+                    neuF.Earnings = item.Earnings;
+                    neuF.IsLocked = item.IsLocked;
+                    neuF.Key = item.Key;
+                }
+                else
+                {
+                    folderState.Calculation.Factors.Add(item);
+                }
+            }
+            folderState.Calculation.HourlyPriceList = calcN.HourlyPriceList;
+            folderState.Calculation.Tax = calcN.Tax;
+            folderState.Calculation.AdditionalCostEarnings = calcN.AdditionalCostEarnings;
+            folderState.Calculation.TenderExcelTax = calcN.TenderExcelTax;
+            folderState.Calculation.TenderInclTax = calcN.TenderInclTax;
         }
 
         public void GetFilter(FilterVM? filter)

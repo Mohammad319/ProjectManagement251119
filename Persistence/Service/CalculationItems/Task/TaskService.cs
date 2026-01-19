@@ -8,6 +8,7 @@ using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Enums;
 
 namespace Persistence.Service.CalculationItems.Task
 {
@@ -111,11 +112,22 @@ namespace Persistence.Service.CalculationItems.Task
             await context.SaveChangesAsync(ct);
 
             var entityIds = entities.Select(e => e.Id).ToList();
-            await LoadTaskNavigationAsync(entityIds, ct);
+            var tasksWithNav = await context.Tasks
+                .AsNoTracking()
+                .Where(t => entityIds.Contains(t.Id))
+                .Include(t => t.Status)
+                .Include(t => t.Opportunity)
+                .ToListAsync(ct);
 
-            entities = TaskExtention.FlattenTasks(entities);
-            await NotifyTasks(OperationType.AddRange, targetCalcId, entities, ct);
+            tasksWithNav = TaskExtention.FlattenTasks(tasksWithNav);
 
+            var dtos = tasksWithNav.MapToTaskListDTOs();
+
+            await notification.SendNotificationAsync(
+                targetCalcId.ToString(),
+                ObjectTypHub.task,
+                OperationType.AddRange,
+                dtos);
             return true;
         }
 
@@ -439,9 +451,12 @@ namespace Persistence.Service.CalculationItems.Task
             context.Tasks.Update(task);
             await context.SaveChangesAsync(ct);
 
-            await LoadTaskNavigationAsync([task.Id], ct);
-
-            var taskDto = task.MapToTaskListDTO();
+            var taskWithNav = await context.Tasks
+    .AsNoTracking()
+    .Include(t => t.Status)
+    .Include(t => t.Opportunity)
+    .FirstAsync(t => t.Id == task.Id, ct);
+            var taskDto = taskWithNav.MapToTaskListDTO();
 
             await notification.SendNotificationAsync(
                 calcId.ToString(),
@@ -542,44 +557,15 @@ namespace Persistence.Service.CalculationItems.Task
             await context.Tasks.AddAsync(rootTask, ct);
             await context.SaveChangesAsync(ct);
 
-            await LoadTaskReferencesAsync(tasks, ct);
+            //await LoadTaskReferencesAsync(tasks, ct);
 
-            // ملاحظة: deleteOriginal يمكن استخدامه لاحقاً في CutAsync لحذف النسخة الأصلية
-            return tasks;
-        }
-
-        // -----------------------------------------------------
-        // Helper: load navigation props (Status / Opportunity)
-        // -----------------------------------------------------
-        private async ValueTask LoadTaskNavigationAsync(
-            List<int> taskIds,
-            CancellationToken ct)
-        {
-            if (taskIds == null || taskIds.Count == 0)
-                return;
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            //List<int> taskIds = [.. tasks.Select(t => t.Id)];
 
             await context.Tasks
-                .Where(t => taskIds.Contains(t.Id))
-                .Include(t => t.Status)
-                .Include(t => t.Opportunity)
-                .LoadAsync(ct);
-        }
-
-        // -----------------------------------------------------
-        // Helper: load task references + resources
-        // -----------------------------------------------------
-        public async ValueTask LoadTaskReferencesAsync(
-            List<TaskEntity> tasks,
-            CancellationToken ct)
-        {
-            if (tasks == null || tasks.Count == 0)
-                return;
-
-            List<int> taskIds = [.. tasks.Select(t => t.Id)];
-
-            await LoadTaskNavigationAsync(taskIds, ct);
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
+    .Where(t => taskIds.Contains(t.Id))
+    .Include(t => t.Status)
+    .Include(t => t.Opportunity)
+    .LoadAsync(ct);
             List<ResourceEntity> allResources = await context.Resources
                 .Where(r => taskIds.Contains(r.TaskId))
                 .Include(r => r.Status)
@@ -597,24 +583,8 @@ namespace Persistence.Service.CalculationItems.Task
                 task.Resources = resourceLookup.TryGetValue(task.Id, out var resList)
                     ? resList
                     : [];
-        }
-
-        // -----------------------------------------------------
-        // Helper: notify hub about list of tasks
-        // -----------------------------------------------------
-        private async ValueTask NotifyTasks(
-            OperationType operationType,
-            int calcId,
-            List<TaskEntity> tasks,
-            CancellationToken ct)
-        {
-            var dtos = tasks.MapToTaskListDTOs();
-
-            await notification.SendNotificationAsync(
-                calcId.ToString(),
-                ObjectTypHub.task,
-                operationType,
-                dtos);
+            // ملاحظة: deleteOriginal يمكن استخدامه لاحقاً في CutAsync لحذف النسخة الأصلية
+            return tasks;
         }
     }
 }

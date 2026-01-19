@@ -1,0 +1,61 @@
+﻿Create new user
+CREATE LOGIN pmuser 
+WITH PASSWORD = 'StrongPassword@123';
+--------------------------------------------------
+ثانياً: ربط المستخدم بقاعدة البيانات
+USE db922357028_2;
+CREATE USER pmuser FOR LOGIN pmuser;
+
+USE db962510648_2;
+CREATE USER pmuser FOR LOGIN pmuser;
+
+USE SiSTOfotoAppPM7;
+CREATE USER pmuser FOR LOGIN pmuser;
+
+USE TaskResourceBlueprints2;
+CREATE USER pmuser FOR LOGIN pmuser;
+--------------------------------------------------
+ثالثاً: إعطاء الصلاحيات اللازمة
+ALTER ROLE db_datareader ADD MEMBER pmuser;
+ALTER ROLE db_datawriter ADD MEMBER pmuser;
+وإذا كان يحتاج تحكم كامل:
+ALTER ROLE db_owner ADD MEMBER pmuser;
+---------------------------------------------------
+/* 1) إنشاء Logins على مستوى السيرفر (مرة واحدة) */
+IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'IIS APPPOOL\PM_Tenant')
+    CREATE LOGIN [IIS APPPOOL\PM_Tenant] FROM WINDOWS;
+
+IF NOT EXISTS (SELECT 1 FROM sys.server_principals WHERE name = N'IIS APPPOOL\PM_Admin')
+    CREATE LOGIN [IIS APPPOOL\PM_Admin] FROM WINDOWS;
+
+
+/* 2) قاعدة SiSTOfotoAppPM7 */
+USE SiSTOfotoAppPM7;
+
+IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'IIS APPPOOL\PM_Tenant')
+    CREATE USER [IIS APPPOOL\PM_Tenant] FOR LOGIN [IIS APPPOOL\PM_Tenant];
+
+IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'IIS APPPOOL\PM_Admin')
+    CREATE USER [IIS APPPOOL\PM_Admin] FOR LOGIN [IIS APPPOOL\PM_Admin];
+
+ALTER ROLE db_datareader ADD MEMBER [IIS APPPOOL\PM_Tenant];
+ALTER ROLE db_datawriter ADD MEMBER [IIS APPPOOL\PM_Tenant];
+
+ALTER ROLE db_datareader ADD MEMBER [IIS APPPOOL\PM_Admin];
+ALTER ROLE db_datawriter ADD MEMBER [IIS APPPOOL\PM_Admin];
+
+
+/* 3) قاعدة TaskResourceBlueprints2 */
+USE TaskResourceBlueprints2;
+
+IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'IIS APPPOOL\PM_Tenant')
+    CREATE USER [IIS APPPOOL\PM_Tenant] FOR LOGIN [IIS APPPOOL\PM_Tenant];
+
+IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = N'IIS APPPOOL\PM_Admin')
+    CREATE USER [IIS APPPOOL\PM_Admin] FOR LOGIN [IIS APPPOOL\PM_Admin];
+
+ALTER ROLE db_datareader ADD MEMBER [IIS APPPOOL\PM_Tenant];
+ALTER ROLE db_datawriter ADD MEMBER [IIS APPPOOL\PM_Tenant];
+
+ALTER ROLE db_datareader ADD MEMBER [IIS APPPOOL\PM_Admin];
+ALTER ROLE db_datawriter ADD MEMBER [IIS APPPOOL\PM_Admin];
