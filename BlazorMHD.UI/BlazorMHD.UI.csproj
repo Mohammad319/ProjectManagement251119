@@ -16,7 +16,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
-  <!-- ✅ minify فقط في Release -->
+
+	<!-- ✅ minify فقط في Release -->
   <PropertyGroup>
     <TailwindMinify Condition="'$(Configuration)'=='Release'">--minify</TailwindMinify>
     <TailwindMinify Condition="'$(Configuration)'!='Release'"></TailwindMinify>
@@ -65,4 +66,13 @@
       <LastGenOutput>Localiztion.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+	<ItemGroup>
+		<Content Update="**\package.json" CopyToPublishDirectory="Never" />
+		<Content Update="**\package-lock.json" CopyToPublishDirectory="Never" />
+		<Content Update="**\tailwind.config.js" CopyToPublishDirectory="Never" />
+		<Content Update="**\postcss.config.js" CopyToPublishDirectory="Never" />
+	</ItemGroup>
+
+
 </Project>
