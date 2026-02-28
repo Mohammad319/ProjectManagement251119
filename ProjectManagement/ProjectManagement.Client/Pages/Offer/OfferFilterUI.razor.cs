@@ -13,18 +13,18 @@ namespace ProjectManagement.Client.Pages.Offer
     {
         [Parameter] public CalculationItemType ItemType { get; set; }
         [Parameter] public EventCallback Callback { get; set; }
-        public PostStorygeDTO Post;
+        public PostStorygeDTO Post = new();
         private OfferFilterDTO Filter = new();
-        private List<ResourceSortModel> ResourcesSort { get; set; }
-        List<ListResourceTypeDTO> ResourceTypes { get; set; }
-        List<ListOrderDTO> Statues;
-        List<ListOrderDTO> TGSStatuses;
+        private List<ResourceSortModel>? ResourcesSort { get; set; }
+        List<ListResourceTypeDTO> ResourceTypes { get; set; } = [];
+        List<ListOrderDTO> Statues = [];
+        List<ListOrderDTO> TGSStatuses = [];
         List<FolderMVVM> FoldersList = [];
-        ListResourceTypeDTO ResTypeSelected;
-        List<ListProjectMVVM> Projects;
-        List<ListCalculationMVVM> Calcs;
-        List<ListDTO> Organisations;
-        [Inject] HTTPRepository _httpRepository { get; set; }
+        ListResourceTypeDTO? ResTypeSelected;
+        List<ListProjectMVVM> Projects = [];
+        List<ListCalculationMVVM> Calcs = [];
+        List<ListDTO> Organisations = [];
+        [Inject] HTTPRepository _httpRepository { get; set; } = default!;
         private void OnInputOrgChanged(ChangeEventArgs e)
         {
             var selectedName = e.Value?.ToString();
@@ -42,7 +42,7 @@ namespace ProjectManagement.Client.Pages.Offer
 
         public async Task SetNewTypeAsync(CalculationItemType nt)
         {
-            Offers = null;
+            Offers = [];
             Post.Type = nt;
             Post.Items = [];
             await NewIni();
@@ -58,7 +58,7 @@ namespace ProjectManagement.Client.Pages.Offer
 
         public async Task<int> GetOffersAsync()
         {
-            Offers = null;
+            Offers = [];
             Offers = await Repo.Offer.GetByFilterAsync(Filter);
 
             StateHasChanged();
@@ -70,7 +70,7 @@ namespace ProjectManagement.Client.Pages.Offer
                 return;
 
             ResTypeSelected = ResourceTypes.FirstOrDefault(x => x.Id == id);
-            ResourcesSort = null;
+            ResourcesSort = [];
             ResourcesSort = await Repo.ResType.GetResourceSortAsync(id.Value);
         }
 
@@ -93,7 +93,7 @@ namespace ProjectManagement.Client.Pages.Offer
             Filter.ProjectID = null;
             Filter.CalculationID = 0;
 
-            Projects = null;
+            Projects = [];
             if (id.HasValue)
             {
                 Projects = await Repo.Project.GetByFolderIdAsync(id.Value);

@@ -5,7 +5,7 @@
 <tr @onclick="Click"
     @oncontextmenu="Context"
     @oncontextmenu:preventDefault
-    style="@Resource.Style(Template.NetCalc?.Color?.Resource, Resource.Active)">
+    style="@Resource.Style(Template.NetCalc?.Color?.Resource ?? string.Empty, Resource.Active)">
     <td></td>
 
     @foreach (var col in Template.NetCalc.Columns)

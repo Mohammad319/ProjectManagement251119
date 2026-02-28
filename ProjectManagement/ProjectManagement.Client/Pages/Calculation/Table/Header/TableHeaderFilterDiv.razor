@@ -249,42 +249,42 @@
             }
             else if (obj.Id == NetColumnId.Name)
             {
-                foreach (var item1 in Calc.FilterVM.Name)
+                foreach (var item1 in Calc.FilterVM.Name ?? [])
                 {
                     <div class="chip">@item1</div>
                 }
             }
             else if (obj.Id == NetColumnId.Account)
             {
-                foreach (var item1 in Calc.FilterVM.Account)
+                foreach (var item1 in Calc.FilterVM.Account ?? [])
                 {
                     <div class="chip">@item1</div>
                 }
             }
             else if (obj.Id == NetColumnId.ResourceType)
             {
-                foreach (var item1 in Calc.FilterVM.Resource)
+                foreach (var item1 in Calc.FilterVM.Resource ?? [])
                 {
                     <div class="chip">@item1</div>
                 }
             }
             else if (obj.Id == NetColumnId.ResourceTypeSystem)
             {
-                foreach (var item1 in Calc.FilterVM.ResourceTypeSystem)
+                foreach (var item1 in Calc.FilterVM.ResourceTypeSystem ?? [])
                 {
                     <div class="chip">@item1</div>
                 }
             }
             else if (obj.Id == NetColumnId.ResourceSort)
             {
-                foreach (var item1 in Calc.FilterVM.ResourceSort)
+                foreach (var item1 in Calc.FilterVM.ResourceSort ?? [])
                 {
                     <div class="chip">@item1</div>
                 }
             }
             else if (obj.Id == NetColumnId.Unit)
             {
-                foreach (var item1 in Calc.FilterVM.Unit)
+                foreach (var item1 in Calc.FilterVM.Unit ?? [])
                 {
                     <div class="chip">@item1</div>
                 }
@@ -324,12 +324,12 @@
         if (string.IsNullOrEmpty(e?.Value?.ToString())) return;
 
         if (FilterAttrStr == "status")
-            Calc.FilterVM.Status.Add(e.Value.ToString());
+            Calc.FilterVM.Status.Add(e.Value!.ToString()!);
         else if (FilterAttrStr == "resourceType")
-            Calc.FilterVM.Resource.Add(e.Value.ToString());
+            Calc.FilterVM.Resource.Add(e.Value!.ToString()!);
         else if (FilterAttrStr == "resourceTypeSystem")
         {
-            ResourceTypesEnum f = (ResourceTypesEnum)Enum.Parse(typeof(ResourceTypesEnum), e?.Value?.ToString());
+            if (!Enum.TryParse<ResourceTypesEnum>(e.Value!.ToString(), out var f)) return;
             Calc.FilterVM.ResourceTypeSystem.Add(f);
         }
     }
@@ -342,6 +342,22 @@
 
     public async Task EnterCodeClick(MouseEventArgs e1, NetColumnId i)
     {
+        FilterAttrStr = i switch
+        {
+            NetColumnId.Status => "status",
+            NetColumnId.Code => "code",
+            NetColumnId.Name => "name",
+            NetColumnId.Unit => "unit",
+            NetColumnId.Account => "account",
+            NetColumnId.ResourceType => "resourceType",
+            NetColumnId.ResourceSort => "resourceSort",
+            NetColumnId.ResourceTypeSystem => "resourceTypeSystem",
+            _ => null
+        };
+
+        if (FilterAttrStr is null)
+            return;
+
         if (i == NetColumnId.Status || i == NetColumnId.Code ||
             i == NetColumnId.Name || i == NetColumnId.Unit || i == NetColumnId.Account ||
             i == NetColumnId.ResourceType || i == NetColumnId.ResourceSort || i == NetColumnId.ResourceTypeSystem)
@@ -367,22 +383,22 @@
             }
             else if (FilterAttrStr == "account")
             {
-                FilterValues = Calc.FilterVM.Account;
+                FilterValues = Calc.FilterVM.Account ?? [];
                 FilterType = Calc.FilterVM.AccountFilterType;
             }
             else if (FilterAttrStr == "name")
             {
-                FilterValues = Calc.FilterVM.Name;
+                FilterValues = Calc.FilterVM.Name ?? [];
                 FilterType = Calc.FilterVM.NameFilterType;
             }
             else if (FilterAttrStr == "resourceSort")
             {
-                FilterValues = Calc.FilterVM.ResourceSort;
+                FilterValues = Calc.FilterVM.ResourceSort ?? [];
                 FilterType = Calc.FilterVM.ResourceSortFilterType;
             }
             else if (FilterAttrStr == "unit")
             {
-                FilterValues = Calc.FilterVM.Unit;
+                FilterValues = Calc.FilterVM.Unit ?? [];
                 FilterType = Calc.FilterVM.UnitFilterType;
             }
 
@@ -406,7 +422,7 @@
 
     public void FilterTypesFilter(ChangeEventArgs e)
     {
-        FilterType f = (FilterType)Enum.Parse(typeof(FilterType), e?.Value?.ToString());
+        if (!Enum.TryParse<FilterType>(e?.Value?.ToString(), out var f)) return;
 
         if (FilterAttrStr == "code")
             Calc.FilterVM.CodeFilterType = f;
