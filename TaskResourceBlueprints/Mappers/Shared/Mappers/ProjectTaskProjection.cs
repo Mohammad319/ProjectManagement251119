@@ -93,7 +93,7 @@ public static class ProjectTaskProjection
                             CapWaste = z.a.CapWaste,
                             BaseCost = z.a.BaseCost,
                             CO2 = z.Link == null ? null : z.Link.Co2,
-                            Cost = z.a.Resource == null ? null : z.a.Resource.Data.Cost,
+                            Cost = z.a.Resource?.Data.Cost ?? 0,
                             Note = z.a.Resource == null ? null : z.a.Resource.Data.Note,
                             UpperNote = z.a.Resource == null ? null : z.a.Resource.Data.UpperNote,
                             Quantity = z.a.Resource == null ? null : z.a.Resource.Data.Quantity,
