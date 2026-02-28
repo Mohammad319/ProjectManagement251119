@@ -11,29 +11,29 @@ namespace ProjectManagement.Shared.DTO.Organisation
     {
         [Url(ErrorMessageResourceName = ErrorsMessages.URL, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string URL { get; set; }
+        public string URL { get; set; } = string.Empty;
         [EmailAddress(ErrorMessageResourceName = ErrorsMessages.EmailAddress, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
         [Range(0, 9999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public double? Rating { get; set; }
         public DateTime? VerificationDate { get; set; } = null;
         public DateTime? InvoiceVerificationDate { get; set; } = null;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
         [Range(0, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? NumberOfWorkersCards { get; set; }
-        public YesNoUnkown SocialLaborAgreement { get; set; }
-        public YesNoUnkown QualitySystems { get; set; }
-        public YesNoUnkown EnvironmentalSystems { get; set; }
-        public string PIDNumber { get; set; }
-        public string IDNumber { get; set; }
+        public YesNoUnkown SocialLaborAgreement { get; set; } = default!;
+        public YesNoUnkown QualitySystems { get; set; } = default!;
+        public YesNoUnkown EnvironmentalSystems { get; set; } = default!;
+        public string PIDNumber { get; set; } = string.Empty;
+        public string IDNumber { get; set; } = string.Empty;
         [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
         [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Mobile { get; set; }
+        public string Mobile { get; set; } = string.Empty;
         public List<string> Notes { get; set; } = [];
         public List<AddressDTO> Address { get; set; } = [];
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
@@ -47,38 +47,38 @@ namespace ProjectManagement.Shared.DTO.Organisation
     }
     public class OrganisationDetailsDTO : OrganisationBaseData
     {
-        public string Category { get; set; }
-        public string SubCategory { get; set; }
-        public string Type { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public string SubCategory { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
 
     }
     public class OrganisationBaseData : OrganisationBase
     {
         [Url(ErrorMessageResourceName = ErrorsMessages.URL, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string URL { get; set; }
+        public string URL { get; set; } = string.Empty;
         [EmailAddress(ErrorMessageResourceName = ErrorsMessages.EmailAddress, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
         [Range(0, 9999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public double? Rating { get; set; }
         public DateTime? VerificationDate { get; set; } = null;
         public DateTime? InvoiceVerificationDate { get; set; } = null;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
         [Range(0, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? NumberOfWorkersCards { get; set; }
-        public YesNoUnkown SocialLaborAgreement { get; set; }
-        public YesNoUnkown QualitySystems { get; set; }
-        public YesNoUnkown EnvironmentalSystems { get; set; }
-        public string PIDNumber { get; set; }
-        public string IDNumber { get; set; }
+        public YesNoUnkown SocialLaborAgreement { get; set; } = default!;
+        public YesNoUnkown QualitySystems { get; set; } = default!;
+        public YesNoUnkown EnvironmentalSystems { get; set; } = default!;
+        public string PIDNumber { get; set; } = string.Empty;
+        public string IDNumber { get; set; } = string.Empty;
         [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
         [Phone(ErrorMessage = ErrorsMessages.Phone), DataType(DataType.PhoneNumber, ErrorMessage = ErrorsMessages.Phone)]
         [MaxLength(30, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Mobile { get; set; }
+        public string Mobile { get; set; } = string.Empty;
         public List<string> Notes { get; set; } = [];
         public List<AddressDTO> Address { get; set; } = [];
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
@@ -86,10 +86,10 @@ namespace ProjectManagement.Shared.DTO.Organisation
     public class ShortListOrganisationDTO
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Category { get; set; }
-        public string SubCategory { get; set; }
-        public string Type { get; set; }
-        public string Contacts{ get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string SubCategory { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Contacts{ get; set; } = string.Empty;
     }
 }

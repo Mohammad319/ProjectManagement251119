@@ -76,7 +76,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 
     public class ResourceBase
     {
-        public ResourceTypesEnum ResType { get; set; }
+        public ResourceTypesEnum ResType { get; set; } = default!;
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
         public double Order { get; set; }

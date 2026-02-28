@@ -12,7 +12,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public double? ProbabilityPercent { get; set; }
         public double? ProbabilityBest { get; set; }
         public double? Value { get; set; }
-        public string Comment { get; set; }
+        public string Comment { get; set; } = string.Empty;
 
     }
     public class PostOpportunityDTO : OpportunityBase

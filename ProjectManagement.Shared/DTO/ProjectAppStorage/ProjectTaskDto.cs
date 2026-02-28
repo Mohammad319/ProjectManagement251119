@@ -11,7 +11,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
 public class ResourceTenantLinkBase
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int? StatusId { get; set; }
     public int? ResourceTypeId { get; set; }
     public int? ResourceSortId { get; set; }
@@ -26,21 +26,21 @@ public class ProjectTaskDto
     public bool Uncontrollable { get; set; }
 
     public int Id { get; set; }
-    public string DisplayName { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
     public int SortOrder { get; set; }
     public bool IsVisible { get; set; } = true;
-    public string Note { get; set; }
+    public string Note { get; set; } = string.Empty;
     public List<string> UpperNote { get; set; } = [];
 
     public double? Quantity { get; set; }
-    public string UnitCode { get; set; }
-    public string Code { get; set; }
+    public string UnitCode { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
     public double ChangeFactor1 { get; set; } = 1;
     public double ChangeFactor2 { get; set; } = 1;
     public bool IsActive { get; set; } = true;
     public int? UnitGroupId { get; set; }
     public int? CapacityResourceId { get; set; }
-    public UnitGroupDto UnitGroup { get; set; }
+    public UnitGroupDto UnitGroup { get; set; } = default!;
     public List<double> WorkloadThresholds { get; set; } = [0, 0, 0];
     [NotMapped] public Dictionary<ParamName, double> ParameterValues { get; } = [];
     [NotMapped] public string NewUnitCode { get; set; }

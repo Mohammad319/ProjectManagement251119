@@ -13,7 +13,7 @@ namespace ProjectManagement.Shared.DTO.Account
     public class ListAccountGroupIncludeAccountDTO
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public List<ListAccountDTO> Accounts { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public List<ListAccountDTO> Accounts { get; set; } = [];
     }
 }

@@ -16,8 +16,8 @@ namespace ProjectManagement.Shared.DTO.Tenant
         public int? TaskId { get; set; }
         //public List<TaskStorageAppModel> Tasks { get; set; }
         public List<string> KeyWord { get; set; } = [];
-        public List<int> GroupIds { get; set; }
-        public List<ResourceStorageListDTO> Resources { get; set; }
+        public List<int> GroupIds { get; set; } = [];
+        public List<ResourceStorageListDTO> Resources { get; set; } = [];
     }
 
 }

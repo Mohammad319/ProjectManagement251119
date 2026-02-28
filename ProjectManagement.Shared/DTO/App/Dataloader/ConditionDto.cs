@@ -6,14 +6,14 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
 {
     public class Equation
     {
-        public string TargetVarible { get; set; } = null!;
-        public string Formula { get; set; } = null!;
+        public string TargetVarible { get; set; } = default!;
+        public string Formula { get; set; } = default!;
         public List<ResourceTypesEnum> Types { get; set; } = [];
     }
     public class ConditionElementDto
     {
         public int Id { get; set; }
-        public string Name { get; set; } = null!;
+        public string Name { get; set; } = default!;
         public List<Equation> Equations { get; set; } = [];
 
         [JsonIgnore] public bool IsSelected = false;
@@ -21,10 +21,10 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     public class ConditionDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public bool IsMultiSelect { get; set; } = false;
-        public string Notes { get; set; }
+        public string Notes { get; set; } = string.Empty;
         public List<ExternalVariable> ExternalVariables { get; set; } = [];
-        public List<ConditionElementDto> Items { get; set; }
+        public List<ConditionElementDto> Items { get; set; } = [];
     }
 }

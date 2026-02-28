@@ -5,8 +5,8 @@ public class ResourceOptionItemDto
 {
     public int Id { get; set; }
     //public int ResourceChoiceGroupId { get; set; }
-    public string ResourceName { get; set; }
+    public string ResourceName { get; set; } = string.Empty;
 
-    //public ResourceDto Resource { get; set; } = null!;
+    //public ResourceDto Resource { get; set; } = default!;
     //public int ResourceId { get; set; }
 }

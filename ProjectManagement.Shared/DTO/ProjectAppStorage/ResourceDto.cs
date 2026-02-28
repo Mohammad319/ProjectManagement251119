@@ -25,7 +25,7 @@ public class ResourceDto: ResourceDLBase
     public List<RoleDTO> CapRole { get; set; } = [];
     public double? CostStorageValue { get; set; }
     public double? CostUserValue { get; set; }
-    public string NameUserValue { get; set; }
+    public string NameUserValue { get; set; } = string.Empty;
     public int? StatusId { get; set; }
     public int? ResourceTypeId { get; set; }
     public int? ResourceSortId { get; set; }

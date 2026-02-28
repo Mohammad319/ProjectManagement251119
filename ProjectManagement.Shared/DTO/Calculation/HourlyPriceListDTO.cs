@@ -9,9 +9,9 @@ namespace ProjectManagement.Shared.DTO.Calculation
 {
     public class HourlyPriceListGroupDTO
     {
-        public string Code { get; set; }
-        public string Name { get; set; }
-        public string Comment { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Comment { get; set; } = string.Empty;
 
         [JsonIgnore]
         public bool SubItemsVisible { get; set; } = true;
@@ -19,14 +19,14 @@ namespace ProjectManagement.Shared.DTO.Calculation
     }
     public class HourlyPriceListItemDTO
     {
-        public string Code { get; set; }
-        public string Name { get; set; }
-        public string Unit { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public double Quantity { get; set; }
         public double CostMarketPrices { get; set; }
         public double CostSubmittedPrices { get; set; }
 
-        public string Comment { get; set; }
+        public string Comment { get; set; } = string.Empty;
 
         [JsonIgnore]
         public double TotalMarketPrices => CostMarketPrices * Quantity;

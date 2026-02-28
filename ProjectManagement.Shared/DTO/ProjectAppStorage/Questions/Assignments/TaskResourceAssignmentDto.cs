@@ -16,9 +16,9 @@ public class TaskResourceAssignmentDto
     public List<RoleDTO> CapRole { get; set; } = [];
     public List<string> Formulas { get; set; } = [];
     public int TaskId { get; set; }
-    public ProjectTaskDto Task { get; set; }
+    public ProjectTaskDto Task { get; set; } = default!;
     public int ResourceId { get; set; }
-    public ResourceDto Resource { get; set; }
+    public ResourceDto Resource { get; set; } = default!;
 
     public double? CalcCap()
     {

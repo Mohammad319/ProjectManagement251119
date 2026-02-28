@@ -10,9 +10,9 @@ namespace ProjectManagement.Shared.DTO.Tenant
     {
         public int Id { get; set; }
         public DateTimeOffset? DateExpire { get; set; }
-        public string Name { get; set; }
-        public string DB { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string DB { get; set; } = string.Empty;
         public bool HasOwnDb { get; set; }
-        public string DatabaseInfoName { get; set; }
+        public string DatabaseInfoName { get; set; } = string.Empty;
     }
 }

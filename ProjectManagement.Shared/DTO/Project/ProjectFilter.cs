@@ -8,10 +8,10 @@ namespace ProjectManagement.Shared.DTO.Project
     public class ProjectFilter
     {
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
-        public string NameOperator { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string NameOperator { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
         public DateTime? StartDate1 { get; set; }
         public DateTime? StartDate2 { get; set; }
         public DateTime? EndDate1 { get; set; }
