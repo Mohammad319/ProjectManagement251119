@@ -1,3 +1,4 @@
+#nullable disable
 ﻿namespace ProjectManagement.Client.Shared.Repositories
 {
     public interface IErrorDialog
