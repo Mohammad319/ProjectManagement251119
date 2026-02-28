@@ -6,8 +6,8 @@ namespace ProjectManagement.Client.Adminstrator.Shared.Culture
 {
     public partial class CultureSelector
     {
-        [Inject] public NavigationManager NavManager { get; set; }
-        [Inject] public IJSRuntime JSRuntime { get; set; }
+        [Inject] public NavigationManager NavManager { get; set; } = default!;
+        [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
 
         readonly CultureInfo[] cultures = [new CultureInfo("en-US"), new CultureInfo("se-SE")];
 
