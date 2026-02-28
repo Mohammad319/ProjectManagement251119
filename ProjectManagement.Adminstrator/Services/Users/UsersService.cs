@@ -142,8 +142,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
             await _appContext.SaveChangesAsync();
             var tenant = await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == TenantId);
-            _appContext.Tenants.Remove(tenant);
-            await _appContext.SaveChangesAsync();
+            if (tenant != null)
+            {
+                _appContext.Tenants.Remove(tenant);
+                await _appContext.SaveChangesAsync();
+            }
 
             return false;
         }

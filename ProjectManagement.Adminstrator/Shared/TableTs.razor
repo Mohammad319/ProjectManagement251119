@@ -36,8 +36,8 @@
     public class Employee
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Position { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Position { get; set; } = string.Empty;
     }
     async Task Cl()
     {
@@ -55,5 +55,5 @@
         }
     }
 
-    [Inject] IJSRuntime JS { get; set; }
+    [Inject] IJSRuntime JS { get; set; } = default!;
 }
