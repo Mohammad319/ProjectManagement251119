@@ -11,37 +11,39 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
     public partial class ApplicationFormUI
     {
         [Parameter] public ApplicationEntity ApplicationUpdate { get; set; } = new();
-        List<ListDTO>? Departments;
-        RowEntity RowForm;
+        private List<ListDTO>? Departments;
+        private RowEntity? RowForm;
         [Parameter] public EventCallback<bool> Callback { get; set; }
-        bool IsLoading = false;
+        private bool IsLoading = false;
+
         protected async override Task OnInitializedAsync()
         {
             Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
-            ApplicationUpdate.DepartmentId = Departments.FirstOrDefault().Id;
+            ApplicationUpdate.DepartmentId = Departments?.FirstOrDefault()?.Id ?? 0;
         }
+
         private async Task HandleSubmitAsync()
         {
             IsLoading = true;
-            bool isSuccess = false;
-            if (ApplicationUpdate.Id == 0)
-                isSuccess = await MicroBus.Send(new CreateApplicationCommand(ApplicationUpdate)) > 0;
+            bool isSuccess = ApplicationUpdate.Id == 0
+                ? await MicroBus.Send(new CreateApplicationCommand(ApplicationUpdate)) > 0
+                : await MicroBus.Send(new UpdateApplicationCommand(ApplicationUpdate));
 
-            else isSuccess = await MicroBus.Send(new UpdateApplicationCommand(ApplicationUpdate));
             MHD.Notifications(ApplicationUpdate.Id == 0 ? ToastType.Add : ToastType.Update, isSuccess);
             await Callback.InvokeAsync(isSuccess);
         }
 
-        void CallBackRowForm(RowEntity row)
+        private void CallBackRowForm(RowEntity row)
         {
-            if (row != null)
+            if (row.ID == Guid.Empty)
             {
-                if (row.ID == Guid.Empty)
-                {
-                    row.ID = Guid.NewGuid();
-                    ApplicationUpdate.Data.Rows.Add(row);
-                }
-                else
+                row.ID = Guid.NewGuid();
+                ApplicationUpdate.Data.Rows.Add(row);
+            }
+            else
+            {
+                RowForm = ApplicationUpdate.Data.Rows.FirstOrDefault(x => x.ID == row.ID);
+                if (RowForm != null)
                 {
                     RowForm.Name = row.Name;
                     RowForm.Description = row.Description;
@@ -50,16 +52,18 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                     RowForm.Attributes = row.Attributes;
                 }
             }
+
             RowForm = null;
         }
 
-        void Remove(RowEntity row)
+        private void Remove(RowEntity row)
         {
             MHD.MessageYesNo(ResourceApp.delete,
                 AppLoc[LocalizerConst.deleteConfirmMsg, row.Name],
                MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(row)));
         }
-        bool RemoveAsync(RowEntity st)
+
+        private bool RemoveAsync(RowEntity st)
         {
             ApplicationUpdate.Data.Rows.Remove(st);
             StateHasChanged();

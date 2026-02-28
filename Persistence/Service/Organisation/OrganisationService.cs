@@ -115,9 +115,9 @@ namespace Persistence.Service.Organisation
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Category = x.OrganisationCategory.ParentCategory.Name,
-                    SubCategory = x.OrganisationCategory.Name,
-                    Type = x.OrganisationType.Name
+                    Category = x.OrganisationCategory != null ? x.OrganisationCategory.ParentCategory != null ? x.OrganisationCategory.ParentCategory.Name : string.Empty : string.Empty,
+                    SubCategory = x.OrganisationCategory != null ? x.OrganisationCategory.Name : string.Empty,
+                    Type = x.OrganisationType != null ? x.OrganisationType.Name : string.Empty
                 })
                 .ToListAsync(ct);
         }

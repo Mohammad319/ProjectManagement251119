@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.Calculation;
 using ProjectManagement.Shared.Base.Application;
 using System.ComponentModel.DataAnnotations;
@@ -10,10 +10,12 @@ namespace Domain.Entities.Application
     {
         [Key] public int Id { get; set; }
         public int CalculationId { get; set; }
+
         [JsonIgnore]
-        public CalculationEntity Calculation { get; set; }
+        public CalculationEntity Calculation { get; set; } = null!;
+
         public int ApplicationId { get; set; }
-        public ApplicationEntity Application { get; set; }
+        public ApplicationEntity Application { get; set; } = null!;
         [JsonIgnore] public int TenantId { get; set; }
     }
 }
