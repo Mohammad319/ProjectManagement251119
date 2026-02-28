@@ -18,24 +18,24 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? OpportunityId { get; set; }
         public bool OnlyCodeText { get; set; } = false;
 
-        public string Note { get; set; }
+        public string Note { get; set; } = string.Empty;
         public double? Quantity { get; set; }
         [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Unit { get; set; }
+        public string Unit { get; set; } = string.Empty;
         public double ChangeFactor1 { get; set; } = 1;
         public double ChangeFactor2 { get; set; } = 1;
         [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public double? Cap { get; set; }
         public bool IsActive { get; set; } = true;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Code { get; set; }
-        public TaskType Type { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public TaskType Type { get; set; } = default!;
         public bool IsOH { get; set; }
 
         TaskMetadata data = new();
         public TaskMetadata Metadata { get { data ??= new TaskMetadata(); return data; } set { data = value; } }
-        public List<ResourcePostDTO> Resources { get; set; }
-        public List<TaskPostDTO> Tasks { get; set; }
+        public List<ResourcePostDTO> Resources { get; set; } = [];
+        public List<TaskPostDTO> Tasks { get; set; } = [];
         [JsonIgnore] public bool Colspan { get; set; }
 
         public double ActuallyQuantity { get; set; } = 0;
@@ -48,8 +48,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? TaskId { get; set; }
         TaskMetadata data = new();
         public TaskMetadata Data { get { data ??= new TaskMetadata(); return data; } set { data = value; } }
-        public List<ResourceStorageListDTO> Resources { get; set; }
-        public List<TaskStorageDTO> Tasks { get; set; }
+        public List<ResourceStorageListDTO> Resources { get; set; } = [];
+        public List<TaskStorageDTO> Tasks { get; set; } = [];
         [JsonIgnore] public bool Colspan { get; set; }
     }
 
@@ -60,10 +60,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int? TaskId { get; set; }
 
         public int? StatusId { get; set; }
-        public string Status { get; set; }
-        public string StatusColor { get; set; }
-        public string Opportunity { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string StatusColor { get; set; } = string.Empty;
+        public string Opportunity { get; set; } = string.Empty;
         public int? OpportunityId { get; set; }
-        public List<ResourceListDTO> Resources { get; set; }
+        public List<ResourceListDTO> Resources { get; set; } = [];
     }
 }

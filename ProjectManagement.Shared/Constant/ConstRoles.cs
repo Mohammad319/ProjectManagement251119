@@ -283,14 +283,14 @@ namespace ProjectManagement.Shared.Constants
     }
     public sealed class NetColumnState
     {
-        public NetColumnId Id { get; set; }
+        public NetColumnId Id { get; set; } = default!;
         public int Width { get; set; }
         public bool Frozen { get; set; }
         [JsonIgnore]public int StartPX { get; set; }
     }
     public sealed class SummarySheetColumnState
     {
-        public SummarySheetColumnId Id { get; set; }
+        public SummarySheetColumnId Id { get; set; } = default!;
         public int Width { get; set; }
         public bool Frozen { get; set; }
     }

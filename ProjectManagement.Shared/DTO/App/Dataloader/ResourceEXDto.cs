@@ -26,7 +26,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
         public bool CheckInput(double? quantity)
         {
             return IsPercent ? MorgenCost + DayCost <= 100 :
-                MorgenCost + DayCost <= quantity.Value;
+                MorgenCost + DayCost <= quantity.GetValueOrDefault();
         }
         public double CalcCost() { 
             return (Morgen * MorgenCost)+ (Day * DayCost) + (Evening * EveningCost);
@@ -38,8 +38,8 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     }
     public class ResourceDLBase
     {
-        public ResourceTypesEnum ResType { get; set; }
-        public string Name { get; set; } = null!;
+        public ResourceTypesEnum ResType { get; set; } = default!;
+        public string Name { get; set; } = default!;
         [Range(0, double.MaxValue)] public double SortOrder { get; set; }
         private ResourceMetadata _data = new();
         public ResourceMetadata Data
@@ -73,7 +73,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             Values.Add(Data.Cost);
         }
         public int Id { get; set; }
-        public string Group { get; set; }
+        public string Group { get; set; } = string.Empty;
         public List<ConditionDto> ConditionEffect { get; set; } = new();
         public List<RoleDTO> CapRole { get; set; } = [];
         public List<int> ConditionTaskIds { get; set; } = new();

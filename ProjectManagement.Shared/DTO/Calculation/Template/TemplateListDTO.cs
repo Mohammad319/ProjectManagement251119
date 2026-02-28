@@ -50,7 +50,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Range(0, 200, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public bool Active { get; set; } = true;
@@ -58,12 +58,12 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     public class TemplateModelDTO : TemplateData
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
     public class TemplateListDTO
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public int? TemplateId { get; set; }
     }
 }

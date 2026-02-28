@@ -18,21 +18,21 @@ namespace ProjectManagement.Shared.DTO.Project
 
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Developer { get; set; }
+        public string Developer { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ClientsManager { get; set; }
+        public string ClientsManager { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ProjectManager { get; set; }
+        public string ProjectManager { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Designer { get; set; }
-        public Procurement Procurement { get; set; }
+        public string Designer { get; set; } = string.Empty;
+        public Procurement Procurement { get; set; } = default!;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Supervisor { get; set; }
-        public string OverviewInfoProject { get; set; }
+        public string Supervisor { get; set; } = string.Empty;
+        public string OverviewInfoProject { get; set; } = string.Empty;
         [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ClientsContactPersonTender { get; set; }
+        public string ClientsContactPersonTender { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Inspector { get; set; }
+        public string Inspector { get; set; } = string.Empty;
 
     }
     public class ProjectBaseData : ProjectBase
@@ -43,21 +43,21 @@ namespace ProjectManagement.Shared.DTO.Project
 
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Developer { get; set; }
+        public string Developer { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ClientsManager { get; set; }
+        public string ClientsManager { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ProjectManager { get; set; }
+        public string ProjectManager { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Designer { get; set; }
-        public Procurement Procurement { get; set; }
+        public string Designer { get; set; } = string.Empty;
+        public Procurement Procurement { get; set; } = default!;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Supervisor { get; set; }
-        public string OverviewInfoProject { get; set; }
+        public string Supervisor { get; set; } = string.Empty;
+        public string OverviewInfoProject { get; set; } = string.Empty;
         [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ClientsContactPersonTender { get; set; }
+        public string ClientsContactPersonTender { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Inspector { get; set; }
+        public string Inspector { get; set; } = string.Empty;
     }
 
         public class PostProjectDTO : ProjectBaseData
@@ -75,14 +75,14 @@ namespace ProjectManagement.Shared.DTO.Project
     public class ProjectDetailsDTO : ProjectBaseData
     {
         public bool IsVisible { get; set; } = true;
-        public string Folder { get; set; }
+        public string Folder { get; set; } = string.Empty;
 
-        public string Status { get; set; }
-        public string Organisation { get; set; }
-        public string ProcurementMethods { get; set; }
-        public string Compensation { get; set; }
-        public string Contract { get; set; }
-        public string Type { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string Organisation { get; set; } = string.Empty;
+        public string ProcurementMethods { get; set; } = string.Empty;
+        public string Compensation { get; set; } = string.Empty;
+        public string Contract { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
         public DateTime Created { get; set; } = DateTime.Now;
         public DateTime? LastModified { get; set; }
     }
@@ -93,12 +93,12 @@ namespace ProjectManagement.Shared.DTO.Project
     public class ListProjectDTO
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public double Order { get; set; }
-        public string Code { get; set; }
-        public string Status { get; set; }
-        public string Color { get; set; }
-        public string Responsible { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public string Responsible { get; set; } = string.Empty;
         public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
         public DateTime TenderDeadline { get; set; } = DateTime.Now;

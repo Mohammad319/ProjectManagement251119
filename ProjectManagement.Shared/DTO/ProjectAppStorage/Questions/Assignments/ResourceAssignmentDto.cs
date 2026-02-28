@@ -8,7 +8,7 @@ public class ResourceAssignmentDto
 {
     public List<RoleDTO> CapRole { get; set; } = [];
     public List<string> Formulas { get; set; } = [];
-    public ResourceDto Resource { get; set; } = null!;
+    public ResourceDto Resource { get; set; } = default!;
     public int QuestionConditionId { get; set; }
 
     public List<NumericResourceAssignmentDto> NumericResourceFormulas { get; set; } = [];

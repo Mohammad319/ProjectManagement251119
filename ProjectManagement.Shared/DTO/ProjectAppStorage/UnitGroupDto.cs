@@ -6,7 +6,7 @@ namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
 public class UnitGroupDto
 {
     public int Id { get; set; }
-    public string DisplayName { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
     public List<string> Keys { get; set; } = [];
 
 }

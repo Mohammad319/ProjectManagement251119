@@ -20,7 +20,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             public List<RoleDTO> CapRole { get; set; } = [];
         public List<string> Equations { get; set; } = [];
 
-        public List<int> ConditionsIDs { get; set; }
+        public List<int> ConditionsIDs { get; set; } = [];
         }
     
 }

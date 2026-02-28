@@ -8,7 +8,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 {
     public class TenderBase
     {
-        public string Attributes { get; set; }
-        public string Note { get; set; }
+        public string Attributes { get; set; } = string.Empty;
+        public string Note { get; set; } = string.Empty;
     }
 }

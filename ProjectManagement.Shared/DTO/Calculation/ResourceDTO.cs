@@ -13,8 +13,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class ResourcePostDTO
     {
         public int Id { get; set; }
-        public ResourceTypesEnum ResType { get; set; }
-        public string Name { get; set; }
+        public ResourceTypesEnum ResType { get; set; } = default!;
+        public string Name { get; set; } = string.Empty;
         public double Order { get; set; }
         public bool IsActive { get; set; } = true;
         public ResourceMetadata Data { get; set; } = new();
@@ -28,10 +28,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public double SortOrder { get; set; }
 
         [MaxLength(FieldLengths.Comment)]
-        public string Note { get; set; }
+        public string Note { get; set; } = string.Empty;
 
         [MaxLength(FieldLengths.Unit)]
-        public string Unit { get; set; }
+        public string Unit { get; set; } = string.Empty;
         [Required]
         public double Quantity { get; set; }
         public double? CO2 { get; set; }
@@ -40,7 +40,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public double? ChangeFactor1 { get; set; }
         public double? ChangeFactor2 { get; set; }
 
-        //public CostValue Cost { get; private set; } = null!;
+        //public CostValue Cost { get; private set; } = default!;
         public double ActuallyQuantity { get; set; } = 0;
         public double WorkedQ { get; set; } = 0;
 
@@ -64,18 +64,18 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int TaskId { get; set; }
         public int? OfferId { get; set; }
         public int? OpportunityId { get; set; }
-        public string Opportunity { get; set; }
+        public string Opportunity { get; set; } = string.Empty;
         public int Id { get; set; }
         public int? AccountId { get; set; }
-        public string Account { get; set; }
-        public string AccountCode { get; set; }
-        public string Status { get; set; }
-        public string StatusColor { get; set; }
+        public string Account { get; set; } = string.Empty;
+        public string AccountCode { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string StatusColor { get; set; } = string.Empty;
         public int? StatusId { get; set; }
         public int? ResourceSortId { get; set; }
         public int? ResourceTypeId { get; set; }
-        public string ResName { get; set; }
-        public string Sort { get; set; }
-        public List<ListOfferDTO> Offers { get; set; }
+        public string ResName { get; set; } = string.Empty;
+        public string Sort { get; set; } = string.Empty;
+        public List<ListOfferDTO> Offers { get; set; } = [];
     }
 }
