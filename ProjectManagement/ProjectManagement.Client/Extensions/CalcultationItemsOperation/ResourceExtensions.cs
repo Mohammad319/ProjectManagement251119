@@ -34,7 +34,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var task = calculation.Tasks.FirstOrDefault(x => x.Resources.Any(r => r.Id == id));
                 var resourceToRemove = task?.Resources?.FirstOrDefault(r => r.Id == id);
                 if (resourceToRemove != null)
-                    task.Resources.Remove(resourceToRemove);
+                    task?.Resources?.Remove(resourceToRemove);
             }
 
             return true;

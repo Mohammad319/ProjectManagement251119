@@ -19,7 +19,8 @@ namespace ProjectManagement.Client.Helper
             if (SelectedItems.Any(x => x.Id == id))
             {
                 var o = SelectedItems.FirstOrDefault(x => x.Id == id);
-                SelectedItems.Remove(o);
+                if (o != null)
+                    SelectedItems.Remove(o);
             }
             else SelectedItems.Add(new ResourceTaskItemDTO(id, q));
         }
@@ -49,7 +50,7 @@ namespace ProjectManagement.Client.Helper
             TemporaryData.ItemsType = type;
             TemporaryData.OldCalcID = calcid;
         }
-        public static string Key { get; set; }
+        public static string? Key { get; set; }
         public static List<ResourceTaskItemDTO> SelectedItems { get; set; } = [];
         public static int OldCalcID { get; set; }
         public static CalculationItemType? ItemsType { get; set; }

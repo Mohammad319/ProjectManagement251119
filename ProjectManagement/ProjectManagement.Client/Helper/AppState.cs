@@ -7,7 +7,7 @@
 
     public class StorageState
     {
-        public event Action OnChange;
+        public event Action? OnChange;
 
         public void NotifyStateChanged() => OnChange?.Invoke();
 
