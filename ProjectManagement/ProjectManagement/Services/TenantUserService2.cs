@@ -31,6 +31,8 @@ public sealed class TenantUserService(
     {
         if (tenantUser is null) return null;
 
+        if (string.IsNullOrWhiteSpace(tenantUser.Email)) return null;
+
         var existingUser = await userManager.FindByEmailAsync(tenantUser.Email);
         if (existingUser != null) return existingUser;
 
@@ -80,10 +82,10 @@ public sealed class TenantUserService(
                     ExternalAuthId = identityUser.Id,
                     FirstName = request.Firstname,
                     LastName = request.Lastname,
-                    Email = request.Email,
+                    Email = request.Email ?? string.Empty,
                     TenantId = currentTenant.TenantId,
                     DepartmentId = request.DepartmentId,
-                    UserName = request.Email,
+                    UserName = request.Email ?? string.Empty,
                 };
 
                 context.User.Add(localUser);
@@ -156,14 +158,14 @@ public sealed class TenantUserService(
             userEntity.DepartmentId = user.DepartmentId;
             userEntity.FirstName = user.Firstname;
             userEntity.LastName = user.Lastname;
-            userEntity.ExternalAuthId = user.IdAuth;
+            userEntity.ExternalAuthId = user.IdAuth ?? string.Empty;
 
             context.User.Update(userEntity);
             await context.SaveChangesAsync();
         }
 
         var roles = await userManager.GetRolesAsync(oldUser);
-        if (!roles.Contains(user.Role))
+        if (!string.IsNullOrWhiteSpace(user.Role) && !roles.Contains(user.Role))
         {
             await userManager.RemoveFromRolesAsync(oldUser, roles);
             await userManager.AddToRoleAsync(oldUser, user.Role);

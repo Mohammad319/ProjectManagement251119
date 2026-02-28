@@ -35,7 +35,11 @@ namespace ProjectManagement.Server.Controllers.v1
         [HttpPost(URLConst.Project.Search)]
         public async Task<IActionResult> Filter(ProjectFilter dto)
         {
-            return Ok(await MicroBus.Send(new GetProjectsBySearchQuery(dto, GetUserId(),GetDepartmentId().Value)));
+            var departmentId = GetDepartmentId();
+            if (!departmentId.HasValue)
+                return BadRequest("Department is required.");
+
+            return Ok(await MicroBus.Send(new GetProjectsBySearchQuery(dto, GetUserId(), departmentId.Value)));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Details + "/{id}")]
