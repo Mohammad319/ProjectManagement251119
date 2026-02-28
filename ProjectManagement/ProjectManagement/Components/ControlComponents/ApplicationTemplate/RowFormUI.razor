@@ -260,7 +260,7 @@
             </div>
         }
     }
-    else
+    else if (AttributeForm is not null)
     {
         <AttributeFormUI Attribute="@AttributeForm" Callback="CallBackField"></AttributeFormUI>
     }
@@ -270,14 +270,14 @@
     [Parameter] public int PartPage { get; set; } = 0;
 
     RowEntity RowUpdate { get; set; } = new();
-    AttributeBase AttributeForm;
+    AttributeBase? AttributeForm;
     StyleVM Style { get; set; } = new StyleVM();
     StyleVM StyleRow { get; set; } = new StyleVM();
     [Parameter] public EventCallback<RowEntity> Callback { get; set; }
     bool IsLoading = false;
 
-    string StyleStr;
-    string StyleRowStr;
+    string StyleStr = string.Empty;
+    string StyleRowStr = string.Empty;
     int Part = 0;
     void updateStyle()
     {

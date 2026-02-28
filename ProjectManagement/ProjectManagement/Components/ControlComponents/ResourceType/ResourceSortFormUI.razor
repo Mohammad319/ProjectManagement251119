@@ -93,7 +93,7 @@
 </EditForm>
 @code{
     [Parameter] public EventCallback<bool> Callback { get; set; }
-    [Parameter] public ResourceSortModel? ResourceSort { get; set; }
+    [Parameter] public ResourceSortModel ResourceSort { get; set; } = new();
     bool IsLoading = false;
     List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
     ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
@@ -101,7 +101,7 @@
     async Task ChangeGroupAccount(ChangeEventArgs e)
     {
         AccountGroupSelected = null;
-        int id = int.Parse(e.Value.ToString());
+        if (!int.TryParse(e.Value?.ToString(), out var id)) return;
         await Task.Delay(1);
         if (id == 0) return;
         SelectedGroup(id);
@@ -110,9 +110,9 @@
     protected async override Task OnInitializedAsync()
     {
         AccountGroups = await MicroBus.Send(new GetAccountGroupsAsListQuery());
-        if (ResourceSort?.Id > 0)
+        if (ResourceSort.Id > 0)
         {
-            AccountGroupSelected = AccountGroups.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceSort.AccountId));
+            AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceSort.AccountId));
         }
     }
     private async Task HandleSubmitAsync()
@@ -121,7 +121,7 @@
         PostResourceSortDTO PostResourceSort = new();
         PropertyCopier.CopyPropertiesTo(ResourceSort, PostResourceSort);
         bool result = false;
-        if (ResourceSort?.Id == 0)
+        if (ResourceSort.Id == 0)
             result = await MicroBus.Send(new CreateResourceSortCommand(ResourceSort.ResourceTypeId ,PostResourceSort)) > 0;
         else result = await MicroBus.Send(new UpdateResourceSortCommand(ResourceSort.Id,PostResourceSort));
         await Callback.InvokeAsync(result);

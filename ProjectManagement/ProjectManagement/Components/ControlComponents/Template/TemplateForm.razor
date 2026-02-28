@@ -69,7 +69,7 @@
     }
 @code {
     TemplateListPostDTO TemplateUpdate = new();
-    [Parameter] public TemplateModelDTO? TempForm { get; set; }
+    [Parameter] public TemplateModelDTO TempForm { get; set; } = new();
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
     bool btnSubmitDisabled = false;
