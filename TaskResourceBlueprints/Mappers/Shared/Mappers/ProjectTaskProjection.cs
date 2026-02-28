@@ -73,7 +73,7 @@ public static class ProjectTaskProjection
                         StatusId = z.Link == null ? (int?)null : z.Link.StatusId,
                         MenuId = z.a.MenuId,
                         Properties = z.a.Resource == null
-                            ? []
+                            ? new List<ResourcePropertyBindDto>()
                             : z.a.Resource.AttributeValues
                             .Select(b => new ResourcePropertyBindDto
                             {
