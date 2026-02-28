@@ -77,11 +77,11 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             return await db.TaskResourceAssignments
                 .AsNoTracking()
-                .Where(t => t.TaskId == id)
-                .OrderBy(t => t.Resource.Name)
+                .Where(t => t.TaskId == id && t.Resource != null)
+                .OrderBy(t => t.Resource!.Name)
                 .Select(t => new ResourceTaskIndexDto(
                     t.ResourceId,
-                    t.Resource.Name,
+                    t.Resource!.Name,
                     t.Resource.Data.ChangeFactor1,
                     t.Resource.Data.ChangeFactor2,
                     t.Resource.Data.Unit,

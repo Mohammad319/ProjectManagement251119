@@ -114,7 +114,8 @@ namespace TaskResourceBlueprints.Services.Resource
         public async Task<ResourceCategory> GetByIdAsync(int id)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
-            return await context.ResourceCategories.FindAsync(id);
+            var category = await context.ResourceCategories.FindAsync(id);
+            return category ?? throw new KeyNotFoundException($"Resource category with id {id} was not found.");
         }
         public async Task<bool> UpdateAsync(ResourceCategory obj)
         {

@@ -28,10 +28,12 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             Note = x.FieldNotes,
             Quantity = x.Quantity,
             Unit = x.UnitCode,
-            Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
+            Resources = x.TaskResourceAssignments
+                .Where(res => res.Resource != null)
+                .Select(res => new ResourceEXDto()
             {
                 CapRole = res.CapacityRoles,
-                Id = res.Resource.Id,
+                Id = res.Resource!.Id,
                 Name = res.Resource.Name,
                 Data = new ResourceMetadata()
                 {
@@ -39,7 +41,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     ChangeFactor2 = res.ChangeFactor2,
                     CapWaste = res.CapWaste,
                     BaseCost = res.BaseCost,
-                    Quantity = res.Resource.Data.Quantity,
+                    Quantity = res.Resource!.Data.Quantity,
                     Unit = res.Resource.Data.Unit,
                     Cost = res.Resource.Data.Cost,
                 },
@@ -120,15 +122,22 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             var query = db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
             if (!string.IsNullOrEmpty(filter.NameOrCode))
             {
-                query = query.Where(x => x.Code.Contains(filter.NameOrCode) ||
-                x.Name.Contains(filter.NameOrCode));
+                var nameOrCode = filter.NameOrCode;
+                query = query.Where(x => x.Code.Contains(nameOrCode!) ||
+                x.Name.Contains(nameOrCode));
             }
             return await query.TasksBaseToDto(tenantid).ToListAsync(ct);
         }
         public async Task<ProjectTaskDto> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            return await db.Tasks?.Where(x => x.Status == TaskStatusEnum.Ready)?.AsNoTracking()?.ProjectToDto(tenantid, depId)?.FirstOrDefaultAsync(x => x.Id == id, ct);
+            var task = await db.Tasks
+                .Where(x => x.Status == TaskStatusEnum.Ready)
+                .AsNoTracking()
+                .ProjectToDto(tenantid, depId)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
+
+            return task ?? throw new KeyNotFoundException($"Task with id {id} was not found.");
         }
         private static void Validate(TaskDefinitionEditDto d)
         {
