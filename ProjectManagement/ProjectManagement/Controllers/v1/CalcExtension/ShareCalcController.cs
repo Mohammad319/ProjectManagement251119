@@ -26,6 +26,10 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
         [HttpPost]
         public async Task<IActionResult> Post(PostShareCalcDTO dto)
         {
+            var departmentId = GetDepartmentId();
+            if (!departmentId.HasValue)
+                return BadRequest("Department is required.");
+
             var upsert = new ShareCalcUpsertDTO
             {
                 Id = null,
@@ -40,7 +44,7 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
                 Tap6 = dto.Tap6
             };
 
-            var id = await MicroBus.Send(new UpsertCalcShareCommand(upsert, GetUserId(), GetDepartmentId()));
+            var id = await MicroBus.Send(new UpsertCalcShareCommand(upsert, GetUserId(), departmentId));
             return Ok(id);
         }
 
@@ -51,11 +55,15 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
         //}
         public async Task<IActionResult> Update(UpdateShareCalcDTO dto)
         {
+            var departmentId = GetDepartmentId();
+            if (!departmentId.HasValue)
+                return BadRequest("Department is required.");
+
             var upsert = new ShareCalcUpsertDTO
             {
                 Id = dto.Id,
                 //CalculationId = dto.CalculationId,
-                DepartmentId = GetDepartmentId().Value,
+                DepartmentId = departmentId.Value,
                 Tabs = ShareTabs.None,
                 Tap1 = dto.Tap1,
                 Tap2 = dto.Tap2,
@@ -65,15 +73,17 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
                 Tap6 = dto.Tap6
             };
 
-            var id = await MicroBus.Send(new UpsertCalcShareCommand(upsert, GetUserId(), GetDepartmentId()));
+            var id = await MicroBus.Send(new UpsertCalcShareCommand(upsert, GetUserId(), departmentId));
             return Ok(id);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            int GroupId = GetDepartmentId().Value;
-            int UserId = GetUserId();
+            var groupId = GetDepartmentId();
+            if (!groupId.HasValue)
+                return BadRequest("Department is required.");
+
             return Ok(await MicroBus.Send(new DeleteCalcShareCommand(id)));
         }
     }
