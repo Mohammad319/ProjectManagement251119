@@ -332,7 +332,7 @@ else
 
                                 @if (g.Items?.Count > 0)
                                 {
-                                    foreach (var it in g.Items)
+                                    @foreach (var it in g.Items)
                                     {
                                         <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom2">
                                             <div class="@CsS.Grid.Span.MD10">
@@ -366,3 +366,4 @@ else
             </section>
 
     </EditForm>
+}
