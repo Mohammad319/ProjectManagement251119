@@ -69,8 +69,8 @@
         if (result)
         {
             if (Post.Type == CalculationItemType.task)
-                Tasks.RemoveAll(x => x.Id == id);
-            else if (Post.Type == CalculationItemType.resource) Resources.RemoveAll(x => x.Id == id);
+                Tasks?.RemoveAll(x => x.Id == id);
+            else if (Post.Type == CalculationItemType.resource) Resources?.RemoveAll(x => x.Id == id);
             StateHasChanged();
         }
         MHD.Notifications(ToastType.Delete, result);
@@ -82,7 +82,9 @@
     async Task StorageTypeSet(ChangeEventArgs e)
     {
         Reset();
-        Post.Type = (CalculationItemType)Enum.Parse(typeof(CalculationItemType), e.Value.ToString());
+        var selectedType = e.Value?.ToString();
+        if (!Enum.TryParse<CalculationItemType>(selectedType, out var type)) return;
+        Post.Type = type;
         await GetAsync();
     }
     void Reset(){
@@ -103,7 +105,7 @@
             Tasks = data.Select(x => new StorageDTO<TaskPostDTO>
             {
                 Id = x.Id,
-                StorageValue = JsonSerializer.Deserialize<TaskPostDTO>(x.StorageValue),
+                StorageValue = JsonSerializer.Deserialize<TaskPostDTO>(x.StorageValue) ?? new TaskPostDTO(),
                 StorageLevel = x.StorageLevel,
                 StorageSort = x.StorageSort,
                 StorageType = x.StorageType
@@ -115,7 +117,7 @@
             Resources = data.Select(x => new StorageDTO<ResourcePostDTO>
             {
                 Id = x.Id,
-                StorageValue = JsonSerializer.Deserialize<ResourcePostDTO>(x.StorageValue),
+                StorageValue = JsonSerializer.Deserialize<ResourcePostDTO>(x.StorageValue) ?? new ResourcePostDTO(),
                 StorageLevel = x.StorageLevel,
                 StorageSort = x.StorageSort,
                 StorageType = x.StorageType
@@ -126,13 +128,17 @@
     async Task GetStorageSort(ChangeEventArgs e)
     {
         Reset();
-        Post.SortSelected = (StorageSort)Enum.Parse(typeof(StorageSort), e.Value.ToString());
+        var selectedSort = e.Value?.ToString();
+        if (!Enum.TryParse<StorageSort>(selectedSort, out var sort)) return;
+        Post.SortSelected = sort;
         await GetAsync();
     }
     async Task GetAuthorityStorage(ChangeEventArgs e)
     {
         Reset();
-        Post.AuthoritySelected = (AuthorityStorage)Enum.Parse(typeof(AuthorityStorage), e.Value.ToString());
+        var selectedAuthority = e.Value?.ToString();
+        if (!Enum.TryParse<AuthorityStorage>(selectedAuthority, out var authority)) return;
+        Post.AuthoritySelected = authority;
         await GetAsync();
     }
 }

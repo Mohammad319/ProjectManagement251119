@@ -166,13 +166,13 @@
                 Firstname = UserForm?.Firstname,
                 Lastname = UserForm?.Lastname,
                 DepartmentId = DepartmentId ?? UserForm?.DepartmentId,
-                LockoutEnabled = UserForm.LockoutEnabled,
+                LockoutEnabled = UserForm?.LockoutEnabled ?? false,
                 IdAuth = UserForm?.IdAuth,
                 LockoutStart = UserForm?.LockoutStart,
                 LockoutEnd = UserForm?.LockoutEnd,
                 PhoneNumber = UserForm?.PhoneNumber,
-                PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
-                Id = UserForm.Id,
+                PhoneNumberConfirmed = UserForm?.PhoneNumberConfirmed ?? false,
+                Id = UserForm?.Id ?? 0,
                 Username = UserForm?.Username,
             };
 
@@ -197,8 +197,8 @@
         if (!Form.DepartmentId.HasValue && Departments?.Any() == true)
             Form.DepartmentId = Departments[0].Id;
 
-        if (UserForm.Id > 0 && !string.IsNullOrWhiteSpace(UserForm.Username))
-            Roles = await GetRolesAsync(UserForm.Username);
+        if ((UserForm?.Id ?? 0) > 0 && !string.IsNullOrWhiteSpace(UserForm?.Username))
+            Roles = await GetRolesAsync(UserForm!.Username!);
         else
             Roles = new List<string> { PMRolesConst.Tenant.Manger };
     }

@@ -123,8 +123,7 @@
     UserPostDTO Form = new();
     bool IsLoading = true;
     IList<string> Roles = [];
-    List<ListDTO>? Departments;
-    [Inject] AuthenticationStateProvider? AuthStateProvider { get; set; }
+    [Inject] AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     async Task<int> GetUserTenant()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();

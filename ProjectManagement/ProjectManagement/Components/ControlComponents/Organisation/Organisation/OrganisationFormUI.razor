@@ -209,7 +209,7 @@
                             <label class="@CssClasses.Form.Label">@ResourceLoc.category</label>
                             <InputSelect class="@CssClasses.Input.Text" @bind-Value="PostCompany.CategoryId">
                                 <option value="0"></option>
-                                @foreach (var category in Categories.Where(x => x.ParentCategoryId == CategorySelected.Id))
+                                @foreach (var category in (Categories ?? Enumerable.Empty<ListOrganisationCategoryDTO>()).Where(x => x.ParentCategoryId == CategorySelected.Id))
                                 {
                                     <option value="@category.Id">@category.Name</option>
                                 }

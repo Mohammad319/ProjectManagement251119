@@ -122,15 +122,19 @@ namespace ProjectManagement.Components.ControlComponents.Department
         {
             if (IsBusy) return;
 
+            var titleTarget = user.Email ?? user.Username ?? string.Empty;
+            var parameters = new Dictionary<string, object>
+            {
+                [nameof(UpdateUserUI.UserForm)] = user,
+                [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnEditUserResultAsync)
+            };
+
+            if (DepartmentId.HasValue)
+                parameters[nameof(UpdateUserUI.DepartmentId)] = DepartmentId.Value;
+
             MHD.Modal.ShowComponent<UpdateUserUI>(
-                AppLoc[LocalizerConst.Update, user.Email ?? user.Username],
-                new Dictionary<string, object>
-                {
-                    [nameof(UpdateUserUI.UserForm)] = user,
-                    [nameof(UpdateUserUI.DepartmentId)] = DepartmentId,
-                    [nameof(UpdateUserUI.Callback)] =
-                        EventCallback.Factory.Create<bool>(this, OnEditUserResultAsync)
-                },
+                AppLoc[LocalizerConst.Update, titleTarget],
+                parameters,
                 DialogSize.ExtraLarge
             );
         }

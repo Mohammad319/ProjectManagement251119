@@ -21,7 +21,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceType
         async Task ChangeGroupAccount(ChangeEventArgs e)
         {
             AccountGroupSelected = null;
-            int id = int.Parse(e.Value.ToString());
+            if (!int.TryParse(e.Value?.ToString(), out var id)) return;
             await Task.Delay(1);
             if (id == 0) return;
             SelectedGroup(id);
@@ -33,7 +33,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceType
             AccountGroups = await MicroBus.Send(new GetAccountGroupsAsListQuery());
             if (ResourceType.Id > 0)
             {
-                AccountGroupSelected = AccountGroups.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceTypeUpdate.AccountId));
+                AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceTypeUpdate.AccountId));
             }
         }
         private async Task HandleSubmitAsync()
@@ -58,7 +58,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceType
             messageStore = new(editContext);
         }
 
-        private void HandleValidationRequested(object sender, ValidationRequestedEventArgs args)
+        private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
         {
             messageStore?.Clear();
             if (ResourceTypeUpdate.Type
