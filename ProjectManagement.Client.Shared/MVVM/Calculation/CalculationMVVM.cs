@@ -1,4 +1,4 @@
-#nullable disable
+#nullable enable
 ﻿using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Client.Shared.ViewModel;

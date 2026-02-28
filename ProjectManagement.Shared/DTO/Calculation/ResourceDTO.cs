@@ -28,10 +28,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public double SortOrder { get; set; }
 
         [MaxLength(FieldLengths.Comment)]
-        public string? Note { get; set; }
+        public string Note { get; set; }
 
         [MaxLength(FieldLengths.Unit)]
-        public string? Unit { get; set; }
+        public string Unit { get; set; }
         [Required]
         public double Quantity { get; set; }
         public double? CO2 { get; set; }

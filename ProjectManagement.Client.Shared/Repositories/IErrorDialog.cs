@@ -3,6 +3,6 @@
 {
     public interface IErrorDialog
     {
-        void Show(string title, string message, string? traceId = null);
+        void Show(string title, string message, string traceId = null);
     }
 }
