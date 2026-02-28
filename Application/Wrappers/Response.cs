@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,18 +10,27 @@ namespace Application.Wrappers
     {
         public Response()
         {
+            Message = string.Empty;
+            Errors = [];
+            Data = default!;
         }
-        public Response(T data, string message = null)
+
+        public Response(T data, string? message = null)
         {
             Succeeded = true;
-            Message = message;
+            Message = message ?? string.Empty;
+            Errors = [];
             Data = data;
         }
+
         public Response(string message)
         {
             Succeeded = false;
             Message = message;
+            Errors = [];
+            Data = default!;
         }
+
         public bool Succeeded { get; set; }
         public string Message { get; set; }
         public List<string> Errors { get; set; }

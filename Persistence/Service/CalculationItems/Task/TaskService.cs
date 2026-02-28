@@ -77,7 +77,7 @@ namespace Persistence.Service.CalculationItems.Task
                 return false;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            int? parentTaskId = tasks?.FirstOrDefault()?.ParentTaskId;
+            int? parentTaskId = tasks.FirstOrDefault()?.ParentTaskId;
 
             if (parentTaskId.HasValue && parentTaskId > 0)
             {
