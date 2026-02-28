@@ -8,7 +8,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 {
     public class QuanityListDTO
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public double? Quantity { get; set; }
     }
     public class OHFactors
@@ -19,7 +19,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         public bool IsLocked { get; set; } = true;
         public double Earnings { get; set; } = 20;
         public double Key { get; set; } = 0;
-        public string Unit { get; set; }
+        public string Unit { get; set; } = string.Empty;
         public int DivisionKey { get; set; } = 0;
         public string Selected { get; set; } = "all";
     }
@@ -27,11 +27,11 @@ namespace ProjectManagement.Shared.Base.Calculation
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
 
         public double Tax { get; set; } = 25;
