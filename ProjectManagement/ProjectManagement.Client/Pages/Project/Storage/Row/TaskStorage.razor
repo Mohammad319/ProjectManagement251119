@@ -5,8 +5,8 @@
 @TaskRow(Task)
 
 @code {
-    [Parameter] public TaskPostDTO Task { get; set; }
-    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public TaskPostDTO Task { get; set; } = null!;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public bool WithContent { get; set; }
 
     RenderFragment TaskRow(TaskPostDTO task, bool IsParent = true, string color = UiStyles.ClassTask, int left = 0) => __builder =>

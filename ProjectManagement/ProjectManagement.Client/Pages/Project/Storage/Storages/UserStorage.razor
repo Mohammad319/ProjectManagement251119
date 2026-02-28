@@ -57,7 +57,7 @@ else
            {
                 if (Type == CalculationItemType.task)
                 {
-                    List<TaskPostDTO> tasks = Tasks.Where(x => IDs.Any(r => r == x.Id)).Select(x => x.StorageValue).ToList();
+                    List<TaskPostDTO> tasks = (Tasks ?? []).Where(x => IDs.Any(r => r == x.Id)).Select(x => x.StorageValue).ToList();
                     if (tasks != null)
                     {
                 tasks.ForEach(x => x.Metadata.IsOH = Calc.OHFactors);
@@ -68,7 +68,7 @@ else
                 }
                 else
                 {
-                    List<ResourcePostDTO> resources = Resources.Where(x => IDs.Any(r => r == x.Id)).Select(x => x.StorageValue).ToList();
+                    List<ResourcePostDTO> resources = (Resources ?? []).Where(x => IDs.Any(r => r == x.Id)).Select(x => x.StorageValue).ToList();
                     if (resources != null)
                         return await Repo.Resource.CreateAsync(resources, ParentID);
                 }

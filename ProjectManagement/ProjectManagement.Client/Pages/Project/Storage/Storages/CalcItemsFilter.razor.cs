@@ -20,17 +20,17 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
         [Parameter] public EventCallback Callback { get; set; }
         [Parameter] public int ParentID { get; set; }
 
-        object List;
+        object? List;
         FilterCalculationItemsDto Filter = new() { Page = -1 };
-        List<AccountModel> Accounts { get; set; }
-        List<ResourceSortModel> ResourcesSort { get; set; }
-        List<ListOrderDTO> TGSStatuses;
+        List<AccountModel> Accounts { get; set; } = [];
+        List<ResourceSortModel> ResourcesSort { get; set; } = [];
+        List<ListOrderDTO> TGSStatuses = [];
         List<FolderMVVM> FoldersList = [];
-        ListResourceTypeDTO ResTypeSelected;
+        ListResourceTypeDTO? ResTypeSelected;
         AccountGroupsListDto AccountGroupSelected = new();
-        List<ListProjectMVVM> Projects;
-        List<ListCalculationMVVM> Calcs;
-        public PostStorygeDTO Post;
+        List<ListProjectMVVM> Projects = [];
+        List<ListCalculationMVVM> Calcs = [];
+        public PostStorygeDTO Post { get; set; } = new();
         public async Task SetNewTypeAsync(CalculationItemType nt)
         {
             List = null;
@@ -76,8 +76,8 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
             if (!id.HasValue)
                 return;
 
-            ResTypeSelected = Config.ResourceTypes.FirstOrDefault(x => x.Id == id);
-            ResourcesSort = null;
+            ResTypeSelected = Config.ResourceTypes?.FirstOrDefault(x => x.Id == id);
+            ResourcesSort = [];
             ResourcesSort = await Repo.ResType.GetResourceSortAsync(id.Value);
         }
         async Task ChangeGroupAccount(int id)
@@ -85,7 +85,7 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
             AccountGroupSelected = new();
             Filter.AccountGroup = id;
             await Task.Delay(1);
-            AccountGroupSelected = Config.AccountGroups.FirstOrDefault(x => x.Id == id);
+            AccountGroupSelected = Config.AccountGroups?.FirstOrDefault(x => x.Id == id) ?? new();
         }
         void CalcChanged(int id)
         {
@@ -106,7 +106,7 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
             Filter.ProjectID = null;
             Filter.CalculationID = 0;
 
-            Projects = null;
+            Projects = [];
             if (id.HasValue)
             {
                 Projects = await Repo.Project.GetByFolderIdAsync(id.Value);

@@ -87,7 +87,7 @@
                     <label class="@CssClasses.Form.Label">@CalcResource.account</label>
                     <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.Account" @bind-Value:set="(value) => Filter.Account = value">
                         <option></option>
-                        @foreach (var status in Projects)
+                        @foreach (var status in Accounts)
                         {
                             <option value="@status.Id">@status.Name</option>
                         }
@@ -138,7 +138,7 @@
                 @if (List != null)
                 {
                     @if (Post.Type == CalculationItemType.task){
-                        foreach (var task in (List as List<TaskListMVVM>)) {
+                        foreach (var task in (List as List<TaskListMVVM>) ?? []) {
                         <tr class="@UiStyles.ClassTask">
                                 <td><span @onclick="()=> Add(task.Id,task.Metadata.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
                                     @((MarkupString)(Post.Items.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus))
@@ -157,7 +157,7 @@
                                     }
                                     }
                     else if (Post.Type == CalculationItemType.resource)
-                        foreach (var Resource in (List as List<ResourceListMVVM>))
+                        foreach (var Resource in (List as List<ResourceListMVVM>) ?? [])
                         {
                         <tr class="@UiStyles.ClassResource">
                                 <td><span @onclick="()=> Add(Resource.Id,Resource.Quantity)" class="@(Post.Items.Any(x => x.Id == Resource.Id) ? "text-danger" : "text-primary")">
