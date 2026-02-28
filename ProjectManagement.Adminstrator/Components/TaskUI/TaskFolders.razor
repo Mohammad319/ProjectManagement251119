@@ -120,9 +120,9 @@
     // Nur ParentTaskId verwenden (saubere Entkopplung vom Domain-Entity)
     [Parameter] public int TaskId { get; set; }
 
-    private List<FolderDto> Folders;
-    private List<ResourceRowDto> Rows;
-    private string SelectedFolderName;
+    private List<FolderDto> Folders = new();
+    private List<ResourceRowDto> Rows = new();
+    private string SelectedFolderName = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -133,7 +133,7 @@
     private async Task LoadResourcesAsync(int folderId, string folderName)
     {
         SelectedFolderName = folderName;
-        Rows = null;
+        Rows = new();
         StateHasChanged();
 
         var (rows, _) = await FoldersService.GetFolderResourcesAsync(TaskId, folderId);

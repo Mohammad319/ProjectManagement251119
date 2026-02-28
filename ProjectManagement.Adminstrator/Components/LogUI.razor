@@ -156,11 +156,11 @@
 
 @code {
     LogsFilter Filter = new();
-    List<LogEntity> Logs;
+    List<LogEntity> Logs = new();
 
     bool IsLoading;
     bool NectBtnActive;
-    List<GetTenantsDTO> Tenants;
+    List<GetTenantsDTO> Tenants = new();
     int day = 7;
     int month = 0;
     async Task DeleteAsync()
@@ -204,14 +204,17 @@
             NectBtnActive = true;
         if (!isNewRequest)
             Logs.AddRange(Logs2);
-        else Logs = Logs2;
+        else
+            Logs = Logs2;
         IsLoading = false;
     }
     async Task GetTenants()
     {
         IsLoading = true;
-        Tenants = null;
-        Tenants = await ExHandlers.RunCheckTokenAsync(() => TenantRepo.GetAsync());
+        Tenants.Clear();
+        var tenants = await ExHandlers.RunCheckTokenAsync(() => TenantRepo.GetAsync());
+        if (tenants is not null)
+            Tenants = tenants;
         IsLoading = false;
         StateHasChanged();
     }

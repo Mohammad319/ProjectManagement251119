@@ -24,7 +24,6 @@
 @code {
     private List<ResourceCategory> folders = new();
     private List<ResourceDefinition> resourcesToShow = new();
-    bool isLoading = false;
     protected override async Task OnInitializedAsync()
     {
         folders = await ResourceFolderService.GetAllAsync();

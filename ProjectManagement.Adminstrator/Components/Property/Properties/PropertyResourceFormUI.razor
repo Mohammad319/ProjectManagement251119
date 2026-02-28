@@ -108,7 +108,7 @@
 </div>
 
 @code {
-    [CascadingParameter] private EditContext EditContext { get; set; }
+    [CascadingParameter] private EditContext? EditContext { get; set; }
     [Parameter] public ResourceAttribute ResourceProp { get; set; } = new();
     [Parameter] public EventCallback<bool> Callback { get; set; }
     [Parameter] public int GroupId { get; set; } = new();

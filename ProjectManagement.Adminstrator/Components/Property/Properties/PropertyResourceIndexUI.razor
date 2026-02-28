@@ -74,7 +74,6 @@ MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => Co
     {
         if (IsSuccess)
         {
-            PropertiesList = null;
             PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);
         }
         Modal.Close();
