@@ -51,10 +51,10 @@
 @code {
     [Parameter] public int TaskId { get; set; }
     [Parameter] public EventCallback<ResourceDefinition> OnSave { get; set; }
-    [Parameter] public List<int> ResIds { get; set; }
+    [Parameter] public List<int> ResIds { get; set; } = new();
 
-    List<ResourceCategory> Folders { get; set; }
-    ResourceCategory Selected;
+    List<ResourceCategory> Folders { get; set; } = new();
+    ResourceCategory? Selected;
     protected override async Task OnInitializedAsync()
     {
         Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(TaskId, CancellationToken.None))

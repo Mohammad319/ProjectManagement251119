@@ -11,9 +11,9 @@
     [Parameter] public List<ConditionDefinition> Conditions { get; set; } = new();
     [Parameter] public EventCallback<int> OnEdit { get; set; }
     [Parameter] public EventCallback<int> OnDelete { get; set; }
-    [Parameter] public List<QuestionGroupDefinition> ChoiceGroups { get; set; }// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
-    [Parameter] public List<ResourceSelectorDefinition> ResourceGroups { get; set; }
-    [Parameter] public List<NumericQuestionDefinition> NumericGroups { get; set; }
+    [Parameter] public List<QuestionGroupDefinition> ChoiceGroups { get; set; } = new();// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
+    [Parameter] public List<ResourceSelectorDefinition> ResourceGroups { get; set; } = new();
+    [Parameter] public List<NumericQuestionDefinition> NumericGroups { get; set; } = new();
 
     bool ResourceAssignments = false;
     private static string RangeLabel(double? min, double? max)

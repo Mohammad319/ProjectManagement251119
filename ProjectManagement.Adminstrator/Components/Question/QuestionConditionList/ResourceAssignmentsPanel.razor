@@ -25,8 +25,8 @@
 
     [Parameter] public Dictionary<int, List<OptionBindVM>> OptBindsByRA { get; set; } = new();
     [Parameter] public Dictionary<int, List<NumericBindVM>> NumBindsByRA { get; set; } = new();
-    [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; }
-    [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; }
+    [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; } = (_, _) => Task.CompletedTask;
+    [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; } = (_, _) => Task.CompletedTask;
     private bool CanAddBindingsFor(ConditionResourceAssignment a) => a.Id > 0;
     private void AddAssignment() =>
         Condition.Assignments.Add(
@@ -52,7 +52,7 @@
                 ChangeFactor2 = resource?.Data?.ChangeFactor2 == null ? 0 : resource.Data.ChangeFactor2,
                 CapWaste = resource?.Data?.CapWaste == null ? 0 : resource.Data.CapWaste,
                 BaseCost = resource?.Data?.BaseCost == null ? 0 : resource.Data.BaseCost,
-                IsActive = resource.IsActive,
+                IsActive = resource?.IsActive ?? false,
                 Resource = new ResourceDefinition
                 {
                     Id = resource.Id,

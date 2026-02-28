@@ -12,13 +12,13 @@
     [Parameter] public ConditionDefinition Condition { get; set; } = null!;
     [Parameter] public List<QuestionGroupDefinition> TaskChoiceGroups { get; set; } = new();
     [Parameter] public List<NumericQuestionDefinition> TaskNumericGroups { get; set; } = new();
-    [Parameter] public List<ResourceSelectorDefinition> ResourceGroups { get; set; }
+    [Parameter] public List<ResourceSelectorDefinition> ResourceGroups { get; set; } = new();
 
     [Parameter] public Dictionary<int, List<OptionBindVM>> OptBindsByRA { get; set; } = new();
     [Parameter] public Dictionary<int, List<NumericBindVM>> NumBindsByRA { get; set; } = new();
 
-    [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; }
-    [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; }
+    [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; } = (_, _) => Task.CompletedTask;
+    [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; } = (_, _) => Task.CompletedTask;
 }
 
 
