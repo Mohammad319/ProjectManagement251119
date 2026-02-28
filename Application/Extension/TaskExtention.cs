@@ -24,7 +24,7 @@ namespace Application.Extention
                     {
                         res.OpportunityId = null;
                         res.PrimaryOfferId = null;
-                        res.Offers = null;
+                        res.Offers = [];
                     }
                     res.Id = 0;
                     res.TaskId = 0;
