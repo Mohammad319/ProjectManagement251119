@@ -10,9 +10,9 @@
 
 @code {
     [Parameter] public ConditionDefinition Condition { get; set; } = null!;
-    [Parameter] public IEnumerable<QuestionGroupDefinition> ChoiceGroups { get; set; }// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
-    [Parameter] public IEnumerable<ResourceSelectorDefinition> ResourceGroups { get; set; }
-    [Parameter] public IEnumerable<NumericQuestionDefinition> NumericGroups { get; set; }
+    [Parameter] public IEnumerable<QuestionGroupDefinition> ChoiceGroups { get; set; } = Enumerable.Empty<QuestionGroupDefinition>();// = (LocalChoiceGroups ?? Enumerable.Empty<ChoiceGroup>()).OrderBy(x => x.SortOrder);
+    [Parameter] public IEnumerable<ResourceSelectorDefinition> ResourceGroups { get; set; } = Enumerable.Empty<ResourceSelectorDefinition>();
+    [Parameter] public IEnumerable<NumericQuestionDefinition> NumericGroups { get; set; } = Enumerable.Empty<NumericQuestionDefinition>();
 
     private IEnumerable<QuestionOptionDefinition> GetLocalChoiceOptions(int groupId)
         => ChoiceGroups.FirstOrDefault(g => g.Id == groupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>();

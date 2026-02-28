@@ -15,10 +15,10 @@
 @inject IResourceCategoryService ResourceCategoryService
 
 @code {
-    TaskDefinition Task { get; set; } = default!;
+    TaskDefinition Task { get; set; } = new();
     [Parameter] public int ID { get; set; } = default!;
-    List<ResourceCategory> Folders { get; set; }
-    ResourceCategory Selected;
+    List<ResourceCategory> Folders { get; set; } = new();
+    ResourceCategory? Selected;
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -327,7 +327,7 @@ else
 
                             <div class="@CsS.Spacing.M.Top2">
                                 <FolderResourcesAddUI TaskId="Task.Id"
-                                                      ResIds="g.Items.Select(x => x.ResourceId).ToList()"
+                                                      ResIds="(g.Items ?? new List<ResourceOptionItem>()).Select(x => x.ResourceId).ToList()"
                                                       OnSave="(e)=>AddDelete(g,e)" />
 
                                 @if (g.Items?.Count > 0)
@@ -366,4 +366,3 @@ else
             </section>
 
     </EditForm>
-}
