@@ -21,7 +21,8 @@ namespace ProjectManagement.Client.Helper
 
             IXLWorksheet sheet = workbook.Worksheet(sheetNr);
 
-            for (int row = rowStart; row <= sheet.LastRowUsed().RowNumber(); row++)
+            int lastRow = sheet.LastRowUsed()?.RowNumber() ?? (rowStart - 1);
+            for (int row = rowStart; row <= lastRow; row++)
             {
                 if (sheet.Row(row).IsEmpty()) continue;
 
