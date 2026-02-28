@@ -123,8 +123,7 @@
     UserPostDTO Form = new();
     bool IsLoading = true;
     IList<string> Roles = [];
-    List<ListDTO>? Departments;
-    [Inject] AuthenticationStateProvider? AuthStateProvider { get; set; }
+    [Inject] AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     async Task<int> GetUserTenant()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
@@ -158,7 +157,7 @@
     async Task IniUserApp()
     {
         if (!string.IsNullOrEmpty(UserForm?.Id))
-            Roles = await UsersService.GetRolesAsync(UserForm.UserName);
+            Roles = await UsersService.GetRolesAsync(UserForm.UserName ?? string.Empty);
         else
             Roles.Add(PMRolesConst.APP.Manger);
     }

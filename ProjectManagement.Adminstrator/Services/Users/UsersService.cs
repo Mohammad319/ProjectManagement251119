@@ -30,7 +30,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
         public async Task<TenantEntity> GetByIdAsync(int id)
         {
             using var _appContext = ContextFactory.CreateDbContext();
-            return await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id);
+            return await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id) ?? new TenantEntity();
         }
         public async Task<int> CreateAsync(TenantEntity tenant)
         {
@@ -60,6 +60,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
         {
             using var _appContext = ContextFactory.CreateDbContext();
             var t = await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == tenant.Id);
+            if (t == null) { return false; }
+
             t.Name = tenant.Name;
             t.Street = tenant.Street;
             t.City = tenant.City;
@@ -77,7 +79,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
             t.DateExpire = tenant.DateExpire;
 
             t.Note = tenant?.Note;
-            if (t == null) { return false; }
             _appContext.Tenants.Update(t);
             await _appContext.SaveChangesAsync();
             return true;
@@ -96,8 +97,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
         public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId)
         {
             using var _appContext = ContextFactory.CreateDbContext();
-            string? ConnectionString = await _appContext?.Tenants?.Where(x => x.Id == tenantId)?
-                .Select(x => x.TenantDB.ConnectionString)?.FirstOrDefaultAsync();
+            string? ConnectionString = await _appContext.Tenants
+                .Where(x => x.Id == tenantId)
+                .Select(x => x.TenantDB.ConnectionString)
+                .FirstOrDefaultAsync();
             if (string.IsNullOrEmpty(ConnectionString))
                 throw new Exception($"No database found for tenant {tenantId}");
             var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
