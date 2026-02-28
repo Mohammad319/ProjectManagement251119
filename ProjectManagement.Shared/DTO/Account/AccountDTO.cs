@@ -35,7 +35,7 @@ namespace ProjectManagement.Shared.DTO.Account
         public string Name { get; init; }
         public string Code { get; init; }
         public bool IsVisible { get; init; } = true;
-        private AccountData? _metadata;
+        private AccountData _metadata;
         public AccountData Metadata
         {
             get => _metadata ??= new();
