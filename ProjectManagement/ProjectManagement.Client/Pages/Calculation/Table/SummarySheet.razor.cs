@@ -35,7 +35,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         }
         void TenderExcelTaxChanged(ChangeEventArgs e)
         {
-            Calculation.TenderExcelTax = double.Parse(e.Value.ToString());
+            if (!double.TryParse(e.Value?.ToString(), out var tenderExcelTax)) return;
+            Calculation.TenderExcelTax = tenderExcelTax;
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
             ProfitDecisionFun();
             Calculation.CalcEarningsForUnlockedRes();
@@ -44,7 +45,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         }
         void TenderInclTaxChanged(ChangeEventArgs e)
         {
-            Calculation.TenderInclTax = double.Parse(e.Value.ToString());
+            if (!double.TryParse(e.Value?.ToString(), out var tenderInclTax)) return;
+            Calculation.TenderInclTax = tenderInclTax;
             Calculation.TenderExcelTax = Calculation.TenderInclTax / (1 + (Calculation.Tax / 100));
             ProfitDecisionFun();
             Calculation.CalcEarningsForUnlockedRes();
@@ -65,7 +67,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
     }, DialogSize.ExtraLarge);
         protected override void OnInitialized()
         {
-            Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
+            Folder?.State?.Calculation?.OnChangeInCalculation += ChangeCalcultionItems;
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));

@@ -25,7 +25,7 @@ else
                     <div class="@CssClasses.Layout.FlexItemsCenter">
                             @if (Departments != null)
                             {
-                            <select @onchange="async (e) => await GetAsync(e.Value.ToString())" class="@CssClasses.Input.Select">
+                            <select @onchange="async (e) => await GetAsync(e.Value?.ToString())" class="@CssClasses.Input.Select">
                                         <option value=""></option>
                                         @foreach (var Template in Departments)
                                         {
@@ -59,16 +59,16 @@ else
 
 
 @code {
-    List<TemplateMVVM> List;
-    TemplateMVVM Form;
+    List<TemplateMVVM>? List;
+    TemplateMVVM? Form;
     bool Loading = true;
-    [CascadingParameter] private Task<AuthenticationState> _authentication { get; set; }
-    List<ListDTO> Departments;
+    [CascadingParameter] private Task<AuthenticationState>? _authentication { get; set; }
+    List<ListDTO>? Departments;
     async Task FormUI(int id) {
         Form = await Repo.Template.GetByIdAsync(id);
         Form.Id = id;
     }
-    async Task GetAsync(string idstr)
+    async Task GetAsync(string? idstr)
     {
         int? id = null;
         if (int.TryParse(idstr, out int value))
@@ -77,8 +77,9 @@ else
     }
     protected async override Task OnInitializedAsync()
     {
-        var role = (await _authentication).User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role);
-        if (role.Value == PMRolesConst.Tenant.Admin)
+        var authState = _authentication is null ? null : await _authentication;
+        var role = authState?.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role);
+        if (role?.Value == PMRolesConst.Tenant.Admin)
             Departments = await Repo.Departments.GetDepartmentsAsListAsync();
         await GetAsync(null);
         Loading = false;
@@ -90,7 +91,7 @@ else
     {
         if (await Repo.Template.DeleteAsync(st.Id))
         {
-            List.Remove(st);
+            List?.Remove(st);
             StateHasChanged();
             MHD.Notifications(ToastType.Delete, true);
         }

@@ -93,7 +93,7 @@
                         <thead class="sticky top-0 z-10 shadow-sm"
                                style="background-color:@Template?.SummarySheet.Color.Header;">
                             <tr class="h-6">
-                                @foreach (var item in Template?.SummarySheet?.Columns)
+                                @foreach (var item in Template?.SummarySheet?.Columns ?? [])
                                 {
                                     <th style="width:@(item.Width + "px")"
                                         class="px-2 py-0.5 font-semibold whitespace-nowrap border-b border-slate-200/70 dark:border-slate-700/70 text-left align-middle">
