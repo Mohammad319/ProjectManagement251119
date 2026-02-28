@@ -19,6 +19,7 @@
 
 	<PropertyGroup>
 		<DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**</DefaultItemExcludes>
+		<NoWarn>$(NoWarn);CS0414;CS0649;CS8600;CS8601;CS8602;CS8604;CS8618;CS8620;CS8625;CS8629;CS9113</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
