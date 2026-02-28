@@ -61,7 +61,7 @@
 </div>
 
 @code {
-    [Parameter] public ResourceDefinition Resource { get; set; }
+    [Parameter, EditorRequired] public ResourceDefinition Resource { get; set; } = null!;
 
     CalcResCost CalcResCost = new();
     [Parameter] public EventCallback<bool> CallBack { get; set; }
@@ -82,7 +82,7 @@
                 };
         else
         {
-            CalcResCost.Day = (int)Resource.Data.Quantity.Value;
+            CalcResCost.Day = Convert.ToInt32(Resource.Data.Quantity ?? 0);
             CalcResCost.DayCost = Resource.Data.Cost;
         }
     }
@@ -94,7 +94,7 @@
     public void IsNotPercent()
     {
         CalcResCost.IsPercent = false;
-        CalcResCost.Quantity = CalcResCost.Quantity.Value;
+        CalcResCost.Quantity ??= 0;
     }
     async Task HandleSubmit()
     {

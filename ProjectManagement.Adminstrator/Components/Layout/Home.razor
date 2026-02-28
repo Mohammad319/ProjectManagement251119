@@ -71,8 +71,6 @@
 
 
 @code {
-    private string? currentUrl;
-
     private string ButtonClasses(Type? cmp)
     {
         const string common = "text-left px-4 py-2 rounded-md transition-colors";
@@ -81,9 +79,6 @@
         return $"{common} {(Component == cmp ? active : inactive)}";
     }
     Type? Component;
-    private bool collapseNavMenu = true;
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-    private bool IsDark;
 
 }
 
