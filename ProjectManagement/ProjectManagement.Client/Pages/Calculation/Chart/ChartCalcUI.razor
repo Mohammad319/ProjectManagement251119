@@ -60,7 +60,7 @@
 
     private readonly List<string> ColorsChart = new();
 
-    private IEnumerable<FactorMVVM> Factors => Container.Calculation?.Factors ?? Enumerable.Empty<FactorMVVM>();
+    private IEnumerable<Factors> Factors => Container.Calculation?.Factors ?? Enumerable.Empty<Factors>();
 
     protected override void OnInitialized()
     {
