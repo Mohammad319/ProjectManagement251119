@@ -77,7 +77,7 @@ namespace Persistence.Service.Department
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Description = x.Description,
+                    Description = x.Description ?? string.Empty,
                     Created = x.CreatedAt,
                     LastModified = x.UpdatedAt,
                     UsersCount = x.Users.Count,

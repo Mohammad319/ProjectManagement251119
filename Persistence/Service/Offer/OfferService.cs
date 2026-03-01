@@ -150,7 +150,7 @@ namespace Persistence.Service.Offer
                 OperationType.Update,
                 new HubDataDto
                 {
-                    Parent = offerId?.ToString(), // Null-safe
+                    Parent = offerId?.ToString() ?? string.Empty, // Null-safe
                     ParentId = resourceId
                 }
             );
@@ -225,11 +225,11 @@ namespace Persistence.Service.Offer
                     Id = x.Id,
                     BaseCost = x.Metadata.BaseCost,
                     Cost = x.Metadata.Cost,
-                    Comment = x.Comment,
+                    Comment = x.Comment ?? string.Empty,
                     Date = x.Date,
-                    Organisation = x!.Organisation!.Name,
-                    Category = x!.Organisation!.OrganisationCategory!.ParentCategory!.Name,
-                    SubCategory = x.Organisation.OrganisationCategory.Name,
+                    Organisation = x.Organisation != null ? (x.Organisation.Name ?? string.Empty) : string.Empty,
+                    Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? (x.Organisation.OrganisationCategory.ParentCategory.Name ?? string.Empty) : string.Empty,
+                    SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? (x.Organisation.OrganisationCategory.Name ?? string.Empty) : string.Empty,
                     ResName = x.Resource.Name,
                     TaskName = x.Resource.Task.Name,
                     TaskCode = x.Resource.Task.Metadata.Code,
@@ -261,12 +261,12 @@ namespace Persistence.Service.Offer
                 Id = x.Id,
                 BaseCost = x.Metadata.BaseCost,
                 Cost = x.Metadata.Cost,
-                Organisation = x!.Organisation!.Name,
-                Comment = x.Comment,
+                Organisation = x.Organisation != null ? (x.Organisation.Name ?? string.Empty) : string.Empty,
+                Comment = x.Comment ?? string.Empty,
                 Date = x.Date,
                 OrganisationId = x.OrganisationId,
-                SubCategory = x.Organisation.OrganisationCategory.Name,
-                Category = x!.Organisation!.OrganisationCategory!.ParentCategory!.Name
+                SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? (x.Organisation.OrganisationCategory.Name ?? string.Empty) : string.Empty,
+                Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? (x.Organisation.OrganisationCategory.ParentCategory.Name ?? string.Empty) : string.Empty
             };
 
         private static System.Linq.Expressions.Expression<Func<OfferEntity, OfferWithCalcId>> ProjectOfferWithCalcId() =>
@@ -277,12 +277,12 @@ namespace Persistence.Service.Offer
                     Id = x.Id,
                     BaseCost = x.Metadata.BaseCost,
                     Cost = x.Metadata.Cost,
-                    Organisation = x.Organisation!.Name,
-                    Comment = x.Comment,
+                    Organisation = x.Organisation != null ? (x.Organisation.Name ?? string.Empty) : string.Empty,
+                    Comment = x.Comment ?? string.Empty,
                     Date = x.Date,
                     OrganisationId = x.OrganisationId,
-                    SubCategory = x.Organisation!.OrganisationCategory!.Name,
-                    Category = x.Organisation!.OrganisationCategory!.ParentCategory!.Name
+                    SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? (x.Organisation.OrganisationCategory.Name ?? string.Empty) : string.Empty,
+                    Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? (x.Organisation.OrganisationCategory.ParentCategory.Name ?? string.Empty) : string.Empty
                 }
             );
 

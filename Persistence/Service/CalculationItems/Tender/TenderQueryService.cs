@@ -40,7 +40,7 @@ namespace Persistence.Service.CalculationItems.Tender
                 {
                     Id = x.Id,
                     Name = x.Name ?? string.Empty,
-                    Note = x.Note
+                    Note = x.Note ?? string.Empty
                 })
                 .ToListAsync(ct);
 
@@ -67,7 +67,7 @@ namespace Persistence.Service.CalculationItems.Tender
                     Company = x.Organisation.Name ?? string.Empty,
                     Category = x.Organisation.OrganisationCategory.Name ?? string.Empty,
                     SubCategory = x.Organisation!.OrganisationCategory!.ParentCategory!.Name ?? string.Empty,
-                    Note = x.Note
+                    Note = x.Note ?? string.Empty
                 })
                 .FirstOrDefaultAsync(ct);
         }
