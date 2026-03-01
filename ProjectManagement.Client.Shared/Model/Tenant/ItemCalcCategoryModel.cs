@@ -9,7 +9,7 @@ namespace ProjectManagement.Client.Shared.Model.Tenant
 {
     public class TaskStoragePostModel : TaskStorageAppDTO
     {
-        public List<ResGroupPostModel> Groups { get; set; }
+        public List<ResGroupPostModel> Groups { get; set; } = [];
     }
     public class ResGroupPostModel : ItemCategoryBase
     {

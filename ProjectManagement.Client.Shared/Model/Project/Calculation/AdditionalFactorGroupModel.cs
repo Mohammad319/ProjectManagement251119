@@ -17,20 +17,20 @@ namespace ProjectManagement.Client.Shared.Model.Project.Calculation
 
     public class AdditionalFactor
     {
-        public string Resource { get; set; }
+        public string Resource { get; set; } = string.Empty;
 
         public bool ProfitRatio { get; set; }
         public string Name { get; set; } = "Factors Name";
         public bool Risk { get; set; }
         public double Cost { get; set; } = 40;
-        public string Account { get; set; }
+        public string Account { get; set; } = string.Empty;
         public int Quantity { get; set; } = 1;
-        public string Unit { get; set; }
+        public string Unit { get; set; } = string.Empty;
         public double Time { get; set; } = 1;
-        public string TimeUnit { get; set; }
+        public string TimeUnit { get; set; } = string.Empty;
         public double AMP1 { get; set; } = 1;
         public double BaseCost { get; set; } = 1;
-        public string Comment { get; set; }
+        public string Comment { get; set; } = string.Empty;
         [JsonIgnore] public double Total => BaseCost + (Quantity * Cost * Time * AMP1);
     }
 }
