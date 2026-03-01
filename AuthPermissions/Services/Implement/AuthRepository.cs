@@ -1,4 +1,5 @@
 ﻿using AuthPermissions.Context;
+using AuthPermissions.Entity;
 using Domain.Repository.AuthPermissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,18 +23,80 @@ namespace AuthPermissions.Services.Implement
                     await _roleManager.CreateAsync(new IdentityRole { Name = role, NormalizedName = role, ConcurrencyStamp = role });
             }
 
-            var Admin = new ApplicationUser
+            var admin = await _userManager.FindByEmailAsync(email);
+            if (admin is null)
             {
-                UserName = email,
-                Email = email,
-                EmailConfirmed = true,
-            };
-            var result = await _userManager.CreateAsync(Admin, pass);
-            if (result.Succeeded)
-            {
-                await _userManager.AddToRoleAsync(Admin, PMRolesConst.APP.Admin);
+                admin = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true,
+                };
+
+                var createResult = await _userManager.CreateAsync(admin, pass);
+                if (!createResult.Succeeded)
+                    return false;
             }
-            return false;
+
+            if (!await _userManager.IsInRoleAsync(admin, PMRolesConst.APP.Admin))
+            {
+                var roleResult = await _userManager.AddToRoleAsync(admin, PMRolesConst.APP.Admin);
+                if (!roleResult.Succeeded)
+                    return false;
+            }
+
+            await SeedDefaultTenantsAsync();
+            return true;
+        }
+
+        private async Task SeedDefaultTenantsAsync()
+        {
+            var tenantDatabases = new[]
+            {
+                new TenantDatabaseEntity
+                {
+                    Name = "DB1",
+                    ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=db922357028_2;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False;MultipleActiveResultSets=True"
+                },
+                new TenantDatabaseEntity
+                {
+                    Name = "DB2",
+                    ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=db962510648_2;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False;MultipleActiveResultSets=True"
+                }
+            };
+
+            foreach (var tenantDatabase in tenantDatabases)
+            {
+                var exists = await _appContext.TenantDatabase
+                    .AnyAsync(x => x.Name == tenantDatabase.Name || x.ConnectionString == tenantDatabase.ConnectionString);
+
+                if (!exists)
+                    _appContext.TenantDatabase.Add(tenantDatabase);
+            }
+
+            await _appContext.SaveChangesAsync();
+
+            var persistedDatabases = await _appContext.TenantDatabase
+                .Where(x => x.Name == "DB1" || x.Name == "DB2")
+                .ToDictionaryAsync(x => x.Name, x => x.Id);
+
+            var tenants = new[]
+            {
+                new TenantEntity { Name = "Company 1", TenantDBId = persistedDatabases.GetValueOrDefault("DB1") },
+                new TenantEntity { Name = "Company 2", TenantDBId = persistedDatabases.GetValueOrDefault("DB2") }
+            };
+
+            foreach (var tenant in tenants)
+            {
+                if (tenant.TenantDBId is null or <= 0)
+                    continue;
+
+                var exists = await _appContext.Tenants.AnyAsync(x => x.Name == tenant.Name);
+                if (!exists)
+                    _appContext.Tenants.Add(tenant);
+            }
+
+            await _appContext.SaveChangesAsync();
         }
         public async Task<IEnumerable<UserAuthModel>> GetUsersAsync(int? TenantId, int? DepartmentId)
         {
