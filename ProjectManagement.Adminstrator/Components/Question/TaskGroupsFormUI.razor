@@ -1,4 +1,4 @@
-﻿@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Questions.Groups
 @using TaskResourceBlueprints.Entities.Resources
@@ -247,7 +247,7 @@ else
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddNumericGroup">Add Group</button>
                 </div>
 
-                @if (Task.NumericQuestions?.Count > 0)
+                @if ((Task.NumericQuestions?.Count ?? 0) > 0)
                 {
                     @foreach (var g in Task.NumericQuestions.OrderBy(x => x.SortOrder))
                     {
