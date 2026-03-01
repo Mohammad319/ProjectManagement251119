@@ -65,7 +65,7 @@ public static class ProjectTaskProjection
                         CostRole = z.a.CapacityRoles,
                         CostStorageValue = z.a.Resource == null ? null : z.a.Resource.Data.Cost,
                         CostUserValue = z.Link == null ? null : z.Link.Cost,
-                        NameUserValue = z.Link == null ? null : z.Link.Name,
+                        NameUserValue = z.Link == null ? string.Empty : z.Link.Name ?? string.Empty,
 
                         AccountId = z.Link == null ? null : z.Link.AccountId,
                         ResourceTypeId = z.Link == null ? (int?)null : z.Link.ResourceTypeId,
@@ -94,11 +94,11 @@ public static class ProjectTaskProjection
                             BaseCost = z.a.BaseCost,
                             CO2 = z.Link == null ? null : z.Link.Co2,
                             Cost = z.a.Resource == null ? 0 : z.a.Resource.Data.Cost,
-                            Note = z.a.Resource == null ? null : z.a.Resource.Data.Note,
-                            UpperNote = z.a.Resource == null ? null : z.a.Resource.Data.UpperNote,
+                            Note = z.a.Resource == null ? string.Empty : z.a.Resource.Data.Note ?? string.Empty,
+                            UpperNote = z.a.Resource == null ? new List<string>() : z.a.Resource.Data.UpperNote ?? new List<string>(),
                             Quantity = z.a.Resource == null ? null : z.a.Resource.Data.Quantity,
-                            Unit = z.a.Resource == null ? null : z.a.Resource.Data.Unit,
-                            QuantityParam = z.a.Resource == null ? null : z.a.Resource.Data.QuantityParam,
+                            Unit = z.a.Resource == null ? string.Empty : z.a.Resource.Data.Unit ?? string.Empty,
+                            QuantityParam = z.a.Resource == null ? string.Empty : z.a.Resource.Data.QuantityParam ?? string.Empty,
                         }
                     })
                     .ToList(),
@@ -260,7 +260,7 @@ public static class ProjectTaskProjection
                                 // --- الحقول المسطّحة بدل UserData ---
                                 CostStorageValue = z.a.Resource.Data.Cost,
                                 CostUserValue = z.Link == null ? null : z.Link.Cost,
-                                NameUserValue = z.Link == null ? null : z.Link.Name,
+                                NameUserValue = z.Link == null ? string.Empty : z.Link.Name ?? string.Empty,
                                 AccountId = z.Link == null ? null : z.Link.AccountId,
                                 ResourceTypeId = z.Link == null ? (int?)null : z.Link.ResourceTypeId,
                                 ResourceSortId = z.Link == null ? (int?)null : z.Link.ResourceSortId,

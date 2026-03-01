@@ -21,13 +21,13 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         {
             Id = x.Id,
             Name = x.Name,
-            Code = x.Code,
+            Code = x.Code ?? string.Empty,
             ChangeFactor1 = x.ChangeFactor1,
             ChangeFactor2 = x.ChangeFactor2,
             ResIdCap = x.CapacityResourceId,
-            Note = x.FieldNotes,
+            Note = x.FieldNotes ?? string.Empty,
             Quantity = x.Quantity,
-            Unit = x.UnitCode,
+            Unit = x.UnitCode ?? string.Empty,
             Resources = x.TaskResourceAssignments
                 .Where(res => res.Resource != null)
                 .Select(res => new ResourceEXDto()
