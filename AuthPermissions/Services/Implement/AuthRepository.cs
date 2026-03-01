@@ -51,19 +51,19 @@ namespace AuthPermissions.Services.Implement
             {
                 model.Add(new UserAuthModel()
                 {
-                    Firstname = user.Firstname,
-                    Lastname = user.Lastname,
+                    Firstname = user.Firstname ?? string.Empty,
+                    Lastname = user.Lastname ?? string.Empty,
                     LockoutStart = user.LockoutStart,
-                    Email = user.Email,
+                    Email = user.Email ?? string.Empty,
                     UserId = user.UserId,
                     DepartmentId = user.DepartmentId,
-                    Username = user.UserName,
-                    PhoneNumber = user.PhoneNumber,
+                    Username = user.UserName ?? string.Empty,
+                    PhoneNumber = user.PhoneNumber ?? string.Empty,
                     PhoneNumberConfirmed = user.PhoneNumberConfirmed,
                     Id = user.Id,
                     LockoutEnabled = user.LockoutEnabled,
                     LockoutEnd = user.LockoutEnd,
-                    NormalizedEmail = user.NormalizedEmail,
+                    NormalizedEmail = user.NormalizedEmail ?? string.Empty,
                     //Roles = await _userManager.GetRolesAsync(user)
                 });
             }
