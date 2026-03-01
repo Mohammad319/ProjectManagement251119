@@ -48,11 +48,11 @@
             Condition.Assignments.Add(new ConditionResourceAssignment()
             {
                 ResourceId = resource.Id,
-                ChangeFactor1 = resource?.Data?.ChangeFactor1 == null ? 0 : resource.Data.ChangeFactor1,
-                ChangeFactor2 = resource?.Data?.ChangeFactor2 == null ? 0 : resource.Data.ChangeFactor2,
-                CapWaste = resource?.Data?.CapWaste == null ? 0 : resource.Data.CapWaste,
-                BaseCost = resource?.Data?.BaseCost == null ? 0 : resource.Data.BaseCost,
-                IsActive = resource?.IsActive ?? false,
+                ChangeFactor1 = resource.Data?.ChangeFactor1 ?? 0,
+                ChangeFactor2 = resource.Data?.ChangeFactor2 ?? 0,
+                CapWaste = resource.Data?.CapWaste ?? 0,
+                BaseCost = resource.Data?.BaseCost ?? 0,
+                IsActive = resource.IsActive,
                 Resource = new ResourceDefinition
                 {
                     Id = resource.Id,
@@ -292,7 +292,7 @@
                                                     </select>
                                             </div>
                                             <div>
-                                                <button class="@CsS.Btn.Outline.Primary" title="Save binding" @onclick="() => OnSaveOption?.Invoke(a.Id, b)">Save</button>
+                                                <button class="@CsS.Btn.Outline.Primary" title="Save binding" @onclick="async () => await OnSaveOption.Invoke(a.Id, b)">Save</button>
                                                 <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddOptionEq(a.Id, b)">Add Equation</button>
                                                 <button class="@CsS.Btn.Outline.Danger" title="Delete binding" @onclick="() => RemoveOptionBindingUI(a.Id, b)">Delete</button>
                                             </div>
@@ -369,7 +369,7 @@
                                             </div>
                                             </div>
                                             <div>
-                                                <button class="@CsS.Btn.Outline.Primary" title="Save numeric binding" @onclick="() => OnSaveNumeric?.Invoke(a.Id, b)">Save</button>
+                                                <button class="@CsS.Btn.Outline.Primary" title="Save numeric binding" @onclick="async () => await OnSaveNumeric.Invoke(a.Id, b)">Save</button>
                                                 <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddNumericEq(a.Id, b)">Add Equation</button>
 
                                                 <button class="@CsS.Btn.Outline.Danger" title="Delete numeric binding" @onclick="() => RemoveNumericBindingUI(a.Id, b)">Delete</button>

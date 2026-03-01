@@ -141,6 +141,12 @@
     public TenantEntity? Put;
     private async Task HandleSubmitAsync()
     {
+        if (Put is null)
+        {
+            await Callback.InvokeAsync(false);
+            return;
+        }
+
         IsLoading = true;
         if (Id == 0)
         {
