@@ -221,8 +221,6 @@
             else
                 await UnitGroupsService.UpdateAsync(_model);
 
-            _savedOk = true;
-
             // نبلغ الأب بنجاح الحفظ (مثلاً لتحديث القائمة)
             await Callback.InvokeAsync(true);
 
