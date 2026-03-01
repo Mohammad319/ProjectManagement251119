@@ -39,8 +39,8 @@ public sealed class TenantUserService(
         var newUser = new ApplicationUser
         {
             Email = tenantUser.Email,
-            Firstname = tenantUser.Firstname,
-            Lastname = tenantUser.Lastname,
+            Firstname = tenantUser.Firstname ?? string.Empty,
+            Lastname = tenantUser.Lastname ?? string.Empty,
             UserName = tenantUser.Email,
             TenantId = currentTenant.TenantId,
             DepartmentId = tenantUser.DepartmentId,
@@ -140,8 +140,8 @@ public sealed class TenantUserService(
         if (oldUser is null || oldUser.TenantId != currentTenant.TenantId)
             return false;
 
-        oldUser.Firstname = user.Firstname;
-        oldUser.Lastname = user.Lastname;
+        oldUser.Firstname = user.Firstname ?? string.Empty;
+        oldUser.Lastname = user.Lastname ?? string.Empty;
         oldUser.PhoneNumber = user.PhoneNumber;
         oldUser.PhoneNumberConfirmed = user.PhoneNumberConfirmed;
         oldUser.LockoutEnabled = user.LockoutEnabled;
