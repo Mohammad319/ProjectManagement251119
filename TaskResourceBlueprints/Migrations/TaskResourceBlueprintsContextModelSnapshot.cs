@@ -612,7 +612,8 @@ namespace TaskResourceBlueprints.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AdminNote")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("CalcResCost")
                         .IsRequired()
@@ -637,7 +638,8 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<int>("ResType")
                         .HasColumnType("int");
@@ -852,7 +854,8 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AdminNote")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<int?>("CapacityResourceId")
                         .HasColumnType("int");
@@ -864,13 +867,15 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<int?>("FallId")
                         .HasColumnType("int");
 
                     b.Property<string>("FieldNotes")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -883,13 +888,15 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<double?>("Quantity")
                         .HasColumnType("float");
 
                     b.Property<string>("Responsible")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.PrimitiveCollection<string>("RowNotes")
                         .IsRequired()
@@ -908,7 +915,8 @@ namespace TaskResourceBlueprints.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("UnitCode")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.PrimitiveCollection<string>("VisibleFolderIds")
                         .IsRequired()

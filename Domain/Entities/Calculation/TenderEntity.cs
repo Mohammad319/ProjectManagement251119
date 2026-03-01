@@ -19,7 +19,7 @@ namespace Domain.Entities.Calculation
         [ForeignKey(nameof(TenderAttributeId))]
         public TenderAttributeDefinitionEntity TenderAttribute { get; private set; } = null!;
 
-        public double Value { get; private set; }
+        public decimal Value { get; private set; }
 
         private TenderAttributeBindEntity() { }
 

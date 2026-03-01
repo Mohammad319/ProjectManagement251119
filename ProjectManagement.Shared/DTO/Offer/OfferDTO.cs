@@ -27,8 +27,8 @@ namespace ProjectManagement.Shared.DTO.Offer
     public class PostOfferDTO : OfferBase
     {
         public string Contact { get; set; } = string.Empty;
-        public double Cost { get; set; }
-        public double BaseCost { get; set; }
+        public decimal Cost { get; set; }
+        public decimal BaseCost { get; set; }
         //[Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int ResourceId { get; set; }
         public int? OrganisationId { get; set; }
@@ -38,8 +38,8 @@ namespace ProjectManagement.Shared.DTO.Offer
     {
         public string Comment { get; set; } = string.Empty;
         public string Contact { get; set; } = string.Empty;
-        public double Cost { get; set; }
-        public double BaseCost { get; set; }
+        public decimal Cost { get; set; }
+        public decimal BaseCost { get; set; }
     }
     public class ListOfferDTO
     {
@@ -47,8 +47,8 @@ namespace ProjectManagement.Shared.DTO.Offer
         public string Organisation { get; set; } = string.Empty;
         public int? OrganisationId { get; set; }
         //public string Unit { get; set; }
-        public double BaseCost { get; set; }
-        public double Cost { get; set; }
+        public decimal BaseCost { get; set; }
+        public decimal Cost { get; set; }
         public string SubCategory { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public string Comment { get; set; } = string.Empty;

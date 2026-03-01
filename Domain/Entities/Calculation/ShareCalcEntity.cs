@@ -48,44 +48,4 @@ namespace Domain.Entities.Calculation
         }
     }
 
-    //public sealed class ShareCalcEntity : AuditableEntity<int>
-    //{
-    //    public int DepartmentId { get; private set; }
-    //    public DepartmentEntity Department { get; private set; } = null!;
-
-    //    public int CalculationId { get; private set; }
-    //    public CalculationEntity Calculation { get; private set; } = null!;
-
-    //    // المستخدم المنشئ (CreatedBy موجود في AuditableEntity)
-    //    public UserEntity? CreatedAtUser { get; private set; }
-
-    //    private ShareCalcData? _metadata;
-    //    public ShareCalcData Metadata
-    //    {
-    //        get => _metadata ??= new ShareCalcData();
-    //        private set => _metadata = value;
-    //    }
-
-    //    private ShareCalcEntity() { } // EF
-
-    //    public ShareCalcEntity(int calculationId, int departmentId, int createdBy, ShareCalcData metadata)
-    //    {
-    //        CalculationId = calculationId;
-    //        DepartmentId = departmentId;
-    //        CreatedBy = createdBy;
-    //        Metadata = metadata ?? new ShareCalcData();
-    //    }
-
-    //    public void UpdateTabs(ShareCalcData data)
-    //    {
-    //        Metadata = data ?? new ShareCalcData();
-    //    }
-
-    //    public void UpdateDepartment(int departmentId)
-    //    {
-    //        DepartmentId = departmentId;
-    //    }
-    //}
-
-
 }

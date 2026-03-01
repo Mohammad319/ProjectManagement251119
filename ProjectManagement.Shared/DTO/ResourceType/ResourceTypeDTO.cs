@@ -9,13 +9,13 @@ namespace ProjectManagement.Shared.DTO.ResourceType
     public class ResourceTypeData
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public double Cost { get; set; } = 1;
+        public decimal Cost { get; set; } = 1;
         [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Unit { get; set; } = string.Empty;
-        public double? FixedQ { get; set; }
+        public decimal? FixedQ { get; set; }
         public double ChangeFactor1 { get; set; } = 1;
         public double ChangeFactor2 { get; set; } = 1;
-        public double? BaseCost { get; set; }
+        public decimal? BaseCost { get; set; }
         public double CapWaste { get; set; }
         public double? CO2 { get; set; }
     }
