@@ -22,20 +22,22 @@
     </EditForm>
            </div>
 @code {
-    [Parameter] public TenantDatabaseEntity? Put { get; set; }
+    [Parameter] public TenantDatabaseEntity Put { get; set; } = new();
     [Parameter] public EventCallback<bool> Callback { get; set; }
-    bool IsLoading = false;
     private async Task HandleSubmitAsync()
     {
         using var context = ContextFactory.CreateDbContext();
 
-        IsLoading = true;
-        if (Put?.Id == 0)
+        if (Put.Id == 0)
         {
             context.TenantDatabase.Add(Put);
         }
-        else context.TenantDatabase.Update(Put);
-            await context.SaveChangesAsync();
-        IsLoading = false;
+        else
+        {
+            context.TenantDatabase.Update(Put);
+        }
+
+        await context.SaveChangesAsync();
+        await Callback.InvokeAsync(true);
     }
 }

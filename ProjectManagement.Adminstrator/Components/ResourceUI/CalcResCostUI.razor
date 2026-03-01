@@ -20,7 +20,7 @@
                 <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100.0) / (Resource.Data?.Quantity ?? 1), 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.MorgenCost" class="@CsS.Input.Number" />
@@ -32,7 +32,7 @@
                 <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100.0) / (Resource.Data?.Quantity ?? 1), 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.DayCost" class="@CsS.Input.Number" />
@@ -61,7 +61,7 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired] public ResourceDefinition Resource { get; set; } = null!;
+    [Parameter, EditorRequired] public ResourceDefinition Resource { get; set; } = new();
 
     CalcResCost CalcResCost = new();
     [Parameter] public EventCallback<bool> CallBack { get; set; }
@@ -82,8 +82,8 @@
                 };
         else
         {
-            CalcResCost.Day = Convert.ToInt32(Resource.Data.Quantity ?? 0);
-            CalcResCost.DayCost = Resource.Data.Cost;
+            CalcResCost.Day = Convert.ToInt32(Resource.Data?.Quantity ?? 0);
+            CalcResCost.DayCost = Resource.Data?.Cost ?? 0;
         }
     }
     public void IsPercent()
@@ -99,7 +99,8 @@
     async Task HandleSubmit()
     {
         Resource.CalcResCost = CalcResCost;
-        Resource.Data.Cost = CalcResCost.CalcCost();
+        if (Resource.Data is not null)
+            Resource.Data.Cost = CalcResCost.CalcCost();
         if(await ResourceService.UpdateAsync(Resource))
         {
             MHD.Modal.Close();

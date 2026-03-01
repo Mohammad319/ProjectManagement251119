@@ -203,9 +203,9 @@
         if (Logs2 == null || Logs2.Count < Filter.Count)
             NectBtnActive = true;
         if (!isNewRequest)
-            Logs.AddRange(Logs2);
+            Logs.AddRange(Logs2 ?? []);
         else
-            Logs = Logs2;
+            Logs = Logs2 ?? [];
         IsLoading = false;
     }
     async Task GetTenants()

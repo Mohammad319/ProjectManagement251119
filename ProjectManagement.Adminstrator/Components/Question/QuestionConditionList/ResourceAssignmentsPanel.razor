@@ -185,7 +185,7 @@
                         {
                             <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole(a))">Add Role</button>
                         }
-                        <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => a.Expressions.Add(string.Empty))">+</button>
+                        <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => (a.Expressions ??= []).Add(string.Empty))">+</button>
                         <button class="@CsS.Btn.Outline.Danger" @onclick="() => RemoveAssignment(a)">x</button>
                     </div>
                 </div>

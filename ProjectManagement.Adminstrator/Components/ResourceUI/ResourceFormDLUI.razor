@@ -171,7 +171,7 @@
 </div>
 
 @code {
-    [CascadingParameter] private EditContext EditContext { get; set; }
+    [CascadingParameter] private EditContext? EditContext { get; set; }
     [Parameter] public ResourceDefinition model { get; set; } = new();
     bool IsEditMode => model.Id > 0;
     [Parameter] public EventCallback<bool> CallBack { get; set; }
