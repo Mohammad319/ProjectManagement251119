@@ -112,7 +112,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public int Version { get; set; } = 0;
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is not TaskListMVVM other)
                 return false;
@@ -134,13 +134,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         }
 
         public int? TaskId { get; set; }
-        public string Opportunity { get; set; }
+        public string Opportunity { get; set; } = string.Empty;
         public int Id { get; set; }
-        public string Status { get; set; }
-        public string StatusColor { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string StatusColor { get; set; } = string.Empty;
 
-        public List<TaskListMVVM> Tasks { get; set; }
-        public List<ResourceListMVVM> Resources { get; set; }
+        public List<TaskListMVVM> Tasks { get; set; } = [];
+        public List<ResourceListMVVM> Resources { get; set; } = [];
 
         // بدل InvalidateCache القديم: الآن فقط صفّر الـCalc_* + صفّر caches الموارد
         public void InvalidateCache()
@@ -169,12 +169,12 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         //Resource (خاص بنوع Task "Resource" عندك)
         public int? OfferId { get; set; }
         public int? AccountId { get; set; }
-        public string Account { get; set; }
-        public string AccountCode { get; set; }
+        public string Account { get; set; } = string.Empty;
+        public string AccountCode { get; set; } = string.Empty;
         public int? ResourceSortId { get; set; }
         public int? ResourceTypeId { get; set; }
-        public string ResName { get; set; }
-        public string Sort { get; set; }
+        public string ResName { get; set; } = string.Empty;
+        public string Sort { get; set; } = string.Empty;
         public double Factor { get; set; } = 1;
         public List<ListOfferMVVM> Offers { get; set; } = [];
 

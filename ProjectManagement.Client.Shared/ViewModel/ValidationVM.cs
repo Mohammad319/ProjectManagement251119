@@ -14,7 +14,7 @@ namespace ProjectManagement.Client.Shared.ViewModel
     {
         public int? Min { get; set; }
         public int? Max { get; set; } = 500;
-        public string Default { get; set; }
+        public string Default { get; set; } = string.Empty;
     }
     public class ValidDateVM
     {

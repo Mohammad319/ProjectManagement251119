@@ -9,7 +9,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string Format(object x) => UiStyles.Format(x, MathRound);
         public double Format(double x) => UiStyles.Format(x, MathRound);
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         static string SetFreezCol(int ColNum, int w)
         {
             string className = "divNetCalc";

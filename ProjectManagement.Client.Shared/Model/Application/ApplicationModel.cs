@@ -9,13 +9,14 @@ namespace ProjectManagement.Client.Shared.Model.Application
 {
     public class AttributeModel : AttributeBase
     {
-        public string Value { get; set; }
+        public string Value { get; set; } = string.Empty;
 
         [JsonIgnore] public DateTime? Date { get; set; } = DateTime.Now;
         [JsonIgnore] public bool? ValueBool { get; set; }
-        public dynamic OBJ;
+        public dynamic OBJ = null!;
 
-        private T DeserializeValidation<T>() => string.IsNullOrEmpty(Validation) ? Activator.CreateInstance<T>() : JsonSerializer.Deserialize<T>(Validation);
+        private T DeserializeValidation<T>() where T : new() =>
+            string.IsNullOrEmpty(Validation) ? new T() : JsonSerializer.Deserialize<T>(Validation) ?? new T();
 
         [JsonIgnore] public ValidDateVM ValdDateVM => DeserializeValidation<ValidDateVM>();
         [JsonIgnore] public ValidSelectVM ValdSelectVM => DeserializeValidation<ValidSelectVM>();

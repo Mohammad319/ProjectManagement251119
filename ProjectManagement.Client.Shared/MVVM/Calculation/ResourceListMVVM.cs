@@ -27,14 +27,17 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double? BaseCost => Data.BaseCost;
         public double? CO2 => Data.CO2;
 
-        [JsonIgnore] public double PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? PriceSub.Value * Quantity.Value : 0;
+        [JsonIgnore] public double PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? Data.PriceSub.Value * Quantity.Value : 0;
     }
 
     public class ResourceListMVVM : ResFromData
     {
         public int Version { get; set; } = 0;
 
-        public ResourceListMVVM() { }
+        public ResourceListMVVM()
+        {
+            OfferClick = () => Task.CompletedTask;
+        }
         public Func<Task> OfferClick { get; set; }
 
         public int Id { get; set; }
@@ -42,19 +45,19 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public int? OfferId { get; set; }
         public int? OpportunityId { get; set; }
 
-        public string Opportunity { get; set; }
+        public string Opportunity { get; set; } = string.Empty;
         public int? AccountId { get; set; }
-        public string Account { get; set; }
-        public string AccountCode { get; set; }
+        public string Account { get; set; } = string.Empty;
+        public string AccountCode { get; set; } = string.Empty;
 
-        public string Status { get; set; }
-        public string StatusColor { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string StatusColor { get; set; } = string.Empty;
         public int? StatusId { get; set; }
 
         public int? ResourceSortId { get; set; }
         public int? ResourceTypeId { get; set; }
-        public string ResName { get; set; }
-        public string Sort { get; set; }
+        public string ResName { get; set; } = string.Empty;
+        public string Sort { get; set; } = string.Empty;
 
         public double Factor { get; set; } = 1;
 

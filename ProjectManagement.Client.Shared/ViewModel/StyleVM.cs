@@ -15,11 +15,11 @@ namespace ProjectManagement.Client.Shared.ViewModel
         public int? PaddingLeft { get; set; }
         public int? PaddingTop { get; set; }
 
-        public string BorderStyle { get; set; }
-        public string BorderColor { get; set; }
-        public string TextAlign { get; set; }
+        public string BorderStyle { get; set; } = string.Empty;
+        public string BorderColor { get; set; } = string.Empty;
+        public string TextAlign { get; set; } = string.Empty;
         public int? FontSize { get; set; } = 13;
-        public string FontWeight { get; set; }
+        public string FontWeight { get; set; } = string.Empty;
 
         public void Set(string style)
         {
