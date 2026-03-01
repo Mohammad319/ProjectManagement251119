@@ -40,6 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
             options.UseSqlServer(conn.TaskResourceBlueprintsDb, sqlOptions =>
             {
+                sqlOptions.MigrationsAssembly(typeof(TaskResourceBlueprintsContext).Assembly.FullName);
                 sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
             }));
 

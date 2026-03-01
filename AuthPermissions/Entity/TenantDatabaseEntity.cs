@@ -7,7 +7,9 @@ namespace AuthPermissions.Entity
     {
         [Key] public int Id { get; set; }
 
-        public int? TenantDBId { get; set; }
+        // كل Tenant يجب أن يكون مربوط بقاعدة بيانات (DB shard / catalog)
+        public int TenantDBId { get; set; }
+
         public TenantDatabaseEntity TenantDB { get; set; } = null!;
     }
     public class TenantDatabaseEntity

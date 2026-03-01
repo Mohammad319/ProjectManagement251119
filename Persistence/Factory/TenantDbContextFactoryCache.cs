@@ -42,6 +42,7 @@ public sealed class TenantDbContextFactoryCache(IMemoryCache cache) : ITenantDbC
 
             builder.UseSqlServer(connectionString, sql =>
             {
+                sql.MigrationsAssembly(typeof(ShardingSingleDbContext).Assembly.FullName);
                 sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 sql.EnableRetryOnFailure();
             });

@@ -227,12 +227,76 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
                 body = body is null ? notDeletedExpr : Expression.AndAlso(body, notDeletedExpr);
             }
 
+            // -----------------------------------------------------------------
+            // Hide children of soft-deleted Calculations
+            // -----------------------------------------------------------------
+            // ملاحظة: CalculationEntity وحدها لديها SoftDelete.
+            // لكن لدينا جداول كثيرة تعتمد عليها (Tasks/Resources/Opportunities/...)
+            // وبعض الاستعلامات كانت تعمل فلترة على CalculationId بدون join على Calculations
+            // => كانت ترجع بيانات لتكاليف محذوفة.
+            //
+            // هذا الـ guard يضمن أن أي كيان مرتبط بـ Calculation سيُخفى تلقائياً إذا
+            // كانت Calculation محذوفة (IsDeleted = 1).
+            var calcGuard = BuildNotDeletedCalculationGuard(clrType, parameter);
+            if (calcGuard is not null)
+                body = body is null ? calcGuard : Expression.AndAlso(body, calcGuard);
+
             if (body is null)
                 continue;
 
             var lambda = Expression.Lambda(body, parameter);
             modelBuilder.Entity(clrType).HasQueryFilter(lambda);
         }
+    }
+
+    private static Expression? BuildNotDeletedCalculationGuard(Type clrType, ParameterExpression parameter)
+    {
+        // Direct: entity has navigation property "Calculation"
+        if (clrType == typeof(TaskEntity)
+            || clrType == typeof(OpportunityEntity)
+            || clrType == typeof(TenderEntity)
+            || clrType == typeof(TenderAttributeDefinitionEntity)
+            || clrType == typeof(ApplicationValuesEntity)
+            || clrType == typeof(ShareCalcEntity))
+        {
+            return BuildNotDeletedChain(parameter, "Calculation");
+        }
+
+        // Indirect paths
+        if (clrType == typeof(ResourceEntity))
+            return BuildNotDeletedChain(parameter, "Task", "Calculation");
+
+        if (clrType == typeof(OfferEntity))
+            return BuildNotDeletedChain(parameter, "Resource", "Task", "Calculation");
+
+        if (clrType == typeof(TenderAttributeBindEntity))
+            return BuildNotDeletedChain(parameter, "Tender", "Calculation");
+
+        return null;
+    }
+
+    private static Expression BuildNotDeletedChain(Expression root, params string[] navPath)
+    {
+        Expression current = root;
+        Expression? nullGuard = null;
+
+        foreach (var segment in navPath)
+        {
+            current = Expression.Property(current, segment);
+
+            // navigation properties are reference types
+            if (!current.Type.IsValueType)
+            {
+                var notNull = Expression.NotEqual(current, Expression.Constant(null, current.Type));
+                nullGuard = nullGuard is null ? notNull : Expression.AndAlso(nullGuard, notNull);
+            }
+        }
+
+        // current should now be CalculationEntity
+        var isDeleted = Expression.Property(current, nameof(ISoftDeletable.IsDeleted));
+        var notDeleted = Expression.Equal(isDeleted, Expression.Constant(false));
+
+        return nullGuard is null ? notDeleted : Expression.AndAlso(nullGuard, notDeleted);
     }
 
     #endregion

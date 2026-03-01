@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
 
 namespace TaskResourceBlueprints.Infrastructure.Configurations.Tasks;
 
@@ -8,6 +9,29 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
 {
     public void Configure(EntityTypeBuilder<TaskDefinition> builder)
     {
+        // ---- Column constraints ----
+        builder.Property(x => x.Name)
+            .HasMaxLength(Lengths.DisplayName)
+            .IsRequired();
+
+        builder.Property(x => x.Code)
+            .HasMaxLength(Lengths.Code);
+
+        builder.Property(x => x.UnitCode)
+            .HasMaxLength(Lengths.Code);
+
+        builder.Property(x => x.Responsible)
+            .HasMaxLength(Lengths.DisplayName);
+
+        builder.Property(x => x.AdminNote)
+            .HasMaxLength(Lengths.Description);
+
+        builder.Property(x => x.FieldNotes)
+            .HasMaxLength(Lengths.Description);
+
+        builder.Property(x => x.Status)
+            .HasConversion<int>();
+
         // Task → choice question groups
         builder.HasMany(t => t.QuestionGroups)
                .WithOne(g => g.Task)

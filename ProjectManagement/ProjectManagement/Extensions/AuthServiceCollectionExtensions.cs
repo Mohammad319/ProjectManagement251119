@@ -17,7 +17,12 @@ public static class AuthRegistration
         services.AddScoped<IdentityRedirectManager>();
         services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-        services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContextPool<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString, sql =>
+            {
+                // Keep Identity/Auth migrations close to the context project
+                sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+            }));
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()

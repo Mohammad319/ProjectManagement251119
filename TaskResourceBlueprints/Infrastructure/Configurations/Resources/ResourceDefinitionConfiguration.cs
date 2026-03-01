@@ -16,7 +16,13 @@ public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<Resource
 {
     public void Configure(EntityTypeBuilder<ResourceDefinition> b)
     {
-        // مثال لو عندك Name/Code/Category, تقدر تضيف MaxLength هنا لاحقًا
+        // ---- Column constraints ----
+        b.Property(x => x.Name)
+            .HasMaxLength(Lengths.DisplayName)
+            .IsRequired();
+
+        b.Property(x => x.AdminNote)
+            .HasMaxLength(Lengths.Description);
 
         // CostRoles: List<RoleDTO> as JSON + comparer
         b.Property(e => e.CostRoles)

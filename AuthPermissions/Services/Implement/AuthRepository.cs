@@ -3,12 +3,14 @@ using AuthPermissions.Entity;
 using Domain.Repository.AuthPermissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Models.Account;
 namespace AuthPermissions.Services.Implement
 {
     public class AuthRepository(ApplicationDbContext _appContext, UserManager<ApplicationUser> _userManager,
-        RoleManager<IdentityRole> _roleManager) : IAuthRepository
+        RoleManager<IdentityRole> _roleManager,
+        IConfiguration _configuration) : IAuthRepository
     {
         public static string[] GetRoles()
         {
@@ -51,52 +53,85 @@ namespace AuthPermissions.Services.Implement
 
         private async Task SeedDefaultTenantsAsync()
         {
-            var tenantDatabases = new[]
+            // IMPORTANT:
+            // - لا تضع connection strings داخل الكود.
+            // - هذا seed مخصص للـ DEV فقط ويقرأ من appsettings.Development.json (أو UserSecrets/ENV).
+            var dbSeeds = _configuration
+                .GetSection("TenantSeeds:Databases")
+                .Get<List<TenantDatabaseSeed>>() ?? [];
+
+            var tenantSeeds = _configuration
+                .GetSection("TenantSeeds:Tenants")
+                .Get<List<TenantSeed>>() ?? [];
+
+            if (dbSeeds.Count == 0 || tenantSeeds.Count == 0)
+                return;
+
+            // 1) Upsert TenantDatabases
+            foreach (var seed in dbSeeds)
             {
-                new TenantDatabaseEntity
-                {
-                    Name = "DB1",
-                    ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=db922357028_2;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False;MultipleActiveResultSets=True"
-                },
-                new TenantDatabaseEntity
-                {
-                    Name = "DB2",
-                    ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=db962510648_2;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False;MultipleActiveResultSets=True"
-                }
-            };
-
-            foreach (var tenantDatabase in tenantDatabases)
-            {
-                var exists = await _appContext.TenantDatabase
-                    .AnyAsync(x => x.Name == tenantDatabase.Name || x.ConnectionString == tenantDatabase.ConnectionString);
-
-                if (!exists)
-                    _appContext.TenantDatabase.Add(tenantDatabase);
-            }
-
-            await _appContext.SaveChangesAsync();
-
-            var persistedDatabases = await _appContext.TenantDatabase
-                .Where(x => x.Name == "DB1" || x.Name == "DB2")
-                .ToDictionaryAsync(x => x.Name, x => x.Id);
-
-            var tenants = new[]
-            {
-                new TenantEntity { Name = "Company 1", TenantDBId = persistedDatabases.GetValueOrDefault("DB1") },
-                new TenantEntity { Name = "Company 2", TenantDBId = persistedDatabases.GetValueOrDefault("DB2") }
-            };
-
-            foreach (var tenant in tenants)
-            {
-                if (tenant.TenantDBId is null or <= 0)
+                if (string.IsNullOrWhiteSpace(seed.Name) || string.IsNullOrWhiteSpace(seed.ConnectionString))
                     continue;
 
-                var exists = await _appContext.Tenants.AnyAsync(x => x.Name == tenant.Name);
+                var name = seed.Name.Trim();
+                var cs = seed.ConnectionString.Trim();
+
+                var exists = await _appContext.TenantDatabase
+                    .AnyAsync(x => x.Name == name || x.ConnectionString == cs);
+
                 if (!exists)
-                    _appContext.Tenants.Add(tenant);
+                {
+                    _appContext.TenantDatabase.Add(new TenantDatabaseEntity
+                    {
+                        Name = name,
+                        ConnectionString = cs
+                    });
+                }
             }
 
             await _appContext.SaveChangesAsync();
+
+            // 2) Resolve DB ids
+            var dbMap = await _appContext.TenantDatabase
+                .AsNoTracking()
+                .ToDictionaryAsync(x => x.Name, x => x.Id);
+
+            // 3) Upsert Tenants
+            foreach (var seed in tenantSeeds)
+            {
+                if (string.IsNullOrWhiteSpace(seed.Name) || string.IsNullOrWhiteSpace(seed.Database))
+                    continue;
+
+                var name = seed.Name.Trim();
+                var dbName = seed.Database.Trim();
+
+                if (!dbMap.TryGetValue(dbName, out var dbId) || dbId <= 0)
+                    continue;
+
+                var exists = await _appContext.Tenants.AnyAsync(x => x.Name == name);
+                if (!exists)
+                {
+                    _appContext.Tenants.Add(new TenantEntity
+                    {
+                        Name = name,
+                        TenantDBId = dbId
+                    });
+                }
+            }
+
+            await _appContext.SaveChangesAsync();
+        }
+
+        private sealed class TenantDatabaseSeed
+        {
+            public string Name { get; set; } = string.Empty;
+            public string ConnectionString { get; set; } = string.Empty;
+        }
+
+        private sealed class TenantSeed
+        {
+            public string Name { get; set; } = string.Empty;
+            public string Database { get; set; } = string.Empty;
         }
         public async Task<IEnumerable<UserAuthModel>> GetUsersAsync(int? TenantId, int? DepartmentId)
         {

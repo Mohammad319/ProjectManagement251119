@@ -8,7 +8,9 @@ public static class Lengths
     // أسماء للعرض
     public const int DisplayName = 256;
 
-    // ربما لاحقًا:
-    // public const int Code = 64;
-    // public const int Description = 1024;
+    // أكواد قصيرة
+    public const int Code = 64;
+
+    // نصوص وصفية/ملاحظات
+    public const int Description = 1024;
 }
