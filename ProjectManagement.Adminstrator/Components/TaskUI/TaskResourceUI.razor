@@ -256,6 +256,7 @@
         if (TaskResource is null)
             return;
 
+        TaskResource.CapRole ??= [];
         if (TaskResource.CapRole.Count != 0)
             TaskResource.CapRole.Add(new() { Min = TaskResource.CapRole.Last().Max, Max = TaskResource.CapRole.Last().Max + 10, Value = TaskResource.CapRole.Last().Value + 1 });
         else TaskResource.CapRole.Add(new() { Min = 0, Max = 10, Value = 5 });

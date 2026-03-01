@@ -48,8 +48,8 @@
         StateHasChanged();
     }
 
-    [Parameter] public TaskDefinition TaskPM { get; set; }
-    [Parameter] public List<ResourceCategory> folders  { get; set;}
-    [Parameter] public List<TaskResourceLinkDto> TaskResourceLink { get; set; }
+    [Parameter] public TaskDefinition TaskPM { get; set; } = new();
+    [Parameter] public List<ResourceCategory> folders  { get; set;} = [];
+    [Parameter] public List<TaskResourceLinkDto> TaskResourceLink { get; set; } = [];
 
 }

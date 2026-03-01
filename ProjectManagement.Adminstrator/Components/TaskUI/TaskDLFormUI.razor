@@ -231,7 +231,7 @@
     private List<TaskUnitGroup> Groups = new();
     private List<ResourceCategory> Folders = new();
 
-    private TaskUnitGroup SelectedGroup => Groups.FirstOrDefault(g => g.Id == UpdateForm.UnitGroupId);
+    private TaskUnitGroup? SelectedGroup => Groups.FirstOrDefault(g => g.Id == UpdateForm.UnitGroupId);
     [Inject] private ITaskDefinitionQueryService TaskQueries { get; set; } = default!;
 
 

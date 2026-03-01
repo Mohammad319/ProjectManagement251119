@@ -9,7 +9,7 @@
 
 @if (DetailsPage != null)
 {
-    <DetailsUI Id="@DetailsPage.Id" Callback="() => DetailsPage = null"></DetailsUI>
+    <DetailsUI Id="@DetailsPage.Id" Callback="ClearDetailsPage"></DetailsUI>
 }
 else
 {
@@ -54,4 +54,12 @@ else
                 }
             </tbody>
         </table>
+}
+
+@code {
+    private Task ClearDetailsPage(bool _)
+    {
+        DetailsPage = null;
+        return Task.CompletedTask;
+    }
 }

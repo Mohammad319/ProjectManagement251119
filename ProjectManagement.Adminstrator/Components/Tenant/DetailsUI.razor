@@ -30,11 +30,11 @@
                     <td class="@CsS.Table.Td">@AppControll.Db</td>
                     <td class="@CsS.Table.Td">@TenantPut?.TenantDB?.Name</td>
                 </tr>
-                @if (TenantPut.DateExpire.HasValue)
+                @if (TenantPut?.DateExpire.HasValue == true)
                 {
                     <tr class="@CsS.Table.Tr">
                         <td class="@CsS.Table.Td">@AppControll.expire</td>
-                        <td class="@CsS.Table.Td">@TenantPut.DateExpire.Value.ToString("dd.MM.yyyy")</td>
+                        <td class="@CsS.Table.Td">@TenantPut?.DateExpire?.ToString("dd.MM.yyyy")</td>
                     </tr>
                 }
                 <tr class="@CsS.Table.Tr">
@@ -63,7 +63,7 @@
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@ResourceIdentity.country</td>
-                    <td class="@CsS.Table.Td">@TenantPut.Country</td>
+                    <td class="@CsS.Table.Td">@TenantPut?.Country</td>
                 </tr>
             </tbody>
         </table>
