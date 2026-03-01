@@ -299,7 +299,7 @@ else
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddResourceGroup">Add Group</button>
                 </div>
 
-                @if (Task.ResourceSelectors?.Count > 0)
+                @if (Task?.ResourceSelectors?.Count > 0)
                 {
                     @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
                     {
