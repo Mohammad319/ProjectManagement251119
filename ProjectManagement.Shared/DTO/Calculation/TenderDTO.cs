@@ -6,7 +6,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
     public class TenderAttributeListPostDTO : AttributeNameTenderBase
     {
-        public Dictionary<int, double> TendersValues { get; set; }
+        public Dictionary<int, double> TendersValues { get; set; } = new();
 
     }
     public class TenderAttributeListDTO : AttributeNameTenderBase

@@ -1,26 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ProjectManagement.Shared.Helper.ProjectAppStorage
 {
-    file static class TupleComparer
+    file sealed class UnitRuleKeyComparer : IEqualityComparer<(string From, string To)>
     {
-        public static IEqualityComparer<(T1, T2)> Create<T1, T2>(
-            IEqualityComparer<T1> c1, IEqualityComparer<T2> c2) =>
-            new Impl<T1, T2>(c1, c2);
+        public bool Equals((string From, string To) x, (string From, string To) y) =>
+            StringComparer.OrdinalIgnoreCase.Equals(x.From, y.From)
+            && StringComparer.OrdinalIgnoreCase.Equals(x.To, y.To);
 
-        private sealed class Impl<T1, T2>(IEqualityComparer<T1> c1, IEqualityComparer<T2> c2) : IEqualityComparer<(T1, T2)>
-        {
-            public bool Equals((T1, T2) x, (T1, T2) y) => c1.Equals(x.Item1, y.Item1) && c2.Equals(x.Item2, y.Item2);
-            public int GetHashCode((T1, T2) obj) => System.HashCode.Combine(c1.GetHashCode(obj.Item1), c2.GetHashCode(obj.Item2));
-        }
+        public int GetHashCode((string From, string To) obj) =>
+            HashCode.Combine(
+                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.From),
+                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.To));
     }
 
     public static class UnitRulesCatalog
     {
         public static readonly Dictionary<(string From, string To), UnitRule> Rules =
-            new(TupleComparer.Create(StringComparer.OrdinalIgnoreCase, StringComparer.OrdinalIgnoreCase))
+            new(new UnitRuleKeyComparer())
             {
                 [(Units.CubicMeter, Units.CubicMeter)] = new UnitRule
                 {
@@ -136,10 +136,10 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 [(Units.Meter, Units.Meter)] = new UnitRule { FromUnit = Units.Meter, ToUnit = Units.Meter, Compute = (Q, _) => Q },
             };
 
-        public static bool TryGet(string from, string to, out UnitRule rule) =>
+        public static bool TryGet(string from, string to, [NotNullWhen(true)] out UnitRule? rule) =>
             Rules.TryGetValue((from, to), out rule);
 
-        public static string BuildKey(string u) => (u ?? "").Trim().ToLowerInvariant() switch
+        public static string BuildKey(string? u) => (u ?? "").Trim().ToLowerInvariant() switch
         {
 
             "meter" or "metre" => "m",
