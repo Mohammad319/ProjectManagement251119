@@ -21,7 +21,7 @@ namespace Persistence.Service.CalculationItems.Tender
                 {
                     Id = x.Id,
                     Name = x.Name ?? string.Empty,
-                    Note = x.Note
+                    Note = x.Note ?? string.Empty
                 })
                 .ToListAsync(ct);
         }
