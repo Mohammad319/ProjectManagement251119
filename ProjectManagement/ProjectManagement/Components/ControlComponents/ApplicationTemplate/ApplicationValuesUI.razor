@@ -133,7 +133,7 @@
         foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
         {
             if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double))
-                attr.Value = attr.ValdNumberVM.Default.ToString();
+                attr.Value = attr.ValdNumberVM.Default?.ToString() ?? string.Empty;
             else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Text || attr.AttributeType == AttributeType.TextArea))
                 attr.Value = attr.ValdTextVM.Default;
             else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Select))
@@ -154,7 +154,7 @@
         foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
         {
             if (attr.AttributeType == AttributeType.Bool)
-                attr.Value = attr.ValueBool.ToString();
+                attr.Value = attr.ValueBool?.ToString() ?? bool.FalseString;
             else if (attr.AttributeType == AttributeType.Time || attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime)
                 attr.Value = attr.Date?.ToString() ?? string.Empty;
 
