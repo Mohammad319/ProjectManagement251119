@@ -40,7 +40,10 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
         ConfigureJsonDataConversions(modelBuilder);
         ConfigureOrderSequences(modelBuilder);
 
-        ConfigureGlobalTenantFilter(modelBuilder);
+        // Global Query Filters:
+        // - Tenant isolation (TenantId)
+        // - Soft delete hiding (IsDeleted)
+        ConfigureGlobalQueryFilters(modelBuilder);
     }
 
     #region Configuration
@@ -175,35 +178,59 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
     }
 
     /// <summary>
-    /// تطبيق Global Query Filter لكل الكيانات التي تطبّق IDataKeyFilterReadOnly
-    /// بحيث يتم فلترتها تلقائيًا حسب TenantId الحالي في الـ DbContext.
+    /// Global query filters:
+    /// 1) Tenant isolation: IDataKeyFilterReadOnly => TenantId == this.TenantId
+    /// 2) Soft-delete: ISoftDeletable => IsDeleted == false
+    ///
+    /// ملاحظة مهمة:
+    /// HasQueryFilter يتم استبداله إذا ناديناه أكثر من مرة لنفس الكيان.
+    /// لذلك نجمع الشروط في فلتر واحد لكل كيان.
     /// </summary>
-    private void ConfigureGlobalTenantFilter(ModelBuilder modelBuilder)
+    private void ConfigureGlobalQueryFilters(ModelBuilder modelBuilder)
     {
-        var tenantEntityTypes = modelBuilder.Model.GetEntityTypes()
-            .Where(t => typeof(IDataKeyFilterReadOnly).IsAssignableFrom(t.ClrType))
+        var entityTypes = modelBuilder.Model.GetEntityTypes()
             .Select(t => t.ClrType)
             .Distinct()
             .ToList();
 
-        // نبني Expression لكل نوع بدون MakeGenericMethod/Invoke لتقليل overhead.
-        foreach (var clrType in tenantEntityTypes)
+        foreach (var clrType in entityTypes)
         {
+            Expression? body = null;
             var parameter = Expression.Parameter(clrType, "e");
 
-            // e => EF.Property<int>(e, "TenantId") == this.TenantId
-            var tenantIdProperty = Expression.Call(
-                typeof(EF),
-                nameof(EF.Property),
-                new[] { typeof(int) },
-                parameter,
-                Expression.Constant(nameof(IDataKeyFilterReadOnly.TenantId)));
+            // TenantId filter
+            if (typeof(IDataKeyFilterReadOnly).IsAssignableFrom(clrType))
+            {
+                var tenantIdProperty = Expression.Call(
+                    typeof(EF),
+                    nameof(EF.Property),
+                    new[] { typeof(int) },
+                    parameter,
+                    Expression.Constant(nameof(IDataKeyFilterReadOnly.TenantId)));
 
-            var tenantIdValue = Expression.Property(Expression.Constant(this), nameof(TenantId));
-            var body = Expression.Equal(tenantIdProperty, tenantIdValue);
+                var tenantIdValue = Expression.Property(Expression.Constant(this), nameof(TenantId));
+                var tenantExpr = Expression.Equal(tenantIdProperty, tenantIdValue);
+                body = body is null ? tenantExpr : Expression.AndAlso(body, tenantExpr);
+            }
+
+            // Soft delete filter
+            if (typeof(ISoftDeletable).IsAssignableFrom(clrType))
+            {
+                var isDeletedProperty = Expression.Call(
+                    typeof(EF),
+                    nameof(EF.Property),
+                    new[] { typeof(bool) },
+                    parameter,
+                    Expression.Constant(nameof(ISoftDeletable.IsDeleted)));
+
+                var notDeletedExpr = Expression.Equal(isDeletedProperty, Expression.Constant(false));
+                body = body is null ? notDeletedExpr : Expression.AndAlso(body, notDeletedExpr);
+            }
+
+            if (body is null)
+                continue;
 
             var lambda = Expression.Lambda(body, parameter);
-
             modelBuilder.Entity(clrType).HasQueryFilter(lambda);
         }
     }

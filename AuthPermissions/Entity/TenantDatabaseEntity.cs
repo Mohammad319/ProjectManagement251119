@@ -14,8 +14,12 @@ namespace AuthPermissions.Entity
     {
         public List<TenantEntity> Tenants { get; set; } = [];
         public int Id { get; set; }
+
+        [MaxLength(80)]
         public string Name { get; set; } = string.Empty;
 
+        // Connection strings قد تكون طويلة نسبيًا (خصوصًا مع خصائص SQL Server)
+        [MaxLength(1000)]
         public string ConnectionString { get; set; } = string.Empty;
     }
 }

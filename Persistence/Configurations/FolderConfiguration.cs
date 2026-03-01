@@ -21,6 +21,11 @@ internal sealed class FolderConfiguration : IEntityTypeConfiguration<FolderEntit
         // ---------------- Indexes ----------------
         builder.HasIndex(x => new { x.TenantId, x.DepartmentId, x.IsVisible, x.SortOrder });
 
+        // منع تكرار نفس اسم المجلد داخل نفس القسم والتينانت
+        builder.HasIndex(x => new { x.TenantId, x.DepartmentId, x.Name })
+            .IsUnique()
+            .HasDatabaseName("UX_Folders_Tenant_Department_Name");
+
         // (اختياري) إذا كثير تبحث بالاسم أو تسوي فلترة بالاسم
         // builder.HasIndex(x => x.Name);
 

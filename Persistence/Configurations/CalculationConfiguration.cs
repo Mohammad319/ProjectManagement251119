@@ -10,6 +10,12 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
 {
     public void Configure(EntityTypeBuilder<CalculationEntity> builder)
     {
+        builder.ToTable(tb =>
+        {
+            // DB guardrails (نفس Range الموجودة في الـ DTO/Domain)
+            tb.HasCheckConstraint("CK_Calculations_Tax_Range", "[Tax] >= 0 AND [Tax] <= 100");
+        });
+
         // -------------------------
         // JSON conversions
         // -------------------------
@@ -73,6 +79,11 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         // فلترة كثيرة تكون على ProjectId فقط (بدون DepartmentId)
         builder.HasIndex(x => new { x.TenantId, x.ProjectId })
             .HasDatabaseName("IX_Calculations_Tenant_Project");
+
+        // ✅ يمنع تكرار نفس كود الحساب داخل نفس المشروع والتينانت
+        builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.Code })
+            .IsUnique()
+            .HasDatabaseName("UX_Calculations_Tenant_Project_Code");
 
         // (اختياري) لو عندك فلترة كثيرة مباشرة على StatusId في قائمة الحسابات
         builder.HasIndex(x => new { x.TenantId, x.StatusId })

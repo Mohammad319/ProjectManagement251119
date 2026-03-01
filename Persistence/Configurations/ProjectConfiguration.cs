@@ -68,5 +68,12 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
         // ✅ إضافة مهمة إذا عندك فلترة كثيرة حسب Department
         builder.HasIndex(x => new { x.TenantId, x.DepartmentId })
             .HasDatabaseName("IX_Projects_Tenant_Department");
+
+        // (اختياري لكن مفيد قبل الإطلاق) منع تكرار Code داخل نفس التينانت
+        // Code عندك nullable => لازم فلتر حتى يسمح بأكثر من NULL
+        builder.HasIndex(x => new { x.TenantId, x.Code })
+            .IsUnique()
+            .HasFilter("[Code] IS NOT NULL")
+            .HasDatabaseName("UX_Projects_Tenant_Code");
     }
 }
