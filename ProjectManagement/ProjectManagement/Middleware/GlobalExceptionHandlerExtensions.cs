@@ -27,8 +27,8 @@ public static class GlobalExceptionHandlerExtensions
                 var isApi =
                     context.Request.Path.StartsWithSegments("/api") ||
                     context.Request.Headers.Accept.Any(h =>
-                        h.Contains("application/json", StringComparison.OrdinalIgnoreCase) ||
-                        h.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase));
+                        (!string.IsNullOrEmpty(h) && h.Contains("application/json", StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrEmpty(h) && h.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase)));
 
                 if (isApi)
                 {
