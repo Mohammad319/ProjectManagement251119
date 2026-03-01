@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class db260115 : Migration
+    public partial class Sharding_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -93,9 +93,9 @@ namespace Persistence.Migrations
                     ApplicationId = table.Column<int>(type: "int", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    Data = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Data = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Responsible = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Responsible = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastUpdate = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -191,6 +191,7 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Calculations", x => x.Id);
+                    table.CheckConstraint("CK_Calculations_Tax_Range", "[Tax] >= 0 AND [Tax] <= 100");
                     table.ForeignKey(
                         name: "FK_Calculations_CalcProjectType_TypeId",
                         column: x => x.TypeId,
@@ -1130,6 +1131,12 @@ namespace Persistence.Migrations
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "UX_AccountGroup_Tenant_Name",
+                table: "AccountGroup",
+                columns: new[] { "TenantId", "Name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Accounts_AccountGroupId",
                 table: "Accounts",
                 column: "AccountGroupId");
@@ -1140,6 +1147,11 @@ namespace Persistence.Migrations
                 column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Accounts_Tenant_Name",
+                table: "Accounts",
+                columns: new[] { "TenantId", "Name" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Accounts_TenantId_Id",
                 table: "Accounts",
                 columns: new[] { "TenantId", "Id" });
@@ -1148,6 +1160,12 @@ namespace Persistence.Migrations
                 name: "IX_Accounts_UpdatedBy",
                 table: "Accounts",
                 column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_Accounts_Tenant_Code",
+                table: "Accounts",
+                columns: new[] { "TenantId", "Code" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Applications_DepartmentId",
@@ -1280,6 +1298,12 @@ namespace Persistence.Migrations
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "UX_Calculations_Tenant_Project_Code",
+                table: "Calculations",
+                columns: new[] { "TenantId", "ProjectId", "Code" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CalculationStatus_CreatedBy",
                 table: "CalculationStatus",
                 column: "CreatedBy");
@@ -1340,6 +1364,12 @@ namespace Persistence.Migrations
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
+                name: "UX_Departments_Tenant_Name",
+                table: "Department",
+                columns: new[] { "TenantId", "Name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Folders_CreatedBy",
                 table: "Folders",
                 column: "CreatedBy");
@@ -1363,6 +1393,12 @@ namespace Persistence.Migrations
                 name: "IX_Folders_UpdatedBy",
                 table: "Folders",
                 column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_Folders_Tenant_Department_Name",
+                table: "Folders",
+                columns: new[] { "TenantId", "DepartmentId", "Name" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Offers_CalculationEntityId",
@@ -1548,6 +1584,13 @@ namespace Persistence.Migrations
                 name: "IX_Projects_UpdatedBy",
                 table: "Projects",
                 column: "UpdatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_Projects_Tenant_Code",
+                table: "Projects",
+                columns: new[] { "TenantId", "Code" },
+                unique: true,
+                filter: "[Code] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Resources_AccountId",

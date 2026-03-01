@@ -17,7 +17,7 @@ namespace Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -80,6 +80,7 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Data")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("LastUpdate")
@@ -91,6 +92,7 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Responsible")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -166,9 +168,16 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Accounts_Tenant_Code");
+
                     b.HasIndex("TenantId", "Id");
 
-                    b.ToTable("Accounts");
+                    b.HasIndex("TenantId", "Name")
+                        .HasDatabaseName("IX_Accounts_Tenant_Name");
+
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.AccountGroupEntity", b =>
@@ -213,7 +222,11 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "Id");
 
-                    b.ToTable("AccountGroup");
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AccountGroup_Tenant_Name");
+
+                    b.ToTable("AccountGroup", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.CalculationEntity", b =>
@@ -374,10 +387,17 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "Id", "DepartmentId")
                         .HasDatabaseName("IX_Calculations_Tenant_Id_Department");
 
+                    b.HasIndex("TenantId", "ProjectId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Calculations_Tenant_Project_Code");
+
                     b.HasIndex("TenantId", "ProjectId", "DepartmentId", "SortOrder")
                         .HasDatabaseName("IX_Calculations_Tenant_Project_Department_Order");
 
-                    b.ToTable("Calculations");
+                    b.ToTable("Calculations", t =>
+                        {
+                            t.HasCheckConstraint("CK_Calculations_Tax_Range", "[Tax] >= 0 AND [Tax] <= 100");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.OfferEntity", b =>
@@ -1089,6 +1109,10 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "Id");
 
+                    b.HasIndex("TenantId", "DepartmentId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Folders_Tenant_Department_Name");
+
                     b.HasIndex("TenantId", "DepartmentId", "IsVisible", "SortOrder");
 
                     b.ToTable("Folders");
@@ -1546,6 +1570,11 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Projects_Tenant_Code")
+                        .HasFilter("[Code] IS NOT NULL");
+
                     b.HasIndex("TenantId", "CreatedBy")
                         .HasDatabaseName("IX_Projects_Tenant_CreatedBy");
 
@@ -1855,6 +1884,10 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Departments_Tenant_Name");
 
                     b.ToTable("Department");
                 });
