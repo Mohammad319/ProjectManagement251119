@@ -8,14 +8,14 @@ namespace AuthPermissions.Entity
         [Key] public int Id { get; set; }
 
         public int? TenantDBId { get; set; }
-        public TenantDatabaseEntity TenantDB { get; set; }
+        public TenantDatabaseEntity TenantDB { get; set; } = null!;
     }
     public class TenantDatabaseEntity
     {
         public List<TenantEntity> Tenants { get; set; } = [];
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        public string ConnectionString { get; set; }
+        public string ConnectionString { get; set; } = string.Empty;
     }
 }
