@@ -135,7 +135,6 @@
     private string _toUnit = "m3";
     private bool _isSaving;
     private string? _error;
-    private bool _savedOk;
 
     // كل الوحدات الهدف المتوفرة في الكتالوج
     private readonly List<string> _allTargets = UnitRulesCatalog.Rules.Values
@@ -221,8 +220,6 @@
                 await UnitGroupsService.AddAsync(_model);
             else
                 await UnitGroupsService.UpdateAsync(_model);
-
-            _savedOk = true;
 
             // نبلغ الأب بنجاح الحفظ (مثلاً لتحديث القائمة)
             await Callback.InvokeAsync(true);

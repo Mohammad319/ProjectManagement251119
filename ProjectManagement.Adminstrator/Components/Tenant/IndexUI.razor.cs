@@ -10,8 +10,8 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
     public partial class IndexUI : AppComponentBase
     {
         [Parameter] public EventCallback<bool> Callback { get; set; }
-        List<GetTenantsDTO> Tenants;
-        GetTenantsDTO DetailsPage;
+        List<GetTenantsDTO>? Tenants;
+        GetTenantsDTO? DetailsPage;
         void UpdateForm(GetTenantsDTO model) => Modal.ShowComponent<FormUI>(model.Id == 0 ?
             AppLoc[LocalizerConst.New, AppControll.tenant] : ResourceApp.update,
                 new Dictionary<string, object>
@@ -52,8 +52,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
 
         async System.Threading.Tasks.Task GetTenantsAsync()
         {
-            Tenants = null;
-            Tenants = await ExHandlers.RunCheckTokenAsync(() => sersService.GetAsync());
+            Tenants = await ExHandlers.RunCheckTokenAsync(() => sersService.GetAsync()) ?? new();
         }
         protected async override System.Threading.Tasks.Task OnInitializedAsync()
         {

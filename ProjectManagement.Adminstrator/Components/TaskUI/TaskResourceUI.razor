@@ -87,7 +87,7 @@
                            inputmode="decimal"
                            min="0"
                            class="@CsS.Input.Number"
-                           @bind-value="TaskResource.CapWaste"
+                           @bind-value="TaskResource!.CapWaste"
                            @bind-value:event="oninput" />
                 </div>
 
@@ -196,24 +196,24 @@
                 <h5 class="@CC.Text.H5">@CalcResource.Formulas</h5>
                 <button class="@CsS.Btn.Outline.Primary"
                         type="button"
-                        @onclick="@(() => TaskResource.Formulas.Add(string.Empty))">
+                        @onclick="@(() => (TaskResource!.Formulas ??= new()).Add(string.Empty))">
                     + Add Formula
                 </button>
             </div>
 
-            @if (TaskResource.Formulas is null || TaskResource.Formulas.Count == 0)
+            @if (TaskResource!.Formulas is null || TaskResource!.Formulas.Count == 0)
             {
                 <div class="@CssClasses.Text.Secondary mt-2">No Data</div>
             }
             else
             {
-                @foreach (var eq in TaskResource.Formulas.Select((value, index) => new { value, index }))
+                @foreach (var eq in TaskResource!.Formulas.Select((value, index) => new { value, index }))
                 {
                     <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Top2">
                         <input class="@CsS.Input.Text flex-1"
                                placeholder="Formula"
-                               value="@TaskResource.Formulas[eq.index]"
-                               @oninput="e => TaskResource.Formulas[eq.index] = e.Value?.ToString() ?? string.Empty" />
+                               value="@TaskResource!.Formulas[eq.index]"
+                               @oninput="e => TaskResource!.Formulas[eq.index] = e.Value?.ToString() ?? string.Empty" />
                         <button type="button"
                                 class="@CsS.Btn.Outline.Danger @CssClasses.Btn.Size.XSmall"
                                 title="@ResourceApp.delete"
@@ -256,6 +256,7 @@
         if (TaskResource is null)
             return;
 
+        TaskResource.CapRole ??= new();
         if (TaskResource.CapRole.Count != 0)
             TaskResource.CapRole.Add(new() { Min = TaskResource.CapRole.Last().Max, Max = TaskResource.CapRole.Last().Max + 10, Value = TaskResource.CapRole.Last().Value + 1 });
         else TaskResource.CapRole.Add(new() { Min = 0, Max = 10, Value = 5 });

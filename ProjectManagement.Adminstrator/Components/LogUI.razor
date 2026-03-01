@@ -198,9 +198,9 @@
     async Task GetTaskAsync(bool isNewRequest = false)
     {
         IsLoading = true;
-        var Logs2 = await GetAsync(Filter);
+        var Logs2 = await GetAsync(Filter) ?? new List<LogEntity>();
 
-        if (Logs2 == null || Logs2.Count < Filter.Count)
+        if (Logs2.Count < Filter.Count)
             NectBtnActive = true;
         if (!isNewRequest)
             Logs.AddRange(Logs2);

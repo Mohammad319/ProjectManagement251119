@@ -50,7 +50,7 @@
         bool result = await ExHandlers.RunCheckTokenAsync(() => service.DeleteAsync(model.Id));
         if (result)
         {
-            ActionTypesList.Remove(model);
+            ActionTypesList?.Remove(model);
         }
         MHD.Notifications(ToastType.Delete, result);
 

@@ -46,7 +46,7 @@ Modal.ShowComponent<LocationFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, C
         bool result = await ExHandlers.RunCheckTokenAsync(() => service.DeleteAsync( model.Id));
         if (result)
         {
-            LocationsList.Remove(model);
+            LocationsList?.Remove(model);
         }
         MHD.Notifications(ToastType.Delete, result);
 

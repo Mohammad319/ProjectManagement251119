@@ -20,7 +20,7 @@
                 <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+                @(CalcPercent(CalcResCost.Morgen))%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.MorgenCost" class="@CsS.Input.Number" />
@@ -32,7 +32,7 @@
                 <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+                @(CalcPercent(CalcResCost.Day))%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.DayCost" class="@CsS.Input.Number" />
@@ -109,5 +109,11 @@
     async Task HandleValidSubmit()
     {
         await ResourceService.UpdateAsync(Resource);
+    }
+
+    double CalcPercent(double amount)
+    {
+        var quantity = Resource.Data.Quantity ?? 0;
+        return quantity > 0 ? Math.Round((amount * 100.0) / quantity, 2) : 0;
     }
 }
