@@ -48,6 +48,10 @@
     [Parameter] public bool Elevated { get; set; } = false;
     [Parameter] public bool Compact { get; set; } = false;
 
+    public void SetHeader(RenderFragment? header) => Header = header;
+    public void SetBody(RenderFragment? body) => ChildContent = body;
+    public void SetFooter(RenderFragment? footer) => Footer = footer;
+
     private string BasePadding => Compact ? "px-2 py-1.5" : "px-3 py-2";
 
     private string BuildClasses()

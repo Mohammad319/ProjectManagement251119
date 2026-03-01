@@ -1,4 +1,4 @@
-﻿using ProjectManagement.Shared.Base.AppTenant;
+using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Enums;
 using System;
@@ -58,7 +58,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     }
     public class ResourceEXDto : ResourceDLBase
     {
-        [JsonIgnore] public CalcResCost CalcResCost;
+        [JsonIgnore] public CalcResCost CalcResCost { get; set; } = new();
 
         [JsonIgnore] public List<double> Values { get; set; } = [];
         public ResourceEXDto(){  }

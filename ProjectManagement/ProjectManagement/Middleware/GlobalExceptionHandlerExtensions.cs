@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Extensions;
 
@@ -26,9 +26,9 @@ public static class GlobalExceptionHandlerExtensions
 
                 var isApi =
                     context.Request.Path.StartsWithSegments("/api") ||
-                    context.Request.Headers.Accept.Any(h =>
+                    (context.Request.Headers.Accept?.Any(h =>
                         h.Contains("application/json", StringComparison.OrdinalIgnoreCase) ||
-                        h.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase));
+                        h.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase)) ?? false);
 
                 if (isApi)
                 {
