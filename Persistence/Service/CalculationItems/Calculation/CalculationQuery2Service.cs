@@ -231,12 +231,12 @@ namespace Persistence.Service.CalculationItems.Calculation
                         Id = row.OfferId.Value,
                         BaseCost = row.OfferBaseCost,
                         Cost = row.OfferCost,
-                        Comment = row.OfferComment,
+                        Comment = row.OfferComment ?? string.Empty,
                         Date = row.OfferDate ?? default,
                         OrganisationId = row.OfferOrganisationId ?? 0,
-                        Organisation = row.OfferOrganisation,
-                        SubCategory = row.OfferSubCategory,
-                        Category = row.OfferCategory
+                        Organisation = row.OfferOrganisation ?? string.Empty,
+                        SubCategory = row.OfferSubCategory ?? string.Empty,
+                        Category = row.OfferCategory ?? string.Empty
                     });
                 }
             }

@@ -64,9 +64,9 @@ namespace Persistence.Service.Organisation
             return new OrganisationDetailsDTO
             {
                 Name = x.Name,
-                Category = x.OrganisationCategory?.ParentCategory?.Name,
-                SubCategory = x.OrganisationCategory?.Name,
-                Type = x.OrganisationType?.Name,
+                Category = x.OrganisationCategory?.ParentCategory?.Name ?? string.Empty,
+                SubCategory = x.OrganisationCategory?.Name ?? string.Empty,
+                Type = x.OrganisationType?.Name ?? string.Empty,
                 Address = x.Metadata.Address,
                 Contacts = x.Metadata.Contacts,
                 Email = x.Metadata.Email,

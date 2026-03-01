@@ -67,7 +67,7 @@ namespace Persistence.Service.Project
                 Contracts = contractsTask.Result,
                 Compensations = compensationsTask.Result,
                 Organisation = orgTask.Result,
-                Statuses = statusesTask?.Result
+                Statuses = statusesTask?.Result ?? []
             };
         }
 
