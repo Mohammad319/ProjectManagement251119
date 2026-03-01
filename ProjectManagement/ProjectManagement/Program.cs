@@ -1,4 +1,5 @@
-﻿using ProjectManagement.Configuration;
+﻿using Domain.Repository.AuthPermissions;
+using ProjectManagement.Configuration;
 using ProjectManagement.Extensions;
 using ProjectManagement.SignalR;
 using Serilog;
@@ -21,6 +22,8 @@ builder.Services.AddProjectManagementApp(builder, conn);
 
 var app = builder.Build();
 
+await InitializeDefaultSystemAsync(app);
+
 // Pipeline
 app.UseProjectManagementPipeline();
 
@@ -37,3 +40,20 @@ app.MapRazorComponents<ProjectManagement.Components.App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
+
+static async Task InitializeDefaultSystemAsync(WebApplication app)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var authRepository = scope.ServiceProvider.GetRequiredService<IAuthRepository>();
+
+    var email = configuration.GetSection("User:Email").Get<string>();
+    if (string.IsNullOrWhiteSpace(email))
+        return;
+
+    var password = configuration.GetSection("User:Password").Get<string>();
+    if (string.IsNullOrWhiteSpace(password))
+        password = email;
+
+    await authRepository.Initialize(email, password);
+}
