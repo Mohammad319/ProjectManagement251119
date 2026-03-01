@@ -87,7 +87,7 @@
                            inputmode="decimal"
                            min="0"
                            class="@CsS.Input.Number"
-                           @bind-value="TaskResource.CapWaste"
+                           @bind-value="TaskResource!.CapWaste"
                            @bind-value:event="oninput" />
                 </div>
 
@@ -196,12 +196,12 @@
                 <h5 class="@CC.Text.H5">@CalcResource.Formulas</h5>
                 <button class="@CsS.Btn.Outline.Primary"
                         type="button"
-                        @onclick="@(() => TaskResource.Formulas.Add(string.Empty))">
+                        @onclick="@(() => TaskResource!.Formulas.Add(string.Empty))">
                     + Add Formula
                 </button>
             </div>
 
-            @if (TaskResource.Formulas is null || TaskResource.Formulas.Count == 0)
+            @if (TaskResource!.Formulas is null || TaskResource.Formulas.Count == 0)
             {
                 <div class="@CssClasses.Text.Secondary mt-2">No Data</div>
             }

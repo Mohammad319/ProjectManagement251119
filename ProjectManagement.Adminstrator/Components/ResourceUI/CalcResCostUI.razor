@@ -17,10 +17,10 @@
             <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@CalcResource.cost</div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">Morning</div>
             <div>
-                <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
+                <InputNumber max="@(Resource.Data?.Quantity)" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100.0) / (Resource.Data?.Quantity ?? 1), 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100.0) / (Resource?.Data?.Quantity ?? 1), 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.MorgenCost" class="@CsS.Input.Number" />
@@ -29,10 +29,10 @@
             <!-- Day -->
             <div class="@CC.Text.Sm @CsS.Text.Secondary">Day</div>
             <div>
-                <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
+                <InputNumber max="@(Resource.Data?.Quantity)" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100.0) / (Resource.Data?.Quantity ?? 1), 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100.0) / (Resource?.Data?.Quantity ?? 1), 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.DayCost" class="@CsS.Input.Number" />
