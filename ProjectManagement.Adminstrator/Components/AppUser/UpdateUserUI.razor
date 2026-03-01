@@ -137,19 +137,19 @@
         {
             Form = new UserPostDTO()
                 {
-                    Email = UserForm.Email,
-                    Firstname = UserForm.Firstname,
-                    Lastname = UserForm.Lastname,
+                    Email = UserForm.Email ?? string.Empty,
+                    Firstname = UserForm.Firstname ?? string.Empty,
+                    Lastname = UserForm.Lastname ?? string.Empty,
                     DepartmentId = DepartmentId,
                     LockoutEnabled = UserForm.LockoutEnabled,
-                    Id = UserForm.Id,
+                    Id = UserForm.Id ?? string.Empty,
                     LockoutStart = UserForm.LockoutStart,
                     LockoutEnd = UserForm.LockoutEnd,
-                    PhoneNumber = UserForm.PhoneNumber,
+                    PhoneNumber = UserForm.PhoneNumber ?? string.Empty,
                     PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
                 };
             await IniUserApp();
-            Form.Role = Roles.FirstOrDefault();
+            Form.Role = Roles.FirstOrDefault() ?? PMRolesConst.APP.Manger;
             IsLoading = false;
         }
     }
