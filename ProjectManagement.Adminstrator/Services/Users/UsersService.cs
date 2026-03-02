@@ -5,6 +5,7 @@ using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Persistence.Context;
 using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.DTO.ResourceType;
