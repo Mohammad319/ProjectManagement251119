@@ -69,30 +69,6 @@ Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configurat
 builder.Host.UseSerilog();
 var app = builder.Build();
 
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var applicationDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await applicationDb.Database.MigrateAsync();
-
-    await applicationDb.Database.ExecuteSqlRawAsync("""
-        IF OBJECT_ID(N'[dbo].[TenantDatabases]', N'U') IS NULL
-        BEGIN
-            CREATE TABLE [dbo].[TenantDatabases] (
-                [Id] INT IDENTITY(1,1) NOT NULL,
-                [Name] NVARCHAR(80) NOT NULL,
-                [ConnectionString] NVARCHAR(1000) NOT NULL,
-                CONSTRAINT [PK_TenantDatabases] PRIMARY KEY ([Id])
-            );
-
-            CREATE UNIQUE INDEX [IX_TenantDatabases_Name]
-                ON [dbo].[TenantDatabases] ([Name]);
-
-            CREATE UNIQUE INDEX [IX_TenantDatabases_ConnectionString]
-                ON [dbo].[TenantDatabases] ([ConnectionString]);
-        END
-        """);
-}
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
