@@ -11,7 +11,7 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {
-        var conn = Environment.GetEnvironmentVariable("CATALOG_CONN")
+        var conn = Environment.GetEnvironmentVariable("AuthPermissions")
                    ?? @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ProjectManagement_Catalog;Integrated Security=True;MultipleActiveResultSets=True";
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
