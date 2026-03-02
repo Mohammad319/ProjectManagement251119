@@ -339,24 +339,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
         }
         public async Task<bool> RegisterAsync(UserPostDTO request, int? tenantId)
         {
-            int? userid = null;
-            UserEntity? ue = null;
-            if (tenantId.HasValue)
-            {
-                ue = new UserEntity()
-                {
-                    DepartmentId = request.DepartmentId,
-                    FirstName = request.Firstname,
-                    LastName = request.Lastname,
-                    TenantId = tenantId.Value,
-                    UserName = request.Email,
-                    Email = request.Email,
-                };
-                var dbtenant = await CreateDbContext(tenantId.Value);
-                dbtenant.User.Add(ue);
-                await dbtenant.SaveChangesAsync();
-            }
-            var response = new RegisterDto.Response();
+            UserEntity? tenantUser = null;
             var userEntity = new ApplicationUser()
             {
                 Email = request.Email,
@@ -365,31 +348,72 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 UserName = request.Email,
                 TenantId = tenantId,
                 DepartmentId = null,
-                UserId = userid,
                 LockoutEnabled = request.LockoutEnabled,
                 LockoutStart = request.LockoutStart,
                 LockoutEnd = request.LockoutEnd,
                 PhoneNumber = request.PhoneNumber,
                 PhoneNumberConfirmed = request.PhoneNumberConfirmed,
             };
-            if (tenantId.HasValue && ue != null && ue.Id == 0)
+
+            try
+            {
+                if (tenantId.HasValue)
+                {
+                    tenantUser = new UserEntity()
+                    {
+                        DepartmentId = request.DepartmentId,
+                        FirstName = request.Firstname,
+                        LastName = request.Lastname,
+                        TenantId = tenantId.Value,
+                        UserName = request.Email,
+                        Email = request.Email,
+                    };
+
+                    var dbtenant = await CreateDbContext(tenantId.Value);
+                    dbtenant.User.Add(tenantUser);
+                    await dbtenant.SaveChangesAsync();
+
+                    if (tenantUser.Id == 0)
+                        return false;
+
+                    userEntity.UserId = tenantUser.Id;
+                }
+            }
+
+            catch (RetryLimitExceededException)
             {
                 return false;
             }
+
             var result = await _userManager.CreateAsync(userEntity, request.Email);
             if (result.Succeeded)
             {
-                if (tenantId.HasValue && ue != null)
+                if (tenantId.HasValue && tenantUser != null)
                 {
-                    ue.ExternalAuthId = userEntity.Id;
-                    var dbtenant = await CreateDbContext(tenantId.Value);
-                    dbtenant.User.Update(ue);
-                    await dbtenant.SaveChangesAsync();
+                    try
+                    {
+                        tenantUser.ExternalAuthId = userEntity.Id;
+                        var dbtenant = await CreateDbContext(tenantId.Value);
+                        dbtenant.User.Update(tenantUser);
+                        await dbtenant.SaveChangesAsync();
+                    }
+                    catch (RetryLimitExceededException)
+                    {
+                        await _userManager.DeleteAsync(userEntity);
+                        return false;
+                    }
                 }
+
                 await _userManager.AddToRoleAsync(userEntity, request.Role);
-                response.IsSuccessfulRegistration = true;
                 await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
             }
+            else if (tenantId.HasValue && tenantUser != null)
+            {
+                var dbtenant = await CreateDbContext(tenantId.Value);
+                dbtenant.User.Remove(tenantUser);
+                await dbtenant.SaveChangesAsync();
+            }
+
             return result.Succeeded;
         }
     }
