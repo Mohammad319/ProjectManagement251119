@@ -25,7 +25,7 @@ namespace ProjectManagement.Shared.Base.Users
         [MaxLength(FieldLengths.Email, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Email { get; set; } = string.Empty;
 
-        [Url(ErrorMessage = ErrorsMessages.URL), DataType(DataType.Url, ErrorMessage = ErrorsMessages.URL)]
+        [Url(ErrorMessage = ErrorsMessages.URL)]
         [MaxLength(200, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Website { get; set; } = string.Empty;
 
