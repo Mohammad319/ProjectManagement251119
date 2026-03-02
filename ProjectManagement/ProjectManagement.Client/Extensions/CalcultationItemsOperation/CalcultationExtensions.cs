@@ -41,7 +41,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 decimal apriceTot = 0m;
 
                 // nullable totals
-                decimal totalCo2 = 0m;
+                double totalCo2 = 0d;
                 bool hasCo2 = false;
 
                 decimal baseCost = 0m;
@@ -148,7 +148,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 sum += s;
                 weighted += s * f.Earnings;
             }
-            calc.ProfitDecision = sum != 0m ? (weighted / sum) : 0m;
+            calc.ProfitDecision = sum != 0m ? (double)(weighted / sum) : 0d;
 
             ComputeTaskAggregates(calc);
         }
@@ -180,7 +180,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 return;
 
             // نفس معادلتك
-            decimal e = ((calc.ProfitDecision * calc.Sum) - lockedSumWeighted) / unlockedSum;
+            double e = (double)(((decimal)calc.ProfitDecision * calc.Sum - lockedSumWeighted) / unlockedSum);
 
             for (int i = 0; i < factors.Count; i++)
             {
@@ -424,7 +424,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         // =========================================================
         // Task variables (DFS) - بدون LINQ
         // =========================================================
-        private static void CalcTaskVariablesRecursive(TaskListMVVM task, Dictionary<string, QuanityListDTO> qIndex, decimal? parentQuantity)
+        private static void CalcTaskVariablesRecursive(TaskListMVVM task, Dictionary<string, QuanityListDTO> qIndex, double? parentQuantity)
         {
             var meta = task.Metadata;
             if (meta is null) return;
@@ -442,7 +442,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
             else
             {
-                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0m);
+                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0d);
             }
 
             if (task.Tasks is null || task.Tasks.Count == 0)
@@ -459,8 +459,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         private static void CalcResourceVariables(
             ResourceListMVVM resource,
             Dictionary<string, QuanityListDTO> qIndex,
-            decimal? taskQuantity,
-            decimal? cap)
+            double? taskQuantity,
+            double? cap)
         {
             if (resource.Data is null)
                 throw new InvalidOperationException("resource.Data must not be null.");
@@ -470,7 +470,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (resource.HasCap && cap.HasValue)
                 data.CapWaste = cap.Value;
 
-            var effectiveTaskQuantity = taskQuantity ?? 0m;
+            var effectiveTaskQuantity = taskQuantity ?? 0d;
 
             if (!string.IsNullOrEmpty(resource.QuantityParam))
             {
@@ -489,7 +489,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var capWaste = data.CapWaste;
 
                 if (resource.HasWast && capWaste != 0)
-                    data.Quantity = baseCalc * (1 + capWaste / 100);
+                    data.Quantity = baseCalc * (1d + capWaste / 100d);
                 else if (resource.HasCap && capWaste != 0)
                     data.Quantity = baseCalc / capWaste;
                 else
