@@ -11,7 +11,7 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    [Migration("20260302082849_Blueprints_1")]
+    [Migration("20260302231620_Blueprints_1")]
     partial class Blueprints_1
     {
         /// <inheritdoc />

@@ -189,7 +189,7 @@
         }
         catch (Exception)
         {
-            MHD.MessageOk(ResourceApp.save, "Unexpected error while saving user.", MhdState.Error);
+            MHD.MessageOk(ResourceApp.save, "Unexpected error while saving user.", MhdState.Danger);
         }
         finally
         {
