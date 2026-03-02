@@ -23,6 +23,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         [Parameter] public int Id { get; set; }
         TenantEntity? TenantPut;
         List<ApplicationUser>? Users;
+        bool IsAddingCompanyInfo;
         [Parameter] public EventCallback<bool> Callback { get; set; }
         void UserRoleDialog(ApplicationUser user) =>
     Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Email ?? string.Empty], new Dictionary<string, object>
@@ -57,6 +58,23 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             Users = await ExHandlers.RunCheckTokenAsync(() => UsersService.GetUsersAsync(Id));
             StateHasChanged();
         }
+        async Task AddBasicCompanyInfoAsync()
+        {
+            if (Id <= 0 || IsAddingCompanyInfo) return;
+
+            IsAddingCompanyInfo = true;
+            try
+            {
+                var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id));
+                MHD.MessageOk(ResourceApp.add, result ? "Basic company info added successfully." : "No data was added (already exists).", result ? MhdState.Success : MhdState.Info);
+            }
+            finally
+            {
+                IsAddingCompanyInfo = false;
+                StateHasChanged();
+            }
+        }
+
         string DB = string.Empty;
         protected async override Task OnInitializedAsync()
         {

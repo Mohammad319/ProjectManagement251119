@@ -1,10 +1,16 @@
 ﻿using AuthPermissions.Entity;
+using Domain.Entities.Calculation;
+using Domain.Entities.Project;
+using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
+using ProjectManagement.Shared.Base.Users;
+using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.DTO.Identity;
 using ProjectManagement.Shared.DTO.Tenant;
+using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Models.Account;
 
 namespace ProjectManagement.Adminstrator.Services.Users
@@ -154,6 +160,82 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
 
             return false;
+        }
+
+        public async Task<bool> AddBasicCompanyInfoAsync(int tenantId)
+        {
+            var dataAccess = await CreateDbContext(tenantId);
+
+            if (!await dataAccess.ResourceStatus.AnyAsync())
+            {
+                dataAccess.ResourceStatus.AddRange(
+                    new StatusResourcesEntity("Active", "#16a34a", 10, true),
+                    new StatusResourcesEntity("Inactive", "#dc2626", 20, true));
+            }
+
+            if (!await dataAccess.TaskStatus.AnyAsync())
+            {
+                dataAccess.TaskStatus.AddRange(
+                    new TaskStatusEntity("Planned", "#2563eb", 10, true),
+                    new TaskStatusEntity("In Progress", "#f59e0b", 20, true),
+                    new TaskStatusEntity("Done", "#16a34a", 30, true));
+            }
+
+            if (!await dataAccess.Department.AnyAsync())
+            {
+                dataAccess.Department.AddRange(
+                    DepartmentEntity.Create(new DepartmentBase { Name = "Management", Description = "Default management department" }),
+                    DepartmentEntity.Create(new DepartmentBase { Name = "Engineering", Description = "Default engineering department" }));
+            }
+
+            if (!await dataAccess.ResourceTypes.AnyAsync())
+            {
+                var order = 10;
+                foreach (var type in Enum.GetValues<ResourceTypesEnum>())
+                {
+                    dataAccess.ResourceTypes.Add(ResourceTypeEntity.Create(new PostResourceTypeDTO
+                    {
+                        Name = type.ToString(),
+                        IsVisible = true,
+                        Type = type,
+                    }, order));
+                    order += 10;
+                }
+            }
+
+            if (!await dataAccess.Compensations.AnyAsync())
+            {
+                dataAccess.Compensations.Add(new CompensationEntity("Fixed price", "#8b5cf6", 10, true));
+            }
+
+            if (!await dataAccess.Contracts.AnyAsync())
+            {
+                dataAccess.Contracts.Add(new ContractEntity("Standard contract", "#0ea5e9", 10, true));
+            }
+
+            if (!await dataAccess.ProcurementMethod.AnyAsync())
+            {
+                var procurementMethod = new ProcurementMethodEntity();
+                procurementMethod.Update("Direct purchase", "#f97316", 10, true);
+                dataAccess.ProcurementMethod.Add(procurementMethod);
+            }
+
+            if (!await dataAccess.CalculationStatus.AnyAsync())
+            {
+                var status = new StatusEntity();
+                status.Update("Open", "#22c55e", 10, true);
+                dataAccess.CalculationStatus.Add(status);
+            }
+
+            if (!await dataAccess.CalcProjectType.AnyAsync())
+            {
+                var type = new TypeEntity();
+                type.Update("General", "#3b82f6", 10, true);
+                dataAccess.CalcProjectType.Add(type);
+            }
+
+            var changed = await dataAccess.SaveChangesAsync();
+            return changed > 0;
         }
 
         public async Task<bool> UpdateUserAsync(UserPostDTO user, int? tentnid)

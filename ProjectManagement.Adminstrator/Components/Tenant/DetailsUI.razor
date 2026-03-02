@@ -74,6 +74,9 @@
         <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom2" @onclick="(e) => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
             New User
         </button>
+        <button class="@CsS.Btn.Outline.Primary CsS.Spacing.M.Bottom2" @onclick="AddBasicCompanyInfoAsync" disabled="@IsAddingCompanyInfo">
+            @(IsAddingCompanyInfo ? "Adding..." : "Add Basic Company Info")
+        </button>
     </AuthorizeView>
 
     @if (Users == null || !Users.Any())
