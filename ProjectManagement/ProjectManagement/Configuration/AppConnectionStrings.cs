@@ -6,7 +6,7 @@ public static class AppConnectionStringsReader
 {
     public static AppConnectionStrings Read(IConfiguration config)
     {
-        var TaskResourceBlueprintsConnection = config.GetConnectionString("TaskResourceBlueprintsConnection")
+        var TaskResourceBlueprintsConnection = config.GetConnectionString("BlueprintsDB")
             ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsConnection' not found.");
 
         var defaultConnection = config.GetConnectionString("DefaultConnection")

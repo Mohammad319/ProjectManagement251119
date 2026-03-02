@@ -18,7 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-var TaskResourceBlueprintsDb = builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var TaskResourceBlueprintsDb = builder.Configuration.GetConnectionString("BlueprintsDB") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddTaskResourceBlueprints();
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
     options.UseSqlServer(TaskResourceBlueprintsDb, sqlOptions =>
