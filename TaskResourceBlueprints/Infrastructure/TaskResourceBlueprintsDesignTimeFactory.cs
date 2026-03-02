@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace TaskResourceBlueprints.Infrastructure;
 
@@ -12,6 +13,7 @@ public sealed class TaskResourceBlueprintsDesignTimeFactory : IDesignTimeDbConte
     public TaskResourceBlueprintsContext CreateDbContext(string[] args)
     {
         var conn = Environment.GetEnvironmentVariable("BLUEPRINTS_CONN")
+                   ?? LoadConnectionStringFromConfiguration()
                    ?? @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=TaskResourceBlueprints;Integrated Security=True;MultipleActiveResultSets=True";
 
         var options = new DbContextOptionsBuilder<TaskResourceBlueprintsContext>()
@@ -19,5 +21,18 @@ public sealed class TaskResourceBlueprintsDesignTimeFactory : IDesignTimeDbConte
             .Options;
 
         return new TaskResourceBlueprintsContext(options);
+    }
+
+    private static string? LoadConnectionStringFromConfiguration()
+    {
+        var currentDirectory = Directory.GetCurrentDirectory();
+
+        var config = new ConfigurationBuilder()
+            .SetBasePath(currentDirectory)
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .Build();
+
+        return config.GetConnectionString("BlueprintsDB");
     }
 }
