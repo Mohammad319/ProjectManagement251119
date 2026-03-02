@@ -1,15 +1,25 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjectManagement.Shared.Helper
 {
-    public sealed class OptionalUrlAttribute : UrlAttribute
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
+    public sealed class OptionalUrlAttribute : ValidationAttribute
     {
+        private static readonly UrlAttribute UrlValidator = new();
+
         public override bool IsValid(object? value)
         {
-            if (value is string text && string.IsNullOrWhiteSpace(text))
+            if (value is null)
                 return true;
 
-            return base.IsValid(value);
+            if (value is not string text)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(text))
+                return true;
+
+            return UrlValidator.IsValid(text);
         }
     }
 }
