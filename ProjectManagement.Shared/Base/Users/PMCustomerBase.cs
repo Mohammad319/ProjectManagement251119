@@ -1,4 +1,5 @@
 ﻿using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.Helper;
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -10,11 +11,11 @@ namespace ProjectManagement.Shared.Base.Users
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
 
-        [Phone(ErrorMessageResourceName = ErrorsMessages.Phone, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [Phone(ErrorMessageResourceName = nameof(Resource.ResLocalize.Phone), ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(FieldLengths.Phone, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Phone { get; set; } = string.Empty;
 
-        [Phone(ErrorMessageResourceName = ErrorsMessages.Phone, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [Phone(ErrorMessageResourceName = nameof(Resource.ResLocalize.Phone), ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(FieldLengths.Phone, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Mobile { get; set; } = string.Empty;
 
@@ -25,7 +26,7 @@ namespace ProjectManagement.Shared.Base.Users
         [MaxLength(FieldLengths.Email, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Email { get; set; } = string.Empty;
 
-        [Url(ErrorMessage = ErrorsMessages.URL)]
+        [OptionalUrl(ErrorMessageResourceName = ErrorsMessages.URL, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(200, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Website { get; set; } = string.Empty;
 

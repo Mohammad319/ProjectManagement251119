@@ -9,8 +9,8 @@
 
         public const string EmailAddress = "EmailAddress";
         public const string URL = "URL";
-        public const string Phone = "The Phone field is required";
-        public const string PostalCode = "The PostalCode field is required";
-        public const string PasswordNotMatch = "The new password and the confirmation password do not match.";
+        public const string Phone = "Phone";
+        public const string PostalCode = "PostalCode";
+        public const string PasswordNotMatch = "PasswordNotMatch";
     }
 }

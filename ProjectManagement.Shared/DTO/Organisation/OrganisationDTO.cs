@@ -3,13 +3,14 @@ using ProjectManagement.Shared.Base.Organisation;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using ProjectManagement.Shared.DTO.App;
+using ProjectManagement.Shared.Helper;
 using System;
 
 namespace ProjectManagement.Shared.DTO.Organisation
 {
     public class OrganisationData
     {
-        [Url(ErrorMessageResourceName = ErrorsMessages.URL, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [OptionalUrl(ErrorMessageResourceName = ErrorsMessages.URL, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string URL { get; set; } = string.Empty;
         [EmailAddress(ErrorMessageResourceName = ErrorsMessages.EmailAddress, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
@@ -54,7 +55,7 @@ namespace ProjectManagement.Shared.DTO.Organisation
     }
     public class OrganisationBaseData : OrganisationBase
     {
-        [Url(ErrorMessageResourceName = ErrorsMessages.URL, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [OptionalUrl(ErrorMessageResourceName = ErrorsMessages.URL, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(250, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string URL { get; set; } = string.Empty;
         [EmailAddress(ErrorMessageResourceName = ErrorsMessages.EmailAddress, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
