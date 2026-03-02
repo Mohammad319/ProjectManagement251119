@@ -10,11 +10,11 @@ namespace ProjectManagement.Shared.Base.Users
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
 
-        [Phone(ErrorMessageResourceName = ErrorsMessages.Phone, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [Phone(ErrorMessageResourceName = nameof(Resource.ResLocalize.Phone), ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(FieldLengths.Phone, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Phone { get; set; } = string.Empty;
 
-        [Phone(ErrorMessageResourceName = ErrorsMessages.Phone, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [Phone(ErrorMessageResourceName = nameof(Resource.ResLocalize.Phone), ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(FieldLengths.Phone, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Mobile { get; set; } = string.Empty;
 
