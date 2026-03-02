@@ -378,7 +378,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var key = new FactorKey(f.ResId, f.SortId, f.ResourceType);
                 relatedMap.TryGetValue(key, out var relatedOH);
 
-                f.Factor = ((f.NetCostTotaly * (1m + ((decimal)f.Earnings / 100m))) + relatedOH + ohShare) / f.NetCostTotaly;
+                f.Factor = decimal.ToDouble(((f.NetCostTotaly * (1m + ((decimal)f.Earnings / 100m))) + relatedOH + ohShare) / f.NetCostTotaly);
             }
         }
 
@@ -442,7 +442,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
             else
             {
-                meta.Quantity = (double)(meta.ChangeFactor1 * meta.ChangeFactor2 * (decimal)(parentQuantity ?? 0d));
+                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0d);
             }
 
             if (task.Tasks is null || task.Tasks.Count == 0)
