@@ -427,6 +427,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         await _userManager.DeleteAsync(userEntity);
                         return false;
                     }
+                }
 
                 await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
             }
