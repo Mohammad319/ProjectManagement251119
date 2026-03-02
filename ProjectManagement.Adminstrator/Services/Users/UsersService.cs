@@ -405,10 +405,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
 
             catch (RetryLimitExceededException)
-            {
-                return false;
-            }
-            catch (DbUpdateException)
+
             {
                 return false;
             }
@@ -430,25 +427,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         await _userManager.DeleteAsync(userEntity);
                         return false;
                     }
-                    catch (DbUpdateException)
-                    {
-                        await _userManager.DeleteAsync(userEntity);
-                        return false;
-                    }
-                }
-
-                var addRoleResult = await _userManager.AddToRoleAsync(userEntity, request.Role);
-                if (!addRoleResult.Succeeded)
-                {
-                    await _userManager.DeleteAsync(userEntity);
-                    if (tenantId.HasValue && tenantUser != null)
-                    {
-                        var dbtenant = await CreateDbContext(tenantId.Value);
-                        dbtenant.User.Remove(tenantUser);
-                        await dbtenant.SaveChangesAsync();
-                    }
-                    return false;
-                }
 
                 await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
             }
