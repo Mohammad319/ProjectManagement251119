@@ -246,7 +246,7 @@
         var totalCost = others.Sum(r => r?.Data.Cost ?? 0);
         var co2 = others.Sum(r => r?.Data.CO2 ?? 0);
         var totalStorageCost = others.Sum(r => r?.CostStorageValue ?? 0);
-        var totalUserCost = others.Sum(r => r?.CostUserValue ?? (decimal?)(r?.CostStorageValue ?? 0));
+        var totalUserCost = others.Sum(r => r?.CostUserValue ?? (double?)(r?.CostStorageValue ?? 0));
 
         // إيجاد/إنشاء الملخص في Resources
         var summary = Task.BaseResources.FirstOrDefault(IsSummary);

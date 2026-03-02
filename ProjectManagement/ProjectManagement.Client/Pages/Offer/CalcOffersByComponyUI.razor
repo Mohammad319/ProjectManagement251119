@@ -226,10 +226,10 @@
     {
         public List<ResourceListMVVM> Resources { get; set; } = new();
         public string? Key { get; set; }
-        public List<decimal> NetQ { get; set; } = new();
+        public List<double> NetQ { get; set; } = new();
         public List<int> IDs { get; set; } = new();
 
-        public decimal Min => NetQ.Min();
+        public double Min => NetQ.Min();
 
         public void OrderByMin()
         {
@@ -313,7 +313,7 @@
         }
     }
 
-    private string Format(decimal? x) => Template.Format(x ?? 0m);
+    private string Format(double? x) => Template.Format(x ?? 0d);
 
     async Task SetDefaultAsync(ResourceListMVVM res, ListOfferMVVM offer)
     {

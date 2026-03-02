@@ -35,7 +35,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         }
         void TenderExcelTaxChanged(ChangeEventArgs e)
         {
-            if (!decimal.TryParse(e.Value?.ToString(), out var tenderExcelTax)) return;
+            if (!double.TryParse(e.Value?.ToString(), out var tenderExcelTax)) return;
             Calculation.TenderExcelTax = tenderExcelTax;
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
             ProfitDecisionFun();
@@ -45,7 +45,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         }
         void TenderInclTaxChanged(ChangeEventArgs e)
         {
-            if (!decimal.TryParse(e.Value?.ToString(), out var tenderInclTax)) return;
+            if (!double.TryParse(e.Value?.ToString(), out var tenderInclTax)) return;
             Calculation.TenderInclTax = tenderInclTax;
             Calculation.TenderExcelTax = Calculation.TenderInclTax / (1 + (Calculation.Tax / 100));
             ProfitDecisionFun();
@@ -53,7 +53,9 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             EarningOnChange = true;
             StateHasChanged();
         }
+        private string Format(double x) => Template.Format(x);
         private string Format(decimal x) => Template.Format(x);
+        private string Format(decimal? x) => Template.Format(x ?? 0m);
         public string SelectedFactor(string res)
         {
             var res45 = Calculation.Factors.FirstOrDefault(x => x.ResId + "," + x.SortId == res);
@@ -72,7 +74,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             ProfitDecisionFun();
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
         }
-        void ChangeProfit(decimal e)
+        void ChangeProfit(double e)
         {
             EarningOnChange = true;
             Calculation.ProfitDecision = e;
@@ -85,7 +87,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         //Calculation.TenderExcelTax = ((Calculation.ProfitDecision / 100) + 1) * Calculation.Sum;
         void ProfitDecisionFun()
         {
-            Calculation.ProfitDecision = ((Calculation.TenderExcelTax / Calculation.Sum) - 1) * 100;
+            Calculation.ProfitDecision = ((Calculation.TenderExcelTax / (double)Calculation.Sum) - 1d) * 100d;
         }
         public void Dispose()
         {

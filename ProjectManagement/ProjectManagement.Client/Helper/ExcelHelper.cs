@@ -62,7 +62,7 @@ namespace ProjectManagement.Client.Helper
                     else
                     {
                         task.Metadata.QuantityParam = ConstValues.FixedQ;
-                        _ = decimal.TryParse(quantityStr, out decimal quantity);
+                        _ = double.TryParse(quantityStr, out double quantity);
                         _ = decimal.TryParse(priceStr, out decimal price);
                         task.Metadata.Quantity = quantity;
                         task.Metadata.PriceSubDB = price;
