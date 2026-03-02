@@ -6,12 +6,14 @@ public static class AppConnectionStringsReader
 {
     public static AppConnectionStrings Read(IConfiguration config)
     {
-        var TaskResourceBlueprintsConnection = config.GetConnectionString("BlueprintsDB")
-            ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsConnection' not found.");
+        var taskResourceBlueprintsConnection = config.GetConnectionString("BlueprintsDB")
+            ?? throw new InvalidOperationException("Connection string 'BlueprintsDB' not found.");
 
-        var defaultConnection = config.GetConnectionString("AuthPermissions")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+        var defaultConnection = config.GetConnectionString("AuthPermissionsDB")
+            ?? config.GetConnectionString("AuthPermissions")
+            ?? config.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'AuthPermissionsDB' not found.");
 
-        return new AppConnectionStrings(defaultConnection, TaskResourceBlueprintsConnection);
+        return new AppConnectionStrings(defaultConnection, taskResourceBlueprintsConnection);
     }
 }
