@@ -16,7 +16,7 @@
 <div class="@CsS.Modal.Body">
     @if (Put != null)
     {
-        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm" class="">
+        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" FormName="tenantForm" id="tenantForm" class="">
             <DataAnnotationsValidator />
             <ValidationSummary class="@CsS.Text.Danger" />
             <div class="@CsS.Grid.Col.MD4">
