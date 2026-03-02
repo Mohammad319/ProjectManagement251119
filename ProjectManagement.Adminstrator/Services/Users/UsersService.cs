@@ -37,7 +37,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
             using var _appContext = ContextFactory.CreateDbContext();
             TenantEntity t = new();
             t.Name = tenant.Name;
-            t.TenantDBId = tenant.TenantDBId;
             t.Street = tenant.Street;
             t.City = tenant.City;
             t.Country = tenant.Country;
@@ -64,7 +63,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
             if (t == null) { return false; }
 
             t.Name = tenant.Name;
-            t.TenantDBId = tenant.TenantDBId;
             t.Street = tenant.Street;
             t.City = tenant.City;
             t.Country = tenant.Country;
