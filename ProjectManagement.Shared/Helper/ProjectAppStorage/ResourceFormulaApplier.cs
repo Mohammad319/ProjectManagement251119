@@ -35,8 +35,9 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
             if (row is null || row.Formulas is null || row.Formulas.Count == 0) return;
             var vars = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase)
             {
-                [BaseCost] = row.Data.BaseCost ?? 0,
-                [Cost] = row.Data.Cost,
+                // Money fields are stored as decimal in ResourceMetadata; the formula engine works in double.
+                [BaseCost] = row.Data.BaseCost.HasValue ? (double)row.Data.BaseCost.Value : 0d,
+                [Cost] = (double)row.Data.Cost,
                 [Quantity] = row.Data.Quantity ?? 0,
                 [Cap] = row.Data.CapWaste,
                 [Waste] = row.Data.CapWaste,
@@ -73,8 +74,8 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 }
             }
 
-            row.Data.BaseCost = vars.TryGetValue(BaseCost, out var b) ? b : row.Data.BaseCost;
-            row.Data.Cost = vars.TryGetValue(Cost, out var c) ? c : row.Data.Cost;
+            row.Data.BaseCost = vars.TryGetValue(BaseCost, out var b) ? (decimal)b : row.Data.BaseCost;
+            row.Data.Cost = vars.TryGetValue(Cost, out var c) ? (decimal)c : row.Data.Cost;
             row.Data.Quantity = vars.TryGetValue(Quantity, out var q) ? q : row.Data.Quantity;
             row.Data.CapWaste = vars.TryGetValue(Cap, out var w) ? w : row.Data.CapWaste;
             row.Data.CapWaste = vars.TryGetValue(Waste, out var cap) ? cap : row.Data.CapWaste;
@@ -86,8 +87,8 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
         {
             switch (name.ToLowerInvariant())
             {
-                case BaseCost: row.Data.BaseCost = value; vars[BaseCost] = value; break;
-                case Cost: row.Data.Cost = value; vars[Cost] = value; break;
+                case BaseCost: row.Data.BaseCost = (decimal)value; vars[BaseCost] = value; break;
+                case Cost: row.Data.Cost = (decimal)value; vars[Cost] = value; break;
                 case Quantity: row.Data.Quantity = value; vars[Quantity] = value; break;
                 case Waste: row.Data.CapWaste = value; vars[Waste] = value; break;
                 case Cap: row.Data.CapWaste = value; vars[Cap] = value; break;

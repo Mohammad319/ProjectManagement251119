@@ -60,7 +60,8 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                 foreach (var item in res.CostRole)
                     if (item.Min <= res.Data.Quantity.Value && item.Max >= res.Data.Quantity.Value && item.Value.HasValue)
                     {
-                        res.Data.Cost = item.Value.Value;
+                        // ResourceMetadata.Cost is decimal, while RoleDTO.Value is double
+                        res.Data.Cost = (decimal)item.Value.Value;
                         break;
                     }
         }

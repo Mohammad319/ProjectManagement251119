@@ -65,47 +65,47 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public bool IsOH => Metadata.IsOH;
         public bool PriceSubInPrecent => Metadata.PriceSubInPrecent;
-        public double? PriceSubDB => Metadata.PriceSubDB;
-        public double? PriceSubTaxDB => Metadata.PriceSubTaxDB;
-        public double? MinPrice => Metadata.MinPrice;
-        public double? CeilingPrice => Metadata.CeilingPrice;
+        public decimal? PriceSubDB => Metadata.PriceSubDB;
+        public decimal? PriceSubTaxDB => Metadata.PriceSubTaxDB;
+        public decimal? MinPrice => Metadata.MinPrice;
+        public decimal? CeilingPrice => Metadata.CeilingPrice;
 
         // =========================
         // ✅ محسوبات سريعة (لا LINQ)
         // =========================
-        [JsonIgnore] public double Calc_NetCostQ { get; set; }
-        [JsonIgnore] public double Calc_NetCostTotaly { get; set; }
-        [JsonIgnore] public double Calc_ApriceTotally { get; set; }
+        [JsonIgnore] public decimal Calc_NetCostQ { get; set; }
+        [JsonIgnore] public decimal Calc_NetCostTotaly { get; set; }
+        [JsonIgnore] public decimal Calc_ApriceTotally { get; set; }
         [JsonIgnore] public double? Calc_TotalCO2 { get; set; }
-        [JsonIgnore] public double? Calc_BaseCost { get; set; }
+        [JsonIgnore] public decimal? Calc_BaseCost { get; set; }
 
-        [JsonIgnore] public double NetCostQ => Calc_NetCostQ;
-        [JsonIgnore] public double NetCostTotaly => Calc_NetCostTotaly;
-        [JsonIgnore] public double ApriceTotally => Calc_ApriceTotally;
+        [JsonIgnore] public decimal NetCostQ => Calc_NetCostQ;
+        [JsonIgnore] public decimal NetCostTotaly => Calc_NetCostTotaly;
+        [JsonIgnore] public decimal ApriceTotally => Calc_ApriceTotally;
 
         [JsonIgnore]
-        public double PriceQ =>
+        public decimal PriceQ =>
             (Metadata.Quantity.HasValue && Metadata.Quantity.Value > 0)
                 ? (Calc_ApriceTotally / Metadata.Quantity.Value)
                 : 0;
 
         [JsonIgnore] public double? TotalCO2 => Calc_TotalCO2;
-        [JsonIgnore] public double? BaseCost => Calc_BaseCost;
+        [JsonIgnore] public decimal? BaseCost => Calc_BaseCost;
 
         // هذه بقيت “خفيفة” (ما فيها LINQ)
-        [JsonIgnore] public double PriceSub => Metadata.PriceSubDB ?? Math.Round(PriceQ);
-        [JsonIgnore] public double PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * Metadata.Quantity.Value : 0;
-        [JsonIgnore] public double Diff => PriceSubTotal - ApriceTotally;
+        [JsonIgnore] public decimal PriceSub => Metadata.PriceSubDB ?? Math.Round(PriceQ);
+        [JsonIgnore] public decimal PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * (decimal)Metadata.Quantity.Value : 0;
+        [JsonIgnore] public decimal Diff => PriceSubTotal - ApriceTotally;
 
-        public double PriceQTax(double Tax) => PriceQ * (1 + (Tax / 100));
-        public double ApriceTotallyTax(double Tax) => ApriceTotally * (1 + (Tax / 100));
+        public decimal PriceQTax(double Tax) => PriceQ * (1 + ((decimal)Tax / 100));
+        public decimal ApriceTotallyTax(double Tax) => ApriceTotally * (1 + ((decimal)Tax / 100));
 
-        public double PriceActuallyQuantity => ActuallyQuantity * PriceSub;
-        public double PriceWorkedQ => WorkedQ * PriceSub;
-        public double PriceSubTax(double tax) => PriceSub * (1 + tax);
-        public double PriceTotalSubTax(double tax) => PriceSubTax(tax) * (1 + tax);
-        public double PriceActuallyQuantityTax(double tax) => PriceActuallyQuantity * (1 + tax);
-        public double PriceWorkedQTax(double tax) => PriceWorkedQ * (1 + tax);
+        public decimal PriceActuallyQuantity => (decimal)ActuallyQuantity * PriceSub;
+        public decimal PriceWorkedQ => (decimal)WorkedQ * PriceSub;
+        public decimal PriceSubTax(double tax) => PriceSub * (1 + (decimal)tax);
+        public decimal PriceTotalSubTax(double tax) => PriceSubTax(tax) * (1 + (decimal)tax);
+        public decimal PriceActuallyQuantityTax(double tax) => PriceActuallyQuantity * (1 + (decimal)tax);
+        public decimal PriceWorkedQTax(double tax) => PriceWorkedQ * (1 + (decimal)tax);
 
         public bool HasVoice => Metadata.HasVoice;
         public string Responsible => Metadata.Responsible;

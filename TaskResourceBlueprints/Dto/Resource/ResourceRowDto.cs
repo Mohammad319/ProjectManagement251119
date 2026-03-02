@@ -15,8 +15,8 @@
         double ChangeFactor1,
         double ChangeFactor2,
         double WasteFactor,  // كان CapWaste
-        double? Cost,
-        double? BaseCost,
+        decimal? Cost,
+        decimal? BaseCost,
         bool IsAssigned      // هل مربوط بالمهمة؟
     );
 }

@@ -23,14 +23,14 @@ namespace Domain.Entities.Calculation
 
         private TenderAttributeBindEntity() { }
 
-        public TenderAttributeBindEntity(int tenderId, int attributeId, double value)
+        public TenderAttributeBindEntity(int tenderId, int attributeId, decimal value)
         {
             TenderId = tenderId;
             TenderAttributeId = attributeId;
             SetValue(value);
         }
 
-        public void SetValue(double value)
+        public void SetValue(decimal value)
         {
             // هنا يمكنك إضافة قواعد (min/max) إذا احتجت
             Value = value;
@@ -78,7 +78,7 @@ namespace Domain.Entities.Calculation
             Attributes = json;
         }
 
-        public void SetAttributeValue(int attributeId, double value)
+        public void SetAttributeValue(int attributeId, decimal value)
         {
             var existing = TendersAttributes
                 .FirstOrDefault(x => x.TenderAttributeId == attributeId);
