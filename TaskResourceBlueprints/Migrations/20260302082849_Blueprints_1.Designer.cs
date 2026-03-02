@@ -11,7 +11,7 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    [Migration("20260301111604_Blueprints_1")]
+    [Migration("20260302082849_Blueprints_1")]
     partial class Blueprints_1
     {
         /// <inheritdoc />
@@ -124,9 +124,9 @@ namespace TaskResourceBlueprints.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double?>("BaseCost")
+                    b.Property<decimal?>("BaseCost")
                         .HasPrecision(18, 4)
-                        .HasColumnType("float(18)");
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<double>("CapWaste")
                         .HasPrecision(18, 6)
@@ -242,8 +242,8 @@ namespace TaskResourceBlueprints.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double?>("BaseCost")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("BaseCost")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<double>("CapWaste")
                         .HasColumnType("float");
