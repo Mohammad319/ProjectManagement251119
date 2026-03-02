@@ -246,6 +246,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             using var _appContext = ContextFactory.CreateDbContext();
             ApplicationUser? olduser = await _appContext.Users.FindAsync(user.Id);
             if (olduser == null || olduser.TenantId != tentnid) return false;
+
             olduser.Firstname = user.Firstname;
             olduser.Lastname = user.Lastname;
             olduser.PhoneNumber = user.PhoneNumber;
@@ -253,28 +254,51 @@ namespace ProjectManagement.Adminstrator.Services.Users
             olduser.LockoutEnabled = user.LockoutEnabled;
             olduser.LockoutStart = user.LockoutStart;
             olduser.LockoutEnd = user.LockoutEnd;
-            if (tentnid.HasValue)
+
+            try
             {
-                UserEntity userEntity = new()
+                if (tentnid.HasValue)
                 {
-                    // = olduser.UserId.Value,
-                    DepartmentId = user.DepartmentId,
-                    FirstName = user.Firstname,
-                    LastName = user.Lastname,
-                    TenantId = tentnid.Value,
-                    //Username = user.Email,
-                    //Email = user.Email,
-                    ExternalAuthId = user.Id
-                };
-                var dataAccess = await CreateDbContext(tentnid.Value);
-                dataAccess.User.Update(userEntity);
-                await dataAccess.SaveChangesAsync();
+                    var dataAccess = await CreateDbContext(tentnid.Value);
+                    var tenantUser = await dataAccess.User.FirstOrDefaultAsync(x =>
+                        (olduser.UserId.HasValue && x.Id == olduser.UserId.Value) ||
+                        x.ExternalAuthId == olduser.Id);
+
+                    if (tenantUser != null)
+                    {
+                        tenantUser.DepartmentId = user.DepartmentId;
+                        tenantUser.FirstName = user.Firstname;
+                        tenantUser.LastName = user.Lastname;
+                        tenantUser.ExternalAuthId = olduser.Id;
+                        await dataAccess.SaveChangesAsync();
+
+                        if (!olduser.UserId.HasValue)
+                        {
+                            olduser.UserId = tenantUser.Id;
+                        }
+                    }
+                }
+
+                await _appContext.SaveChangesAsync();
             }
+            catch (RetryLimitExceededException)
+            {
+                return false;
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
+
             if (!await _userManager.IsInRoleAsync(olduser, user.Role))
             {
                 var roles = await _userManager.GetRolesAsync(olduser);
                 await _userManager.RemoveFromRolesAsync(olduser, roles);
-                await _userManager.AddToRoleAsync(olduser, user.Role);
+                var addRoleResult = await _userManager.AddToRoleAsync(olduser, user.Role);
+                if (!addRoleResult.Succeeded)
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -381,6 +405,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
 
             catch (RetryLimitExceededException)
+
             {
                 return false;
             }
@@ -402,9 +427,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         await _userManager.DeleteAsync(userEntity);
                         return false;
                     }
-                }
 
-                await _userManager.AddToRoleAsync(userEntity, request.Role);
                 await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
             }
             else if (tenantId.HasValue && tenantUser != null)

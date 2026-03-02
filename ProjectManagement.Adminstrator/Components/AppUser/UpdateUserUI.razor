@@ -149,7 +149,7 @@
                     PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
                 };
             await IniUserApp();
-            Form.Role = Roles.FirstOrDefault() ?? PMRolesConst.APP.Manger;
+            Form.Role = Roles.FirstOrDefault() ?? (TenantId.HasValue ? PMRolesConst.Tenant.Manger : PMRolesConst.APP.Manger);
             IsLoading = false;
         }
     }
@@ -159,20 +159,42 @@
         if (!string.IsNullOrEmpty(UserForm?.Id))
             Roles = await UsersService.GetRolesAsync(UserForm.UserName ?? string.Empty);
         else
-            Roles.Add(PMRolesConst.APP.Manger);
+            Roles.Add(TenantId.HasValue ? PMRolesConst.Tenant.Manger : PMRolesConst.APP.Manger);
     }
 
     async Task HandleSubmitAsync2()
     {
-        if (string.IsNullOrEmpty(UserForm?.Id))
+        if (IsLoading) return;
+
+        IsLoading = true;
+        try
         {
-            var result = await UsersService.RegisterAsync(Form, TenantId);
-            await Callback.InvokeAsync(result);
+            bool result;
+            if (string.IsNullOrEmpty(UserForm?.Id))
+            {
+                result = await UsersService.RegisterAsync(Form, TenantId);
+            }
+            else
+            {
+                result = await UsersService.UpdateUserAsync(Form, TenantId);
+            }
+
+            if (!result)
+            {
+                MHD.MessageOk(ResourceApp.save, "Save failed. Please verify data and database connection.", MhdState.Warning);
+                return;
+            }
+
+            await Callback.InvokeAsync(true);
         }
-        else
+        catch (Exception)
         {
-            var result = await UsersService.UpdateUserAsync(Form, TenantId);
-            await Callback.InvokeAsync(result);
+            MHD.MessageOk(ResourceApp.save, "Unexpected error while saving user.", MhdState.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
         }
     }
 }
