@@ -3,7 +3,7 @@
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
     <div class="@CssClasses.Modal.Body">
-            <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" FormName="tenantDatabaseForm" id="tenantForm">
+            <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
             <div class="@CssClasses.Grid.Span.MD4">
