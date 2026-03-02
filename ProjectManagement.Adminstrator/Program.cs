@@ -10,6 +10,7 @@ using ProjectManagement.Adminstrator.Components.Account;
 using ProjectManagement.Adminstrator.Factory;
 using ProjectManagement.Adminstrator.Middleware;
 using ProjectManagement.Client.Adminstrator.DependencyInjection;
+using AuthPermissions.Context;
 using Serilog;
 using System.Globalization;
 
@@ -40,11 +41,6 @@ var connectionString = builder.Configuration.GetConnectionString("AuthPermission
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'AuthPermissionsDB' not found.");
 builder.Services.AddCustomAuthentication(connectionString);
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlOptions =>
-    {
-        sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-    }));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -72,6 +68,31 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+    await using var applicationDb = await dbFactory.CreateDbContextAsync();
+    await applicationDb.Database.MigrateAsync();
+
+    await applicationDb.Database.ExecuteSqlRawAsync("""
+        IF OBJECT_ID(N'[dbo].[TenantDatabases]', N'U') IS NULL
+        BEGIN
+            CREATE TABLE [dbo].[TenantDatabases] (
+                [Id] INT IDENTITY(1,1) NOT NULL,
+                [Name] NVARCHAR(80) NOT NULL,
+                [ConnectionString] NVARCHAR(1000) NOT NULL,
+                CONSTRAINT [PK_TenantDatabases] PRIMARY KEY ([Id])
+            );
+
+            CREATE UNIQUE INDEX [IX_TenantDatabases_Name]
+                ON [dbo].[TenantDatabases] ([Name]);
+
+            CREATE UNIQUE INDEX [IX_TenantDatabases_ConnectionString]
+                ON [dbo].[TenantDatabases] ([ConnectionString]);
+        END
+        """);
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
