@@ -83,7 +83,7 @@
         else
         {
             CalcResCost.Day = Convert.ToInt32(Resource.Data?.Quantity ?? 0);
-            CalcResCost.DayCost = Resource.Data?.Cost ?? 0;
+            CalcResCost.DayCost = (double)(Resource.Data?.Cost ?? 0);
         }
     }
     public void IsPercent()
@@ -100,7 +100,7 @@
     {
         Resource.CalcResCost = CalcResCost;
         if (Resource.Data is not null)
-            Resource.Data.Cost = CalcResCost.CalcCost();
+            Resource.Data.Cost = (decimal)CalcResCost.CalcCost();
         if(await ResourceService.UpdateAsync(Resource))
         {
             MHD.Modal.Close();
