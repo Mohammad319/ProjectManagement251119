@@ -77,9 +77,9 @@ else if (_tasks != null)
                            foreach (var res in item.Resources)
                 {
                     if (AppState.StorageApp.Cost && res.CostUserValue.HasValue)
-                        res.Data.Cost = res.CostUserValue.Value;
+                        res.Data.Cost = (decimal)res.CostUserValue.Value;
                     else if (res.CostStorageValue.HasValue)
-                        res.Data.Cost = res.CostStorageValue.Value;
+                        res.Data.Cost = (decimal)res.CostStorageValue.Value;
                 }
             }
 
@@ -108,7 +108,7 @@ else if (_tasks != null)
             foreach (var res in item.Resources)
             {
                 if (res.CostUserValue.HasValue)
-                    res.Data.Cost = res.CostUserValue.Value;
+                    res.Data.Cost = (decimal)res.CostUserValue.Value;
             }
         _loading = false;
     }

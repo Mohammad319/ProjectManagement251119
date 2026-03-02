@@ -158,7 +158,7 @@
                                                            style="color:@Template.SummarySheet.Color.Text;"
                                                            @onchange="(e) =>
                                                            {
-                                                               if (double.TryParse(e.Value?.ToString(), out var v))
+                                                               if (decimal.TryParse(e.Value?.ToString(), out var v))
                                                                {
                                                                    factors.Earnings = v;
                                                                    SomeHasChanged();
@@ -212,7 +212,7 @@
                                                        style="color:@Template.SummarySheet.Color.Text;"
                                                        @onchange="(e) =>
                                                        {
-                                                           if (double.TryParse(e.Value?.ToString(), out var v))
+                                                           if (decimal.TryParse(e.Value?.ToString(), out var v))
                                                            {
                                                                factors.Key = v;
                                                                SomeHasChanged();
@@ -347,7 +347,7 @@
                                                    value="@Format(Calc.ProfitDecision)"
                                                    @onchange="(e) =>
                                                    {
-                                                       if (double.TryParse(e.Value?.ToString(), out var v))
+                                                       if (decimal.TryParse(e.Value?.ToString(), out var v))
                                                        {
                                                            ChangeProfit(v);
                                                        }
