@@ -14,7 +14,7 @@ namespace ProjectManagement.Adminstrator.Factory
                     sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 }),
                 contextLifetime: ServiceLifetime.Scoped,
-                optionsLifetime: ServiceLifetime.Scoped);
+                optionsLifetime: ServiceLifetime.Singleton);
 
             services.AddDbContextFactory<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString, sqlOptions =>
