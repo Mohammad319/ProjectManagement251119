@@ -89,7 +89,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
                         if (r.TotalCO2.HasValue)
                         {
-                            totalCo2 += r.TotalCO2.Value;
+                            totalCo2 += (double)r.TotalCO2.Value;
                             hasCo2 = true;
                         }
 
@@ -146,7 +146,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var f = factors[i];
                 var s = f.Sum;
                 sum += s;
-                weighted += s * f.Earnings;
+                weighted += s * (decimal)f.Earnings;
             }
             calc.ProfitDecision = sum != 0m ? (double)(weighted / sum) : 0d;
 
@@ -171,7 +171,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             {
                 var f = factors[i];
                 if (f.IsLocked)
-                    lockedSumWeighted += (f.Sum * f.Earnings);
+                    lockedSumWeighted += (f.Sum * (decimal)f.Earnings);
                 else
                     unlockedSum += f.Sum;
             }
@@ -336,7 +336,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             {
                 var f = factors[i];
                 if (f.Selected == "all" && f.NetCostTotalyOH > 0)
-                    totalOHAll += f.NetCostTotalyOH * (1 + (f.Earnings / 100));
+                    totalOHAll += f.NetCostTotalyOH * (1m + ((decimal)f.Earnings / 100m));
             }
 
             // ✅ تجميع OH المرتبط باستخدام FactorKey بدل string
@@ -360,7 +360,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
                 var key = new FactorKey(resId, sortId, f.ResourceType);
 
-                var add = f.NetCostTotalyOH * (1 + (f.Earnings / 100));
+                var add = f.NetCostTotalyOH * (1m + ((decimal)f.Earnings / 100m));
                 relatedMap[key] = relatedMap.TryGetValue(key, out var cur) ? (cur + add) : add;
             }
 
@@ -378,7 +378,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var key = new FactorKey(f.ResId, f.SortId, f.ResourceType);
                 relatedMap.TryGetValue(key, out var relatedOH);
 
-                f.Factor = ((f.NetCostTotaly * (1 + (f.Earnings / 100))) + relatedOH + ohShare) / f.NetCostTotaly;
+                f.Factor = ((f.NetCostTotaly * (1m + ((decimal)f.Earnings / 100m))) + relatedOH + ohShare) / f.NetCostTotaly;
             }
         }
 
@@ -442,7 +442,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
             else
             {
-                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0d);
+                meta.Quantity = (double)(meta.ChangeFactor1 * meta.ChangeFactor2 * (decimal)(parentQuantity ?? 0d));
             }
 
             if (task.Tasks is null || task.Tasks.Count == 0)

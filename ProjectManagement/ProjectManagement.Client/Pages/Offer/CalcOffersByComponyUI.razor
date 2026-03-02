@@ -72,7 +72,7 @@
                         }
 
                         var isChecked = res.OfferId == off.Id;
-                        var price = (res.Quantity * off.Cost) + off.BaseCost;
+                        var price = ((res.Quantity ?? 0d) * (double)off.Cost) + (double)off.BaseCost;
 
                         <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"
                              title="@($"({res.Quantity} x {off.Cost}) + {off.BaseCost}")">
@@ -87,10 +87,10 @@
                                                @onclick="() => SetDefaultAsync(res, off)" />
 
                                         <!-- الخلفية -->
-                                        <div class="h-4 w-8 rounded-full bg-slate-300 transition-all duration-300
+                                        <span class="h-4 w-8 rounded-full bg-slate-300 transition-all duration-300
                                                                 peer-checked:bg-emerald-500
                                                                 dark:bg-slate-600 dark:peer-checked:bg-emerald-400">
-                                        </div>
+                                        </span>
 
                                         <!-- الأيقونة -->
                                         <span class="absolute left-0.5 top-0.5 flex h-3 w-3 items-center justify-center
@@ -152,7 +152,7 @@
             {
                 var offers = res.Offers?
                 .Where(x => !x.OrganisationId.HasValue || x.OrganisationId == 0)
-                .OrderBy(off => ((res.Quantity * off.Cost) + off.BaseCost))
+                .OrderBy(off => (((res.Quantity ?? 0d) * (double)off.Cost) + (double)off.BaseCost))
                 .ToList();
 
                 var offersCount = offers?.Count ?? 0;
@@ -171,7 +171,7 @@
                         @foreach (var off in offers)
                         {
                             var isChecked = res.OfferId == off.Id;
-                            var price = (res.Quantity * off.Cost) + off.BaseCost;
+                            var price = ((res.Quantity ?? 0d) * (double)off.Cost) + (double)off.BaseCost;
 
                             <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"
                                  title="@($"({res.Quantity} x {off.Cost}) + {off.BaseCost}")">
@@ -184,10 +184,10 @@
                                                    checked="@isChecked"
                                                    @onclick="() => SetDefaultAsync(res, off)" />
 
-                                            <div class="h-4 w-8 rounded-full bg-slate-300 transition-all duration-300
+                                            <span class="h-4 w-8 rounded-full bg-slate-300 transition-all duration-300
                                                                         peer-checked:bg-emerald-500
                                                                         dark:bg-slate-600 dark:peer-checked:bg-emerald-400">
-                                            </div>
+                                            </span>
 
                                             <span class="absolute left-0.5 top-0.5 flex h-3 w-3 items-center justify-center
                                                                          rounded-full bg-white text-[8px] font-bold text-slate-500 transition-all duration-300
@@ -278,7 +278,7 @@
                         group.Resources.Add(res);
                         for (int i = 0; i < companies.Count; i++)
                         {
-                            group.NetQ[i] += (companies[i].Cost * (res.Quantity ?? 0)) + companies[i].BaseCost;
+                            group.NetQ[i] += ((double)companies[i].Cost * (res.Quantity ?? 0d)) + (double)companies[i].BaseCost;
                         }
                     }
                     else
@@ -287,7 +287,7 @@
                         {
                             Key = key,
                             Resources = new List<ResourceListMVVM> { res },
-                            NetQ = companies.Select(x => (x.Cost * (res.Quantity ?? 0)) + x.BaseCost).ToList(),
+                            NetQ = companies.Select(x => ((double)x.Cost * (res.Quantity ?? 0d)) + (double)x.BaseCost).ToList(),
                         });
                     }
                 }
@@ -313,7 +313,7 @@
         }
     }
 
-    private string Format(double? x) => Template.Format(x ?? 0d);
+    private string Format(double? x) => (x ?? 0d).ToString("0.##");
 
     async Task SetDefaultAsync(ResourceListMVVM res, ListOfferMVVM offer)
     {
