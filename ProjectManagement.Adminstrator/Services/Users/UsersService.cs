@@ -246,6 +246,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             using var _appContext = ContextFactory.CreateDbContext();
             ApplicationUser? olduser = await _appContext.Users.FindAsync(user.Id);
             if (olduser == null || olduser.TenantId != tentnid) return false;
+
             olduser.Firstname = user.Firstname;
             olduser.Lastname = user.Lastname;
             olduser.PhoneNumber = user.PhoneNumber;
@@ -253,23 +254,31 @@ namespace ProjectManagement.Adminstrator.Services.Users
             olduser.LockoutEnabled = user.LockoutEnabled;
             olduser.LockoutStart = user.LockoutStart;
             olduser.LockoutEnd = user.LockoutEnd;
+
             if (tentnid.HasValue)
             {
-                UserEntity userEntity = new()
-                {
-                    // = olduser.UserId.Value,
-                    DepartmentId = user.DepartmentId,
-                    FirstName = user.Firstname,
-                    LastName = user.Lastname,
-                    TenantId = tentnid.Value,
-                    //Username = user.Email,
-                    //Email = user.Email,
-                    ExternalAuthId = user.Id
-                };
                 var dataAccess = await CreateDbContext(tentnid.Value);
-                dataAccess.User.Update(userEntity);
-                await dataAccess.SaveChangesAsync();
+                var tenantUser = await dataAccess.User.FirstOrDefaultAsync(x =>
+                    (olduser.UserId.HasValue && x.Id == olduser.UserId.Value) ||
+                    x.ExternalAuthId == olduser.Id);
+
+                if (tenantUser != null)
+                {
+                    tenantUser.DepartmentId = user.DepartmentId;
+                    tenantUser.FirstName = user.Firstname;
+                    tenantUser.LastName = user.Lastname;
+                    tenantUser.ExternalAuthId = olduser.Id;
+                    await dataAccess.SaveChangesAsync();
+
+                    if (!olduser.UserId.HasValue)
+                    {
+                        olduser.UserId = tenantUser.Id;
+                    }
+                }
             }
+
+            await _appContext.SaveChangesAsync();
+
             if (!await _userManager.IsInRoleAsync(olduser, user.Role))
             {
                 var roles = await _userManager.GetRolesAsync(olduser);
@@ -339,24 +348,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
         }
         public async Task<bool> RegisterAsync(UserPostDTO request, int? tenantId)
         {
-            int? userid = null;
-            UserEntity? ue = null;
-            if (tenantId.HasValue)
-            {
-                ue = new UserEntity()
-                {
-                    DepartmentId = request.DepartmentId,
-                    FirstName = request.Firstname,
-                    LastName = request.Lastname,
-                    TenantId = tenantId.Value,
-                    UserName = request.Email,
-                    Email = request.Email,
-                };
-                var dbtenant = await CreateDbContext(tenantId.Value);
-                dbtenant.User.Add(ue);
-                await dbtenant.SaveChangesAsync();
-            }
-            var response = new RegisterDto.Response();
+            UserEntity? tenantUser = null;
             var userEntity = new ApplicationUser()
             {
                 Email = request.Email,
@@ -365,31 +357,72 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 UserName = request.Email,
                 TenantId = tenantId,
                 DepartmentId = null,
-                UserId = userid,
                 LockoutEnabled = request.LockoutEnabled,
                 LockoutStart = request.LockoutStart,
                 LockoutEnd = request.LockoutEnd,
                 PhoneNumber = request.PhoneNumber,
                 PhoneNumberConfirmed = request.PhoneNumberConfirmed,
             };
-            if (tenantId.HasValue && ue != null && ue.Id == 0)
+
+            try
+            {
+                if (tenantId.HasValue)
+                {
+                    tenantUser = new UserEntity()
+                    {
+                        DepartmentId = request.DepartmentId,
+                        FirstName = request.Firstname,
+                        LastName = request.Lastname,
+                        TenantId = tenantId.Value,
+                        UserName = request.Email,
+                        Email = request.Email,
+                    };
+
+                    var dbtenant = await CreateDbContext(tenantId.Value);
+                    dbtenant.User.Add(tenantUser);
+                    await dbtenant.SaveChangesAsync();
+
+                    if (tenantUser.Id == 0)
+                        return false;
+
+                    userEntity.UserId = tenantUser.Id;
+                }
+            }
+
+            catch (RetryLimitExceededException)
             {
                 return false;
             }
+
             var result = await _userManager.CreateAsync(userEntity, request.Email);
             if (result.Succeeded)
             {
-                if (tenantId.HasValue && ue != null)
+                if (tenantId.HasValue && tenantUser != null)
                 {
-                    ue.ExternalAuthId = userEntity.Id;
-                    var dbtenant = await CreateDbContext(tenantId.Value);
-                    dbtenant.User.Update(ue);
-                    await dbtenant.SaveChangesAsync();
+                    try
+                    {
+                        tenantUser.ExternalAuthId = userEntity.Id;
+                        var dbtenant = await CreateDbContext(tenantId.Value);
+                        dbtenant.User.Update(tenantUser);
+                        await dbtenant.SaveChangesAsync();
+                    }
+                    catch (RetryLimitExceededException)
+                    {
+                        await _userManager.DeleteAsync(userEntity);
+                        return false;
+                    }
                 }
+
                 await _userManager.AddToRoleAsync(userEntity, request.Role);
-                response.IsSuccessfulRegistration = true;
                 await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
             }
+            else if (tenantId.HasValue && tenantUser != null)
+            {
+                var dbtenant = await CreateDbContext(tenantId.Value);
+                dbtenant.User.Remove(tenantUser);
+                await dbtenant.SaveChangesAsync();
+            }
+
             return result.Succeeded;
         }
     }
