@@ -1,5 +1,5 @@
 <#
-Init databases (Catalog/Identity + Tenant template + Blueprints)
+Init databases (AuthPermissions + Tenant template + Blueprints)
 
 ملاحظة:
  - شغّل السكربت من جذر الـ repository (نفس مستوى ProjectManagement251119)
@@ -7,7 +7,7 @@ Init databases (Catalog/Identity + Tenant template + Blueprints)
  - عدّل connection strings حسب جهازك/السيرفر
 
 الهدف:
- 1) إنشاء/تحديث قاعدة بيانات الكاتالوج (Identity + Tenants)
+ 1) إنشاء/تحديث قاعدة بيانات AuthPermissions (Identity + Tenants)
  2) إنشاء/تحديث قاعدة بيانات الـ Blueprints
  3) (اختياري) إنشاء Tenant template DB وتحديثها (ShardingSingleDbContext)
 
@@ -20,7 +20,10 @@ $ErrorActionPreference = "Stop"
 
 # ---- Connection strings (يمكن تحريكها لـ user-secrets أو env vars) ----
 if ([string]::IsNullOrWhiteSpace($env:CATALOG_CONN)) {
-  $env:CATALOG_CONN = "Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ProjectManagement_Catalog;Integrated Security=True;MultipleActiveResultSets=True"
+  $env:CATALOG_CONN = "Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=SiSTOfotoAppPM2;Integrated Security=True;MultipleActiveResultSets=True"
+}
+if ([string]::IsNullOrWhiteSpace($env:AuthPermissionsDB)) {
+  $env:AuthPermissionsDB = $env:CATALOG_CONN
 }
 if ([string]::IsNullOrWhiteSpace($env:BLUEPRINTS_CONN)) {
   $env:BLUEPRINTS_CONN = "Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=TaskResourceBlueprints;Integrated Security=True;MultipleActiveResultSets=True"
