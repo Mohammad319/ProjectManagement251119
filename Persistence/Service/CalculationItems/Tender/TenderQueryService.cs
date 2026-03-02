@@ -28,7 +28,7 @@ namespace Persistence.Service.CalculationItems.Tender
                     Values = x.TendersAttributes.Select(a => new ValuesList
                     {
                         AttributeID = a.TenderAttributeId,
-                        Values = a.Value
+                        Values = (double)a.Value
                     }).ToList()
                 })
                 .ToListAsync(ct);

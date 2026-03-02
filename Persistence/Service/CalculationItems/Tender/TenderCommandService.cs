@@ -40,7 +40,7 @@ namespace Persistence.Service.CalculationItems.Tender
                         new TenderAttributeBindEntity(
                             tenderId: tender.Id,
                             attributeId: x.Key,
-                            value: x.Value));
+                            value: (decimal)x.Value));
                 }
 
                 await context.SaveChangesAsync(ct);
@@ -125,11 +125,11 @@ namespace Persistence.Service.CalculationItems.Tender
                     new TenderAttributeBindEntity(
                         tenderId: tenderId,
                         attributeId: attributeId,
-                        value: value));
+                        value: (decimal)value));
             }
             else
             {
-                bind.SetValue(value);
+                bind.SetValue((decimal)value);
             }
 
             await context.SaveChangesAsync(ct);

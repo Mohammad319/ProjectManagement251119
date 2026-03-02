@@ -93,9 +93,9 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double AdditionalCostEarnings { get; set; } = 10;
         public double ResourcePriceSum { get; set; } = 0;
 
-        public double Sum => Factors.Sum(x => x.Sum);
-        public double SumFactorsEV => Factors.Sum(x => x.EarningsValue);
-        public double SumFactorsPrice => Factors.Sum(x => x.Price);
+        public decimal Sum => Factors.Sum(x => x.Sum);
+        public decimal SumFactorsEV => Factors.Sum(x => x.EarningsValue);
+        public decimal SumFactorsPrice => Factors.Sum(x => x.Price);
 
         public double ProfitDecision { get; set; }
         public double TenderExcelTax { get; set; }
