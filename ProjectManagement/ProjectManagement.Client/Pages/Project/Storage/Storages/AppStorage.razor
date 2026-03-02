@@ -355,7 +355,7 @@
                 resource.Data.CapWaste = resource.Values[0];
                 resource.Data.ChangeFactor1 = resource.Values[1];
                 resource.Data.ChangeFactor2 = resource.Values[2];
-                resource.Data.BaseCost = resource.Values[3];
+                resource.Data.BaseCost = (decimal?)resource.Values[3];
                 @* resource.Data.Cost = resource.Values[4]; *@
 
                 var conds = (task.ConditionEffect ?? []).Where(x => (resource.ConditionTaskIds ?? []).Any(c => c == x.Id))

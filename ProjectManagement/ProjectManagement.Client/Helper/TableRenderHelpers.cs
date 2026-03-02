@@ -11,13 +11,13 @@ namespace ProjectManagement.Client.Helper
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
         // ✅ Cache: لا نعيد بناء الأعمدة كل مرة
-        private static readonly Dictionary<(double tax, int x), List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>> _colsCache
+        private static readonly Dictionary<(decimal tax, int x), List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>> _colsCache
             = new();
 
         // ----------------- SELECTION -----------------
         public static void HandleKeyUp(KeyboardEventArgs e) => TemporaryData.Key = null;
 
-        public static void HandleItemSelected(int id, double? q, CalculationItemType type)
+        public static void HandleItemSelected(int id, decimal? q, CalculationItemType type)
         {
             if (TemporaryData.Key == "Control")
                 SelectedData.Add(id, q, type);
@@ -28,7 +28,7 @@ namespace ProjectManagement.Client.Helper
         // ----------------- FORMAT -----------------
         private static string Format(int digits) => "0." + new string('#', digits);
 
-        public static List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> GetColumns(double tax, int x = 2)
+        public static List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> GetColumns(decimal tax, int x = 2)
         {
             var key = (tax, x);
             if (_colsCache.TryGetValue(key, out var cached))
@@ -155,10 +155,10 @@ namespace ProjectManagement.Client.Helper
         public static RenderFragment RenderTextTd(object? value) =>
             RenderTd(value?.ToString() ?? string.Empty);
 
-        public static RenderFragment RenderFormattedTd(string format, double value) =>
+        public static RenderFragment RenderFormattedTd(string format, decimal value) =>
             RenderTd(value.ToString(format, Inv), cssClass: "num-cell");
 
-        public static RenderFragment RenderFormattedTd(string format, double? value) =>
+        public static RenderFragment RenderFormattedTd(string format, decimal? value) =>
             RenderTd(value.HasValue ? value.Value.ToString(format, Inv) : string.Empty, cssClass: "num-cell");
 
         public static RenderFragment RenderCheckboxTd(bool isChecked) => __b =>
