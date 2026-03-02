@@ -8,11 +8,13 @@ namespace ProjectManagement.Adminstrator.Factory
     {
         public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, string connectionString)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString, sqlOptions =>
+            services.AddDbContext<ApplicationDbContext>(
+                options => options.UseSqlServer(connectionString, sqlOptions =>
                 {
                     sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                }));
+                }),
+                contextLifetime: ServiceLifetime.Scoped,
+                optionsLifetime: ServiceLifetime.Singleton);
 
             services.AddDbContextFactory<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString, sqlOptions =>
