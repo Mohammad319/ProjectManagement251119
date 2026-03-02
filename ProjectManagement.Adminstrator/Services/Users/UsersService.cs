@@ -112,7 +112,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
             if (string.IsNullOrEmpty(ConnectionString))
                 throw new Exception($"No database found for tenant {tenantId}");
             var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
-            optionsBuilder.UseSqlServer(ConnectionString);
+            optionsBuilder.UseSqlServer(ConnectionString, sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure();
+            });
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
                 TenantId = tenantId
