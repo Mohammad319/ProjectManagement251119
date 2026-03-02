@@ -294,7 +294,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
             {
                 var roles = await _userManager.GetRolesAsync(olduser);
                 await _userManager.RemoveFromRolesAsync(olduser, roles);
-                await _userManager.AddToRoleAsync(olduser, user.Role);
+                var addRoleResult = await _userManager.AddToRoleAsync(olduser, user.Role);
+                if (!addRoleResult.Succeeded)
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -433,7 +437,19 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     }
                 }
 
-                await _userManager.AddToRoleAsync(userEntity, request.Role);
+                var addRoleResult = await _userManager.AddToRoleAsync(userEntity, request.Role);
+                if (!addRoleResult.Succeeded)
+                {
+                    await _userManager.DeleteAsync(userEntity);
+                    if (tenantId.HasValue && tenantUser != null)
+                    {
+                        var dbtenant = await CreateDbContext(tenantId.Value);
+                        dbtenant.User.Remove(tenantUser);
+                        await dbtenant.SaveChangesAsync();
+                    }
+                    return false;
+                }
+
                 await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
             }
             else if (tenantId.HasValue && tenantUser != null)
