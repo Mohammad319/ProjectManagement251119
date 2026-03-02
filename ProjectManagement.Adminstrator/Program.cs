@@ -71,8 +71,7 @@ var app = builder.Build();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
-    var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-    await using var applicationDb = await dbFactory.CreateDbContextAsync();
+    var applicationDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await applicationDb.Database.MigrateAsync();
 
     await applicationDb.Database.ExecuteSqlRawAsync("""
