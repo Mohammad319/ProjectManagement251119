@@ -18,7 +18,7 @@ namespace ProjectManagement.Adminstrator.Factory
                 options.UseSqlServer(connectionString, sqlOptions =>
                 {
                     sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                }));
+                }), ServiceLifetime.Scoped);
 
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
