@@ -19,6 +19,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
         Task<int> CreateAsync(TenantEntity tenant);
         Task<List<GetTenantsDTO>> GetAsync();
         Task<TenantEntity> GetByIdAsync(int id);
+        Task<bool> AddBasicCompanyInfoAsync(int tenantId);
 
     }
 }
