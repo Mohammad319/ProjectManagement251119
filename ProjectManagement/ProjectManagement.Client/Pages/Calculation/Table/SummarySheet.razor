@@ -470,7 +470,7 @@
                         <th class="px-3 py-1 border-b border-slate-200 dark:border-slate-700">
                             (((NetCostTotaly * (1 + (Earnings / 100))) +
                             AllFactors.Where(x => x.Selected == ResId + "," + SortId)
-                            .Sum(x => x.NetCostTotalyOH * (1 + (x.Earnings / 100)))) + OH)
+                            .Sum(x => x.NetCostTotalyOH * (1m + ((decimal)x.Earnings / 100m)))) + OH)
                             / NetCostTotaly
                         </th>
                     </tr>
@@ -487,7 +487,7 @@
                                 <td class="px-3 py-1.5">
                                     @("(" + Format(factor.NetCostTotaly) + " * " +
                                                             Format(Calc.Factors.Where(x => x.Selected == "all")
-                                                            .Sum(x => x.NetCostTotalyOH * (1 + (x.Earnings / 100)))) +
+                                                            .Sum(x => x.NetCostTotalyOH * (1m + ((decimal)x.Earnings / 100m)))) +
                                                             ") / " + Format(Calc.Factors.Sum(x => x.NetCostTotaly)))
                                 </td>
                                 <td class="px-3 py-1.5">

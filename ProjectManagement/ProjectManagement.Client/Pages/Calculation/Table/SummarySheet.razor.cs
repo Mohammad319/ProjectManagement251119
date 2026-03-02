@@ -1,5 +1,4 @@
 ﻿using BlazorMHD.UI.Core.Services;
-using DocumentFormat.OpenXml.Office.Word;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles;
@@ -19,7 +18,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             CalcultationExtensions.AssignFactorsToResourcesFast(Calculation);
             //Calculation.AssignFactorsToResources();
 
-            Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
+            Calculation.TenderExcelTax = (double)Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
         }
@@ -29,7 +28,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         async Task SaveAsync()
         {
             await ExtraFactorsSaveAsync();
-            Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
+            Calculation.TenderExcelTax = (double)Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
         }
@@ -53,9 +52,9 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             EarningOnChange = true;
             StateHasChanged();
         }
-        private string Format(double x) => Template.Format(x);
-        private string Format(decimal x) => Template.Format(x);
-        private string Format(decimal? x) => Template.Format(x ?? 0m);
+        private string Format(double x) => x.ToString("0.##");
+        private string Format(decimal x) => x.ToString("0.##");
+        private string Format(decimal? x) => (x ?? 0m).ToString("0.##");
         public string SelectedFactor(string res)
         {
             var res45 = Calculation.Factors.FirstOrDefault(x => x.ResId + "," + x.SortId == res);
@@ -70,7 +69,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         protected override void OnInitialized()
         {
             Folder?.State?.Calculation?.OnChangeInCalculation += ChangeCalcultionItems;
-            Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
+            Calculation.TenderExcelTax = (double)Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
         }
@@ -79,7 +78,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             EarningOnChange = true;
             Calculation.ProfitDecision = e;
             Calculation.CalcEarningsForUnlockedRes();
-            Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
+            Calculation.TenderExcelTax = (double)Calculation.Factors.Sum(x => x.PriceOG);
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
             StateHasChanged();
         }
