@@ -41,11 +41,6 @@ var connectionString = builder.Configuration.GetConnectionString("AuthPermission
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'AuthPermissionsDB' not found.");
 builder.Services.AddCustomAuthentication(connectionString);
-builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlOptions =>
-    {
-        sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-    }));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using AuthPermissions.Context;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +8,18 @@ namespace ProjectManagement.Adminstrator.Factory
     {
         public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, string connectionString)
         {
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString, sqlOptions =>
+                {
+                    sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                }));
 
-            //services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+            services.AddDbContextFactory<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString, sqlOptions =>
+                {
+                    sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                }));
+
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -29,8 +39,6 @@ namespace ProjectManagement.Adminstrator.Factory
                 options.Password.RequireUppercase = false;
                 options.Password.RequireLowercase = false;
             });
-            using var scope = services.BuildServiceProvider().CreateScope();
-
 
             services.AddAuthorization();
 
