@@ -10,6 +10,7 @@ using ProjectManagement.Adminstrator.Components.Account;
 using ProjectManagement.Adminstrator.Factory;
 using ProjectManagement.Adminstrator.Middleware;
 using ProjectManagement.Client.Adminstrator.DependencyInjection;
+using AuthPermissions.Context;
 using Serilog;
 using System.Globalization;
 
@@ -72,6 +73,13 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
 var app = builder.Build();
+
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+    await using var applicationDb = await dbFactory.CreateDbContextAsync();
+    await applicationDb.Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
