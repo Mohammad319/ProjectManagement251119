@@ -14,13 +14,13 @@ namespace ProjectManagement.Adminstrator.Factory
                     sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                 }),
                 contextLifetime: ServiceLifetime.Scoped,
-                optionsLifetime: ServiceLifetime.Singleton);
+                optionsLifetime: ServiceLifetime.Scoped);
 
             services.AddDbContextFactory<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString, sqlOptions =>
                 {
                     sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                }), ServiceLifetime.Scoped);
+                }));
 
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
