@@ -18,10 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-var TaskResourceBlueprintsDb = builder.Configuration.GetConnectionString("BlueprintsDB") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var taskResourceBlueprintsDb = builder.Configuration.GetConnectionString("BlueprintsDB")
+    ?? throw new InvalidOperationException("Connection string 'BlueprintsDB' not found.");
 builder.Services.AddTaskResourceBlueprints();
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
-    options.UseSqlServer(TaskResourceBlueprintsDb, sqlOptions =>
+    options.UseSqlServer(taskResourceBlueprintsDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     }));
@@ -34,7 +35,10 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 builder.Services.AddApplicationServices();
 builder.Services.AddAuthPermissionsLayer();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("AuthPermissionsDB")
+    ?? builder.Configuration.GetConnectionString("AuthPermissions")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'AuthPermissionsDB' not found.");
 builder.Services.AddCustomAuthentication(connectionString);
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
