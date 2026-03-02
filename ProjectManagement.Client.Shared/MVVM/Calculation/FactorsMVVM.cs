@@ -14,9 +14,9 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public double Factor { get; set; }
 
         public decimal Sum => NetCostTotaly + NetCostTotalyOH;
-        public decimal EarningsValue => Sum * (Earnings / 100);
+        public decimal EarningsValue => Sum * ((decimal)Earnings / 100m);
         public decimal Price => EarningsValue + Sum;
-        public decimal PriceOG => NetCostTotaly * Factor;
+        public decimal PriceOG => NetCostTotaly * (decimal)Factor;
 
         public static readonly string[] KVName = { "NetCostTotaly", "NetCostTotalyOH", "Sum", "Price", "PriceOG" };
 
@@ -43,11 +43,11 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             return Key switch
             {
                 0 => 0,
-                _ when DivisionKey == 0 => NetCostTotaly / Key,
-                1 => NetCostTotalyOH / Key,
-                2 => Sum / Key,
-                3 => Price / Key,
-                4 => PriceOG / Key,
+                _ when DivisionKey == 0 => NetCostTotaly / (decimal)Key,
+                1 => NetCostTotalyOH / (decimal)Key,
+                2 => Sum / (decimal)Key,
+                3 => Price / (decimal)Key,
+                4 => PriceOG / (decimal)Key,
                 _ => 0
             };
         }
@@ -71,13 +71,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 sumNetCostAll += x.NetCostTotaly;
 
                 if (x.Selected == "all" && x.NetCostTotalyOH > 0)
-                    totalOHAll += x.NetCostTotalyOH * (1 + (x.Earnings / 100));
+                    totalOHAll += x.NetCostTotalyOH * (1 + ((decimal)x.Earnings / 100m));
             }
 
             if (sumNetCostAll == 0) return 0;
 
             // حصتك من OH حسب NetCostTotaly
-            return (NetCostTotaly * totalOHAll) / sumNetCostAll;
+            return (double)((NetCostTotaly * totalOHAll) / sumNetCostAll);
         }
 
       
@@ -97,7 +97,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                     var item = factors[i];
                     if (item.Selected != matchKey) continue;
 
-                    double part = item.NetCostTotalyOH * (1 + (item.Earnings / 100));
+                    double part = (double)(item.NetCostTotalyOH * (1 + ((decimal)item.Earnings / 100m)));
                     relatedSum += part;
                     explanation += $"[{F(item.NetCostTotalyOH)} * {1 + (item.Earnings / 100)}] + ";
                 }
@@ -112,7 +112,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
             string formula = $"(({F(NetCostTotaly)} * {1 + (Earnings / 100)}) + {explanation}Oh{F(oh)}) / {F(NetCostTotaly)} = ";
 
-            double part1 = F(NetCostTotaly * (1 + (Earnings / 100)));
+            double part1 = F(NetCostTotaly * (1 + ((decimal)Earnings / 100m)));
             double part2 = F(relatedSum);
             double part3 = F(oh);
 
@@ -123,5 +123,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         }
 
         private double F(double x) => Math.Round(x, 4);
+        private double F(decimal x) => Math.Round((double)x, 4);
     }
 }

@@ -68,10 +68,10 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         private decimal? _apriceTotally;
         private decimal? _totalCO2;
 
-        [JsonIgnore] public decimal NetCostQ => _netCostQ ??= Quantity.HasValue && Quantity > 0 ? NetCostTotaly / Quantity.Value : 0;
+        [JsonIgnore] public decimal NetCostQ => _netCostQ ??= Quantity.HasValue && Quantity > 0 ? NetCostTotaly / (decimal)Quantity.Value : 0;
         [JsonIgnore] public decimal NetCostTotaly => _netCostTotally ??= (BaseCost ?? 0) + (Quantity * Cost ?? 0);
         [JsonIgnore] public decimal ApriceTotally => _apriceTotally ??= (decimal)Factor * NetCostTotaly;
-        [JsonIgnore] public decimal? TotalCO2 => _totalCO2 ??= CO2.HasValue ? Quantity * CO2.Value : null;
+        [JsonIgnore] public decimal? TotalCO2 => _totalCO2 ??= CO2.HasValue && Quantity.HasValue ? (decimal?)(Quantity.Value * CO2.Value) : null;
 
         public void InvalidateCache()
         {

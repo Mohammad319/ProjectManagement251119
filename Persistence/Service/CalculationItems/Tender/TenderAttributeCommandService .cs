@@ -38,7 +38,7 @@ namespace Persistence.Service.CalculationItems.Tender
                         new TenderAttributeBindEntity(
                             tenderId: x.Key,
                             attributeId: attr.Id,
-                            value: x.Value));
+                            value: (decimal)x.Value));
                 }
 
                 await context.SaveChangesAsync(ct);

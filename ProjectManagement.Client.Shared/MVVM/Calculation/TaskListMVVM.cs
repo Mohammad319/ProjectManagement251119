@@ -86,7 +86,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         [JsonIgnore]
         public decimal PriceQ =>
             (Metadata.Quantity.HasValue && Metadata.Quantity.Value > 0)
-                ? (Calc_ApriceTotally / Metadata.Quantity.Value)
+                ? (Calc_ApriceTotally / (decimal)Metadata.Quantity.Value)
                 : 0;
 
         [JsonIgnore] public double? TotalCO2 => Calc_TotalCO2;
