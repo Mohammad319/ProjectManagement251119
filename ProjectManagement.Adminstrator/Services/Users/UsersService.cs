@@ -400,16 +400,64 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 dataAccess.Compensations.Add(new CompensationEntity("Fixed price", "#8b5cf6", 10, true));
             }
 
-            if (!await dataAccess.Contracts.AnyAsync())
+            var defaultContracts = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                dataAccess.Contracts.Add(new ContractEntity("Standard contract", "#0ea5e9", 10, true));
+                ("Standard contract", "#0ea5e9", 10, true),
+            };
+
+            var existingContracts = await dataAccess.Contracts.ToListAsync();
+            foreach (var defaultContract in defaultContracts)
+            {
+                var contract = existingContracts.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultContract.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (contract is null)
+                {
+                    dataAccess.Contracts.Add(new ContractEntity(
+                        defaultContract.Name,
+                        defaultContract.Color,
+                        defaultContract.SortOrder,
+                        defaultContract.IsVisible));
+                    continue;
+                }
+
+                contract.Update(
+                    defaultContract.Name,
+                    defaultContract.Color,
+                    defaultContract.SortOrder,
+                    defaultContract.IsVisible);
             }
 
-            if (!await dataAccess.ProcurementMethod.AnyAsync())
+            var defaultProcurementMethods = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                var procurementMethod = new ProcurementMethodEntity();
-                procurementMethod.Update("Direct purchase", "#f97316", 10, true);
-                dataAccess.ProcurementMethod.Add(procurementMethod);
+                ("Limited Procedure", "#00ff00", 1300, true),
+                ("Selective Tending", "#00ff00", 1400, true),
+                ("Open Tendering", "#00ff00", 1500, true),
+            };
+
+            var existingProcurementMethods = await dataAccess.ProcurementMethod.ToListAsync();
+            foreach (var defaultProcurementMethod in defaultProcurementMethods)
+            {
+                var procurementMethod = existingProcurementMethods.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultProcurementMethod.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (procurementMethod is null)
+                {
+                    var newProcurementMethod = new ProcurementMethodEntity();
+                    newProcurementMethod.Update(
+                        defaultProcurementMethod.Name,
+                        defaultProcurementMethod.Color,
+                        defaultProcurementMethod.SortOrder,
+                        defaultProcurementMethod.IsVisible);
+                    dataAccess.ProcurementMethod.Add(newProcurementMethod);
+                    continue;
+                }
+
+                procurementMethod.Update(
+                    defaultProcurementMethod.Name,
+                    defaultProcurementMethod.Color,
+                    defaultProcurementMethod.SortOrder,
+                    defaultProcurementMethod.IsVisible);
             }
 
             if (!await dataAccess.CalculationStatus.AnyAsync())
