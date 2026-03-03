@@ -3,6 +3,7 @@ using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -425,6 +426,12 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     };
 
                     await using var dbtenant = await CreateDbContext(tenantId.Value);
+                    if (!await dbtenant.Database.CanConnectAsync())
+                    {
+                        _logger.LogError("Cannot connect to tenant database while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
+                        return false;
+                    }
+
                     dbtenant.User.Add(tenantUser);
                     await dbtenant.SaveChangesAsync();
 
@@ -433,6 +440,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
                     userEntity.UserId = tenantUser.Id;
                 }
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "SQL error while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
+                return false;
             }
 
             catch (RetryLimitExceededException ex)
