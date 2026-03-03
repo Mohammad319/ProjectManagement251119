@@ -48,8 +48,12 @@ namespace ProjectManagement.Client.Handless
 
             if (response.StatusCode == HttpStatusCode.Forbidden)
             {
+                var forbiddenBody = await SafeReadAsync(response, ct);
+                var forbiddenTraceId = TryResolveTraceId(response, forbiddenBody);
+                var endpoint = request.RequestUri?.PathAndQuery ?? "(unknown endpoint)";
+
                 ShowOnce("صلاحيات", "ليس لديك صلاحية لتنفيذ هذه العملية.");
-                _ = clientLogger.ErrorAsync("Forbidden (403) from API", traceId: null, ex: null);
+                _ = clientLogger.ErrorAsync($"Forbidden (403) from API {endpoint}", forbiddenTraceId, string.IsNullOrWhiteSpace(forbiddenBody) ? null : new Exception(forbiddenBody));
                 return response;
             }
 
@@ -128,6 +132,35 @@ namespace ProjectManagement.Client.Handless
             {
                 return null;
             }
+        }
+
+        private static string? TryResolveTraceId(HttpResponseMessage response, string body)
+        {
+            var parsedTraceId = TryParseProblemDetails(body)?.TraceId;
+            if (!string.IsNullOrWhiteSpace(parsedTraceId))
+            {
+                return parsedTraceId;
+            }
+
+            if (response.Headers.TryGetValues("traceId", out var traceValues))
+            {
+                var traceId = traceValues.FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(traceId))
+                {
+                    return traceId;
+                }
+            }
+
+            if (response.Headers.TryGetValues("x-correlation-id", out var correlationValues))
+            {
+                var correlationId = correlationValues.FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(correlationId))
+                {
+                    return correlationId;
+                }
+            }
+
+            return null;
         }
 
         private sealed class ApiProblemDetails
