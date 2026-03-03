@@ -169,6 +169,22 @@ namespace ProjectManagement.Adminstrator.Services.Users
             {
                 await dbtenant.Database.EnsureCreatedAsync();
             }
+
+            await EnsureLegacyUsersTableCompatibilityAsync(dbtenant);
+        }
+
+        private static async Task EnsureLegacyUsersTableCompatibilityAsync(ShardingSingleDbContext dbtenant)
+        {
+            const string sql = """
+                IF OBJECT_ID(N'[dbo].[Users]', N'U') IS NULL
+                   AND OBJECT_ID(N'[dbo].[Users]', N'SN') IS NULL
+                   AND OBJECT_ID(N'[dbo].[User]', N'U') IS NOT NULL
+                BEGIN
+                    EXEC(N'CREATE SYNONYM [dbo].[Users] FOR [dbo].[User]');
+                END
+                """;
+
+            await dbtenant.Database.ExecuteSqlRawAsync(sql);
         }
         public async Task<bool> RemoveTenant(int TenantId)
         {
