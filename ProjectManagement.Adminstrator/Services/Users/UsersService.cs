@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Persistence.Context;
 using ProjectManagement.Shared.Base.Users;
+using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.DTO.Identity;
 using ProjectManagement.Shared.DTO.Tenant;
@@ -133,7 +134,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             return roles;
         }
 
-        public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId)
+        public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId, int? currentUserId = null)
         {
             using var _appContext = ContextFactory.CreateDbContext();
             string? ConnectionString = await _appContext.Tenants
@@ -150,7 +151,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             });
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
-                TenantId = tenantId
+                TenantId = tenantId,
+                CurrentUserId = currentUserId
             };
 
             return db;
@@ -245,23 +247,130 @@ namespace ProjectManagement.Adminstrator.Services.Users
             return false;
         }
 
-        public async Task<bool> AddBasicCompanyInfoAsync(int tenantId)
+        public async Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null)
         {
-            var dataAccess = await CreateDbContext(tenantId);
+            var dataAccess = await CreateDbContext(tenantId, userId);
+            var changed = 0;
 
-            if (!await dataAccess.ResourceStatus.AnyAsync())
+            var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                dataAccess.ResourceStatus.AddRange(
-                    new StatusResourcesEntity("Active", "#16a34a", 10, true),
-                    new StatusResourcesEntity("Inactive", "#dc2626", 20, true));
+                ("Active", "#16a34a", 10, true),
+                ("Inactive", "#dc2626", 20, true),
+            };
+
+            var existingResourceStatuses = await dataAccess.ResourceStatus.ToListAsync();
+            foreach (var defaultResourceStatus in defaultResourceStatuses)
+            {
+                var status = existingResourceStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultResourceStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (status is null)
+                {
+                    dataAccess.ResourceStatus.Add(new StatusResourcesEntity(
+                        defaultResourceStatus.Name,
+                        defaultResourceStatus.Color,
+                        defaultResourceStatus.SortOrder,
+                        defaultResourceStatus.IsVisible));
+                    continue;
+                }
+
+                status.Update(
+                    defaultResourceStatus.Name,
+                    defaultResourceStatus.Color,
+                    defaultResourceStatus.SortOrder,
+                    defaultResourceStatus.IsVisible);
             }
 
-            if (!await dataAccess.TaskStatus.AnyAsync())
+            var defaultTaskStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                dataAccess.TaskStatus.AddRange(
-                    new TaskStatusEntity("Planned", "#2563eb", 10, true),
-                    new TaskStatusEntity("In Progress", "#f59e0b", 20, true),
-                    new TaskStatusEntity("Done", "#16a34a", 30, true));
+                ("Planned", "#2563eb", 10, true),
+                ("In Progress", "#f59e0b", 20, true),
+                ("Done", "#16a34a", 30, true),
+            };
+
+            var existingTaskStatuses = await dataAccess.TaskStatus.ToListAsync();
+            foreach (var defaultTaskStatus in defaultTaskStatuses)
+            {
+                var status = existingTaskStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultTaskStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (status is null)
+                {
+                    dataAccess.TaskStatus.Add(new TaskStatusEntity(
+                        defaultTaskStatus.Name,
+                        defaultTaskStatus.Color,
+                        defaultTaskStatus.SortOrder,
+                        defaultTaskStatus.IsVisible));
+                    continue;
+                }
+
+                status.Update(
+                    defaultTaskStatus.Name,
+                    defaultTaskStatus.Color,
+                    defaultTaskStatus.SortOrder,
+                    defaultTaskStatus.IsVisible);
+            }
+
+            var defaultAccountGroups = new[] { "AG1", "AG2" };
+            var existingAccountGroups = await dataAccess.AccountGroup.ToListAsync();
+            foreach (var groupName in defaultAccountGroups)
+            {
+                var accountGroup = existingAccountGroups.FirstOrDefault(x =>
+                    string.Equals(x.Name, groupName, StringComparison.OrdinalIgnoreCase));
+
+                if (accountGroup is null)
+                {
+                    dataAccess.AccountGroup.Add(new AccountGroupEntity(groupName));
+                    continue;
+                }
+
+                accountGroup.Update(groupName);
+            }
+
+            if (dataAccess.ChangeTracker.HasChanges())
+            {
+                changed += await dataAccess.SaveChangesAsync();
+            }
+
+            var accountGroupsByName = await dataAccess.AccountGroup
+                .ToDictionaryAsync(x => x.Name, StringComparer.OrdinalIgnoreCase);
+
+            var defaultAccounts = new (string Code, string Name, string GroupName, bool IsVisible)[]
+            {
+                ("Code1", "Acc1", "AG1", true),
+                ("Code2", "Acc2", "AG1", true),
+                ("Code3", "Acc3", "AG2", true),
+                ("Code4", "Acc4", "AG2", true),
+            };
+
+            var existingAccounts = await dataAccess.Accounts.ToListAsync();
+            foreach (var defaultAccount in defaultAccounts)
+            {
+                if (!accountGroupsByName.TryGetValue(defaultAccount.GroupName, out var accountGroup))
+                {
+                    continue;
+                }
+
+                var account = existingAccounts.FirstOrDefault(x =>
+                    string.Equals(x.Code, defaultAccount.Code, StringComparison.OrdinalIgnoreCase));
+
+                if (account is null)
+                {
+                    dataAccess.Accounts.Add(new AccountEntity(
+                        defaultAccount.Code,
+                        defaultAccount.Name,
+                        accountGroup.Id,
+                        defaultAccount.IsVisible,
+                        new AccountData()));
+                    continue;
+                }
+
+                account.Update(
+                    defaultAccount.Code,
+                    defaultAccount.Name,
+                    accountGroup.Id,
+                    defaultAccount.IsVisible,
+                    account.Metadata);
             }
 
             if (!await dataAccess.Department.AnyAsync())
@@ -271,19 +380,28 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     DepartmentEntity.Create(new DepartmentBase { Name = "Engineering", Description = "Default engineering department" }));
             }
 
-            if (!await dataAccess.ResourceTypes.AnyAsync())
+            var existingResourceTypes = await dataAccess.ResourceTypes.ToListAsync();
+            var order = 10;
+            foreach (var type in Enum.GetValues<ResourceTypesEnum>())
             {
-                var order = 10;
-                foreach (var type in Enum.GetValues<ResourceTypesEnum>())
+                var resourceTypeDto = new PostResourceTypeDTO
                 {
-                    dataAccess.ResourceTypes.Add(ResourceTypeEntity.Create(new PostResourceTypeDTO
-                    {
-                        Name = type.ToString(),
-                        IsVisible = true,
-                        Type = type,
-                    }, order));
+                    Name = type.ToString(),
+                    IsVisible = true,
+                    Type = type,
+                };
+
+                var resourceType = existingResourceTypes.FirstOrDefault(x => x.Kind == type);
+                if (resourceType is null)
+                {
+                    dataAccess.ResourceTypes.Add(ResourceTypeEntity.Create(resourceTypeDto, order));
                     order += 10;
+                    continue;
                 }
+
+                resourceType.Update(resourceTypeDto);
+                resourceType.UpdateOrder(order);
+                order += 10;
             }
 
             if (!await dataAccess.Compensations.AnyAsync())
@@ -291,16 +409,64 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 dataAccess.Compensations.Add(new CompensationEntity("Fixed price", "#8b5cf6", 10, true));
             }
 
-            if (!await dataAccess.Contracts.AnyAsync())
+            var defaultContracts = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                dataAccess.Contracts.Add(new ContractEntity("Standard contract", "#0ea5e9", 10, true));
+                ("Standard contract", "#0ea5e9", 10, true),
+            };
+
+            var existingContracts = await dataAccess.Contracts.ToListAsync();
+            foreach (var defaultContract in defaultContracts)
+            {
+                var contract = existingContracts.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultContract.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (contract is null)
+                {
+                    dataAccess.Contracts.Add(new ContractEntity(
+                        defaultContract.Name,
+                        defaultContract.Color,
+                        defaultContract.SortOrder,
+                        defaultContract.IsVisible));
+                    continue;
+                }
+
+                contract.Update(
+                    defaultContract.Name,
+                    defaultContract.Color,
+                    defaultContract.SortOrder,
+                    defaultContract.IsVisible);
             }
 
-            if (!await dataAccess.ProcurementMethod.AnyAsync())
+            var defaultProcurementMethods = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                var procurementMethod = new ProcurementMethodEntity();
-                procurementMethod.Update("Direct purchase", "#f97316", 10, true);
-                dataAccess.ProcurementMethod.Add(procurementMethod);
+                ("Limited Procedure", "#00ff00", 1300, true),
+                ("Selective Tending", "#00ff00", 1400, true),
+                ("Open Tendering", "#00ff00", 1500, true),
+            };
+
+            var existingProcurementMethods = await dataAccess.ProcurementMethod.ToListAsync();
+            foreach (var defaultProcurementMethod in defaultProcurementMethods)
+            {
+                var procurementMethod = existingProcurementMethods.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultProcurementMethod.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (procurementMethod is null)
+                {
+                    var newProcurementMethod = new ProcurementMethodEntity();
+                    newProcurementMethod.Update(
+                        defaultProcurementMethod.Name,
+                        defaultProcurementMethod.Color,
+                        defaultProcurementMethod.SortOrder,
+                        defaultProcurementMethod.IsVisible);
+                    dataAccess.ProcurementMethod.Add(newProcurementMethod);
+                    continue;
+                }
+
+                procurementMethod.Update(
+                    defaultProcurementMethod.Name,
+                    defaultProcurementMethod.Color,
+                    defaultProcurementMethod.SortOrder,
+                    defaultProcurementMethod.IsVisible);
             }
 
             if (!await dataAccess.CalculationStatus.AnyAsync())
@@ -317,7 +483,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 dataAccess.CalcProjectType.Add(type);
             }
 
-            var changed = await dataAccess.SaveChangesAsync();
+            if (dataAccess.ChangeTracker.HasChanges())
+            {
+                changed += await dataAccess.SaveChangesAsync();
+            }
+
             return changed > 0;
         }
 

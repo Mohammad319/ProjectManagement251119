@@ -23,7 +23,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         [Parameter] public int Id { get; set; }
         TenantEntity? TenantPut;
         List<ApplicationUser>? Users;
-        bool IsAddingCompanyInfo;
+        string? AddingCompanyInfoForUserId;
         [Parameter] public EventCallback<bool> Callback { get; set; }
         void UserRoleDialog(ApplicationUser user) =>
     Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Email ?? string.Empty], new Dictionary<string, object>
@@ -58,19 +58,28 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             Users = await ExHandlers.RunCheckTokenAsync(() => UsersService.GetUsersAsync(Id));
             StateHasChanged();
         }
-        async Task AddBasicCompanyInfoAsync()
-        {
-            if (Id <= 0 || IsAddingCompanyInfo) return;
+        bool IsAddingCompanyInfoFor(ApplicationUser user) =>
+            !string.IsNullOrWhiteSpace(AddingCompanyInfoForUserId) && AddingCompanyInfoForUserId == user.Id;
 
-            IsAddingCompanyInfo = true;
+        async Task AddBasicCompanyInfoAsync(ApplicationUser user)
+        {
+            if (Id <= 0 || user is null || string.IsNullOrWhiteSpace(user.Id) || IsAddingCompanyInfoFor(user)) return;
+
+            if (!user.UserId.HasValue || user.UserId.Value <= 0)
+            {
+                MHD.MessageOk(ResourceApp.newItem, "Selected user does not have a linked tenant user id.", MhdState.Warning);
+                return;
+            }
+
+            AddingCompanyInfoForUserId = user.Id;
             try
             {
-                var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id));
-                MHD.MessageOk(ResourceApp.newItem, result ? "Basic company info added successfully." : "No data was added (already exists).", result ? MhdState.Success : MhdState.Info);
+                var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id, user.UserId));
+                MHD.MessageOk(ResourceApp.newItem, result ? "Basic company info added/updated successfully." : "No changes were required.", result ? MhdState.Success : MhdState.Info);
             }
             finally
             {
-                IsAddingCompanyInfo = false;
+                AddingCompanyInfoForUserId = null;
                 StateHasChanged();
             }
         }
