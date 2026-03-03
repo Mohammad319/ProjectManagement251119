@@ -133,7 +133,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             return roles;
         }
 
-        public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId)
+        public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId, int? currentUserId = null)
         {
             using var _appContext = ContextFactory.CreateDbContext();
             string? ConnectionString = await _appContext.Tenants
@@ -150,7 +150,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             });
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
-                TenantId = tenantId
+                TenantId = tenantId,
+                CurrentUserId = currentUserId
             };
 
             return db;
@@ -245,9 +246,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
             return false;
         }
 
-        public async Task<bool> AddBasicCompanyInfoAsync(int tenantId)
+        public async Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null)
         {
-            var dataAccess = await CreateDbContext(tenantId);
+            var dataAccess = await CreateDbContext(tenantId, userId);
 
             if (!await dataAccess.ResourceStatus.AnyAsync())
             {

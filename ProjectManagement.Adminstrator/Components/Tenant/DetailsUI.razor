@@ -74,9 +74,6 @@
         <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom2" @onclick="(e) => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
             New User
         </button>
-        <button class="@CsS.Btn.Outline.Primary CsS.Spacing.M.Bottom2" @onclick="AddBasicCompanyInfoAsync" disabled="@IsAddingCompanyInfo">
-            @(IsAddingCompanyInfo ? "Adding..." : "Add Basic Company Info")
-        </button>
     </AuthorizeView>
 
     @if (Users == null || !Users.Any())
@@ -98,6 +95,7 @@
                         <th class="@CsS.Table.TH">@ResourceIdentity.lockoutEnd</th>
                         <th class="@CsS.Table.TH">@ResourceIdentity.lockoutStart</th>
                         <th class="@CsS.Table.TH">@ResourceApp.department</th>
+                        <th class="@CsS.Table.TH">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="@CsS.Table.TBody">
@@ -117,6 +115,15 @@
                                 @(user.LockoutStart.HasValue? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)
                             </td>
                             <td class="@CsS.Table.Td">@user.DepartmentId</td>
+                            <td class="@CsS.Table.Td">
+                                <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
+                                    <button class="@CsS.Btn.Outline.Primary"
+                                            @onclick="() => AddBasicCompanyInfoAsync(user)"
+                                            disabled="@IsAddingCompanyInfoFor(user)">
+                                        @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
+                                    </button>
+                                </AuthorizeView>
+                            </td>
                         </tr>
                     }
                 </tbody>
