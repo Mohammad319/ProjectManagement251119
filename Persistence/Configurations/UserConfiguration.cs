@@ -11,9 +11,8 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<UserEntity> builder)
         {
-            // Tenant databases store users in [dbo].[User].
-            // Set both table + schema explicitly so EF does not rely on login default schema.
-            // This prevents runtime failures like: "Invalid object name 'User'".
+            // Existing tenant databases use [dbo].[User].
+            // Keep table + schema explicit to avoid default-schema ambiguities.
             builder.ToTable("User", "dbo");
 
             builder.HasIndex(u => u.Email).IsUnique();
