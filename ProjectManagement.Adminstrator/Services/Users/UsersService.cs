@@ -160,7 +160,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
         {
             await using var dbtenant = await CreateDbContext(tenantId);
 
-            var hasMigrations = (await dbtenant.Database.GetMigrationsAsync()).Any();
+            var hasMigrations = dbtenant.Database.GetMigrations().Any();
             if (hasMigrations)
             {
                 await dbtenant.Database.MigrateAsync();

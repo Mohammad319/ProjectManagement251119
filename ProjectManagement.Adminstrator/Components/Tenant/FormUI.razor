@@ -172,5 +172,6 @@
             Put = await sersService.GetByIdAsync(Id);
         using var _appContext = ContextFactory.CreateDbContext();
         Databases = await _appContext.TenantDatabase.ToListAsync();
+        if (Id == 0 && Databases != null) Put?.TenantDBId = Databases.First().Id;
     }
     }
