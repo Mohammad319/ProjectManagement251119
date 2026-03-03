@@ -442,12 +442,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     };
 
                     await using var dbtenant = await CreateDbContext(tenantId.Value);
-                    if (!await dbtenant.Database.CanConnectAsync())
-                    {
-                        _logger.LogError("Cannot connect to tenant database while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
-                        return false;
-                    }
-
                     dbtenant.User.Add(tenantUser);
                     await dbtenant.SaveChangesAsync();
 
