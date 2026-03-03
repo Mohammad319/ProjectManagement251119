@@ -380,19 +380,28 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     DepartmentEntity.Create(new DepartmentBase { Name = "Engineering", Description = "Default engineering department" }));
             }
 
-            if (!await dataAccess.ResourceTypes.AnyAsync())
+            var existingResourceTypes = await dataAccess.ResourceTypes.ToListAsync();
+            var order = 10;
+            foreach (var type in Enum.GetValues<ResourceTypesEnum>())
             {
-                var order = 10;
-                foreach (var type in Enum.GetValues<ResourceTypesEnum>())
+                var resourceTypeDto = new PostResourceTypeDTO
                 {
-                    dataAccess.ResourceTypes.Add(ResourceTypeEntity.Create(new PostResourceTypeDTO
-                    {
-                        Name = type.ToString(),
-                        IsVisible = true,
-                        Type = type,
-                    }, order));
+                    Name = type.ToString(),
+                    IsVisible = true,
+                    Type = type,
+                };
+
+                var resourceType = existingResourceTypes.FirstOrDefault(x => x.Kind == type);
+                if (resourceType is null)
+                {
+                    dataAccess.ResourceTypes.Add(ResourceTypeEntity.Create(resourceTypeDto, order));
                     order += 10;
+                    continue;
                 }
+
+                resourceType.Update(resourceTypeDto);
+                resourceType.UpdateOrder(order);
+                order += 10;
             }
 
             if (!await dataAccess.Compensations.AnyAsync())
