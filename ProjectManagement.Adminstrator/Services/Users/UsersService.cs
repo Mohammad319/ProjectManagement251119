@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Persistence.Context;
 using ProjectManagement.Shared.Base.Users;
+using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.DTO.Identity;
 using ProjectManagement.Shared.DTO.Tenant;
@@ -249,6 +250,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
         public async Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null)
         {
             var dataAccess = await CreateDbContext(tenantId, userId);
+            var changed = 0;
 
             var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
@@ -309,6 +311,68 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     defaultTaskStatus.IsVisible);
             }
 
+            var defaultAccountGroups = new[] { "AG1", "AG2" };
+            var existingAccountGroups = await dataAccess.AccountGroup.ToListAsync();
+            foreach (var groupName in defaultAccountGroups)
+            {
+                var accountGroup = existingAccountGroups.FirstOrDefault(x =>
+                    string.Equals(x.Name, groupName, StringComparison.OrdinalIgnoreCase));
+
+                if (accountGroup is null)
+                {
+                    dataAccess.AccountGroup.Add(new AccountGroupEntity(groupName));
+                    continue;
+                }
+
+                accountGroup.Update(groupName);
+            }
+
+            if (dataAccess.ChangeTracker.HasChanges())
+            {
+                changed += await dataAccess.SaveChangesAsync();
+            }
+
+            var accountGroupsByName = await dataAccess.AccountGroup
+                .ToDictionaryAsync(x => x.Name, StringComparer.OrdinalIgnoreCase);
+
+            var defaultAccounts = new (string Code, string Name, string GroupName, bool IsVisible)[]
+            {
+                ("Code1", "Acc1", "AG1", true),
+                ("Code2", "Acc2", "AG1", true),
+                ("Code3", "Acc3", "AG2", true),
+                ("Code4", "Acc4", "AG2", true),
+            };
+
+            var existingAccounts = await dataAccess.Accounts.ToListAsync();
+            foreach (var defaultAccount in defaultAccounts)
+            {
+                if (!accountGroupsByName.TryGetValue(defaultAccount.GroupName, out var accountGroup))
+                {
+                    continue;
+                }
+
+                var account = existingAccounts.FirstOrDefault(x =>
+                    string.Equals(x.Code, defaultAccount.Code, StringComparison.OrdinalIgnoreCase));
+
+                if (account is null)
+                {
+                    dataAccess.Accounts.Add(new AccountEntity(
+                        defaultAccount.Code,
+                        defaultAccount.Name,
+                        accountGroup.Id,
+                        defaultAccount.IsVisible,
+                        new AccountData()));
+                    continue;
+                }
+
+                account.Update(
+                    defaultAccount.Code,
+                    defaultAccount.Name,
+                    accountGroup.Id,
+                    defaultAccount.IsVisible,
+                    account.Metadata);
+            }
+
             if (!await dataAccess.Department.AnyAsync())
             {
                 dataAccess.Department.AddRange(
@@ -362,7 +426,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 dataAccess.CalcProjectType.Add(type);
             }
 
-            var changed = await dataAccess.SaveChangesAsync();
+            if (dataAccess.ChangeTracker.HasChanges())
+            {
+                changed += await dataAccess.SaveChangesAsync();
+            }
+
             return changed > 0;
         }
 
