@@ -3,6 +3,7 @@ using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -434,10 +435,25 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     userEntity.UserId = tenantUser.Id;
                 }
             }
+            catch (SqlException ex)
+            {
+                LogTenantRegistrationSqlFailure(ex, tenantId, request.Email, "SQL error while creating tenant user.");
+                return false;
+            }
 
+            catch (RetryLimitExceededException ex) when (ex.InnerException is SqlException sqlEx)
+            {
+                LogTenantRegistrationSqlFailure(sqlEx, tenantId, request.Email, "Retry limit exceeded while creating tenant user.");
+                return false;
+            }
             catch (RetryLimitExceededException ex)
             {
                 _logger.LogError(ex, "Retry limit exceeded while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
+                return false;
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx)
+            {
+                LogTenantRegistrationSqlFailure(sqlEx, tenantId, request.Email, "Database update failed while creating tenant user.");
                 return false;
             }
             catch (DbUpdateException ex)
@@ -481,6 +497,19 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
 
             return result.Succeeded;
+        }
+
+        private void LogTenantRegistrationSqlFailure(SqlException ex, int? tenantId, string email, string context)
+        {
+            _logger.LogError(
+                ex,
+                "{Context} Tenant {TenantId}, email {Email}, sql error {SqlErrorNumber} state {SqlState}: {SqlMessage}",
+                context,
+                tenantId,
+                email,
+                ex.Number,
+                ex.State,
+                ex.Message);
         }
     }
 }
