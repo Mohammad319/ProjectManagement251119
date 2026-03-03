@@ -37,6 +37,11 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
         // Apply all IEntityTypeConfiguration<> in this assembly.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShardingSingleDbContext).Assembly);
 
+        // Hard-guard mapping for tenant users to avoid accidental fallback to plural table names.
+        // This is intentionally repeated here (in addition to UserConfiguration) because tenant
+        // registration is a critical path and production DB schema is fixed at [dbo].[User].
+        modelBuilder.Entity<UserEntity>().ToTable("User", "dbo");
+
         ConfigureJsonDataConversions(modelBuilder);
         ConfigureOrderSequences(modelBuilder);
 
