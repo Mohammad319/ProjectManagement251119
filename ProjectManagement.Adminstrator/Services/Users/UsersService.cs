@@ -159,7 +159,16 @@ namespace ProjectManagement.Adminstrator.Services.Users
         private async Task EnsureTenantDatabaseReadyAsync(int tenantId)
         {
             await using var dbtenant = await CreateDbContext(tenantId);
-            await dbtenant.Database.MigrateAsync();
+
+            var hasMigrations = (await dbtenant.Database.GetMigrationsAsync()).Any();
+            if (hasMigrations)
+            {
+                await dbtenant.Database.MigrateAsync();
+            }
+            else
+            {
+                await dbtenant.Database.EnsureCreatedAsync();
+            }
         }
         public async Task<bool> RemoveTenant(int TenantId)
         {
