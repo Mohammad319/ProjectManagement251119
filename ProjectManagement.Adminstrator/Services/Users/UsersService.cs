@@ -313,12 +313,28 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
                 await _appContext.SaveChangesAsync();
             }
-            catch (RetryLimitExceededException)
+            catch (RetryLimitExceededException ex)
             {
+                _logger.LogError(ex,
+                    "Retry limit exceeded while updating user {UserId} for tenant {TenantId}.",
+                    user.Id,
+                    tentnid);
                 return false;
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
+                _logger.LogError(ex,
+                    "Database update failed while updating user {UserId} for tenant {TenantId}.",
+                    user.Id,
+                    tentnid);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Unexpected error while updating user {UserId} for tenant {TenantId}.",
+                    user.Id,
+                    tentnid);
                 return false;
             }
 
@@ -426,12 +442,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     };
 
                     await using var dbtenant = await CreateDbContext(tenantId.Value);
-                    if (!await dbtenant.Database.CanConnectAsync())
-                    {
-                        _logger.LogError("Cannot connect to tenant database while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
-                        return false;
-                    }
-
                     dbtenant.User.Add(tenantUser);
                     await dbtenant.SaveChangesAsync();
 
