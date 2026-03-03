@@ -431,10 +431,14 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     };
 
                     await using var dbtenant = await CreateDbContext(tenantId.Value, enableRetry: false);
-                    var canConnect = await dbtenant.Database.CanConnectAsync();
-                    if (!canConnect)
+                    try
                     {
-                        _logger.LogError("Cannot connect to tenant database for tenant {TenantId} while creating user {Email}.", tenantId, request.Email);
+                        await dbtenant.Database.OpenConnectionAsync();
+                        await dbtenant.Database.CloseConnectionAsync();
+                    }
+                    catch (SqlException ex) when (IsTenantLoginFailure(ex))
+                    {
+                        LogTenantLoginFailure(ex, tenantId.Value, request.Email);
                         return false;
                     }
 
@@ -447,9 +451,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     userEntity.UserId = tenantUser.Id;
                 }
             }
-            catch (SqlException ex) when (ex.Number is 4060 or 18456)
+            catch (SqlException ex) when (tenantId.HasValue && IsTenantLoginFailure(ex))
             {
-                _logger.LogError(ex, "Tenant database login failed for tenant {TenantId} while creating user {Email}. Verify DB access and SQL login permissions.", tenantId, request.Email);
+                LogTenantLoginFailure(ex, tenantId.Value, request.Email);
                 return false;
             }
 
@@ -499,9 +503,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     dbtenant.User.Remove(tenantUser);
                     await dbtenant.SaveChangesAsync();
                 }
-                catch (SqlException ex) when (ex.Number is 4060 or 18456)
+                catch (SqlException ex) when (tenantId.HasValue && IsTenantLoginFailure(ex))
                 {
-                    _logger.LogWarning(ex, "Tenant user rollback skipped due to tenant database login failure for tenant {TenantId} after identity creation failed for {Email}.", tenantId, request.Email);
+                    _logger.LogWarning(ex, "Tenant user rollback skipped بسبب فشل تسجيل الدخول لقاعدة tenant. TenantId: {TenantId}, Email: {Email}.", tenantId, request.Email);
                 }
                 catch (Exception ex)
                 {
@@ -510,6 +514,37 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
 
             return result.Succeeded;
+        }
+
+        private static bool IsTenantLoginFailure(SqlException ex)
+            => ex.Number is 4060 or 18456;
+
+        private void LogTenantLoginFailure(SqlException ex, int tenantId, string email)
+        {
+            SqlConnectionStringBuilder? builder = null;
+            try
+            {
+                using var appContext = ContextFactory.CreateDbContext();
+                var connectionString = appContext.Tenants
+                    .Where(x => x.Id == tenantId)
+                    .Select(x => x.TenantDB.ConnectionString)
+                    .FirstOrDefault();
+
+                if (!string.IsNullOrWhiteSpace(connectionString))
+                    builder = new SqlConnectionStringBuilder(connectionString);
+            }
+            catch
+            {
+                // no-op: logging should never break registration flow
+            }
+
+            _logger.LogError(ex,
+                "فشل تسجيل الدخول لقاعدة بيانات tenant أثناء إنشاء المستخدم. TenantId: {TenantId}, Email: {Email}, DataSource: {DataSource}, InitialCatalog: {InitialCatalog}, IntegratedSecurity: {IntegratedSecurity}.",
+                tenantId,
+                email,
+                builder?.DataSource,
+                builder?.InitialCatalog,
+                builder?.IntegratedSecurity);
         }
     }
 }
