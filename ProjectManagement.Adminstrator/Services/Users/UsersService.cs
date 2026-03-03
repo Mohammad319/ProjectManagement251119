@@ -250,11 +250,33 @@ namespace ProjectManagement.Adminstrator.Services.Users
         {
             var dataAccess = await CreateDbContext(tenantId, userId);
 
-            if (!await dataAccess.ResourceStatus.AnyAsync())
+            var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                dataAccess.ResourceStatus.AddRange(
-                    new StatusResourcesEntity("Active", "#16a34a", 10, true),
-                    new StatusResourcesEntity("Inactive", "#dc2626", 20, true));
+                ("Active", "#16a34a", 10, true),
+                ("Inactive", "#dc2626", 20, true),
+            };
+
+            var existingResourceStatuses = await dataAccess.ResourceStatus.ToListAsync();
+            foreach (var defaultResourceStatus in defaultResourceStatuses)
+            {
+                var status = existingResourceStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultResourceStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (status is null)
+                {
+                    dataAccess.ResourceStatus.Add(new StatusResourcesEntity(
+                        defaultResourceStatus.Name,
+                        defaultResourceStatus.Color,
+                        defaultResourceStatus.SortOrder,
+                        defaultResourceStatus.IsVisible));
+                    continue;
+                }
+
+                status.Update(
+                    defaultResourceStatus.Name,
+                    defaultResourceStatus.Color,
+                    defaultResourceStatus.SortOrder,
+                    defaultResourceStatus.IsVisible);
             }
 
             var defaultTaskStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
