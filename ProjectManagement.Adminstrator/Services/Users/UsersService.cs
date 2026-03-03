@@ -313,12 +313,28 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
                 await _appContext.SaveChangesAsync();
             }
-            catch (RetryLimitExceededException)
+            catch (RetryLimitExceededException ex)
             {
+                _logger.LogError(ex,
+                    "Retry limit exceeded while updating user {UserId} for tenant {TenantId}.",
+                    user.Id,
+                    tentnid);
                 return false;
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
+                _logger.LogError(ex,
+                    "Database update failed while updating user {UserId} for tenant {TenantId}.",
+                    user.Id,
+                    tentnid);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Unexpected error while updating user {UserId} for tenant {TenantId}.",
+                    user.Id,
+                    tentnid);
                 return false;
             }
 
