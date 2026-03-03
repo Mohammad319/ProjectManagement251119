@@ -6,6 +6,7 @@ using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using Persistence.Context;
 using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.DTO.ResourceType;
@@ -18,7 +19,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
 {
     public class UsersService(UserManager<ApplicationUser> _userManager,
         IServiceScopeFactory _scopeFactory,
-          IDbContextFactory<ApplicationDbContext> ContextFactory
+          IDbContextFactory<ApplicationDbContext> ContextFactory,
+          ILogger<UsersService> _logger
        ) : IUsersService
     {
 
@@ -142,7 +144,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
             optionsBuilder.UseSqlServer(ConnectionString, sqlOptions =>
             {
-                sqlOptions.EnableRetryOnFailure();
+                sqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null);
+                sqlOptions.CommandTimeout(30);
             });
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
@@ -421,7 +424,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                         Email = request.Email,
                     };
 
-                    var dbtenant = await CreateDbContext(tenantId.Value);
+                    await using var dbtenant = await CreateDbContext(tenantId.Value);
                     dbtenant.User.Add(tenantUser);
                     await dbtenant.SaveChangesAsync();
 
@@ -432,9 +435,19 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 }
             }
 
-            catch (RetryLimitExceededException)
-
+            catch (RetryLimitExceededException ex)
             {
+                _logger.LogError(ex, "Retry limit exceeded while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
+                return false;
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database update failed while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while creating tenant user for tenant {TenantId} and email {Email}.", tenantId, request.Email);
                 return false;
             }
 
@@ -446,12 +459,13 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     try
                     {
                         tenantUser.ExternalAuthId = userEntity.Id;
-                        var dbtenant = await CreateDbContext(tenantId.Value);
+                        await using var dbtenant = await CreateDbContext(tenantId.Value);
                         dbtenant.User.Update(tenantUser);
                         await dbtenant.SaveChangesAsync();
                     }
-                    catch (RetryLimitExceededException)
+                    catch (Exception ex)
                     {
+                        _logger.LogError(ex, "Failed to link external auth id for tenant user {UserId} in tenant {TenantId}.", tenantUser.Id, tenantId);
                         await _userManager.DeleteAsync(userEntity);
                         return false;
                     }
@@ -461,7 +475,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
             else if (tenantId.HasValue && tenantUser != null)
             {
-                var dbtenant = await CreateDbContext(tenantId.Value);
+                await using var dbtenant = await CreateDbContext(tenantId.Value);
                 dbtenant.User.Remove(tenantUser);
                 await dbtenant.SaveChangesAsync();
             }
