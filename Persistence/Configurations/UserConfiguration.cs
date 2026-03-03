@@ -11,8 +11,9 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<UserEntity> builder)
         {
-            // Existing tenant databases use the pluralized table name.
-            builder.ToTable("Users");
+            // Tenant databases use the singular table name generated from DbSet<User>.
+            // Mapping explicitly avoids runtime failures like "Invalid object name 'Users'".
+            builder.ToTable("User");
 
             builder.HasIndex(u => u.Email).IsUnique();
 
