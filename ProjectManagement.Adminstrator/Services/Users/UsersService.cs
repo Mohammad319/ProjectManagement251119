@@ -177,10 +177,27 @@ namespace ProjectManagement.Adminstrator.Services.Users
         {
             const string sql = """
                 IF OBJECT_ID(N'[dbo].[Users]', N'U') IS NULL
+                   AND OBJECT_ID(N'[dbo].[Users]', N'V') IS NULL
                    AND OBJECT_ID(N'[dbo].[Users]', N'SN') IS NULL
-                   AND OBJECT_ID(N'[dbo].[User]', N'U') IS NOT NULL
+                   AND (
+                        OBJECT_ID(N'[dbo].[User]', N'U') IS NOT NULL
+                        OR OBJECT_ID(N'[dbo].[User]', N'V') IS NOT NULL
+                        OR OBJECT_ID(N'[dbo].[User]', N'SN') IS NOT NULL
+                   )
                 BEGIN
                     EXEC(N'CREATE SYNONYM [dbo].[Users] FOR [dbo].[User]');
+                END
+
+                IF OBJECT_ID(N'[dbo].[User]', N'U') IS NULL
+                   AND OBJECT_ID(N'[dbo].[User]', N'V') IS NULL
+                   AND OBJECT_ID(N'[dbo].[User]', N'SN') IS NULL
+                   AND (
+                        OBJECT_ID(N'[dbo].[Users]', N'U') IS NOT NULL
+                        OR OBJECT_ID(N'[dbo].[Users]', N'V') IS NOT NULL
+                        OR OBJECT_ID(N'[dbo].[Users]', N'SN') IS NOT NULL
+                   )
+                BEGIN
+                    EXEC(N'CREATE SYNONYM [dbo].[User] FOR [dbo].[Users]');
                 END
                 """;
 
