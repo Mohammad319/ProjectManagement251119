@@ -3,6 +3,7 @@ using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -430,7 +431,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     };
 
                     await using var dbtenant = await CreateDbContext(tenantId.Value, enableRetry: false);
-                    if (!await dbtenant.Database.CanConnectAsync())
+                    var canConnect = await dbtenant.Database.CanConnectAsync();
+                    if (!canConnect)
                     {
                         _logger.LogError("Cannot connect to tenant database for tenant {TenantId} while creating user {Email}.", tenantId, request.Email);
                         return false;
@@ -444,6 +446,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
                     userEntity.UserId = tenantUser.Id;
                 }
+            }
+            catch (SqlException ex) when (ex.Number is 4060 or 18456)
+            {
+                _logger.LogError(ex, "Tenant database login failed for tenant {TenantId} while creating user {Email}. Verify DB access and SQL login permissions.", tenantId, request.Email);
+                return false;
             }
 
             catch (RetryLimitExceededException ex)
@@ -486,9 +493,20 @@ namespace ProjectManagement.Adminstrator.Services.Users
             }
             else if (tenantId.HasValue && tenantUser != null)
             {
-                await using var dbtenant = await CreateDbContext(tenantId.Value, enableRetry: false);
-                dbtenant.User.Remove(tenantUser);
-                await dbtenant.SaveChangesAsync();
+                try
+                {
+                    await using var dbtenant = await CreateDbContext(tenantId.Value, enableRetry: false);
+                    dbtenant.User.Remove(tenantUser);
+                    await dbtenant.SaveChangesAsync();
+                }
+                catch (SqlException ex) when (ex.Number is 4060 or 18456)
+                {
+                    _logger.LogWarning(ex, "Tenant user rollback skipped due to tenant database login failure for tenant {TenantId} after identity creation failed for {Email}.", tenantId, request.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Tenant user rollback failed for tenant {TenantId} and email {Email}.", tenantId, request.Email);
+                }
             }
 
             return result.Succeeded;
