@@ -11,6 +11,9 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<UserEntity> builder)
         {
+            // Existing tenant databases use the pluralized table name.
+            builder.ToTable("Users");
+
             builder.HasIndex(u => u.Email).IsUnique();
 
             builder.Property(u => u.FirstName).HasMaxLength(30);
