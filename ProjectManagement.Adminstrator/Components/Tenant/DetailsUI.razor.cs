@@ -75,7 +75,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             try
             {
                 var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id, user.UserId));
-                MHD.MessageOk(ResourceApp.newItem, result ? "Basic company info added successfully." : "No data was added (already exists).", result ? MhdState.Success : MhdState.Info);
+                MHD.MessageOk(ResourceApp.newItem, result ? "Basic company info added/updated successfully." : "No changes were required.", result ? MhdState.Success : MhdState.Info);
             }
             finally
             {

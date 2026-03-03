@@ -257,12 +257,34 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     new StatusResourcesEntity("Inactive", "#dc2626", 20, true));
             }
 
-            if (!await dataAccess.TaskStatus.AnyAsync())
+            var defaultTaskStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                dataAccess.TaskStatus.AddRange(
-                    new TaskStatusEntity("Planned", "#2563eb", 10, true),
-                    new TaskStatusEntity("In Progress", "#f59e0b", 20, true),
-                    new TaskStatusEntity("Done", "#16a34a", 30, true));
+                ("Planned", "#2563eb", 10, true),
+                ("In Progress", "#f59e0b", 20, true),
+                ("Done", "#16a34a", 30, true),
+            };
+
+            var existingTaskStatuses = await dataAccess.TaskStatus.ToListAsync();
+            foreach (var defaultTaskStatus in defaultTaskStatuses)
+            {
+                var status = existingTaskStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultTaskStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (status is null)
+                {
+                    dataAccess.TaskStatus.Add(new TaskStatusEntity(
+                        defaultTaskStatus.Name,
+                        defaultTaskStatus.Color,
+                        defaultTaskStatus.SortOrder,
+                        defaultTaskStatus.IsVisible));
+                    continue;
+                }
+
+                status.Update(
+                    defaultTaskStatus.Name,
+                    defaultTaskStatus.Color,
+                    defaultTaskStatus.SortOrder,
+                    defaultTaskStatus.IsVisible);
             }
 
             if (!await dataAccess.Department.AnyAsync())
