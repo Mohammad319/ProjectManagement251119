@@ -42,8 +42,23 @@ namespace ProjectManagement.Adminstrator.Services.Users
         public async Task<int> CreateAsync(TenantEntity tenant)
         {
             using var _appContext = ContextFactory.CreateDbContext();
+
+            var tenantName = tenant.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(tenantName))
+                throw new ArgumentException("Tenant name is required.", nameof(tenant));
+
+            var tenantDbExists = await _appContext.TenantDatabase
+                .AnyAsync(x => x.Id == tenant.TenantDBId);
+            if (!tenantDbExists)
+                throw new InvalidOperationException($"Tenant database with id '{tenant.TenantDBId}' does not exist.");
+
+            var duplicateName = await _appContext.Tenants
+                .AnyAsync(x => x.Name == tenantName);
+            if (duplicateName)
+                throw new InvalidOperationException($"A tenant with the name '{tenantName}' already exists.");
+
             TenantEntity t = new();
-            t.Name = tenant.Name;
+            t.Name = tenantName;
             t.TenantDBId = tenant.TenantDBId;
             t.Street = tenant.Street;
             t.City = tenant.City;
@@ -53,7 +68,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
             t.PostCode = tenant.PostCode;
             t.MaxCalculations = tenant.MaxCalculations;
             t.MaxUsers = tenant.MaxUsers;
-            t.Fax = tenant.Fax;
             t.Website = tenant.Website;
             t.Phone = tenant.Phone;
             t.Mobile = tenant.Mobile;
@@ -70,7 +84,21 @@ namespace ProjectManagement.Adminstrator.Services.Users
             var t = await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == tenant.Id);
             if (t == null) { return false; }
 
-            t.Name = tenant.Name;
+            var tenantName = tenant.Name?.Trim();
+            if (string.IsNullOrWhiteSpace(tenantName))
+                throw new ArgumentException("Tenant name is required.", nameof(tenant));
+
+            var tenantDbExists = await _appContext.TenantDatabase
+                .AnyAsync(x => x.Id == tenant.TenantDBId);
+            if (!tenantDbExists)
+                throw new InvalidOperationException($"Tenant database with id '{tenant.TenantDBId}' does not exist.");
+
+            var duplicateName = await _appContext.Tenants
+                .AnyAsync(x => x.Id != tenant.Id && x.Name == tenantName);
+            if (duplicateName)
+                throw new InvalidOperationException($"A tenant with the name '{tenantName}' already exists.");
+
+            t.Name = tenantName;
             t.TenantDBId = tenant.TenantDBId;
             t.Street = tenant.Street;
             t.City = tenant.City;
@@ -80,7 +108,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
             t.PostCode = tenant.PostCode;
             t.MaxCalculations = tenant.MaxCalculations;
             t.MaxUsers = tenant.MaxUsers;
-            t.Fax = tenant.Fax;
             t.Website = tenant.Website;
             t.Phone = tenant.Phone;
             t.Mobile = tenant.Mobile;
