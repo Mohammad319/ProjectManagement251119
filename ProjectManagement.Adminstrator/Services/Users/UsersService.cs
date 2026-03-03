@@ -164,11 +164,47 @@ namespace ProjectManagement.Adminstrator.Services.Users
             if (hasMigrations)
             {
                 await dbtenant.Database.MigrateAsync();
+                await EnsureLegacyUsersTableCompatibilityAsync(dbtenant);
+                return;
             }
-            else
+
+            var relationalCreator = dbtenant.Database.GetService<IRelationalDatabaseCreator>();
+            var databaseExists = await relationalCreator.ExistsAsync();
+
+            if (!databaseExists)
             {
                 await dbtenant.Database.EnsureCreatedAsync();
+                await EnsureLegacyUsersTableCompatibilityAsync(dbtenant);
+                return;
             }
+
+            var hasTables = await relationalCreator.HasTablesAsync();
+            if (!hasTables)
+            {
+                await dbtenant.Database.EnsureCreatedAsync();
+                await EnsureLegacyUsersTableCompatibilityAsync(dbtenant);
+                return;
+            }
+
+            await EnsureLegacyUsersTableCompatibilityAsync(dbtenant);
+
+            throw new InvalidOperationException(
+                $"Tenant database for tenant '{tenantId}' exists but no EF migrations are configured for '{nameof(ShardingSingleDbContext)}'. " +
+                "Create tenant migrations and run database update, or provision a fresh tenant database.");
+        }
+
+        private static async Task EnsureLegacyUsersTableCompatibilityAsync(ShardingSingleDbContext dbtenant)
+        {
+            const string sql = """
+                IF OBJECT_ID(N'[dbo].[Users]', N'U') IS NULL
+                   AND OBJECT_ID(N'[dbo].[Users]', N'SN') IS NULL
+                   AND OBJECT_ID(N'[dbo].[User]', N'U') IS NOT NULL
+                BEGIN
+                    EXEC(N'CREATE SYNONYM [dbo].[Users] FOR [dbo].[User]');
+                END
+                """;
+
+            await dbtenant.Database.ExecuteSqlRawAsync(sql);
         }
         public async Task<bool> RemoveTenant(int TenantId)
         {
