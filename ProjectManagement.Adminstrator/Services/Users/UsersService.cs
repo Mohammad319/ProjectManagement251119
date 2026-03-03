@@ -155,6 +155,12 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
             return db;
         }
+
+        private async Task EnsureTenantDatabaseReadyAsync(int tenantId)
+        {
+            await using var dbtenant = await CreateDbContext(tenantId);
+            await dbtenant.Database.MigrateAsync();
+        }
         public async Task<bool> RemoveTenant(int TenantId)
         {
             var dataAccess = await CreateDbContext(TenantId);
@@ -431,6 +437,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             {
                 if (tenantId.HasValue)
                 {
+                    await EnsureTenantDatabaseReadyAsync(tenantId.Value);
+
                     tenantUser = new UserEntity()
                     {
                         DepartmentId = request.DepartmentId,
@@ -450,6 +458,15 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
                     userEntity.UserId = tenantUser.Id;
                 }
+            }
+            catch (SqlException ex) when (ex.Number == 4060)
+            {
+                _logger.LogError(ex,
+                    "Cannot open tenant database while creating tenant user for tenant {TenantId} and email {Email}. " +
+                    "Verify the tenant connection string database exists and the SQL login has access.",
+                    tenantId,
+                    request.Email);
+                return false;
             }
             catch (SqlException ex)
             {
