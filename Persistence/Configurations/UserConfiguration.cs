@@ -11,9 +11,10 @@ namespace Persistence.Configurations
     {
         public void Configure(EntityTypeBuilder<UserEntity> builder)
         {
-            // Tenant databases use the singular table name generated from DbSet<User>.
-            // Mapping explicitly avoids runtime failures like "Invalid object name 'Users'".
-            builder.ToTable("User");
+            // Tenant databases store users in [dbo].[User].
+            // Set both table + schema explicitly so EF does not rely on login default schema.
+            // This prevents runtime failures like: "Invalid object name 'User'".
+            builder.ToTable("User", "dbo");
 
             builder.HasIndex(u => u.Email).IsUnique();
 
