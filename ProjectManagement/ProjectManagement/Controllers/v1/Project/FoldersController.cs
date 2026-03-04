@@ -42,8 +42,9 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpPost]
         public async Task<IActionResult> Create(PostFolderDTO dto)
         {
-            if (GetDepartmentId()==null) return BadRequest();
-            return Ok(await MicroBus.Send(new CreateFolderCommand(dto, GetUserId(), GetDepartmentId().Value)));
+            var departmentId = GetDepartmentId();
+            if (departmentId is null) return BadRequest();
+            return Ok(await MicroBus.Send(new CreateFolderCommand(dto, GetUserId(), departmentId.Value)));
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}")]

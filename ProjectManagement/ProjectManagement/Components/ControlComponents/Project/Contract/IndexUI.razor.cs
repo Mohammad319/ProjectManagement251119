@@ -26,7 +26,7 @@ new Dictionary<string, object> { [nameof(ContractFormUI.Contract)] = model, [nam
             bool result = await MicroBus.Send(new DeleteContractCommand(model.Id));
             if (result)
             {
-                ContractList.Remove(model);
+                ContractList?.Remove(model);
             }
             MHD.Notifications(ToastType.Delete, result);
 

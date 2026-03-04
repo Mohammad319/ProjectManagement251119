@@ -447,8 +447,15 @@
             }
             else
             {
+                var projectId = Folder.State.ProjectSelected?.Id;
+                if (projectId is null)
+                {
+                    MHD.Notifications(ToastType.Info);
+                    return;
+                }
+
                 Calculation.Id = await Repo.Calculation.CreateAsync(
-                    Folder.State.ProjectSelected.Id,
+                    projectId.Value,
                     CalculationUpdate
                 );
 
