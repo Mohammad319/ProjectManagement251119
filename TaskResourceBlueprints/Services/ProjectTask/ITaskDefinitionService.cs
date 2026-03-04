@@ -13,6 +13,7 @@ using TaskResourceBlueprints.Entities.Lookups;
 using TaskResourceBlueprints.Entities.Resources;
 using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure;
+using TaskResourceBlueprints.Mappers.Shared.Mappers;
 namespace TaskResourceBlueprints.Services.ProjectTask
 {
     public static class TaskSelectors
