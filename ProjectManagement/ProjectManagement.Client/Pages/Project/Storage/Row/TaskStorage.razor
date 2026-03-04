@@ -38,7 +38,9 @@
         {
             if (task.Resources != null) foreach (var resource in task.Resources)
             {
-                 <ResourcesStorage Resource="resource"></ResourcesStorage>
+                 <ResourcesStorage Resource="resource">
+                     <ChildContent></ChildContent>
+                 </ResourcesStorage>
             }
 
             if (task.Tasks != null) foreach (var item in task.Tasks.OrderByDescending(x => x.Order))
