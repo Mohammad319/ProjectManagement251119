@@ -9,9 +9,6 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
 {
     partial class ResourceFormUI
     {
-        int Selectwidth = 150;
-        int InputNumber = 110;
-
         private void ChangeQuantityParam(string qp)
         {
             if (string.IsNullOrEmpty(qp))
@@ -68,9 +65,9 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         {
 
             if (!id.HasValue) return;
-            ResTypeSelected = Config.ResourceTypes.FirstOrDefault(x => x.Id == id);
+            ResTypeSelected = Config.ResourceTypes?.FirstOrDefault(x => x.Id == id);
             if (ResTypeSelected == null) return;
-            if (Resource.Id > 0)
+            if (Resource?.Id > 0)
             {
                 ResourceUpdate.ResourceTypeId = id;
                 ResourceUpdate.ResType = ResTypeSelected.Type;
@@ -84,7 +81,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             else if (id.HasValue)
             {
                 ListResourceSortDTO? ResourceSort = ResTypeSelected?.ResourcesSort?.FirstOrDefault(x => x.Id == id);
-                await ChangeResType(ResourceSort);
+                if (ResourceSort is not null)
+                    await ChangeResType(ResourceSort);
             }
             else
             {
@@ -96,9 +94,10 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         {
             AccountGroupSelected = new();
             ResourceUpdate.AccountId = null;
-            if (string.IsNullOrEmpty(e.Value.ToString())) return;
+            var selected = e.Value?.ToString();
+            if (string.IsNullOrEmpty(selected) || !int.TryParse(selected, out var accountGroupId)) return;
             await Task.Delay(1);
-            AccountGroupSelected = Config?.AccountGroups?.FirstOrDefault(x => x.Id == int.Parse(e.Value.ToString()));
+            AccountGroupSelected = Config?.AccountGroups?.FirstOrDefault(x => x.Id == accountGroupId);
         }
         async Task SetNewAccountAsync(int? accountId)
         {
@@ -106,7 +105,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             await Task.Delay(1);
             ResourceUpdate.AccountId = accountId;
             if (accountId != null)
-                AccountGroupSelected = Config.AccountGroups.FirstOrDefault(x => x.Accounts.Any(s => s.Id == accountId));
+                AccountGroupSelected = Config.AccountGroups?.FirstOrDefault(x => x.Accounts.Any(s => s.Id == accountId));
             Refresh = false;
         }
 
@@ -114,31 +113,40 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         {
             btnSubmitDisabled = true;
             bool hasSuccess = false;
+            var resource = Resource;
+            if (resource is null)
+            {
+                MHD.Notifications(ToastType.Danger, false);
+                Close();
+                return;
+            }
+
             try
             {
                 if (ResTypeSelected != null)
                     ResourceUpdate.ResType = ResTypeSelected.Type;
-                if (Resource.Id > 0)
+                if (resource.Id > 0)
                 {
-                    hasSuccess = await Repo.Resource.UpdateAsync(ResourceUpdate, Resource.Id);
+                    hasSuccess = await Repo.Resource.UpdateAsync(ResourceUpdate, resource.Id);
                 }
-                else if (Resource.Id == 0)
+                else if (resource.Id == 0)
                 {
                     double maxOrder = 0;
-                    if (Calc?.Tasks?.FirstOrDefault(x => x.Id == Resource.TaskId)?.Resources.Count != 0)
-                        maxOrder = Calc.Tasks.FirstOrDefault(x => x.Id == Resource.TaskId).Resources.OrderByDescending(x => x.Order).Last().Order + 100;
+                    var task = Calc?.Tasks?.FirstOrDefault(x => x.Id == resource.TaskId);
+                    if (task?.Resources?.Count > 0)
+                        maxOrder = task.Resources.Max(x => x.Order) + 100;
                     foreach (var item in PostList)
                     {
                         item.Order = maxOrder;
                         maxOrder += 100;
                     }
-                    hasSuccess = await Repo.Resource.CreateAsync([ResourceUpdate], Resource.TaskId);
+                    hasSuccess = await Repo.Resource.CreateAsync([ResourceUpdate], resource.TaskId);
                 }
-                MHD.Notifications(Resource.Id == 0 ? ToastType.Add : ToastType.Update, hasSuccess);
+                MHD.Notifications(resource.Id == 0 ? ToastType.Add : ToastType.Update, hasSuccess);
             }
             catch (Exception ex)
             {
-                MHD.Notifications(Resource.Id == 0 ? ToastType.Add : ToastType.Update, false);
+                MHD.Notifications(resource.Id == 0 ? ToastType.Add : ToastType.Update, false);
                 Console.WriteLine(ex.Message);
             }
             Close();
@@ -153,9 +161,13 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             if (Calc.Opportunities == null)
                 Calc.Opportunities = await Repo.Opportunity.GetAsync(Calc.Id);
             Config = await Repo.Resource.GetConfigForm();
-            PropertyCopier.CopyPropertiesTo(Resource, ResourceUpdate);
-            ResourceUpdate.Data = Resource.Data;
-            if (Resource.Id > 0)
+            if (Resource is not null)
+            {
+                PropertyCopier.CopyPropertiesTo(Resource, ResourceUpdate);
+                ResourceUpdate.Data = Resource.Data;
+            }
+
+            if (Resource?.Id > 0)
                 await SetNewAccountAsync(Resource.AccountId);
             else
             {
@@ -168,9 +180,9 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             StateHasChanged();
         }
         bool Refresh = false;
-        private EditContext editContext;
-        private ValidationMessageStore messageStore;
-        private void HandleValidationRequested(object sender, ValidationRequestedEventArgs args)
+        private EditContext? editContext;
+        private ValidationMessageStore? messageStore;
+        private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
         {
             messageStore?.Clear();
             if (ResourceUpdate.ResType == ResourceTypesEnum.Materials && (ResourceUpdate.Data.CapWaste < 0) || ResourceUpdate.Data.CapWaste > 999)

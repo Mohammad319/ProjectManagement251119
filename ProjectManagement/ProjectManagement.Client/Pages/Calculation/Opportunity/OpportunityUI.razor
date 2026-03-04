@@ -200,12 +200,14 @@
 }
     protected override void OnInitialized()
     {
-        Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
+        if (Folder?.State?.Calculation != null)
+            Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
     }
 
     public void Dispose()
     {
-        Folder.State.Calculation.OnChangeInCalculation -= ChangeCalcultionItems;
+        if (Folder?.State?.Calculation != null)
+            Folder.State.Calculation.OnChangeInCalculation -= ChangeCalcultionItems;
     }
 
     void ChangeCalcultionItems() => _ = InvokeAsync(StateHasChanged);

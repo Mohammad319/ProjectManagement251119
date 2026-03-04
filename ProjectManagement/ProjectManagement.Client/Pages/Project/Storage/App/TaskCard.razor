@@ -117,7 +117,7 @@
     }
     void GetResourceTEnant(ResourceDto res)
     {
-        if (res?.Id == SummaryId) return;
+        if (res is null || res.Id == SummaryId) return;
 
         ResourceDto? resource = null;
         if (res.ResourceSource == ResourceSource.Base)
@@ -265,7 +265,7 @@
                 
                 Data = new ProjectManagement.Shared.Base.Calculation.ResourceMetadata
                 {
-                    Unit = Task.UnitCode ?? Task.UnitCode,
+                    Unit = Task.UnitCode ?? string.Empty,
                     Quantity = (decimal?)(Task.Quantity ?? 0d),
                     BaseCost = totalBaseCost,
                     Cost = totalCost,

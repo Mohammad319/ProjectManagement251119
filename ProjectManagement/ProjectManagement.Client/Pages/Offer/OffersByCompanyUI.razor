@@ -196,6 +196,12 @@
     void EditOffer(ListOfferMVVM offer, int ResourceID)
     {
         ResourceListMVVM? res = Calc.Tasks.SelectMany(x => x.Resources).FirstOrDefault(x => x.Id == ResourceID);
+        if (res is null)
+        {
+            MHD.Notifications(ToastType.Danger, false);
+            return;
+        }
+
         Modal.ShowComponent<OfferPostUI>(ResourceLoc.offer, new Dictionary<string, object>()
         {
             [nameof(OfferPostUI.Offer)] = offer,

@@ -12,7 +12,7 @@
 @inherits AppComponentBase
 <EditForm id="resForm" Model="ResourceUpdate" OnValidSubmit="async()=> await HandleSubmitAsync()">
 
-    @if (Resource.Id == 0 && PostList.Count > 1)
+    @if (Resource?.Id == 0 && PostList.Count > 1)
     {
         <div>
             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
@@ -43,7 +43,7 @@
                 <div class="@CssClasses.Layout.FlexWidth160">
                     <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
                     <select @onchange="ChangeGroupAccount"
-                            value="@AccountGroupSelected.Id"
+                            value="@AccountGroupSelected?.Id"
                             class="@CssClasses.Input.Select">
                         <option></option>
                         @foreach (var item in Config.AccountGroups)
@@ -406,7 +406,7 @@
 </EditForm>
 
     <div class="@CssClasses.Modal.Footer">
-    @if (Resource.Id == 0)
+    @if (Resource?.Id == 0)
     {
         if (PostList.Count > 1)
         {

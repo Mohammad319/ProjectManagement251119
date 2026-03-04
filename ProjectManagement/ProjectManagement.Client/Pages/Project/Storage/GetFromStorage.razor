@@ -12,7 +12,7 @@
                    bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
                     value="@((int)Post.AuthoritySelected)"
                     @onchange="GetAuthorityStorage">
-                @foreach (AuthorityStorage level in Enum.GetValues(typeof(AuthorityStorage)))
+                @foreach (AuthorityStorage level in Enum.GetValues<AuthorityStorage>())
                 {
                     <option value="@((int)level)">@AppLoc[level.ToString()]</option>
                 }
@@ -28,7 +28,7 @@ else
         <select class="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-[2px] text-[12px]
                        bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
                 @onchange="(e) => GetAuthorityStorage(e)">
-            @foreach (var level in Enum.GetValues(typeof(AuthorityStorage)))
+            @foreach (var level in Enum.GetValues<AuthorityStorage>())
             {
                 <option value="@((int)level)">@AppLoc[level.ToString()]</option>
             }
