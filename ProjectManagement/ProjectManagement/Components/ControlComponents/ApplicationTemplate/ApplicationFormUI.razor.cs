@@ -18,7 +18,9 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
         protected async override Task OnInitializedAsync()
         {
             Departments = await MicroBus.Send(new GetDepartmentsAsListQuery()) ?? [];
-            ApplicationUpdate.DepartmentId = Departments.FirstOrDefault()?.Id;
+            var firstDepartmentId = Departments.FirstOrDefault()?.Id;
+            if (firstDepartmentId.HasValue)
+                ApplicationUpdate.DepartmentId = firstDepartmentId.Value;
         }
         private async Task HandleSubmitAsync()
         {
