@@ -21,7 +21,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
 
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
         }
         [Parameter] public bool IsReport { get; set; }
         bool ShowAllSort = true;
@@ -31,12 +31,12 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             await ExtraFactorsSaveAsync();
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
         }
         void TenderExcelTaxChanged(ChangeEventArgs e)
         {
-            Calculation.TenderExcelTax = double.Parse(e.Value.ToString());
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
+            Calculation.TenderExcelTax = decimal.Parse(e.Value?.ToString() ?? "0");
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
             ProfitDecisionFun();
             Calculation.CalcEarningsForUnlockedRes();
             EarningOnChange = true;
@@ -44,8 +44,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         }
         void TenderInclTaxChanged(ChangeEventArgs e)
         {
-            Calculation.TenderInclTax = double.Parse(e.Value.ToString());
-            Calculation.TenderExcelTax = Calculation.TenderInclTax / (1 + (Calculation.Tax / 100));
+            Calculation.TenderInclTax = decimal.Parse(e.Value?.ToString() ?? "0");
+            Calculation.TenderExcelTax = Calculation.TenderInclTax / (1m + ((decimal)Calculation.Tax / 100m));
             ProfitDecisionFun();
             Calculation.CalcEarningsForUnlockedRes();
             EarningOnChange = true;
@@ -68,22 +68,22 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
         }
-        void ChangeProfit(double e)
+        void ChangeProfit(decimal e)
         {
             EarningOnChange = true;
             Calculation.ProfitDecision = e;
             Calculation.CalcEarningsForUnlockedRes();
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1 + (Calculation.Tax / 100));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
             StateHasChanged();
         }
         //ProfitDecision = ((TenderExcelTax/ TotalSum) – 1) * 100
         //Calculation.TenderExcelTax = ((Calculation.ProfitDecision / 100) + 1) * Calculation.Sum;
         void ProfitDecisionFun()
         {
-            Calculation.ProfitDecision = ((Calculation.TenderExcelTax / Calculation.Sum) - 1) * 100;
+            Calculation.ProfitDecision = ((Calculation.TenderExcelTax / Calculation.Sum) - 1m) * 100m;
         }
         public void Dispose()
         {

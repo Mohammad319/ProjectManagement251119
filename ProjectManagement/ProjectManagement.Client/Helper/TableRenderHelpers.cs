@@ -17,7 +17,7 @@ namespace ProjectManagement.Client.Helper
         // ----------------- SELECTION -----------------
         public static void HandleKeyUp(KeyboardEventArgs e) => TemporaryData.Key = null;
 
-        public static void HandleItemSelected(int id, double? q, CalculationItemType type)
+        public static void HandleItemSelected(int id, decimal? q, CalculationItemType type)
         {
             if (TemporaryData.Key == "Control")
                 SelectedData.Add(id, q, type);
@@ -159,6 +159,12 @@ namespace ProjectManagement.Client.Helper
             RenderTd(value.ToString(format, Inv), cssClass: "num-cell");
 
         public static RenderFragment RenderFormattedTd(string format, double? value) =>
+            RenderTd(value.HasValue ? value.Value.ToString(format, Inv) : string.Empty, cssClass: "num-cell");
+
+        public static RenderFragment RenderFormattedTd(string format, decimal value) =>
+            RenderTd(value.ToString(format, Inv), cssClass: "num-cell");
+
+        public static RenderFragment RenderFormattedTd(string format, decimal? value) =>
             RenderTd(value.HasValue ? value.Value.ToString(format, Inv) : string.Empty, cssClass: "num-cell");
 
         public static RenderFragment RenderCheckboxTd(bool isChecked) => __b =>

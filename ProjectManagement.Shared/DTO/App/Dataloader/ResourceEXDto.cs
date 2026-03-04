@@ -16,22 +16,22 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     {
         public bool IsPercent { get; set; } = true;
         public int Morgen { get; set; } = 0;
-        public double MorgenCost { get; set; }
+        public decimal MorgenCost { get; set; }
         public int Day { get; set; } = 0;
-        public double DayCost { get; set; }
+        public decimal DayCost { get; set; }
         public int Evening { get; set; }
-        public double EveningCost { get; set; }
-        public double? Quantity { get; set; }
+        public decimal EveningCost { get; set; }
+        public decimal? Quantity { get; set; }
 
-        public bool CheckInput(double? quantity)
+        public bool CheckInput(decimal? quantity)
         {
             return IsPercent ? MorgenCost + DayCost <= 100 :
                 MorgenCost + DayCost <= quantity.Value;
         }
-        public double CalcCost() { 
+        public decimal CalcCost() {
             return (Morgen * MorgenCost)+ (Day * DayCost) + (Evening * EveningCost);
         }
-        public void SetQuantity(double q)
+        public void SetQuantity(decimal q)
         {
             Quantity = q;
         }

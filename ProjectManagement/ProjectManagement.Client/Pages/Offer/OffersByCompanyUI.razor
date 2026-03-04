@@ -174,7 +174,7 @@
         public string? Category;
         public string? SubCategory;
         public int? ID;
-        public double? Quantity;
+        public decimal? Quantity;
 
         public List<Tuple<ListOfferMVVM, int, string>> Offers = new();
     }
@@ -183,7 +183,7 @@
     HashSet<int> ExpandedCompanies { get; set; } = new();
     private bool IsLoading { get; set; } = true;
 
-    private double Format(double? x) => Template.Format(x ?? 0);
+    private double Format(decimal? x) => Template.Format(x ?? 0m);
 
     void ToggleCompany(int id)
     {

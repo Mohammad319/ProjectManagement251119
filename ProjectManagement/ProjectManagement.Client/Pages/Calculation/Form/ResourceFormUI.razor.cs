@@ -47,13 +47,13 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         async Task Update(double ch1, double ch2, double? BaseCost, double CapWaste, double? CO2, double Cost,
             double? FixedQ, string Unit, int? AccountId, int? resTypeId, int? resTypeSortId)
         {
-            ResourceUpdate.Data.ChangeFactor1 = ch1;
-            ResourceUpdate.Data.ChangeFactor2 = ch2;
-            ResourceUpdate.Data.BaseCost = BaseCost;
-            ResourceUpdate.Data.CapWaste = CapWaste;
+            ResourceUpdate.Data.ChangeFactor1 = (decimal)ch1;
+            ResourceUpdate.Data.ChangeFactor2 = (decimal)ch2;
+            ResourceUpdate.Data.BaseCost = BaseCost.HasValue ? (decimal)BaseCost.Value : null;
+            ResourceUpdate.Data.CapWaste = (decimal)CapWaste;
             ResourceUpdate.Data.CO2 = CO2;
-            ResourceUpdate.Data.Cost = Cost;
-            ResourceUpdate.Data.Quantity = FixedQ;
+            ResourceUpdate.Data.Cost = (decimal)Cost;
+            ResourceUpdate.Data.Quantity = FixedQ.HasValue ? (decimal)FixedQ.Value : null;
             ResourceUpdate.Data.Unit = Unit;
             ResourceUpdate.ResourceTypeId = resTypeId;
             ResourceUpdate.ResourceSortId = resTypeSortId;

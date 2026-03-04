@@ -154,7 +154,7 @@ else
             ResourceUpdate = new ResourceTenantLinkBase
             {
                 Name = string.IsNullOrWhiteSpace(Resource?.NameUserValue) ? Resource?.Name : Resource.NameUserValue,
-                Cost = Resource?.CostUserValue ?? Resource?.Data?.Cost,
+                Cost = Resource?.CostUserValue ?? (Resource?.Data?.Cost is decimal c ? (double?)c : null),
                 Co2 = Resource?.Data?.CO2,
                 AccountId = Resource?.AccountId,
                 ResourceTypeId = Resource?.ResourceTypeId,

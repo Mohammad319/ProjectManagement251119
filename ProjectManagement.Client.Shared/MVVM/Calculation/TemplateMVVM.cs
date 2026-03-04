@@ -8,6 +8,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     {
         public string Format(object x) => UiStyles.Format(x, MathRound);
         public double Format(double x) => UiStyles.Format(x, MathRound);
+        public double Format(decimal x) => UiStyles.Format((double)x, MathRound);
+        public double Format(decimal? x) => UiStyles.Format((double)(x ?? 0m), MathRound);
         public int Id { get; set; }
         public string Name { get; set; }
         static string SetFreezCol(int ColNum, int w)

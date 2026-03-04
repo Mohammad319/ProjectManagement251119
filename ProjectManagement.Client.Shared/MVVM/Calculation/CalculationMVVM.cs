@@ -97,8 +97,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal SumFactorsPrice => Factors.Sum(x => x.Price);
 
         public decimal ProfitDecision { get; set; }
-        public double TenderExcelTax { get; set; }
-        public double TenderInclTax { get; set; }
+        public decimal TenderExcelTax { get; set; }
+        public decimal TenderInclTax { get; set; }
 
         public bool OnlyActive { get; set; }
         public bool ShowTasks { get; set; } = true;

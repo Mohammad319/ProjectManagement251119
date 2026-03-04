@@ -77,9 +77,9 @@ else if (_tasks != null)
                            foreach (var res in item.Resources)
                 {
                     if (AppState.StorageApp.Cost && res.CostUserValue.HasValue)
-                        res.Data.Cost = res.CostUserValue.Value;
+                        res.Data.Cost = (decimal)res.CostUserValue.Value;
                     else if (res.CostStorageValue.HasValue)
-                        res.Data.Cost = res.CostStorageValue.Value;
+                        res.Data.Cost = (decimal)res.CostStorageValue.Value;
                 }
             }
 
@@ -108,7 +108,7 @@ else if (_tasks != null)
             foreach (var res in item.Resources)
             {
                 if (res.CostUserValue.HasValue)
-                    res.Data.Cost = res.CostUserValue.Value;
+                    res.Data.Cost = (decimal)res.CostUserValue.Value;
             }
         _loading = false;
     }
@@ -126,9 +126,9 @@ else if (_tasks != null)
                 Metadata = new ProjectManagement.Shared.Base.Calculation.TaskMetadata
                 {
                     QuantityParam = ConstValues.FixedQ,
-                    Quantity = Task.Quantity ?? 0,
-                    ChangeFactor1 = Task.ChangeFactor1,
-                    ChangeFactor2 = Task.ChangeFactor2,
+                    Quantity = (decimal)(Task.Quantity ?? 0),
+                    ChangeFactor1 = (decimal)Task.ChangeFactor1,
+                    ChangeFactor2 = (decimal)Task.ChangeFactor2,
                     IsActive = Task.IsActive,
                     Type = ProjectManagement.Shared.Base.Calculation.TaskType.Task,
                     Code = Task.Code,
