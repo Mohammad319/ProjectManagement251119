@@ -63,8 +63,8 @@
                                         <button disabled="@(list.Any(x => x.UserId == user.Id))"
                                                 class="@CssClasses.Btn.Solid.Primary"
                                                 @onclick=" ()=> Form = new ListShareCalcDTO(){
-                                                DepartmentId = DepartmentSelected.Id,
-                                                                            Department = DepartmentSelected.Name,
+                                                DepartmentId = DepartmentSelected?.Id ?? 0,
+                                                                            Department = DepartmentSelected?.Name ?? string.Empty,
                                                                             UserId = user.Id,
                                                                             User = user.Name
                                                                         }">
@@ -125,15 +125,15 @@
     }
 </div>
 @code {
-    List<ListShareCalcDTO> list;
-    ListShareCalcDTO Form;
-    [Parameter] public ListCalculationMVVM ListCalculation { get; set; }
+    List<ListShareCalcDTO> list = [];
+    ListShareCalcDTO? Form;
+    [Parameter, EditorRequired] public ListCalculationMVVM ListCalculation { get; set; } = default!;
     int page = 0;
-    List<ListDTO> Departments;
-    List<ListDTO> Users;
-    ListDTO DepartmentSelected;
+    List<ListDTO> Departments = [];
+    List<ListDTO> Users = [];
+    ListDTO? DepartmentSelected;
     [Parameter] public EventCallback Callback { get; set; }
-    [Inject] AuthenticationStateProvider AuthStateProvider { get; set; }
+    [Inject] AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
 
     async Task<int> GetUserDepartment()
     {
@@ -142,11 +142,11 @@
         if (claim == null) return 0;
         return Convert.ToInt32(claim.Value);
     }
-    void FormCallBack(ListShareCalcDTO obj)
+    void FormCallBack(ListShareCalcDTO? obj)
     {
         if (obj != null)
         {
-            list.Add(obj);
+            list?.Add(obj);
         }
         Form = null;
     }
@@ -154,16 +154,15 @@
     async Task GetUsersAsync(ListDTO department)
     {
         DepartmentSelected = department;
-        Users = null;
-        Users = await Repo.Departments.GetUsersAsListAsync(department.Id);
+        Users = await Repo.Departments.GetUsersAsListAsync(department.Id) ?? [];
         page = 1;
     }
     protected async override Task OnInitializedAsync()
     {
-        Departments = await Repo.Departments.GetDepartmentsAsListAsync();
+        Departments = await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
         int UserDepartment = await GetUserDepartment();
         Departments.RemoveAll(x => x.Id == UserDepartment);
-        list = await Repo.ShareCalc.GetAsync(ListCalculation.Id);
+        list = await Repo.ShareCalc.GetAsync(ListCalculation.Id) ?? [];
     }
     void Remove(ListShareCalcDTO project)
     {

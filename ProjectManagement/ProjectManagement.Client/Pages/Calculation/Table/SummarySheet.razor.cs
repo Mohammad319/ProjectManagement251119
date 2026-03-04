@@ -66,7 +66,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
     }, DialogSize.ExtraLarge);
         protected override void OnInitialized()
         {
-            Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
+            if (Folder?.State?.Calculation != null)
+                Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
             Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));

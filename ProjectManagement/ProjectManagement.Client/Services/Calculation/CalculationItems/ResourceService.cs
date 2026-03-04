@@ -64,6 +64,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task Duplicate(ResourceListMVVM dusection)
         {
+            var calc = _folderState.Calculation;
+            if (calc == null) return;
+
             PostStorygeDTO post = new()
             {
                 Items = [new ResourceTaskItemDTO(dusection.Id, dusection.Quantity)],
@@ -71,9 +74,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 copyType = CopyType.Copy,
                 WithCildren = true,
                 ParentID = dusection.TaskId,
-                NewCalcID = _folderState.Calculation.Id,
-                OldCalcID = _folderState.Calculation.Id,
-                IsOH = _folderState.Calculation.OHFactors
+                NewCalcID = calc.Id,
+                OldCalcID = calc.Id,
+                IsOH = calc.OHFactors
             };
 
             bool result = await Storage.CreateItem(post);
@@ -83,6 +86,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         private ResourceListMVVM? Get(int id)
         {
             var calc = _folderState.Calculation;
+            if (calc == null) return null;
+
             if (calc.TryGetResource(id, out var res))
                 return res;
 
@@ -93,6 +98,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         public void FromOfferHub(OperationType ot, object obj)
         {
             var calc = _folderState.Calculation;
+            if (calc == null) return;
 
             if (ot == OperationType.Remove)
             {
@@ -117,11 +123,12 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             }
             else if (ot == OperationType.Update)
             {
-                HubDataDto list = obj.FromJsonWeb<HubDataDto>();
+                HubDataDto? list = obj.FromJsonWeb<HubDataDto>();
+                if (list == null) return;
 
                 if (list.Data != null)
                 {
-                    List<ListOfferMVVM> listOO = list.GetData<List<ListOfferMVVM>>();
+                    List<ListOfferMVVM> listOO = list.GetData<List<ListOfferMVVM>>() ?? [];
 
                     for (int i = 0; i < listOO.Count; i++)
                     {
@@ -143,7 +150,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                     {
                         res.OfferId = offerID;
                         var off = res.Offers.FirstOrDefault(x => x.Id == res.OfferId);
-                        if (off != null)
+                        if (off != null && res.Data != null)
                         {
                             res.Data.BaseCost = off.BaseCost;
                             res.Data.Cost = off.Cost;
@@ -154,7 +161,10 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             else if (ot == OperationType.Add)
             {
                 var list = obj.FromJsonWeb<HubDataDto>();
+                if (list == null) return;
+
                 var offer = list.GetData<ListOfferMVVM>();
+                if (offer == null) return;
 
                 var res = Get(list.ParentId);
                 if (res == null) return;
@@ -169,15 +179,19 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         public bool FromHub(OperationType ot, object obj)
         {
             var calc = _folderState.Calculation;
+            if (calc == null) return false;
 
             if (ot == OperationType.RemoveRange)
             {
                 var rlist = obj.FromJsonWeb<IEnumerable<int>>();
-                calc.RemoveResources(rlist);
+                if (rlist != null)
+                    calc.RemoveResources(rlist);
             }
             else if (ot == OperationType.Update)
             {
                 var newG = obj.FromJsonWeb<ResourceListMVVM>();
+                if (newG == null) return false;
+
                 var oldRes = Get(newG.Id);
                 if (oldRes == null) return false;
 
@@ -192,13 +206,19 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             else if (ot == OperationType.Add)
             {
                 var list = obj.FromJsonWeb<HubDataDto>();
+                if (list == null) return false;
+
                 var res = list.GetData<ResourceListMVVM>();
-                calc.Add(res);
+                if (res != null)
+                    calc.Add(res);
             }
             else if (ot == OperationType.AddRange)
             {
                 var list = obj.FromJsonWeb<HubDataDto>();
+                if (list == null) return false;
+
                 var resources = list.GetData<List<ResourceListMVVM>>();
+                if (resources == null) return false;
 
                 // ✅ إصلاح bug + أسرع
                 calc.AddRangeResources(resources);
@@ -210,6 +230,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
                 int targetTaskId = list.Item1;
                 var ids = list.Item2;
+                if (ids == null) return false;
 
                 if (!calc.TryGetTask(targetTaskId, out var targetTask) || targetTask == null)
                     return false;
@@ -250,7 +271,10 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task ConfirmedRemoveAsync(List<int> items)
         {
-            bool result = await Repo.DeleteAsync(_folderState.Calculation.Id, items);
+            var calc = _folderState.Calculation;
+            if (calc == null) return;
+
+            bool result = await Repo.DeleteAsync(calc.Id, items);
             SelectedData.Reset();
             Mhd.Notifications(ToastType.Delete, result);
             if (result) dialogService.Close();
