@@ -52,7 +52,7 @@
         TaskUnitGroup up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
         Modal.ShowComponent<UnitsGroupFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New] :
-                    AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+                    AppLoc[LocalizerConst.Update, model.DisplayName ?? string.Empty], new Dictionary<string, object>
                     {
                         [nameof(UnitsGroupFormUI.GroupId)] = up.Id,
                         [nameof(UnitsGroupFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
@@ -67,7 +67,7 @@
         bool result = await ExHandlers.RunCheckTokenAsync(() => UnitGroupsService.DeleteAsync(model.Id));
         if (result)
         {
-            FallsList.Remove(model);
+            FallsList?.Remove(model);
         }
         MHD.Notifications(ToastType.Delete, result);
 
