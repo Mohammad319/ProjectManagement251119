@@ -70,7 +70,7 @@
 
 @code {
     TemplateListPostDTO TemplateUpdate = new();
-    [Parameter] public TemplateMVVM TempForm { get; set; }
+    [Parameter] public TemplateMVVM TempForm { get; set; } = default!;
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
     bool btnSubmitDisabled = false;

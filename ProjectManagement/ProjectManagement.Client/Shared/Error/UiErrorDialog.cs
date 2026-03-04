@@ -9,11 +9,11 @@ namespace ProjectManagement.Client.Shared.Error
         {
             dialog.ShowComponent<ApiErrorDialogUI>(
                 title,Icons.Folder,
-                new Dictionary<string, object?>
+                new Dictionary<string, object>
                 {
                     [nameof(ApiErrorDialogUI.Title)] = title,
                     [nameof(ApiErrorDialogUI.Message)] = message,
-                    [nameof(ApiErrorDialogUI.TraceId)] = traceId
+                    [nameof(ApiErrorDialogUI.TraceId)] = traceId ?? string.Empty
                 },
                 DialogSize.Medium
             );
