@@ -26,7 +26,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
         public bool CheckInput(decimal? quantity)
         {
             return IsPercent ? MorgenCost + DayCost <= 100 :
-                MorgenCost + DayCost <= quantity.Value;
+                MorgenCost + DayCost <= quantity.GetValueOrDefault();
         }
         public decimal CalcCost() {
             return (Morgen * MorgenCost)+ (Day * DayCost) + (Evening * EveningCost);
@@ -58,7 +58,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     }
     public class ResourceEXDto : ResourceDLBase
     {
-        [JsonIgnore] public CalcResCost CalcResCost;
+        [JsonIgnore] public CalcResCost CalcResCost { get; set; } = new();
 
         [JsonIgnore] public List<decimal> Values { get; set; } = [];
         public ResourceEXDto(){  }
