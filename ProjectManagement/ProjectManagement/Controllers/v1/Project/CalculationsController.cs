@@ -68,7 +68,9 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         [HttpGet(URLConst.Calculation.SharedPage + "/{id}")]
         public async Task<IActionResult> GetPage2(int id)
         {
-            return Ok(await MicroBus.Send(new GetShareCalculationPageQuery(id, GetUserId(), GetDepartmentId().Value)));
+            var departmentId = GetDepartmentId();
+            if (departmentId is null) return BadRequest();
+            return Ok(await MicroBus.Send(new GetShareCalculationPageQuery(id, GetUserId(), departmentId.Value)));
         }
         [Authorize(Roles = Tenant.Users)]
         [HttpGet(URLConst.Calculation.GetToPost + "/{id}")]

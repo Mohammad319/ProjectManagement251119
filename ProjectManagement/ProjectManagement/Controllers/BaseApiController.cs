@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using ProjectManagement.Shared.Constant;
 using System.Security.Claims;
 
@@ -38,7 +39,7 @@ namespace ProjectManagement.Server.Controllers
             return 0;
         }
         private ICommandDispatcher? _dispatcher;
-        protected ICommandDispatcher MicroBus => _dispatcher ??= HttpContext?.RequestServices.GetService<ICommandDispatcher>();
+        protected ICommandDispatcher MicroBus => _dispatcher ??= HttpContext.RequestServices.GetRequiredService<ICommandDispatcher>();
 
         //private IMediator _mediator;
         //protected IMediator Mediator => _mediator ??= HttpContext.RequestServices.GetService<IMediator>();

@@ -12,8 +12,8 @@ namespace ProjectManagement.Server.Controllers.v1.Identity
         {
             try
             {
-                string Email = configuration.GetSection("User:Email").Get<string>();
-                string Password = configuration.GetSection("User:Password").Get<string>();
+                string Email = configuration.GetSection("User:Email").Get<string>() ?? string.Empty;
+                string Password = configuration.GetSection("User:Password").Get<string>() ?? string.Empty;
                 if (string.IsNullOrEmpty(Email)) return BadRequest();
                 if (string.IsNullOrEmpty(Password)) Password = Email;
 
