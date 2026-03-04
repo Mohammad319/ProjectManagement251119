@@ -15,11 +15,11 @@ namespace ProjectManagement.Shared.Base.AppTenant
     }
     public class CapResourceBase
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public bool IsVisible { get; set; } = true;
         public ResourceTypesEnum ResType { get; set; } = ResourceTypesEnum.Materials;
-        public List<int> Groups { get; set; }
-        public List<RoleDTO> Role { get; set; }
+        public List<int> Groups { get; set; } = [];
+        public List<RoleDTO> Role { get; set; } = [];
         public double? GetRole(double q)
         {
             return Role?.FirstOrDefault(x => x.Min <= q && x.Max >= q)?.Value;

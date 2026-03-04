@@ -11,8 +11,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
 {
     public class CalculationHourlyPriceFactorData
     {
-        public List<HourlyPriceListGroupDTO> HourlyPrice {  get; set; }
-        public List<OHFactors> Factors { get; set; }
+        public List<HourlyPriceListGroupDTO> HourlyPrice {  get; set; } = [];
+        public List<OHFactors> Factors { get; set; } = [];
     }
 
     public class CalculationData
@@ -33,24 +33,24 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
         public List<IncomeBase> Income { get; set; } = [];
 
-        public string Maps { get; set; }
-        public string Developer { get; set; }
+        public string Maps { get; set; } = string.Empty;
+        public string Developer { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ClientsManager { get; set; }
+        public string ClientsManager { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Designer { get; set; }
-        public string OverviewInfo { get; set; }
+        public string Designer { get; set; } = string.Empty;
+        public string OverviewInfo { get; set; } = string.Empty;
         [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ContactPerson { get; set; }
+        public string ContactPerson { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Supervisor { get; set; }
+        public string Supervisor { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Inspector { get; set; }
+        public string Inspector { get; set; } = string.Empty;
     }
     public class CalculationDataBase : CalculationBase
     {
-        public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; }
-        public List<OHFactors> Factors { get; set; }
+        public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; } = [];
+        public List<OHFactors> Factors { get; set; } = [];
 
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
@@ -67,19 +67,19 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
         public List<IncomeBase> Income { get; set; } = [];
 
-        public string Maps { get; set; }
-        public string Developer { get; set; }
+        public string Maps { get; set; } = string.Empty;
+        public string Developer { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ClientsManager { get; set; }
+        public string ClientsManager { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Designer { get; set; }
-        public string OverviewInfo { get; set; }
+        public string Designer { get; set; } = string.Empty;
+        public string OverviewInfo { get; set; } = string.Empty;
         [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ContactPerson { get; set; }
+        public string ContactPerson { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Supervisor { get; set; }
+        public string Supervisor { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Inspector { get; set; }
+        public string Inspector { get; set; } = string.Empty;
     }
     public class CalculationPostDTO
     {
@@ -92,11 +92,11 @@ namespace ProjectManagement.Shared.DTO.Calculation
         }
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
 
         public double Tax { get; set; } = 25;
@@ -109,8 +109,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public double Order { get; set; }
         public DateTime? PublicationDate { get; set; } = DateTime.Now;
         public DateTime? DecisionDate { get; set; } = DateTime.Now;
-        public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; }
-        public List<OHFactors> Factors { get; set; }
+        public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; } = [];
+        public List<OHFactors> Factors { get; set; } = [];
 
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
@@ -127,19 +127,19 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
         public List<IncomeBase> Income { get; set; } = [];
 
-        public string Maps { get; set; }
-        public string Developer { get; set; }
+        public string Maps { get; set; } = string.Empty;
+        public string Developer { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ClientsManager { get; set; }
+        public string ClientsManager { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Designer { get; set; }
-        public string OverviewInfo { get; set; }
+        public string Designer { get; set; } = string.Empty;
+        public string OverviewInfo { get; set; } = string.Empty;
         [MaxLength(160, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string ContactPerson { get; set; }
+        public string ContactPerson { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Supervisor { get; set; }
+        public string Supervisor { get; set; } = string.Empty;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Inspector { get; set; }
+        public string Inspector { get; set; } = string.Empty;
         public bool IsPrivate { get; set; }
         public int? StatusId { get; set; }
         public int? ContractId { get; set; }
@@ -151,10 +151,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
     }
     public class CalculationDetailsDTO : CalculationDataBase
     {
-        public string Type { get; set; }
-        public string ProcurementMethods { get; set; }
-        public string Compensation { get; set; }
-        public string Contract { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public string ProcurementMethods { get; set; } = string.Empty;
+        public string Compensation { get; set; } = string.Empty;
+        public string Contract { get; set; } = string.Empty;
     }
     public class CalculationPageDTO
     {
@@ -163,30 +163,30 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
         public double Tax { get; set; }
         public double TimeMonth { get; set; }
-        public string Name { get; set; }
-        public string Code { get; set; }
-        public string Company { get; set; }
-        public string Responsible { get; set; }
-        public string Address { get; set; }
-        public string Customer { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Company { get; set; } = string.Empty;
+        public string Responsible { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string Customer { get; set; } = string.Empty;
         public int? OrganisationId { get; set; }
-        public string Supervisor { get; set; }
-        public string Inspector { get; set; }
-        public string Compensation { get; set; }
-        public string Contract { get; set; }
+        public string Supervisor { get; set; } = string.Empty;
+        public string Inspector { get; set; } = string.Empty;
+        public string Compensation { get; set; } = string.Empty;
+        public string Contract { get; set; } = string.Empty;
         public int? TemplateId { get; set; }
         public double AdditionalCostEarnings { get; set; } = 10;
-        public virtual List<TaskListDTO> Tasks { get; set; }
+        public virtual List<TaskListDTO> Tasks { get; set; } = [];
     }
     public class ListCalculationDTO
     {
         public double Order { get; set; }
         public int Id { get; set; }
         public bool IsPrivate { get; set; }
-        public string Name { get; set; }
-        public string Code { get; set; }
-        public string Status { get; set; }
-        public string Responsible { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string Responsible { get; set; } = string.Empty;
         //public List<string> Responsibles { get; set; } = [];
         public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(1);

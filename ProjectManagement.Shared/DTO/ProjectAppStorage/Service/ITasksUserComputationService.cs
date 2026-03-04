@@ -58,7 +58,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         {
             if (res.CostRole != null && res.Data.Quantity.HasValue)
                 foreach (var item in res.CostRole)
-                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max)
+                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
                     {
                         res.Data.Cost = (decimal)item.Value.Value;
                         break;
@@ -71,7 +71,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             if ((res.ResType == ResourceTypesEnum.MachinesAndEquipments || res.ResType == ResourceTypesEnum.Worker)
                 && res.CapRole != null && res.Data.Quantity.HasValue)
                 foreach (var item in res.CapRole)
-                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max)
+                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
                     {
                         res.Data.CapWaste = (decimal)item.Value.Value;
                         break;

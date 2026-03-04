@@ -6,8 +6,8 @@ namespace ProjectManagement.Shared.DTO.Hub
     public class HubDataDto
     {
         public int ParentId { get; set; }
-        public string Parent { get; set; }
-        public object Data { get; set; }
+        public string Parent { get; set; } = string.Empty;
+        public object Data { get; set; } = new();
         public T GetData<T>()
         {
             if (Data is null)

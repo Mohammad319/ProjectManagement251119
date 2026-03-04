@@ -8,6 +8,6 @@
 
         public double? MinInputValue { get; set; }
         public double? MaxInputValue { get; set; }
-        public string SectionKey { get; set; }
+        public string SectionKey { get; set; } = string.Empty;
     }
 }

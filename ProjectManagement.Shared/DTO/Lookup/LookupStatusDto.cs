@@ -8,7 +8,7 @@ namespace ProjectManagement.Shared.DTO.Lookup
     {
         public int Id { get; set; }
         public int SortOrder { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public string Color { get; set; } = "#00ff00";
         public bool IsVisible { get; private set; } = true;
 

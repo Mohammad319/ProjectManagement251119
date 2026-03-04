@@ -10,14 +10,14 @@ namespace ProjectManagement.Shared.DTO.App.List
     public class ListApp
     {
         [JsonIgnore]public bool IsLoaded;
-        public List<ListDTO> CustomerGroups {  get; set; }
-        public List<ListDTO> Customers { get; set; }
-        public List<ListDTO> Methods { get; set; }
-        public List<ListDTO> Contracts { get; set; }
-        public List<ListDTO> Compensations { get; set; }
-        public List<ListDTO> ProjectTypes { get; set; }
-        public List<ListDTO> Status { get; set; }
-        public List<ListDTO> ResourceStatus { get; set; }
+        public List<ListDTO> CustomerGroups {  get; set; } = [];
+        public List<ListDTO> Customers { get; set; } = [];
+        public List<ListDTO> Methods { get; set; } = [];
+        public List<ListDTO> Contracts { get; set; } = [];
+        public List<ListDTO> Compensations { get; set; } = [];
+        public List<ListDTO> ProjectTypes { get; set; } = [];
+        public List<ListDTO> Status { get; set; } = [];
+        public List<ListDTO> ResourceStatus { get; set; } = [];
 
     }
 }

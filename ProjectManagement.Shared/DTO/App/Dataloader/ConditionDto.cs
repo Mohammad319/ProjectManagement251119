@@ -21,10 +21,10 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     public class ConditionDto
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public bool IsMultiSelect { get; set; } = false;
-        public string Notes { get; set; }
+        public string Notes { get; set; } = string.Empty;
         public List<ExternalVariable> ExternalVariables { get; set; } = [];
-        public List<ConditionElementDto> Items { get; set; }
+        public List<ConditionElementDto> Items { get; set; } = [];
     }
 }
