@@ -60,6 +60,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         public void FromHub(OperationType ot, object obj)
         {
             var calc = CalcContainer.Calculation;
+            if (calc is null)
+                return;
 
             if (ot == OperationType.RemoveRange)
             {
@@ -104,10 +106,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 if (list is null)
                     return;
 
-                if (list.Item2 is not null)
-                    calc.RemoveTasks(list.Item2);
-                if (list.Item1 is not null)
-                    calc.AddTasks(list.Item1);
+                calc.RemoveTasks(list.Item2 ?? []);
+                calc.AddTasks(list.Item1 ?? []);
             }
         }
 

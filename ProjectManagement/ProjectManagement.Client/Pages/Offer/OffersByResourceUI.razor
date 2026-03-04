@@ -267,7 +267,8 @@
 
     protected override void OnInitialized()
     {
-        Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
+        if (Folder?.State?.Calculation != null)
+            Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
         IsLoading = false;
     }
 

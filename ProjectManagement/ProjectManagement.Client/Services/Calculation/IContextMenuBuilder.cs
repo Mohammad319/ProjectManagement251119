@@ -60,6 +60,7 @@ namespace ProjectManagement.Client.Services.Calculation
         public List<MenuItem> BuildGeneralContextMenu(bool isAdmin = false)
         {
             var list = new List<MenuItem>();
+            var calculation = CalcService.Calculation;
 
             // عنصر إنشاء مهمة جديدة
             MenuItem newTaskItem = NewMenuItem(
@@ -94,7 +95,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     list.Add(NewMenuItem(Icons.NotSelected, ResourceLoc.unselectAll, UnSelectedAll));
 
                 if (TemporaryData.HasPasteOption(CalculationItemType.task)
-                    && (!(TemporaryData.CopyTypeo == CopyType.Move && TemporaryData.OldCalcID == CalcService.Calculation.Id)
+                    && (!(TemporaryData.CopyTypeo == CopyType.Move && TemporaryData.OldCalcID == calculation?.Id)
                         || TemporaryData.CopyTypeo == CopyType.Copy))
                 {
                     // هذا Async → يذهب إلى overload الأول (Func<Task>)
@@ -108,13 +109,13 @@ namespace ProjectManagement.Client.Services.Calculation
 
             // عناصر عامة (لا تتطلب isAdmin)
             list.Add(NewMenuItem(
-                CalcService.Calculation.OnlyActive ? Icons.Active : Icons.NotActive,
+                calculation?.OnlyActive == true ? Icons.Active : Icons.NotActive,
                 ResourceLoc.onlyActive,
                 ItemsOnlyActive
             ));
 
             list.Add(NewMenuItem(
-                CalcService.Calculation.OHFactors ? Icons.Active : Icons.NotActive,
+                calculation?.OHFactors == true ? Icons.Active : Icons.NotActive,
                 "OH",
                 ItemsOnlyOH
             ));
@@ -134,17 +135,19 @@ namespace ProjectManagement.Client.Services.Calculation
         void UnSelectedAll()
         {
             SelectedData.Reset();
-            CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
+            CalcService.Calculation?.NotifyGridRefresh(flatListDirty: true);
         }
 
         void ItemsOnlyActive()
         {
+            if (CalcService.Calculation is null) return;
             CalcService.Calculation.OnlyActive = !CalcService.Calculation.OnlyActive;
             CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
         }
 
         void ItemsOnlyOH()
         {
+            if (CalcService.Calculation is null) return;
             CalcService.Calculation.OHFactors = !CalcService.Calculation.OHFactors;
             CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
         }
@@ -198,9 +201,9 @@ namespace ProjectManagement.Client.Services.Calculation
                     Icons.Copy,
                     ResourceApp.copy,
                     () => TemporaryData.Copy(
-                        CalcService.Calculation.Id,
+                        CalcService.Calculation?.Id ?? 0,
                         item.Id,
-                        item.Metadata.Quantity,
+                        item.Metadata?.Quantity ?? 0,
                         CalculationItemType.task)
                 ),
             ]);
@@ -258,7 +261,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     Icons.Copy,
                     ResourceApp.copy,
                     () => TemporaryData.Copy(
-                        CalcService.Calculation.Id,
+                        CalcService.Calculation?.Id ?? 0,
                         item.Id,
                         item.Quantity,
                         CalculationItemType.resource)
@@ -267,7 +270,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     Icons.Cut,
                     ResourceApp.cut,
                     () => TemporaryData.Cut(
-                        CalcService.Calculation.Id,
+                        CalcService.Calculation?.Id ?? 0,
                         item.Id,
                         item.Quantity,
                         CalculationItemType.resource)
@@ -334,7 +337,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 Icons.ReorderRows,
                 new Dictionary<string, object>
                 {
-                    [nameof(DragDropTaskUI.Task)] = taskId
+                    [nameof(DragDropTaskUI.Task)] = taskId ?? new TaskListMVVM()
                 }, DialogSize.ExtraLarge);
 
         private void OpenTemplateDialog() =>
@@ -352,8 +355,8 @@ namespace ProjectManagement.Client.Services.Calculation
             {
                 copyType = TemporaryData.CopyTypeo ?? CopyType.Copy,
                 OldCalcID = TemporaryData.OldCalcID,
-                NewCalcID = CalcService.Calculation.Id,
-                IsOH = CalcService.Calculation.OHFactors,
+                NewCalcID = CalcService.Calculation?.Id ?? 0,
+                IsOH = CalcService.Calculation?.OHFactors ?? false,
                 ParentID = taskId,
                 WithCildren = true,
                 Items = TemporaryData.SelectedItems,
