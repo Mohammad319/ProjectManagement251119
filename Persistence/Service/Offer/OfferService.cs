@@ -169,11 +169,11 @@ namespace Persistence.Service.Offer
 
             if (offers.Count == 0) return false;
 
-            double sum = offers.Sum(x => x.Metadata.Cost);
+            decimal sum = offers.Sum(x => x.Metadata.Cost);
             if (sum == 0) return false;
 
             foreach (var o in offers)
-                o.SetBaseCost((o.Metadata.Cost * avg) / sum);
+                o.SetBaseCost((o.Metadata.Cost * (decimal)avg) / sum);
 
             await context.SaveChangesAsync(ct);
 

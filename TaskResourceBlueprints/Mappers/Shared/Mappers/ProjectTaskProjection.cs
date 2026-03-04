@@ -61,7 +61,7 @@ public static class ProjectTaskProjection
                         ResType = z.a.Resource.ResType,
                         SortOrder = z.a.Resource.SortOrder,
                         CostRole = z.a.CapacityRoles,
-                        CostStorageValue = z.a.Resource.Data.Cost,
+                        CostStorageValue = (double?)z.a.Resource.Data.Cost,
                         CostUserValue = z.Link == null ? null : z.Link.Cost,
                         NameUserValue = z.Link == null ? null : z.Link.Name,
 
@@ -87,7 +87,7 @@ public static class ProjectTaskProjection
                             ChangeFactor1 = z.a.ChangeFactor1,
                             ChangeFactor2 = z.a.ChangeFactor2,
                             CapWaste = z.a.CapWaste,
-                            BaseCost = z.a.BaseCost,
+                            BaseCost = (decimal?)z.a.BaseCost,
                             CO2 = z.Link == null ? null : z.Link.Co2,
                             Cost = z.a.Resource.Data.Cost,
                             Note = z.a.Resource.Data.Note,
@@ -237,7 +237,7 @@ public static class ProjectTaskProjection
                                 {
                                     ChangeFactor1 = z.a.ChangeFactor1,
                                     ChangeFactor2 = z.a.ChangeFactor2,
-                                    BaseCost = z.a.BaseCost,
+                                    BaseCost = (decimal?)z.a.BaseCost,
                                     CapWaste = z.a.CapWaste,
                                     CO2 = z.Link == null ? null : z.Link.Co2,
                                     Cost = z.a.Resource.Data.Cost,
@@ -252,7 +252,7 @@ public static class ProjectTaskProjection
                                 SortOrder = z.a.Resource.SortOrder,
 
                                 // --- الحقول المسطّحة بدل UserData ---
-                                CostStorageValue = z.a.Resource.Data.Cost,
+                                CostStorageValue = (double?)z.a.Resource.Data.Cost,
                                 CostUserValue = z.Link == null ? null : z.Link.Cost,
                                 NameUserValue = z.Link == null ? null : z.Link.Name,
                                 AccountId = z.Link == null ? null : z.Link.AccountId,
