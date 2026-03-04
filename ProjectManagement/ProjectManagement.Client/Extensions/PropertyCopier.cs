@@ -11,10 +11,15 @@ namespace ProjectManagement.Client.Extensions
         /// </summary>
         public static T FromJsonWeb<T>(this object obj)
         {
-            if (obj is null || string.IsNullOrWhiteSpace(obj.ToString()))
+            var json = obj?.ToString();
+            if (string.IsNullOrWhiteSpace(json))
                 throw new ArgumentNullException(nameof(obj), "القيمة المدخلة لا يمكن أن تكون null أو فارغة.");
 
-            return JsonSerializer.Deserialize<T>(obj.ToString(), new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var result = JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            if (result is null)
+                throw new InvalidOperationException("تعذر تحويل JSON إلى الكائن المطلوب.");
+
+            return result;
         }
      }
 }

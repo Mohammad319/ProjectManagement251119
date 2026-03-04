@@ -34,18 +34,18 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         }
         public static bool RemoveTasks(this CalculationMVVM calculation, List<int> taskIds)
         {
-            if (taskIds == null) return false;
+            if (taskIds == null || calculation?.Tasks == null) return false;
 
             foreach (var id in taskIds)
             {
-                var task = calculation?.Tasks?.FirstOrDefault(x => x.Id == id);
+                var task = calculation.Tasks.FirstOrDefault(x => x.Id == id);
                 if (task == null) continue;
 
-                calculation.Tasks?.Remove(task);
+                calculation.Tasks.Remove(task);
 
                 if (task.TaskId.HasValue && task.TaskId > 0)
                 {
-                    var parent = calculation.Tasks.FirstOrDefault(x => x.Id == task.TaskId);
+                    var parent = calculation.Tasks.FirstOrDefault(x => x.Id == task.TaskId.Value);
                     parent?.Tasks?.Remove(task);
                 }
             }
