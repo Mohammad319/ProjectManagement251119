@@ -11,7 +11,7 @@ namespace ProjectManagement.Client.Helper
         private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
 
         // ✅ Cache: لا نعيد بناء الأعمدة كل مرة
-        private static readonly Dictionary<(double tax, int x), List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>> _colsCache
+        private static readonly Dictionary<(decimal tax, int x), List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>> _colsCache
             = new();
 
         // ----------------- SELECTION -----------------
@@ -28,7 +28,7 @@ namespace ProjectManagement.Client.Helper
         // ----------------- FORMAT -----------------
         private static string Format(int digits) => "0." + new string('#', digits);
 
-        public static List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> GetColumns(double tax, int x = 2)
+        public static List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> GetColumns(decimal tax, int x = 2)
         {
             var key = (tax, x);
             if (_colsCache.TryGetValue(key, out var cached))

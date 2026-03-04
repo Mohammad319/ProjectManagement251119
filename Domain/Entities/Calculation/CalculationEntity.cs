@@ -56,7 +56,7 @@ namespace Domain.Entities.Calculation
         /// نسبة الضريبة (0 - 100)
         /// </summary>
         [Range(0, 100)]
-        public double Tax { get; private set; } = 25;
+        public int Tax { get; private set; } = 25;
 
         public Procurement Procurement { get; private set; }
 
@@ -250,7 +250,7 @@ namespace Domain.Entities.Calculation
         // Small behavior methods (invariants)
         // =========================================================
 
-        public void SetTax(double tax)
+        public void SetTax(int tax)
         {
             if (tax < 0 || tax > 100)
                 throw new ArgumentOutOfRangeException(nameof(tax), "Tax must be between 0 and 100.");

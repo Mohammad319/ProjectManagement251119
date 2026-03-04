@@ -99,7 +99,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Name { get; set; } = string.Empty;
         [Range(0, 100, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
 
-        public double Tax { get; set; } = 25;
+        public int Tax { get; set; } = 25;
         public Procurement Procurement { get; set; }
 
         public DateTime TenderDeadline { get; set; } = DateTime.Now;

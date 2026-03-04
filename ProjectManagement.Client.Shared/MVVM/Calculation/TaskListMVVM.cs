@@ -97,8 +97,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         [JsonIgnore] public decimal PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * Metadata.Quantity.Value : 0;
         [JsonIgnore] public decimal Diff => PriceSubTotal - ApriceTotally;
 
-        public decimal PriceQTax(double Tax) => PriceQ * (1 + ((decimal)Tax / 100));
-        public decimal ApriceTotallyTax(double Tax) => ApriceTotally * (1 + ((decimal)Tax / 100));
+        public decimal PriceQTax(decimal Tax) => PriceQ * (1 + ((decimal)Tax / 100));
+        public decimal ApriceTotallyTax(decimal Tax) => ApriceTotally * (1 + ((decimal)Tax / 100));
 
         public decimal PriceActuallyQuantity => ActuallyQuantity * PriceSub;
         public decimal PriceWorkedQ => (decimal)WorkedQ * PriceSub;

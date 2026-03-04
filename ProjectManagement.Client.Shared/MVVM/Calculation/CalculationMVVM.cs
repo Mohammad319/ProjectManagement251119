@@ -65,7 +65,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         // ====== خصائص الحساب ======
         public int Id { get; set; }
-        public double Tax { get; set; }
+        public int Tax { get; set; }
 
         public string Name { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
