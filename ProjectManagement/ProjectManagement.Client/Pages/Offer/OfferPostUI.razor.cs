@@ -9,15 +9,15 @@ namespace ProjectManagement.Client.Pages.Offer
     public partial class OfferPostUI
     {
         [Parameter] public ListOfferMVVM Offer { get; set; } = new ListOfferMVVM();
-        [Parameter] public ResourceListMVVM Resource { get; set; }
+        [Parameter] public ResourceListMVVM Resource { get; set; } = new();
         PostOfferDTO PostOffer { get; set; } = new();
         bool IsLoading = false;
-        List<ListDTO> Organisations;
-        List<UnderContactOrganisationBase> Contacts;
+        List<ListDTO> Organisations = [];
+        List<UnderContactOrganisationBase> Contacts = [];
         void OnChangeCompany(ChangeEventArgs e)
         {
             PostOffer.Contact = null;
-            Contacts = null;
+            Contacts = [];
             if (e == null || string.IsNullOrEmpty(e.Value.ToString())) return;
             PostOffer.OrganisationId = int.Parse(e.Value.ToString());
             var org = Organisations.FirstOrDefault(x => x.Id == PostOffer.OrganisationId);
@@ -35,7 +35,7 @@ namespace ProjectManagement.Client.Pages.Offer
             offer.Comment = PostOffer.Comment;
             offer.OrganisationId = PostOffer.OrganisationId;
             offer.Contact = PostOffer.Contact;
-            offer.Organisation = PostOffer.OrganisationId.HasValue ? Organisations.FirstOrDefault(x => x.Id == PostOffer.OrganisationId).Name : "";
+            offer.Organisation = PostOffer.OrganisationId.HasValue ? Organisations.FirstOrDefault(x => x.Id == PostOffer.OrganisationId)?.Name ?? string.Empty : string.Empty;
         }
         private async Task HandleSubmitAsync()
         {
