@@ -130,9 +130,9 @@
                 else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Select))
                     attr.Value = attr.ValdSelectVM.Values[attr.ValdSelectVM.DefaultIndex];
                 else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Bool))
-                    attr.ValueBool = attr.ValdBoolVM.Default.Value;
+                    attr.ValueBool = attr.ValdBoolVM.Default ?? false;
                 else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime))
-                    attr.Date = attr.ValdDateVM.Default.Value;
+                    attr.Date = attr.ValdDateVM.Default;
             }
         }
     }

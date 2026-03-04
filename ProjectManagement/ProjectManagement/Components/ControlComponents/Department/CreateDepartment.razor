@@ -76,7 +76,7 @@
         departmentPost = new DepartmentBase
         {
             Name = name,
-            Description = desc
+            Description = desc ?? string.Empty
         };
 
         editContext = new EditContext(departmentPost);
@@ -103,7 +103,7 @@
         try
         {
             departmentPost.Name = (departmentPost.Name ?? string.Empty).Trim();
-            departmentPost.Description = departmentPost.Description?.Trim();
+            departmentPost.Description = (departmentPost.Description ?? string.Empty).Trim();
 
             // Update
             if ((DepartmentList?.Id ?? 0) > 0)
