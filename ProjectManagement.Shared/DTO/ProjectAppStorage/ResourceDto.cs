@@ -1,9 +1,7 @@
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.Enums;
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
 public  enum ResourceSource
 {
@@ -25,7 +23,7 @@ public class ResourceDto: ResourceDLBase
     public List<RoleDTO> CapRole { get; set; } = [];
     public double? CostStorageValue { get; set; }
     public double? CostUserValue { get; set; }
-    public string NameUserValue { get; set; }
+    public string NameUserValue { get; set; } = string.Empty;
     public int? StatusId { get; set; }
     public int? ResourceTypeId { get; set; }
     public int? ResourceSortId { get; set; }

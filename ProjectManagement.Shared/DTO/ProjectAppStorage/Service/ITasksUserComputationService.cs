@@ -3,10 +3,7 @@ using ProjectManagement.Shared.Base.ProjectAppStorage;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Helper.ProjectAppStorage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 namespace ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 
 public class ResourceMenuGroup
@@ -56,7 +53,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     {
         foreach (var res in resources)
         {
-            if (res.CostRole != null && res.Data.Quantity.HasValue)
+            if (res.Data.Quantity.HasValue)
                 foreach (var item in res.CostRole)
                     if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
                     {
@@ -69,7 +66,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     {
         foreach (var res in resources)
             if ((res.ResType == ResourceTypesEnum.MachinesAndEquipments || res.ResType == ResourceTypesEnum.Worker)
-                && res.CapRole != null && res.Data.Quantity.HasValue)
+                && res.Data.Quantity.HasValue)
                 foreach (var item in res.CapRole)
                     if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
                     {
@@ -109,7 +106,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         task.ResultResources = [];
 
         var ans = A(task.Id);
-        foreach (var cond in task.Conditions ?? Enumerable.Empty<TaskConditionDto>())
+        foreach (var cond in task.Conditions)
         {
             var choiceOk = EvaluateChoices(cond, ans);
             var resOk = EvaluateResources(cond, ans);
@@ -125,7 +122,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
             if (!(cr && cn && nr)) continue;
 
-            foreach (var ra in cond.ConditionResourceAssignments ?? Enumerable.Empty<ResourceAssignmentDto>())
+            foreach (var ra in cond.ConditionResourceAssignments)
             {
                 if (ra.Resource == null) continue;
                 ra.Formulas = [];
@@ -192,7 +189,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     {
         List<string> Formulas = [];
 
-        if (SelectedChoiceOptionIds == null || SelectedChoiceOptionIds.Count == 0) return;
+        if (SelectedChoiceOptionIds.Count == 0) return;
         foreach (var bind in res.OptionResourceFormulas)
         {
             if (SelectedChoiceOptionIds.Any(x => x == bind.ChoiceOptionId))
