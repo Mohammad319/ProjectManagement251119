@@ -13,7 +13,7 @@ namespace TaskResourceBlueprints.Services.Resource
         Task<List<ResourceDefinition>> GetResourcesAsync(HashSet<int> selectedFolderIds);
         Task<IReadOnlyList<ResourceDefinition>> GetFolderResourcesAsync(int folderId, CancellationToken ct);
 
-        Task<ResourceCategory> GetByIdAsync(int id);
+        Task<ResourceCategory?> GetByIdAsync(int id);
         Task<bool> UpdateAsync(ResourceCategory obj);
         Task<int> AddAsync(ResourceCategory obj);
         Task<bool> DeleteAsync(int id);
@@ -111,7 +111,7 @@ namespace TaskResourceBlueprints.Services.Resource
             }
             return allIds;
         }
-        public async Task<ResourceCategory> GetByIdAsync(int id)
+        public async Task<ResourceCategory?> GetByIdAsync(int id)
         {
             await using var context = await ContextFactory.CreateDbContextAsync();
             return await context.ResourceCategories.FindAsync(id);

@@ -21,31 +21,31 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         {
             Id = x.Id,
             Name = x.Name,
-            Code = x.Code,
+            Code = x.Code ?? string.Empty,
             ChangeFactor1 = x.ChangeFactor1,
             ChangeFactor2 = x.ChangeFactor2,
             ResIdCap = x.CapacityResourceId,
             Note = x.FieldNotes,
             Quantity = x.Quantity,
-            Unit = x.UnitCode,
+            Unit = x.UnitCode ?? string.Empty,
             Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
             {
                 CapRole = res.CapacityRoles,
-                Id = res.Resource.Id,
-                Name = res.Resource.Name,
+                Id = res.Resource != null ? res.Resource.Id : 0,
+                Name = res.Resource != null ? res.Resource.Name : string.Empty,
                 Data = new ResourceMetadata()
                 {
                     ChangeFactor1 = res.ChangeFactor1,
                     ChangeFactor2 = res.ChangeFactor2,
                     CapWaste = res.CapWaste,
                     BaseCost = res.BaseCost,
-                    Quantity = res.Resource.Data.Quantity,
-                    Unit = res.Resource.Data.Unit,
-                    Cost = res.Resource.Data.Cost,
+                    Quantity = res.Resource != null && res.Resource.Data != null ? res.Resource.Data.Quantity : 0,
+                    Unit = res.Resource != null && res.Resource.Data != null ? res.Resource.Data.Unit : string.Empty,
+                    Cost = res.Resource != null && res.Resource.Data != null ? res.Resource.Data.Cost : 0,
                 },
-                Group = res.Resource.Folder != null ? res.Resource.Folder.DisplayName : string.Empty,
-                ResType = res.Resource.ResType,
-                SortOrder = res.Resource.SortOrder,
+                Group = res.Resource != null && res.Resource.Folder != null ? res.Resource.Folder.DisplayName : string.Empty,
+                ResType = res.Resource != null ? res.Resource.ResType : ResourceTypesEnum.Adjustment,
+                SortOrder = res.Resource != null ? res.Resource.SortOrder : 0,
             }).ToList()
         };
     }
@@ -68,7 +68,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         Task<bool> UpdateResourceAppStorageTenantAsync(int tenantId, int ResourceId, ResourceTenantLinkBase taskResourceDto, CancellationToken ct);
         Task<List<TaskWithResourcesMDto>?> GetTasksWithAdjustedResources(int? ActionId, int? LocationId, int? FallId, int? ActionTypeId);
         Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto filter, int tenantid, CancellationToken ct);
-        Task<ProjectTaskDto> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct);
+        Task<ProjectTaskDto?> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct);
         Task<int> CreateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task UpdateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task DeleteAsync(int id, CancellationToken ct);
@@ -120,15 +120,20 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             var query = db.Tasks.Where(x => x.Status == TaskStatusEnum.Ready).AsNoTracking().AsQueryable();
             if (!string.IsNullOrEmpty(filter.NameOrCode))
             {
-                query = query.Where(x => x.Code.Contains(filter.NameOrCode) ||
-                x.Name.Contains(filter.NameOrCode));
+                var search = filter.NameOrCode;
+                query = query.Where(x => x.Code.Contains(search!) ||
+                x.Name.Contains(search!));
             }
             return await query.TasksBaseToDto(tenantid).ToListAsync(ct);
         }
-        public async Task<ProjectTaskDto> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
+        public async Task<ProjectTaskDto?> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            return await db.Tasks?.Where(x => x.Status == TaskStatusEnum.Ready)?.AsNoTracking()?.ProjectToDto(tenantid, depId)?.FirstOrDefaultAsync(x => x.Id == id, ct);
+            return await db.Tasks
+                .Where(x => x.Status == TaskStatusEnum.Ready)
+                .AsNoTracking()
+                .ProjectToDto(tenantid, depId)
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
         }
         private static void Validate(TaskDefinitionEditDto d)
         {

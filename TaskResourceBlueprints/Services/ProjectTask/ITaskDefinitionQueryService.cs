@@ -81,11 +81,11 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .OrderBy(t => t.Resource.Name)
                 .Select(t => new ResourceTaskIndexDto(
                     t.ResourceId,
-                    t.Resource.Name,
-                    t.Resource.Data.ChangeFactor1,
-                    t.Resource.Data.ChangeFactor2,
-                    t.Resource.Data.Unit,
-                    t.Resource.IsActive
+                    t.Resource != null ? t.Resource.Name : string.Empty,
+                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.ChangeFactor1 : 0,
+                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.ChangeFactor2 : 0,
+                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.Unit : string.Empty,
+                    t.Resource != null && t.Resource.IsActive
                 ))
                 .ToListAsync(ct);
         }
