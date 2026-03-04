@@ -201,7 +201,7 @@
             var value = Compute.ComputeOrThrow(
                 toUnit: Task.NewUnitCode!,
                 fromUnit: Task.UnitCode!,
-                quantity: Task.Quantity ?? 0,
+                quantity: Convert.ToDouble(Task.Quantity ?? 0),
                 parameters: Task.ParameterValues);
             _resultText = value.ToString("G");
 

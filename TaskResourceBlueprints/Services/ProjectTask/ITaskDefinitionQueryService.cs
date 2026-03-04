@@ -82,8 +82,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .Select(t => new ResourceTaskIndexDto(
                     t.ResourceId,
                     t.Resource != null ? t.Resource.Name : string.Empty,
-                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.ChangeFactor1 : 0,
-                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.ChangeFactor2 : 0,
+                    t.Resource != null && t.Resource.Data != null ? Convert.ToDouble(t.Resource.Data.ChangeFactor1) : 0,
+                    t.Resource != null && t.Resource.Data != null ? Convert.ToDouble(t.Resource.Data.ChangeFactor2) : 0,
                     t.Resource != null && t.Resource.Data != null ? t.Resource.Data.Unit : string.Empty,
                     t.Resource != null && t.Resource.IsActive
                 ))
