@@ -149,7 +149,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             else allVariables = resourceVariables;
             string expressionWithValues = ReplaceVariables(formula, allVariables);
             double result = EvaluateExpression(expressionWithValues);
-            SetVariable(targetVariable, result);
+            SetVariable(targetVariable, (decimal)result);
         }
     }
 }

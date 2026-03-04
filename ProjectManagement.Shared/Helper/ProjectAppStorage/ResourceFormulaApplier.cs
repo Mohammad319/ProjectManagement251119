@@ -37,11 +37,11 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
             {
                 [BaseCost] = (double)(row.Data.BaseCost ?? 0m),
                 [Cost] = (double)row.Data.Cost,
-                [Quantity] = row.Data.Quantity ?? 0,
-                [Cap] = row.Data.CapWaste,
-                [Waste] = row.Data.CapWaste,
-                [Chf1] = row.Data.ChangeFactor1,
-                [Chf2] = row.Data.ChangeFactor2,
+                [Quantity] = (double)(row.Data.Quantity ?? 0m),
+                [Cap] = (double)row.Data.CapWaste,
+                [Waste] = (double)row.Data.CapWaste,
+                [Chf1] = (double)row.Data.ChangeFactor1,
+                [Chf2] = (double)row.Data.ChangeFactor2,
             };
             if (taskParameter.TryGetValue(ParamName.Thickness, out var th))
                 vars[TaskThickness] = th;
@@ -75,11 +75,11 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
 
             row.Data.BaseCost = vars.TryGetValue(BaseCost, out var b) ? (decimal?)b : row.Data.BaseCost;
             row.Data.Cost = vars.TryGetValue(Cost, out var c) ? (decimal)c : row.Data.Cost;
-            row.Data.Quantity = vars.TryGetValue(Quantity, out var q) ? q : row.Data.Quantity;
-            row.Data.CapWaste = vars.TryGetValue(Cap, out var w) ? w : row.Data.CapWaste;
-            row.Data.CapWaste = vars.TryGetValue(Waste, out var cap) ? cap : row.Data.CapWaste;
-            row.Data.ChangeFactor1 = vars.TryGetValue(Chf1, out var k1) ? k1 : row.Data.ChangeFactor1;
-            row.Data.ChangeFactor2 = vars.TryGetValue(Chf2, out var k2) ? k2 : row.Data.ChangeFactor2;
+            row.Data.Quantity = vars.TryGetValue(Quantity, out var q) ? (decimal)q : row.Data.Quantity;
+            row.Data.CapWaste = vars.TryGetValue(Cap, out var w) ? (decimal)w : row.Data.CapWaste;
+            row.Data.CapWaste = vars.TryGetValue(Waste, out var cap) ? (decimal)cap : row.Data.CapWaste;
+            row.Data.ChangeFactor1 = vars.TryGetValue(Chf1, out var k1) ? (decimal)k1 : row.Data.ChangeFactor1;
+            row.Data.ChangeFactor2 = vars.TryGetValue(Chf2, out var k2) ? (decimal)k2 : row.Data.ChangeFactor2;
         }
 
         private static void SetVar(string name, double value, ResourceDto row, Dictionary<string, double> vars)
@@ -88,11 +88,11 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
             {
                 case BaseCost: row.Data.BaseCost = (decimal?)value; vars[BaseCost] = value; break;
                 case Cost: row.Data.Cost = (decimal)value; vars[Cost] = value; break;
-                case Quantity: row.Data.Quantity = value; vars[Quantity] = value; break;
-                case Waste: row.Data.CapWaste = value; vars[Waste] = value; break;
-                case Cap: row.Data.CapWaste = value; vars[Cap] = value; break;
-                case Chf1: row.Data.ChangeFactor1 = value; vars[Chf1] = value; break;
-                case Chf2: row.Data.ChangeFactor2 = value; vars[Chf2] = value; break;
+                case Quantity: row.Data.Quantity = (decimal)value; vars[Quantity] = value; break;
+                case Waste: row.Data.CapWaste = (decimal)value; vars[Waste] = value; break;
+                case Cap: row.Data.CapWaste = (decimal)value; vars[Cap] = value; break;
+                case Chf1: row.Data.ChangeFactor1 = (decimal)value; vars[Chf1] = value; break;
+                case Chf2: row.Data.ChangeFactor2 = (decimal)value; vars[Chf2] = value; break;
                 default:
                     vars[name] = value;
                     break;

@@ -42,10 +42,10 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         if(!taskQuantity.HasValue) taskQuantity = 0;
         foreach (var resource in resources)
         {
-            var baseCalc = taskQuantity.Value * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
+            var baseCalc = (decimal)taskQuantity.Value * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
 
             if (resource.HasWast && resource.Data.CapWaste != 0)
-                resource.Data.Quantity = baseCalc * (1 + resource.Data.CapWaste / 100);
+                resource.Data.Quantity = baseCalc * (1m + resource.Data.CapWaste / 100m);
             else if (resource.HasCap && resource.Data.CapWaste != 0)
                 resource.Data.Quantity = baseCalc / resource.Data.CapWaste;
             else resource.Data.Quantity = baseCalc;
@@ -58,7 +58,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         {
             if (res.CostRole != null && res.Data.Quantity.HasValue)
                 foreach (var item in res.CostRole)
-                    if (item.Min <= res.Data.Quantity.Value && item.Max >= res.Data.Quantity.Value)
+                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max)
                     {
                         res.Data.Cost = (decimal)item.Value.Value;
                         break;
@@ -71,9 +71,9 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             if ((res.ResType == ResourceTypesEnum.MachinesAndEquipments || res.ResType == ResourceTypesEnum.Worker)
                 && res.CapRole != null && res.Data.Quantity.HasValue)
                 foreach (var item in res.CapRole)
-                    if (item.Min <= res.Data.Quantity.Value && item.Max >= res.Data.Quantity.Value)
+                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max)
                     {
-                        res.Data.CapWaste = item.Value.Value;
+                        res.Data.CapWaste = (decimal)item.Value.Value;
                         break;
                     }
     }
@@ -130,7 +130,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                 if (ra.Resource == null) continue;
                 ra.Formulas = [];
                 var resName = ra.Resource.Name;
-                double cawaste = ra.Resource.Data.CapWaste;
+                decimal cawaste = ra.Resource.Data.CapWaste;
                 // حساب Cap/Waste بحسب الأدوار إن لزم
                 if (ra.Resource.ResType == ResourceTypesEnum.MachinesAndEquipments ||
                     ra.Resource.ResType == ResourceTypesEnum.Worker)
@@ -138,8 +138,8 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     foreach (var item in ra.CapRole ?? Enumerable.Empty<RoleDTO>())
                     {
                         var q = ra.Resource.Data.Quantity;
-                        if (q >= item.Min && q <= item.Max && item.Value.HasValue)
-                            cawaste = item.Value.Value;
+                        if (q.HasValue && (double)q.Value >= item.Min && (double)q.Value <= item.Max && item.Value.HasValue)
+                            cawaste = (decimal)item.Value.Value;
                     }
                 }
 

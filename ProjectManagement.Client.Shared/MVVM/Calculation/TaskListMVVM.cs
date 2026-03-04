@@ -48,17 +48,17 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string Note => Metadata.Note;
         public List<string> UpperNote => Metadata.UpperNote;
         public string QuantityParam => Metadata.QuantityParam;
-        public double? Quantity => Metadata.Quantity;
+        public decimal? Quantity => Metadata.Quantity;
         public string Unit => Metadata.Unit;
-        public double ChangeFactor1 => Metadata.ChangeFactor1;
-        public double ChangeFactor2 => Metadata.ChangeFactor2;
-        public double ActuallyQuantity => Metadata.ActuallyQuantity;
+        public decimal ChangeFactor1 => Metadata.ChangeFactor1;
+        public decimal ChangeFactor2 => Metadata.ChangeFactor2;
+        public decimal ActuallyQuantity => Metadata.ActuallyQuantity;
         public double WorkedQ => Metadata.WorkedQ;
 
         // ⚠️ تجنب قسمة على صفر
-        public double WorkedQPercent => (Metadata.ActuallyQuantity == 0) ? 0 : (Metadata.WorkedQ / Metadata.ActuallyQuantity);
+        public double WorkedQPercent => (Metadata.ActuallyQuantity == 0) ? 0 : (Metadata.WorkedQ / (double)Metadata.ActuallyQuantity);
 
-        public double? Cap => Metadata.Cap;
+        public decimal? Cap => Metadata.Cap;
         public bool Active => Metadata.IsActive;
         public string Code => Metadata.Code;
         public TaskType Type => Metadata.Type;
@@ -86,7 +86,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         [JsonIgnore]
         public decimal PriceQ =>
             (Metadata.Quantity.HasValue && Metadata.Quantity.Value > 0)
-                ? (Calc_ApriceTotally / (decimal)Metadata.Quantity.Value)
+                ? (Calc_ApriceTotally / Metadata.Quantity.Value)
                 : 0;
 
         [JsonIgnore] public double? TotalCO2 => Calc_TotalCO2;
@@ -94,13 +94,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         // هذه بقيت “خفيفة” (ما فيها LINQ)
         [JsonIgnore] public decimal PriceSub => Metadata.PriceSubDB ?? Math.Round(PriceQ);
-        [JsonIgnore] public decimal PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * (decimal)Metadata.Quantity.Value : 0;
+        [JsonIgnore] public decimal PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * Metadata.Quantity.Value : 0;
         [JsonIgnore] public decimal Diff => PriceSubTotal - ApriceTotally;
 
         public decimal PriceQTax(double Tax) => PriceQ * (1 + ((decimal)Tax / 100));
         public decimal ApriceTotallyTax(double Tax) => ApriceTotally * (1 + ((decimal)Tax / 100));
 
-        public decimal PriceActuallyQuantity => (decimal)ActuallyQuantity * PriceSub;
+        public decimal PriceActuallyQuantity => ActuallyQuantity * PriceSub;
         public decimal PriceWorkedQ => (decimal)WorkedQ * PriceSub;
         public decimal PriceSubTax(double tax) => PriceSub * (1 + (decimal)tax);
         public decimal PriceTotalSubTax(double tax) => PriceSubTax(tax) * (1 + (decimal)tax);
