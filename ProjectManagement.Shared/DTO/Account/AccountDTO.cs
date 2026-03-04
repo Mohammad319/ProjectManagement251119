@@ -25,14 +25,14 @@ namespace ProjectManagement.Shared.DTO.Account
     public class ListAccountDTO
     {
         public int Id { get; init; }
-        public string Name { get; init; }
-        public string Account { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Account { get; init; } = string.Empty;
     }
     public class AccountManageDTO
     {
         public int Id { get; init; }
-        public string Name { get; init; }
-        public string Code { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Code { get; init; } = string.Empty;
         public bool IsVisible { get; init; } = true;
         private AccountData? _metadata;
         public AccountData Metadata

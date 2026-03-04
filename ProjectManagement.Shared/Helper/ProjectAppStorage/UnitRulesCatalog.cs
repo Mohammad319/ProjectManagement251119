@@ -13,14 +13,14 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
         private sealed class Impl<T1, T2>(IEqualityComparer<T1> c1, IEqualityComparer<T2> c2) : IEqualityComparer<(T1, T2)>
         {
             public bool Equals((T1, T2) x, (T1, T2) y) => c1.Equals(x.Item1, y.Item1) && c2.Equals(x.Item2, y.Item2);
-            public int GetHashCode((T1, T2) obj) => System.HashCode.Combine(c1.GetHashCode(obj.Item1), c2.GetHashCode(obj.Item2));
+            public int GetHashCode((T1, T2) obj) => System.HashCode.Combine(c1.GetHashCode(obj.Item1!), c2.GetHashCode(obj.Item2!));
         }
     }
 
     public static class UnitRulesCatalog
     {
         public static readonly Dictionary<(string From, string To), UnitRule> Rules =
-            new(TupleComparer.Create(StringComparer.OrdinalIgnoreCase, StringComparer.OrdinalIgnoreCase))
+            new(TupleComparer.Create<string, string>(StringComparer.OrdinalIgnoreCase, StringComparer.OrdinalIgnoreCase))
             {
                 [(Units.CubicMeter, Units.CubicMeter)] = new UnitRule
                 {
@@ -136,8 +136,17 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 [(Units.Meter, Units.Meter)] = new UnitRule { FromUnit = Units.Meter, ToUnit = Units.Meter, Compute = (Q, _) => Q },
             };
 
-        public static bool TryGet(string from, string to, out UnitRule rule) =>
-            Rules.TryGetValue((from, to), out rule);
+        public static bool TryGet(string from, string to, out UnitRule rule)
+        {
+            if (Rules.TryGetValue((from, to), out var foundRule))
+            {
+                rule = foundRule;
+                return true;
+            }
+
+            rule = null!;
+            return false;
+        }
 
         public static string BuildKey(string u) => (u ?? "").Trim().ToLowerInvariant() switch
         {
