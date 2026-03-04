@@ -5,6 +5,7 @@
 @using ProjectManagement.Client.Shared.MVVM.Folder
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Shared.Constant
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.Project
@@ -93,7 +94,7 @@
                         <thead class="sticky top-0 z-10 shadow-sm"
                                style="background-color:@Template?.SummarySheet.Color.Header;">
                             <tr class="h-6">
-                                @foreach (var item in Template?.SummarySheet?.Columns ?? Enumerable.Empty<SummarySheetColumnState>())
+                                @foreach (var item in Template?.SummarySheet?.Columns?.AsEnumerable() ?? Enumerable.Empty<SummarySheetColumnState>())
                                 {
                                     <th style="width:@(item.Width + "px")"
                                         class="px-2 py-0.5 font-semibold whitespace-nowrap border-b border-slate-200/70 dark:border-slate-700/70 text-left align-middle">

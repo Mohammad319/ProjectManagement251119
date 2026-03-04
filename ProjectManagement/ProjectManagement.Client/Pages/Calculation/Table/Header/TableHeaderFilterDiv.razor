@@ -3,6 +3,7 @@
 @using ProjectManagement.Client.Shared.Repositories.Calculation;
 @using ProjectManagement.Client.Shared.Repositories.ResourceType;
 @using ProjectManagement.Client.Shared.ViewModel;
+@using ProjectManagement.Shared.Constant
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.ResourceType;
@@ -230,7 +231,7 @@
         </td>
     }
 
-    @foreach (var obj in Template?.NetCalc?.Columns ?? Enumerable.Empty<NetColumnState>())//Template.NetOrder)
+    @foreach (var obj in Template?.NetCalc?.Columns?.AsEnumerable() ?? Enumerable.Empty<NetColumnState>())//Template.NetOrder)
     {
         <td @onclick="(e) => EnterCodeClick(e, obj.Id)">
             @if (obj.Id  == NetColumnId.Status)
