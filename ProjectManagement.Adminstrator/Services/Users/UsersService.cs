@@ -29,8 +29,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
             var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                ("Active", "#16a34a", 10, true),
-                ("Inactive", "#dc2626", 20, true),
+                ("Active", "#16a34a", 100, true),
+                ("Inactive", "#dc2626", 200, true),
             };
 
             var existingResourceStatuses = await dataAccess.ResourceStatus.ToListAsync();
@@ -58,9 +58,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
             var defaultTaskStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                ("Planned", "#2563eb", 10, true),
-                ("In Progress", "#f59e0b", 20, true),
-                ("Done", "#16a34a", 30, true),
+                ("Planned", "#2563eb", 100, true),
+                ("In Progress", "#f59e0b", 200, true),
+                ("Done", "#16a34a", 300, true),
             };
 
             var existingTaskStatuses = await dataAccess.TaskStatus.ToListAsync();
@@ -181,12 +181,20 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
             if (!await dataAccess.Compensations.AnyAsync())
             {
-                dataAccess.Compensations.Add(new CompensationEntity("Fixed price", "#8b5cf6", 10, true));
+                dataAccess.Compensations.Add(new CompensationEntity("unit price contract", "#8b5cf6", 100, true));
+                dataAccess.Compensations.Add(new CompensationEntity("time and Materials contract", "#8b5cf6", 200, true));
+                dataAccess.Compensations.Add(new CompensationEntity("lump-sum contract", "#8b5cf6", 300, true));
+                dataAccess.Compensations.Add(new CompensationEntity("integrated project delivery contract", "#8b5c60", 400, true));
+                dataAccess.Compensations.Add(new CompensationEntity("incentive construction contract", "#805cf6", 500, true));
+                dataAccess.Compensations.Add(new CompensationEntity("guaranteed maximum price contract", "#8b5cf6", 600, true));
+                dataAccess.Compensations.Add(new CompensationEntity("design and build contract", "#8b5cf6", 700, true));
+                dataAccess.Compensations.Add(new CompensationEntity("cost-plus construction contract", "#00ff00", 800, true));
             }
 
             var defaultContracts = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                ("Standard contract", "#0ea5e9", 10, true),
+                ("Traditional procurement", "#0ea5e9", 100, true),
+                 ("Design & Build Contract", "#00a590", 200, true),
             };
 
             var existingContracts = await dataAccess.Contracts.ToListAsync();
@@ -214,9 +222,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
             var defaultProcurementMethods = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
-                ("Limited Procedure", "#00ff00", 1300, true),
-                ("Selective Tending", "#00ff00", 1400, true),
-                ("Open Tendering", "#00ff00", 1500, true),
+                ("Limited Procedure", "#00ff00", 100, true),
+                ("Selective Tending", "#00ff00", 200, true),
+                ("Open Tendering", "#00ff00", 300, true),
             };
 
             var existingProcurementMethods = await dataAccess.ProcurementMethod.ToListAsync();
@@ -247,8 +255,24 @@ namespace ProjectManagement.Adminstrator.Services.Users
             if (!await dataAccess.CalculationStatus.AnyAsync())
             {
                 var status = new StatusEntity();
-                status.Update("Open", "#22c55e", 10, true);
+                status.Update("Not Started", "#22c55e", 100, true);
+                var status2 = new StatusEntity();
+                status.Update("Planned", "#00aaff", 200, true);
+                var status3 = new StatusEntity();
+                status3.Update("In Progress", "#a2a239", 300, true);
+                var status4 = new StatusEntity();
+                status4.Update("Completed", "#2bc52b", 400, true);
+                var status5 = new StatusEntity();
+                status5.Update("Failed", "#ff0033", 500, true);
+                var status6 = new StatusEntity();
+                status6.Update("Cancelled", "#b98741", 600, true);
                 dataAccess.CalculationStatus.Add(status);
+                dataAccess.CalculationStatus.Add(status2);
+                dataAccess.CalculationStatus.Add(status3);
+                dataAccess.CalculationStatus.Add(status4);
+                dataAccess.CalculationStatus.Add(status5);
+                dataAccess.CalculationStatus.Add(status6);
+
             }
 
             if (!await dataAccess.CalcProjectType.AnyAsync())
