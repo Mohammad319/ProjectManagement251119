@@ -22,8 +22,8 @@ namespace ProjectManagement.Shared.Base.Calculation
     }
     public class ResourceMetadata
     {
-        public List<ResourceParameter> Parameters { get; set; } = new ();
-        public List<ResourceTime> Times { get; set; } = new ();
+        public List<ResourceParameter> Parameters { get; set; } = [];
+        public List<ResourceTime> Times { get; set; } = [];
         public decimal? PriceSub { get; set; }
 
         public string Note { get; set; } = string.Empty;
@@ -53,7 +53,7 @@ namespace ProjectManagement.Shared.Base.Calculation
                 PriceSub = PriceSub,
 
                 Note = Note ?? string.Empty,
-                UpperNote = UpperNote is null ? new() : new List<string>(UpperNote),
+                UpperNote = UpperNote is null ? new() : [.. UpperNote],
 
                 QuantityParam = QuantityParam ?? string.Empty,
                 Quantity = Quantity,

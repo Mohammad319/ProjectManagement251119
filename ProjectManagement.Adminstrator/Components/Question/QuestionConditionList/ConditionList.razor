@@ -16,7 +16,7 @@
     [Parameter] public List<NumericQuestionDefinition> NumericGroups { get; set; } = new();
 
     bool ResourceAssignments = false;
-    private static string RangeLabel(double? min, double? max)
+    private static string RangeLabel(decimal? min, decimal? max)
         => min.HasValue && max.HasValue ? $"[{min}..{max}]" :
            min.HasValue ? $">= {min}" : max.HasValue ? $"<= {max}" : "(any)";
 

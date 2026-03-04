@@ -102,10 +102,10 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public decimal PriceActuallyQuantity => ActuallyQuantity * PriceSub;
         public decimal PriceWorkedQ => (decimal)WorkedQ * PriceSub;
-        public decimal PriceSubTax(double tax) => PriceSub * (1 + (decimal)tax);
-        public decimal PriceTotalSubTax(double tax) => PriceSubTax(tax) * (1 + (decimal)tax);
-        public decimal PriceActuallyQuantityTax(double tax) => PriceActuallyQuantity * (1 + (decimal)tax);
-        public decimal PriceWorkedQTax(double tax) => PriceWorkedQ * (1 + (decimal)tax);
+        public decimal PriceSubTax(decimal tax) => PriceSub * (1 +tax);
+        public decimal PriceTotalSubTax(decimal tax) => PriceSubTax(tax) * (1 + tax);
+        public decimal PriceActuallyQuantityTax(decimal tax) => PriceActuallyQuantity * (1 + tax);
+        public decimal PriceWorkedQTax(decimal tax) => PriceWorkedQ * (1 + tax);
 
         public bool HasVoice => Metadata.HasVoice;
         public string Responsible => Metadata.Responsible;
