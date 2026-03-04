@@ -231,7 +231,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                         Id = row.OfferId.Value,
                         BaseCost = row.OfferBaseCost,
                         Cost = row.OfferCost,
-                        Comment = row.OfferComment,
+                        Comment = row.OfferComment ?? string.Empty,
                         Date = row.OfferDate ?? default,
                         OrganisationId = row.OfferOrganisationId ?? 0,
                         Organisation = row.OfferOrganisation ?? string.Empty,

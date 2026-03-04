@@ -57,7 +57,7 @@ public static class ProjectTaskProjection
                     {
                         Id = z.a.ResourceId,
                         Name = z.a.Resource != null ? z.a.Resource.Name : string.Empty,
-                        CalcResCost = z.a.Resource.CalcResCost ?? new (),
+                        CalcResCost = z.a.Resource != null ? z.a.Resource.CalcResCost ?? new() : new(),
                         Active = z.a.IsActive,
                         FolderId = z.a.Resource.FolderId,
                         ResType = z.a.Resource.ResType,
@@ -235,7 +235,7 @@ public static class ProjectTaskProjection
                                 Active = z.a.IsActive,
                                 CostRole = z.a.CapacityRoles,
                                 CapRole = z.a.CapacityRoles,
-                                CalcResCost = z.a.Resource.CalcResCost ?? new(),
+                                CalcResCost = z.a.Resource != null ? z.a.Resource.CalcResCost ?? new() : new(),
                                 MenuId = z.a.MenuId,
                                 Data = new ResourceMetadata
                                 {
