@@ -1,7 +1,7 @@
 ﻿@using Application.Feature.Calculation.Storage.Commands
 @using Application.Feature.Calculation.Storage.Queries
 @using Microsoft.EntityFrameworkCore
-@using Persistence.Context
+@using Persistence.Factory
 @using ProjectManagement.Client.Pages.Project.Storage.Row
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Project;
@@ -9,7 +9,7 @@
 @using System.Text.Json
 @inherits AppComponentBase
 @inject ICommandDispatcher MicroBus
-@inject  ShardingSingleDbContext _context
+@inject IDbContextFactoryTenant DbContextFactory
 <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
     <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             @onchange="(e) => GetAuthorityStorage(e)">
@@ -94,10 +94,11 @@
     async Task GetAsync()
     {
         BtnImportIsVisible = false;
-        var data = await _context.Storages.Where(x =>
-        x.StorageType == Post.Type &&
-        x.StorageLevel == Post.AuthoritySelected &&
-        x.StorageSort == Post.SortSelected).ToListAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var data = await context.Storages.Where(x =>
+            x.StorageType == Post.Type &&
+            x.StorageLevel == Post.AuthoritySelected &&
+            x.StorageSort == Post.SortSelected).ToListAsync();
 
         await MicroBus.Send(new GetStorageQuery(Post.Type, Post.AuthoritySelected, Post.SortSelected));
         if (Post.Type == CalculationItemType.task)
