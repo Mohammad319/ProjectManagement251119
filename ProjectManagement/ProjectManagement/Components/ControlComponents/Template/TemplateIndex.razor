@@ -34,7 +34,7 @@ else
                     <div class="@CssClasses.Layout.FlexItemsCenter">
                             @if (Departments != null)
                             {
-                            <select @onchange="async (e) => await GetAsync(e.Value.ToString())" class="@CssClasses.Input.Select">
+                            <select @onchange="async (e) => await GetAsync(e.Value?.ToString())" class="@CssClasses.Input.Select">
                                         <option value=""></option>
                                         @foreach (var Template in Departments)
                                         {
@@ -79,7 +79,7 @@ else
             Form = formm;
         Form.Id = id;
     }
-    async Task GetAsync(string idstr)
+    async Task GetAsync(string? idstr)
     {
         int? id = null;
         if (int.TryParse(idstr, out int value))
@@ -88,8 +88,8 @@ else
     }
     protected async override Task OnInitializedAsync()
     {
-        var role = (await _authentication).User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role);
-        if (role.Value == PMRolesConst.Tenant.Admin)
+        var role = (await _authentication).User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value;
+        if (role == PMRolesConst.Tenant.Admin)
             Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
         await GetAsync(string.Empty);
         Loading = false;

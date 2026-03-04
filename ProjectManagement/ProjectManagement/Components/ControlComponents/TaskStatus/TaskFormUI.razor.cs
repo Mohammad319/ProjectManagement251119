@@ -7,7 +7,7 @@ namespace ProjectManagement.Components.ControlComponents.TaskStatus
 {
     public partial class TaskFormUI
     {
-        [Parameter] public TaskStatusEntity Status { get; set; }
+        [Parameter] public TaskStatusEntity Status { get; set; } = new();
         PostTaskStatusDTO PostStatus { get; set; } = new();
         [Parameter] public EventCallback<bool> Callback { get; set; }
         bool IsLoading = false;

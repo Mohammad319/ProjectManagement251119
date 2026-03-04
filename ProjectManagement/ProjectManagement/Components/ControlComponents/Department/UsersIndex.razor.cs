@@ -123,11 +123,11 @@ namespace ProjectManagement.Components.ControlComponents.Department
             if (IsBusy) return;
 
             MHD.Modal.ShowComponent<UpdateUserUI>(
-                AppLoc[LocalizerConst.Update, user.Email ?? user.Username],
+                AppLoc[LocalizerConst.Update, user.Email ?? user.Username ?? string.Empty],
                 new Dictionary<string, object>
                 {
                     [nameof(UpdateUserUI.UserForm)] = user,
-                    [nameof(UpdateUserUI.DepartmentId)] = DepartmentId,
+                    [nameof(UpdateUserUI.DepartmentId)] = DepartmentId ?? 0,
                     [nameof(UpdateUserUI.Callback)] =
                         EventCallback.Factory.Create<bool>(this, OnEditUserResultAsync)
                 },

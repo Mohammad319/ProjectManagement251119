@@ -112,7 +112,7 @@
 
             <div class="@CssClasses.Layout.FlexWidth110">
                 <label class="@CssClasses.Form.Label">@CalcResource.cost </label>
-                @if (Resource.OfferId.HasValue && Resource.OfferId > 0)
+                @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                 {
                     <input class="@CssClasses.Input.Text" type="number" disabled value="@Resource.Data.Cost" />
                 }
@@ -125,7 +125,7 @@
 
             <div class="@CssClasses.Layout.FlexWidth110">
                 <label class="@CssClasses.Form.Label">@CalcResource.baseCost </label>
-                @if (Resource.OfferId.HasValue && Resource.OfferId > 0)
+                @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                 {
                     <input type="number" disabled value="@Resource.Data.BaseCost" />
                 }
@@ -304,8 +304,8 @@
             }
         }
     </MhdCard>
-    @if (Resource.ResType == ResourceTypesEnum.Worker ||
-        Resource.ResType == ResourceTypesEnum.MachinesAndEquipments)
+    @if (Resource?.ResType == ResourceTypesEnum.Worker ||
+        Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments)
     {
          <MhdCard Elevated="true" Compact="true" Class="mb-2">
         <div class="flex items-center justify-between mb-2">

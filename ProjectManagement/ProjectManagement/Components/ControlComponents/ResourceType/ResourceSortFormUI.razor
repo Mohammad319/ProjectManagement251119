@@ -93,7 +93,7 @@
 </EditForm>
 @code{
     [Parameter] public EventCallback<bool> Callback { get; set; }
-    [Parameter] public ResourceSortModel? ResourceSort { get; set; }
+    [Parameter] public ResourceSortModel ResourceSort { get; set; } = new();
     bool IsLoading = false;
     List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
     ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
@@ -101,7 +101,8 @@
     async Task ChangeGroupAccount(ChangeEventArgs e)
     {
         AccountGroupSelected = null;
-        int id = int.Parse(e.Value.ToString());
+        if (!int.TryParse(e.Value?.ToString(), out int id))
+            return;
         await Task.Delay(1);
         if (id == 0) return;
         SelectedGroup(id);
@@ -112,7 +113,7 @@
         AccountGroups = await MicroBus.Send(new GetAccountGroupsAsListQuery());
         if (ResourceSort?.Id > 0)
         {
-            AccountGroupSelected = AccountGroups.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceSort.AccountId));
+            AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceSort.AccountId));
         }
     }
     private async Task HandleSubmitAsync()

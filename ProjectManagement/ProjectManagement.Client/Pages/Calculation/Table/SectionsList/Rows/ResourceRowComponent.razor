@@ -8,15 +8,18 @@
     style="@Resource.Style(Template.NetCalc?.Color?.Resource, Resource.Active)">
     <td></td>
 
-    @foreach (var col in Template.NetCalc.Columns)
+    @if (Template.NetCalc?.Columns is not null)
     {
-        @Colmuns[(int)col.Id].ResRender(Resource)
+        @foreach (var col in Template.NetCalc.Columns)
+        {
+            @Colmuns[(int)col.Id].ResRender(Resource)
+        }
     }
 </tr>
 
 @if (Resource.Data?.UpperNote != null && CalcService.ShowComments)
 {
-    @Note(Resource.Data.UpperNote, 3, Template.NetCalc.Columns.Count)
+    @Note(Resource.Data.UpperNote, 3, Template.NetCalc?.Columns?.Count ?? 0)
 }
 
 @code {
