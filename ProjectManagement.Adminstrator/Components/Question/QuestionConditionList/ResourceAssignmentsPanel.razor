@@ -25,8 +25,8 @@
 
     [Parameter] public Dictionary<int, List<OptionBindVM>> OptBindsByRA { get; set; } = new();
     [Parameter] public Dictionary<int, List<NumericBindVM>> NumBindsByRA { get; set; } = new();
-    [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; }
-    [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; }
+    [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; } = (_, _) => Task.CompletedTask;
+    [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; } = (_, _) => Task.CompletedTask;
     private bool CanAddBindingsFor(ConditionResourceAssignment a) => a.Id > 0;
     private void AddAssignment() =>
         Condition.Assignments.Add(
@@ -45,13 +45,14 @@
             Condition.Assignments.RemoveAll(x => x.ResourceId == resource.Id);
         else
         {
+            var metadata = resource.Data;
             Condition.Assignments.Add(new ConditionResourceAssignment()
             {
                 ResourceId = resource.Id,
-                ChangeFactor1 = resource?.Data?.ChangeFactor1 == null ? 0 : resource.Data.ChangeFactor1,
-                ChangeFactor2 = resource?.Data?.ChangeFactor2 == null ? 0 : resource.Data.ChangeFactor2,
-                CapWaste = resource?.Data?.CapWaste == null ? 0 : resource.Data.CapWaste,
-                BaseCost = resource?.Data?.BaseCost == null ? 0 : resource.Data.BaseCost,
+                ChangeFactor1 = metadata?.ChangeFactor1 ?? 0,
+                ChangeFactor2 = metadata?.ChangeFactor2 ?? 0,
+                CapWaste = metadata?.CapWaste ?? 0,
+                BaseCost = metadata?.BaseCost ?? 0,
                 IsActive = resource.IsActive,
                 Resource = new ResourceDefinition
                 {
@@ -59,11 +60,11 @@
                     Name = resource.Name,
                     Data = new ResourceMetadata
                     {
-                        Cost = resource?.Data?.Cost ?? 0,
-                        ChangeFactor1 = resource?.Data?.ChangeFactor1 ?? 0,
-                        ChangeFactor2 = resource?.Data?.ChangeFactor2 ?? 0,
-                        CapWaste = resource?.Data?.CapWaste ?? 0,
-                        BaseCost = resource?.Data?.BaseCost ?? 0
+                        Cost = metadata?.Cost ?? 0,
+                        ChangeFactor1 = metadata?.ChangeFactor1 ?? 0,
+                        ChangeFactor2 = metadata?.ChangeFactor2 ?? 0,
+                        CapWaste = metadata?.CapWaste ?? 0,
+                        BaseCost = metadata?.BaseCost ?? 0
                     }
                 }
             });
@@ -185,7 +186,7 @@
                         {
                             <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole(a))">Add Role</button>
                         }
-                        <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => a.Expressions.Add(string.Empty))">+</button>
+                        <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">+</button>
                         <button class="@CsS.Btn.Outline.Danger" @onclick="() => RemoveAssignment(a)">x</button>
                     </div>
                 </div>
@@ -292,7 +293,7 @@
                                                     </select>
                                             </div>
                                             <div>
-                                                <button class="@CsS.Btn.Outline.Primary" title="Save binding" @onclick="() => OnSaveOption?.Invoke(a.Id, b)">Save</button>
+                                                <button class="@CsS.Btn.Outline.Primary" title="Save binding" @onclick="async () => await OnSaveOption(a.Id, b)">Save</button>
                                                 <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddOptionEq(a.Id, b)">Add Equation</button>
                                                 <button class="@CsS.Btn.Outline.Danger" title="Delete binding" @onclick="() => RemoveOptionBindingUI(a.Id, b)">Delete</button>
                                             </div>
@@ -369,7 +370,7 @@
                                             </div>
                                             </div>
                                             <div>
-                                                <button class="@CsS.Btn.Outline.Primary" title="Save numeric binding" @onclick="() => OnSaveNumeric?.Invoke(a.Id, b)">Save</button>
+                                                <button class="@CsS.Btn.Outline.Primary" title="Save numeric binding" @onclick="async () => await OnSaveNumeric(a.Id, b)">Save</button>
                                                 <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddNumericEq(a.Id, b)">Add Equation</button>
 
                                                 <button class="@CsS.Btn.Outline.Danger" title="Delete numeric binding" @onclick="() => RemoveNumericBindingUI(a.Id, b)">Delete</button>
