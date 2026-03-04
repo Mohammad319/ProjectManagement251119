@@ -6,6 +6,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
 {
     public interface IUsersService
     {
+        Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null);
+
         Task<bool> RemoveTenant(int TenantId);
         Task<IList<string>> GetRolesAsync(string username);
         Task<bool> RemoveUserAsync(string id, int? tenantId);

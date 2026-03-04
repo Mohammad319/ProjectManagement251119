@@ -1,10 +1,17 @@
 ﻿using AuthPermissions.Entity;
+using Domain.Entities.Calculation;
+using Domain.Entities.Project;
+using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
+using ProjectManagement.Shared.Base.Users;
+using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Identity;
+using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.DTO.Tenant;
+using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Models.Account;
 
 namespace ProjectManagement.Adminstrator.Services.Users
@@ -14,6 +21,249 @@ namespace ProjectManagement.Adminstrator.Services.Users
           IDbContextFactory<ApplicationDbContext> ContextFactory
        ) : IUsersService
     {
+        public async Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null)
+        {
+            var dataAccess = await CreateDbContext(tenantId, userId);
+            var changed = 0;
+
+            var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
+            {
+                ("Active", "#16a34a", 10, true),
+                ("Inactive", "#dc2626", 20, true),
+            };
+
+            var existingResourceStatuses = await dataAccess.ResourceStatus.ToListAsync();
+            foreach (var defaultResourceStatus in defaultResourceStatuses)
+            {
+                var status = existingResourceStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultResourceStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (status is null)
+                {
+                    dataAccess.ResourceStatus.Add(new StatusResourcesEntity(
+                        defaultResourceStatus.Name,
+                        defaultResourceStatus.Color,
+                        defaultResourceStatus.SortOrder,
+                        defaultResourceStatus.IsVisible));
+                    continue;
+                }
+
+                status.Update(
+                    defaultResourceStatus.Name,
+                    defaultResourceStatus.Color,
+                    defaultResourceStatus.SortOrder,
+                    defaultResourceStatus.IsVisible);
+            }
+
+            var defaultTaskStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
+            {
+                ("Planned", "#2563eb", 10, true),
+                ("In Progress", "#f59e0b", 20, true),
+                ("Done", "#16a34a", 30, true),
+            };
+
+            var existingTaskStatuses = await dataAccess.TaskStatus.ToListAsync();
+            foreach (var defaultTaskStatus in defaultTaskStatuses)
+            {
+                var status = existingTaskStatuses.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultTaskStatus.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (status is null)
+                {
+                    dataAccess.TaskStatus.Add(new TaskStatusEntity(
+                        defaultTaskStatus.Name,
+                        defaultTaskStatus.Color,
+                        defaultTaskStatus.SortOrder,
+                        defaultTaskStatus.IsVisible));
+                    continue;
+                }
+
+                status.Update(
+                    defaultTaskStatus.Name,
+                    defaultTaskStatus.Color,
+                    defaultTaskStatus.SortOrder,
+                    defaultTaskStatus.IsVisible);
+            }
+
+            var defaultAccountGroups = new[] { "AG1", "AG2" };
+            var existingAccountGroups = await dataAccess.AccountGroup.ToListAsync();
+            foreach (var groupName in defaultAccountGroups)
+            {
+                var accountGroup = existingAccountGroups.FirstOrDefault(x =>
+                    string.Equals(x.Name, groupName, StringComparison.OrdinalIgnoreCase));
+
+                if (accountGroup is null)
+                {
+                    dataAccess.AccountGroup.Add(new AccountGroupEntity(groupName));
+                    continue;
+                }
+
+                accountGroup.Update(groupName);
+            }
+
+            if (dataAccess.ChangeTracker.HasChanges())
+            {
+                changed += await dataAccess.SaveChangesAsync();
+            }
+
+            var accountGroupsByName = await dataAccess.AccountGroup
+                .ToDictionaryAsync(x => x.Name, StringComparer.OrdinalIgnoreCase);
+
+            var defaultAccounts = new (string Code, string Name, string GroupName, bool IsVisible)[]
+            {
+                ("Code1", "Acc1", "AG1", true),
+                ("Code2", "Acc2", "AG1", true),
+                ("Code3", "Acc3", "AG2", true),
+                ("Code4", "Acc4", "AG2", true),
+            };
+
+            var existingAccounts = await dataAccess.Accounts.ToListAsync();
+            foreach (var defaultAccount in defaultAccounts)
+            {
+                if (!accountGroupsByName.TryGetValue(defaultAccount.GroupName, out var accountGroup))
+                {
+                    continue;
+                }
+
+                var account = existingAccounts.FirstOrDefault(x =>
+                    string.Equals(x.Code, defaultAccount.Code, StringComparison.OrdinalIgnoreCase));
+
+                if (account is null)
+                {
+                    dataAccess.Accounts.Add(new AccountEntity(
+                        defaultAccount.Code,
+                        defaultAccount.Name,
+                        accountGroup.Id,
+                        defaultAccount.IsVisible,
+                        new AccountData()));
+                    continue;
+                }
+
+                account.Update(
+                    defaultAccount.Code,
+                    defaultAccount.Name,
+                    accountGroup.Id,
+                    defaultAccount.IsVisible,
+                    account.Metadata);
+            }
+
+            if (!await dataAccess.Department.AnyAsync())
+            {
+                dataAccess.Department.AddRange(
+                    DepartmentEntity.Create(new DepartmentBase { Name = "Management", Description = "Default management department" }),
+                    DepartmentEntity.Create(new DepartmentBase { Name = "Engineering", Description = "Default engineering department" }));
+            }
+
+            var existingResourceTypes = await dataAccess.ResourceTypes.ToListAsync();
+            var order = 10;
+            foreach (var type in Enum.GetValues<ResourceTypesEnum>())
+            {
+                var resourceTypeDto = new PostResourceTypeDTO
+                {
+                    Name = type.ToString(),
+                    IsVisible = true,
+                    Type = type,
+                };
+
+                var resourceType = existingResourceTypes.FirstOrDefault(x => x.Kind == type);
+                if (resourceType is null)
+                {
+                    dataAccess.ResourceTypes.Add(ResourceTypeEntity.Create(resourceTypeDto, order));
+                    order += 10;
+                    continue;
+                }
+
+                resourceType.Update(resourceTypeDto);
+                resourceType.UpdateOrder(order);
+                order += 10;
+            }
+
+            if (!await dataAccess.Compensations.AnyAsync())
+            {
+                dataAccess.Compensations.Add(new CompensationEntity("Fixed price", "#8b5cf6", 10, true));
+            }
+
+            var defaultContracts = new (string Name, string Color, int SortOrder, bool IsVisible)[]
+            {
+                ("Standard contract", "#0ea5e9", 10, true),
+            };
+
+            var existingContracts = await dataAccess.Contracts.ToListAsync();
+            foreach (var defaultContract in defaultContracts)
+            {
+                var contract = existingContracts.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultContract.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (contract is null)
+                {
+                    dataAccess.Contracts.Add(new ContractEntity(
+                        defaultContract.Name,
+                        defaultContract.Color,
+                        defaultContract.SortOrder,
+                        defaultContract.IsVisible));
+                    continue;
+                }
+
+                contract.Update(
+                    defaultContract.Name,
+                    defaultContract.Color,
+                    defaultContract.SortOrder,
+                    defaultContract.IsVisible);
+            }
+
+            var defaultProcurementMethods = new (string Name, string Color, int SortOrder, bool IsVisible)[]
+            {
+                ("Limited Procedure", "#00ff00", 1300, true),
+                ("Selective Tending", "#00ff00", 1400, true),
+                ("Open Tendering", "#00ff00", 1500, true),
+            };
+
+            var existingProcurementMethods = await dataAccess.ProcurementMethod.ToListAsync();
+            foreach (var defaultProcurementMethod in defaultProcurementMethods)
+            {
+                var procurementMethod = existingProcurementMethods.FirstOrDefault(x =>
+                    string.Equals(x.Name, defaultProcurementMethod.Name, StringComparison.OrdinalIgnoreCase));
+
+                if (procurementMethod is null)
+                {
+                    var newProcurementMethod = new ProcurementMethodEntity();
+                    newProcurementMethod.Update(
+                        defaultProcurementMethod.Name,
+                        defaultProcurementMethod.Color,
+                        defaultProcurementMethod.SortOrder,
+                        defaultProcurementMethod.IsVisible);
+                    dataAccess.ProcurementMethod.Add(newProcurementMethod);
+                    continue;
+                }
+
+                procurementMethod.Update(
+                    defaultProcurementMethod.Name,
+                    defaultProcurementMethod.Color,
+                    defaultProcurementMethod.SortOrder,
+                    defaultProcurementMethod.IsVisible);
+            }
+
+            if (!await dataAccess.CalculationStatus.AnyAsync())
+            {
+                var status = new StatusEntity();
+                status.Update("Open", "#22c55e", 10, true);
+                dataAccess.CalculationStatus.Add(status);
+            }
+
+            if (!await dataAccess.CalcProjectType.AnyAsync())
+            {
+                var type = new TypeEntity();
+                type.Update("General", "#3b82f6", 10, true);
+                dataAccess.CalcProjectType.Add(type);
+            }
+
+            if (dataAccess.ChangeTracker.HasChanges())
+            {
+                changed += await dataAccess.SaveChangesAsync();
+            }
+
+            return changed > 0;
+        }
 
         public async Task<List<GetTenantsDTO>> GetAsync()
         {
@@ -91,6 +341,29 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 return new List<string>();
             var roles = await userManager.GetRolesAsync(user);
             return roles;
+        }
+         async Task<ShardingSingleDbContext> CreateDbContext(int tenantId, int? currentUserId = null)
+        {
+            using var _appContext = ContextFactory.CreateDbContext();
+            string? ConnectionString = await _appContext.Tenants
+                .Where(x => x.Id == tenantId)
+                .Select(x => x.TenantDB.ConnectionString)
+                .FirstOrDefaultAsync();
+            if (string.IsNullOrEmpty(ConnectionString))
+                throw new Exception($"No database found for tenant {tenantId}");
+            var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
+            optionsBuilder.UseSqlServer(ConnectionString, sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null);
+                sqlOptions.CommandTimeout(30);
+            });
+            var db = new ShardingSingleDbContext(optionsBuilder.Options)
+            {
+                TenantId = tenantId,
+                CurrentUserId = currentUserId
+            };
+
+            return db;
         }
 
         public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId)

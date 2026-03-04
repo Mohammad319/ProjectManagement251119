@@ -114,6 +114,15 @@
                                 @(user.LockoutStart.HasValue? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)
                             </td>
                             <td class="@CsS.Table.Td">@user.DepartmentId</td>
+                            <td class="@CsS.Table.Td">
+                                <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
+                                    <button class="@CsS.Btn.Outline.Primary"
+                                            @onclick="() => AddBasicCompanyInfoAsync(user)"
+                                            disabled="@IsAddingCompanyInfoFor(user)">
+                                        @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
+                                    </button>
+                                </AuthorizeView>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -122,3 +131,31 @@
     }
 }
 
+@code{
+    bool IsAddingCompanyInfoFor(ApplicationUser user) =>
+    !string.IsNullOrWhiteSpace(AddingCompanyInfoForUserId) && AddingCompanyInfoForUserId == user.Id;
+    string? AddingCompanyInfoForUserId;
+    async Task AddBasicCompanyInfoAsync(ApplicationUser user)
+    {
+        if (Id <= 0 || user is null || string.IsNullOrWhiteSpace(user.Id) || IsAddingCompanyInfoFor(user)) return;
+
+        if (!user.UserId.HasValue || user.UserId.Value <= 0)
+        {
+            MHD.MessageOk(ResourceApp.newItem, "Selected user does not have a linked tenant user id.", MhdState.Warning);
+            return;
+        }
+
+        AddingCompanyInfoForUserId = user.Id;
+        try
+        {
+            var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id, user.UserId));
+            MHD.MessageOk(ResourceApp.newItem, result ? "Basic company info added/updated successfully." : "No changes were required.", result ? MhdState.Success : MhdState.Info);
+        }
+        finally
+        {
+            AddingCompanyInfoForUserId = null;
+            StateHasChanged();
+        }
+    }
+
+}
