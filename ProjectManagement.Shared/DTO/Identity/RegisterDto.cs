@@ -10,7 +10,7 @@ namespace ProjectManagement.Shared.DTO.Identity
         public class Response
         {
             public bool IsSuccessfulRegistration { get; set; }
-            public string Errors { get; set; }
+            public string Errors { get; set; } = string.Empty;
         }
     }
 }

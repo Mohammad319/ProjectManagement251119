@@ -13,13 +13,12 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
-        public string Note { get; set; }
+        public string Note { get; set; } = string.Empty;
         public double? Quantity { get; set; }
-        public string Unit { get; set; }
+        public string Unit { get; set; } = string.Empty;
         public double ChangeFactor1 { get; set; } = 1;
         public double ChangeFactor2 { get; set; } = 1;
-        public string Code { get; set; }
-
+        public string Code { get; set; } = string.Empty;
         public List<ResourceEXDto> Resources { get; set; } = [];
         public int? ResIdCap { get; set; }
 

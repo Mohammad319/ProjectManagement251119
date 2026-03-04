@@ -7,7 +7,7 @@ namespace ProjectManagement.Shared.Base.Application
 {
     public class ApplicationValuesData
     {
-        public Dictionary<Guid, string> Attributes { get; set; }
+        public Dictionary<Guid, string> Attributes { get; set; } = [];
     }
     public class ApplicationValuesBase
     {
@@ -17,9 +17,9 @@ namespace ProjectManagement.Shared.Base.Application
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         [MaxLength(50, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Responsible { get; set; }
+        public string Responsible { get; set; } = string.Empty;
         public DateTime LastUpdate { get; set; } = DateTime.Now;
 
     }

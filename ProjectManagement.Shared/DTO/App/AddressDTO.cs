@@ -2,12 +2,11 @@
 {
     public class AddressDTO
     {
-        public string Street { get; set; }
-        public string ZIPCode { get; set; }
-        public string Nr { get; set; }
-        public string City { get; set; }
-        public string Region { get; set; }
-        public string Country { get; set; }
-
+        public string Street { get; set; } = string.Empty;
+        public string ZIPCode { get; set; } = string.Empty;
+        public string Nr { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string Region { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
     }
 }

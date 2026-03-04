@@ -9,6 +9,6 @@ namespace ProjectManagement.Shared.Base.Calculation
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

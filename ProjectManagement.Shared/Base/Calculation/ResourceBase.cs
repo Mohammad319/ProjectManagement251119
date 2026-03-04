@@ -7,14 +7,14 @@ namespace ProjectManagement.Shared.Base.Calculation
 {
     public class ResourceParameter()
     {
-        public string Name { get; set; }
-        public string Unit { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public double Value { get; set; } = 1;
 
     }
     public class ResourceTime()
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public decimal Value { get; set; } = 1;
         public decimal Quantity { get; set; } = 1;
         public decimal Cost { get; set; } = 1;
@@ -26,12 +26,12 @@ namespace ProjectManagement.Shared.Base.Calculation
         public List<ResourceTime> Times { get; set; } = new ();
         public decimal? PriceSub { get; set; }
 
-        public string Note { get; set; }
+        public string Note { get; set; } = string.Empty;
         public List<string> UpperNote { get; set; } = [];
-        public string QuantityParam { get; set; }
+        public string QuantityParam { get; set; } = string.Empty;
         public decimal? Quantity { get; set; }
         [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Unit { get; set; }
+        public string Unit { get; set; } = string.Empty;
         public decimal ChangeFactor1 { get; set; } = 1;
         public decimal ChangeFactor2 { get; set; } = 1;
 
@@ -78,7 +78,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     {
         public ResourceTypesEnum ResType { get; set; }
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public double Order { get; set; }
         public bool Active { get; set; } = true;
     }

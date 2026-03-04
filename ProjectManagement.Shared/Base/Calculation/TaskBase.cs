@@ -9,12 +9,12 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class TaskMetadata
     {
         [AllowNull, MaxLength(500)]
-        public string Note { get; set; }
+        public string Note { get; set; } = string.Empty;
         public List<string> UpperNote { get; set; } = [];
-        public string QuantityParam { get; set; }
+        public string QuantityParam { get; set; } = string.Empty;
         public decimal? Quantity { get; set; }
         [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Unit { get; set; }
+        public string Unit { get; set; } = string.Empty;
         public decimal ChangeFactor1 { get; set; } = 1;
         public decimal ChangeFactor2 { get; set; } = 1;
         public decimal ActuallyQuantity { get; set; } = 0;
@@ -24,7 +24,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal? Cap { get; set; }
         public bool IsActive { get; set; } = true;
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
         public TaskType Type { get; set; }
 
         public bool IsOH { get; set; }
@@ -35,8 +35,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal? CeilingPrice { get; set; }
         public bool HasVoice { get; set; }
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Responsible { get; set; }
-
+        public string Responsible { get; set; } = string.Empty;
         public TaskMetadata Clone()
         {
             return new TaskMetadata
@@ -78,7 +77,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class TaskBase
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public double Order { get; set; }
     }
 }
