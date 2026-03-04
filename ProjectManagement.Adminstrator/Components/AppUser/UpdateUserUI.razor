@@ -149,7 +149,7 @@
                     PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
                 };
             await IniUserApp();
-            Form.Role = Roles.FirstOrDefault();
+            Form.Role = Roles.FirstOrDefault() ?? string.Empty;
             IsLoading = false;
         }
     }

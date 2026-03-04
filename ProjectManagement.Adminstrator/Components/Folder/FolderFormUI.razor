@@ -88,7 +88,7 @@
         if (folder.Id == 0)
             await IResourceFolderService.AddAsync(folder);
         else
-            IResourceFolderService.UpdateAsync(folder);
+            await IResourceFolderService.UpdateAsync(folder);
 
         await Callback.InvokeAsync(true);
     }

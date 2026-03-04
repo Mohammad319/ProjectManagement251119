@@ -120,9 +120,9 @@
     // Nur ParentTaskId verwenden (saubere Entkopplung vom Domain-Entity)
     [Parameter] public int TaskId { get; set; }
 
-    private List<FolderDto> Folders;
-    private List<ResourceRowDto> Rows;
-    private string SelectedFolderName;
+    private List<FolderDto>? Folders;
+    private List<ResourceRowDto>? Rows;
+    private string? SelectedFolderName;
 
     protected override async Task OnInitializedAsync()
     {
