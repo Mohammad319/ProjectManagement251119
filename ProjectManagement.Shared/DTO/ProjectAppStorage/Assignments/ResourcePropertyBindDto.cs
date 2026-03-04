@@ -14,6 +14,6 @@ public class ResourcePropertyBindDto
     public bool IsUserEditable { get; set; } = true;
     public DataType DataType { get; set; } = DataType.Text;
     public double? MaxNumericValue { get; set; }
-    public string TextDefault { get; set; }
+    public string TextDefault { get; set; } = string.Empty;
     public double? NumberDefault { get; set; }
 }

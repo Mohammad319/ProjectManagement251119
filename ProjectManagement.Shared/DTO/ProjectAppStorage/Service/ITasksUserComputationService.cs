@@ -132,7 +132,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                 if (ra.Resource.ResType == ResourceTypesEnum.MachinesAndEquipments ||
                     ra.Resource.ResType == ResourceTypesEnum.Worker)
                 {
-                    foreach (var item in ra.CapRole ?? Enumerable.Empty<RoleDTO>())
+                    foreach (var item in ra.CapRole)
                     {
                         var q = ra.Resource.Data.Quantity;
                         if (q.HasValue && (double)q.Value >= item.Min && (double)q.Value <= item.Max && item.Value.HasValue)
