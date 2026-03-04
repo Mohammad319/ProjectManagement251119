@@ -166,8 +166,8 @@ public static class ProjectTaskProjection
                     DisplayName = n.DisplayName,
                     SortOrder = n.SortOrder,
                     //ParentTaskId = n.ParentTaskId,
-                    MaxInputValue = n.MaxInputValue,
-                    MinInputValue = n.MinInputValue,
+                    MaxInputValue = (decimal?)n.MaxInputValue,
+                    MinInputValue = (decimal?)n.MinInputValue,
                     SectionKey = n.SectionKey,
                 }).ToList(),
                 Conditions = t.Conditions.Select(c => new TaskConditionDto
@@ -258,7 +258,7 @@ public static class ProjectTaskProjection
                                 SortOrder = z.a.Resource == null ? default : z.a.Resource.SortOrder,
 
                                 // --- الحقول المسطّحة بدل UserData ---
-                                CostStorageValue = z.a.Resource == null ? null : (double?)z.a.Resource.Data.Cost,
+                                CostStorageValue = z.a.Resource == null ? null : z.a.Resource.Data.Cost,
                                 CostUserValue = z.Link == null ? null : z.Link.Cost,
                                 NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
                                 AccountId = z.Link == null ? null : z.Link.AccountId,

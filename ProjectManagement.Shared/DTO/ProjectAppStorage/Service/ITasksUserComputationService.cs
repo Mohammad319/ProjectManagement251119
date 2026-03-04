@@ -36,7 +36,7 @@ public interface ITasksUserComputationServiceWasm
     bool Combine(bool a, bool b, ConditionLogic op);
 
     // التحويلات الفيزيائية خليه double (لا علاقة بالمال)
-    double ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters);
+    decimal ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters);
 }
 
 public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServiceWasm
@@ -102,7 +102,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         return a;
     }
 
-    public double ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters)
+    public decimal ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters)
     {
         if (string.IsNullOrWhiteSpace(toUnit) || string.IsNullOrWhiteSpace(fromUnit))
             throw new ArgumentException("اختر وحدتي التحويل أولاً.");
