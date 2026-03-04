@@ -67,7 +67,7 @@
     </EditForm>
 
 @code {
-    [Parameter] public UnderContactOrganisationBase underContact { get; set; }
+    [Parameter] public UnderContactOrganisationBase underContact { get; set; } = new();
     [Parameter] public EventCallback<UnderContactOrganisationBase> Callback { get; set; }
     private async Task SubmitAsync()
     {

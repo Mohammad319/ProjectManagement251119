@@ -191,7 +191,7 @@
         Modal.ShowComponent<OpportunityFormUI>(
             model.Id == 0
                 ? AppLoc[LocalizerConst.New, CalcResource.opportunity]
-                : AppLoc[LocalizerConst.Update, model.OpportunitiesRisks],
+                : AppLoc[LocalizerConst.Update, model.OpportunitiesRisks ?? string.Empty],
             new Dictionary<string, object>
             {
                 [nameof(OpportunityFormUI.Opportunity)] = model,

@@ -9,23 +9,24 @@ namespace ProjectManagement.Client.Pages.Offer
     public partial class OfferPostUI
     {
         [Parameter] public ListOfferMVVM Offer { get; set; } = new ListOfferMVVM();
-        [Parameter] public ResourceListMVVM Resource { get; set; } = new();
+        [Parameter] public ResourceListMVVM? Resource { get; set; }
         PostOfferDTO PostOffer { get; set; } = new();
         bool IsLoading = false;
         List<ListDTO> Organisations = [];
         List<UnderContactOrganisationBase> Contacts = [];
         void OnChangeCompany(ChangeEventArgs e)
         {
-            PostOffer.Contact = null;
+            PostOffer.Contact = string.Empty;
             Contacts = [];
-            if (e == null || string.IsNullOrEmpty(e.Value.ToString())) return;
-            PostOffer.OrganisationId = int.Parse(e.Value.ToString());
-            var org = Organisations.FirstOrDefault(x => x.Id == PostOffer.OrganisationId);
+            if (e?.Value is null) return;
+            var rawValue = e.Value.ToString();
+            if (!int.TryParse(rawValue, out var organisationId)) return;
+            PostOffer.OrganisationId = organisationId;
         }
         protected async override Task OnInitializedAsync()
         {
             PropertyCopier.CopyPropertiesTo(Offer, PostOffer);
-            PostOffer.ResourceId = Resource.Id;
+            PostOffer.ResourceId = Resource?.Id ?? 0;
             Organisations = await Repo.Org.GetVisibleOrIdAsync(Offer.OrganisationId.HasValue ? Offer.OrganisationId.Value : 0);
         }
         void Change(ListOfferMVVM offer)

@@ -64,7 +64,7 @@
 @code {
     PostOpportunityDTO Post = new();
     bool IsLoading = false;
-    [Parameter] public OpportunityModel Opportunity { get; set; }
+    [Parameter] public OpportunityModel Opportunity { get; set; } = default!;
 
     protected override void OnInitialized()
     {

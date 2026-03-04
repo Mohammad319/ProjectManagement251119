@@ -211,7 +211,9 @@
         if (await Repo.Offer.DeleteOfferAsync(offer.Id))
         {
             var r = CompaniesList.FirstOrDefault(x => x.Offers.Any(o => o.Item1.Id == offer.Id));
-            r?.Offers.Remove(r?.Offers?.FirstOrDefault(c => c.Item1.Id == offer.Id));
+            var itemToRemove = r?.Offers?.FirstOrDefault(c => c.Item1.Id == offer.Id);
+            if (r is not null && itemToRemove is not null)
+                r.Offers.Remove(itemToRemove);
             MHD.Notifications(ToastType.Delete, true);
             StateHasChanged();
         }

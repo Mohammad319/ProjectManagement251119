@@ -4,7 +4,7 @@ using TaskResourceBlueprints.Entities.Tasks;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
-namespace ProjectManagement.Shared.Mappers;
+namespace TaskResourceBlueprints.Mappers.Shared.Mappers;
 
 public static class ProjectTaskProjection
 {
@@ -106,7 +106,7 @@ public static class ProjectTaskProjection
     }
 
    public static IQueryable<ProjectTaskDto> ProjectToDto(
-    this IQueryable<TaskDefinition> query, int tenantid, int depid)
+    this IQueryable<TaskDefinition> query, int tenantid, int _depid)
     {
         return query.AsNoTracking().AsSplitQuery()
             .Select(t => new ProjectTaskDto

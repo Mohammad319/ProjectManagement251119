@@ -26,7 +26,6 @@ namespace ProjectManagement.Client.Services.Calculation
     public class ContextMenuBuilderService(
         FolderState CalcService,
         IStringLocalizer<ResourceApp> AppLoc,
-        IStringLocalizer<ResourceLoc> Localizer,
         IStorageRepository Storage,
         MhdServices Mhd,
         DialogService dialogService
@@ -329,7 +328,7 @@ namespace ProjectManagement.Client.Services.Calculation
                     [nameof(GetFromStorage.CalcType)] = type
                 }, DialogSize.ExtraLarge);
 
-        private void OpenReorder(TaskListMVVM taskId) =>
+        private void OpenReorder(TaskListMVVM? taskId) =>
             dialogService.ShowComponent<DragDropTaskUI>(
                 ResourceApp.reOrder,
                 Icons.ReorderRows,
@@ -351,14 +350,14 @@ namespace ProjectManagement.Client.Services.Calculation
         {
             var post = new PostStorygeDTO
             {
-                copyType = TemporaryData.CopyTypeo!.Value,
+                copyType = TemporaryData.CopyTypeo ?? CopyType.Copy,
                 OldCalcID = TemporaryData.OldCalcID,
                 NewCalcID = CalcService.Calculation.Id,
                 IsOH = CalcService.Calculation.OHFactors,
                 ParentID = taskId,
                 WithCildren = true,
                 Items = TemporaryData.SelectedItems,
-                Type = TemporaryData.ItemsType!.Value
+                Type = TemporaryData.ItemsType ?? CalculationItemType.task
             };
 
             bool result = await Storage.CreateItem(post);

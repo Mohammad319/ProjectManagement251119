@@ -30,7 +30,7 @@ else
                 @onchange="(e) => GetAuthorityStorage(e)">
             @foreach (var level in Enum.GetValues(typeof(AuthorityStorage)))
             {
-                <option value="@((int)level)">@AppLoc[level?.ToString()]</option>
+                <option value="@((int)level)">@AppLoc[level.ToString()]</option>
             }
         </select>
 
