@@ -62,26 +62,16 @@
                     <ValidationMessage For="@(() => projectFilter.Code)" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                    <InputSelect @bind-Value="projectFilter.StatusId" class="@CssClasses.Input.Text">
-                        <option selected></option>
-                        @if (Statuses != null)
-                        {
-                            foreach (var status in Statuses)
-                            {
-                                <option value="@status.Id">@status.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => projectFilter.StatusId)" />
-                </div>
-                <div>
                     <label class="@CssClasses.Form.Label">@ResourceIdentity.customer</label>
                     <InputSelect @bind-Value="projectFilter.CustomerId" class="@CssClasses.Input.Text">
-                        @if (Customers != null) foreach (var customer in Customers)
+                        <option></option>
+                        @if (Customers != null)
+                        {
+                            foreach (var customer in Customers)
                             {
                                 <option value="@customer.Id">@customer.Name</option>
-                            }}
+                            }
+                        }
                     </InputSelect>
                     <ValidationMessage For="@(() => projectFilter.CustomerId)" />
                 </div>
@@ -158,7 +148,6 @@
     protected async override Task OnInitializedAsync()
     {
         IsLoading = true;
-        @* Statuses = await Repo.Status.GetLocalAsync(); *@
         Customers = await Repo.Org.GetVisibleOrIdAsync();
         IsLoading = false;
     }
