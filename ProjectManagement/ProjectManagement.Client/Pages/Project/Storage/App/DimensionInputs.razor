@@ -92,7 +92,7 @@
     private void OnParamChangedInternal(ParamName name, object? raw)
     {
         if (double.TryParse(Convert.ToString(raw), out var val))
-            Task.ParameterValues[name] = val;
+            Task.ParameterValues[name] = Convert.ToDouble(val);
         else
             Task.ParameterValues.Remove(name);
 
