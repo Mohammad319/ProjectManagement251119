@@ -535,6 +535,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 var dbtenant = await CreateDbContext(tenantId.Value);
                 dbtenant.User.Add(ue);
                 await dbtenant.SaveChangesAsync();
+                userid = ue.Id;
             }
             var response = new RegisterDto.Response();
             var userEntity = new ApplicationUser()
