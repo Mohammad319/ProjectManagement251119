@@ -134,8 +134,8 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
             {
                 Id = b.Id,
                 NumericId = b.NumericId,
-                InputMinValue = b.MinInputValue.HasValue ? Convert.ToDouble(b.MinInputValue.Value) : null,
-                InputMaxValue = b.MaxInputValue.HasValue ? Convert.ToDouble(b.MaxInputValue.Value) : null,
+                InputMinValue = b.MinInputValue,
+                InputMaxValue = b.MaxInputValue,
                 Formulas = b.Expressions?.ToList() ?? []
             });
 
@@ -275,8 +275,8 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
             {
                 NumericId = vm.NumericId,
                 AssignmentId = raId,
-                MinInputValue = vm.InputMinValue.HasValue ? Convert.ToDouble(vm.InputMinValue.Value) : null,
-                MaxInputValue = vm.InputMaxValue.HasValue ? Convert.ToDouble(vm.InputMaxValue.Value) : null,
+                MinInputValue = vm.InputMinValue,
+                MaxInputValue = vm.InputMaxValue,
                 Expressions = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
             };
             db.NumericResourceAssignments.Add(entity);
@@ -287,8 +287,8 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
         {
             var entity = await db.NumericResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
             entity.NumericId = vm.NumericId;
-            entity.MinInputValue = vm.InputMinValue.HasValue ? Convert.ToDouble(vm.InputMinValue.Value) : null;
-            entity.MaxInputValue = vm.InputMaxValue.HasValue ? Convert.ToDouble(vm.InputMaxValue.Value) : null;
+            entity.MinInputValue = vm.InputMinValue;
+            entity.MaxInputValue = vm.InputMaxValue;
             entity.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
             await db.SaveChangesAsync(ct);
             return entity.Id;

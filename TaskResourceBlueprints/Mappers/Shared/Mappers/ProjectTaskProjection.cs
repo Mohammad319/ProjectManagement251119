@@ -63,7 +63,7 @@ public static class ProjectTaskProjection
                         ResType = z.a.Resource != null ? z.a.Resource.ResType : default,
                         SortOrder = z.a.Resource != null ? z.a.Resource.SortOrder : default,
                         CostRole = z.a.CapacityRoles,
-                        CostStorageValue = z.a.Resource == null ? null : Convert.ToDouble(z.a.Resource.Data.Cost),
+                        CostStorageValue = z.a.Resource == null ? null : (double?)z.a.Resource.Data.Cost,
                         CostUserValue = z.Link == null ? null : z.Link.Cost,
                         NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
 
@@ -258,7 +258,7 @@ public static class ProjectTaskProjection
                                 SortOrder = z.a.Resource == null ? default : z.a.Resource.SortOrder,
 
                                 // --- الحقول المسطّحة بدل UserData ---
-                                CostStorageValue = z.a.Resource == null ? null : Convert.ToDouble(z.a.Resource.Data.Cost),
+                                CostStorageValue = z.a.Resource == null ? null : (double?)z.a.Resource.Data.Cost,
                                 CostUserValue = z.Link == null ? null : z.Link.Cost,
                                 NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
                                 AccountId = z.Link == null ? null : z.Link.AccountId,
