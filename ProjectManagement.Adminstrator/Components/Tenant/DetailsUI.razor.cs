@@ -23,22 +23,19 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         [Parameter] public int Id { get; set; }
         TenantEntity? TenantPut;
         List<ApplicationUser>? Users;
-        bool Loading = false;
         [Parameter] public EventCallback<bool> Callback { get; set; }
         void UserRoleDialog(ApplicationUser user) =>
-    Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Email], new Dictionary<string, object>
+    Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Email ?? string.Empty], new Dictionary<string, object>
     {
         [nameof(UpdateUserUI.UserForm)] = user,
-        [nameof(UpdateUserUI.TenantId)] = TenantPut.Id,
+        [nameof(UpdateUserUI.TenantId)] = TenantPut?.Id ?? 0,
         [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
     });
         async Task RefreshAsync(bool IsSuccess)
         {
             if (IsSuccess == true)
             {
-                Loading = true;
                 await GetUsersAsync();
-                Loading = false;
             }
             Modal.Close();
         }
@@ -46,33 +43,30 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         {
             if (await ExHandlers.RunCheckTokenAsync(() => UsersService.RemoveUserAsync((deleteConfirmed).Id, Id)))
             {
-                Users.Remove(deleteConfirmed);
+                Users?.Remove(deleteConfirmed);
                 StateHasChanged();
             }
         }
         void Remove(ApplicationUser user)
         {
-            MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
+            MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email ?? string.Empty], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
         }
 
         async Task GetUsersAsync()
         {
-            Loading = true;
-            Users = null;
             Users = await ExHandlers.RunCheckTokenAsync(() => UsersService.GetUsersAsync(Id));
-            Loading = false;
             StateHasChanged();
         }
-        string DB;
         protected async override Task OnInitializedAsync()
         {
             using var _appContext = ContextFactory.CreateDbContext();
             if (Id > 0)
             {
-                Loading = true;
                 TenantPut = await ExHandlers.RunCheckTokenAsync(() => UsersService.GetByIdAsync(Id));
-            DB  = _appContext.TenantDatabase.FirstOrDefaultAsync(a => a.Id == TenantPut.TenantDBId)?.Result?.Name;
-                Loading = false;
+                if (TenantPut is not null)
+                {
+                    TenantPut.TenantDB = await _appContext.TenantDatabase.FirstOrDefaultAsync(a => a.Id == TenantPut.TenantDBId);
+                }
             }
         }
     }
