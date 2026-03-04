@@ -22,12 +22,12 @@ public class TaskResourceAssignmentDto
 
     public double? CalcCap()
     {
-        double? q = Resource.Data.Quantity;
+        decimal? q = Resource.Data.Quantity;
         if(CapRole != null && q.HasValue)
         foreach (var item in CapRole)
         {
-            if (item.Min <= q && item.Max >= q) return item.Value;
+            if ((double)q.Value >= item.Min && (double)q.Value <= item.Max) return item.Value;
         }
-        return q;
+        return q.HasValue ? (double)q.Value : null;
     }
 }
