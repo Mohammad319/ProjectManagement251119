@@ -62,8 +62,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         {
             if (factors is null || factors.Count == 0) return 0;
 
-            double totalOHAll = 0;
-            double sumNetCostAll = 0;
+            decimal totalOHAll = 0;
+            decimal sumNetCostAll = 0;
 
             for (int i = 0; i < factors.Count; i++)
             {
@@ -77,7 +77,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             if (sumNetCostAll == 0) return 0;
 
             // حصتك من OH حسب NetCostTotaly
-            return (NetCostTotaly * totalOHAll) / sumNetCostAll;
+            return (double)((NetCostTotaly * totalOHAll) / sumNetCostAll);
         }
 
       
@@ -88,7 +88,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             string matchKey = $"{ResId},{SortId}";
 
             string explanation = "(";
-            double relatedSum = 0;
+            decimal relatedSum = 0;
 
             if (factors != null)
             {
@@ -97,7 +97,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                     var item = factors[i];
                     if (item.Selected != matchKey) continue;
 
-                    double part = item.NetCostTotalyOH * (1 + (item.Earnings / 100));
+                    decimal part = item.NetCostTotalyOH * (1 + (item.Earnings / 100));
                     relatedSum += part;
                     explanation += $"[{F(item.NetCostTotalyOH)} * {1 + (item.Earnings / 100)}] + ";
                 }
@@ -112,16 +112,17 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
             string formula = $"(({F(NetCostTotaly)} * {1 + (Earnings / 100)}) + {explanation}Oh{F(oh)}) / {F(NetCostTotaly)} = ";
 
-            double part1 = F(NetCostTotaly * (1 + (Earnings / 100)));
-            double part2 = F(relatedSum);
+            decimal part1 = F(NetCostTotaly * (1 + (Earnings / 100)));
+            decimal part2 = F(relatedSum);
             double part3 = F(oh);
 
-            double result = F((part1 + part2 + part3) / F(NetCostTotaly));
+            double result = F(((double)part1 + (double)part2 + part3) / (double)F(NetCostTotaly));
 
-            formula += $"{part1} + {part2} + {part3} / {F(NetCostTotaly)} = {part1 + part2 + part3} / {F(NetCostTotaly)} = {result}";
+            formula += $"{part1} + {part2} + {part3} / {F(NetCostTotaly)} = {(double)part1 + (double)part2 + part3} / {F(NetCostTotaly)} = {result}";
             return formula;
         }
 
+        private decimal F(decimal x) => Math.Round(x, 4);
         private double F(double x) => Math.Round(x, 4);
     }
 }

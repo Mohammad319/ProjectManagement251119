@@ -68,7 +68,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 {
                     Active = x.Resource == null ? false : x.Resource.IsActive,
                     MenuId = x.MenuId,
-                    BaseCost = (double?)x.BaseCost,
+                    BaseCost = x.BaseCost,
                     CapRole = x.CapacityRoles,
                     CapWaste = x.CapWaste,
                     ChangeFactor1 = x.ChangeFactor1,
