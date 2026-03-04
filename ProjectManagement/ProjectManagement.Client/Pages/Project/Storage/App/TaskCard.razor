@@ -266,7 +266,7 @@
                 Data = new ProjectManagement.Shared.Base.Calculation.ResourceMetadata
                 {
                     Unit = Task.UnitCode ?? Task.UnitCode,
-                    Quantity = Task.Quantity ?? 0,
+                    Quantity = (decimal?)(Task.Quantity ?? 0d),
                     BaseCost = totalBaseCost,
                     Cost = totalCost,
                     CO2 = co2,

@@ -52,6 +52,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             StateHasChanged();
         }
         private double Format(double x) => Template.Format(x);
+        private double Format(decimal x) => Template.Format((double)x);
         public string SelectedFactor(string res)
         {
             var res45 = Calculation.Factors.FirstOrDefault(x => x.ResId + "," + x.SortId == res);
