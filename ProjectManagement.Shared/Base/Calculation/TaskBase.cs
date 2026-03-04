@@ -29,10 +29,10 @@ namespace ProjectManagement.Shared.Base.Calculation
 
         public bool IsOH { get; set; }
         public bool PriceSubInPrecent { get; set; }
-        public double? PriceSubDB { get; set; }
-        public double? PriceSubTaxDB { get; set; }
-        public double? MinPrice { get; set; }
-        public double? CeilingPrice { get; set; }
+        public decimal? PriceSubDB { get; set; }
+        public decimal? PriceSubTaxDB { get; set; }
+        public decimal? MinPrice { get; set; }
+        public decimal? CeilingPrice { get; set; }
         public bool HasVoice { get; set; }
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Responsible { get; set; }

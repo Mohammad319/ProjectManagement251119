@@ -59,7 +59,7 @@ namespace Domain.Entities.Calculation
             Date = DateTime.UtcNow;
         }
 
-        public void SetBaseCost(double baseCost)
+        public void SetBaseCost(decimal baseCost)
         {
             Metadata.BaseCost = baseCost;
         }

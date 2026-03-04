@@ -2,7 +2,6 @@
 using Domain.Entities.Base;
 using Domain.Entities.Organisation;
 using Domain.Entities.Project;
-using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
@@ -171,7 +170,7 @@ namespace Domain.Entities.Calculation
         // =========================================================
         // Factory + Update methods
         // =========================================================
-  
+
 
         public static CalculationEntity CreateCopy(CalculationEntity original, Guid newProjectId, int userId)
         {

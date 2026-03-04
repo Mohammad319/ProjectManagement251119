@@ -15,9 +15,9 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class ResourceTime()
     {
         public string Name { get; set; }
-        public double Value { get; set; } = 1;
+        public decimal Value { get; set; } = 1;
         public double Quantity { get; set; } = 1;
-        public double Cost { get; set; } = 1;
+        public decimal Cost { get; set; } = 1;
 
     }
     public class ResourceMetadata
@@ -40,8 +40,8 @@ namespace ProjectManagement.Shared.Base.Calculation
         public double Waste { get; set; } = 0;
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public double Cost { get; set; }
-        public double? BaseCost { get; set; }
+        public decimal Cost { get; set; }
+        public decimal? BaseCost { get; set; }
         public double? CO2 { get; set; }
 
         public ResourceMetadata Clone()
