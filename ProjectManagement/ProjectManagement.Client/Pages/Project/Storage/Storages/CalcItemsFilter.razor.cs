@@ -54,7 +54,10 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
             if (Post.Items.Any(x => x.Id == id))
             {
                 var qr = Post.Items.FirstOrDefault(x => x.Id == id);
-                Post.Items.Remove(qr);
+                if (qr is not null)
+                {
+                    Post.Items.Remove(qr);
+                }
             }
             else Post.Items.Add(new ResourceTaskItemDTO(id, q));
             Callback.InvokeAsync().Wait();
