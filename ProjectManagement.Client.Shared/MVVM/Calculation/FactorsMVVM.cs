@@ -28,8 +28,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public static Factors AddNewFactor(bool oh, ResourceListMVVM res) => new()
         {
-            NetCostTotaly = !oh ? res.NetCostTotaly : 0,
-            NetCostTotalyOH = oh ? res.NetCostTotaly : 0,
+            NetCostTotaly = !oh ? (double)res.NetCostTotaly : 0,
+            NetCostTotalyOH = oh ? (double)res.NetCostTotaly : 0,
             SortId = res.ResourceSortId,
             ResourceType = res.ResType,
             Sort = res.Sort ?? string.Empty,

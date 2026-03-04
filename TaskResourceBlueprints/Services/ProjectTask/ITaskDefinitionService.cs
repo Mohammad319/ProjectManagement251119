@@ -38,7 +38,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     ChangeFactor1 = res.ChangeFactor1,
                     ChangeFactor2 = res.ChangeFactor2,
                     CapWaste = res.CapWaste,
-                    BaseCost = res.BaseCost,
+                    BaseCost = (double?)res.BaseCost,
                     Quantity = res.Resource.Data.Quantity,
                     Unit = res.Resource.Data.Unit,
                     Cost = res.Resource.Data.Cost,
