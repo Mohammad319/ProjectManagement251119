@@ -6,6 +6,7 @@ using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
+using Persistence.Interceptors;
 using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Identity;
@@ -357,6 +358,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 sqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null);
                 sqlOptions.CommandTimeout(30);
             });
+            optionsBuilder.AddInterceptors(new TenantAuditSaveChangesInterceptor());
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
                 TenantId = tenantId,
@@ -375,6 +377,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 throw new Exception($"No database found for tenant {tenantId}");
             var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
             optionsBuilder.UseSqlServer(ConnectionString);
+            optionsBuilder.AddInterceptors(new TenantAuditSaveChangesInterceptor());
             var db = new ShardingSingleDbContext(optionsBuilder.Options)
             {
                 TenantId = tenantId
