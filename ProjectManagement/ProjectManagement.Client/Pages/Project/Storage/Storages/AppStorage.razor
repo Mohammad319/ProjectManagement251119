@@ -55,7 +55,7 @@
                                                         else
                                                         {
                                                             <div class="px-1">
-                                                                <select class="@CssClasses.Input.Text" @onchange="(e) => OnSingleSelectionChanged(e.Value.ToString(), condition)">
+                                                                <select class="@CssClasses.Input.Text" @onchange="(e) => OnSingleSelectionChanged(e.Value?.ToString(), condition)">
                                                                     <option></option>
 
                                                                     @foreach (var item in condition.Items)
@@ -145,8 +145,8 @@
          
                                         <span role="button" @onclick="() => AddRemoveRes(task.Id,res.Id)"
                                               @onclick:stopPropagation="true"
-                                              class="@(TaskResSelecteds.Any(x => x.Id == task.Id) && TaskResSelecteds.First(x=>x.Id == task.Id).Resoueces.Any(r=>r == res.Id)? "text-danger" : "text-primary")">
-@((MarkupString)(TaskResSelecteds.Any(x => x.Id == task.Id) && TaskResSelecteds.First(x => x.Id == task.Id).Resoueces.Any(r => r == res.Id) ? Icons.Minus : Icons.Plus2))
+                                              class="@(TaskResSelecteds.Any(x => x.Id == task.Id) && TaskResSelecteds.First(x=>x.Id == task.Id).Resoueces?.Any(r=>r == res.Id) == true ? "text-danger" : "text-primary")">
+@((MarkupString)(TaskResSelecteds.Any(x => x.Id == task.Id) && TaskResSelecteds.First(x => x.Id == task.Id).Resoueces?.Any(r => r == res.Id) == true ? Icons.Minus : Icons.Plus2))
                                         </span>
                                         <span>  @res.Name</span>
                                       
@@ -184,7 +184,7 @@
                                                                 else
                                                                 {
                                                                     <select class="w-full p-1 border text-xs rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                                                            @onchange="(e) => OnSingleSelectionChanged(e.Value.ToString(), condition)">
+                                                                            @onchange="(e) => OnSingleSelectionChanged(e.Value?.ToString(), condition)">
                                                                         <option></option>
 
                                                                         @foreach (var item in condition.Items)
@@ -322,7 +322,7 @@
             item.IsSelected = selectedValues.Contains(item.Id.ToString());
         }
     }
-    private void OnSingleSelectionChanged(string e, ConditionDto cat)
+    private void OnSingleSelectionChanged(string? e, ConditionDto cat)
     {
         foreach (var item in cat.Items)
         {
@@ -347,7 +347,7 @@
     {
         var listcond = task.ConditionEffect.SelectMany(x => x.Items).Where(x => x.IsSelected).ToList();
         Dictionary<string, decimal> externalVariables = task.ConditionEffect.SelectMany(x => x.ExternalVariables)
-    .Where(x => x.Value.HasValue).ToDictionary(x => x.VariableName, x => x.Value.Value);
+    .Where(x => x.Value.HasValue).ToDictionary(x => x.VariableName, x => x.Value.GetValueOrDefault());
         if (task.Resources != null) foreach (var resource in task.Resources)
             {
                 resource.Data.CapWaste = resource.Values[0];
@@ -370,7 +370,7 @@
                                     .Where(x => x.Value.HasValue)
                                     .ToDictionary(
                                     x => x.VariableName,
-                                    x => x.Value.Value
+                                    x => x.Value.GetValueOrDefault()
                                     );
 
                     foreach (var item in rescon.Items)

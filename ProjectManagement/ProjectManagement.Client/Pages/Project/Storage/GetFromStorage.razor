@@ -94,8 +94,8 @@ else
     [Parameter] public int ParentID { get; set; }
     [Parameter] public CalculationItemType CalcType { get; set; }
 
-    CalcItemsFilter ImportOtherCalc;
-    UserStorage UserStorage;
+    CalcItemsFilter? ImportOtherCalc;
+    UserStorage? UserStorage;
     bool BtnMore = false;
     GetFilterDTO Post = new GetFilterDTO();
     protected override void OnInitialized() => Post.Type = CalcType;
@@ -110,32 +110,43 @@ else
 
     async Task ChangeTypeAsync(ChangeEventArgs e)
     {
-        Post.Type = (CalculationItemType)Enum.Parse(typeof(CalculationItemType), e.Value.ToString());
-        if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc){
+        var typeValue = e.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(typeValue)) return;
+
+        Post.Type = (CalculationItemType)Enum.Parse(typeof(CalculationItemType), typeValue);
+        if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc && ImportOtherCalc is not null){
             await ImportOtherCalc.SetNewTypeAsync(Post.Type);
         }
     }
 
     void ChangeItemCalcCategories(ChangeEventArgs e)
     {
-        Post.ItemCalcCategory = e.Value.ToString();
+        Post.ItemCalcCategory = e.Value?.ToString() ?? string.Empty;
     }
 
     async Task SaveAsync()
     {
         bool result = false;
         if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc)
-            result = await ImportOtherCalc.SaveAsync(ParentID);
+            result = ImportOtherCalc is not null && await ImportOtherCalc.SaveAsync(ParentID);
 
-        else result = await UserStorage.SaveAsync();
+        else result = UserStorage is not null && await UserStorage.SaveAsync();
         MHD.Notifications(ToastType.Info, result);
         Modal.Close();
     }
 
-    void GetStorageSort(ChangeEventArgs e) => Post.SortSelected = (StorageSort)Enum.Parse(typeof(StorageSort), e.Value.ToString());
+    void GetStorageSort(ChangeEventArgs e)
+    {
+        var sortValue = e.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(sortValue)) return;
+        Post.SortSelected = (StorageSort)Enum.Parse(typeof(StorageSort), sortValue);
+    }
    void GetAuthorityStorage(ChangeEventArgs e)
     {
-        AuthorityStorage n = (AuthorityStorage)Enum.Parse(typeof(AuthorityStorage), e.Value.ToString());
+        var authorityValue = e.Value?.ToString();
+        if (string.IsNullOrWhiteSpace(authorityValue)) return;
+
+        AuthorityStorage n = (AuthorityStorage)Enum.Parse(typeof(AuthorityStorage), authorityValue);
         Post.AuthoritySelected = n;
         StateHasChanged();
     }
@@ -143,7 +154,7 @@ else
     async Task GetAsync()
     {
         if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc)
-            await ImportOtherCalc.GetObjectTypeAsync(1);
-        else await UserStorage.GetAsync(Post);
+            if (ImportOtherCalc is not null) await ImportOtherCalc.GetObjectTypeAsync(1);
+        else if (UserStorage is not null) await UserStorage.GetAsync(Post);
     }
 }
