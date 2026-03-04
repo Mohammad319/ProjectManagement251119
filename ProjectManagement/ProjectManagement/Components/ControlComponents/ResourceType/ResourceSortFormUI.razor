@@ -122,7 +122,7 @@
         PostResourceSortDTO PostResourceSort = new();
         PropertyCopier.CopyPropertiesTo(ResourceSort, PostResourceSort);
         bool result = false;
-        if (ResourceSort?.Id == 0)
+        if (ResourceSort.Id == 0)
             result = await MicroBus.Send(new CreateResourceSortCommand(ResourceSort.ResourceTypeId ,PostResourceSort)) > 0;
         else result = await MicroBus.Send(new UpdateResourceSortCommand(ResourceSort.Id,PostResourceSort));
         await Callback.InvokeAsync(result);
