@@ -38,7 +38,7 @@
     </ChildContent>
 </MhdTable>
 @code {
-    List<ResourceAttributeSet> ActionsTasks;
+    List<ResourceAttributeSet> ActionsTasks = new();
     void UpdateForm() => UpdateForm(new ResourceAttributeSet() { DisplayName = "name" });
     void UpdateForm(ResourceAttributeSet model)
     {
@@ -78,13 +78,13 @@
         Modal.Close();
         if (IsSuccess)
         {
-            ActionsTasks = await GroupPropertiesService.GetAllAsync();
+            ActionsTasks = await GroupPropertiesService.GetAllAsync() ?? new();
         }
         StateHasChanged();
     }
 
     protected async override Task OnInitializedAsync()
     {
-        ActionsTasks = await GroupPropertiesService.GetAllAsync();
+        ActionsTasks = await GroupPropertiesService.GetAllAsync() ?? new();
     }
 }

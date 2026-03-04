@@ -74,8 +74,7 @@ MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => Co
     {
         if (IsSuccess)
         {
-            PropertiesList = null;
-            PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);
+            PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId) ?? new();
         }
         Modal.Close();
         StateHasChanged();
@@ -84,6 +83,6 @@ MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => Co
     int SelectedGroupId = 0;
     protected async override Task OnInitializedAsync()
     {
-        PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);
+        PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId) ?? new();
     }
 }

@@ -17,8 +17,8 @@
 @code {
     TaskDefinition Task { get; set; } = default!;
     [Parameter] public int ID { get; set; } = default!;
-    List<ResourceCategory> Folders { get; set; }
-    ResourceCategory Selected;
+    List<ResourceCategory> Folders { get; set; } = new();
+    ResourceCategory? Selected;
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
     protected override async Task OnInitializedAsync()

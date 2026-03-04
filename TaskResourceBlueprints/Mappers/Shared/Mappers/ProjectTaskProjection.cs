@@ -57,13 +57,13 @@ public static class ProjectTaskProjection
                     {
                         Id = z.a.ResourceId,
                         Name = z.a.Resource != null ? z.a.Resource.Name : string.Empty,
-                        CalcResCost = z.a.Resource.CalcResCost ?? new (),
+                        CalcResCost = z.a.Resource!.CalcResCost ?? new (),
                         Active = z.a.IsActive,
-                        FolderId = z.a.Resource.FolderId,
-                        ResType = z.a.Resource.ResType,
-                        SortOrder = z.a.Resource.SortOrder,
+                        FolderId = z.a.Resource!.FolderId,
+                        ResType = z.a.Resource!.ResType,
+                        SortOrder = z.a.Resource!.SortOrder,
                         CostRole = z.a.CapacityRoles,
-                        CostStorageValue = (double?)z.a.Resource.Data.Cost,
+                        CostStorageValue = (double?)z.a.Resource!.Data.Cost,
                         CostUserValue = z.Link == null ? null : z.Link.Cost,
                         NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
 
@@ -72,7 +72,7 @@ public static class ProjectTaskProjection
                         ResourceSortId = z.Link == null ? (int?)null : z.Link.ResourceSortId,
                         StatusId = z.Link == null ? (int?)null : z.Link.StatusId,
                         MenuId = z.a.MenuId,
-                        Properties = z.a.Resource.AttributeValues
+                        Properties = z.a.Resource!.AttributeValues
                             .Select(b => new ResourcePropertyBindDto
                             {
                                 Id = b.AttributeId,
@@ -91,12 +91,12 @@ public static class ProjectTaskProjection
                             CapWaste = z.a.CapWaste,
                             BaseCost = (decimal?)z.a.BaseCost,
                             CO2 = z.Link == null ? null : z.Link.Co2,
-                            Cost = z.a.Resource.Data.Cost,
-                            Note = z.a.Resource.Data.Note,
-                            UpperNote = z.a.Resource.Data.UpperNote,
-                            Quantity = z.a.Resource.Data.Quantity,
-                            Unit = z.a.Resource.Data.Unit,
-                            QuantityParam = z.a.Resource.Data.QuantityParam,
+                            Cost = z.a.Resource!.Data.Cost,
+                            Note = z.a.Resource!.Data.Note,
+                            UpperNote = z.a.Resource!.Data.UpperNote,
+                            Quantity = z.a.Resource!.Data.Quantity,
+                            Unit = z.a.Resource!.Data.Unit,
+                            QuantityParam = z.a.Resource!.Data.QuantityParam,
                         }
                     })
                     .ToList(),
@@ -235,7 +235,7 @@ public static class ProjectTaskProjection
                                 Active = z.a.IsActive,
                                 CostRole = z.a.CapacityRoles,
                                 CapRole = z.a.CapacityRoles,
-                                CalcResCost = z.a.Resource.CalcResCost ?? new(),
+                                CalcResCost = z.a.Resource!.CalcResCost ?? new(),
                                 MenuId = z.a.MenuId,
                                 Data = new ResourceMetadata
                                 {
@@ -244,19 +244,19 @@ public static class ProjectTaskProjection
                                     BaseCost = (decimal?)z.a.BaseCost,
                                     CapWaste = z.a.CapWaste,
                                     CO2 = z.Link == null ? null : z.Link.Co2,
-                                    Cost = z.a.Resource.Data.Cost,
-                                    Note = z.a.Resource.Data.Note,
-                                    UpperNote = z.a.Resource.Data.UpperNote,
-                                    Quantity = z.a.Resource.Data.Quantity,
-                                    Unit = z.a.Resource.Data.Unit,
-                                    QuantityParam = z.a.Resource.Data.QuantityParam,
+                                    Cost = z.a.Resource!.Data.Cost,
+                                    Note = z.a.Resource!.Data.Note,
+                                    UpperNote = z.a.Resource!.Data.UpperNote,
+                                    Quantity = z.a.Resource!.Data.Quantity,
+                                    Unit = z.a.Resource!.Data.Unit,
+                                    QuantityParam = z.a.Resource!.Data.QuantityParam,
                                 },
-                                FolderId = z.a.Resource.FolderId,
-                                ResType = z.a.Resource.ResType,
-                                SortOrder = z.a.Resource.SortOrder,
+                                FolderId = z.a.Resource!.FolderId,
+                                ResType = z.a.Resource!.ResType,
+                                SortOrder = z.a.Resource!.SortOrder,
 
                                 // --- الحقول المسطّحة بدل UserData ---
-                                CostStorageValue = (double?)z.a.Resource.Data.Cost,
+                                CostStorageValue = (double?)z.a.Resource!.Data.Cost,
                                 CostUserValue = z.Link == null ? null : z.Link.Cost,
                                 NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
                                 AccountId = z.Link == null ? null : z.Link.AccountId,
@@ -265,7 +265,7 @@ public static class ProjectTaskProjection
                                 StatusId = z.Link == null ? (int?)null : z.Link.StatusId,
                                 // ------------------------------------
 
-                                Properties = z.a.Resource.AttributeValues.Select(b => new ResourcePropertyBindDto
+                                Properties = z.a.Resource!.AttributeValues.Select(b => new ResourcePropertyBindDto
                                 {
                                     Id = b.Id,
                                     NumberDefault = b.NumericValue,
