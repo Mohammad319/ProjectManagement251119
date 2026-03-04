@@ -17,8 +17,8 @@
 @code {
     TaskDefinition Task { get; set; } = default!;
     [Parameter] public int ID { get; set; } = default!;
-    List<ResourceCategory> Folders { get; set; }
-    ResourceCategory Selected;
+    List<ResourceCategory> Folders { get; set; } = [];
+    ResourceCategory? Selected;
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -27,6 +27,9 @@
                ?? new TaskDefinition();
         Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(Task.Id, CancellationToken.None))
 .Select(f => new ResourceCategory() { Id = f.Id, DisplayName = f.DisplayName }).ToList();
+        Task.QuestionGroups ??= [];
+        Task.NumericQuestions ??= [];
+        Task.ResourceSelectors ??= [];
 
     }
 
