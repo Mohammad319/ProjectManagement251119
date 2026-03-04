@@ -20,9 +20,10 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
         public static bool Add(this CalculationMVVM calculation, List<ResourceListMVVM> list)
         {
-            if (list == null || list.Count == 0) return false;
-            var task = calculation.Tasks.FirstOrDefault(x => x.Id == list.First().TaskId);
+            if (list == null || list.Count == 0 || calculation?.Tasks == null) return false;
+            var task = calculation.Tasks.FirstOrDefault(x => x.Id == list[0].TaskId);
             if (task == null) return false;
+            task.Resources ??= [];
             task.Resources.InsertRange(0, list);
             return true;
         }
@@ -30,12 +31,14 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         {
             if (resourceIds == null) return false;
 
+            if (calculation?.Tasks == null) return false;
+
             foreach (int id in resourceIds)
             {
-                var task = calculation.Tasks.FirstOrDefault(x => x.Resources.Any(r => r.Id == id));
+                var task = calculation.Tasks.FirstOrDefault(x => x.Resources?.Any(r => r.Id == id) == true);
                 var resourceToRemove = task?.Resources?.FirstOrDefault(r => r.Id == id);
                 if (resourceToRemove != null)
-                    task.Resources.Remove(resourceToRemove);
+                    task?.Resources?.Remove(resourceToRemove);
             }
 
             return true;
