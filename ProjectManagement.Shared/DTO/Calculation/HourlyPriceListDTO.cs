@@ -29,9 +29,9 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Comment { get; set; }
 
         [JsonIgnore]
-        public decimal TotalMarketPrices => CostMarketPrices * Quantity;
+        public decimal TotalMarketPrices => CostMarketPrices * (decimal)Quantity;
         [JsonIgnore]
-        public decimal TotalSubmittedPrices => CostSubmittedPrices * Quantity;
+        public decimal TotalSubmittedPrices => CostSubmittedPrices * (decimal)Quantity;
         [JsonIgnore]
         public decimal Difference => TotalSubmittedPrices - TotalMarketPrices;
 
