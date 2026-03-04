@@ -1,3 +1,4 @@
+#nullable enable
 ﻿using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.Base.Project;
