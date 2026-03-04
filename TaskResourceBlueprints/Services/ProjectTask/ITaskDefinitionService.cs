@@ -121,7 +121,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             if (!string.IsNullOrEmpty(filter.NameOrCode))
             {
                 var search = filter.NameOrCode;
-                query = query.Where(x => x.Code.Contains(search!) ||
+                query = query.Where(x => (x.Code ?? string.Empty).Contains(search!) ||
                 x.Name.Contains(search!));
             }
             return await query.TasksBaseToDto(tenantid).ToListAsync(ct);

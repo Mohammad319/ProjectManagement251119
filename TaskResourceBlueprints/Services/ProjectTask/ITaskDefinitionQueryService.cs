@@ -78,7 +78,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             return await db.TaskResourceAssignments
                 .AsNoTracking()
                 .Where(t => t.TaskId == id)
-                .OrderBy(t => t.Resource.Name)
+                .OrderBy(t => t.Resource != null ? t.Resource.Name : string.Empty)
                 .Select(t => new ResourceTaskIndexDto(
                     t.ResourceId,
                     t.Resource != null ? t.Resource.Name : string.Empty,

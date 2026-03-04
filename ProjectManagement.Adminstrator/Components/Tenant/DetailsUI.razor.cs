@@ -23,13 +23,12 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         [Parameter] public int Id { get; set; }
         TenantEntity? TenantPut;
         List<ApplicationUser>? Users;
-        bool Loading = false;
         [Parameter] public EventCallback<bool> Callback { get; set; }
         void UserRoleDialog(ApplicationUser user) =>
     Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Email], new Dictionary<string, object>
     {
         [nameof(UpdateUserUI.UserForm)] = user,
-        [nameof(UpdateUserUI.TenantId)] = TenantPut.Id,
+        [nameof(UpdateUserUI.TenantId)] = TenantPut?.Id ?? 0,
         [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
     });
         async Task RefreshAsync(bool IsSuccess)
@@ -46,7 +45,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         {
             if (await ExHandlers.RunCheckTokenAsync(() => UsersService.RemoveUserAsync((deleteConfirmed).Id, Id)))
             {
-                Users.Remove(deleteConfirmed);
+                Users?.Remove(deleteConfirmed);
                 StateHasChanged();
             }
         }
@@ -63,7 +62,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             Loading = false;
             StateHasChanged();
         }
-        string DB;
+        string DB = string.Empty;
         protected async override Task OnInitializedAsync()
         {
             using var _appContext = ContextFactory.CreateDbContext();
@@ -71,7 +70,10 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             {
                 Loading = true;
                 TenantPut = await ExHandlers.RunCheckTokenAsync(() => UsersService.GetByIdAsync(Id));
-            DB  = _appContext.TenantDatabase.FirstOrDefaultAsync(a => a.Id == TenantPut.TenantDBId)?.Result?.Name;
+            DB = await _appContext.TenantDatabase
+                .Where(a => a.Id == (TenantPut?.TenantDBId ?? 0))
+                .Select(a => a.Name)
+                .FirstOrDefaultAsync() ?? string.Empty;
                 Loading = false;
             }
         }

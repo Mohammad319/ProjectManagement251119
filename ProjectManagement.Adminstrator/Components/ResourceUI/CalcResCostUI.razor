@@ -17,10 +17,10 @@
             <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@Resource?.Data?.Cost</div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">Morning</div>
             <div>
-                <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
+                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100m) / Resource.Data.Quantity.Value, 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100m) / (Resource?.Data?.Quantity ?? 1), 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.MorgenCost" class="@CsS.Input.Number" />
@@ -29,10 +29,10 @@
             <!-- Day -->
             <div class="@CC.Text.Sm @CsS.Text.Secondary">Day</div>
             <div>
-                <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
+                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100m) / Resource.Data.Quantity.Value, 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100m) / (Resource?.Data?.Quantity ?? 1), 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.DayCost" class="@CsS.Input.Number" />
@@ -61,14 +61,14 @@
 </div>
 
 @code {
-    [Parameter] public ResourceDefinition Resource { get; set; }
+    [Parameter] public ResourceDefinition? Resource { get; set; }
 
     CalcResCost CalcResCost = new();
     [Parameter] public EventCallback<bool> CallBack { get; set; }
 
     protected override void OnInitialized()
     {
-        if (Resource.CalcResCost != null)
+        if (Resource?.CalcResCost != null)
             CalcResCost = new()
                 {
                     DayCost = Resource.CalcResCost.DayCost,
@@ -82,8 +82,8 @@
                 };
         else
         {
-            CalcResCost.Day = (int)Resource.Data.Quantity.Value;
-            CalcResCost.DayCost = Resource.Data.Cost;
+            CalcResCost.Day = (int)(Resource?.Data?.Quantity ?? 0);
+            CalcResCost.DayCost = Resource?.Data?.Cost ?? 0;
         }
     }
     public void IsPercent()
@@ -94,12 +94,19 @@
     public void IsNotPercent()
     {
         CalcResCost.IsPercent = false;
-        CalcResCost.Quantity = CalcResCost.Quantity.Value;
+        CalcResCost.Quantity ??= 0;
     }
     async Task HandleSubmit()
     {
+        if (Resource is null)
+            return;
+
         Resource.CalcResCost = CalcResCost;
-        Resource.Data.Cost = CalcResCost.CalcCost();
+        if (Resource.Data is not null)
+        {
+            Resource.Data.Cost = CalcResCost.CalcCost();
+        }
+
         if(await ResourceService.UpdateAsync(Resource))
         {
             MHD.Modal.Close();
@@ -108,6 +115,9 @@
     }
     async Task HandleValidSubmit()
     {
-        await ResourceService.UpdateAsync(Resource);
+        if (Resource is not null)
+        {
+            await ResourceService.UpdateAsync(Resource);
+        }
     }
 }

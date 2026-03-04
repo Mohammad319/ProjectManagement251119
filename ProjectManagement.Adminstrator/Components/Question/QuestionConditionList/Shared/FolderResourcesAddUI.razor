@@ -51,10 +51,10 @@
 @code {
     [Parameter] public int TaskId { get; set; }
     [Parameter] public EventCallback<ResourceDefinition> OnSave { get; set; }
-    [Parameter] public List<int> ResIds { get; set; }
+    [Parameter] public List<int> ResIds { get; set; } = [];
 
-    List<ResourceCategory> Folders { get; set; }
-    ResourceCategory Selected;
+    List<ResourceCategory> Folders { get; set; } = [];
+    ResourceCategory? Selected;
     protected override async Task OnInitializedAsync()
     {
         Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(TaskId, CancellationToken.None))
@@ -76,7 +76,6 @@
     {
         if (folders.Resources == null || folders.Resources.Count == 0)
         {
-            Selected = null;
             folders.Resources = (await ResourceCategoryService.GetFolderResourcesAsync(folders.Id, CancellationToken.None)).ToList();
         }
         Selected = folders;
