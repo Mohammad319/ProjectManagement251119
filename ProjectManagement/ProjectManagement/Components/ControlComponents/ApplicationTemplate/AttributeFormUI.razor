@@ -241,7 +241,7 @@
     [Parameter] public EventCallback<AttributeBase> Callback { get; set; }
     bool IsLoading = false;
     ValidSelectVM ValidSelectVM = new ValidSelectVM();
-    string SelectV;
+    string SelectV = string.Empty;
     ValidTextVM ValidTextVM = new ValidTextVM();
     ValidNumberVM ValidNumberVM = new ValidNumberVM();
     ValidBoolVM ValidBoolVM = new ValidBoolVM();
@@ -255,16 +255,16 @@
         {
             PartPage = 1;
             if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Int || AttributeUpdate.AttributeType == AttributeType.Double))
-                ValidNumberVM = System.Text.Json.JsonSerializer.Deserialize<ValidNumberVM>(AttributeUpdate.Validation);
+                ValidNumberVM = System.Text.Json.JsonSerializer.Deserialize<ValidNumberVM>(AttributeUpdate.Validation) ?? new ValidNumberVM();
             else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Text || AttributeUpdate.AttributeType == AttributeType.TextArea))
-                ValidTextVM = System.Text.Json.JsonSerializer.Deserialize<ValidTextVM>(AttributeUpdate.Validation);
+                ValidTextVM = System.Text.Json.JsonSerializer.Deserialize<ValidTextVM>(AttributeUpdate.Validation) ?? new ValidTextVM();
             else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Select))
-                ValidSelectVM = System.Text.Json.JsonSerializer.Deserialize<ValidSelectVM>(AttributeUpdate.Validation);
+                ValidSelectVM = System.Text.Json.JsonSerializer.Deserialize<ValidSelectVM>(AttributeUpdate.Validation) ?? new ValidSelectVM();
             else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Bool))
-                ValidBoolVM = System.Text.Json.JsonSerializer.Deserialize<ValidBoolVM>(AttributeUpdate.Validation);
+                ValidBoolVM = System.Text.Json.JsonSerializer.Deserialize<ValidBoolVM>(AttributeUpdate.Validation) ?? new ValidBoolVM();
             else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.DateTime 
             || AttributeUpdate.AttributeType == AttributeType.Date || AttributeUpdate.AttributeType == AttributeType.Time))
-                ValidDateVM = System.Text.Json.JsonSerializer.Deserialize<ValidDateVM>(AttributeUpdate.Validation);
+                ValidDateVM = System.Text.Json.JsonSerializer.Deserialize<ValidDateVM>(AttributeUpdate.Validation) ?? new ValidDateVM();
 
         }
         else PartPage = 0;

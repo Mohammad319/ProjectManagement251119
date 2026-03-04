@@ -270,14 +270,14 @@
     [Parameter] public int PartPage { get; set; } = 0;
 
     RowEntity RowUpdate { get; set; } = new();
-    AttributeBase AttributeForm;
+    AttributeBase AttributeForm = new();
     StyleVM Style { get; set; } = new StyleVM();
     StyleVM StyleRow { get; set; } = new StyleVM();
     [Parameter] public EventCallback<RowEntity> Callback { get; set; }
     bool IsLoading = false;
 
-    string StyleStr;
-    string StyleRowStr;
+    string StyleStr = string.Empty;
+    string StyleRowStr = string.Empty;
     int Part = 0;
     void updateStyle()
     {
@@ -301,7 +301,7 @@
     }
     void CallBackField(AttributeBase attr)
     {
-        AttributeForm = null;
+        AttributeForm = new();
         if (attr == null) return;
         if (attr.ID == Guid.Empty){
             attr.ID = Guid.NewGuid();
