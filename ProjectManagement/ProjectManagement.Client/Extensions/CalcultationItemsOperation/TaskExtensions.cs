@@ -57,7 +57,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         public static void CalcVaribles(
             this TaskListMVVM task,
             Dictionary<string, QuanityListDTO> qIndex,
-            double? parentQuantity)
+            decimal? parentQuantity)
         {
             if (task.Metadata.Type == TaskType.CodeName)
             {
@@ -72,7 +72,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
             else
             {
-                task.Metadata.Quantity = task.Metadata.ChangeFactor1 * task.Metadata.ChangeFactor2 * (parentQuantity ?? 0);
+                task.Metadata.Quantity = task.Metadata.ChangeFactor1 * task.Metadata.ChangeFactor2 * (parentQuantity ?? 0m);
             }
 
             if (task.Tasks is not null)

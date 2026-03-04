@@ -49,7 +49,7 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
             if (Post.Items.Count == 0) return false;
             return await Repo.Storage.CreateItem(Post);
         }
-        void Add(int id, double? q)
+        void Add(int id, decimal? q)
         {
             if (Post.Items.Any(x => x.Id == id))
             {

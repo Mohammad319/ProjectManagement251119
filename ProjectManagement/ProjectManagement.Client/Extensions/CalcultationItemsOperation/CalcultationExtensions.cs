@@ -443,7 +443,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
             else
             {
-                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0d);
+                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0m);
             }
 
             if (task.Tasks is null || task.Tasks.Count == 0)
@@ -471,7 +471,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (resource.HasCap && cap.HasValue)
                 data.CapWaste = cap.Value;
 
-            var effectiveTaskQuantity = taskQuantity ?? 0d;
+            var effectiveTaskQuantity = taskQuantity ?? 0m;
 
             if (!string.IsNullOrEmpty(resource.QuantityParam))
             {

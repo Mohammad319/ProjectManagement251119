@@ -12,15 +12,15 @@
         <ValidationSummary class="@CsS.Text.Danger" />
         <div class="@CsS.Grid.Col.MD4">
             <div class="@CC.Text.MutedXs @CC.Text.SemiBold">Period</div>
-            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@CalcResource.quantity</div>
+            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@Resource?.Data?.Quantity</div>
             <div class="@CC.Text.MutedXs @CC.Text.SemiBold">%</div>
-            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@CalcResource.cost</div>
+            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@Resource?.Data?.Cost</div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">Morning</div>
             <div>
                 <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100m) / Resource.Data.Quantity.Value, 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.MorgenCost" class="@CsS.Input.Number" />
@@ -32,17 +32,17 @@
                 <InputNumber max="@Resource.Data.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
             </div>
             <div class="@CC.Text.Sm @CsS.Text.Secondary">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100.0) / Resource.Data.Quantity.Value, 2) : 0)%
+                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100m) / Resource.Data.Quantity.Value, 2) : 0)%
             </div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.DayCost" class="@CsS.Input.Number" />
             </div>
             @{
-                var totalQty = Resource?.Data?.Quantity ?? 0;
+                var totalQty = Resource?.Data?.Quantity ?? 0m;
                 var used = (CalcResCost.Morgen + CalcResCost.Day);
                 var eveningQty = (used > totalQty) ? 0 : (totalQty - used);
                 CalcResCost.Evening = Convert.ToInt32(eveningQty);
-                var eveningPct = totalQty > 0 ? Math.Round((eveningQty * 100.0) / totalQty, 2) : 0;
+                var eveningPct = totalQty > 0 ? Math.Round((eveningQty * 100m) / totalQty, 2) : 0;
             }
             <div class="@CC.Text.Sm @CsS.Text.Secondary">Evening</div>
             <div>

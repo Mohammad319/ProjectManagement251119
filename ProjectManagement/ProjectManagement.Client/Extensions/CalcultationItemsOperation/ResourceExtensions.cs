@@ -43,8 +43,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         public static void CalcVaribles(
             this ResourceListMVVM resource,
             Dictionary<string, QuanityListDTO> qIndex,
-            double? taskQuantity,
-            double? cap)
+            decimal? taskQuantity,
+            decimal? cap)
         {
             if (resource.Data is null)
                 throw new InvalidOperationException("resource.Data must not be null.");
@@ -54,7 +54,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (resource.HasCap && cap.HasValue)
                 data.CapWaste = cap.Value;
 
-            var effectiveTaskQuantity = taskQuantity ?? 0d;
+            var effectiveTaskQuantity = taskQuantity ?? 0m;
 
             if (!string.IsNullOrEmpty(resource.QuantityParam))
             {

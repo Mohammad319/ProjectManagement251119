@@ -9,7 +9,7 @@ namespace ProjectManagement.Client.Helper
         public static bool ExistItem(CalculationItemType type, int id) =>
             ItemsType == type && SelectedItems.Any(x => x.Id == id);
 
-        public static void Add(int id, double? q, CalculationItemType type)
+        public static void Add(int id, decimal? q, CalculationItemType type)
         {
             if (type != ItemsType)
             {
@@ -32,11 +32,11 @@ namespace ProjectManagement.Client.Helper
     }
     public static class TemporaryData
     {
-        public static void Copy(int calcid, int id, double? q, CalculationItemType type)
+        public static void Copy(int calcid, int id, decimal? q, CalculationItemType type)
             => CopyCut(calcid, id, q, type, CopyType.Copy);
-        public static void Cut(int calcid, int id, double? q, CalculationItemType type)
+        public static void Cut(int calcid, int id, decimal? q, CalculationItemType type)
     => CopyCut(calcid, id, q, type, CopyType.Move);
-        static void CopyCut(int calcid, int id, double? q, CalculationItemType type, CopyType ctype)
+        static void CopyCut(int calcid, int id, decimal? q, CalculationItemType type, CopyType ctype)
         {
             TemporaryData.Reset();
             if (!SelectedData.ExistItem(type, id)) TemporaryData.SelectedItems.Add(new ResourceTaskItemDTO(id, q));
