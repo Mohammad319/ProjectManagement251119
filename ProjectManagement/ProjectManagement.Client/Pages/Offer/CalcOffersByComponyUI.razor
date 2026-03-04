@@ -72,10 +72,11 @@
                         }
 
                         var isChecked = res.OfferId == off.Id;
-                        var price = ((decimal)res.Quantity * off.Cost) + off.BaseCost;
+                        var quantity = res.Quantity.GetValueOrDefault();
+                        var price = (quantity * off.Cost) + off.BaseCost;
 
                         <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"
-                             title="@($"({res.Quantity} x {off.Cost}) + {off.BaseCost}")">
+                             title="@($"({quantity} x {off.Cost}) + {off.BaseCost}")">
                             <div class="flex flex-col items-start gap-0.5">
 
                                 <div class="flex items-center gap-2">

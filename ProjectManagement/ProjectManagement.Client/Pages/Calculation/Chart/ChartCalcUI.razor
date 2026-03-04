@@ -49,7 +49,7 @@
 
 @code {
     // للوصول إلى دوال التنسيق نفسها التي لديك
-    TemplateMVVM Template => Container.Calculation.Template;
+    TemplateMVVM? Template => Container.Calculation?.Template;
 
     // تكوينات الرسوم
     private ChartJsConfig? NetCostTotalyPieCfg;
@@ -64,9 +64,10 @@
     {
         GenerateRandomColors();
 
-        var netCostTotaly = Container.Calculation.Factors.Select(x => (float)Template.Format(x.NetCostTotaly)).ToList();
-        var netCostTotalyOH = Container.Calculation.Factors.Select(x => (float)Template.Format(x.NetCostTotalyOH)).ToList();
-        var earningsValue = Container.Calculation.Factors.Select(x => (float)Template.Format(x.EarningsValue)).ToList();
+        var factors = Container.Calculation?.Factors?.ToList() ?? new List<Factors>();
+        var netCostTotaly = factors.Select(x => (float)(Template?.Format(x.NetCostTotaly) ?? 0d)).ToList();
+        var netCostTotalyOH = factors.Select(x => (float)(Template?.Format(x.NetCostTotalyOH) ?? 0d)).ToList();
+        var earningsValue = factors.Select(x => (float)(Template?.Format(x.EarningsValue) ?? 0d)).ToList();
 
         NetCostTotalyPieCfg = CreatePieConfig(netCostTotaly, "NetCostTotaly");
         NetCostTotalyOHPieCfg = CreatePieConfig(netCostTotalyOH, "NetCostTotalyOH");
@@ -84,12 +85,12 @@
         ColorsChart.Clear();
 
         // عدد ألوان يساوي عدد العوامل + ألوان إضافية للـ Bar
-        int needed = Math.Max(3, Container.Calculation.Factors.Count());
+        int needed = Math.Max(3, Container.Calculation?.Factors?.Count() ?? 0);
         for (int i = 0; i < needed; i++) ColorsChart.Add(Hex());
     }
 
     private List<string> FactorLabels() =>
-        Container.Calculation.Factors
+        (Container.Calculation?.Factors ?? Enumerable.Empty<Factors>())
             .Select(f => f.ResName + (string.IsNullOrWhiteSpace(f.Sort) ? "" : $" ({f.Sort})"))
             .ToList();
 
@@ -106,7 +107,7 @@
                     new PieDataset
                     {
                         // PieDataset لا يحتوي Label في pax.BlazorChartJs
-                        Data = data.Cast<object?>().ToList(),
+                        Data = data.Select(x => (object)x).ToList(),
                         BackgroundColor = new List<string>(ColorsChart.Take(data.Count))
                     }
                 }
@@ -124,9 +125,10 @@
 
     private ChartJsConfig CreateSumPieConfig()
     {
-        var sumNet = (float)Template.Format(Container.Calculation.Factors.Sum(x => x.NetCostTotaly));
-        var sumOH = (float)Template.Format(Container.Calculation.Factors.Sum(x => x.NetCostTotalyOH));
-        var sumEV = (float)Template.Format(Container.Calculation.Factors.Sum(x => x.EarningsValue));
+        var factors = Container.Calculation?.Factors ?? Enumerable.Empty<Factors>();
+        var sumNet = (float)(Template?.Format(factors.Sum(x => x.NetCostTotaly)) ?? 0d);
+        var sumOH = (float)(Template?.Format(factors.Sum(x => x.NetCostTotalyOH)) ?? 0d);
+        var sumEV = (float)(Template?.Format(factors.Sum(x => x.EarningsValue)) ?? 0d);
 
         return new ChartJsConfig
         {
@@ -138,7 +140,7 @@
                 {
                     new PieDataset
                     {
-                        Data = new List<object?> { sumNet, sumOH, sumEV },
+                        Data = new List<object> { sumNet, sumOH, sumEV },
                         BackgroundColor = new List<string>(ColorsChart.Take(3))
                     }
                 }
@@ -171,21 +173,21 @@
         var dsNet = new BarDataset
         {
             Label = "NetCostTotaly",
-            Data = netCostTotaly.Concat(new[] { sumNet }).Cast<object?>().ToList(),
+            Data = netCostTotaly.Concat(new[] { sumNet }).Select(x => (object)x).ToList(),
             BackgroundColor = Enumerable.Repeat(ColorsChart[0], labels.Count).ToList()
         };
 
         var dsOH = new BarDataset
         {
             Label = "NetCostTotalyOH",
-            Data = netCostTotalyOH.Concat(new[] { sumOH }).Cast<object?>().ToList(),
+            Data = netCostTotalyOH.Concat(new[] { sumOH }).Select(x => (object)x).ToList(),
             BackgroundColor = Enumerable.Repeat(ColorsChart[1], labels.Count).ToList()
         };
 
         var dsEV = new BarDataset
         {
             Label = "EarningsValue",
-            Data = earningsValue.Concat(new[] { sumEV }).Cast<object?>().ToList(),
+            Data = earningsValue.Concat(new[] { sumEV }).Select(x => (object)x).ToList(),
             BackgroundColor = Enumerable.Repeat(ColorsChart[2], labels.Count).ToList()
         };
 
