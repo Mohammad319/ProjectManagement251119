@@ -33,6 +33,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task Duplicate(TaskListMVVM dusection)
         {
+            if (CalcContainer.Calculation is null)
+                return;
+
             PostStorygeDTO post = new()
             {
                 Items = [new ResourceTaskItemDTO(dusection.Id, dusection.Metadata?.Quantity ?? 0)],
@@ -113,6 +116,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public async Task ConfirmedRemoveAsync(List<int> items)
         {
+            if (CalcContainer.Calculation is null)
+                return;
+
             var result = await Repo.DeleteAsync(CalcContainer.Calculation.Id, items);
             Mhd.Notifications(ToastType.Delete, result);
             if (result) dialogService.Close();

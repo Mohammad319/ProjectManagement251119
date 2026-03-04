@@ -32,7 +32,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceType
             bool result = await MicroBus.Send(new DeleteResourceTypeCommand(resourceType.Id));
             if (result)
             {
-                Items.Remove(resourceType);
+                Items?.Remove(resourceType);
                 StateHasChanged();
             }
             MHD.Notifications(ToastType.Delete, result);

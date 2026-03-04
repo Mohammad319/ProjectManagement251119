@@ -51,11 +51,15 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
         //}
         public async Task<IActionResult> Update(UpdateShareCalcDTO dto)
         {
+            var departmentId = GetDepartmentId();
+            if (!departmentId.HasValue)
+                return BadRequest("Department not found.");
+
             var upsert = new ShareCalcUpsertDTO
             {
                 Id = dto.Id,
                 //CalculationId = dto.CalculationId,
-                DepartmentId = GetDepartmentId().Value,
+                DepartmentId = departmentId.Value,
                 Tabs = ShareTabs.None,
                 Tap1 = dto.Tap1,
                 Tap2 = dto.Tap2,
@@ -72,8 +76,10 @@ namespace ProjectManagement.Server.Controllers.v1.Calculation
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            int GroupId = GetDepartmentId().Value;
-            int UserId = GetUserId();
+            var groupId = GetDepartmentId();
+            if (!groupId.HasValue)
+                return BadRequest("Department not found.");
+
             return Ok(await MicroBus.Send(new DeleteCalcShareCommand(id)));
         }
     }

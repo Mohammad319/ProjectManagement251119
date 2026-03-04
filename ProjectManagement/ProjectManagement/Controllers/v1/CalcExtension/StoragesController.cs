@@ -43,7 +43,7 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
         public async Task<IActionResult> TasksApp2(int id)
         {
             int? tenantId = GetTenantId();
-            ProjectTaskDto _tasks = new();
+            ProjectTaskDto? _tasks = new();
             if (tenantId.HasValue)
             {
                     _tasks = await TaskService.GetTaskForUserDtoAsync(id, tenantId.Value, 0, CancellationToken.None);
