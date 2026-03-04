@@ -139,8 +139,8 @@ new Dictionary<string, object>
     [nameof(TaskResourceUI.Task)] = model,
     [nameof(TaskResourceUI.Resource)] = resourceId,
 });
-    private List<ProjectTaskListItemDto> tasks;
-    private string errorMessage;
+    private List<ProjectTaskListItemDto>? tasks;
+    private string? errorMessage;
     List<int> ColspanTaskIDs = [];
     private void ConfirmDelete(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
     => MHD.DeleteMessage(res.DisplayName, EventCallback.Factory.Create(this, () => RemoveAsync(task, res)));
@@ -174,7 +174,6 @@ new Dictionary<string, object>
         try
         {
             errorMessage = null;
-            tasks = null;
             tasks = (await TaskQueries.GetListAsync(CancellationToken.None)).ToList();
                     StateHasChanged();
 
