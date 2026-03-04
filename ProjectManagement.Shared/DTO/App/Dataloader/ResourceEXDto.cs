@@ -69,8 +69,8 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             Values.Add(Data.CapWaste);
             Values.Add(Data.ChangeFactor1);
             Values.Add(Data.ChangeFactor2);
-            Values.Add(Data.BaseCost.HasValue ? Data.BaseCost.Value : 0);
-            Values.Add(Data.Cost);
+            Values.Add(Data.BaseCost.HasValue ? (double)Data.BaseCost.Value : 0);
+            Values.Add((double)Data.Cost);
         }
         public int Id { get; set; }
         public string Group { get; set; }
@@ -82,10 +82,10 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             return new Dictionary<string, double>
         {
             { "quantity", Data.Quantity.HasValue ? Data.Quantity.Value : 0 },
-            { "basecost", Data.BaseCost.HasValue ?Data.BaseCost.Value:0 },
+            { "basecost", Data.BaseCost.HasValue ? (double)Data.BaseCost.Value : 0 },
             { "cap", Data.CapWaste },
             { "waste", Data.CapWaste },
-            { "cost", Data.Cost },
+            { "cost", (double)Data.Cost },
             { "chf1", Data.ChangeFactor1 },
             { "chf2", Data.ChangeFactor2 }
         };
