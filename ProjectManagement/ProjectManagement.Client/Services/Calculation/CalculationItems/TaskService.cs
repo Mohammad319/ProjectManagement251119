@@ -35,7 +35,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         {
             PostStorygeDTO post = new()
             {
-                Items = [new ResourceTaskItemDTO(dusection.Id, dusection.Metadata.Quantity)],
+                Items = [new ResourceTaskItemDTO(dusection.Id, dusection.Metadata?.Quantity ?? 0)],
                 Type = CalculationItemType.task,
                 copyType = CopyType.Copy,
                 WithCildren = true,
@@ -52,9 +52,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         public void Remove(TaskListMVVM task)
         {
             if (!SelectedData.ExistItem(CalculationItemType.task, task.Id))
-                Mhd.DeleteMessage(task.Name, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([task.Id])));
+                Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([task.Id])));
             else
-                Mhd.DeleteMessage(task.Name, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. SelectedData.SelectedItems.Select(x => x.Id)])));
+                Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. SelectedData.SelectedItems.Select(x => x.Id)])));
         }
 
         public void FromHub(OperationType ot, object obj)

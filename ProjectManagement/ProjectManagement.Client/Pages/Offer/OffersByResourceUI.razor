@@ -287,7 +287,7 @@
         if (await Repo.Offer.DeleteOfferAsync(offer.Id))
         {
             var r = Calc.Tasks.SelectMany(x => x.Resources)
-                              .FirstOrDefault(x => x.Offers.Any(o => o.Id == offer.Id));
+                              .FirstOrDefault(x => x.Offers != null && x.Offers.Any(o => o.Id == offer.Id));
             r?.Offers.Remove(offer);
             StateHasChanged();
             MHD.Notifications(ToastType.Delete, true);

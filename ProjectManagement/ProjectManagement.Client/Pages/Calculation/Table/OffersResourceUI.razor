@@ -11,7 +11,7 @@
         </tr>
     </thead>
     <tbody class="@CssClasses.Table.TBody">
-        @foreach (var offer in Resource.Offers)
+        @foreach (var offer in Resource?.Offers ?? [])
         {
             <tr class="@CssClasses.Table.Tr">
                 <td class="@CssClasses.Table.Td">@offer.BaseCost</td>
@@ -23,5 +23,5 @@
     </tbody>
 </table>
 @code {
-    [Parameter] public ResourceListMVVM Resource { get; set; }
+    [Parameter] public ResourceListMVVM? Resource { get; set; }
 }

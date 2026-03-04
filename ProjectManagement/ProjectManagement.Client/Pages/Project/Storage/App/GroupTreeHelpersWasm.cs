@@ -8,9 +8,9 @@ namespace ProjectManagement.Client.Pages.Project.Storage.App
     {
         public GroupKind Kind { get; init; }
         public int Order { get; init; }
-        public OptionGroupDto Choice { get; init; }
-        public ResourceOptionGroupDto Resource { get; init; }
-        public NumericInputDto Numeric { get; init; }
+        public OptionGroupDto? Choice { get; init; }
+        public ResourceOptionGroupDto? Resource { get; init; }
+        public NumericInputDto? Numeric { get; init; }
     }
     public static class GroupTreeHelpersWasm
     {

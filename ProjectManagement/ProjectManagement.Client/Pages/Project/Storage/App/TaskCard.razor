@@ -141,7 +141,7 @@
         if (Task.Added)
             Task.Collspanded = true;
 
-        foreach (var item in Task.Resources)
+        foreach (var item in Task.Resources ?? Enumerable.Empty<ResourceDto>())
             item.IsAdded = Task.Added;
 
         var summary = Task.Resources?.FirstOrDefault(IsSummary);
@@ -240,13 +240,13 @@
 
         Task.BaseResources ??= [];
         // حساب المجاميع من بقية الموارد (عدا الملخص)
-        var others = Task.Resources.Where(r => r is not null && !IsSummary(r)).ToList();
+        var others = (Task.Resources ?? new List<ResourceDto>()).Where(r => r is not null && !IsSummary(r)).ToList();
 
         var totalBaseCost = others.Sum(r => r?.Data?.BaseCost ?? 0);
         var totalCost = others.Sum(r => r?.Data.Cost ?? 0);
         var co2 = others.Sum(r => r?.Data.CO2 ?? 0);
         var totalStorageCost = others.Sum(r => r?.CostStorageValue ?? 0);
-        var totalUserCost = others.Sum(r => r?.CostUserValue ?? r?.CostStorageValue);
+        var totalUserCost = others.Sum(r => r?.CostUserValue ?? r?.CostStorageValue ?? 0);
 
         // إيجاد/إنشاء الملخص في Resources
         var summary = Task.BaseResources.FirstOrDefault(IsSummary);

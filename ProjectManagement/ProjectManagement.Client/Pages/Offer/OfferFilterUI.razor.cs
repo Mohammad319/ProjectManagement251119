@@ -13,32 +13,25 @@ namespace ProjectManagement.Client.Pages.Offer
     {
         [Parameter] public CalculationItemType ItemType { get; set; }
         [Parameter] public EventCallback Callback { get; set; }
-        public PostStorygeDTO Post;
+        public PostStorygeDTO Post { get; set; } = new();
         private OfferFilterDTO Filter = new();
-        private List<ResourceSortModel> ResourcesSort { get; set; }
-        List<ListResourceTypeDTO> ResourceTypes { get; set; }
-        List<ListOrderDTO> Statues;
-        List<ListOrderDTO> TGSStatuses;
+        private List<ResourceSortModel>? ResourcesSort { get; set; }
+        List<ListResourceTypeDTO> ResourceTypes { get; set; } = [];
+        List<ListOrderDTO> Statues = [];
+        List<ListOrderDTO> TGSStatuses = [];
         List<FolderMVVM> FoldersList = [];
-        ListResourceTypeDTO ResTypeSelected;
-        List<ListProjectMVVM> Projects;
-        List<ListCalculationMVVM> Calcs;
-        List<ListDTO> Organisations;
-        [Inject] HTTPRepository _httpRepository { get; set; }
+        ListResourceTypeDTO? ResTypeSelected;
+        List<ListProjectMVVM>? Projects;
+        List<ListCalculationMVVM>? Calcs;
+        List<ListDTO> Organisations = [];
+        [Inject] HTTPRepository _httpRepository { get; set; } = default!;
         private void OnInputOrgChanged(ChangeEventArgs e)
         {
             var selectedName = e.Value?.ToString();
             var selectedOrg = Organisations.FirstOrDefault(o => o.Name == selectedName);
-            if (selectedOrg != null)
-            {
-                Filter.OrganisationId = selectedOrg.Id;
-            }
-            else
-            {
-                Filter.OrganisationId = null; // أو 0 مثلاً
-            }
+            Filter.OrganisationId = selectedOrg?.Id;
         }
-        public List<ListOfferCalcInfoMVVM> Offers { get; set; } = [];
+        public List<ListOfferCalcInfoMVVM>? Offers { get; set; } = [];
 
         public async Task SetNewTypeAsync(CalculationItemType nt)
         {
@@ -70,7 +63,6 @@ namespace ProjectManagement.Client.Pages.Offer
                 return;
 
             ResTypeSelected = ResourceTypes.FirstOrDefault(x => x.Id == id);
-            ResourcesSort = null;
             ResourcesSort = await Repo.ResType.GetResourceSortAsync(id.Value);
         }
 
@@ -106,7 +98,7 @@ namespace ProjectManagement.Client.Pages.Offer
             if (Post.Type == CalculationItemType.task)
             {
                 ResourceTypes = await Repo.ResType.GetLocalAsync();
-                Statues = [.. (await _httpRepository.GetAsync<List<ListOrderDTO>>(PMAPIConst.ResourceStatus + $"?id={null}"))]; ;
+                Statues = [.. (await _httpRepository.GetAsync<List<ListOrderDTO>>(PMAPIConst.ResourceStatus + $"?id={null}"))];
             }
             else
             {
