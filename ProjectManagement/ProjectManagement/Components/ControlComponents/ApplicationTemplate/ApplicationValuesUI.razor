@@ -87,35 +87,41 @@
     </EditForm>
 }
 @code {
-    List<ApplicationModel> Applications;
-    ApplicationModel Application { get; set; }
-    [Parameter] public ApplicationValuesModel ApplicationValues { get; set; }
+    List<ApplicationModel> Applications = [];
+    ApplicationModel? Application { get; set; }
+    [Parameter] public ApplicationValuesModel ApplicationValues { get; set; } = new();
     [Parameter] public EventCallback<ApplicationValuesModel> CallbackUpdate { get; set; }
     protected async override Task OnInitializedAsync()
     {
-        Applications = await Repo.Application.GetApplicationsAsync(true);
+        Applications = await Repo.Application.GetApplicationsAsync(true) ?? [];
         if (ApplicationValues.Application != null)
         {
             Application = ApplicationValues.Application;
-            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
+            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
             {
+                var savedValue = ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value;
+                if (string.IsNullOrWhiteSpace(savedValue))
+                    continue;
+
                 if (attr.AttributeType == AttributeType.Bool)
-                    attr.ValueBool = bool.Parse(ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value);
+                    attr.ValueBool = bool.TryParse(savedValue, out var boolValue) && boolValue;
                 else if (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Time)
-                    attr.Date = DateTime.Parse(ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value);
-                else attr.Value = ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value;
+                    attr.Date = DateTime.TryParse(savedValue, out var dateValue) ? dateValue : null;
+                else attr.Value = savedValue;
             }
         }
     }
 
     void Change2(ChangeEventArgs e)
     {
-        if (!string.IsNullOrEmpty(e.Value.ToString()))
+        var selectedValue = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(selectedValue) && int.TryParse(selectedValue, out var id))
         {
-            int id = int.Parse(e.Value.ToString());
-
             Application = Applications.FirstOrDefault(x => x.Id == id);
-            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
+            if (Application is null)
+                return;
+
+            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
             {
                 if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double))
                     attr.Value = attr.ValdNumberVM.Default.ToString();
@@ -132,14 +138,17 @@
     }
     async Task SaveAsync()
     {
+        if (Application is null)
+            return;
+
         ApplicationValues.Data.Attributes = new Dictionary<Guid, string>();
-        foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes))
+        foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
         {
             if (attr.AttributeType == AttributeType.Bool)
                 attr.Value = attr.ValueBool.ToString();
             else if (attr.AttributeType == AttributeType.Time || attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime)
                 attr.Value = attr.Date.ToString();
-            ApplicationValues.Data.Attributes.Add(attr.ID, attr.Value);
+            ApplicationValues.Data.Attributes.Add(attr.ID, attr.Value ?? string.Empty);
         }
       ApplicationValues.ApplicationId = Application.Id; 
         if (ApplicationValues.Id == 0)

@@ -11,14 +11,14 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
     public partial class ApplicationFormUI
     {
         [Parameter] public ApplicationEntity ApplicationUpdate { get; set; } = new();
-        List<ListDTO>? Departments;
-        RowEntity RowForm;
+        List<ListDTO> Departments = [];
+        RowEntity? RowForm;
         [Parameter] public EventCallback<bool> Callback { get; set; }
         bool IsLoading = false;
         protected async override Task OnInitializedAsync()
         {
-            Departments = await MicroBus.Send(new GetDepartmentsAsListQuery());
-            ApplicationUpdate.DepartmentId = Departments.FirstOrDefault().Id;
+            Departments = await MicroBus.Send(new GetDepartmentsAsListQuery()) ?? [];
+            ApplicationUpdate.DepartmentId = Departments.FirstOrDefault()?.Id;
         }
         private async Task HandleSubmitAsync()
         {
@@ -41,7 +41,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                     row.ID = Guid.NewGuid();
                     ApplicationUpdate.Data.Rows.Add(row);
                 }
-                else
+                else if (RowForm is not null)
                 {
                     RowForm.Name = row.Name;
                     RowForm.Description = row.Description;

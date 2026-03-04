@@ -160,20 +160,21 @@
             Departments = await Dispatcher.Send(new GetDepartmentsAsListQuery());
 
             // build form
+            var sourceUser = UserForm ?? new TenantUserDto();
             Form = new TenantUserDto
             {
-                Email = UserForm?.Email,
-                Firstname = UserForm?.Firstname,
-                Lastname = UserForm?.Lastname,
-                DepartmentId = DepartmentId ?? UserForm?.DepartmentId,
-                LockoutEnabled = UserForm.LockoutEnabled,
-                IdAuth = UserForm?.IdAuth,
-                LockoutStart = UserForm?.LockoutStart,
-                LockoutEnd = UserForm?.LockoutEnd,
-                PhoneNumber = UserForm?.PhoneNumber,
-                PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
-                Id = UserForm.Id,
-                Username = UserForm?.Username,
+                Email = sourceUser.Email,
+                Firstname = sourceUser.Firstname,
+                Lastname = sourceUser.Lastname,
+                DepartmentId = DepartmentId ?? sourceUser.DepartmentId,
+                LockoutEnabled = sourceUser.LockoutEnabled,
+                IdAuth = sourceUser.IdAuth,
+                LockoutStart = sourceUser.LockoutStart,
+                LockoutEnd = sourceUser.LockoutEnd,
+                PhoneNumber = sourceUser.PhoneNumber,
+                PhoneNumberConfirmed = sourceUser.PhoneNumberConfirmed,
+                Id = sourceUser.Id,
+                Username = sourceUser.Username,
             };
 
             await InitRolesAndDefaultsAsync();
