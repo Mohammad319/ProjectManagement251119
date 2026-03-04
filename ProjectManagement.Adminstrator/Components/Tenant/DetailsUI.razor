@@ -16,7 +16,7 @@
     </button>
 </h3>
 
-@if (TenantPut != null)
+@if (TenantPut is TenantEntity tenant)
 {
     <!-- بطاقة تفاصيل التينانت -->
     <div class="@CC.Card.Panel @CsS.Spacing.M.Bottom3">
@@ -24,46 +24,46 @@
             <tbody class="@CsS.Table.TBody">
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@CalcResource.name</td>
-                    <td class="@CsS.Table.Td">@TenantPut.Name</td>
+                    <td class="@CsS.Table.Td">@tenant.Name</td>
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@AppControll.Db</td>
-                    <td class="@CsS.Table.Td">@TenantPut?.TenantDB?.Name</td>
+                    <td class="@CsS.Table.Td">@tenant.TenantDB?.Name</td>
                 </tr>
-                @if (TenantPut.DateExpire.HasValue)
+                @if (tenant.DateExpire.HasValue)
                 {
                     <tr class="@CsS.Table.Tr">
                         <td class="@CsS.Table.Td">@AppControll.expire</td>
-                        <td class="@CsS.Table.Td">@TenantPut.DateExpire.Value.ToString("dd.MM.yyyy")</td>
+                        <td class="@CsS.Table.Td">@tenant.DateExpire.Value.ToString("dd.MM.yyyy")</td>
                     </tr>
                 }
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@AppControll.maxUsers</td>
-                    <td class="@CsS.Table.Td">@TenantPut.MaxUsers</td>
+                    <td class="@CsS.Table.Td">@tenant.MaxUsers</td>
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@AppControll.maxCalculations</td>
-                    <td class="@CsS.Table.Td">@TenantPut.MaxCalculations</td>
+                    <td class="@CsS.Table.Td">@tenant.MaxCalculations</td>
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@ResourceIdentity.email</td>
-                    <td class="@CsS.Table.Td">@TenantPut.Email</td>
+                    <td class="@CsS.Table.Td">@tenant.Email</td>
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@ResourceIdentity.fax</td>
-                    <td class="@CsS.Table.Td">@TenantPut?.Fax</td>
+                    <td class="@CsS.Table.Td">@tenant.Fax</td>
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@ResourceIdentity.phone</td>
-                    <td class="@CsS.Table.Td">@TenantPut?.Phone</td>
+                    <td class="@CsS.Table.Td">@tenant.Phone</td>
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@ResourceIdentity.mobile</td>
-                    <td class="@CsS.Table.Td">@TenantPut?.Mobile @TenantPut?.BuildNumber</td>
+                    <td class="@CsS.Table.Td">@tenant.Mobile @tenant.BuildNumber</td>
                 </tr>
                 <tr class="@CsS.Table.Tr">
                     <td class="@CsS.Table.Td">@ResourceIdentity.country</td>
-                    <td class="@CsS.Table.Td">@TenantPut.Country</td>
+                    <td class="@CsS.Table.Td">@tenant.Country</td>
                 </tr>
             </tbody>
         </table>
