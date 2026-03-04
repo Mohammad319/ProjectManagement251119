@@ -24,14 +24,14 @@ namespace ProjectManagement.Client.Adminstrator.Handless
             catch (Exception e)
             {
                 _loger.Log(e);
-                return default;
+                return default!;
             }
         }
 
         /// <summary>
         /// الحصول على Claim انتهاء صلاحية التوكن (exp) من المستخدم.
         /// </summary>
-        private async Task<Claim> GetExpirationClaimAsync()
+        private async Task<Claim?> GetExpirationClaimAsync()
         {
             var user = (await authStateProvider.GetAuthenticationStateAsync()).User;
             return user?.FindFirst(u => u.Type.Equals("exp"));
@@ -57,7 +57,7 @@ namespace ProjectManagement.Client.Adminstrator.Handless
                 loadingService.End();
             }
 
-            return default;
+            return default!;
         }
     }
 }
