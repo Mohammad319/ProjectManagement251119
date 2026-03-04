@@ -113,7 +113,7 @@
         AccountGroups = await MicroBus.Send(new GetAccountGroupsAsListQuery());
         if (ResourceSort?.Id > 0)
         {
-            AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceSort.AccountId));
+            AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts?.Any(a => a.Id == ResourceSort.AccountId) == true);
         }
     }
     private async Task HandleSubmitAsync()
