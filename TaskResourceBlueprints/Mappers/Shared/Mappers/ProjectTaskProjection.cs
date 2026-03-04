@@ -63,7 +63,7 @@ public static class ProjectTaskProjection
                         ResType = z.a.Resource != null ? z.a.Resource.ResType : default,
                         SortOrder = z.a.Resource != null ? z.a.Resource.SortOrder : default,
                         CostRole = z.a.CapacityRoles,
-                        CostStorageValue = z.a.Resource == null ? null : (double?)z.a.Resource.Data.Cost,
+                        CostStorageValue = z.a.Resource == null ? null : z.a.Resource.Data.Cost,
                         CostUserValue = z.Link == null ? null : z.Link.Cost,
                         NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
 

@@ -266,12 +266,12 @@
                 Data = new ProjectManagement.Shared.Base.Calculation.ResourceMetadata
                 {
                     Unit = Task.UnitCode ?? string.Empty,
-                    Quantity = (decimal?)(Task.Quantity ?? 0d),
+                    Quantity = Task.Quantity ?? 0,
                     BaseCost = totalBaseCost,
                     Cost = totalCost,
                     CO2 = co2,
-                    ChangeFactor1 = (decimal)Task.ChangeFactor1,
-                    ChangeFactor2 = (decimal)Task.ChangeFactor2,
+                    ChangeFactor1 = Task.ChangeFactor1,
+                    ChangeFactor2 = Task.ChangeFactor2,
                     Note = Task.Note
                 }
             };

@@ -32,7 +32,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
         public required string FromUnit { get; init; }
         public required string ToUnit { get; init; }
         public List<ParamDef> Params { get; init; } = [];
-        public required Func<double, IReadOnlyDictionary<ParamName, double>, double> Compute { get; init; }
+        public required Func<decimal, IReadOnlyDictionary<ParamName, decimal>, decimal> Compute { get; init; }
     }
 
 }

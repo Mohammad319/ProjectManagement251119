@@ -47,7 +47,7 @@ namespace TaskResourceBlueprints.Entities.Tasks
         /// <summary>ملاحظات عامة عن المهمة.</summary>
         public string? FieldNotes { get; set; }  // أو Notes / Description حسب ما تفضّل
 
-        public double? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
         public string? UnitCode { get; set; }
 
         public double ChangeFactor1 { get; set; } = 1;
@@ -63,7 +63,7 @@ namespace TaskResourceBlueprints.Entities.Tasks
         /// Workload thresholds, e.g. for Low / Medium / High.
         /// Always three values.
         /// </summary>
-        public List<double> WorkloadThresholds { get; set; } = new() { 0, 0, 0 };
+        public List<decimal> WorkloadThresholds { get; set; } = new() { 0, 0, 0 };
 
         // Lookups
         public int? ActionId { get; set; }

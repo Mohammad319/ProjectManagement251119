@@ -7,26 +7,31 @@ public class TaskResourceAssignmentDto
 {
     public int Id { get; set; }
     public bool IsActive { get; set; } = true;
-    public double ChangeFactor1 { get; set; } = 1;
-    public double ChangeFactor2 { get; set; } = 1;
-    public double CapWaste { get; set; } = 1;
-    public double? BaseCost { get; set; } = 0;
+
+    // كانت double -> صارت decimal
+    public decimal ChangeFactor1 { get; set; } = 1;
+    public decimal ChangeFactor2 { get; set; } = 1;
+    public decimal CapWaste { get; set; } = 1;
+    public decimal? BaseCost { get; set; } = 0;
+
     public bool Uncontrollable { get; set; } = false;
+
     public List<RoleDTO> CapRole { get; set; } = [];
     public List<string> Formulas { get; set; } = [];
+
     public int TaskId { get; set; }
     public ProjectTaskDto Task { get; set; } = null!;
     public int ResourceId { get; set; }
     public ResourceDto Resource { get; set; } = null!;
 
-    public double? CalcCap()
+    public decimal? CalcCap()
     {
         decimal? q = Resource.Data.Quantity;
         if (q.HasValue)
-        foreach (var item in CapRole)
-        {
-            if ((double)q.Value >= item.Min && (double)q.Value <= item.Max) return item.Value;
-        }
-        return q.HasValue ? (double)q.Value : null;
+            foreach (var item in CapRole)
+                if (q.Value >= item.Min && q.Value <= item.Max)
+                    return item.Value;
+
+        return q;
     }
 }

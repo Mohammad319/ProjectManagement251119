@@ -178,6 +178,7 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
     /// تطبيق Global Query Filter لكل الكيانات التي تطبّق IDataKeyFilterReadOnly
     /// بحيث يتم فلترتها تلقائيًا حسب TenantId الحالي في الـ DbContext.
     /// </summary>
+    /// 
     private void ConfigureGlobalTenantFilter(ModelBuilder modelBuilder)
     {
         var tenantEntityTypes = modelBuilder.Model.GetEntityTypes()
@@ -186,12 +187,11 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
             .Distinct()
             .ToList();
 
-        // نبني Expression لكل نوع بدون MakeGenericMethod/Invoke لتقليل overhead.
         foreach (var clrType in tenantEntityTypes)
         {
             var parameter = Expression.Parameter(clrType, "e");
 
-            // e => EF.Property<int>(e, "TenantId") == this.TenantId
+            // EF.Property<int>(e, "TenantId")
             var tenantIdProperty = Expression.Call(
                 typeof(EF),
                 nameof(EF.Property),
@@ -199,11 +199,30 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
                 parameter,
                 Expression.Constant(nameof(IDataKeyFilterReadOnly.TenantId)));
 
+            // this.TenantId
             var tenantIdValue = Expression.Property(Expression.Constant(this), nameof(TenantId));
-            var body = Expression.Equal(tenantIdProperty, tenantIdValue);
+
+            // EF.Property<int>(e, "TenantId") == this.TenantId
+            Expression body = Expression.Equal(tenantIdProperty, tenantIdValue);
+
+            // + SoftDelete filter (إذا الكيان يطبق ISoftDeletable)
+            if (typeof(ISoftDeletable).IsAssignableFrom(clrType))
+            {
+                // EF.Property<bool>(e, "IsDeleted")
+                var isDeletedProperty = Expression.Call(
+                    typeof(EF),
+                    nameof(EF.Property),
+                    new[] { typeof(bool) },
+                    parameter,
+                    Expression.Constant(nameof(ISoftDeletable.IsDeleted)));
+
+                // EF.Property<bool>(e, "IsDeleted") == false
+                var notDeleted = Expression.Equal(isDeletedProperty, Expression.Constant(false));
+
+                body = Expression.AndAlso(body, notDeleted);
+            }
 
             var lambda = Expression.Lambda(body, parameter);
-
             modelBuilder.Entity(clrType).HasQueryFilter(lambda);
         }
     }

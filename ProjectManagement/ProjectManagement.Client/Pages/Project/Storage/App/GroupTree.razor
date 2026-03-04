@@ -186,7 +186,7 @@
 
     private async Task SetNumeric(int numericId, ChangeEventArgs e)
     {
-        if (double.TryParse(Convert.ToString(e.Value), out var v))
+        if (decimal.TryParse(Convert.ToString(e.Value), out var v))
             Answers.NumericValuesByGroupId[numericId] = v;
         else
             Answers.NumericValuesByGroupId[numericId] = null;

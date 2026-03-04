@@ -91,7 +91,7 @@
     // ========== تحديث بارامتر ==========
     private void OnParamChangedInternal(ParamName name, object? raw)
     {
-        if (double.TryParse(Convert.ToString(raw), out var val))
+        if (decimal.TryParse(Convert.ToString(raw), out var val))
             Task.ParameterValues[name] = val;
         else
             Task.ParameterValues.Remove(name);
@@ -117,7 +117,7 @@
 
     private bool ShouldShowApply(ProjectTaskDto t)
     {
-        var thresholds = t.WorkloadThresholds ?? new List<double>();
+        var thresholds = t.WorkloadThresholds ?? new List<decimal>();
         bool needsDims = Needs(t, ParamName.Thickness)
                       || Needs(t, ParamName.Width)
                       || Needs(t, ParamName.Length);

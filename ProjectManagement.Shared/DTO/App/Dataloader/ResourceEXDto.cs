@@ -1,6 +1,7 @@
 ﻿using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Helper.ProjectAppStorage;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -77,79 +78,63 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
         public List<ConditionDto> ConditionEffect { get; set; } = new();
         public List<RoleDTO> CapRole { get; set; } = [];
         public List<int> ConditionTaskIds { get; set; } = new();
+
         public Dictionary<string, decimal> GetVariables()
         {
-            return new Dictionary<string, decimal>
-        {
-            { "quantity", Data.Quantity.HasValue ? Data.Quantity.Value : 0 },
-            { "basecost", Data.BaseCost.HasValue ?Data.BaseCost.Value : 0 },
-            { "cap", Data.CapWaste },
-            { "waste", Data.CapWaste },
-            { "cost",  Data.Cost },
-            { "chf1", Data.ChangeFactor1 },
-            { "chf2", Data.ChangeFactor2 }
-        };
-        }
-        public static List<string> ExtractVariables(string expression)
-        {
-            var matches = Regex.Matches(expression, @"[a-zA-Z_][a-zA-Z0-9_]*");
-            return matches.Cast<Match>()
-                          .Select(m => m.Value)
-                          .Distinct()
-                          .ToList();
-        }
-        private string ReplaceVariables(string expression, Dictionary<string, decimal> variables)
-        {
-            foreach (var kvp in variables)
-            {
-                // استخدم Regex لضمان الاستبدال الكامل للكلمة (بدون استبدال داخل كلمة أخرى)
-                expression = Regex.Replace(expression, $@"\b{Regex.Escape(kvp.Key)}\b", kvp.Value.ToString(CultureInfo.InvariantCulture));
-            }
-            return expression;
-        }
-        public static double EvaluateExpression(string expression)
-        {
-            // تأكد من استخدام الفاصلة العشرية الصحيحة للثقافة الحالية (مثلاً النقطة بدلاً من الفاصلة)
-            var culture = CultureInfo.InvariantCulture;
+            var cap = Data.Cap != 0m ? Data.Cap : Data.CapWaste;
+            var waste = Data.Waste != 0m ? Data.Waste : Data.CapWaste;
 
-            try
+            return new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
             {
-                var dt = new DataTable();
-                var result = dt.Compute(expression, "");
-                return Convert.ToDouble(result, culture);
-            }
-            catch (System.Exception ex)
-            {
-                throw new InvalidOperationException($"خطأ في تقييم المعادلة: '{expression}'", ex);
-            }
+                ["quantity"] = Data.Quantity ?? 0m,
+                ["basecost"] = Data.BaseCost ?? 0m,
+                ["cost"] = Data.Cost,
+                ["chf1"] = Data.ChangeFactor1,
+                ["chf2"] = Data.ChangeFactor2,
+                ["cap"] = cap,
+                ["waste"] = waste,
+                ["capwaste"] = Data.CapWaste
+            };
         }
+
         public void SetVariable(string name, decimal value)
         {
-            switch (name.ToLower())
+            switch (name.ToLowerInvariant())
             {
                 case "quantity": Data.Quantity = value; break;
                 case "chf1": Data.ChangeFactor1 = value; break;
                 case "chf2": Data.ChangeFactor2 = value; break;
-                case "cap": Data.CapWaste = value; break;
-                case "waste": Data.CapWaste = value; break;
-                case "basecost": Data.BaseCost = value; break;
 
-                default: Console.WriteLine($"⚠️ المتغير {name} غير معرف داخل المورد."); break;
+                // توافق خلفي
+                case "cap": Data.Cap = value; Data.CapWaste = value; break;
+                case "waste": Data.Waste = value; Data.CapWaste = value; break;
+                case "capwaste": Data.CapWaste = value; break;
+
+                case "basecost": Data.BaseCost = value; break;
+                case "cost": Data.Cost = value; break;
+
+                default:
+                    Console.WriteLine($"⚠️ المتغير {name} غير معرف داخل المورد.");
+                    break;
             }
         }
+
         public void Calculate(string targetVariable, string formula, Dictionary<string, decimal> externalVars)
         {
-            Dictionary<string, decimal> resourceVariables = GetVariables();
-            Dictionary<string, decimal> allVariables;
+            var all = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var kv in GetVariables())
+                all[kv.Key] = kv.Value;
+
             if (externalVars != null)
-                allVariables = resourceVariables
-                    .Concat(externalVars.ToDictionary(x => x.Key, x => x.Value))
-                    .GroupBy(x => x.Key.ToLower())
-                    .ToDictionary(g => g.Key, g => g.First().Value);
-            else allVariables = resourceVariables;
-            string expressionWithValues = ReplaceVariables(formula, allVariables);
-            double result = EvaluateExpression(expressionWithValues);
-            SetVariable(targetVariable, (decimal)result);
+                foreach (var kv in externalVars)
+                    all[kv.Key] = kv.Value;
+
+            if (!ExpressionEvaluator.TryEval(formula, all, out var result))
+                throw new InvalidOperationException($"خطأ في تقييم المعادلة: '{formula}'");
+
+            SetVariable(targetVariable, result);
         }
-    }
+
+   }
 }

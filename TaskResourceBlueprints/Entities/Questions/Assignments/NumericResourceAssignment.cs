@@ -11,8 +11,8 @@ namespace TaskResourceBlueprints.Entities.Questions.Assignments
 
         public int AssignmentId { get; set; }
         public ConditionResourceAssignment Assignment { get; set; } = null!;
-        public double? MinInputValue { get; set; }
-        public double? MaxInputValue { get; set; }
+        public decimal? MinInputValue { get; set; }
+        public decimal? MaxInputValue { get; set; }
         public List<string> Expressions { get; set; } = [];
     }
 }

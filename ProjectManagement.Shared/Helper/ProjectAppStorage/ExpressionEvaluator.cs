@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProjectManagement.Shared.Helper.ProjectAppStorage
 {
     /// <summary>
-    /// مقيِّم تعابير حسابية بسيط يدعم + - * / والأقواس والمتغيرات.
+    /// مقيِّم تعابير حسابية بسيط يدعم:
+    /// + - * / والأقواس والمتغيرات + unary +/- (مثل: -2، -(a+b))
     /// المتغيرات تُمرَّر عبر قاموس vars (غير حساس لحالة الأحرف).
     /// </summary>
     internal static class ExpressionEvaluator
     {
-        public static bool TryEval(string expr, IReadOnlyDictionary<string, double> vars, out double result)
+        public static bool TryEval(string expr, IReadOnlyDictionary<string, decimal> vars, out decimal result)
         {
             try
             {
@@ -23,14 +21,15 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
             }
             catch
             {
-                result = 0;
+                result = 0m;
                 return false;
             }
         }
 
-        private static List<string> ToRpn(string expr, IReadOnlyDictionary<string, double> vars)
+        private static List<string> ToRpn(string expr, IReadOnlyDictionary<string, decimal> vars)
         {
             var tokens = Tokenize(expr);
+            tokens = NormalizeUnary(tokens);
 
             // استبدال المتغيرات بقيمها
             for (int i = 0; i < tokens.Count; i++)
@@ -49,21 +48,29 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
 
             int Prec(string op) => op switch
             {
-                "+" or "-" => 1,
+                "u+" or "u-" => 3,
                 "*" or "/" => 2,
+                "+" or "-" => 1,
                 _ => 0
             };
 
+            bool IsRightAssoc(string op) => op is "u+" or "u-";
+
             foreach (var t in tokens)
             {
-                if (double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                if (decimal.TryParse(t, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _))
                 {
                     output.Add(t);
                 }
                 else if (IsOperator(t))
                 {
-                    while (ops.Count > 0 && IsOperator(ops.Peek()) && Prec(ops.Peek()) >= Prec(t))
+                    while (ops.Count > 0 && IsOperator(ops.Peek()))
+                    {
+                        var top = ops.Peek();
+                        var cond = IsRightAssoc(t) ? Prec(top) > Prec(t) : Prec(top) >= Prec(t);
+                        if (!cond) break;
                         output.Add(ops.Pop());
+                    }
                     ops.Push(t);
                 }
                 else if (t == "(") ops.Push(t);
@@ -81,34 +88,49 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 if (op is "(" or ")") throw new InvalidOperationException("Mismatched parentheses");
                 output.Add(op);
             }
+
             return output;
         }
 
-        private static double EvalRpn(List<string> rpn)
+        private static decimal EvalRpn(List<string> rpn)
         {
-            var st = new Stack<double>();
+            var st = new Stack<decimal>();
             foreach (var t in rpn)
             {
-                if (double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var n)) st.Push(n);
-                else
+                if (decimal.TryParse(t, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var n))
                 {
-                    if (st.Count < 2) throw new InvalidOperationException("Invalid expression");
-                    var b = st.Pop(); var a = st.Pop();
-                    st.Push(t switch
-                    {
-                        "+" => a + b,
-                        "-" => a - b,
-                        "*" => a * b,
-                        "/" => b == 0 ? throw new DivideByZeroException() : a / b,
-                        _ => throw new InvalidOperationException($"Unknown operator '{t}'")
-                    });
+                    st.Push(n);
+                    continue;
                 }
+
+                if (t is "u+" or "u-")
+                {
+                    if (st.Count < 1) throw new InvalidOperationException("Invalid expression");
+                    var a = st.Pop();
+                    st.Push(t == "u-" ? -a : a);
+                    continue;
+                }
+
+                if (st.Count < 2) throw new InvalidOperationException("Invalid expression");
+                var b = st.Pop();
+                var a2 = st.Pop();
+
+                st.Push(t switch
+                {
+                    "+" => a2 + b,
+                    "-" => a2 - b,
+                    "*" => a2 * b,
+                    "/" => b == 0m ? throw new DivideByZeroException() : a2 / b,
+                    _ => throw new InvalidOperationException($"Unknown operator '{t}'")
+                });
             }
+
             if (st.Count != 1) throw new InvalidOperationException("Invalid expression");
             return st.Pop();
         }
 
-        private static bool IsOperator(string t) => t is "+" or "-" or "*" or "/";
+        private static bool IsOperator(string t) => t is "+" or "-" or "*" or "/" or "u+" or "u-";
+
         private static bool IsIdentifier(string t)
         {
             if (string.IsNullOrEmpty(t)) return false;
@@ -130,7 +152,8 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 char ch = s[i];
                 if (char.IsWhiteSpace(ch)) { i++; continue; }
 
-                if (char.IsDigit(ch) || ch == '.' && i + 1 < s.Length && char.IsDigit(s[i + 1]))
+                // number ('.' كفاصلة عشرية)
+                if (char.IsDigit(ch) || (ch == '.' && i + 1 < s.Length && char.IsDigit(s[i + 1])))
                 {
                     int start = i; i++;
                     while (i < s.Length && (char.IsDigit(s[i]) || s[i] == '.')) i++;
@@ -138,6 +161,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                     continue;
                 }
 
+                // identifier
                 if (char.IsLetter(ch) || ch == '_')
                 {
                     int start = i; i++;
@@ -150,8 +174,41 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
 
                 throw new InvalidOperationException($"Unexpected char '{ch}'");
             }
+
             return tokens;
         }
-    }
 
+        private static List<string> NormalizeUnary(List<string> tokens)
+        {
+            var result = new List<string>();
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                var t = tokens[i];
+
+                bool isUnaryCandidate =
+                    (t == "+" || t == "-") &&
+                    (result.Count == 0 || result[^1] == "(" || IsOperator(result[^1]));
+
+                if (!isUnaryCandidate)
+                {
+                    result.Add(t);
+                    continue;
+                }
+
+                // لو التالي رقم => دمج الإشارة مع الرقم
+                if (i + 1 < tokens.Count &&
+                    decimal.TryParse(tokens[i + 1], NumberStyles.Number, CultureInfo.InvariantCulture, out _))
+                {
+                    result.Add((t == "-" ? "-" : "") + tokens[i + 1]);
+                    i++;
+                    continue;
+                }
+
+                // غير ذلك => unary operator
+                result.Add(t == "-" ? "u-" : "u+");
+            }
+
+            return result;
+        }
+    }
 }

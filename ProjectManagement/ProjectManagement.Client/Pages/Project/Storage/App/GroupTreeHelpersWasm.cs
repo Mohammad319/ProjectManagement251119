@@ -54,7 +54,7 @@ namespace ProjectManagement.Client.Pages.Project.Storage.App
             }
         }
 
-        public static string RangeLabel(double? min, double? max)
+        public static string RangeLabel(decimal? min, decimal? max)
         {
             if (min.HasValue && max.HasValue) return $"[{min} .. {max}]";
             if (min.HasValue) return $">= {min}";

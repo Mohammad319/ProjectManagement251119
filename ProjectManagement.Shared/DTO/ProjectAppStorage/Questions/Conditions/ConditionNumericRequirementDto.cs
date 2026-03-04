@@ -3,10 +3,8 @@ namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
 
 public class ConditionNumericRequirementDto
 {
-    //public int Id { get; set; }
-    //public int QuestionConditionId { get; set; }
     public int NumericInputId { get; set; }
-    public double? MaxAllowedValue { get; set; }
-    public double? MinAllowedValue { get; set; }
+    public decimal? MaxAllowedValue { get; set; }
+    public decimal? MinAllowedValue { get; set; }
     public int SetKey { get; set; } = 1;
 }

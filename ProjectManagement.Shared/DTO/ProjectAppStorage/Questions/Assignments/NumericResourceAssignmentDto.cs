@@ -5,10 +5,8 @@ namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
 
 public class NumericResourceAssignmentDto
 {
-    //public int Id { get; set; }
     public int NumericId { get; set; }
-    //public int ResourceAssignmentId { get; set; }
-    public double? MinInputValue { get; set; }
-    public double? MaxInputValue { get; set; }
+    public decimal? MinInputValue { get; set; }
+    public decimal? MaxInputValue { get; set; }
     public List<string> Formulas { get; set; } = [];
 }

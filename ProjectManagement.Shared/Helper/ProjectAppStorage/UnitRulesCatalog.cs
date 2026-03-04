@@ -45,7 +45,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
                         new ParamDef { Key = ParamName.Width,     Source = ParamSource.User }
                         },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000.0) * (p[ParamName.Width] / 1000.0)
+                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 10000) * (p[ParamName.Width] / 10000)
                 },
 
                 [(Units.Piece, Units.CubicMeter)] = new UnitRule

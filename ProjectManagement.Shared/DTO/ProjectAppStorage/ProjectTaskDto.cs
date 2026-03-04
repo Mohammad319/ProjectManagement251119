@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Shared.DTO.ProjectAppStorage;
+
 public class ResourceTenantLinkBase
 {
     public string Name { get; set; } = string.Empty;
@@ -14,11 +15,14 @@ public class ResourceTenantLinkBase
     public int? ResourceTypeId { get; set; }
     public int? ResourceSortId { get; set; }
     public int? AccountId { get; set; }
-    public double? Co2 { get; set; }
-    public double? Cost { get; set; }
-    public double? Quantity { get; set; }
 
+    public double? Co2 { get; set; } // خليها double عادي
+
+    // كانت double -> صارت decimal
+    public decimal? Cost { get; set; }
+    public decimal? Quantity { get; set; }
 }
+
 public class ProjectTaskDto
 {
     public bool Uncontrollable { get; set; }
@@ -30,18 +34,29 @@ public class ProjectTaskDto
     public string Note { get; set; } = string.Empty;
     public List<string> UpperNote { get; set; } = [];
 
-    public double? Quantity { get; set; }
+    // كانت double -> صارت decimal
+    public decimal? Quantity { get; set; }
+
     public string UnitCode { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
-    public double ChangeFactor1 { get; set; } = 1;
-    public double ChangeFactor2 { get; set; } = 1;
+
+    // كانت double -> صارت decimal
+    public decimal ChangeFactor1 { get; set; } = 1;
+    public decimal ChangeFactor2 { get; set; } = 1;
+
     public bool IsActive { get; set; } = true;
     public int? UnitGroupId { get; set; }
     public int? CapacityResourceId { get; set; }
+
     public UnitGroupDto UnitGroup { get; set; } = new();
-    public List<double> WorkloadThresholds { get; set; } = [0, 0, 0];
-    [NotMapped] public Dictionary<ParamName, double> ParameterValues { get; } = [];
+
+    // إذا تستخدمها للـ thresholds (UI فقط) تقدر تتركها double،
+    // لكن الأفضل توحيدها:
+    public List<decimal> WorkloadThresholds { get; set; } = [0, 0, 0];
+
+    [NotMapped] public Dictionary<ParamName, decimal> ParameterValues { get; } = [];
     [NotMapped] public string NewUnitCode { get; set; } = string.Empty;
+
     public List<ResourceDto> BaseResources { get; set; } = [];
     public List<ResourceDto> ResultResources { get; set; } = [];
 
@@ -49,12 +64,14 @@ public class ProjectTaskDto
     public List<ResourceOptionGroupDto> ResourceOptionGroups { get; set; } = [];
     public List<NumericInputDto> NumericInputs { get; set; } = [];
     public List<TaskConditionDto> Conditions { get; set; } = [];
-    [JsonIgnore]public bool Collspanded { get; set; }
+
+    [JsonIgnore] public bool Collspanded { get; set; }
     [JsonIgnore] public bool IsLoading { get; set; }
     [JsonIgnore] public bool Added { get; set; }
     [JsonIgnore] public int StatusId { get; set; }
+
     [JsonIgnore] public List<ResourceDto> Resources => BaseResources.Concat(ResultResources).ToList();
 
-    [JsonIgnore] public double TotalCost => Resources.Where(x => x.Id>0).Sum(x=>x.TotalCost);
-
+    // كانت double -> صارت decimal
+    [JsonIgnore] public decimal TotalCost => Resources.Where(x => x.Id > 0).Sum(x => x.TotalCost);
 }

@@ -373,7 +373,7 @@ else
     [Parameter] public EventCallback<ResourceDto> OnEdit { get; set; }
     [Parameter] public bool NameConfig { get; set; }
     [Parameter] public bool CostConfig { get; set; }
-    [Parameter] public double TotalCost { get; set; }
+    [Parameter] public decimal TotalCost { get; set; }
 
     // يُستدعى عند تغيير Dropdown أو أي تغيّر نريد أن نبلّغ به الأب (TaskCard مثلاً)
     [Parameter] public EventCallback OnChanged { get; set; }

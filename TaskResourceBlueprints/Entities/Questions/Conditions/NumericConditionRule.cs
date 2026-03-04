@@ -11,9 +11,9 @@ namespace TaskResourceBlueprints.Entities.Questions.Conditions
         public int NumericQuestionId { get; set; }
         public NumericQuestionDefinition NumericQuestion { get; set; } = null!;
 
-        public double? MaxAllowedValue { get; set; }
-        public double? MinAllowedValue { get; set; }
-        public double? DefaultValue { get; set; }
+        public decimal? MaxAllowedValue { get; set; }
+        public decimal? MinAllowedValue { get; set; }
+        public decimal? DefaultValue { get; set; }
 
         public int GroupKey { get; set; } = 1;
     }

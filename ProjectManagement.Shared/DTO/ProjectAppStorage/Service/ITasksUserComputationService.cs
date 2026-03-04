@@ -11,7 +11,6 @@ public class ResourceMenuGroup
     public int MenuId { get; set; }
     public List<ResourceDto> Resources { get; set; } = new();
     public int SelectedResourceId { get; set; }
-    // فقط لمساعدة الريندر حتى لا نكرر الصف
     public bool Rendered { get; set; }
 }
 
@@ -19,60 +18,78 @@ public sealed class UserAnswers
 {
     public HashSet<int> SelectedChoiceOptionIds { get; } = [];
     public HashSet<int> SelectedResourceChoiceItemIds { get; } = [];
-    public Dictionary<int, double?> NumericValuesByGroupId { get; } = [];
+
+    // كانت double? -> صارت decimal?
+    public Dictionary<int, decimal?> NumericValuesByGroupId { get; } = [];
 }
+
 public interface ITasksUserComputationServiceWasm
 {
     UserAnswers A(int taskId);
     void ReCalcCostResources(List<ResourceDto> resources);
     void ReCalcCapResources(List<ResourceDto> resources);
-    void CalcQuantityResource(List<ResourceDto> resource, double? taskQuantity);
+
+    // كانت double? -> صارت decimal?
+    void CalcQuantityResource(List<ResourceDto> resource, decimal? taskQuantity);
+
     bool BuildFinalRows(ProjectTaskDto task);
     bool Combine(bool a, bool b, ConditionLogic op);
-    double ComputeOrThrow(string toUnit, string fromUnit, double quantity, IReadOnlyDictionary<ParamName, double> parameters);
+
+    // التحويلات الفيزيائية خليه double (لا علاقة بالمال)
+    double ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters);
 }
+
 public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServiceWasm
 {
     private readonly Dictionary<int, UserAnswers> _answers = [];
-    public void CalcQuantityResource(List<ResourceDto> resources, double? taskQuantity)
+
+    public void CalcQuantityResource(List<ResourceDto> resources, decimal? taskQuantity)
     {
-        if(!taskQuantity.HasValue) taskQuantity = 0;
+        taskQuantity ??= 0m;
+
         foreach (var resource in resources)
         {
-            var baseCalc = (decimal)taskQuantity.Value * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
+            var baseCalc = taskQuantity.Value * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
 
             if (resource.HasWast && resource.Data.CapWaste != 0)
                 resource.Data.Quantity = baseCalc * (1m + resource.Data.CapWaste / 100m);
             else if (resource.HasCap && resource.Data.CapWaste != 0)
                 resource.Data.Quantity = baseCalc / resource.Data.CapWaste;
-            else resource.Data.Quantity = baseCalc;
-
+            else
+                resource.Data.Quantity = baseCalc;
         }
     }
+
     public void ReCalcCostResources(List<ResourceDto> resources)
     {
         foreach (var res in resources)
         {
-            if (res.Data.Quantity.HasValue)
-                foreach (var item in res.CostRole)
-                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
-                    {
-                        res.Data.Cost = (decimal)item.Value.Value;
-                        break;
-                    }
+            if (!res.Data.Quantity.HasValue) continue;
+
+            foreach (var item in res.CostRole)
+                if (res.Data.Quantity.Value >= item.Min && res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
+                {
+                    res.Data.Cost = item.Value.Value;
+                    break;
+                }
         }
     }
+
     public void ReCalcCapResources(List<ResourceDto> resources)
     {
         foreach (var res in resources)
-            if ((res.ResType == ResourceTypesEnum.MachinesAndEquipments || res.ResType == ResourceTypesEnum.Worker)
-                && res.Data.Quantity.HasValue)
-                foreach (var item in res.CapRole)
-                    if ((double)res.Data.Quantity.Value >= item.Min && (double)res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
-                    {
-                        res.Data.CapWaste = (decimal)item.Value.Value;
-                        break;
-                    }
+        {
+            if (!((res.ResType == ResourceTypesEnum.MachinesAndEquipments || res.ResType == ResourceTypesEnum.Worker)
+                && res.Data.Quantity.HasValue))
+                continue;
+
+            foreach (var item in res.CapRole)
+                if (res.Data.Quantity.Value >= item.Min && res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
+                {
+                    res.Data.CapWaste = item.Value.Value;
+                    break;
+                }
+        }
     }
 
     public UserAnswers A(int taskId)
@@ -85,7 +102,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         return a;
     }
 
-    public double ComputeOrThrow(string toUnit, string fromUnit, double quantity, IReadOnlyDictionary<ParamName, double> parameters)
+    public double ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters)
     {
         if (string.IsNullOrWhiteSpace(toUnit) || string.IsNullOrWhiteSpace(fromUnit))
             throw new ArgumentException("اختر وحدتي التحويل أولاً.");
@@ -98,6 +115,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         var missing = rule.Params.Select(p => p.Key).Where(k => !parameters.ContainsKey(k)).ToList();
         if (missing.Count > 0)
             throw new ArgumentException($"القيم الناقصة: {string.Join(", ", missing)}");
+
         return rule.Compute(quantity, parameters);
     }
 
@@ -125,24 +143,26 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             foreach (var ra in cond.ConditionResourceAssignments)
             {
                 if (ra.Resource == null) continue;
+
                 ra.Formulas = [];
                 var resName = ra.Resource.Name;
+
                 decimal cawaste = ra.Resource.Data.CapWaste;
-                // حساب Cap/Waste بحسب الأدوار إن لزم
+
                 if (ra.Resource.ResType == ResourceTypesEnum.MachinesAndEquipments ||
                     ra.Resource.ResType == ResourceTypesEnum.Worker)
                 {
                     foreach (var item in ra.CapRole)
                     {
                         var q = ra.Resource.Data.Quantity;
-                        if (q.HasValue && (double)q.Value >= item.Min && (double)q.Value <= item.Max && item.Value.HasValue)
-                            cawaste = (decimal)item.Value.Value;
+                        if (q.HasValue && q.Value >= item.Min && q.Value <= item.Max && item.Value.HasValue)
+                            cawaste = item.Value.Value;
                     }
                 }
 
-                // تجميع الصيغ من الاختيارات والأرقام
                 GetOptionFormulas(ra, ans.SelectedChoiceOptionIds);
                 GetNumericFormulas(ra, ans.NumericValuesByGroupId);
+
                 ResourceDto res = new()
                 {
                     Id = ra.Resource.Id,
@@ -173,9 +193,11 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     Formulas = ra.Formulas,
                     Properties = ra.Resource.Properties,
                 };
+
                 task.ResultResources.Add(res);
             }
         }
+
         ReCalcCostResources(task.ResultResources);
         ReCalcCapResources(task.ResultResources);
         CalcQuantityResource(task.ResultResources, task.Quantity);
@@ -183,24 +205,24 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         ResourceFormulaApplier.ApplyAll(task.ResultResources, task.ParameterValues);
         return true;
     }
+
     public bool Combine(bool a, bool b, ConditionLogic op)
         => op == ConditionLogic.And ? a && b : a || b;
+
     public void GetOptionFormulas(ResourceAssignmentDto res, HashSet<int> SelectedChoiceOptionIds)
     {
-        List<string> Formulas = [];
-
         if (SelectedChoiceOptionIds.Count == 0) return;
+
+        List<string> formulas = [];
         foreach (var bind in res.OptionResourceFormulas)
-        {
-            if (SelectedChoiceOptionIds.Any(x => x == bind.ChoiceOptionId))
-            {
-                Formulas.AddRange(bind.Formulas);
-            }
-        }
+            if (SelectedChoiceOptionIds.Contains(bind.ChoiceOptionId))
+                formulas.AddRange(bind.Formulas);
+
         res.Formulas ??= [];
-        res.Formulas.AddRange(Formulas);
+        res.Formulas.AddRange(formulas);
     }
-    public void GetNumericFormulas(ResourceAssignmentDto res, Dictionary<int, double?> numericByGroup)
+
+    public void GetNumericFormulas(ResourceAssignmentDto res, Dictionary<int, decimal?> numericByGroup)
     {
         if (numericByGroup is null || numericByGroup.Count == 0) return;
         if (res.NumericResourceFormulas is null || res.NumericResourceFormulas.Count == 0) return;
@@ -222,6 +244,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         res.Formulas ??= [];
         res.Formulas.AddRange(formulas);
     }
+
     public bool EvaluateChoices(TaskConditionDto cond, UserAnswers ans)
         => cond.OptionRequirements.Count == 0 || cond.OptionRequirements
            .GroupBy(r => r.SetKey)
@@ -241,7 +264,6 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     if (!ans.NumericValuesByGroupId.TryGetValue(r.NumericInputId, out var val) || val is null)
                         return false;
 
-                    // إبقاء نفس المقارنة كما في صفحتك
                     return (!r.MaxAllowedValue.HasValue || val.Value <= r.MaxAllowedValue.Value)
                         && (!r.MinAllowedValue.HasValue || val.Value >= r.MinAllowedValue.Value);
                 })
