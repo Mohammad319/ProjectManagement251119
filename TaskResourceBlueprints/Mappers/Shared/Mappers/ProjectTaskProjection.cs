@@ -37,24 +37,26 @@ public static class ProjectTaskProjection
                 BaseResources = t.TaskResourceAssignments.Select(a => new
                     {
                         a,
-                        Link = a.Resource.TenantLinks
-                            .Where(x => x.TenantId == tenantid)
-                            .Select(x => new
-                            {
-                                x.AccountId,
-                                x.Name,
-                                x.ResourceTypeId,
-                                x.ResourceSortId,
-                                x.StatusId,
-                                x.Co2,
-                                x.Cost,
-                            })
-                            .FirstOrDefault() // APPLY/LEFT JOIN واحد فقط
+                        Link = a.Resource != null
+                            ? a.Resource.TenantLinks
+                                .Where(x => x.TenantId == tenantid)
+                                .Select(x => new
+                                {
+                                    x.AccountId,
+                                    x.Name,
+                                    x.ResourceTypeId,
+                                    x.ResourceSortId,
+                                    x.StatusId,
+                                    x.Co2,
+                                    x.Cost,
+                                })
+                                .FirstOrDefault()
+                            : null // APPLY/LEFT JOIN واحد فقط
                     })
                     .Select(z => new ResourceDto
                     {
                         Id = z.a.ResourceId,
-                        Name = z.a.Resource.Name,
+                        Name = z.a.Resource != null ? z.a.Resource.Name : string.Empty,
                         CalcResCost = z.a.Resource.CalcResCost ?? new (),
                         Active = z.a.IsActive,
                         FolderId = z.a.Resource.FolderId,
@@ -63,7 +65,7 @@ public static class ProjectTaskProjection
                         CostRole = z.a.CapacityRoles,
                         CostStorageValue = (double?)z.a.Resource.Data.Cost,
                         CostUserValue = z.Link == null ? null : z.Link.Cost,
-                        NameUserValue = z.Link == null ? null : z.Link.Name,
+                        NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
 
                         AccountId = z.Link == null ? null : z.Link.AccountId,
                         ResourceTypeId = z.Link == null ? (int?)null : z.Link.ResourceTypeId,
@@ -75,10 +77,10 @@ public static class ProjectTaskProjection
                             {
                                 Id = b.AttributeId,
                                 NumberDefault = b.NumericValue,
-                                DataType = b.Attribute.DataType,
-                                DisplayName = b.Attribute.DisplayName,
-                                IsUserEditable = b.Attribute.IsUserEditable,
-                                MaxNumericValue = b.Attribute.MaxNumericValue,
+                                DataType = b.Attribute != null ? b.Attribute.DataType : default,
+                                DisplayName = b.Attribute != null ? b.Attribute.DisplayName : string.Empty,
+                                IsUserEditable = b.Attribute != null && b.Attribute.IsUserEditable,
+                                MaxNumericValue = b.Attribute != null ? b.Attribute.MaxNumericValue : null,
                                 TextDefault = b.TextValue,
                             }).ToList(),
 
@@ -204,19 +206,21 @@ public static class ProjectTaskProjection
                         .Select(a => new
                         {
                             a,
-                            Link = a.Resource.TenantLinks
-                                .Where(x => x.TenantId == tenantid)
-                                .Select(x => new
-                                {
-                                    x.AccountId,
-                                    x.Name,
-                                    x.ResourceTypeId,
-                                    x.ResourceSortId,
-                                    x.StatusId,
-                                    x.Cost,
-                                    x.Co2,
-                                })
-                                .FirstOrDefault()
+                            Link = a.Resource != null
+                                ? a.Resource.TenantLinks
+                                    .Where(x => x.TenantId == tenantid)
+                                    .Select(x => new
+                                    {
+                                        x.AccountId,
+                                        x.Name,
+                                        x.ResourceTypeId,
+                                        x.ResourceSortId,
+                                        x.StatusId,
+                                        x.Cost,
+                                        x.Co2,
+                                    })
+                                    .FirstOrDefault()
+                                : null
                         })
                         .Select(z => new ResourceAssignmentDto
                         {
@@ -227,7 +231,7 @@ public static class ProjectTaskProjection
                             Resource = z.a.Resource == null ? null : new ResourceDto
                             {
                                 Id = z.a.ResourceId,
-                                Name = z.a.Resource.Name,
+                                Name = z.a.Resource != null ? z.a.Resource.Name : string.Empty,
                                 Active = z.a.IsActive,
                                 CostRole = z.a.CapacityRoles,
                                 CapRole = z.a.CapacityRoles,
@@ -254,7 +258,7 @@ public static class ProjectTaskProjection
                                 // --- الحقول المسطّحة بدل UserData ---
                                 CostStorageValue = (double?)z.a.Resource.Data.Cost,
                                 CostUserValue = z.Link == null ? null : z.Link.Cost,
-                                NameUserValue = z.Link == null ? null : z.Link.Name,
+                                NameUserValue = z.Link == null || z.Link.Name == null ? string.Empty : z.Link.Name,
                                 AccountId = z.Link == null ? null : z.Link.AccountId,
                                 ResourceTypeId = z.Link == null ? (int?)null : z.Link.ResourceTypeId,
                                 ResourceSortId = z.Link == null ? (int?)null : z.Link.ResourceSortId,
@@ -265,10 +269,10 @@ public static class ProjectTaskProjection
                                 {
                                     Id = b.Id,
                                     NumberDefault = b.NumericValue,
-                                    DataType = b.Attribute.DataType,
-                                    DisplayName = b.Attribute.DisplayName,
-                                    IsUserEditable = b.Attribute.IsUserEditable,
-                                    MaxNumericValue = b.Attribute.MaxNumericValue,
+                                    DataType = b.Attribute != null ? b.Attribute.DataType : default,
+                                    DisplayName = b.Attribute != null ? b.Attribute.DisplayName : string.Empty,
+                                    IsUserEditable = b.Attribute != null && b.Attribute.IsUserEditable,
+                                    MaxNumericValue = b.Attribute != null ? b.Attribute.MaxNumericValue : null,
                                     TextDefault = b.TextValue,
                                 }).ToList(),
                             },

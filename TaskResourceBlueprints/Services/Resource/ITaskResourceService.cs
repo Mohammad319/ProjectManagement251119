@@ -95,7 +95,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 zz.BaseCost = taskResourceDto.BaseCost;
                 zz.Uncontrollable = taskResourceDto.Uncontrollable;
                 zz.Expressions = taskResourceDto.Formulas;
-                zz.CapacityRoles = taskResourceDto.CapRole;
+                zz.CapacityRoles = taskResourceDto.CapRole ?? [];
                 await db.SaveChangesAsync(ct);
                 return true;
             }
