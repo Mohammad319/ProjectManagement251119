@@ -132,7 +132,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                 case "chf2": Data.ChangeFactor2 = value; break;
                 case "cap": Data.CapWaste = value; break;
                 case "waste": Data.CapWaste = value; break;
-                case "basecost": Data.BaseCost = value; break;
+                case "basecost": Data.BaseCost = (decimal)value; break;
 
                 default: Console.WriteLine($"⚠️ المتغير {name} غير معرف داخل المورد."); break;
             }
