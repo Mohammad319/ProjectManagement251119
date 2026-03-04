@@ -304,7 +304,7 @@ else
 
                 @if (Task?.ResourceSelectors?.Count > 0)
                 {
-                    @foreach (var g in (Task?.ResourceSelectors ?? []).OrderBy(x => x.SortOrder))
+                    @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
                     {
                         <div class="@NewCC.Card.SubPanel">
                             <div class="@CsS.Grid.Col.MD12">
