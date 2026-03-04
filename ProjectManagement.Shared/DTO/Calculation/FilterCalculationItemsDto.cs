@@ -10,9 +10,9 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class FilterCalculationItemsDto
     {
         public int Status { get; set; }
-        public string Name { get; set; }
-        public string Code { get; set; }
-        public string Unit { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public int Page { get; set; }
         public int AccountGroup { get; set; }
         public int Account { get; set; }

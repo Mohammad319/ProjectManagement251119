@@ -6,14 +6,14 @@ namespace ProjectManagement.Shared.DTO.Folder
     public class PostFolderDTO : FolderBase{    }
 
     public class DetailsFolderDTO : FolderBase {
-        public string Department { get; set; }
-        public string CreateBy { get; set; }
+        public string Department { get; set; } = string.Empty;
+        public string CreateBy { get; set; } = string.Empty;
     }
 
     public class ListFolderDTO
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public double Order { get; set; }
         public string Color { get; set; } = "#08bf66";
     }
