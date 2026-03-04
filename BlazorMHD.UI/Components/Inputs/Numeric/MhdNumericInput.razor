@@ -40,22 +40,19 @@
 
     [Parameter] public MhdSize Size { get; set; } = MhdSize.Sm;
 
-    [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object>? AdditionalAttributes { get; set; }
-
-    protected override bool TryParseValueFromString(string? value, out decimal? result, out string? validationErrorMessage)
+    protected override bool TryParseValueFromString(string? value, out decimal? result, out string validationErrorMessage)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
             result = null;
-            validationErrorMessage = null;
+            validationErrorMessage = string.Empty;
             return true;
         }
 
         if (decimal.TryParse(value, out var parsed))
         {
             result = parsed;
-            validationErrorMessage = null;
+            validationErrorMessage = string.Empty;
             return true;
         }
 

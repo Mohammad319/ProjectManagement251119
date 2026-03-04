@@ -2,8 +2,8 @@
     [CascadingParameter] public MhdCard Parent { get; set; } = default!;
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        Parent.Footer = ChildContent;
+        Parent.SetFooter(ChildContent);
     }
 }

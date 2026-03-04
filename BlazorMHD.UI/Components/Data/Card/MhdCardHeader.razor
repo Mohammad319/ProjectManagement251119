@@ -3,8 +3,8 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        Parent.Header = ChildContent;
+        Parent.SetHeader(ChildContent);
     }
 }

@@ -8,21 +8,21 @@
         </div>
     }
 
-    @if (Header is not null)
+    @if (ResolvedHeader is not null)
     {
         <div class="@($"{BasePadding} border-b border-gray-200 dark:border-gray-700")">
-            @Header
+            @ResolvedHeader
         </div>
     }
 
     <div class="@BasePadding">
-        @ChildContent
+        @ResolvedBody
     </div>
 
-    @if (Footer is not null)
+    @if (ResolvedFooter is not null)
     {
         <div class="@($"{BasePadding} border-t border-gray-200 dark:border-gray-700")">
-            @Footer
+            @ResolvedFooter
         </div>
     }
 </div>
@@ -47,6 +47,18 @@
     [Parameter] public CardInteractionMode Interaction { get; set; } = CardInteractionMode.None;
     [Parameter] public bool Elevated { get; set; } = false;
     [Parameter] public bool Compact { get; set; } = false;
+
+    private RenderFragment? _headerContent;
+    private RenderFragment? _bodyContent;
+    private RenderFragment? _footerContent;
+
+    internal void SetHeader(RenderFragment? content) => _headerContent = content;
+    internal void SetBody(RenderFragment? content) => _bodyContent = content;
+    internal void SetFooter(RenderFragment? content) => _footerContent = content;
+
+    private RenderFragment? ResolvedHeader => _headerContent ?? Header;
+    private RenderFragment? ResolvedBody => _bodyContent ?? ChildContent;
+    private RenderFragment? ResolvedFooter => _footerContent ?? Footer;
 
     private string BasePadding => Compact ? "px-2 py-1.5" : "px-3 py-2";
 
