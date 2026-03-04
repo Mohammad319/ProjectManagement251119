@@ -27,7 +27,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             ChangeFactor2 = x.ChangeFactor2,
             ResIdCap = x.CapacityResourceId,
             Note = x.FieldNotes ?? string.Empty,
-            Quantity = x.Quantity,
+            Quantity = (double?)x.Quantity,
             Unit = x.UnitCode ?? string.Empty,
             Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
             {

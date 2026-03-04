@@ -33,7 +33,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                     FromUnit = Units.SquareMeter,
                     ToUnit = Units.CubicMeter,
                     Params = { new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User } },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000.0)
+                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000m)
                 },
 
                 [(Units.Meter, Units.CubicMeter)] = new UnitRule
@@ -59,9 +59,9 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Length,    Source = ParamSource.User }
                     },
                     Compute = (Q, p) => Q
-                    * (p[ParamName.Thickness] / 1000.0)
-                    * (p[ParamName.Width] / 1000.0)
-                    * (p[ParamName.Length] / 1000.0)
+                    * (p[ParamName.Thickness] / 1000m)
+                    * (p[ParamName.Width] / 1000m)
+                    * (p[ParamName.Length] / 1000m)
                 },
                 [(Units.Ton, Units.CubicMeter)] = new UnitRule
                 {
@@ -93,7 +93,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
                         new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
                     },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000.0) * p[ParamName.Density]
+                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000m) * p[ParamName.Density]
                 },
                 [(Units.Meter, Units.Ton)] = new UnitRule
                 {
@@ -105,8 +105,8 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Width,     Source = ParamSource.User },
                         new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
                     },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000.0) 
-                    * (p[ParamName.Width] / 1000.0) 
+                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000m)
+                    * (p[ParamName.Width] / 1000m)
                     * p[ParamName.Density]
                 },
                 [(Units.Piece, Units.Ton)] = new UnitRule
@@ -121,16 +121,16 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
                 },
                     Compute = (Q, p) =>(Q
-                     * (p[ParamName.Thickness] / 1000.0)
-                     * (p[ParamName.Width] / 1000.0)
-                     * (p[ParamName.Length] / 1000.0))
+                     * (p[ParamName.Thickness] / 1000m)
+                     * (p[ParamName.Width] / 1000m)
+                     * (p[ParamName.Length] / 1000m))
                     * p[ParamName.Density]
                 },
                 //معدلات لا تحتاج الى مدخلات خارجية
-                [(Units.Kilometer, Units.Meter)] = new UnitRule { FromUnit = Units.Kilometer, ToUnit = Units.Meter, Compute = (Q, _) => Q * 1000.0 },
-                [(Units.Centimeter, Units.Meter)] = new UnitRule { FromUnit = Units.Centimeter, ToUnit = Units.Meter, Compute = (Q, _) => Q / 100.0 },
-                [(Units.Millimeter, Units.Meter)] = new UnitRule { FromUnit = Units.Millimeter, ToUnit = Units.Meter, Compute = (Q, _) => Q / 1000.0 },
-                [(Units.Gram, Units.Kilogram)] = new UnitRule { FromUnit = Units.Gram, ToUnit = Units.Kilogram, Compute = (Q, _) => Q / 1000.0 },
+                [(Units.Kilometer, Units.Meter)] = new UnitRule { FromUnit = Units.Kilometer, ToUnit = Units.Meter, Compute = (Q, _) => Q * 1000m },
+                [(Units.Centimeter, Units.Meter)] = new UnitRule { FromUnit = Units.Centimeter, ToUnit = Units.Meter, Compute = (Q, _) => Q / 100m },
+                [(Units.Millimeter, Units.Meter)] = new UnitRule { FromUnit = Units.Millimeter, ToUnit = Units.Meter, Compute = (Q, _) => Q / 1000m },
+                [(Units.Gram, Units.Kilogram)] = new UnitRule { FromUnit = Units.Gram, ToUnit = Units.Kilogram, Compute = (Q, _) => Q / 1000m },
                 [(Units.Kilogram, Units.Kilogram)] = new UnitRule { FromUnit = Units.Kilogram, ToUnit = Units.Kilogram, Compute = (Q, _) => Q },
                 [(Units.Ton, Units.Ton)] = new UnitRule { FromUnit = Units.Ton, ToUnit = Units.Ton, Compute = (Q, _) => Q },
                 [(Units.Meter, Units.Meter)] = new UnitRule { FromUnit = Units.Meter, ToUnit = Units.Meter, Compute = (Q, _) => Q },

@@ -5,7 +5,7 @@
         string? Code,
         string DisplayName,
         string? UnitCode,
-        double? Quantity,
+        decimal? Quantity,
         bool IsActive
     )
     {

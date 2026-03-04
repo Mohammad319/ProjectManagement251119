@@ -39,8 +39,8 @@ public sealed class NumericBindVM
 {
     public int Id { get; set; }
     public int NumericId { get; set; }
-    public double? InputMinValue { get; set; }
-    public double? InputMaxValue { get; set; }
+    public decimal? InputMinValue { get; set; }
+    public decimal? InputMaxValue { get; set; }
     public List<string> Formulas { get; set; } = new();
     public bool SavedOk { get; set; }
     public string? LastError { get; set; }
