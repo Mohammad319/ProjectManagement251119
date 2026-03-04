@@ -41,7 +41,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var task = calculation?.Tasks?.FirstOrDefault(x => x.Id == id);
                 if (task == null) continue;
 
-                calculation.Tasks.Remove(task);
+                calculation.Tasks?.Remove(task);
 
                 if (task.TaskId.HasValue && task.TaskId > 0)
                 {

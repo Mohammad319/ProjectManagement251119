@@ -135,15 +135,14 @@ else
     private EditContext? editContext;
 
     // UI state
-    private int selectWidth = 160;
     private bool isRefreshing = false;
     private bool isSubmitting = false;
     private string? error;
 
     // Selections
-    private AccountGroupsListDto AccountGroupSelected;
+    private AccountGroupsListDto? AccountGroupSelected;
     private int? accountGroupId;
-    private ListResourceTypeDTO ResTypeSelected;
+    private ListResourceTypeDTO? ResTypeSelected;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -242,7 +241,8 @@ else
             {
                 // Sync the displayed resource with edited values
                 Resource.NameUserValue = ResourceUpdate.Name;
-                Resource.Data.CO2 = ResourceUpdate.Co2;
+                if (Resource.Data is not null)
+                    Resource.Data.CO2 = ResourceUpdate.Co2;
                 Resource.CostUserValue = ResourceUpdate.Cost;
 
                 Resource.AccountId = ResourceUpdate.AccountId;

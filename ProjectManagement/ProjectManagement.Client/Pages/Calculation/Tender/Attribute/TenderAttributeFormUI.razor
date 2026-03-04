@@ -39,13 +39,13 @@
 @code {
     void OnChange(ChangeEventArgs ev,int i)
     {
-        if (string.IsNullOrEmpty(ev.Value.ToString()))
+        if (string.IsNullOrEmpty(ev.Value?.ToString()))
         {
             TendersValues[i] = 0;
         }
         else
         {
-            string s = ev.Value.ToString();
+            string s = ev.Value?.ToString() ?? "0";
             var t = Convert.ToDouble(s);
             TendersValues[i] = t;
         }
@@ -55,8 +55,8 @@
     [Parameter] public List<TenderListDTO> Tenders { get; set; } = new();
     [Parameter] public int CalcId { get; set; }
 
-    [Parameter] public TenderAttributeListDTO TenderAttribute { get; set; }
-    TenderAttributeListPostDTO Post;
+    [Parameter] public TenderAttributeListDTO TenderAttribute { get; set; } = new();
+    TenderAttributeListPostDTO Post = new();
     Dictionary<int, double> TendersValues = new Dictionary<int, double>();
     protected override void OnInitialized()
     {

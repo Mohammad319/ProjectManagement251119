@@ -123,23 +123,24 @@ else
 }
 @code {
     [Parameter] public int Tab { get; set; } = 0;
-    TemplateListPostDTO Form;
+    TemplateListPostDTO? Form;
     void CallBack(bool refrsh){
         Refresh();
         Form = null;
     }
 RenderFragment RenderForm() => __builder =>
 {
+        if (Form is null) return;
         if (Tab == 1) __builder.AddContent(0, (RenderFragment)(b => b.AddContent(0,@<NelCalculationTemplate2 Temp="Form" />)));
         else if (Tab == 3) __builder.AddContent(1,@<SummarySheetTemplate Temp="Form" />);
 };
-    List<TemplateMVVM> List;
+    List<TemplateMVVM> List = [];
     bool btnSubmitDisabled = false;
     bool Loading = true;
     void Refresh() => Calc.NotifyGridRefresh(flatListDirty: true);
     protected async override Task OnInitializedAsync()
     {
-        List = await Repo.Template.GetAsync();
+        List = await Repo.Template.GetAsync() ?? [];
         if ( (List == null || !List.Any()))
         {
             MHD.MessageOk(ResourceApp.thereIsNoElements,
@@ -167,7 +168,7 @@ RenderFragment RenderForm() => __builder =>
         btnSubmitDisabled = true;
         try
         {
-            if (await Repo.Template.UpdateAsync(Form, Calc.TemplateId.Value))
+            if (Form is not null && Calc.TemplateId.HasValue && await Repo.Template.UpdateAsync(Form, Calc.TemplateId.Value))
                 Form.CopyPropertiesTo(Calc.Template);
             Refresh();
         }

@@ -63,11 +63,17 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
             if (ot == OperationType.RemoveRange)
             {
-                calc.RemoveTasks(obj.FromJsonWeb<List<int>>());
+                var ids = obj.FromJsonWeb<List<int>>();
+                if (ids is null)
+                    return;
+
+                calc.RemoveTasks(ids);
             }
             else if (ot == OperationType.Update)
             {
                 var task = obj.FromJsonWeb<TaskListMVVM>();
+                if (task is null)
+                    return;
 
                 // ✅ O(1)
                 if (!calc.TryGetTask(task.Id, out var oldSection) || oldSection == null)
@@ -88,13 +94,20 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             else if (ot == OperationType.AddRange)
             {
                 var tasks = obj.FromJsonWeb<List<TaskListMVVM>>();
+                if (tasks is null)
+                    return;
                 calc.AddTasks(tasks);
             }
             else if (ot == OperationType.MoveRange)
             {
                 var list = obj.FromJsonWeb<Tuple<List<TaskListMVVM>, List<int>>>();
-                if (list != null) calc.RemoveTasks(list.Item2);
-                calc.AddTasks(list.Item1);
+                if (list is null)
+                    return;
+
+                if (list.Item2 is not null)
+                    calc.RemoveTasks(list.Item2);
+                if (list.Item1 is not null)
+                    calc.AddTasks(list.Item1);
             }
         }
 
