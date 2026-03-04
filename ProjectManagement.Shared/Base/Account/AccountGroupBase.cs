@@ -8,7 +8,7 @@ namespace ProjectManagement.Shared.Base.Account
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         public DateTime LastUpdate { get; set; } = DateTime.Now;
     }
 }

@@ -73,7 +73,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             Values.Add(Data.Cost);
         }
         public int Id { get; set; }
-        public string Group { get; set; }
+        public string Group { get; set; } = string.Empty;
         public List<ConditionDto> ConditionEffect { get; set; } = new();
         public List<RoleDTO> CapRole { get; set; } = [];
         public List<int> ConditionTaskIds { get; set; } = new();

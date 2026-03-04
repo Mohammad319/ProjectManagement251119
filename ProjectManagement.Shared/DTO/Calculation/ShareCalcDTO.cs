@@ -27,8 +27,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class ListShareCalcDTO
     {
         public int Id { get; set; }
-        public string Department { get; set; }
-        public string User { get; set; }
+        public string Department { get; set; } = string.Empty;
+        public string User { get; set; } = string.Empty;
         public int DepartmentId { get; set; }
         public int? UserId { get; set; }
         public bool Tap1 { get; set; }

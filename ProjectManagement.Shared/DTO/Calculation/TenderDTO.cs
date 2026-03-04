@@ -6,8 +6,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
     public class TenderAttributeListPostDTO : AttributeNameTenderBase
     {
-        public Dictionary<int, double> TendersValues { get; set; }
-
+        public Dictionary<int, double> TendersValues { get; set; } = [];
     }
     public class TenderAttributeListDTO : AttributeNameTenderBase
     {
@@ -16,13 +15,13 @@ namespace ProjectManagement.Shared.DTO.Calculation
     }
     public class TenderAttributePostDTO
     {
-        public string Note { get; set; }
-        public string Name { get; set; }
+        public string Note { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
     public class TenderPostDTO
     {
         public Dictionary<int, double> AttributesValue { get; set; } = new();
-        public string Note { get; set; }
+        public string Note { get; set; } = string.Empty;
         public int CompanyId { get; set; }
     }
 
@@ -36,11 +35,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
     {
         public int Id { get; set; }
         public int CompanyId { get; set; }
-        public string Company { get; set; }
-        public string Category { get; set; }
-        public string SubCategory { get; set; }
-
-        public List<ValuesList> Values { get; set; }
+        public string Company { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string SubCategory { get; set; } = string.Empty;
+        public List<ValuesList> Values { get; set; } = [];
     }
     public class ValuesList
     {
@@ -52,8 +50,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class TenderDetailsDTO : TenderBase
     {
         public int Id { get; set; }
-        public string Company { get; set; }
-        public string Category { get; set; }
-        public string SubCategory { get; set; }
+        public string Company { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string SubCategory { get; set; } = string.Empty;
     }
 }

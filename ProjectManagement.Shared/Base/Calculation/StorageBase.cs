@@ -9,7 +9,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 {
     public class StorageBase
     {
-        public string StorageValue { get; set; }
+        public string StorageValue { get; set; } = string.Empty;
         public CalculationItemType StorageType { get; set; }
         public StorageSort StorageSort { get; set; }
         public AuthorityStorage StorageLevel { get; set; }
