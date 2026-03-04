@@ -38,7 +38,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     ChangeFactor1 = res.ChangeFactor1,
                     ChangeFactor2 = res.ChangeFactor2,
                     CapWaste = res.CapWaste,
-                    BaseCost = (double?)res.BaseCost,
+                    BaseCost = res.BaseCost,
                     Quantity = res.Resource.Data.Quantity,
                     Unit = res.Resource.Data.Unit,
                     Cost = res.Resource.Data.Cost,
@@ -53,10 +53,10 @@ namespace TaskResourceBlueprints.Services.ProjectTask
     {
         [JsonIgnore] public CalcResCost? CalcResCost;
         public int? MenuId { get; set; }
-        public double ChangeFactor1 { get; set; } = 1;
-        public double ChangeFactor2 { get; set; } = 1;
-        public double CapWaste { get; set; } = 1;
-        public double? BaseCost { get; set; } = 0;
+        public decimal ChangeFactor1 { get; set; } = 1;
+        public decimal ChangeFactor2 { get; set; } = 1;
+        public decimal CapWaste { get; set; } = 1;
+        public decimal? BaseCost { get; set; } = 0;
         public bool Uncontrollable { get; set; } = false;
         public bool Active { get; set; } = false;
         public List<RoleDTO>? CapRole { get; set; } = [];

@@ -50,8 +50,8 @@ namespace TaskResourceBlueprints.Services.Resource
                     r.Data.ChangeFactor1,
                     r.Data.ChangeFactor2,
                     r.Data.CapWaste,
-                    (double?)r.Data.Cost,
-                    (double?)r.Data.BaseCost,
+                    r.Data.Cost,
+                    r.Data.BaseCost,
                     assignedIds.Contains(r.Id)
                 ))
                 .ToListAsync(ct);
@@ -151,7 +151,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 ChangeFactor1 = r.ChangeFactor1,
                 ChangeFactor2 = r.ChangeFactor2,
                 CapWaste = r.CapWaste,
-                BaseCost = (double?)r.BaseCost,
+                BaseCost = r.BaseCost,
             });
 
             await db.SaveChangesAsync(ct);

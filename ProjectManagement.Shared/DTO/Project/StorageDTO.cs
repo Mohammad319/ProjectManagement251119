@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace ProjectManagement.Shared.DTO.Project
 {
-    public sealed record ResourceTaskItemDTO(int Id, double? Value);
+    public sealed record ResourceTaskItemDTO(int Id, decimal? Value);
 
     public class PostStorygeDTO
     {

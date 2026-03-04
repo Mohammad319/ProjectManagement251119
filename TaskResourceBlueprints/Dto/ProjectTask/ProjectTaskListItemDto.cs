@@ -15,10 +15,9 @@
     public sealed record ResourceTaskIndexDto(
     int Id,
     string DisplayName,
-        double Chf1,
-    double Chf2,
+        decimal Chf1,
+    decimal Chf2,
     string Unit,
-
     bool IsActive
 );
 }

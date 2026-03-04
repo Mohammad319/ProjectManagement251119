@@ -14,10 +14,10 @@ namespace TaskResourceBlueprints.Entities.Questions.Assignments
         public ConditionDefinition Condition { get; set; } = null!;
         public int? MenuId { get; set; }
 
-        public double ChangeFactor1 { get; set; } = 1;
-        public double ChangeFactor2 { get; set; } = 1;
-        public double CapWaste { get; set; } = 1;
-        public double? BaseCost { get; set; } = 0;
+        public decimal ChangeFactor1 { get; set; } = 1;
+        public decimal ChangeFactor2 { get; set; } = 1;
+        public decimal CapWaste { get; set; } = 1;
+        public decimal? BaseCost { get; set; } = 0;
         public bool Uncontrollable { get; set; } = false;
         public bool IsActive { get; set; } = true;
 

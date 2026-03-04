@@ -11,12 +11,12 @@
         string Name,
         string ResourceType, // أو enum->string
         string? UnitCode,
-        double? Quantity,
-        double ChangeFactor1,
-        double ChangeFactor2,
-        double WasteFactor,  // كان CapWaste
-        double? Cost,
-        double? BaseCost,
+        decimal? Quantity,
+        decimal ChangeFactor1,
+        decimal ChangeFactor2,
+        decimal WasteFactor,  // كان CapWaste
+        decimal? Cost,
+        decimal? BaseCost,
         bool IsAssigned      // هل مربوط بالمهمة؟
     );
 }
