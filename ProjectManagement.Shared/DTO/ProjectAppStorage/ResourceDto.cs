@@ -30,7 +30,7 @@ public class ResourceDto: ResourceDLBase
     public int? ResourceTypeId { get; set; }
     public int? ResourceSortId { get; set; }
     public int? AccountId { get; set; }
-    [JsonIgnore] public double TotalCost => (Data.Cost * Data.Quantity.GetValueOrDefault()) + Data.BaseCost.GetValueOrDefault();
+    [JsonIgnore] public double TotalCost => (double)((Data.Cost * (decimal)Data.Quantity.GetValueOrDefault()) + Data.BaseCost.GetValueOrDefault());
 
     [JsonIgnore] public ResourceSource ResourceSource = ResourceSource.Base;
     [JsonIgnore] public bool IsAdded { get; set; }
