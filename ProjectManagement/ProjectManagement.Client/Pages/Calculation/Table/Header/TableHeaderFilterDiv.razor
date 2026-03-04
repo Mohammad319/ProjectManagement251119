@@ -230,7 +230,7 @@
         </td>
     }
 
-    @foreach (var obj in Template?.NetCalc?.Columns ?? Enumerable.Empty<NetColmunDTO>())//Template.NetOrder)
+    @foreach (var obj in Template?.NetCalc?.Columns ?? Enumerable.Empty<NetColumnState>())//Template.NetOrder)
     {
         <td @onclick="(e) => EnterCodeClick(e, obj.Id)">
             @if (obj.Id  == NetColumnId.Status)
