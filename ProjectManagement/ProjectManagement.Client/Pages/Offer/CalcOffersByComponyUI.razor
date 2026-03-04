@@ -313,7 +313,7 @@
         }
     }
 
-    private double Format(double? x) => Template.Format(x ?? 0);
+    private string Format(double? x) => Template.Format(x ?? 0);
 
     async Task SetDefaultAsync(ResourceListMVVM res, ListOfferMVVM offer)
     {
