@@ -25,7 +25,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             ChangeFactor1 = x.ChangeFactor1,
             ChangeFactor2 = x.ChangeFactor2,
             ResIdCap = x.CapacityResourceId,
-            Note = x.FieldNotes,
+            Note = x.FieldNotes ?? string.Empty,
             Quantity = x.Quantity,
             Unit = x.UnitCode ?? string.Empty,
             Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
@@ -121,8 +121,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             if (!string.IsNullOrEmpty(filter.NameOrCode))
             {
                 var search = filter.NameOrCode;
-                query = query.Where(x => x.Code.Contains(search!) ||
-                x.Name.Contains(search!));
+                query = query.Where(x => (x.Code ?? string.Empty).Contains(search) ||
+                x.Name.Contains(search));
             }
             return await query.TasksBaseToDto(tenantid).ToListAsync(ct);
         }

@@ -150,7 +150,7 @@ namespace Persistence.Service.Offer
                 OperationType.Update,
                 new HubDataDto
                 {
-                    Parent = offerId?.ToString(), // Null-safe
+                    Parent = offerId?.ToString() ?? string.Empty, // Null-safe
                     ParentId = resourceId
                 }
             );
@@ -225,7 +225,7 @@ namespace Persistence.Service.Offer
                     Id = x.Id,
                     BaseCost = x.Metadata.BaseCost,
                     Cost = x.Metadata.Cost,
-                    Comment = x.Comment,
+                    Comment = x.Comment ?? string.Empty,
                     Date = x.Date,
                     Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,
                     Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? x.Organisation.OrganisationCategory.ParentCategory.Name : string.Empty,
@@ -262,7 +262,7 @@ namespace Persistence.Service.Offer
                 BaseCost = x.Metadata.BaseCost,
                 Cost = x.Metadata.Cost,
                 Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,
-                Comment = x.Comment,
+                Comment = x.Comment ?? string.Empty,
                 Date = x.Date,
                 OrganisationId = x.OrganisationId,
                 SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? x.Organisation.OrganisationCategory.Name : string.Empty,
@@ -278,7 +278,7 @@ namespace Persistence.Service.Offer
                     BaseCost = x.Metadata.BaseCost,
                     Cost = x.Metadata.Cost,
                     Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,
-                    Comment = x.Comment,
+                    Comment = x.Comment ?? string.Empty,
                     Date = x.Date,
                     OrganisationId = x.OrganisationId,
                     SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? x.Organisation.OrganisationCategory.Name : string.Empty,
