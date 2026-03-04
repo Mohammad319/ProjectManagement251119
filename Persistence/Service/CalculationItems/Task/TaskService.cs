@@ -75,9 +75,11 @@ namespace Persistence.Service.CalculationItems.Task
         {
             if (tasks is null || tasks.Count == 0)
                 return false;
+
+            var safeTasks = tasks;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            int? parentTaskId = tasks?.FirstOrDefault()?.ParentTaskId;
+            int? parentTaskId = safeTasks.FirstOrDefault()?.ParentTaskId;
 
             if (parentTaskId.HasValue && parentTaskId > 0)
             {
@@ -88,11 +90,11 @@ namespace Persistence.Service.CalculationItems.Task
                     return false;
 
                 // كل التاسكات تابعة لنفس الـ Parent
-                if (tasks.Any(t => t.ParentTaskId != parentTask.Id))
+                if (safeTasks.Any(t => t.ParentTaskId != parentTask.Id))
                     return false;
 
                 // توحيد IsOH بناء على Parent
-                foreach (var task in tasks)
+                foreach (var task in safeTasks)
                     task.Metadata.IsOH = parentTask.Metadata.IsOH;
             }
             else
@@ -104,7 +106,7 @@ namespace Persistence.Service.CalculationItems.Task
                     return false;
             }
 
-            var entities = tasks
+            var entities = safeTasks
                 .Select(t => TaskMapper.MapToTaskEntity(t, targetCalcId))
                 .ToList();
 

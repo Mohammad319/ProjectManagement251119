@@ -67,14 +67,14 @@ namespace Persistence.Service.Organisation
                 Category = x.OrganisationCategory?.ParentCategory?.Name,
                 SubCategory = x.OrganisationCategory?.Name,
                 Type = x.OrganisationType?.Name,
-                Address = x.Metadata.Address,
-                Contacts = x.Metadata.Contacts,
-                Email = x.Metadata.Email,
-                Mobile = x.Metadata.Mobile,
-                Notes = x.Metadata.Notes,
+                Address = x.Metadata.Address ?? [],
+                Contacts = x.Metadata.Contacts ?? [],
+                Email = x.Metadata.Email ?? string.Empty,
+                Mobile = x.Metadata.Mobile ?? string.Empty,
+                Notes = x.Metadata.Notes ?? [],
                 Rating = x.Metadata.Rating,
-                Status = x.Metadata.Status,
-                URL = x.Metadata.URL
+                Status = x.Metadata.Status ?? string.Empty,
+                URL = x.Metadata.URL ?? string.Empty
             };
         }
 
@@ -94,12 +94,12 @@ namespace Persistence.Service.Organisation
                 CategoryId = x.OrganisationCategoryId,
                 OrganisationTypeID = x.OrganisationTypeId,
                 IsVisible = x.IsVisible,
-                Address = x.Metadata.Address,
-                Contacts = x.Metadata.Contacts,
-                Email = x.Metadata.Email,
-                Notes = x.Metadata.Notes,
+                Address = x.Metadata.Address ?? [],
+                Contacts = x.Metadata.Contacts ?? [],
+                Email = x.Metadata.Email ?? string.Empty,
+                Notes = x.Metadata.Notes ?? [],
                 Rating = x.Metadata.Rating,
-                URL = x.Metadata.URL
+                URL = x.Metadata.URL ?? string.Empty
             };
         }
 
@@ -115,9 +115,9 @@ namespace Persistence.Service.Organisation
                 {
                     Id = x.Id,
                     Name = x.Name,
-                    Category = x.OrganisationCategory.ParentCategory.Name,
-                    SubCategory = x.OrganisationCategory.Name,
-                    Type = x.OrganisationType.Name
+                    Category = x.OrganisationCategory != null && x.OrganisationCategory.ParentCategory != null ? x.OrganisationCategory.ParentCategory.Name : string.Empty,
+                    SubCategory = x.OrganisationCategory != null ? x.OrganisationCategory.Name : string.Empty,
+                    Type = x.OrganisationType != null ? x.OrganisationType.Name : string.Empty
                 })
                 .ToListAsync(ct);
         }

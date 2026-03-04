@@ -173,9 +173,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                         // initialized; later overwritten by loaded metadata
                         Metadata = new TaskMetadata(),
 
-                        Status = row.TaskStatusName,
-                        StatusColor = row.TaskStatusColor,
-                        Opportunity = row.TaskOpportunity,
+                        Status = row.TaskStatusName ?? string.Empty,
+                        StatusColor = row.TaskStatusColor ?? string.Empty,
+                        Opportunity = row.TaskOpportunity ?? string.Empty,
                         Resources = []
                     };
 
@@ -209,13 +209,13 @@ namespace Persistence.Service.CalculationItems.Calculation
                         // initialized; later overwritten by loaded metadata
                         Data = new ResourceMetadata(),
 
-                        Opportunity = row.ResourceOpportunity,
-                        StatusColor = row.ResourceStatusColor,
-                        Status = row.ResourceStatus,
-                        Sort = row.ResourceSort,
-                        ResName = row.ResourceTypeName,
-                        Account = row.ResourceAccount,
-                        AccountCode = row.ResourceAccountCode,
+                        Opportunity = row.ResourceOpportunity ?? string.Empty,
+                        StatusColor = row.ResourceStatusColor ?? string.Empty,
+                        Status = row.ResourceStatus ?? string.Empty,
+                        Sort = row.ResourceSort ?? string.Empty,
+                        ResName = row.ResourceTypeName ?? string.Empty,
+                        Account = row.ResourceAccount ?? string.Empty,
+                        AccountCode = row.ResourceAccountCode ?? string.Empty,
                         Offers = []
                     };
 
@@ -234,9 +234,9 @@ namespace Persistence.Service.CalculationItems.Calculation
                         Comment = row.OfferComment,
                         Date = row.OfferDate ?? default,
                         OrganisationId = row.OfferOrganisationId ?? 0,
-                        Organisation = row.OfferOrganisation,
-                        SubCategory = row.OfferSubCategory,
-                        Category = row.OfferCategory
+                        Organisation = row.OfferOrganisation ?? string.Empty,
+                        SubCategory = row.OfferSubCategory ?? string.Empty,
+                        Category = row.OfferCategory ?? string.Empty
                     });
                 }
             }

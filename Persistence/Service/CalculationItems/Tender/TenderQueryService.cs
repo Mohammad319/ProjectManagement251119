@@ -22,9 +22,9 @@ namespace Persistence.Service.CalculationItems.Tender
                 {
                     Id = x.Id,
                     CompanyId = x.OrganisationId,
-                    Company = x.Organisation.Name ?? string.Empty,
-                    Category = x.Organisation.OrganisationCategory.Name ?? string.Empty,
-                    SubCategory = x.Organisation!.OrganisationCategory!.ParentCategory!.Name ?? string.Empty,
+                    Company = x.Organisation != null ? x.Organisation.Name ?? string.Empty : string.Empty,
+                    Category = x.Organisation != null && x.Organisation.OrganisationCategory != null ? x.Organisation.OrganisationCategory.Name ?? string.Empty : string.Empty,
+                    SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? x.Organisation.OrganisationCategory.ParentCategory.Name ?? string.Empty : string.Empty,
                     Values = x.TendersAttributes.Select(a => new ValuesList
                     {
                         AttributeID = a.TenderAttributeId,
@@ -40,7 +40,7 @@ namespace Persistence.Service.CalculationItems.Tender
                 {
                     Id = x.Id,
                     Name = x.Name ?? string.Empty,
-                    Note = x.Note
+                    Note = x.Note ?? string.Empty
                 })
                 .ToListAsync(ct);
 
@@ -64,10 +64,10 @@ namespace Persistence.Service.CalculationItems.Tender
                 .Select(x => new TenderDetailsDTO
                 {
                     Id = x.Id,
-                    Company = x.Organisation.Name ?? string.Empty,
-                    Category = x.Organisation.OrganisationCategory.Name ?? string.Empty,
-                    SubCategory = x.Organisation!.OrganisationCategory!.ParentCategory!.Name ?? string.Empty,
-                    Note = x.Note
+                    Company = x.Organisation != null ? x.Organisation.Name ?? string.Empty : string.Empty,
+                    Category = x.Organisation != null && x.Organisation.OrganisationCategory != null ? x.Organisation.OrganisationCategory.Name ?? string.Empty : string.Empty,
+                    SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? x.Organisation.OrganisationCategory.ParentCategory.Name ?? string.Empty : string.Empty,
+                    Note = x.Note ?? string.Empty
                 })
                 .FirstOrDefaultAsync(ct);
         }

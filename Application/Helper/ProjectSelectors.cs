@@ -13,8 +13,8 @@ namespace Application.Helper
             x => new ListProjectDTO
             {
                 Id = x.Id,
-                Name = x.Name,
-                Code = x.Code,
+                Name = x.Name ?? string.Empty,
+                Code = x.Code ?? string.Empty,
                 StartDate = x.StartDate,
                 EndDate = x.EndDate,
                 Order = x.SortOrder
@@ -23,8 +23,8 @@ namespace Application.Helper
         public static Expression<Func<ProjectEntity, PostProjectDTO>> Post =>
             x => new PostProjectDTO
             {
-                Name = x.Name,
-                Code = x.Code,
+                Name = x.Name ?? string.Empty,
+                Code = x.Code ?? string.Empty,
                 StartDate = x.StartDate,
                 EndDate = x.EndDate,
                 TenderDeadline = x.TenderDeadline,
