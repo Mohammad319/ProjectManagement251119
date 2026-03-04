@@ -60,7 +60,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     {
         [JsonIgnore] public CalcResCost CalcResCost;
 
-        [JsonIgnore] public List<double> Values { get; set; } = [];
+        [JsonIgnore] public List<decimal> Values { get; set; } = [];
         public ResourceEXDto(){  }
 
         public void Backup()
@@ -69,23 +69,23 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             Values.Add(Data.CapWaste);
             Values.Add(Data.ChangeFactor1);
             Values.Add(Data.ChangeFactor2);
-            Values.Add(Data.BaseCost.HasValue ? (double)Data.BaseCost.Value : 0);
-            Values.Add((double)Data.Cost);
+            Values.Add(Data.BaseCost.HasValue ? Data.BaseCost.Value : 0);
+            Values.Add(Data.Cost);
         }
         public int Id { get; set; }
         public string Group { get; set; }
         public List<ConditionDto> ConditionEffect { get; set; } = new();
         public List<RoleDTO> CapRole { get; set; } = [];
         public List<int> ConditionTaskIds { get; set; } = new();
-        public Dictionary<string, double> GetVariables()
+        public Dictionary<string, decimal> GetVariables()
         {
-            return new Dictionary<string, double>
+            return new Dictionary<string, decimal>
         {
             { "quantity", Data.Quantity.HasValue ? Data.Quantity.Value : 0 },
-            { "basecost", Data.BaseCost.HasValue ? (double)Data.BaseCost.Value : 0 },
+            { "basecost", Data.BaseCost.HasValue ?Data.BaseCost.Value : 0 },
             { "cap", Data.CapWaste },
             { "waste", Data.CapWaste },
-            { "cost", (double)Data.Cost },
+            { "cost",  Data.Cost },
             { "chf1", Data.ChangeFactor1 },
             { "chf2", Data.ChangeFactor2 }
         };
@@ -98,7 +98,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                           .Distinct()
                           .ToList();
         }
-        private string ReplaceVariables(string expression, Dictionary<string, double> variables)
+        private string ReplaceVariables(string expression, Dictionary<string, decimal> variables)
         {
             foreach (var kvp in variables)
             {
@@ -123,7 +123,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                 throw new InvalidOperationException($"خطأ في تقييم المعادلة: '{expression}'", ex);
             }
         }
-        public void SetVariable(string name, double value)
+        public void SetVariable(string name, decimal value)
         {
             switch (name.ToLower())
             {
@@ -132,15 +132,15 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                 case "chf2": Data.ChangeFactor2 = value; break;
                 case "cap": Data.CapWaste = value; break;
                 case "waste": Data.CapWaste = value; break;
-                case "basecost": Data.BaseCost = (decimal)value; break;
+                case "basecost": Data.BaseCost = value; break;
 
                 default: Console.WriteLine($"⚠️ المتغير {name} غير معرف داخل المورد."); break;
             }
         }
-        public void Calculate(string targetVariable, string formula, Dictionary<string, double> externalVars)
+        public void Calculate(string targetVariable, string formula, Dictionary<string, decimal> externalVars)
         {
-            Dictionary<string, double> resourceVariables = GetVariables();
-            Dictionary<string, double> allVariables;
+            Dictionary<string, decimal> resourceVariables = GetVariables();
+            Dictionary<string, decimal> allVariables;
             if (externalVars != null)
                 allVariables = resourceVariables
                     .Concat(externalVars.ToDictionary(x => x.Key, x => x.Value))

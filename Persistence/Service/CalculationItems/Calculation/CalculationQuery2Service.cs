@@ -120,8 +120,8 @@ namespace Persistence.Service.CalculationItems.Calculation
 
                     // Offer (nullable) - keep costs
                     OfferId = (int?)o.Id,
-                    OfferBaseCost = o == null ? 0 : (double)o.Metadata.BaseCost,
-                    OfferCost = o == null ? 0 : (double)o.Metadata.Cost,
+                    OfferBaseCost = o == null ? 0 : o.Metadata.BaseCost,
+                    OfferCost = o == null ? 0 : o.Metadata.Cost,
                     OfferComment = o.Metadata.Comment,
                     OfferDate = o.Date,
                     OfferOrganisationId = o.OrganisationId,

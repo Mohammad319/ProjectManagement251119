@@ -72,7 +72,7 @@
                         }
 
                         var isChecked = res.OfferId == off.Id;
-                        var price = (res.Quantity * off.Cost) + off.BaseCost;
+                        var price = ((decimal)res.Quantity * off.Cost) + off.BaseCost;
 
                         <div class="px-2 py-1 text-left border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"
                              title="@($"({res.Quantity} x {off.Cost}) + {off.BaseCost}")">
@@ -226,10 +226,10 @@
     {
         public List<ResourceListMVVM> Resources { get; set; } = new();
         public string? Key { get; set; }
-        public List<double> NetQ { get; set; } = new();
+        public List<decimal> NetQ { get; set; } = new();
         public List<int> IDs { get; set; } = new();
 
-        public double Min => NetQ.Min();
+        public decimal Min => NetQ.Min();
 
         public void OrderByMin()
         {
@@ -313,7 +313,7 @@
         }
     }
 
-    private double Format(double? x) => Template.Format(x ?? 0);
+    private double Format(decimal? x) => Template.Format(x ?? 0);
 
     async Task SetDefaultAsync(ResourceListMVVM res, ListOfferMVVM offer)
     {

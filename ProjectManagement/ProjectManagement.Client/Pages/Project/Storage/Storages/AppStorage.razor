@@ -346,7 +346,7 @@
     void CalcFunk(TaskWithResourcesMDto task)
     {
         var listcond = task.ConditionEffect.SelectMany(x => x.Items).Where(x => x.IsSelected).ToList();
-        Dictionary<string, double> externalVariables = task.ConditionEffect.SelectMany(x => x.ExternalVariables)
+        Dictionary<string, decimal> externalVariables = task.ConditionEffect.SelectMany(x => x.ExternalVariables)
     .Where(x => x.Value.HasValue).ToDictionary(x => x.VariableName, x => x.Value.Value);
         if (task.Resources != null) foreach (var resource in task.Resources)
             {
@@ -366,7 +366,7 @@
                         }
                 foreach (var rescon in resource.ConditionEffect)
                 {
-                    Dictionary<string, double> exvar = rescon.ExternalVariables
+                Dictionary<string, decimal> exvar = rescon.ExternalVariables
                                     .Where(x => x.Value.HasValue)
                                     .ToDictionary(
                                     x => x.VariableName,

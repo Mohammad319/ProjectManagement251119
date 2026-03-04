@@ -16,7 +16,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     {
         public string Name { get; set; }
         public decimal Value { get; set; } = 1;
-        public double Quantity { get; set; } = 1;
+        public decimal Quantity { get; set; } = 1;
         public decimal Cost { get; set; } = 1;
 
     }
@@ -29,15 +29,15 @@ namespace ProjectManagement.Shared.Base.Calculation
         public string Note { get; set; }
         public List<string> UpperNote { get; set; } = [];
         public string QuantityParam { get; set; }
-        public double? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
         [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Unit { get; set; }
-        public double ChangeFactor1 { get; set; } = 1;
-        public double ChangeFactor2 { get; set; } = 1;
+        public decimal ChangeFactor1 { get; set; } = 1;
+        public decimal ChangeFactor2 { get; set; } = 1;
 
-        public double CapWaste { get; set; }
-        public double Cap { get; set; } = 0;
-        public double Waste { get; set; } = 0;
+        public decimal CapWaste { get; set; }
+        public decimal Cap { get; set; } = 0;
+        public decimal Waste { get; set; } = 0;
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public decimal Cost { get; set; }

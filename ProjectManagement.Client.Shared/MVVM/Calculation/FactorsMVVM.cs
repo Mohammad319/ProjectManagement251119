@@ -9,18 +9,18 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string Sort { get; set; } = string.Empty;
         public string ResName { get; set; } = string.Empty;
 
-        public double NetCostTotaly { get; set; }
-        public double NetCostTotalyOH { get; set; }
-        public double Factor { get; set; }
+        public decimal NetCostTotaly { get; set; }
+        public decimal NetCostTotalyOH { get; set; }
+        public decimal Factor { get; set; }
 
-        public double Sum => NetCostTotaly + NetCostTotalyOH;
-        public double EarningsValue => Sum * (Earnings / 100);
-        public double Price => EarningsValue + Sum;
-        public double PriceOG => NetCostTotaly * Factor;
+        public decimal Sum => NetCostTotaly + NetCostTotalyOH;
+        public decimal EarningsValue => Sum * (Earnings / 100);
+        public decimal Price => EarningsValue + Sum;
+        public decimal PriceOG => NetCostTotaly * Factor;
 
         public static readonly string[] KVName = { "NetCostTotaly", "NetCostTotalyOH", "Sum", "Price", "PriceOG" };
 
-        public void AddResValue(bool oh, double resNetCost)
+        public void AddResValue(bool oh, decimal resNetCost)
         {
             if (oh) NetCostTotalyOH += resNetCost;
             else NetCostTotaly += resNetCost;
@@ -28,8 +28,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public static Factors AddNewFactor(bool oh, ResourceListMVVM res) => new()
         {
-            NetCostTotaly = !oh ? (double)res.NetCostTotaly : 0,
-            NetCostTotalyOH = oh ? (double)res.NetCostTotaly : 0,
+            NetCostTotaly = !oh ? res.NetCostTotaly : 0,
+            NetCostTotalyOH = oh ? res.NetCostTotaly : 0,
             SortId = res.ResourceSortId,
             ResourceType = res.ResType,
             Sort = res.Sort ?? string.Empty,
@@ -37,7 +37,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             ResId = res.ResourceTypeId,
         };
 
-        public double KV()
+        public decimal KV()
         {
             // نفس منطقك
             return Key switch

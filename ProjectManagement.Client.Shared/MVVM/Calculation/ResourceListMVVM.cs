@@ -16,18 +16,18 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string Note => Data.Note;
         public List<string> UpperNote => Data.UpperNote;
         public string QuantityParam => Data.QuantityParam;
-        public double? Quantity => Data.Quantity;
+        public decimal? Quantity => Data.Quantity;
         public string Unit => Data.Unit;
-        public double ChangeFactor1 => Data.ChangeFactor1;
-        public double ChangeFactor2 => Data.ChangeFactor2;
+        public decimal ChangeFactor1 => Data.ChangeFactor1;
+        public decimal ChangeFactor2 => Data.ChangeFactor2;
         public decimal? PriceSub => Data.PriceSub;
 
-        public double CapWaste => Data.CapWaste;
+        public decimal CapWaste => Data.CapWaste;
         public decimal Cost => Data.Cost;
         public decimal? BaseCost => Data.BaseCost;
         public double? CO2 => Data.CO2;
 
-        [JsonIgnore] public decimal PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? PriceSub.Value * (decimal)Quantity.Value : 0;
+        [JsonIgnore] public decimal PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? PriceSub.Value * Quantity.Value : 0;
     }
 
     public class ResourceListMVVM : ResFromData
@@ -56,7 +56,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string ResName { get; set; }
         public string Sort { get; set; }
 
-        public double Factor { get; set; } = 1;
+        public decimal Factor { get; set; } = 1;
 
         public List<ListOfferMVVM> Offers { get; set; } = [];
 
@@ -65,10 +65,10 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         private decimal? _apriceTotally;
         private double? _totalCO2;
 
-        [JsonIgnore] public decimal NetCostQ => _netCostQ ??= Quantity.HasValue && Quantity > 0 ? NetCostTotaly / (decimal)Quantity.Value : 0;
-        [JsonIgnore] public decimal NetCostTotaly => _netCostTotally ??= (BaseCost ?? 0) + ((decimal?)Quantity * Cost ?? 0);
-        [JsonIgnore] public decimal ApriceTotally => _apriceTotally ??= (decimal)Factor * NetCostTotaly;
-        [JsonIgnore] public double? TotalCO2 => _totalCO2 ??= CO2.HasValue ? Quantity * CO2.Value : null;
+        [JsonIgnore] public decimal NetCostQ => _netCostQ ??= Quantity.HasValue && Quantity > 0 ? NetCostTotaly / Quantity.Value : 0;
+        [JsonIgnore] public decimal NetCostTotaly => _netCostTotally ??= (BaseCost ?? 0) + (Quantity * Cost ?? 0);
+        [JsonIgnore] public decimal ApriceTotally => _apriceTotally ??= Factor * NetCostTotaly;
+        [JsonIgnore] public double? TotalCO2 => _totalCO2 ??= CO2.HasValue ? (double)Quantity * CO2.Value : null;
 
         public void InvalidateCache()
         {

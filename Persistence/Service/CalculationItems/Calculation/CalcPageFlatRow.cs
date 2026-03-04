@@ -55,8 +55,8 @@ internal sealed class CalcPageFlatRow
     // Offer (nullable due to LEFT JOIN)
     // --------------------
     public int? OfferId { get; init; }
-    public double OfferBaseCost { get; init; }
-    public double OfferCost { get; init; }
+    public decimal OfferBaseCost { get; init; }
+    public decimal OfferCost { get; init; }
     public string? OfferComment { get; init; }
     public DateTime? OfferDate { get; init; }
     public int? OfferOrganisationId { get; init; }

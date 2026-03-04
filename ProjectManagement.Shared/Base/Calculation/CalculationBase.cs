@@ -9,7 +9,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class QuanityListDTO
     {
         public string Name { get; set; }
-        public double? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
     }
     public class OHFactors
     {
@@ -17,8 +17,8 @@ namespace ProjectManagement.Shared.Base.Calculation
         public int? SortId { get; set; }
         public int? ResId { get; set; }
         public bool IsLocked { get; set; } = true;
-        public double Earnings { get; set; } = 20;
-        public double Key { get; set; } = 0;
+        public decimal Earnings { get; set; } = 20;
+        public decimal Key { get; set; } = 0;
         public string Unit { get; set; }
         public int DivisionKey { get; set; } = 0;
         public string Selected { get; set; } = "all";

@@ -36,15 +36,15 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             {
                 var t = s2.Pop();
 
-                double netQ = 0;
-                double netTot = 0;
-                double apriceTot = 0;
+                decimal netQ = 0;
+                decimal netTot = 0;
+                decimal apriceTot = 0;
 
                 // nullable totals
                 double totalCo2 = 0;
                 bool hasCo2 = false;
 
-                double baseCost = 0;
+                decimal baseCost = 0;
                 bool hasBaseCost = false;
 
                 // Children (active فقط)
@@ -139,8 +139,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
             // 6) ProfitDecision بدون LINQ
             var factors = calc.Factors;
-            double sum = 0;
-            double weighted = 0;
+            decimal sum = 0;
+            decimal weighted = 0;
             for (int i = 0; i < factors.Count; i++)
             {
                 var f = factors[i];
@@ -164,8 +164,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (factors is null || factors.Count == 0)
                 return;
 
-            double lockedSumWeighted = 0;
-            double unlockedSum = 0;
+            decimal lockedSumWeighted = 0;
+            decimal unlockedSum = 0;
 
             for (int i = 0; i < factors.Count; i++)
             {
@@ -180,7 +180,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 return;
 
             // نفس معادلتك
-            double e = ((calc.ProfitDecision * calc.Sum) - lockedSumWeighted) / unlockedSum;
+            decimal e = ((calc.ProfitDecision * calc.Sum) - lockedSumWeighted) / unlockedSum;
 
             for (int i = 0; i < factors.Count; i++)
             {
@@ -326,12 +326,12 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             if (factors is null || factors.Count == 0) return;
 
             // sum(NetCostTotaly) مرة واحدة
-            double sumNetCostAll = 0;
+            decimal sumNetCostAll = 0;
             for (int i = 0; i < factors.Count; i++)
                 sumNetCostAll += factors[i].NetCostTotaly;
 
             // مجموع OH لعناصر Selected == "all"
-            double totalOHAll = 0;
+            decimal totalOHAll = 0;
             for (int i = 0; i < factors.Count; i++)
             {
                 var f = factors[i];
@@ -340,7 +340,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
 
             // ✅ تجميع OH المرتبط باستخدام FactorKey بدل string
-            var relatedMap = new Dictionary<FactorKey, double>(Math.Max(16, factors.Count));
+            var relatedMap = new Dictionary<FactorKey, decimal>(Math.Max(16, factors.Count));
 
             for (int i = 0; i < factors.Count; i++)
             {
@@ -370,7 +370,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var f = factors[i];
                 if (f.NetCostTotaly <= 0) continue;
 
-                double ohShare = (sumNetCostAll != 0)
+                decimal ohShare = (sumNetCostAll != 0)
                     ? (f.NetCostTotaly * totalOHAll) / sumNetCostAll
                     : 0;
 
@@ -424,7 +424,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         // =========================================================
         // Task variables (DFS) - بدون LINQ
         // =========================================================
-        private static void CalcTaskVariablesRecursive(TaskListMVVM task, Dictionary<string, QuanityListDTO> qIndex, double? parentQuantity)
+        private static void CalcTaskVariablesRecursive(TaskListMVVM task, 
+            Dictionary<string, QuanityListDTO> qIndex, decimal? parentQuantity)
         {
             var meta = task.Metadata;
             if (meta is null) return;
@@ -459,8 +460,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         private static void CalcResourceVariables(
             ResourceListMVVM resource,
             Dictionary<string, QuanityListDTO> qIndex,
-            double? taskQuantity,
-            double? cap)
+            decimal? taskQuantity,
+            decimal? cap)
         {
             if (resource.Data is null)
                 throw new InvalidOperationException("resource.Data must not be null.");
