@@ -144,7 +144,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 return true;
             }
 
-            rule = new UnitRule();
+            rule = null!;
             return false;
         }
 
