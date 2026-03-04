@@ -11,10 +11,10 @@ namespace Application.Wrappers
         public Response()
         {
         }
-        public Response(T data, string message = null)
+        public Response(T data, string? message = null)
         {
             Succeeded = true;
-            Message = message;
+            Message = message ?? string.Empty;
             Data = data;
         }
         public Response(string message)
@@ -23,8 +23,8 @@ namespace Application.Wrappers
             Message = message;
         }
         public bool Succeeded { get; set; }
-        public string Message { get; set; }
-        public List<string> Errors { get; set; }
-        public T Data { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public List<string> Errors { get; set; } = [];
+        public T? Data { get; set; }
     }
 }

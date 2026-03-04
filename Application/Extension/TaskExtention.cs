@@ -24,7 +24,7 @@ namespace Application.Extention
                     {
                         res.OpportunityId = null;
                         res.PrimaryOfferId = null;
-                        res.Offers = null;
+                        res.Offers = [];
                     }
                     res.Id = 0;
                     res.TaskId = 0;
@@ -33,7 +33,10 @@ namespace Application.Extention
         }
         public static void BuildTaskHierarchy(List<TaskEntity> all)
         {
-            var lookup = all.Where(x => x.ParentTaskId != null).GroupBy(x => x.ParentTaskId).ToDictionary(g => g.Key, g => g.ToList());
+            var lookup = all
+                .Where(x => x.ParentTaskId.HasValue)
+                .GroupBy(x => x.ParentTaskId!.Value)
+                .ToDictionary(g => g.Key, g => g.ToList());
             foreach (var task in all)
             {
                 if (lookup.TryGetValue(task.Id, out var children))
