@@ -149,7 +149,14 @@
             await Callback.InvokeAsync(await ExHandlers.RunCheckTokenAsync(() => sersService.CreateAsync(post)) > 0);
         }
         else
-            await Callback.InvokeAsync(await ExHandlers.RunCheckTokenAsync(() => sersService.UpdateAsync(Put)));
+            if (Put is not null)
+            {
+                await Callback.InvokeAsync(await ExHandlers.RunCheckTokenAsync(() => sersService.UpdateAsync(Put)));
+            }
+            else
+            {
+                await Callback.InvokeAsync(false);
+            }
         IsLoading = false;
     }
     List<TenantDatabaseEntity>? Databases;

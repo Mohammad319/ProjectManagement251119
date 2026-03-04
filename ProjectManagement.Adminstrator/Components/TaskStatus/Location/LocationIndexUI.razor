@@ -24,7 +24,7 @@
 
 @code {
         bool IsVisible = true;
-        List<LocationEntity>? LocationsList;
+        List<LocationEntity> LocationsList = [];
         void UpdateForm() => UpdateForm(new LocationEntity() { Name = "name" });
         void UpdateForm(LocationEntity model)
             {
@@ -57,13 +57,13 @@ Modal.ShowComponent<LocationFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, C
         Modal.Close();
         if (IsSuccess)
         {
-            LocationsList = await service.GetAllAsync();
+            LocationsList = await service.GetAllAsync() ?? [];
         }
         StateHasChanged();
     }
 
     protected async override Task OnInitializedAsync()
     {
-        LocationsList = await service.GetAllAsync();
+        LocationsList = await service.GetAllAsync() ?? [];
     }
 }

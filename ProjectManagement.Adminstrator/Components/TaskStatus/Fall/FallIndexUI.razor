@@ -23,7 +23,7 @@
 
 @code {
     bool IsVisible = true;
-    List<FallEntity>? FallsList;
+    List<FallEntity> FallsList = [];
     void UpdateForm() => UpdateForm(new FallEntity() { Name = "" });
     void UpdateForm(FallEntity model)
     {
@@ -56,13 +56,13 @@
         Modal.Close();
         if (IsSuccess)
         {
-            FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync());
+            FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync()) ?? [];
         }
         StateHasChanged();
     }
 
     protected async override Task OnInitializedAsync()
     {
-        FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync());
+        FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync()) ?? [];
     }
 }
