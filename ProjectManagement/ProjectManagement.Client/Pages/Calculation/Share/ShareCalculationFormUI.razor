@@ -55,7 +55,7 @@
     PostShareCalcDTO form = new();
     bool IsLoading = false;
     [Parameter] public EventCallback<ListShareCalcDTO> Callback { get; set; }
-    [Parameter] public ListShareCalcDTO ListShareCalc { get; set; }
+    [Parameter, EditorRequired] public ListShareCalcDTO ListShareCalc { get; set; } = default!;
     [Parameter] public int CalculationId { get; set; }
 
     protected override void OnInitialized()

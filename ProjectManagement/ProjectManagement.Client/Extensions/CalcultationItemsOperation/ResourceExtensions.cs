@@ -6,8 +6,9 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 {
     public static class ResourceExtensions
     {
-        public static string Style(this ResourceListMVVM resource, string color, bool isTaskActive)
+        public static string Style(this ResourceListMVVM resource, string? color, bool isTaskActive)
         {
+            color ??= "transparent";
             if (SelectedData.ExistItem(CalculationItemType.resource, resource.Id))
                 return CSS.SelectedItem;
             return isTaskActive && resource.Active

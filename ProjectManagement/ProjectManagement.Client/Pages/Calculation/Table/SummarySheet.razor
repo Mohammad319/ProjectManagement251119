@@ -93,7 +93,7 @@
                         <thead class="sticky top-0 z-10 shadow-sm"
                                style="background-color:@Template?.SummarySheet.Color.Header;">
                             <tr class="h-6">
-                                @foreach (var item in Template?.SummarySheet?.Columns)
+                                @foreach (var item in Template?.SummarySheet?.Columns ?? Enumerable.Empty<NetColmunDTO>())
                                 {
                                     <th style="width:@(item.Width + "px")"
                                         class="px-2 py-0.5 font-semibold whitespace-nowrap border-b border-slate-200/70 dark:border-slate-700/70 text-left align-middle">
@@ -189,7 +189,7 @@
                                                     <select class="h-4 w-full min-w-[90px] border bg-transparent dark:bg-transparent rounded pl-1 pr-5 text-[11px] leading-none focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
                                                             style="color:@Template.SummarySheet.Color.Text;"
                                                             @bind:get="factors.Selected"
-                                                            @bind:set="(value) => { factors.Selected = value; SomeHasChanged(); }">
+                                                            @bind:set="(value) => { factors.Selected = value ?? string.Empty; SomeHasChanged(); }">
                                                         <option value="all">All</option>
                                                         @foreach (var item in Calc.Factors.Where(x => x.NetCostTotaly > 0))
                                                         {

@@ -15,7 +15,7 @@ namespace ProjectManagement.Client.Helper
             = new();
 
         // ----------------- SELECTION -----------------
-        public static void HandleKeyUp(KeyboardEventArgs e) => TemporaryData.Key = null;
+        public static void HandleKeyUp(KeyboardEventArgs e) => TemporaryData.Key = string.Empty;
 
         public static void HandleItemSelected(int id, decimal? q, CalculationItemType type)
         {
