@@ -24,7 +24,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     {
         public List<ResourceParameter> Parameters { get; set; } = new ();
         public List<ResourceTime> Times { get; set; } = new ();
-        public double? PriceSub { get; set; }
+        public decimal? PriceSub { get; set; }
 
         public string Note { get; set; }
         public List<string> UpperNote { get; set; } = [];
