@@ -80,12 +80,12 @@
     private async Task RemoveAsync(ApplicationUser deleteConfirmed)
     {
         if (await ExHandlers.RunCheckTokenAsync(() => UsersService.RemoveUserAsync(deleteConfirmed.Id,null)))
-            Users.Remove(deleteConfirmed);
+            Users?.Remove(deleteConfirmed);
         StateHasChanged();
     }
     bool Remove(ApplicationUser user)
     {
-        MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
+        MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email ?? string.Empty], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
         return true;
     }
     void Delete_Click(ApplicationUser user)

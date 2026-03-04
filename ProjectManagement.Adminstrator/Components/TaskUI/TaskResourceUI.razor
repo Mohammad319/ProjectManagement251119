@@ -243,16 +243,19 @@
     </div>
 </div>
 @code {
-    [Parameter] public ProjectTaskListItemDto Task { get; set; }
-    [Parameter] public ResourceTaskIndexDto Resource { get; set; }
-    TaskResourceDto TaskResource;
+    [Parameter, EditorRequired] public ProjectTaskListItemDto Task { get; set; } = default!;
+    [Parameter, EditorRequired] public ResourceTaskIndexDto Resource { get; set; } = default!;
+    TaskResourceDto? TaskResource;
     private void RemoveFormula(int i)
     {
-        if (i >= 0 && i < TaskResource.Formulas.Count)
+        if (TaskResource is not null && i >= 0 && i < TaskResource.Formulas.Count)
             TaskResource.Formulas.RemoveAt(i);
     }
     void AddRole()
     {
+        if (TaskResource?.CapRole is null)
+            return;
+
         if (TaskResource.CapRole.Count != 0)
             TaskResource.CapRole.Add(new() { Min = TaskResource.CapRole.Last().Max, Max = TaskResource.CapRole.Last().Max + 10, Value = TaskResource.CapRole.Last().Value + 1 });
         else TaskResource.CapRole.Add(new() { Min = 0, Max = 10, Value = 5 });
@@ -261,10 +264,15 @@
     protected override async Task OnInitializedAsync()
     {
         TaskResource = await TaskResourceService.GetTaskResourceAsync
-        (Task.Id , Resource.Id , CancellationToken.None);
+        (Task.Id, Resource.Id, CancellationToken.None) ?? new TaskResourceDto();
+        TaskResource.CapRole ??= [];
+        TaskResource.Formulas ??= [];
     }
     async Task SaveAsync()
     {
+        if (TaskResource is null)
+            return;
+
         if (await TaskResourceService.UpdateAssignmentAsync(Task.Id, Resource.Id, TaskResource, CancellationToken.None))
         {
             MHD.Modal.Close();

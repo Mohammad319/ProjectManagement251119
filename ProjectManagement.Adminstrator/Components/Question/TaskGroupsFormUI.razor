@@ -327,7 +327,7 @@ else
 
                             <div class="@CsS.Spacing.M.Top2">
                                 <FolderResourcesAddUI TaskId="Task.Id"
-                                                      ResIds="g.Items.Select(x => x.ResourceId).ToList()"
+                                                      ResIds="(g.Items ?? []).Select(x => x.ResourceId).ToList()"
                                                       OnSave="(e)=>AddDelete(g,e)" />
 
                                 @if (g.Items?.Count > 0)
