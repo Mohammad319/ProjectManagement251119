@@ -43,20 +43,15 @@ else if(Contacts != null){
 }
 
 @code {
-    [Parameter] public List<UnderContactOrganisationBase> Contacts { get; set; }
-    UnderContactOrganisationBase Form;
+    [Parameter] public List<UnderContactOrganisationBase> Contacts { get; set; } = [];
+    UnderContactOrganisationBase? Form;
     int IndexForm = -1;
     void CallBack(UnderContactOrganisationBase f)
     {
-        if (IndexForm == -1 && f != null) Contacts.Add(f);
+        if (IndexForm == -1) Contacts.Add(f);
         Form = null;
         StateHasChanged();
     }
-    protected override void OnInitialized()
-    {
-        if (Contacts == null) Contacts = [];
-    }
-
     void SetForm(int i = -1)
     {
         IndexForm = i;

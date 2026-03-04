@@ -110,7 +110,7 @@
                                 @foreach (var factors in Calc.Factors)
                                 {
                                     <tr @key="factors.ResId"
-                                        style="background-color:@Template.SummarySheet.Color.Factor;"
+                                        style="background-color:@(Template?.SummarySheet?.Color?.Factor);"
                                         class="h-5 align-middle hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors">
                                         <!-- اسم المورد -->
                                         <td class="px-2 py-0 align-middle whitespace-nowrap">
@@ -146,7 +146,7 @@
                                                             class="inline-flex items-center justify-center rounded p-0.5 transition"
                                                             title="@ResourceApp._lock"
                                                             @onclick="() => { EarningOnChange = true; factors.IsLocked = !factors.IsLocked; }">
-                                                        <span class="text-[10px] @CssClasses.Btn.Span" style="color:@Template.SummarySheet.Color.Text;">
+                                                        <span class="text-[10px] @CssClasses.Btn.Span" style="color:@(Template?.SummarySheet?.Color?.Text);">
                                                             @((MarkupString)Icons.IsLocked(factors.IsLocked))
                                                         </span>
                                                     </button>
@@ -157,7 +157,7 @@
                                                                               bg-transparent dark:bg-transparent
                                                                               px-1 text-[11px] leading-none
                                                                               focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                           style="color:@Template.SummarySheet.Color.Text;"
+                                                           style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                            @onchange="(e) =>
                                                            {
                                                                if (decimal.TryParse(e.Value?.ToString(), out var v))
@@ -189,7 +189,7 @@
                                                 @if (factors.NetCostTotalyOH > 0)
                                                 {
                                                     <select class="h-4 w-full min-w-[90px] border bg-transparent dark:bg-transparent rounded pl-1 pr-5 text-[11px] leading-none focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                            style="color:@Template.SummarySheet.Color.Text;"
+                                                            style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                             @bind:get="factors.Selected"
                                                             @bind:set="(value) => { factors.Selected = value ?? string.Empty; SomeHasChanged(); }">
                                                         <option value="all">All</option>
@@ -211,7 +211,7 @@
                                                                           bg-transparent dark:bg-transparent
                                                                           px-1 text-[11px] leading-none
                                                                           focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                       style="color:@Template.SummarySheet.Color.Text;"
+                                                       style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                        @onchange="(e) =>
                                                        {
                                                            if (decimal.TryParse(e.Value?.ToString(), out var v))
@@ -229,7 +229,7 @@
                                                                            pl-1 pr-5 text-[11px] leading-none
                                                                           
                                                                            focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                        style="color:@Template.SummarySheet.Color.Text;"
+                                                        style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                         @bind:get="factors.DivisionKey"
                                                         @bind:set="(value) => { factors.DivisionKey = value; SomeHasChanged(); }">
                                                     @for (int i = 0; i < Factors.KVName.Length; i++)
@@ -251,7 +251,7 @@
                                                                               bg-transparent dark:bg-transparent
                                                                               px-1 text-[11px] leading-none
                                                                               focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                           style="color:@Template.SummarySheet.Color.Text;"
+                                                           style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                            value="@factors.Unit"
                                                            @onchange="@((e) =>
                                                            {
@@ -320,7 +320,7 @@
 
                             @if (Calc.Factors.Count != 0)
                             {
-                                <tr style="background-color:@Template.SummarySheet.Color.Sum;"
+                                <tr style="background-color:@(Template?.SummarySheet?.Color?.Sum);"
                                     class="h-5 align-middle font-semibold">
                                     <td class="px-2 py-0 align-middle" colspan="2">@CalcResource.sum</td>
 
@@ -345,7 +345,7 @@
                                                                   bg-transparent dark:bg-transparent
                                                                   px-1 text-[11px] leading-none
                                                                   focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
-                                                   style="color:@Template.SummarySheet.Color.Text;"
+                                                   style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                    value="@Format(Calc.ProfitDecision)"
                                                    @onchange="(e) =>
                                                    {
@@ -423,7 +423,7 @@
                       focus:outline-none focus:ring-[0.5px] focus:ring-blue-400" />
 
         <span class="text-xs md:text-sm text-slate-700 dark:text-slate-300">
-            @Template.Currency
+            @(Template?.Currency)
         </span>
     </div>
 
@@ -442,7 +442,7 @@
                       focus:outline-none focus:ring-[0.5px] focus:ring-blue-400" />
 
         <span class="text-xs md:text-sm text-slate-700 dark:text-slate-300">
-            @Template.Currency
+            @(Template?.Currency)
         </span>
     </div>
 
