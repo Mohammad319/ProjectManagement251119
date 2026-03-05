@@ -12,6 +12,12 @@ namespace Domain.Entities.Calculation
     [Index(nameof(TenantId), nameof(CalculationId))]
     public sealed class TaskEntity : IntBaseEntity
     {
+        /// <summary>
+        /// Concurrency token (SQL rowversion). يساعد على منع ضياع التعديلات عند وجود أكثر من مستخدم.
+        /// </summary>
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
         private TaskMetadata? _metadata;
         public TaskMetadata Metadata
         {

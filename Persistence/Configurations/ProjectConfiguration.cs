@@ -79,10 +79,6 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
         builder.HasIndex(x => new { x.TenantId, x.CreatedBy })
             .HasDatabaseName("IX_Projects_Tenant_CreatedBy");
 
-        // ✅ إضافة مهمة إذا عندك فلترة كثيرة حسب Department
-        builder.HasIndex(x => new { x.TenantId, x.DepartmentId })
-            .HasDatabaseName("IX_Projects_Tenant_Department");
-
         // (اختياري) بحث بالاسم داخل tenant
         builder.HasIndex(x => new { x.TenantId, x.Name })
             .HasDatabaseName("IX_Projects_Tenant_Name");

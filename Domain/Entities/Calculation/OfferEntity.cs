@@ -11,6 +11,12 @@ namespace Domain.Entities.Calculation
     [Index(nameof(TenantId), nameof(ResourceId))]
     public sealed class OfferEntity : IntBaseEntity
     {
+        /// <summary>
+        /// Concurrency token (SQL rowversion).
+        /// </summary>
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
         public DateTime Date { get; private set; } = DateTime.UtcNow;
 
         [MaxLength(FieldLengths.Comment)]

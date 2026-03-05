@@ -26,7 +26,6 @@ namespace Domain.Entities.Calculation
         {
             Tasks = [];
             SharesCalc = [];
-            Offers = [];
             Opportunities = [];
             AttributesTender = [];
             Tenders = [];
@@ -157,9 +156,6 @@ namespace Domain.Entities.Calculation
         // -----------------------
 
         public ICollection<ShareCalcEntity> SharesCalc { get; private set; } = [];
-
-        [JsonIgnore]
-        public ICollection<OfferEntity> Offers { get; private set; } = [];
 
         [JsonIgnore]
         public ICollection<OpportunityEntity> Opportunities { get; private set; } = [];

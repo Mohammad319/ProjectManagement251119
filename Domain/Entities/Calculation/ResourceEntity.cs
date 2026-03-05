@@ -13,6 +13,12 @@ namespace Domain.Entities.Calculation
     [Index(nameof(TenantId), nameof(TaskId))]
     public sealed class ResourceEntity : IntBaseEntity
     {
+        /// <summary>
+        /// Concurrency token (SQL rowversion).
+        /// </summary>
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
         private ResourceMetadata? _metadata;
         public ResourceMetadata Metadata
         {

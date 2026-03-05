@@ -170,7 +170,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     o.ResourceId,
                     BaseCost = o.Metadata.BaseCost,
                     Cost = o.Metadata.Cost,
-                    Comment = o.Metadata.Comment,
+                    Comment = o.Comment,
                     o.Date,
                     o.OrganisationId,
                     Organisation = o.Organisation == null ? string.Empty : (o.Organisation.Name ?? string.Empty),

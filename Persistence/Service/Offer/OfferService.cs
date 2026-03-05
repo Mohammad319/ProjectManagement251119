@@ -51,20 +51,27 @@ namespace Persistence.Service.Offer
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // تقليل الاستعلامات:
-            // بدل Find + SaveChanges (تحميل كائن ثم حفظ),
-            // نستخدم ExecuteUpdateAsync (UPDATE مباشر في DB) ثم استعلام واحد للـ DTO للإشعار.
-            var affected = await context.Offers
-                .Where(x => x.Id == id)
-                .ExecuteUpdateAsync(setters => setters
-                        .SetProperty(x => x.OrganisationId, dto.OrganisationId)
-                        .SetProperty(x => x.Comment, dto.Comment)
-                        .SetProperty(x => x.Metadata.Cost, dto.Cost)
-                        .SetProperty(x => x.Metadata.BaseCost, dto.BaseCost)
-                        .SetProperty(x => x.Metadata.Contact, dto.Contact),
-                    ct);
+            // ملاحظة مهمة:
+            // Metadata مخزنة كـ JSON عبر ValueConverter (nvarchar(max)).
+            // لذلك ExecuteUpdateAsync على x.Metadata.* لن يترجم لـ SQL بشكل موثوق.
+            // هنا نفضّل Correctness على micro-optimization.
+            var entity = await context.Offers
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (affected == 0) return false;
+            if (entity is null) return false;
+
+            entity.Update(
+                organisationId: dto.OrganisationId,
+                metadata: new OfferData
+                {
+                    Cost = dto.Cost,
+                    BaseCost = dto.BaseCost,
+                    Contact = dto.Contact
+                },
+                comment: dto.Comment
+            );
+
+            await context.SaveChangesAsync(ct);
 
             var updated = await context.Offers
                 .AsNoTracking()

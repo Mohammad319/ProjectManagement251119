@@ -1,6 +1,5 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Folder;
-using Domain.Entities.Project;
 using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.Constant;
 using System.ComponentModel.DataAnnotations;
@@ -21,9 +20,6 @@ namespace Domain.Entities.Users
 
         [JsonIgnore]
         public ICollection<UserEntity> Users { get; private set; } = [];
-
-        [JsonIgnore]
-        public ICollection<ProjectEntity> Projects { get; private set; } = [];
 
         private DepartmentEntity() { } // EF
 

@@ -1,6 +1,7 @@
 ﻿using Application.Feature.Identity.Department;
 using Domain.DTO.User;
 using Domain.Entities.Users;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.DTO.General;
@@ -24,7 +25,7 @@ namespace Persistence.Service.Department
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.Department.FindAsync(id, ct);
+            var entity = await context.Department.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -36,15 +37,16 @@ namespace Persistence.Service.Department
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.Department
-                .Include(x => x.Projects)
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+            // ممنوع الحذف إذا كان هناك مشاريع مرتبطة بهذا القسم (عبر Folder.DepartmentId)
+            var hasProjects = await context.Projects
+                .AsNoTracking()
+                .AnyAsync(p => p.Folder.DepartmentId == id, ct);
 
-            if (entity == null) return false;
-
-            // ممنوع الحذف إذا مرتبط بمشاريع
-            if (entity.Projects.Any())
+            if (hasProjects)
                 return false;
+
+            var entity = await context.Department.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (entity == null) return false;
 
             context.Department.Remove(entity);
             await context.SaveChangesAsync(ct);
@@ -71,6 +73,7 @@ namespace Persistence.Service.Department
         public async Task<List<DepartmentDetailsDTO>> GetDetailsAsync(CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             return await context.Department
                 .AsNoTracking()
                 .Select(x => new DepartmentDetailsDTO
@@ -81,8 +84,10 @@ namespace Persistence.Service.Department
                     Created = x.CreatedAt,
                     LastModified = x.UpdatedAt,
                     UsersCount = x.Users.Count,
-                    ProjectsCount = x.Projects.Count,
-                    FoldersCount = x.Folders.Count
+                    FoldersCount = x.Folders.Count,
+
+                    // المشاريع مربوطة بالأقسام عبر Folder.DepartmentId
+                    ProjectsCount = x.Folders.SelectMany(f => f.FolderProjects).Count()
                 })
                 .ToListAsync(ct);
         }
@@ -90,7 +95,9 @@ namespace Persistence.Service.Department
         public async Task<List<TenantUserDto>> GetUsersByDepartmentIdAsync(int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            return await context.User.Where(x=>x.DepartmentId == departmentId)
+
+            return await context.User
+                .Where(x => x.DepartmentId == departmentId)
                 .AsNoTracking()
                 .Select(x => new TenantUserDto
                 {

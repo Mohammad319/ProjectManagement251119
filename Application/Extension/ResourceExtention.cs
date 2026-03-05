@@ -40,7 +40,7 @@ namespace Application.Extention
                 Id = of.Id,
                 BaseCost = of.Metadata.BaseCost,
                 Cost = of.Metadata.Cost,
-                Comment = of.Metadata.Comment,
+                Comment = of.Comment ?? string.Empty,
                 Date = of.Date,
                 OrganisationId = of.OrganisationId,
                 Organisation = of.Organisation != null ? of.Organisation.Name : string.Empty,
