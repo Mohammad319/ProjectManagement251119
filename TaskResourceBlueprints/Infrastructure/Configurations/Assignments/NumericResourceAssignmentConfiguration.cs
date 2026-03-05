@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
 using TaskResourceBlueprints.Infrastructure.Extensions;
 
 namespace TaskResourceBlueprints.Infrastructure.Configurations.Assignments;
@@ -23,6 +24,12 @@ public class NumericResourceAssignmentConfiguration : IEntityTypeConfiguration<N
          .OnDelete(DeleteBehavior.Restrict);
 
         b.HasIndex(x => new { x.NumericId, x.AssignmentId }).IsUnique();
+
+        b.Property(x => x.MinInputValue)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        b.Property(x => x.MaxInputValue)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
 
         b.Property(x => x.Expressions)
             .HasJsonListComparer();

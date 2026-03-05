@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaskResourceBlueprints.Entities.Questions.Conditions;
+using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
 
 namespace TaskResourceBlueprints.Infrastructure.Configurations.Conditions;
 
@@ -18,5 +19,14 @@ public class NumericConditionRuleConfiguration : IEntityTypeConfiguration<Numeri
          .OnDelete(DeleteBehavior.Restrict);
 
         b.HasIndex(x => new { x.ConditionId, x.GroupKey });
+
+        b.Property(x => x.DefaultValue)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        b.Property(x => x.MinAllowedValue)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        b.Property(x => x.MaxAllowedValue)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
     }
 }
