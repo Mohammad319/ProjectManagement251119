@@ -70,6 +70,8 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
     {
         builder.ToTable("Resources");
 
+        builder.Property(e => e.RowVersion).IsRowVersion();
+
         builder.HasIndex(x => new { x.TenantId, x.TaskId, x.SortOrder })
             .HasDatabaseName("IX_Resources_Tenant_Task_Sort");
 
@@ -124,6 +126,8 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
     {
         builder.ToTable("Tasks");
 
+        builder.Property(e => e.RowVersion).IsRowVersion();
+
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 
@@ -162,6 +166,8 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<OfferEntity>
     public void Configure(EntityTypeBuilder<OfferEntity> builder)
     {
         builder.ToTable("Offers");
+
+        builder.Property(e => e.RowVersion).IsRowVersion();
 
         builder.HasOne(o => o.Resource)
             .WithMany(r => r.Offers)

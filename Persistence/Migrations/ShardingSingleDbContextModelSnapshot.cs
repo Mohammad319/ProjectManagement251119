@@ -469,6 +469,12 @@ namespace Persistence.Migrations
                     b.Property<int>("ResourceId")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
@@ -573,6 +579,12 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("ResourceTypeId")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<double>("SortOrder")
                         .HasColumnType("float");
@@ -870,6 +882,12 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("ParentTaskId")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<double>("SortOrder")
                         .HasColumnType("float");

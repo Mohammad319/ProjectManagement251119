@@ -28,9 +28,7 @@ namespace Persistence.Service.CalculationItems.Storage
             if (type == CalculationItemType.task)
             {
                 // جلب التسك مع الأبناء
-                var tasks = await context.Tasks
-                    .FromSqlInterpolated($"EXEC GetRecursiveTasks {id}")
-                    .IgnoreQueryFilters()
+                var tasks = await RecursiveTasksCte.Query(context, id)
                     .AsNoTracking()
                     .ToListAsync(ct);
 

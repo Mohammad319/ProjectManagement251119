@@ -12,7 +12,7 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260305064842_db260115")]
+    [Migration("20260305083917_db260115")]
     partial class db260115
     {
         /// <inheritdoc />
@@ -472,6 +472,12 @@ namespace Persistence.Migrations
                     b.Property<int>("ResourceId")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
@@ -576,6 +582,12 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("ResourceTypeId")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<double>("SortOrder")
                         .HasColumnType("float");
@@ -873,6 +885,12 @@ namespace Persistence.Migrations
 
                     b.Property<int?>("ParentTaskId")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<double>("SortOrder")
                         .HasColumnType("float");

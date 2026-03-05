@@ -59,6 +59,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
     }
     public class ResourceListDTO : ResourceBase
     {
+        public double SortOrder { get; set; }
+
         public ResourceMetadata Data { get; set; } = new();
         public int TaskId { get; set; }
         public int? OfferId { get; set; }

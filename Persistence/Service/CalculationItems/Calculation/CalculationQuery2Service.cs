@@ -4,6 +4,8 @@ using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Persistence.Service.CalculationItems.Calculation
 {
@@ -61,7 +63,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     OpportunityId = t.OpportunityId,
                     Opportunity = t.Opportunity == null ? string.Empty : (t.Opportunity.OpportunityType ?? string.Empty),
 
-                    // TaskMetadata يمكن تحميلها هنا بدون تضخيم للصفوف (سطر واحد لكل task)
+                    // TaskMetadata: safe here (one row per task)
                     Metadata = t.Metadata,
                 })
                 .ToListAsync(ct);
@@ -70,14 +72,16 @@ namespace Persistence.Service.CalculationItems.Calculation
                 return header;
 
             var tasksById = taskDtos.ToDictionary(t => t.Id);
+            var taskIds = taskDtos.Select(t => t.Id).ToList();
 
             // 3) Resources (one row per resource)
-            var resourceRows = await (
-                from r in context.Resources.AsNoTracking().TagWith("CalcPageOptimizedV2.Resources")
-                join t in context.Tasks.AsNoTracking() on r.TaskId equals t.Id
-                where t.CalculationId == id
-                orderby r.TaskId, r.SortOrder
-                select new
+            var resourceRows = await context.Resources
+                .AsNoTracking()
+                .TagWith("CalcPageOptimizedV2.Resources")
+                .Where(r => taskIds.Contains(r.TaskId))
+                .OrderBy(r => r.TaskId)
+                .ThenBy(r => r.SortOrder)
+                .Select(r => new
                 {
                     r.Id,
                     r.TaskId,
@@ -91,16 +95,21 @@ namespace Persistence.Service.CalculationItems.Calculation
                     r.PrimaryOfferId,
                     r.SortOrder,
                     r.OpportunityId,
+
                     Opportunity = r.Opportunity == null ? string.Empty : (r.Opportunity.OpportunityType ?? string.Empty),
                     Status = r.Status == null ? string.Empty : (r.Status.Name ?? string.Empty),
                     StatusColor = r.Status == null ? string.Empty : (r.Status.Color ?? string.Empty),
+
                     Sort = r.ResourceSort == null ? string.Empty : (r.ResourceSort.Name ?? string.Empty),
                     ResName = r.ResourceType == null ? string.Empty : (r.ResourceType.Name ?? string.Empty),
+
                     Account = r.Account == null ? string.Empty : (r.Account.Name ?? string.Empty),
                     AccountCode = r.Account == null ? string.Empty : (r.Account.Code ?? string.Empty),
-                    r.Metadata,
-                }
-            ).ToListAsync(ct);
+
+                    // ResourceMetadata: safe here (one row per resource)
+                    Metadata = r.Metadata
+                })
+                .ToListAsync(ct);
 
             var resourcesById = new Dictionary<int, ResourceListDTO>(capacity: resourceRows.Count);
 
@@ -123,6 +132,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                     OfferId = r.PrimaryOfferId,
                     Order = r.SortOrder,
                     OpportunityId = r.OpportunityId,
+
                     Opportunity = r.Opportunity ?? string.Empty,
                     Status = r.Status ?? string.Empty,
                     StatusColor = r.StatusColor ?? string.Empty,
@@ -131,66 +141,71 @@ namespace Persistence.Service.CalculationItems.Calculation
                     Account = r.Account ?? string.Empty,
                     AccountCode = r.AccountCode ?? string.Empty,
 
-                    // ResourceMetadata سطر واحد لكل resource
                     Data = r.Metadata,
+                    Offers = []
                 };
 
                 resourcesById[r.Id] = resDto;
                 taskDto.Resources.Add(resDto);
             }
 
-            // 4) Offers (one row per offer)
-            if (resourcesById.Count > 0)
+            if (resourcesById.Count == 0)
             {
-                var offerRows = await (
-                    from o in context.Offers.AsNoTracking().TagWith("CalcPageOptimizedV2.Offers")
-                    join r in context.Resources.AsNoTracking() on o.ResourceId equals r.Id
-                    join t in context.Tasks.AsNoTracking() on r.TaskId equals t.Id
-                    where t.CalculationId == id
-                    orderby o.ResourceId, o.Date descending
-                    select new
-                    {
-                        o.Id,
-                        o.ResourceId,
-                        BaseCost = o.Metadata.BaseCost,
-                        Cost = o.Metadata.Cost,
-                        Comment = o.Metadata.Comment,
-                        o.Date,
-                        o.OrganisationId,
-                        Organisation = o.Organisation == null ? string.Empty : (o.Organisation.Name ?? string.Empty),
-                        SubCategory = o.Organisation == null
-                            ? string.Empty
-                            : (o.Organisation.OrganisationCategory == null
-                                ? string.Empty
-                                : (o.Organisation.OrganisationCategory.Name ?? string.Empty)),
-                        Category = o.Organisation == null
-                            ? string.Empty
-                            : (o.Organisation.OrganisationCategory == null
-                                ? string.Empty
-                                : (o.Organisation.OrganisationCategory.ParentCategory == null
-                                    ? string.Empty
-                                    : (o.Organisation.OrganisationCategory.ParentCategory!.Name ?? string.Empty))),
-                    }
-                ).ToListAsync(ct);
+                header.Tasks = taskDtos;
+                return header;
+            }
 
-                foreach (var o in offerRows)
+            var resourceIds = resourcesById.Keys.ToList();
+
+            // 4) Offers (one row per offer)
+            var offerRows = await context.Offers
+                .AsNoTracking()
+                .TagWith("CalcPageOptimizedV2.Offers")
+                .Where(o => resourceIds.Contains(o.ResourceId))
+                .OrderBy(o => o.ResourceId)
+                .ThenByDescending(o => o.Date)
+                .Select(o => new
                 {
-                    if (!resourcesById.TryGetValue(o.ResourceId, out var resDto))
-                        continue;
+                    o.Id,
+                    o.ResourceId,
+                    BaseCost = o.Metadata.BaseCost,
+                    Cost = o.Metadata.Cost,
+                    Comment = o.Metadata.Comment,
+                    o.Date,
+                    o.OrganisationId,
+                    Organisation = o.Organisation == null ? string.Empty : (o.Organisation.Name ?? string.Empty),
+                    SubCategory = o.Organisation == null
+                        ? string.Empty
+                        : (o.Organisation.OrganisationCategory == null
+                            ? string.Empty
+                            : (o.Organisation.OrganisationCategory.Name ?? string.Empty)),
+                    Category = o.Organisation == null
+                        ? string.Empty
+                        : (o.Organisation.OrganisationCategory == null
+                            ? string.Empty
+                            : (o.Organisation.OrganisationCategory.ParentCategory == null
+                                ? string.Empty
+                                : (o.Organisation.OrganisationCategory.ParentCategory!.Name ?? string.Empty))),
+                })
+                .ToListAsync(ct);
 
-                    resDto.Offers.Add(new ListOfferDTO
-                    {
-                        Id = o.Id,
-                        BaseCost = o.BaseCost,
-                        Cost = o.Cost,
-                        Comment = o.Comment ?? string.Empty,
-                        Date = o.Date,
-                        OrganisationId = o.OrganisationId,
-                        Organisation = o.Organisation ?? string.Empty,
-                        SubCategory = o.SubCategory ?? string.Empty,
-                        Category = o.Category ?? string.Empty,
-                    });
-                }
+            foreach (var o in offerRows)
+            {
+                if (!resourcesById.TryGetValue(o.ResourceId, out var resDto))
+                    continue;
+
+                resDto.Offers.Add(new ListOfferDTO
+                {
+                    Id = o.Id,
+                    BaseCost = o.BaseCost,
+                    Cost = o.Cost,
+                    Comment = o.Comment ?? string.Empty,
+                    Date = o.Date,
+                    OrganisationId = o.OrganisationId,
+                    Organisation = o.Organisation ?? string.Empty,
+                    SubCategory = o.SubCategory ?? string.Empty,
+                    Category = o.Category ?? string.Empty,
+                });
             }
 
             header.Tasks = taskDtos;

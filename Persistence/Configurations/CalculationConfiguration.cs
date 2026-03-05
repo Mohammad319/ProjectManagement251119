@@ -18,6 +18,7 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         builder.Property(e => e.Metadata).HasJsonConversion();
         builder.Property(e => e.HourlyPrice).HasJsonConversion();
         builder.Property(e => e.Factors).HasJsonConversion();
+        builder.Property(e => e.RowVersion).IsRowVersion();
 
         // -------------------------
         // Relationships

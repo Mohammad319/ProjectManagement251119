@@ -21,7 +21,16 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
             if (departmentId is null) return 0;
-            // TODO: إن احتجت لاحقاً تحقق departmentId مرتبط بالمشروع (Authorization/Validation)
+            // ✅ Safety: ensure the project belongs to this department (prevents forged departmentId)
+            var projectDepartmentId = await db.Projects
+                .AsNoTracking()
+                .Where(p => p.Id == projectId)
+                .Select(p => p.Folder.DepartmentId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (projectDepartmentId != departmentId.Value)
+                return 0;
+
             var maxOrder = await db.Calculations
                 .Where(x => x.ProjectId == projectId)
                 .MaxAsync(x => (double?)x.SortOrder, cancellationToken);

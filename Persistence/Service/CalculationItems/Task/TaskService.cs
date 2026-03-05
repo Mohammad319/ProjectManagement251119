@@ -4,6 +4,7 @@ using Application.Interfaces;
 using Application.Mapping.CalcItems;
 using Domain.Entities.Calculation;
 using Persistence.Factory;
+using Persistence.Service.Sql;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
@@ -229,9 +230,7 @@ namespace Persistence.Service.CalculationItems.Task
                 else
                 {
                     // نقل بين Calculation مختلفة → نحتاج الشجرة كاملة + الموارد
-                    var tasks = await context.Tasks
-                        .FromSqlRaw("EXEC GetRecursiveTasks {0}", item.Id)
-                        .IgnoreQueryFilters()
+                    var tasks = await RecursiveTasksCte.Query(context, item.Id, sourceCalcId)
                         .AsNoTracking()
                         .ToListAsync(ct);
 
@@ -471,7 +470,7 @@ namespace Persistence.Service.CalculationItems.Task
         }
 
         // -----------------------------------------------------
-        // Helper: get task + all children via stored proc
+        // Helper: get task + all children via composable CTE
         // -----------------------------------------------------
         private async Task<List<TaskEntity>> GetTaskWithChildrenAsync(
             int rootTaskId,
@@ -479,9 +478,7 @@ namespace Persistence.Service.CalculationItems.Task
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Tasks
-                .FromSqlRaw("EXEC GetRecursiveTasks {0}", rootTaskId)
-                .IgnoreQueryFilters()
+            return await RecursiveTasksCte.Query(context, rootTaskId)
                 .AsNoTracking()
                 .ToListAsync(ct);
         }
