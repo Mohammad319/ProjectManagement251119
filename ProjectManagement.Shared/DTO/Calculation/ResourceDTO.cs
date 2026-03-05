@@ -1,4 +1,4 @@
-﻿using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
@@ -14,9 +14,23 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public int Id { get; set; }
         public ResourceTypesEnum ResType { get; set; }
         public string Name { get; set; } = string.Empty;
-        public double Order { get; set; }
+
+        /// <summary>
+        /// ✅ Alias for SortOrder (old clients may still use Order)
+        /// </summary>
+        public double Order
+        {
+            get => SortOrder;
+            set => SortOrder = value;
+        }
+
         public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// ✅ مصدر واحد للحقيقة لكل بيانات الحساب (Quantity/Cost/Factors/...)
+        /// </summary>
         public ResourceMetadata Data { get; set; } = new();
+
         public int? OfferId { get; set; }
         public int? AccountId { get; set; }
         public int? StatusId { get; set; }
@@ -26,20 +40,62 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
         public double SortOrder { get; set; }
 
+        // -----------------------------
+        // ✅ Proxy properties (منع التكرار/التناقض بين الحقول و Data)
+        // -----------------------------
+
         [MaxLength(FieldLengths.Comment)]
-        public string? Note { get; set; }
+        public string? Note
+        {
+            get => string.IsNullOrWhiteSpace(Data.Note) ? null : Data.Note;
+            set => Data.Note = value ?? string.Empty;
+        }
 
         [MaxLength(FieldLengths.Unit)]
-        public string? Unit { get; set; }
-        [Required]
-        public double Quantity { get; set; }
-        public double? CO2 { get; set; }
-        public decimal Cost { get; set; }
-        public decimal? BaseCost { get; set; }
-        public double? ChangeFactor1 { get; set; }
-        public double? ChangeFactor2 { get; set; }
+        public string? Unit
+        {
+            get => string.IsNullOrWhiteSpace(Data.Unit) ? null : Data.Unit;
+            set => Data.Unit = value ?? string.Empty;
+        }
 
-        //public CostValue Cost { get; private set; } = null!;
+        [Required]
+        public decimal Quantity
+        {
+            get => Data.Quantity ?? 0m;
+            set => Data.Quantity = value;
+        }
+
+        public double? CO2
+        {
+            get => Data.CO2;
+            set => Data.CO2 = value;
+        }
+
+        public decimal Cost
+        {
+            get => Data.Cost;
+            set => Data.Cost = value;
+        }
+
+        public decimal? BaseCost
+        {
+            get => Data.BaseCost;
+            set => Data.BaseCost = value;
+        }
+
+        public decimal ChangeFactor1
+        {
+            get => Data.ChangeFactor1;
+            set => Data.ChangeFactor1 = value;
+        }
+
+        public decimal ChangeFactor2
+        {
+            get => Data.ChangeFactor2;
+            set => Data.ChangeFactor2 = value;
+        }
+
+        // kept for UI state / formulas
         public decimal ActuallyQuantity { get; set; } = 0;
         public decimal WorkedQ { get; set; } = 0;
 
@@ -47,8 +103,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         [JsonIgnore] public bool IsAdded { get; set; }
         [JsonIgnore] public int? GroupId { get; set; } = null;
         [JsonIgnore] public List<ResourcePropertyBindDto> Properties { get; set; } = [];
-
     }
+
     public class ResourceStorageListDTO : ResourceBase
     {
         public int Id { get; set; }
@@ -57,6 +113,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public ResourceMetadata Data { get; set; } = new();
         [JsonIgnore] public bool Colspan = false;
     }
+
     public class ResourceListDTO : ResourceBase
     {
         public double SortOrder { get; set; }

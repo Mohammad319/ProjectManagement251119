@@ -175,7 +175,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Compensation { get; set; } = string.Empty;
         public string Contract { get; set; } = string.Empty;
         public int? TemplateId { get; set; }
-        public double AdditionalCostEarnings { get; set; } = 10;
+        public decimal AdditionalCostEarnings { get; set; } = 10m;
         public virtual List<TaskListDTO> Tasks { get; set; } = [];
     }
     public class ListCalculationDTO

@@ -15,11 +15,11 @@ namespace ProjectManagement.Shared.DTO.Offer
         public int? CalculationID { get; set; } = 0;
         public int? Account { get; set; }
 
-        public double? MaxCost { get; set; }
-        public double? MinCost { get; set; }
+        public decimal? MaxCost { get; set; }
+        public decimal? MinCost { get; set; }
 
-        public double? MaxBaseCost { get; set; }
-        public double? MinBaseCost { get; set; }
+        public decimal? MaxBaseCost { get; set; }
+        public decimal? MinBaseCost { get; set; }
 
         public int? OrganisationId { get; set; }
 
@@ -40,7 +40,19 @@ namespace ProjectManagement.Shared.DTO.Offer
         public string Contact { get; set; } = string.Empty;
         public decimal Cost { get; set; }
         public decimal BaseCost { get; set; }
-    }
+    
+        public void Normalize()
+        {
+            Cost = RoundMoney(Cost);
+            BaseCost = RoundMoney(BaseCost);
+            // keep strings tidy
+            Comment = (Comment ?? string.Empty).Trim();
+            Contact = (Contact ?? string.Empty).Trim();
+        }
+
+        private static decimal RoundMoney(decimal value)
+            => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+}
     public class ListOfferDTO
     {
         public int Id { get; set; }

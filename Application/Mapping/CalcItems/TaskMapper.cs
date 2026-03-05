@@ -1,5 +1,6 @@
-﻿using Application.Extention;
+using Application.Extention;
 using Domain.Entities.Calculation;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Application.Mapping.CalcItems
@@ -10,8 +11,25 @@ namespace Application.Mapping.CalcItems
         {
             return [.. tasks.Select(MapToTaskListDTO)];
         }
+
         public static TaskListDTO MapToTaskListDTO(this TaskEntity t)
         {
+            // ✅ Hydrate duplicated fields from scalar columns to keep UI consistent
+            var meta = t.Metadata?.Clone() ?? new TaskMetadata();
+
+            if (!string.IsNullOrWhiteSpace(t.Note))
+                meta.Note = t.Note!;
+
+            if (!string.IsNullOrWhiteSpace(t.Unit))
+                meta.Unit = t.Unit!;
+
+            if (!string.IsNullOrWhiteSpace(t.Code))
+                meta.Code = t.Code!;
+
+            meta.Type = t.Type;
+            meta.IsActive = t.IsActive;
+            meta.IsOH = t.IsOH;
+
             return new TaskListDTO
             {
                 TaskId = t.ParentTaskId,
@@ -23,14 +41,14 @@ namespace Application.Mapping.CalcItems
                 Status = t.Status?.Name ?? string.Empty,
                 StatusColor = t.Status?.Color ?? string.Empty,
                 Opportunity = t.Opportunity?.OpportunityType ?? string.Empty,
-                Metadata = t.Metadata,
+                Metadata = meta,
                 Resources = t.Resources?.Select(ResourceExtention.MapToResourceListDTO).ToList() ?? [],
-
             };
         }
+
         public static TaskEntity MapToTaskEntity(TaskPostDTO dto, int calcId)
         {
-            var task = TaskEntity.Create(calcId,dto, dto.Order, dto.ParentTaskId);
+            var task = TaskEntity.Create(calcId, dto, dto.Order, dto.ParentTaskId);
 
             task.OpportunityId = dto.OpportunityId;
             task.StatusId = dto.StatusId;
@@ -41,18 +59,5 @@ namespace Application.Mapping.CalcItems
 
             return task;
         }
-
-        //public static TaskEntity MapToTaskEntity(TaskPostDTO dto, int calcId) => new()
-        //{
-        //    CalculationId = calcId,
-        //    Name = dto.Name,
-        //    OpportunityId = dto.OpportunityId,
-        //    StatusId = dto.StatusId,
-        //    ParentTaskId = dto.ParentTaskId,
-        //    SortOrder = dto.Order,
-        //    Metadata = dto.Metadata,
-        //    Resources = dto.Resources?.Select(x => x.Parse(dto.Id)).ToList(),
-        //    Tasks = dto.Tasks?.Select(t => MapToTaskEntity(t, calcId)).ToList() ?? [],
-        //};
     }
 }

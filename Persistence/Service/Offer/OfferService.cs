@@ -1,4 +1,6 @@
-﻿using Application.Feature.Offer;
+using Persistence.Serialization;
+using System.Text.Json;
+using Application.Feature.Offer;
 using Application.Interfaces;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
@@ -147,7 +149,9 @@ namespace Persistence.Service.Offer
             {
                 resource.Metadata.Cost = offer.Metadata.Cost;
                 resource.Metadata.BaseCost = offer.Metadata.BaseCost;
-            }
+            
+                resource.Metadata.Normalize();
+}
 
             await context.SaveChangesAsync(ct);
 
@@ -209,6 +213,7 @@ namespace Persistence.Service.Offer
 
             IQueryable<OfferEntity> q = context.Offers.AsNoTracking();
 
+            // ---------- Server-side (SQL) filters ----------
             if (f.CalculationID > 0)
                 q = q.Where(x => x.Resource.Task.CalculationId == f.CalculationID);
             else if (f.ProjectID.HasValue)
@@ -225,18 +230,49 @@ namespace Persistence.Service.Offer
             if (f.OrganisationId.HasValue)
                 q = q.Where(x => x.OrganisationId == f.OrganisationId);
 
+            // NOTE: OfferFilterDTO.Account refers to Resource.AccountId
+            if (f.Account.HasValue)
+                q = q.Where(x => x.Resource.AccountId == f.Account);
+
+            // ---------- Money range filters (SQL via computed columns) ----------
+            // Offers.Metadata is stored as JSON (nvarchar(max)). We expose Cost/BaseCost as persisted computed columns
+            // (CostValue/BaseCostValue) so the database can filter efficiently.
+            decimal? minCost = f.MinCost;
+            decimal? maxCost = f.MaxCost;
+            if (minCost.HasValue && maxCost.HasValue && minCost.Value > maxCost.Value)
+                (minCost, maxCost) = (maxCost, minCost);
+
+            decimal? minBase = f.MinBaseCost;
+            decimal? maxBase = f.MaxBaseCost;
+            if (minBase.HasValue && maxBase.HasValue && minBase.Value > maxBase.Value)
+                (minBase, maxBase) = (maxBase, minBase);
+
+            if (minCost.HasValue)
+                q = q.Where(x => EF.Property<decimal?>(x, "CostValue") >= minCost.Value);
+            if (maxCost.HasValue)
+                q = q.Where(x => EF.Property<decimal?>(x, "CostValue") <= maxCost.Value);
+            if (minBase.HasValue)
+                q = q.Where(x => EF.Property<decimal?>(x, "BaseCostValue") >= minBase.Value);
+            if (maxBase.HasValue)
+                q = q.Where(x => EF.Property<decimal?>(x, "BaseCostValue") <= maxBase.Value);
+
             return await q
                 .OrderByDescending(x => x.Date)
+                .ThenByDescending(x => x.Id)
                 .Select(x => new ListOfferCalcInfo
                 {
                     Id = x.Id,
-                    BaseCost = x.Metadata.BaseCost,
-                    Cost = x.Metadata.Cost,
+                    BaseCost = EF.Property<decimal?>(x, "BaseCostValue") ?? 0m,
+                    Cost = EF.Property<decimal?>(x, "CostValue") ?? 0m,
                     Comment = x.Comment ?? string.Empty,
                     Date = x.Date,
                     Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,
-                    Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? x.Organisation.OrganisationCategory.ParentCategory.Name : string.Empty,
-                    SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? x.Organisation.OrganisationCategory.Name : string.Empty,
+                    Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null
+                        ? x.Organisation.OrganisationCategory.ParentCategory.Name
+                        : string.Empty,
+                    SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null
+                        ? x.Organisation.OrganisationCategory.Name
+                        : string.Empty,
                     ResName = x.Resource.Name,
                     TaskName = x.Resource.Task.Name,
                     TaskCode = x.Resource.Task.Metadata.Code,
@@ -246,7 +282,7 @@ namespace Persistence.Service.Offer
                 .ToListAsync(ct);
         }
 
-        // ---------------- Hub notifications (unified) ----------------
+// ---------------- Hub notifications (unified) ----------------
 
         private Task NotifyOfferAsync(int calcId, OperationType op, int parentId, object data)
             => hub.SendNotificationAsync(

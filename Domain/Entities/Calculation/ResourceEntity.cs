@@ -11,14 +11,8 @@ using System.Text.Json.Serialization;
 namespace Domain.Entities.Calculation
 {
     [Index(nameof(TenantId), nameof(TaskId))]
-    public sealed class ResourceEntity : IntBaseEntity
+    public sealed class ResourceEntity : AuditableEntity<int>
     {
-        /// <summary>
-        /// Concurrency token (SQL rowversion).
-        /// </summary>
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-
         private ResourceMetadata? _metadata;
         public ResourceMetadata Metadata
         {
@@ -94,7 +88,12 @@ namespace Domain.Entities.Calculation
 
             Metadata = dto.Data;
 
-            // --------- العلاقات ---------
+            // ✅ keep duplicated fields in sync (avoid diverging sources between columns and JSON metadata)
+            Metadata.Note = Note ?? string.Empty;
+            Metadata.Unit = Unit ?? string.Empty;
+
+            Metadata.Normalize();
+// --------- العلاقات ---------
             OpportunityId = dto.OpportunityId;
             AccountId = dto.AccountId;
             StatusId = dto.StatusId;

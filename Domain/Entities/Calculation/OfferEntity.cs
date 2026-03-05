@@ -5,18 +5,13 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using System;
 
 namespace Domain.Entities.Calculation
 {
     [Index(nameof(TenantId), nameof(ResourceId))]
-    public sealed class OfferEntity : IntBaseEntity
+    public sealed class OfferEntity : AuditableEntity<int>
     {
-        /// <summary>
-        /// Concurrency token (SQL rowversion).
-        /// </summary>
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-
         public DateTime Date { get; private set; } = DateTime.UtcNow;
 
         [MaxLength(FieldLengths.Comment)]
@@ -50,7 +45,9 @@ namespace Domain.Entities.Calculation
             ResourceId = resourceId;
             OrganisationId = organisationId;
             Metadata = metadata;
-            Comment = comment;
+            
+            Metadata.Normalize();
+Comment = comment;
             Date = DateTime.UtcNow;
         }
 
@@ -61,13 +58,15 @@ namespace Domain.Entities.Calculation
         {
             OrganisationId = organisationId;
             Metadata = metadata;
-            Comment = comment;
+            
+            Metadata.Normalize();
+Comment = comment;
             Date = DateTime.UtcNow;
         }
 
         public void SetBaseCost(decimal baseCost)
         {
-            Metadata.BaseCost = baseCost;
+            Metadata.BaseCost = Math.Round(baseCost, 2, MidpointRounding.AwayFromZero);
         }
     }
 }

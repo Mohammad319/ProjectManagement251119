@@ -12,10 +12,10 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
             public int Id { get; set; }
             public int TaskId { get; set; }
             public int ResourceId { get; set; }
-            public double ChangeFactor1 { get; set; } = 1;
-            public double ChangeFactor2 { get; set; } = 1;
-            public double CapWaste { get; set; } = 1;
-            public double? BaseCost { get; set; } = 0;
+            public decimal ChangeFactor1 { get; set; } = 1m;
+            public decimal ChangeFactor2 { get; set; } = 1m;
+            public decimal CapWaste { get; set; } = 1m;
+            public decimal? BaseCost { get; set; } = 0m;
             public bool Uncontrollable { get; set; } = false;
             public List<RoleDTO> CapRole { get; set; } = [];
         public List<string> Equations { get; set; } = [];

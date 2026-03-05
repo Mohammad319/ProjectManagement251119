@@ -1,4 +1,4 @@
-﻿using Application.Extention;
+using Application.Extention;
 using Application.Services.CalculationItems.Storage;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
@@ -28,8 +28,18 @@ namespace Persistence.Service.CalculationItems.Storage
 
             if (type == CalculationItemType.task)
             {
-                // جلب التسك مع الأبناء
-                var tasks = await RecursiveTasksCte.Query(context, id)
+                // ✅ نحدد CalculationId مرة واحدة: هذا يحسّن أداء CTE لأنه يسمح باستعمال الفهرس المركّب
+                var calcId = await context.Tasks
+                    .AsNoTracking()
+                    .Where(t => t.Id == id)
+                    .Select(t => t.CalculationId)
+                    .FirstOrDefaultAsync(ct);
+
+                if (calcId <= 0)
+                    return false;
+
+                // جلب التاسك مع الأبناء
+                var tasks = await RecursiveTasksCte.Query(context, id, calcId)
                     .AsNoTracking()
                     .ToListAsync(ct);
 

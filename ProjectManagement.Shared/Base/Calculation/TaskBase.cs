@@ -3,6 +3,7 @@ using ProjectManagement.Shared.Base.Calculation.Base;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
+using System;
 
 namespace ProjectManagement.Shared.Base.Calculation
 {
@@ -37,7 +38,34 @@ namespace ProjectManagement.Shared.Base.Calculation
         public bool HasVoice { get; set; }
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Responsible { get; set; } = string.Empty;
-        public TaskMetadata Clone()
+        
+        /// <summary>
+        /// توحيد القيم (خصوصًا الأسعار) لمنع كسور طويلة + منع قيم سالبة للمال.
+        /// </summary>
+        public void Normalize()
+        {
+            WorkedQ = RoundQuantity(WorkedQ);
+            Quantity = Quantity.HasValue ? RoundQuantity(Quantity.Value) : null;
+
+            // money-like fields
+            PriceSubDB = PriceSubDB.HasValue ? RoundMoney(PriceSubDB.Value) : null;
+            PriceSubTaxDB = PriceSubTaxDB.HasValue ? RoundMoney(PriceSubTaxDB.Value) : null;
+            MinPrice = MinPrice.HasValue ? RoundMoney(MinPrice.Value) : null;
+            CeilingPrice = CeilingPrice.HasValue ? RoundMoney(CeilingPrice.Value) : null;
+
+            // clamp negatives where it doesn't make sense
+            if (WorkedQ < 0m) WorkedQ = 0m;
+            if (Quantity.HasValue && Quantity.Value < 0m) Quantity = 0m;
+            if (PriceSubDB.HasValue && PriceSubDB.Value < 0m) PriceSubDB = 0m;
+            if (PriceSubTaxDB.HasValue && PriceSubTaxDB.Value < 0m) PriceSubTaxDB = 0m;
+            if (MinPrice.HasValue && MinPrice.Value < 0m) MinPrice = 0m;
+            if (CeilingPrice.HasValue && CeilingPrice.Value < 0m) CeilingPrice = 0m;
+        }
+
+        private static decimal RoundMoney(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
+        private static decimal RoundQuantity(decimal v) => Math.Round(v, 3, MidpointRounding.AwayFromZero);
+
+public TaskMetadata Clone()
         {
             return new TaskMetadata
             {

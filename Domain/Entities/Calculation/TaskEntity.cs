@@ -10,14 +10,8 @@ using System.Text.Json.Serialization;
 namespace Domain.Entities.Calculation
 {
     [Index(nameof(TenantId), nameof(CalculationId))]
-    public sealed class TaskEntity : IntBaseEntity
+    public sealed class TaskEntity : AuditableEntity<int>
     {
-        /// <summary>
-        /// Concurrency token (SQL rowversion). يساعد على منع ضياع التعديلات عند وجود أكثر من مستخدم.
-        /// </summary>
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-
         private TaskMetadata? _metadata;
         public TaskMetadata Metadata
         {
@@ -146,7 +140,16 @@ namespace Domain.Entities.Calculation
             IsOH = dto.IsOH;
             Metadata = dto.Metadata;
 
-            OpportunityId = dto.OpportunityId;
+            // ✅ keep duplicated fields in sync (avoid diverging sources between columns and JSON metadata)
+            Metadata.Note = Note ?? string.Empty;
+            Metadata.Unit = Unit ?? string.Empty;
+            Metadata.Code = Code ?? string.Empty;
+            Metadata.Type = Type;
+            Metadata.IsActive = IsActive;
+            Metadata.IsOH = IsOH;
+
+            Metadata.Normalize();
+OpportunityId = dto.OpportunityId;
             StatusId = dto.StatusId;
             ParentTaskId = dto.ParentTaskId;
         }

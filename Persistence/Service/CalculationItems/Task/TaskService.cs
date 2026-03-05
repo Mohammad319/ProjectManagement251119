@@ -478,7 +478,16 @@ namespace Persistence.Service.CalculationItems.Task
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await RecursiveTasksCte.Query(context, rootTaskId)
+            var calcId = await context.Tasks
+                .AsNoTracking()
+                .Where(t => t.Id == rootTaskId)
+                .Select(t => t.CalculationId)
+                .FirstOrDefaultAsync(ct);
+
+            if (calcId <= 0)
+                return [];
+
+            return await RecursiveTasksCte.Query(context, rootTaskId, calcId)
                 .AsNoTracking()
                 .ToListAsync(ct);
         }

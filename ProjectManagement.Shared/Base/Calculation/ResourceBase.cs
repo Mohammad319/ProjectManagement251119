@@ -2,6 +2,8 @@
 using ProjectManagement.Shared.Enums;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System;
+using System.Linq;
 
 namespace ProjectManagement.Shared.Base.Calculation
 {
@@ -44,7 +46,50 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal? BaseCost { get; set; }
         public double? CO2 { get; set; }
 
-        public ResourceMetadata Clone()
+        
+        /// <summary>
+        /// توحيد القيم الرقمية لتفادي أرقام طويلة جدًا (خصوصًا بعد الصيغ) + منع قيم سالبة في المال.
+        /// </summary>
+        public void Normalize()
+        {
+            // money
+            Cost = RoundMoney(Cost);
+            BaseCost = BaseCost.HasValue ? RoundMoney(BaseCost.Value) : null;
+            PriceSub = PriceSub.HasValue ? RoundMoney(PriceSub.Value) : null;
+
+            // quantity
+            Quantity = Quantity.HasValue ? RoundQuantity(Quantity.Value) : null;
+
+            // factors (cap/waste/change factors)
+            ChangeFactor1 = RoundFactor(ChangeFactor1);
+            ChangeFactor2 = RoundFactor(ChangeFactor2);
+            CapWaste = RoundFactor(CapWaste);
+            Cap = RoundFactor(Cap);
+            Waste = RoundFactor(Waste);
+
+            // clamp negatives where it doesn't make sense
+            if (Cost < 0m) Cost = 0m;
+            if (BaseCost.HasValue && BaseCost.Value < 0m) BaseCost = 0m;
+            if (PriceSub.HasValue && PriceSub.Value < 0m) PriceSub = 0m;
+            if (Quantity.HasValue && Quantity.Value < 0m) Quantity = 0m;
+
+            // normalize times
+            if (Times is not null)
+            {
+                foreach (var t in Times)
+                {
+                    t.Value = RoundFactor(t.Value);
+                    t.Quantity = RoundQuantity(t.Quantity);
+                    t.Cost = RoundMoney(t.Cost);
+                }
+            }
+        }
+
+        private static decimal RoundMoney(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
+        private static decimal RoundQuantity(decimal v) => Math.Round(v, 3, MidpointRounding.AwayFromZero);
+        private static decimal RoundFactor(decimal v) => Math.Round(v, 4, MidpointRounding.AwayFromZero);
+
+public ResourceMetadata Clone()
         {
             return new ResourceMetadata
             {
