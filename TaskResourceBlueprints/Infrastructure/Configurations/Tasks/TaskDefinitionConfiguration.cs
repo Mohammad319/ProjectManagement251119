@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
 
 namespace TaskResourceBlueprints.Infrastructure.Configurations.Tasks;
 
@@ -8,6 +9,9 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
 {
     public void Configure(EntityTypeBuilder<TaskDefinition> builder)
     {
+        builder.Property(x => x.Quantity)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
         // Task → choice question groups
         builder.HasMany(t => t.QuestionGroups)
                .WithOne(g => g.Task)
