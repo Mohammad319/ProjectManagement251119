@@ -9,6 +9,8 @@ internal sealed class TenderConfiguration : IEntityTypeConfiguration<TenderEntit
 {
     public void Configure(EntityTypeBuilder<TenderEntity> builder)
     {
+        builder.ToTable("Tenders");
+
         builder.HasOne(x => x.Calculation)
             .WithMany(x => x.Tenders)
             .HasForeignKey(x => x.CalculationId)
@@ -19,12 +21,19 @@ internal sealed class TenderConfiguration : IEntityTypeConfiguration<TenderEntit
         builder.HasOne(x => x.Organisation)
             .WithMany(x => x.Tenders)
             .HasForeignKey(x => x.OrganisationId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.TendersAttributes)
             .WithOne(x => x.Tender)
             .HasForeignKey(x => x.TenderId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Indexes (Tenant filter + الاستعلامات الشائعة)
+        builder.HasIndex(x => new { x.TenantId, x.CalculationId })
+            .HasDatabaseName("IX_Tenders_Tenant_Calc");
+
+        builder.HasIndex(x => new { x.TenantId, x.OrganisationId })
+            .HasDatabaseName("IX_Tenders_Tenant_Org");
     }
 }
 
@@ -32,6 +41,8 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<TenderAttributeBindEntity> builder)
     {
+        builder.ToTable("TenderAttributeBinds");
+
         builder.HasKey(m => new { m.TenderAttributeId, m.TenderId });
 
         builder.HasOne(x => x.Tender)
@@ -44,6 +55,9 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
             .WithMany(x => x.TendersAttributes)
             .HasForeignKey(x => x.TenderAttributeId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasIndex(x => new { x.TenantId, x.TenderId })
+            .HasDatabaseName("IX_TenderAttrBinds_Tenant_Tender");
     }
 }
 
@@ -51,6 +65,8 @@ internal sealed class AttributeNameTenderConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<TenderAttributeDefinitionEntity> builder)
     {
+        builder.ToTable("TenderAttributeDefinitions");
+
         builder.HasOne(x => x.Calculation)
             .WithMany(x => x.AttributesTender)
             .HasForeignKey(x => x.CalculationId)
@@ -60,5 +76,8 @@ internal sealed class AttributeNameTenderConfiguration : IEntityTypeConfiguratio
             .WithOne(x => x.TenderAttribute)
             .HasForeignKey(x => x.TenderAttributeId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => new { x.TenantId, x.CalculationId })
+            .HasDatabaseName("IX_TenderAttrDefs_Tenant_Calc");
     }
 }

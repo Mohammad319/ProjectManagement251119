@@ -10,6 +10,8 @@ internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<Resou
 {
     public void Configure(EntityTypeBuilder<ResourceTypeEntity> builder)
     {
+        builder.ToTable("ResourceTypes");
+
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 
@@ -17,6 +19,16 @@ internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<Resou
             .WithMany(x => x.ResourceTypes)
             .HasForeignKey(x => x.AccountId)
             .OnDelete(DeleteBehavior.ClientSetNull);
+
+        builder.HasIndex(x => new { x.TenantId, x.Kind, x.IsVisible, x.SortOrder })
+            .HasDatabaseName("IX_ResourceTypes_Tenant_Kind_Visible_Order");
+
+        builder.HasIndex(x => new { x.TenantId, x.Name })
+            .HasDatabaseName("IX_ResourceTypes_Tenant_Name");
+
+        builder.ToTable(t =>
+            t.HasCheckConstraint("CK_ResourceTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0")
+        );
     }
 }
 
@@ -24,6 +36,8 @@ internal sealed class ResourceSortConfiguration : IEntityTypeConfiguration<Resou
 {
     public void Configure(EntityTypeBuilder<ResourceSortEntity> builder)
     {
+        builder.ToTable("ResourceSorts");
+
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 
@@ -37,6 +51,16 @@ internal sealed class ResourceSortConfiguration : IEntityTypeConfiguration<Resou
             .WithMany(x => x.ResourceSorts)
             .HasForeignKey(x => x.AccountId)
             .OnDelete(DeleteBehavior.ClientSetNull);
+
+        builder.HasIndex(x => new { x.TenantId, x.ResourceTypeId, x.IsVisible, x.SortOrder })
+            .HasDatabaseName("IX_ResourceSorts_Tenant_Type_Visible_Order");
+
+        builder.HasIndex(x => new { x.TenantId, x.ResourceTypeId, x.Name })
+            .HasDatabaseName("IX_ResourceSorts_Tenant_Type_Name");
+
+        builder.ToTable(t =>
+            t.HasCheckConstraint("CK_ResourceSorts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0")
+        );
     }
 }
 

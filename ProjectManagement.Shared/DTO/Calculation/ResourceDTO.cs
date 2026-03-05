@@ -40,8 +40,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public double? ChangeFactor2 { get; set; }
 
         //public CostValue Cost { get; private set; } = null!;
-        public double ActuallyQuantity { get; set; } = 0;
-        public double WorkedQ { get; set; } = 0;
+        public decimal ActuallyQuantity { get; set; } = 0;
+        public decimal WorkedQ { get; set; } = 0;
 
         [JsonIgnore] public List<string> Formulas { get; set; } = [];
         [JsonIgnore] public bool IsAdded { get; set; }

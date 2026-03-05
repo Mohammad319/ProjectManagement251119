@@ -10,6 +10,8 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
 {
     public void Configure(EntityTypeBuilder<CalculationEntity> builder)
     {
+        builder.ToTable("Calculations");
+
         // -------------------------
         // JSON conversions
         // -------------------------
@@ -56,6 +58,17 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
             .OnDelete(DeleteBehavior.ClientSetNull);
 
         // -------------------------
+        // Constraints (Quality)
+        // -------------------------
+        builder.ToTable(t =>
+        {
+            // Tax: 0..100
+            t.HasCheckConstraint("CK_Calculations_Tax_0_100", "[Tax] >= 0 AND [Tax] <= 100");
+            // Date range
+            t.HasCheckConstraint("CK_Calculations_DateRange", "[EndDate] >= [StartDate]");
+        });
+
+        // -------------------------
         // Performance indexes
         // -------------------------
 
@@ -73,6 +86,15 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         // فلترة كثيرة تكون على ProjectId فقط (بدون DepartmentId)
         builder.HasIndex(x => new { x.TenantId, x.ProjectId })
             .HasDatabaseName("IX_Calculations_Tenant_Project");
+
+        // ✅ Multi-tenant safety: Code يجب أن يكون unique داخل نفس Project في نفس Tenant
+        builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.Code })
+            .IsUnique()
+            .HasDatabaseName("UX_Calculations_Tenant_Project_Code");
+
+        // ✅ يفيد فلترة قائمة الحسابات مع الخصوصية + ترتيب العرض
+        builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.IsPrivate, x.SortOrder })
+            .HasDatabaseName("IX_Calculations_Tenant_Project_Private_Order");
 
         // (اختياري) لو عندك فلترة كثيرة مباشرة على StatusId في قائمة الحسابات
         builder.HasIndex(x => new { x.TenantId, x.StatusId })

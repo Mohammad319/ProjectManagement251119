@@ -7,6 +7,8 @@ internal sealed class FolderConfiguration : IEntityTypeConfiguration<FolderEntit
 {
     public void Configure(EntityTypeBuilder<FolderEntity> builder)
     {
+        builder.ToTable("Folders");
+
         // العلاقات
         builder.HasOne(x => x.Department)
             .WithMany(x => x.Folders)
@@ -19,7 +21,17 @@ internal sealed class FolderConfiguration : IEntityTypeConfiguration<FolderEntit
             .OnDelete(DeleteBehavior.Cascade);
 
         // ---------------- Indexes ----------------
-        builder.HasIndex(x => new { x.TenantId, x.DepartmentId, x.IsVisible, x.SortOrder });
+        builder.HasIndex(x => new { x.TenantId, x.DepartmentId, x.IsVisible, x.SortOrder })
+            .HasDatabaseName("IX_Folders_Tenant_Department_Visible_Order");
+
+        // بحث بالاسم داخل القسم
+        builder.HasIndex(x => new { x.TenantId, x.DepartmentId, x.Name })
+            .HasDatabaseName("IX_Folders_Tenant_Department_Name");
+
+        // جودة البيانات
+        builder.ToTable(t =>
+            t.HasCheckConstraint("CK_Folders_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0")
+        );
 
         // (اختياري) إذا كثير تبحث بالاسم أو تسوي فلترة بالاسم
         // builder.HasIndex(x => x.Name);

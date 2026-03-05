@@ -11,6 +11,8 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
 {
     public void Configure(EntityTypeBuilder<ProjectEntity> builder)
     {
+        builder.ToTable("Projects");
+
         builder.Property(p => p.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 
@@ -55,6 +57,18 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
             .HasForeignKey(x => x.OrganisationId)
             .OnDelete(DeleteBehavior.ClientSetNull);
 
+        // ---------------- Constraints ----------------
+        // تاريخ النهاية لا يجب أن يكون قبل البداية
+        builder.ToTable(t =>
+            t.HasCheckConstraint("CK_Projects_DateRange", "[EndDate] >= [StartDate]")
+        );
+
+        // Code (اختياري) لكن إذا موجود يجب أن يكون unique داخل نفس tenant
+        builder.HasIndex(x => new { x.TenantId, x.Code })
+            .IsUnique()
+            .HasFilter("[Code] IS NOT NULL AND [Code] <> ''")
+            .HasDatabaseName("UX_Projects_Tenant_Code");
+
         // ---------------- Indexes (تحسين الأداء) ----------------
 
         // Folder + visibility + order (ممتاز)
@@ -68,5 +82,9 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
         // ✅ إضافة مهمة إذا عندك فلترة كثيرة حسب Department
         builder.HasIndex(x => new { x.TenantId, x.DepartmentId })
             .HasDatabaseName("IX_Projects_Tenant_Department");
+
+        // (اختياري) بحث بالاسم داخل tenant
+        builder.HasIndex(x => new { x.TenantId, x.Name })
+            .HasDatabaseName("IX_Projects_Tenant_Name");
     }
 }

@@ -18,7 +18,8 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal ChangeFactor1 { get; set; } = 1;
         public decimal ChangeFactor2 { get; set; } = 1;
         public decimal ActuallyQuantity { get; set; } = 0;
-        public double WorkedQ { get; set; } = 0;
+        // Worked quantity — نستخدم decimal لتفادي أخطاء الدقة مع الحسابات المالية
+        public decimal WorkedQ { get; set; } = 0;
 
         [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public decimal? Cap { get; set; }

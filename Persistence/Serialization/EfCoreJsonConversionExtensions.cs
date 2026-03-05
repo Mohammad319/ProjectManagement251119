@@ -19,7 +19,9 @@ internal static class EfCoreJsonConversionExtensions
 
         var converter = new ValueConverter<T, string>(
             v => JsonSerializer.Serialize(v, opts),
-            v => JsonSerializer.Deserialize<T>(v, opts) ?? new T());
+            v => string.IsNullOrWhiteSpace(v)
+                ? new T()
+                : (JsonSerializer.Deserialize<T>(v, opts) ?? new T()));
 
         return propertyBuilder.HasConversion(converter);
     }

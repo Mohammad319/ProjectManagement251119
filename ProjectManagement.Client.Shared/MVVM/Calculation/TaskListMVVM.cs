@@ -53,10 +53,10 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal ChangeFactor1 => Metadata.ChangeFactor1;
         public decimal ChangeFactor2 => Metadata.ChangeFactor2;
         public decimal ActuallyQuantity => Metadata.ActuallyQuantity;
-        public double WorkedQ => Metadata.WorkedQ;
+        public decimal WorkedQ => Metadata.WorkedQ;
 
         // ⚠️ تجنب قسمة على صفر
-        public double WorkedQPercent => (Metadata.ActuallyQuantity == 0) ? 0 : (Metadata.WorkedQ / (double)Metadata.ActuallyQuantity);
+        public decimal WorkedQPercent => (Metadata.ActuallyQuantity == 0) ? 0 : (Metadata.WorkedQ / Metadata.ActuallyQuantity);
 
         public decimal? Cap => Metadata.Cap;
         public bool Active => Metadata.IsActive;
@@ -97,15 +97,19 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         [JsonIgnore] public decimal PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * Metadata.Quantity.Value : 0;
         [JsonIgnore] public decimal Diff => PriceSubTotal - ApriceTotally;
 
-        public decimal PriceQTax(decimal Tax) => PriceQ * (1 + ((decimal)Tax / 100));
-        public decimal ApriceTotallyTax(decimal Tax) => ApriceTotally * (1 + ((decimal)Tax / 100));
+        private static decimal TaxFactor(decimal taxPercent) => 1m + (taxPercent / 100m);
+
+        public decimal PriceQTax(decimal taxPercent) => PriceQ * TaxFactor(taxPercent);
+        public decimal ApriceTotallyTax(decimal taxPercent) => ApriceTotally * TaxFactor(taxPercent);
 
         public decimal PriceActuallyQuantity => ActuallyQuantity * PriceSub;
-        public decimal PriceWorkedQ => (decimal)WorkedQ * PriceSub;
-        public decimal PriceSubTax(decimal tax) => PriceSub * (1 +tax);
-        public decimal PriceTotalSubTax(decimal tax) => PriceSubTax(tax) * (1 + tax);
-        public decimal PriceActuallyQuantityTax(decimal tax) => PriceActuallyQuantity * (1 + tax);
-        public decimal PriceWorkedQTax(decimal tax) => PriceWorkedQ * (1 + tax);
+        public decimal PriceWorkedQ => WorkedQ * PriceSub;
+
+        // taxPercent مثال: 25 يعني 25%
+        public decimal PriceSubTax(decimal taxPercent) => PriceSub * TaxFactor(taxPercent);
+        public decimal PriceTotalSubTax(decimal taxPercent) => PriceSubTotal * TaxFactor(taxPercent);
+        public decimal PriceActuallyQuantityTax(decimal taxPercent) => PriceActuallyQuantity * TaxFactor(taxPercent);
+        public decimal PriceWorkedQTax(decimal taxPercent) => PriceWorkedQ * TaxFactor(taxPercent);
 
         public bool HasVoice => Metadata.HasVoice;
         public string Responsible => Metadata.Responsible;

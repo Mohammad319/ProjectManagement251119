@@ -33,7 +33,7 @@ namespace AuthPermissions.Services.Implement
             {
                 await _userManager.AddToRoleAsync(Admin, PMRolesConst.APP.Admin);
             }
-            return false;
+            return result.Succeeded;
         }
         public async Task<IEnumerable<UserAuthModel>> GetUsersAsync(int? TenantId, int? DepartmentId)
         {

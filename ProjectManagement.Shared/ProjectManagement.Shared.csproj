@@ -21,9 +21,8 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>ResLocalize.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resource\ResLocalize.se.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
+    <!-- Swedish resources (sv). Do NOT generate a designer for culture-specific resx files. -->
+    <EmbeddedResource Update="Resource\ResLocalize.sv.resx" />
   </ItemGroup>
 
   <ItemGroup>

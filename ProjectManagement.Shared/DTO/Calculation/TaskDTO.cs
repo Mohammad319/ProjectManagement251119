@@ -39,7 +39,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         [JsonIgnore] public bool Colspan { get; set; }
 
         public decimal ActuallyQuantity { get; set; } = 0;
-        public double WorkedQ { get; set; } = 0;
+        public decimal WorkedQ { get; set; } = 0;
 
     }
     public class TaskStorageDTO : TaskBase
