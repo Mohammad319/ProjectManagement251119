@@ -88,12 +88,6 @@ namespace Persistence.Migrations
                     b.Property<int>("CalculationId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
-
                     b.Property<string>("Data")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -114,12 +108,6 @@ namespace Persistence.Migrations
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
@@ -128,8 +116,6 @@ namespace Persistence.Migrations
                     b.HasIndex("ApplicationId");
 
                     b.HasIndex("CalculationId");
-
-                    b.HasIndex("CreatedBy");
 
                     b.HasIndex("TenantId", "ApplicationId")
                         .HasDatabaseName("IX_ApplicationValues_Tenant_App");
@@ -417,8 +403,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("StatusId");
 
-                    b.HasIndex("UpdatedBy");
-
                     b.HasIndex("TemplateId");
 
                     b.HasIndex("TypeId");
@@ -465,12 +449,19 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CalculationEntityId")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("BaseCostValue")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("decimal(18,2)")
+                        .HasComputedColumnSql("TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.BaseCost'))", true);
 
                     b.Property<string>("Comment")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("CostValue")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("decimal(18,2)")
+                        .HasComputedColumnSql("TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.Cost'))", true);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -480,14 +471,6 @@ namespace Persistence.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("CostValue")
-                        .HasColumnType("decimal(18,2)")
-                        .HasComputedColumnSql("TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.Cost'))", stored: true);
-
-                    b.Property<decimal?>("BaseCostValue")
-                        .HasColumnType("decimal(18,2)")
-                        .HasComputedColumnSql("TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.BaseCost'))", stored: true);
 
                     b.Property<string>("Metadata")
                         .IsRequired()
@@ -499,12 +482,6 @@ namespace Persistence.Migrations
                     b.Property<int>("ResourceId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("int");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -514,9 +491,13 @@ namespace Persistence.Migrations
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.HasIndex("CalculationEntityId");
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("CreatedBy");
 
@@ -526,18 +507,18 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
+                    b.HasIndex("TenantId", "BaseCostValue")
+                        .HasDatabaseName("IX_Offers_Tenant_BaseCostValue");
+
+                    b.HasIndex("TenantId", "CostValue")
+                        .HasDatabaseName("IX_Offers_Tenant_CostValue");
+
                     b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "ResourceId");
 
                     b.HasIndex("TenantId", "OrganisationId", "Date")
                         .HasDatabaseName("IX_Offers_Tenant_Org_Date");
-
-                    b.HasIndex("TenantId", "CostValue")
-                        .HasDatabaseName("IX_Offers_Tenant_CostValue");
-
-                    b.HasIndex("TenantId", "BaseCostValue")
-                        .HasDatabaseName("IX_Offers_Tenant_BaseCostValue");
 
                     b.ToTable("Offers", (string)null);
                 });
@@ -650,15 +631,15 @@ namespace Persistence.Migrations
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Unit")
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("UpdatedBy")
                         .HasColumnType("int");
-
-                    b.Property<string>("Unit")
-                        .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)");
 
                     b.HasKey("Id");
 
@@ -920,6 +901,12 @@ namespace Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -967,15 +954,25 @@ namespace Persistence.Migrations
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CalculationId");
+
+                    b.HasIndex("CreatedBy");
 
                     b.HasIndex("OpportunityId");
 
                     b.HasIndex("ParentTaskId");
 
                     b.HasIndex("StatusId");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "CalculationId");
 
@@ -1719,12 +1716,6 @@ namespace Persistence.Migrations
                     b.Property<int?>("DeletedBy")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DepartmentEntityId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -1795,8 +1786,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("DeletedBy");
 
-                    b.HasIndex("DepartmentEntityId");
-
                     b.HasIndex("FolderId");
 
                     b.HasIndex("OrganisationId");
@@ -1814,9 +1803,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "CreatedBy")
                         .HasDatabaseName("IX_Projects_Tenant_CreatedBy");
-
-                    b.HasIndex("TenantId", "DepartmentId")
-                        .HasDatabaseName("IX_Projects_Tenant_Department");
 
                     b.HasIndex("TenantId", "Id");
 
@@ -2409,9 +2395,10 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Entities.Calculation.OfferEntity", b =>
                 {
-                    b.HasOne("Domain.Entities.Calculation.CalculationEntity", null)
-                        .WithMany("Offers")
-                        .HasForeignKey("CalculationEntityId");
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Offers")
@@ -2423,23 +2410,18 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Organisation");
-
                     b.Navigation("CreatedByUser");
 
-                    b.Navigation("UpdatedByUser");
+                    b.Navigation("Organisation");
 
                     b.Navigation("Resource");
+
+                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.OpportunityEntity", b =>
@@ -2458,6 +2440,11 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Calculation.AccountEntity", "Account")
                         .WithMany("Resources")
                         .HasForeignKey("AccountId");
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Calculation.OpportunityEntity", "Opportunity")
                         .WithMany("Resources")
@@ -2480,11 +2467,6 @@ namespace Persistence.Migrations
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
                         .WithMany()
@@ -2597,6 +2579,11 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Domain.Entities.Calculation.OpportunityEntity", "Opportunity")
                         .WithMany("Tasks")
                         .HasForeignKey("OpportunityId");
@@ -2609,11 +2596,6 @@ namespace Persistence.Migrations
                     b.HasOne("Domain.Entities.Calculation.TaskStatusEntity", "Status")
                         .WithMany("Tasks")
                         .HasForeignKey("StatusId");
-
-                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
                         .WithMany()
@@ -2890,10 +2872,6 @@ namespace Persistence.Migrations
                         .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Users.DepartmentEntity", null)
-                        .WithMany("Projects")
-                        .HasForeignKey("DepartmentEntityId");
-
                     b.HasOne("Domain.Entities.Folder.FolderEntity", "Folder")
                         .WithMany("FolderProjects")
                         .HasForeignKey("FolderId")
@@ -3085,8 +3063,6 @@ namespace Persistence.Migrations
 
                     b.Navigation("AttributesTender");
 
-                    b.Navigation("Offers");
-
                     b.Navigation("Opportunities");
 
                     b.Navigation("SharesCalc");
@@ -3221,8 +3197,6 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Users.DepartmentEntity", b =>
                 {
                     b.Navigation("Folders");
-
-                    b.Navigation("Projects");
 
                     b.Navigation("Users");
                 });

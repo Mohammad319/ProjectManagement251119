@@ -124,7 +124,6 @@ namespace Persistence.Migrations
                     HourlyPrice = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Factors = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     Tax = table.Column<int>(type: "int", nullable: false),
@@ -151,6 +150,7 @@ namespace Persistence.Migrations
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DeletedBy = table.Column<int>(type: "int", nullable: true)
@@ -890,7 +890,6 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
@@ -904,7 +903,12 @@ namespace Persistence.Migrations
                     OpportunityId = table.Column<int>(type: "int", nullable: true),
                     CalculationId = table.Column<int>(type: "int", nullable: false),
                     StatusId = table.Column<int>(type: "int", nullable: true),
-                    TenantId = table.Column<int>(type: "int", nullable: false)
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -930,6 +934,18 @@ namespace Persistence.Migrations
                         column: x => x.ParentTaskId,
                         principalTable: "Tasks",
                         principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Tasks_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Tasks_Users_UpdatedBy",
+                        column: x => x.UpdatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -945,7 +961,6 @@ namespace Persistence.Migrations
                     TenderDeadline = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TenderQA = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SortOrder = table.Column<double>(type: "float", nullable: false),
-                    DepartmentId = table.Column<int>(type: "int", nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProjectTypeId = table.Column<int>(type: "int", nullable: true),
                     FolderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -954,7 +969,6 @@ namespace Persistence.Migrations
                     CompensationId = table.Column<int>(type: "int", nullable: true),
                     ContractId = table.Column<int>(type: "int", nullable: true),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
-                    DepartmentEntityId = table.Column<int>(type: "int", nullable: true),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -978,11 +992,6 @@ namespace Persistence.Migrations
                         name: "FK_Projects_Contracts_ContractId",
                         column: x => x.ContractId,
                         principalTable: "Contracts",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Projects_Departments_DepartmentEntityId",
-                        column: x => x.DepartmentEntityId,
-                        principalTable: "Departments",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Projects_Folders_FolderId",
@@ -1060,7 +1069,6 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
@@ -1075,7 +1083,12 @@ namespace Persistence.Migrations
                     ResourceSortId = table.Column<int>(type: "int", nullable: true),
                     ResourceTypeId = table.Column<int>(type: "int", nullable: true),
                     PrimaryOfferId = table.Column<int>(type: "int", nullable: true),
-                    TenantId = table.Column<int>(type: "int", nullable: false)
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1111,6 +1124,18 @@ namespace Persistence.Migrations
                         principalTable: "Tasks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Resources_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Resources_Users_UpdatedBy",
+                        column: x => x.UpdatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1145,23 +1170,23 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Comment = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrganisationId = table.Column<int>(type: "int", nullable: true),
                     ResourceId = table.Column<int>(type: "int", nullable: false),
-                    CalculationEntityId = table.Column<int>(type: "int", nullable: true),
-                    TenantId = table.Column<int>(type: "int", nullable: false)
+                    BaseCostValue = table.Column<decimal>(type: "decimal(18,2)", nullable: true, computedColumnSql: "TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.BaseCost'))", stored: true),
+                    CostValue = table.Column<decimal>(type: "decimal(18,2)", nullable: true, computedColumnSql: "TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.Cost'))", stored: true),
+                    TenantId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<int>(type: "int", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Offers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Offers_Calculations_CalculationEntityId",
-                        column: x => x.CalculationEntityId,
-                        principalTable: "Calculations",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Offers_Organisations_OrganisationId",
                         column: x => x.OrganisationId,
@@ -1173,6 +1198,18 @@ namespace Persistence.Migrations
                         principalTable: "Resources",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Offers_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Offers_Users_UpdatedBy",
+                        column: x => x.UpdatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -1476,9 +1513,9 @@ namespace Persistence.Migrations
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Offers_CalculationEntityId",
+                name: "IX_Offers_CreatedBy",
                 table: "Offers",
-                column: "CalculationEntityId");
+                column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Offers_OrganisationId",
@@ -1489,6 +1526,16 @@ namespace Persistence.Migrations
                 name: "IX_Offers_ResourceId",
                 table: "Offers",
                 column: "ResourceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Offers_Tenant_BaseCostValue",
+                table: "Offers",
+                columns: new[] { "TenantId", "BaseCostValue" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Offers_Tenant_CostValue",
+                table: "Offers",
+                columns: new[] { "TenantId", "CostValue" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Offers_Tenant_Org_Date",
@@ -1504,6 +1551,11 @@ namespace Persistence.Migrations
                 name: "IX_Offers_TenantId_ResourceId",
                 table: "Offers",
                 columns: new[] { "TenantId", "ResourceId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Offers_UpdatedBy",
+                table: "Offers",
+                column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Opportunities_CalculationId",
@@ -1648,11 +1700,6 @@ namespace Persistence.Migrations
                 column: "DeletedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Projects_DepartmentEntityId",
-                table: "Projects",
-                column: "DepartmentEntityId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Projects_FolderId",
                 table: "Projects",
                 column: "FolderId");
@@ -1676,11 +1723,6 @@ namespace Persistence.Migrations
                 name: "IX_Projects_Tenant_CreatedBy",
                 table: "Projects",
                 columns: new[] { "TenantId", "CreatedBy" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Projects_Tenant_Department",
-                table: "Projects",
-                columns: new[] { "TenantId", "DepartmentId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_Tenant_Folder_Visible_Order",
@@ -1738,6 +1780,11 @@ namespace Persistence.Migrations
                 name: "IX_Resources_AccountId",
                 table: "Resources",
                 column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_CreatedBy",
+                table: "Resources",
+                column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Resources_OpportunityId",
@@ -1803,6 +1850,11 @@ namespace Persistence.Migrations
                 name: "IX_Resources_TenantId_TaskId",
                 table: "Resources",
                 columns: new[] { "TenantId", "TaskId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_UpdatedBy",
+                table: "Resources",
+                column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ResourceSorts_AccountId",
@@ -2006,6 +2058,11 @@ namespace Persistence.Migrations
                 column: "CalculationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tasks_CreatedBy",
+                table: "Tasks",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_OpportunityId",
                 table: "Tasks",
                 column: "OpportunityId");
@@ -2031,6 +2088,11 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "CalculationId", "StatusId" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Tenant_Parent",
+                table: "Tasks",
+                columns: new[] { "TenantId", "ParentTaskId" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_TenantId_CalculationId",
                 table: "Tasks",
                 columns: new[] { "TenantId", "CalculationId" });
@@ -2039,6 +2101,11 @@ namespace Persistence.Migrations
                 name: "IX_Tasks_TenantId_Id",
                 table: "Tasks",
                 columns: new[] { "TenantId", "Id" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_UpdatedBy",
+                table: "Tasks",
+                column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskStatuses_CreatedBy",

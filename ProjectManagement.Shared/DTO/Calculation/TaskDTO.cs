@@ -1,6 +1,7 @@
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -9,8 +10,11 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class TaskPostDTO : TaskBase
     {
         public int Id { get; set; }
-
-        public int? ParentTaskId { get; set; }
+        /// <summary>
+        /// Concurrency token (rowversion). Send this back on updates to detect stale edits.
+        /// </summary>
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+public int? ParentTaskId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? StatusId { get; set; }
@@ -135,6 +139,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public TaskMetadata Metadata { get; set; } = new();
         public int Id { get; set; }
         public int? TaskId { get; set; }
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
         public int? StatusId { get; set; }
         public string Status { get; set; } = string.Empty;

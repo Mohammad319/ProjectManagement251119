@@ -34,6 +34,7 @@ namespace Application.Mapping.CalcItems
             {
                 TaskId = t.ParentTaskId,
                 Id = t.Id,
+                RowVersion = t.RowVersion,
                 Name = t.Name,
                 OpportunityId = t.OpportunityId,
                 Order = t.SortOrder,

@@ -13,38 +13,59 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
     {
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpGet(URLConst.ReOrder + "/{TaskId}/{NewOrder}")]
-        public async Task<IActionResult> ReOrder(int TaskId, double NewOrder) =>
-            Ok(await MicroBus.Send(new NewOrderTaskCommand(TaskId, NewOrder)));
+        public async Task<IActionResult> ReOrder(int TaskId, double NewOrder)
+        {
+            var result = await MicroBus.Send(new NewOrderTaskCommand(TaskId, NewOrder));
+            TrySetETag(result);
+            return Ok(result);
+        }
+
         [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("status")]
         public async Task<IActionResult> Get(int? id)
         {
-            return Ok(await MicroBus.Send(new GetVisualTaskStatusQuery(id)));
+            var result = await MicroBus.Send(new GetVisualTaskStatusQuery(id));
+            TrySetETag(result);
+            return Ok(result);
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost("{id}")]
         public async Task<IActionResult> Create(int id, [FromBody] List<TaskPostDTO> Tasks)
         {
-            return Ok(await MicroBus.Send(new CreateTaskCommand(Tasks, id)));
-        }
-        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
-        [HttpPost(URLConst.Filter)]
-        public async Task<IActionResult> Post(FilterCalculationItemsDto obj)
-        {
-            return Ok(await MicroBus.Send(new GetTasksByFilterQuery(obj)));
+            var result = await MicroBus.Send(new CreateTaskCommand(Tasks, id));
+            TrySetETag(result);
+            return Ok(result);
         }
 
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+        [HttpPost(URLConst.Filter)]
+        public async Task<IActionResult> Post([FromBody] FilterCalculationItemsDto obj)
+        {
+            var result = await MicroBus.Send(new GetTasksByFilterQuery(obj));
+            TrySetETag(result);
+            return Ok(result);
+        }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, TaskPostDTO dto)
+        public async Task<IActionResult> Update(int id, [FromBody] TaskPostDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateTaskCommand(id, dto)));
+            // Allow If-Match / ETag based concurrency (optional) without breaking body-based RowVersion
+            TrySetRowVersionFromIfMatch(dto);
+
+            var result = await MicroBus.Send(new UpdateTaskCommand(id, dto));
+            TrySetETag(result);
+            return Ok(result);
         }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete("{calcID}")]
-        public async Task<IActionResult> Delete(int calcID, [FromBody] IEnumerable<int> items) =>
-            Ok(await MicroBus.Send(new DeleteTaskCommand(items, calcID)));
+        public async Task<IActionResult> Delete(int calcID, [FromBody] IEnumerable<int> items)
+        {
+            var result = await MicroBus.Send(new DeleteTaskCommand(items, calcID));
+            TrySetETag(result);
+            return Ok(result);
+        }
     }
 }

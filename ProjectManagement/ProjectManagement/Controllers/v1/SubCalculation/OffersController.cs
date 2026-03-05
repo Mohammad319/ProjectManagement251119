@@ -14,39 +14,57 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         [HttpGet(URLConst.Offer.Set + "/{resID}/{offerID}")]
         public async Task<IActionResult> Set(int resID, int? offerID)
         {
-            return Ok(await MicroBus.Send(new SetOfferCommand(resID, offerID)));
+            var result = await MicroBus.Send(new SetOfferCommand(resID, offerID));
+            TrySetETag(result);
+            return Ok(result);
         }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpGet(URLConst.Offer.ReCalc + "/{calcID}/{orgID}/{avg}")]
         public async Task<IActionResult> ReCalc(int calcID, int orgID, double avg)
         {
-            return Ok(await MicroBus.Send(new CalcAvgOfferCommand(calcID, orgID, avg)));
+            var result = await MicroBus.Send(new CalcAvgOfferCommand(calcID, orgID, avg));
+            TrySetETag(result);
+            return Ok(result);
         }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost(URLConst.Offer.Offers)]
-        public async Task<IActionResult> Post(PostOfferDTO dto)
+        public async Task<IActionResult> Post([FromBody] PostOfferDTO dto)
         {
-            return Ok(await MicroBus.Send(new CreateOfferCommand(dto)));
+            var result = await MicroBus.Send(new CreateOfferCommand(dto));
+            TrySetETag(result);
+            return Ok(result);
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPut(URLConst.Offer.Offers + "/{id}")]
-        public async Task<IActionResult> Update(int id, PostOfferDTO dto)
+        public async Task<IActionResult> Update(int id, [FromBody] PostOfferDTO dto)
         {
-            return Ok(await MicroBus.Send(new UpdateOfferCommand(id,dto)));
+            // Allow If-Match / ETag based concurrency (optional) without breaking body-based RowVersion
+            TrySetRowVersionFromIfMatch(dto);
+
+            var result = await MicroBus.Send(new UpdateOfferCommand(id, dto));
+            TrySetETag(result);
+            return Ok(result);
         }
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpDelete(URLConst.Offer.Offers + "/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            return Ok(await MicroBus.Send(new DeleteOfferCommand(id)));
+            var result = await MicroBus.Send(new DeleteOfferCommand(id));
+            TrySetETag(result);
+            return Ok(result);
         }
+
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost(URLConst.Offer.Filter)]
         public async Task<IActionResult> Filter([FromBody] OfferFilterDTO filter)
         {
-            return Ok(await MicroBus.Send(new GetOffersByFilterQuery(filter)));
+            var result = await MicroBus.Send(new GetOffersByFilterQuery(filter));
+            TrySetETag(result);
+            return Ok(result);
         }
     }
 }

@@ -31,7 +31,13 @@ namespace ProjectManagement.Shared.DTO.Offer
         public decimal BaseCost { get; set; }
         //[Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int ResourceId { get; set; }
-        public int? OrganisationId { get; set; }
+        
+
+        /// <summary>
+        /// Concurrency token (rowversion). Send this back on updates to detect stale edits.
+        /// </summary>
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+public int? OrganisationId { get; set; }
         public int? ContactOrganisationId { get; set; }
     }
     public class OfferData
@@ -56,7 +62,13 @@ namespace ProjectManagement.Shared.DTO.Offer
     public class ListOfferDTO
     {
         public int Id { get; set; }
-        public string Organisation { get; set; } = string.Empty;
+        
+
+        /// <summary>
+        /// Concurrency token (rowversion). Send this back on updates to detect stale edits.
+        /// </summary>
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+public string Organisation { get; set; } = string.Empty;
         public int? OrganisationId { get; set; }
         //public string Unit { get; set; } = string.Empty;
         public decimal BaseCost { get; set; }

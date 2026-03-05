@@ -6,6 +6,7 @@ using Persistence.Factory;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.CalculationItems.Resource
 {
@@ -324,10 +325,21 @@ namespace Persistence.Service.CalculationItems.Resource
 
             var calcId = entity.Task.CalculationId;
 
+            // optimistic concurrency: detect stale edits
+            if (res.RowVersion is { Length: > 0 })
+                context.Entry(entity).Property(x => x.RowVersion).OriginalValue = res.RowVersion;
+
             entity.Update(res);
             entity.Metadata.QuantityParam = res.Data.QuantityParam;
 
-            await context.SaveChangesAsync(ct);
+            try
+            {
+                await context.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConcurrencyConflictException("Resource", resourceId);
+            }
 
             var fullResource = await context.Resources
                 .Where(x => x.Id == entity.Id)

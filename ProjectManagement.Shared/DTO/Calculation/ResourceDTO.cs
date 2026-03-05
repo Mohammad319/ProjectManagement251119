@@ -4,6 +4,7 @@ using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Enums;
 using System.Collections.Generic;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -12,7 +13,11 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class ResourcePostDTO
     {
         public int Id { get; set; }
-        public ResourceTypesEnum ResType { get; set; }
+        /// <summary>
+        /// Concurrency token (rowversion). Send this back on updates to detect stale edits.
+        /// </summary>
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+public ResourceTypesEnum ResType { get; set; }
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
@@ -117,6 +122,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class ResourceListDTO : ResourceBase
     {
         public double SortOrder { get; set; }
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
         public ResourceMetadata Data { get; set; } = new();
         public int TaskId { get; set; }

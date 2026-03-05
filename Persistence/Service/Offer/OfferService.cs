@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Hub;
 using ProjectManagement.Shared.DTO.Offer;
+using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.Offer
 {
@@ -62,6 +63,10 @@ namespace Persistence.Service.Offer
 
             if (entity is null) return false;
 
+            // optimistic concurrency: detect stale edits
+            if (dto.RowVersion is { Length: > 0 })
+                context.Entry(entity).Property(x => x.RowVersion).OriginalValue = dto.RowVersion;
+
             entity.Update(
                 organisationId: dto.OrganisationId,
                 metadata: new OfferData
@@ -73,7 +78,14 @@ namespace Persistence.Service.Offer
                 comment: dto.Comment
             );
 
-            await context.SaveChangesAsync(ct);
+            try
+            {
+                await context.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConcurrencyConflictException("Offer", id);
+            }
 
             var updated = await context.Offers
                 .AsNoTracking()
@@ -262,6 +274,7 @@ namespace Persistence.Service.Offer
                 .Select(x => new ListOfferCalcInfo
                 {
                     Id = x.Id,
+                    RowVersion = x.RowVersion,
                     BaseCost = EF.Property<decimal?>(x, "BaseCostValue") ?? 0m,
                     Cost = EF.Property<decimal?>(x, "CostValue") ?? 0m,
                     Comment = x.Comment ?? string.Empty,
@@ -302,6 +315,7 @@ namespace Persistence.Service.Offer
             x => new ListOfferDTO
             {
                 Id = x.Id,
+                RowVersion = x.RowVersion,
                 BaseCost = x.Metadata.BaseCost,
                 Cost = x.Metadata.Cost,
                 Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,
@@ -318,6 +332,7 @@ namespace Persistence.Service.Offer
                 new ListOfferDTO
                 {
                     Id = x.Id,
+                    RowVersion = x.RowVersion,
                     BaseCost = x.Metadata.BaseCost,
                     Cost = x.Metadata.Cost,
                     Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,

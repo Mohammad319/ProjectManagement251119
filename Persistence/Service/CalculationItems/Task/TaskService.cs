@@ -10,6 +10,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Exceptions;
 
 namespace Persistence.Service.CalculationItems.Task
 {
@@ -389,7 +390,7 @@ namespace Persistence.Service.CalculationItems.Task
                 return false;
 
             taskWithCalcId.Task.SortOrder = newOrder;
-            return await UpdateTaskAsync(taskWithCalcId.CalcId, taskWithCalcId.Task, ct);
+            return await SaveAndNotifyTaskAsync(context, taskWithCalcId.CalcId, taskId, ct);
         }
 
         // -----------------------------------------------------
@@ -409,15 +410,14 @@ namespace Persistence.Service.CalculationItems.Task
             if (taskWithCalcId == null)
                 return false;
 
-            var task = taskWithCalcId.Task;
+                        var task = taskWithCalcId.Task;
+
+            // optimistic concurrency: if UI sends RowVersion, detect stale edits
+            if (dto.RowVersion is { Length: > 0 })
+                context.Entry(task).Property(x => x.RowVersion).OriginalValue = dto.RowVersion;
+
             var oldType = task.Metadata.Type;
             var newType = dto.Metadata.Type;
-
-            task.Name = dto.Name;
-            task.StatusId = dto.StatusId;
-            task.OpportunityId = dto.OpportunityId;
-            task.Metadata = dto.Metadata;
-            task.Metadata.QuantityParam = dto.Metadata.QuantityParam;
 
             // منطق خاص: لو تغيّر النوع إلى CodeName و فيه Resources → نمنع التغيير
             if (oldType != newType && newType == TaskType.CodeName)
@@ -428,9 +428,10 @@ namespace Persistence.Service.CalculationItems.Task
                 if (hasResources)
                     return false;
 
-                task.StatusId = null;
-                task.OpportunityId = null;
-                task.Metadata = new TaskMetadata
+                // نجبر DTO إلى وضع CodeName (بدون Status/Opportunity)
+                dto.StatusId = null;
+                dto.OpportunityId = null;
+                dto.Metadata = new TaskMetadata
                 {
                     IsOH = dto.Metadata.IsOH,
                     Type = TaskType.CodeName,
@@ -438,26 +439,43 @@ namespace Persistence.Service.CalculationItems.Task
                 };
             }
 
-            return await UpdateTaskAsync(taskWithCalcId.CalcId, task, ct);
-        }
+            task.Update(dto);
 
+            return await SaveAndNotifyTaskAsync(context, taskWithCalcId.CalcId, task.Id, ct);
+
+        }
+        
         // -----------------------------------------------------
-        // Helper: save + reload + notify
+        // Helper: save + reload + notify (with concurrency handling)
         // -----------------------------------------------------
-        private async Task<bool> UpdateTaskAsync(
+        private async Task<bool> SaveAndNotifyTaskAsync(
+            ShardingSingleDbContext context,
             int calcId,
-            TaskEntity task,
+            int taskId,
             CancellationToken ct)
         {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-            context.Tasks.Update(task);
-            await context.SaveChangesAsync(ct);
+            try
+            {
+                await context.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new ConcurrencyConflictException("Task", taskId);
+            }
 
+            // Reload with navs for UI notification
             var taskWithNav = await context.Tasks
-    .AsNoTracking()
-    .Include(t => t.Status)
-    .Include(t => t.Opportunity)
-    .FirstAsync(t => t.Id == task.Id, ct);
+                .AsNoTracking()
+                .Include(t => t.Status)
+                .Include(t => t.Opportunity)
+                .Include(t => t.Resources)
+                .ThenInclude(r => r.Offers)
+                .FirstAsync(t => t.Id == taskId, ct);
+
+            // Load resource lookups (optional, but keeps UI consistent)
+            // (EF doesn't allow multiple ThenInclude branches from same Include chain in one go, so we repeat Include)
+            taskWithNav.Resources = taskWithNav.Resources ?? [];
+
             var taskDto = taskWithNav.MapToTaskListDTO();
 
             await notification.SendNotificationAsync(
@@ -469,7 +487,7 @@ namespace Persistence.Service.CalculationItems.Task
             return true;
         }
 
-        // -----------------------------------------------------
+// -----------------------------------------------------
         // Helper: get task + all children via composable CTE
         // -----------------------------------------------------
         private async Task<List<TaskEntity>> GetTaskWithChildrenAsync(

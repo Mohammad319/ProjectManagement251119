@@ -24,6 +24,7 @@ namespace Application.Extention
                 Name = r.Name,
                 Active = r.IsActive,
                 Id = r.Id,
+                RowVersion = r.RowVersion,
                 ResType = r.ResType,
                 ResourceSortId = r.ResourceSortId,
                 ResourceTypeId = r.ResourceTypeId,
@@ -50,6 +51,7 @@ namespace Application.Extention
             return new ListOfferDTO
             {
                 Id = of.Id,
+                RowVersion = of.RowVersion,
                 BaseCost = of.Metadata.BaseCost,
                 Cost = of.Metadata.Cost,
                 Comment = of.Comment ?? string.Empty,
