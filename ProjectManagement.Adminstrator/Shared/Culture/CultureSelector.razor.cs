@@ -9,7 +9,7 @@ namespace ProjectManagement.Client.Adminstrator.Shared.Culture
         [Inject] public NavigationManager NavManager { get; set; } = default!;
         [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
 
-        readonly CultureInfo[] cultures = [new CultureInfo("en-US"), new CultureInfo("se-SE")];
+        readonly CultureInfo[] cultures = [new CultureInfo("en-US"), new CultureInfo("sv-SE")];
 
         CultureInfo Culture
         {
@@ -27,3 +27,4 @@ namespace ProjectManagement.Client.Adminstrator.Shared.Culture
         }
     }
 }
+

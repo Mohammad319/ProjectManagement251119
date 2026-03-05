@@ -46,6 +46,11 @@ public static class MiddlewareExtensions
 
         app.UseGlobalExceptionHandling(isDev);
 
+        if (!isDev)
+        {
+            app.UseHsts();
+        }
+
         app.UseHttpsRedirection();
         app.UseRouting();
 
@@ -55,39 +60,42 @@ public static class MiddlewareExtensions
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapPost("/internal/tenants/reload", async (
-            HttpRequest req,
-            IConfiguration config,
-            ITenantConnectionStringStore store) =>
-                {
-                    var secret = config["TenantReload:Secret"];
-                    var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
+        var tenantReloadSecret = app.Configuration["TenantReload:Secret"];
+        var tenantReloadEnabled = !string.IsNullOrWhiteSpace(tenantReloadSecret);
 
-                    if (string.IsNullOrWhiteSpace(secret) || header != secret)
-                        return Results.Unauthorized();
+        if (tenantReloadEnabled)
+        {
+            app.MapPost("/internal/tenants/reload", async (
+                HttpRequest req,
+                ITenantConnectionStringStore store) =>
+                    {
+                        var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
 
-                    await store.ReloadAsync(req.HttpContext.RequestAborted);
-                    return Results.Ok(new { status = "reloaded" });
-                })
-        .WithTags("Internal")
-        .DisableAntiforgery();
-        app.MapPost("/internal/tenants/reload/{tenantId:int}", async (
-            int tenantId,
-            HttpRequest req,
-            IConfiguration config,
-            ITenantConnectionStringStore store) =>
-                {
-                    var secret = config["TenantReload:Secret"];
-                    var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
+                        if (header != tenantReloadSecret)
+                            return Results.Unauthorized();
 
-                    if (string.IsNullOrWhiteSpace(secret) || header != secret)
-                        return Results.Unauthorized();
+                        await store.ReloadAsync(req.HttpContext.RequestAborted);
+                        return Results.Ok(new { status = "reloaded" });
+                    })
+            .WithTags("Internal")
+            .DisableAntiforgery();
 
-                    await store.ReloadTenantAsync(tenantId, req.HttpContext.RequestAborted);
-                    return Results.Ok(new { status = "reloaded", tenantId });
-                })
-        .WithTags("Internal")
-        .DisableAntiforgery();
+            app.MapPost("/internal/tenants/reload/{tenantId:int}", async (
+                int tenantId,
+                HttpRequest req,
+                ITenantConnectionStringStore store) =>
+                    {
+                        var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
+
+                        if (header != tenantReloadSecret)
+                            return Results.Unauthorized();
+
+                        await store.ReloadTenantAsync(tenantId, req.HttpContext.RequestAborted);
+                        return Results.Ok(new { status = "reloaded", tenantId });
+                    })
+            .WithTags("Internal")
+            .DisableAntiforgery();
+        }
 
         // TenantContext after auth (depends on claims)
         app.UseMiddleware<TenantContextMiddleware>();

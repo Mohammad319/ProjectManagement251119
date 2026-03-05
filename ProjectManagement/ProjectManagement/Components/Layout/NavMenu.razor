@@ -193,9 +193,9 @@
 
     async Task ChangeLanguage()
     {
-        var newCulture = CultureInfo.CurrentCulture.Name == "se-SE" || string.IsNullOrEmpty(CultureInfo.CurrentCulture.Name)
+        var newCulture = CultureInfo.CurrentCulture.Name == "sv-SE" || string.IsNullOrEmpty(CultureInfo.CurrentCulture.Name)
             ? "en-US"
-            : "se-SE";
+            : "sv-SE";
 
         await JS.InvokeVoidAsync("blazorCulture.set", newCulture);
         _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
@@ -206,3 +206,4 @@
         _navigationManager.LocationChanged -= OnLocationChanged;
     }
 }
+

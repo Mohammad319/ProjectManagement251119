@@ -60,7 +60,7 @@ builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(options => options.DetailedErrors = true);
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
-    var supportedCultures = new[] { "en-US", "se-SE" };
+    var supportedCultures = new[] { "en-US", "sv-SE" };
     options.DefaultRequestCulture = new RequestCulture("en-US");
     options.SupportedCultures = [.. supportedCultures.Select(c => new CultureInfo(c))];
     options.SupportedUICultures = [.. supportedCultures.Select(c => new CultureInfo(c))];
@@ -100,3 +100,4 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
+
