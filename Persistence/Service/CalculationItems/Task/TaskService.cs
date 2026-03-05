@@ -411,6 +411,8 @@ namespace Persistence.Service.CalculationItems.Task
                 return false;
 
             var task = taskWithCalcId.Task;
+            var oldType = task.Metadata.Type;
+            var newType = dto.Metadata.Type;
 
             task.Name = dto.Name;
             task.StatusId = dto.StatusId;
@@ -419,8 +421,7 @@ namespace Persistence.Service.CalculationItems.Task
             task.Metadata.QuantityParam = dto.Metadata.QuantityParam;
 
             // منطق خاص: لو تغيّر النوع إلى CodeName و فيه Resources → نمنع التغيير
-            if (dto.Metadata.Type != task.Metadata.Type &&
-                dto.Metadata.Type == TaskType.CodeName)
+            if (oldType != newType && newType == TaskType.CodeName)
             {
                 bool hasResources = await context.Resources
                     .AnyAsync(x => x.TaskId == task.Id, ct);
@@ -533,10 +534,10 @@ namespace Persistence.Service.CalculationItems.Task
                 return null;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var taskIds = tasks.Select(t => t.Id).ToList();
+            var sourceTaskIds = tasks.Select(t => t.Id).ToList();
 
             var resources = await context.Resources
-                .Where(r => taskIds.Contains(r.TaskId))
+                .Where(r => sourceTaskIds.Contains(r.TaskId))
                 .AsNoTracking()
                 .ToListAsync(ct);
 
@@ -558,18 +559,19 @@ namespace Persistence.Service.CalculationItems.Task
 
             await context.Tasks.AddAsync(rootTask, ct);
             await context.SaveChangesAsync(ct);
+            var newTaskIds = tasks.Select(t => t.Id).ToList();
 
             //await LoadTaskReferencesAsync(tasks, ct);
 
             //List<int> taskIds = [.. tasks.Select(t => t.Id)];
 
             await context.Tasks
-    .Where(t => taskIds.Contains(t.Id))
+    .Where(t => newTaskIds.Contains(t.Id))
     .Include(t => t.Status)
     .Include(t => t.Opportunity)
     .LoadAsync(ct);
             List<ResourceEntity> allResources = await context.Resources
-                .Where(r => taskIds.Contains(r.TaskId))
+                .Where(r => newTaskIds.Contains(r.TaskId))
                 .Include(r => r.Status)
                 .Include(r => r.Account)
                 .Include(r => r.ResourceType)

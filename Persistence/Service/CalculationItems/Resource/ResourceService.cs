@@ -52,6 +52,7 @@ namespace Persistence.Service.CalculationItems.Resource
             foreach (var res in sourceResources)
             {
                 // نسخة جديدة
+                var sourceId = res.Id;
                 res.Id = 0;
                 res.PrimaryOfferId = null;
 
@@ -60,7 +61,7 @@ namespace Persistence.Service.CalculationItems.Resource
                     if (!string.IsNullOrEmpty(res.Metadata.QuantityParam))
                         res.Metadata.QuantityParam = PMValuesConst.FixedQ;
 
-                    res.Metadata.Quantity = valueById.TryGetValue(res.Id, out var v) ? v : res.Metadata.Quantity;
+                    res.Metadata.Quantity = valueById.TryGetValue(sourceId, out var v) ? v : res.Metadata.Quantity;
                     res.OpportunityId = null;
                 }
 

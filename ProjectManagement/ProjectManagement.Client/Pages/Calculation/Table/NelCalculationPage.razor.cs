@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table
@@ -25,21 +26,37 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         {
             try
             {
-                Template.StyleNetCalc = string.Empty;
+                if (string.IsNullOrWhiteSpace(item))
+                    return;
 
-                // item: "columnIndex||newWidth"
-                string[] arr = item.Split("||", StringSplitOptions.RemoveEmptyEntries);
-                if (arr.Length < 2) return;
+                string[] arr = item.Split("||", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                if (arr.Length < 2 ||
+                    !int.TryParse(arr[0], out int headerIndex) ||
+                    !int.TryParse(arr[1], out int newWidth))
+                {
+                    return;
+                }
 
-                int headerIndex = int.Parse(arr[0]);
-                int newWidth = int.Parse(arr[1]);
+                newWidth = Math.Max(PMValuesConst.MinWidthCol, newWidth);
 
-                // إذا أردت تطبيق width على Template.NetCalc.Columns هنا أضف منطقك
-                // Template.NetCalc.Columns.FirstOrDefault(c => c.Id == headerIndex)?.Width = newWidth;
+                if (headerIndex == 1)
+                {
+                    Template.StartCol1 = newWidth;
+                }
+                else
+                {
+                    int templateColumnIndex = headerIndex - 2;
+                    if (templateColumnIndex < 0 || templateColumnIndex >= Template.NetCalc.Columns.Count)
+                        return;
+
+                    Template.NetCalc.Columns[templateColumnIndex].Width = newWidth;
+                }
+
+                Template.FreezCol();
+                await InvokeAsync(StateHasChanged);
 
                 if (Calc?.TemplateId > 0)
                 {
-                    Template.StyleNetCalc = "";
                     TemplateListPostDTO temp = new();
                     Template.CopyPropertiesTo(temp);
                     await Repo.Template.UpdateAsync(temp, Calc.TemplateId.Value);
