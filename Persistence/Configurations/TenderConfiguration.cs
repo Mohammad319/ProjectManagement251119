@@ -43,15 +43,18 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
     {
         builder.ToTable("TenderAttributeBinds");
 
+        // اجعل Id هو الـ PK (Identity)
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).UseIdentityColumn();
 
+        // امنع التكرار لنفس (TenderId + TenderAttributeId) داخل نفس Tenant
         builder.HasIndex(x => new { x.TenantId, x.TenderId, x.TenderAttributeId })
             .IsUnique()
             .HasDatabaseName("UX_TenderAttributeBinds_Tenant_Tender_Attr");
+
         builder.HasOne(x => x.Tender)
             .WithMany(x => x.TendersAttributes)
             .HasForeignKey(x => x.TenderId)
-            .HasPrincipalKey(x => x.Id)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.TenderAttribute)
@@ -59,8 +62,9 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
             .HasForeignKey(x => x.TenderAttributeId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        builder.HasIndex(x => new { x.TenantId, x.TenderId })
-            .HasDatabaseName("IX_TenderAttrBinds_Tenant_Tender");
+        // (اختياري) هذا index صار غالباً غير ضروري بسبب الـ Unique Index أعلاه
+        // builder.HasIndex(x => new { x.TenantId, x.TenderId })
+        //     .HasDatabaseName("IX_TenderAttrBinds_Tenant_Tender");
     }
 }
 

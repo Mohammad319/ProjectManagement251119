@@ -20,19 +20,18 @@ internal static class EfCoreJsonConversionExtensions
                 ? new T()
                 : (JsonSerializer.Deserialize<T>(v, opts) ?? new T()));
 
-        // IMPORTANT: Needed for mutable reference types (JSON) so EF can detect changes
+        // Important: lets EF detect changes for mutable JSON objects (reference types)
         var comparer = new ValueComparer<T>(
             (l, r) =>
-            {
-                if (ReferenceEquals(l, r)) return true;
-                if (l is null && r is null) return true;
-                return JsonSerializer.Serialize(l ?? new T(), opts)
-                     == JsonSerializer.Serialize(r ?? new T(), opts);
-            },
-            v => JsonSerializer.Serialize(v ?? new T(), opts).GetHashCode(),
-            v => JsonSerializer.Deserialize<T>(
-                    JsonSerializer.Serialize(v ?? new T(), opts), opts
-                ) ?? new T()
+                (l == null && r == null)
+                || (l != null && r != null
+                    && JsonSerializer.Serialize(l, opts) == JsonSerializer.Serialize(r, opts)),
+
+            v => v == null ? 0 : JsonSerializer.Serialize(v, opts).GetHashCode(),
+
+            v => v == null
+                ? new T()
+                : (JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(v, opts), opts) ?? new T())
         );
 
         propertyBuilder.HasConversion(converter);
