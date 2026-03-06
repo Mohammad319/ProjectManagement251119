@@ -91,6 +91,8 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         // ✅ Multi-tenant safety: Code يجب أن يكون unique داخل نفس Project في نفس Tenant
         builder.HasIndex(x => new { x.TenantId, x.ProjectId, x.Code })
             .IsUnique()
+            // مهم مع SoftDelete: السماح بإعادة استخدام نفس الـ Code بعد حذف الحساب (Soft)
+            .HasFilter("[IsDeleted] = 0")
             .HasDatabaseName("UX_Calculations_Tenant_Project_Code");
 
         // ✅ يفيد فلترة قائمة الحسابات مع الخصوصية + ترتيب العرض

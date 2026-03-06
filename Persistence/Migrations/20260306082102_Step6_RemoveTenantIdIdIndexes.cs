@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class db260115 : Migration
+    public partial class Step6_RemoveTenantIdIdIndexes : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -1219,11 +1219,6 @@ namespace Persistence.Migrations
                 column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AccountGroups_TenantId_Id",
-                table: "AccountGroups",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_AccountGroups_UpdatedBy",
                 table: "AccountGroups",
                 column: "UpdatedBy");
@@ -1253,11 +1248,6 @@ namespace Persistence.Migrations
                 name: "IX_Accounts_Tenant_Name",
                 table: "Accounts",
                 columns: new[] { "TenantId", "Name" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Accounts_TenantId_Id",
-                table: "Accounts",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Accounts_UpdatedBy",
@@ -1392,11 +1382,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "StatusId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Calculations_TenantId_Id",
-                table: "Calculations",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Calculations_TypeId",
                 table: "Calculations",
                 column: "TypeId");
@@ -1410,7 +1395,8 @@ namespace Persistence.Migrations
                 name: "UX_Calculations_Tenant_Project_Code",
                 table: "Calculations",
                 columns: new[] { "TenantId", "ProjectId", "Code" },
-                unique: true);
+                unique: true,
+                filter: "[IsDeleted] = 0");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Compensations_CreatedBy",
@@ -1426,11 +1412,6 @@ namespace Persistence.Migrations
                 name: "IX_Compensations_Tenant_Visible_Order",
                 table: "Compensations",
                 columns: new[] { "TenantId", "IsVisible", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Compensations_TenantId_Id",
-                table: "Compensations",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Compensations_UpdatedBy",
@@ -1453,11 +1434,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "IsVisible", "SortOrder" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Contracts_TenantId_Id",
-                table: "Contracts",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Contracts_UpdatedBy",
                 table: "Contracts",
                 column: "UpdatedBy");
@@ -1466,11 +1442,6 @@ namespace Persistence.Migrations
                 name: "IX_Departments_CreatedBy",
                 table: "Departments",
                 column: "CreatedBy");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Departments_TenantId_Id",
-                table: "Departments",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Departments_UpdatedBy",
@@ -1502,11 +1473,6 @@ namespace Persistence.Migrations
                 name: "IX_Folders_Tenant_Department_Visible_Order",
                 table: "Folders",
                 columns: new[] { "TenantId", "DepartmentId", "IsVisible", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Folders_TenantId_Id",
-                table: "Folders",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Folders_UpdatedBy",
@@ -1544,11 +1510,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "OrganisationId", "Date" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Offers_TenantId_Id",
-                table: "Offers",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Offers_TenantId_ResourceId",
                 table: "Offers",
                 columns: new[] { "TenantId", "ResourceId" });
@@ -1569,11 +1530,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "CalculationId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Opportunities_TenantId_Id",
-                table: "Opportunities",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_OrganisationCategories_CreatedBy",
                 table: "OrganisationCategories",
                 column: "CreatedBy");
@@ -1582,11 +1538,6 @@ namespace Persistence.Migrations
                 name: "IX_OrganisationCategories_ParentCategoryId",
                 table: "OrganisationCategories",
                 column: "ParentCategoryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrganisationCategories_TenantId_Id",
-                table: "OrganisationCategories",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrganisationCategories_UpdatedBy",
@@ -1625,11 +1576,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "IsVisible", "Name" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Organisations_TenantId_Id",
-                table: "Organisations",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Organisations_UpdatedBy",
                 table: "Organisations",
                 column: "UpdatedBy");
@@ -1638,11 +1584,6 @@ namespace Persistence.Migrations
                 name: "IX_OrganisationTypes_CreatedBy",
                 table: "OrganisationTypes",
                 column: "CreatedBy");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrganisationTypes_TenantId_Id",
-                table: "OrganisationTypes",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrganisationTypes_UpdatedBy",
@@ -1669,11 +1610,6 @@ namespace Persistence.Migrations
                 name: "IX_ProcurementMethods_Tenant_Visible_Order",
                 table: "ProcurementMethods",
                 columns: new[] { "TenantId", "IsVisible", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProcurementMethods_TenantId_Id",
-                table: "ProcurementMethods",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProcurementMethods_UpdatedBy",
@@ -1736,11 +1672,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "Name" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Projects_TenantId_Id",
-                table: "Projects",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Projects_UpdatedBy",
                 table: "Projects",
                 column: "UpdatedBy");
@@ -1750,7 +1681,7 @@ namespace Persistence.Migrations
                 table: "Projects",
                 columns: new[] { "TenantId", "Code" },
                 unique: true,
-                filter: "[Code] IS NOT NULL AND [Code] <> ''");
+                filter: "[IsDeleted] = 0 AND [Code] IS NOT NULL AND [Code] <> ''");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectTypes_CreatedBy",
@@ -1766,11 +1697,6 @@ namespace Persistence.Migrations
                 name: "IX_ProjectTypes_Tenant_Visible_Order",
                 table: "ProjectTypes",
                 columns: new[] { "TenantId", "IsVisible", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProjectTypes_TenantId_Id",
-                table: "ProjectTypes",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectTypes_UpdatedBy",
@@ -1843,11 +1769,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "TaskId", "SortOrder" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Resources_TenantId_Id",
-                table: "Resources",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Resources_TenantId_TaskId",
                 table: "Resources",
                 columns: new[] { "TenantId", "TaskId" });
@@ -1881,11 +1802,6 @@ namespace Persistence.Migrations
                 name: "IX_ResourceSorts_Tenant_Type_Visible_Order",
                 table: "ResourceSorts",
                 columns: new[] { "TenantId", "ResourceTypeId", "IsVisible", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ResourceSorts_TenantId_Id",
-                table: "ResourceSorts",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ResourceSorts_TenantId_ResourceTypeId",
@@ -1923,11 +1839,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "AccountId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ResourceTypes_TenantId_Id",
-                table: "ResourceTypes",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ResourceTypes_UpdatedBy",
                 table: "ResourceTypes",
                 column: "UpdatedBy");
@@ -1963,11 +1874,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "DepartmentId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ShareCalcs_TenantId_Id",
-                table: "ShareCalcs",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ShareCalcs_UpdatedBy",
                 table: "ShareCalcs",
                 column: "UpdatedBy");
@@ -1994,11 +1900,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "IsVisible", "SortOrder" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Statuses_TenantId_Id",
-                table: "Statuses",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Statuses_UpdatedBy",
                 table: "Statuses",
                 column: "UpdatedBy");
@@ -2019,11 +1920,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "IsVisible", "SortOrder" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_StatusResources_TenantId_Id",
-                table: "StatusResources",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_StatusResources_UpdatedBy",
                 table: "StatusResources",
                 column: "UpdatedBy");
@@ -2042,11 +1938,6 @@ namespace Persistence.Migrations
                 name: "IX_Storages_Tenant_Department_Type_Sort_Level",
                 table: "Storages",
                 columns: new[] { "TenantId", "DepartmentId", "StorageType", "StorageSort", "StorageLevel" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Storages_TenantId_Id",
-                table: "Storages",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Storages_UpdatedBy",
@@ -2099,11 +1990,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "CalculationId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_TenantId_Id",
-                table: "Tasks",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Tasks_UpdatedBy",
                 table: "Tasks",
                 column: "UpdatedBy");
@@ -2122,11 +2008,6 @@ namespace Persistence.Migrations
                 name: "IX_TaskStatuses_Tenant_Visible_Order",
                 table: "TaskStatuses",
                 columns: new[] { "TenantId", "IsVisible", "SortOrder" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TaskStatuses_TenantId_Id",
-                table: "TaskStatuses",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TaskStatuses_UpdatedBy",
@@ -2149,11 +2030,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "DepartmentId", "Id" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Templates_TenantId_Id",
-                table: "Templates",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Templates_TenantId_Name",
                 table: "Templates",
                 columns: new[] { "TenantId", "Name" });
@@ -2162,11 +2038,6 @@ namespace Persistence.Migrations
                 name: "IX_Templates_UpdatedBy",
                 table: "Templates",
                 column: "UpdatedBy");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TenderAttributeBinds_TenantId_Id",
-                table: "TenderAttributeBinds",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenderAttributeBinds_TenderAttributeId",
@@ -2195,11 +2066,6 @@ namespace Persistence.Migrations
                 column: "CalculationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TenderAttributeDefinitions_TenantId_Id",
-                table: "TenderAttributeDefinitions",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Tenders_CalculationId",
                 table: "Tenders",
                 column: "CalculationId");
@@ -2220,11 +2086,6 @@ namespace Persistence.Migrations
                 columns: new[] { "TenantId", "OrganisationId" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tenders_TenantId_Id",
-                table: "Tenders",
-                columns: new[] { "TenantId", "Id" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Users_CreatedBy",
                 table: "Users",
                 column: "CreatedBy");
@@ -2243,11 +2104,6 @@ namespace Persistence.Migrations
                 name: "IX_Users_Tenant_UserName",
                 table: "Users",
                 columns: new[] { "TenantId", "UserName" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_TenantId_Id",
-                table: "Users",
-                columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_UpdatedBy",

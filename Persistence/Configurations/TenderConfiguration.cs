@@ -1,5 +1,4 @@
-﻿using Domain.Entities.Calculation;
-using Domain.Entities.Users;
+using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -43,14 +42,9 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
     {
         builder.ToTable("TenderAttributeBinds");
 
-        // اجعل Id هو الـ PK (Identity)
+        // Use Id as PK (Identity) to avoid a useless non-identity Id column when using a composite PK.
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseIdentityColumn();
-
-        // امنع التكرار لنفس (TenderId + TenderAttributeId) داخل نفس Tenant
-        builder.HasIndex(x => new { x.TenantId, x.TenderId, x.TenderAttributeId })
-            .IsUnique()
-            .HasDatabaseName("UX_TenderAttributeBinds_Tenant_Tender_Attr");
 
         builder.HasOne(x => x.Tender)
             .WithMany(x => x.TendersAttributes)
@@ -62,9 +56,10 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
             .HasForeignKey(x => x.TenderAttributeId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        // (اختياري) هذا index صار غالباً غير ضروري بسبب الـ Unique Index أعلاه
-        // builder.HasIndex(x => new { x.TenantId, x.TenderId })
-        //     .HasDatabaseName("IX_TenderAttrBinds_Tenant_Tender");
+        // Prevent duplicates inside the same tenant (and keep a good seek pattern for Tenant+Tender queries).
+        builder.HasIndex(x => new { x.TenantId, x.TenderId, x.TenderAttributeId })
+            .IsUnique()
+            .HasDatabaseName("UX_TenderAttributeBinds_Tenant_Tender_Attr");
     }
 }
 

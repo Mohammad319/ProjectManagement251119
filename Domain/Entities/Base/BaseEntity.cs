@@ -8,8 +8,9 @@ namespace Domain.Entities.Base
     /// المفتاح الأساسي Generic (يمكن أن يكون Guid أو int).
     /// </summary>
     /// <typeparam name="TKey">نوع المفتاح الأساسي (Guid أو int مثلاً).</typeparam>
-    //[Index(nameof(TenantId))]
-    [Index(nameof(TenantId), nameof(Id))]
+    // NOTE: Removed the global (TenantId, Id) index to reduce redundant indexes and write overhead.
+    // Add explicit indexes per-entity based on real query patterns.
+    //[Index(nameof(TenantId))] // enable only if you measure benefit for tenant-only scans
     public abstract class BaseEntity<TKey> : IDataKeyFilterReadOnly
     {
         /// <summary>

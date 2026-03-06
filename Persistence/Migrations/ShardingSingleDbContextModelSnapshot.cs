@@ -197,8 +197,6 @@ namespace Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_Accounts_Tenant_Code");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_Accounts_Tenant_Name");
 
@@ -252,8 +250,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .IsUnique()
@@ -412,8 +408,6 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "DepartmentId")
                         .HasDatabaseName("IX_Calculations_Tenant_Department");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "ProjectId")
                         .HasDatabaseName("IX_Calculations_Tenant_Project");
 
@@ -425,7 +419,8 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ProjectId", "Code")
                         .IsUnique()
-                        .HasDatabaseName("UX_Calculations_Tenant_Project_Code");
+                        .HasDatabaseName("UX_Calculations_Tenant_Project_Code")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.HasIndex("TenantId", "ProjectId", "DepartmentId", "SortOrder")
                         .HasDatabaseName("IX_Calculations_Tenant_Project_Department_Order");
@@ -513,8 +508,6 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "CostValue")
                         .HasDatabaseName("IX_Offers_Tenant_CostValue");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "ResourceId");
 
                     b.HasIndex("TenantId", "OrganisationId", "Date")
@@ -556,8 +549,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "CalculationId")
                         .HasDatabaseName("IX_Opportunities_Tenant_Calc");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.ToTable("Opportunities", null, t =>
                         {
@@ -662,8 +653,6 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "AccountId")
                         .HasDatabaseName("IX_Resources_Tenant_Account");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "OpportunityId")
                         .HasDatabaseName("IX_Resources_Tenant_Opportunity");
 
@@ -744,8 +733,6 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "DepartmentId")
                         .HasDatabaseName("IX_ShareCalcs_Tenant_Department");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "CalculationId", "DepartmentId")
                         .IsUnique()
                         .HasDatabaseName("UX_ShareCalcs_Tenant_Calc_Department");
@@ -805,8 +792,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_StatusResources_Tenant_Name");
@@ -874,8 +859,6 @@ namespace Persistence.Migrations
                     b.HasIndex("DepartmentId");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "DepartmentId", "StorageType", "StorageSort", "StorageLevel")
                         .HasDatabaseName("IX_Storages_Tenant_Department_Type_Sort_Level");
@@ -976,8 +959,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "CalculationId");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "ParentTaskId")
                         .HasDatabaseName("IX_Tasks_Tenant_Parent");
 
@@ -1042,8 +1023,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_TaskStatuses_Tenant_Name");
@@ -1111,8 +1090,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "Name");
 
                     b.HasIndex("TenantId", "DepartmentId", "Id");
@@ -1148,8 +1125,6 @@ namespace Persistence.Migrations
                     b.HasIndex("TenderAttributeId");
 
                     b.HasIndex("TenderId");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "TenderId", "TenderAttributeId")
                         .IsUnique()
@@ -1188,8 +1163,6 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "CalculationId")
                         .HasDatabaseName("IX_TenderAttrDefs_Tenant_Calc");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.ToTable("TenderAttributeDefinitions", (string)null);
                 });
 
@@ -1225,8 +1198,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "CalculationId")
                         .HasDatabaseName("IX_Tenders_Tenant_Calc");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "OrganisationId")
                         .HasDatabaseName("IX_Tenders_Tenant_Org");
@@ -1288,8 +1259,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "DepartmentId", "Name")
                         .HasDatabaseName("IX_Folders_Tenant_Department_Name");
 
@@ -1346,8 +1315,6 @@ namespace Persistence.Migrations
                     b.HasIndex("ParentCategoryId");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .IsUnique()
@@ -1416,8 +1383,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "OrganisationCategoryId")
                         .HasDatabaseName("IX_Organisations_Tenant_Category");
 
@@ -1472,8 +1437,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .IsUnique()
@@ -1537,8 +1500,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_Compensations_Tenant_Name");
@@ -1607,8 +1568,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_Contracts_Tenant_Name");
 
@@ -1675,8 +1634,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_ProcurementMethods_Tenant_Name");
@@ -1805,12 +1762,10 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "Code")
                         .IsUnique()
                         .HasDatabaseName("UX_Projects_Tenant_Code")
-                        .HasFilter("[Code] IS NOT NULL AND [Code] <> ''");
+                        .HasFilter("[IsDeleted] = 0 AND [Code] IS NOT NULL AND [Code] <> ''");
 
                     b.HasIndex("TenantId", "CreatedBy")
                         .HasDatabaseName("IX_Projects_Tenant_CreatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_Projects_Tenant_Name");
@@ -1876,8 +1831,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_Statuses_Tenant_Name");
@@ -1945,8 +1898,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_ProjectTypes_Tenant_Name");
@@ -2021,8 +1972,6 @@ namespace Persistence.Migrations
                     b.HasIndex("ResourceTypeId");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "ResourceTypeId");
 
@@ -2100,8 +2049,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "AccountId");
 
-                    b.HasIndex("TenantId", "Id");
-
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("IX_ResourceTypes_Tenant_Name");
 
@@ -2157,8 +2104,6 @@ namespace Persistence.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "Name")
                         .IsUnique()
@@ -2239,8 +2184,6 @@ namespace Persistence.Migrations
 
                     b.HasIndex("TenantId", "ExternalAuthId")
                         .HasDatabaseName("IX_Users_Tenant_ExternalAuthId");
-
-                    b.HasIndex("TenantId", "Id");
 
                     b.HasIndex("TenantId", "UserName")
                         .HasDatabaseName("IX_Users_Tenant_UserName");

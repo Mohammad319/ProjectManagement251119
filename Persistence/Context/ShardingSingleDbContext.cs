@@ -222,9 +222,79 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
                 body = Expression.AndAlso(body, notDeleted);
             }
 
+            // + Parent SoftDelete filter (للكيانات التي لا تدعم SoftDelete لكنها تابعة لكيان SoftDelete)
+            // مثال: Tasks/Resources/Offers/Tenders... يجب ألا تظهر إذا كان Calculation أو Project محذوف (Soft).
+            var cascadeSoftDelete = BuildCascadeSoftDeleteFilter(parameter, clrType);
+            if (cascadeSoftDelete != null)
+                body = Expression.AndAlso(body, cascadeSoftDelete);
+
             var lambda = Expression.Lambda(body, parameter);
             modelBuilder.Entity(clrType).HasQueryFilter(lambda);
         }
+    }
+
+    /// <summary>
+    /// يضيف شرط إضافي لبعض الجداول التي تعتمد على Calculation/Project (التي تدعم SoftDelete)
+    /// حتى لا تظهر بيانات يتيمة عند حذف Project/Calculation كـ SoftDelete.
+    /// </summary>
+    private static Expression? BuildCascadeSoftDeleteFilter(ParameterExpression parameter, Type clrType)
+    {
+        // Calculation itself is soft-deletable already, but we also want to hide it when Project is soft-deleted.
+        if (clrType == typeof(CalculationEntity))
+        {
+            var project = Expression.Property(parameter, nameof(CalculationEntity.Project));
+            return NotDeleted(project);
+        }
+
+        // Entities that directly reference Calculation
+        if (clrType == typeof(TaskEntity)
+            || clrType == typeof(ShareCalcEntity)
+            || clrType == typeof(OpportunityEntity)
+            || clrType == typeof(ApplicationValuesEntity)
+            || clrType == typeof(TenderEntity)
+            || clrType == typeof(TenderAttributeDefinitionEntity))
+        {
+            var calc = Expression.Property(parameter, "Calculation");
+            var project = Expression.Property(calc, nameof(CalculationEntity.Project));
+            return Expression.AndAlso(NotDeleted(calc), NotDeleted(project));
+        }
+
+        // TenderAttributeBind -> Tender -> Calculation -> Project
+        if (clrType == typeof(TenderAttributeBindEntity))
+        {
+            var tender = Expression.Property(parameter, nameof(TenderAttributeBindEntity.Tender));
+            var calc = Expression.Property(tender, nameof(TenderEntity.Calculation));
+            var project = Expression.Property(calc, nameof(CalculationEntity.Project));
+            return Expression.AndAlso(NotDeleted(calc), NotDeleted(project));
+        }
+
+        // Resource -> Task -> Calculation -> Project
+        if (clrType == typeof(ResourceEntity))
+        {
+            var task = Expression.Property(parameter, nameof(ResourceEntity.Task));
+            var calc = Expression.Property(task, nameof(TaskEntity.Calculation));
+            var project = Expression.Property(calc, nameof(CalculationEntity.Project));
+            return Expression.AndAlso(NotDeleted(calc), NotDeleted(project));
+        }
+
+        // Offer -> Resource -> Task -> Calculation -> Project
+        if (clrType == typeof(OfferEntity))
+        {
+            var res = Expression.Property(parameter, nameof(OfferEntity.Resource));
+            var task = Expression.Property(res, nameof(ResourceEntity.Task));
+            var calc = Expression.Property(task, nameof(TaskEntity.Calculation));
+            var project = Expression.Property(calc, nameof(CalculationEntity.Project));
+            return Expression.AndAlso(NotDeleted(calc), NotDeleted(project));
+        }
+
+        return null;
+    }
+
+    private static Expression NotDeleted(Expression softDeletableEntity)
+    {
+        // entity.IsDeleted == false
+        var isDeleted = Expression.Property(softDeletableEntity, nameof(ISoftDeletable.IsDeleted));
+        return Expression.Equal(isDeleted, Expression.Constant(false));
     }
 
     #endregion

@@ -66,7 +66,8 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<ProjectEntit
         // Code (اختياري) لكن إذا موجود يجب أن يكون unique داخل نفس tenant
         builder.HasIndex(x => new { x.TenantId, x.Code })
             .IsUnique()
-            .HasFilter("[Code] IS NOT NULL AND [Code] <> ''")
+            // مهم مع SoftDelete: السماح بإعادة استخدام نفس الـ Code بعد حذف المشروع (Soft)
+            .HasFilter("[IsDeleted] = 0 AND [Code] IS NOT NULL AND [Code] <> ''")
             .HasDatabaseName("UX_Projects_Tenant_Code");
 
         // ---------------- Indexes (تحسين الأداء) ----------------
