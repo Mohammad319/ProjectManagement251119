@@ -1,4 +1,4 @@
-﻿using Application.Feature.Organisation.OrganisationCategory;
+using Application.Feature.Organisation.OrganisationCategory;
 using Domain.DTO.Category;
 using Domain.Entities.Organisation;
 using Persistence.Factory;
@@ -44,6 +44,9 @@ namespace Persistence.Service.Organisation
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
             if (await db.OrganisationCategory.AnyAsync(x => x.ParentCategoryId == id, ct))
+                return false;
+
+            if (await db.Organisation.AnyAsync(x => x.OrganisationCategoryId == id, ct))
                 return false;
 
             var entity = await db.OrganisationCategory.FindAsync([id], ct);

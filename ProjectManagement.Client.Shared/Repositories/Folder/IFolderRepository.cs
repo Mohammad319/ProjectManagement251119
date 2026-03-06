@@ -12,7 +12,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Folder
         Task<List<FolderMVVM>> GetAllVisibleAsync();
         Task<List<FolderMVVM>> GetByVisible(bool IsVisible);
         Task<DetailsFolderDTO> DetailsAsync(Guid id);
-        Task<bool> ReOrderAsync(Guid Id, double newOrder);
+        Task<bool> ReOrderAsync(Guid Id, int newOrder);
         Task<Guid> CreateAsync(PostFolderDTO model);
         Task<bool> UpdateAsync(Guid Id, PostFolderDTO model);
         Task<bool> DeleteAsync(Guid id);

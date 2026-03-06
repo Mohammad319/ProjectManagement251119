@@ -37,7 +37,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
         {
             return await _httpRepository.GetAsync<PostProjectDTO>(ProjectsURLBase + URLConst.Project.GetProjectPost + "/" + projectId);
         }
-        public async Task<bool> ReOrderAsync(Guid Id, double newOrder)
+        public async Task<bool> ReOrderAsync(Guid Id, int newOrder)
         {
             return await _httpRepository.GetAsync<bool>(ProjectsURLBase + URLConst.ReOrder + $"/{Id}/{newOrder}");
         }

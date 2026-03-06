@@ -12,7 +12,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
 {
     public interface ICalculationRepository
     {
-        Task<bool> ReOrderAsync(int Id, double newOrder);
+        Task<bool> ReOrderAsync(int Id, int newOrder);
         Task<int> CopyAsync(Guid ProjectId, int calcId);
         Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t, int? st);
         Task<List<ListCalculationMVVM>> GetAsync(Guid projectId);

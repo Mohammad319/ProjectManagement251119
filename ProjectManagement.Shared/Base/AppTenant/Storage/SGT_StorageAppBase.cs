@@ -11,7 +11,7 @@ namespace ProjectManagement.Shared.Base.AppTenant.Storage
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
-        public double Order { get; set; }
+        public int Order { get; set; }
         TaskMetadata data = new();
         public TaskMetadata Data { get { data ??= new TaskMetadata(); return data; } set { data = value; } }
     }

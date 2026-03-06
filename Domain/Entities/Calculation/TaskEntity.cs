@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
@@ -16,8 +16,9 @@ namespace Domain.Entities.Calculation
         public TaskMetadata Metadata
         {
             get => _metadata ??= new TaskMetadata();
-            set => _metadata = value;
+            set => _metadata = NormalizeMetadata(value);
         }
+
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
@@ -25,16 +26,20 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
         public TaskType Type { get; set; }
+
         /// <summary>
         /// SortOrder of task in UI display.
         /// </summary>
-        public double SortOrder { get; set; }
+        public int SortOrder { get; set; }
+
         [MaxLength(FieldLengths.Comment)]
         public string? Note { get; set; }
-        [MaxLength(FieldLengths.Code)]
 
+        [MaxLength(FieldLengths.Code)]
         public string? Code { get; set; }
+
         public bool IsOH { get; set; }
+
         /// <summary>
         /// Parent task reference for hierarchical structure (optional).
         /// </summary>
@@ -49,78 +54,60 @@ namespace Domain.Entities.Calculation
         /// </summary>
         public ICollection<TaskEntity> Tasks { get; set; } = [];
 
-        // -----------------------
-        // Opportunity relation
-        // -----------------------
-
         public int? OpportunityId { get; set; }
 
         [JsonIgnore]
         public OpportunityEntity? Opportunity { get; set; }
-
-        // -----------------------
-        // Calculation relation
-        // -----------------------
 
         public int CalculationId { get; set; }
 
         [JsonIgnore]
         public CalculationEntity Calculation { get; set; } = null!;
 
-        // -----------------------
-        // Status
-        // -----------------------
-
         public int? StatusId { get; set; }
 
         [JsonIgnore]
         public TaskStatusEntity? Status { get; set; }
 
-        // -----------------------
-        // Task resources
-        // -----------------------
-
         public ICollection<ResourceEntity> Resources { get; set; } = [];
-
-        // -----------------------
-        // Methods
-        // -----------------------
 
         private TaskEntity() { }
 
-        public static TaskEntity Create(int calculationId, TaskPostDTO dto, double sortOrder, int? parentTaskId = null)
+        public static TaskEntity Create(int calculationId, TaskPostDTO dto, int sortOrder, int? parentTaskId = null)
         {
-            var entity = new TaskEntity
-            {
-                CalculationId = calculationId,
-                SortOrder = sortOrder,
-                ParentTaskId = parentTaskId
-            };
+            if (dto is null) throw new ArgumentNullException(nameof(dto));
 
+            var entity = new TaskEntity();
+            entity.SetCalculation(calculationId);
+            entity.SetParentTask(parentTaskId);
+            entity.SetSortOrder(sortOrder);
             entity.Update(dto);
-
             return entity;
         }
-        public static TaskEntity CloneForCalculation(TaskEntity t)
+
+        public static TaskEntity CloneForCalculation(TaskEntity source)
         {
+            ArgumentNullException.ThrowIfNull(source);
+
             var clone = new TaskEntity
             {
-                Name = t.Name,
-                Code = t.Code,
-                StatusId = t.StatusId,
-                Type = t.Type,
-                Unit = t.Unit,
-                Note = t.Note,
-                IsActive = t.IsActive,
-                SortOrder = t.SortOrder,
-                Metadata = t.Metadata.Clone(),
-               
+                Name = source.Name,
+                Code = source.Code,
+                StatusId = source.StatusId,
+                Type = source.Type,
+                Unit = source.Unit,
+                Note = source.Note,
+                IsActive = source.IsActive,
+                IsOH = source.IsOH,
+                Metadata = source.Metadata.Clone(),
             };
 
-            foreach (var r in t.Resources)
-                clone.Resources.Add(ResourceEntity.CloneForTask(r));
+            clone.SetSortOrder(source.SortOrder);
 
-            foreach (var child in t.Tasks)
+            foreach (var resource in source.Resources)
+                clone.Resources.Add(ResourceEntity.CloneForTask(resource));
+
+            foreach (var child in source.Tasks)
                 clone.Tasks.Add(CloneForCalculation(child));
 
             return clone;
@@ -128,30 +115,95 @@ namespace Domain.Entities.Calculation
 
         public void Update(TaskPostDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                throw new ValidationException("Task name is required.");
+            ArgumentNullException.ThrowIfNull(dto);
 
-            Name = dto.Name;
-            Note = dto.Note;
-            Unit = dto.Unit;
+            Name = NormalizeRequired(dto.Name, "Task name is required.");
+            Note = NormalizeOptional(dto.Note);
+            Unit = NormalizeOptional(dto.Unit);
+            Code = NormalizeOptional(dto.Code);
+
             IsActive = dto.IsActive;
-            Code = dto.Code;
             Type = dto.Type;
             IsOH = dto.IsOH;
-            Metadata = dto.Metadata;
 
-            // ✅ keep duplicated fields in sync (avoid diverging sources between columns and JSON metadata)
+            Metadata = dto.Metadata?.Clone() ?? new TaskMetadata();
+
+            // Keep duplicated fields in sync (scalar columns + JSON metadata)
             Metadata.Note = Note ?? string.Empty;
             Metadata.Unit = Unit ?? string.Empty;
             Metadata.Code = Code ?? string.Empty;
             Metadata.Type = Type;
             Metadata.IsActive = IsActive;
             Metadata.IsOH = IsOH;
-
             Metadata.Normalize();
-OpportunityId = dto.OpportunityId;
+
+            OpportunityId = dto.OpportunityId;
             StatusId = dto.StatusId;
-            ParentTaskId = dto.ParentTaskId;
+            SetParentTask(dto.ParentTaskId);
+        }
+
+        public void SetSortOrder(int sortOrder)
+        {
+            ValidateSortOrder(sortOrder);
+            SortOrder = sortOrder;
+        }
+
+        public void SetParentTask(int? parentTaskId)
+        {
+            ParentTaskId = parentTaskId is > 0 ? parentTaskId : null;
+        }
+
+        public void SetCalculation(int calculationId)
+        {
+            if (calculationId <= 0)
+                throw new ValidationException("CalculationId must be greater than zero.");
+
+            CalculationId = calculationId;
+        }
+
+        public void ClearOpportunity()
+        {
+            OpportunityId = null;
+            Opportunity = null;
+        }
+
+        public void ResetIdentityForClone()
+        {
+            Id = 0;
+            RowVersion = Array.Empty<byte>();
+            SetParentTask(null);
+            ParentTask = null;
+            Status = null;
+            Opportunity = null;
+        }
+
+        private static TaskMetadata NormalizeMetadata(TaskMetadata? metadata)
+        {
+            var clean = metadata?.Clone() ?? new TaskMetadata();
+            clean.Note = NormalizeOptional(clean.Note) ?? string.Empty;
+            clean.Unit = NormalizeOptional(clean.Unit) ?? string.Empty;
+            clean.Code = NormalizeOptional(clean.Code) ?? string.Empty;
+            clean.Responsible = NormalizeOptional(clean.Responsible) ?? string.Empty;
+            clean.QuantityParam = NormalizeOptional(clean.QuantityParam) ?? string.Empty;
+            clean.Normalize();
+            return clean;
+        }
+
+        private static string NormalizeRequired(string? value, string errorMessage)
+        {
+            var trimmed = value?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                throw new ValidationException(errorMessage);
+            return trimmed;
+        }
+
+        private static string? NormalizeOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        private static void ValidateSortOrder(double sortOrder)
+        {
+            if (double.IsNaN(sortOrder) || double.IsInfinity(sortOrder) || sortOrder < 0)
+                throw new ValidationException("SortOrder must be a finite number greater than or equal to zero.");
         }
     }
 }

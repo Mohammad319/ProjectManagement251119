@@ -33,7 +33,7 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         }
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpGet(URLConst.ReOrder + "/{Id}/{NewOrder}")]
-        public async Task<IActionResult> ReOrder(Guid Id, double NewOrder)
+        public async Task<IActionResult> ReOrder(Guid Id, int NewOrder)
         {
             return Ok(await MicroBus.Send(new NewOrderFolderCommand(Id, NewOrder)));
         }

@@ -23,7 +23,7 @@ public ResourceTypesEnum ResType { get; set; }
         /// <summary>
         /// ✅ Alias for SortOrder (old clients may still use Order)
         /// </summary>
-        public double Order
+        public int Order
         {
             get => SortOrder;
             set => SortOrder = value;
@@ -43,7 +43,7 @@ public ResourceTypesEnum ResType { get; set; }
         public int? ResourceTypeId { get; set; }
         public int? OpportunityId { get; set; }
 
-        public double SortOrder { get; set; }
+        public int SortOrder { get; set; }
 
         // -----------------------------
         // ✅ Proxy properties (منع التكرار/التناقض بين الحقول و Data)
@@ -121,7 +121,7 @@ public ResourceTypesEnum ResType { get; set; }
 
     public class ResourceListDTO : ResourceBase
     {
-        public double SortOrder { get; set; }
+        public int SortOrder { get; set; }
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
         public ResourceMetadata Data { get; set; } = new();

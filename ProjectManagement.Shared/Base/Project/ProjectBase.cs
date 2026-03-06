@@ -17,7 +17,7 @@ namespace ProjectManagement.Shared.Base.Project
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
         public DateTime TenderDeadline { get; set; } = DateTime.Now;
         public DateTime TenderQA { get; set; } = DateTime.Now;
-        public double Order { get; set; }
+        public int Order { get; set; }
     }
     public enum Procurement
     {

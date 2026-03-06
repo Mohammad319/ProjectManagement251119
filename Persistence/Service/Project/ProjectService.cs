@@ -9,68 +9,6 @@ namespace Persistence.Service.Project
 {
     public sealed class ProjectService(IDbContextFactoryTenant dbFactory) : IProjectService
     {
-        public async Task<GetProjectCalcConfigDTO> GetProjectCalcConfigAsync(
-            int typeObj,
-            int methods,
-            int contracts,
-            int compensations,
-            int types,
-            int statuses,
-            int orgId,
-            CancellationToken ct = default)
-        {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            var typesTask = context.CalcProjectType.AsNoTracking()
-                .Where(x => x.IsVisible || x.Id == types)
-                .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
-                .ToListAsync(ct);
-
-            var methodsTask = context.ProcurementMethod.AsNoTracking()
-                .Where(x => x.IsVisible || x.Id == methods)
-                .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
-                .ToListAsync(ct);
-
-            var contractsTask = context.Contracts.AsNoTracking()
-                .Where(x => x.IsVisible || x.Id == contracts)
-                .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
-                .ToListAsync(ct);
-
-            var compensationsTask = context.Compensations.AsNoTracking()
-                .Where(x => x.IsVisible || x.Id == compensations)
-                .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
-                .ToListAsync(ct);
-
-            var orgTask = context.Organisation.AsNoTracking()
-                .Where(x => x.IsVisible || x.Id == orgId)
-                .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
-                .ToListAsync(ct);
-
-            Task<List<ListDTO>>? statusesTask = null;
-            if (typeObj == 1)
-            {
-                statusesTask = context.CalculationStatus.AsNoTracking()
-                    .Where(x => x.IsVisible || x.Id == statuses)
-                    .Select(x => new ListDTO { Id = x.Id, Name = x.Name })
-                    .ToListAsync(ct);
-            }
-
-            if (statusesTask is null)
-                await Task.WhenAll(typesTask, methodsTask, contractsTask, compensationsTask, orgTask);
-            else
-                await Task.WhenAll(typesTask, methodsTask, contractsTask, compensationsTask, orgTask, statusesTask);
-
-            return new GetProjectCalcConfigDTO
-            {
-                Types = typesTask.Result,
-                Methods = methodsTask.Result,
-                Contracts = contractsTask.Result,
-                Compensations = compensationsTask.Result,
-                Organisation = orgTask.Result,
-                Statuses = statusesTask?.Result ?? []
-            };
-        }
-
         public async Task<Guid> CreateAsync(PostProjectDTO dto, int userId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -86,7 +24,7 @@ namespace Persistence.Service.Project
                 .AsNoTracking()
                 .Where(x => departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId)
                 .OrderByDescending(x => x.SortOrder)
-                .Select(x => (double?)x.SortOrder)
+                .Select(x => (int?)x.SortOrder)
                 .FirstOrDefaultAsync(ct) ?? 0;
 
             var project = ProjectEntity.Create(dto, dto.FolderId, userId, maxOrder + 100);
@@ -124,12 +62,12 @@ namespace Persistence.Service.Project
             if (project == null)
                 return false;
 
-            context.Projects.Remove(project);
+            project.MarkDeleted(userId);
             await context.SaveChangesAsync(ct);
             return true;
         }
 
-        public async Task<bool> UpdateOrderAsync(Guid id, double newOrder, CancellationToken ct)
+        public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -152,6 +90,7 @@ namespace Persistence.Service.Project
                 .Select(x => new ProjectDetailsDTO())
                 .FirstOrDefaultAsync(ct);
         }
+
         public async Task<PostProjectDTO?> GetPostAsync(Guid id, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -160,6 +99,7 @@ namespace Persistence.Service.Project
                 .Select(ProjectSelectors.Post)
                 .FirstOrDefaultAsync(ct);
         }
+
         public async Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool isVisible, int userId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -190,5 +130,4 @@ namespace Persistence.Service.Project
             throw new NotImplementedException();
         }
     }
-
 }

@@ -8,7 +8,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     public interface IListResTask
     {
         public string Name { get; set; }
-        public double Order { get; set; }
+        public int Order { get; set; }
 
         public string Note { get; }
         public List<string> UpperNote { get; }

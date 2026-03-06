@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Organisation;
 using System.ComponentModel.DataAnnotations;
@@ -22,34 +22,35 @@ namespace Domain.Entities.Organisation
         [JsonIgnore]
         public ICollection<OrganisationEntity> Organisations { get; private set; } = [];
 
-        private OrganisationCategoryEntity() { } // EF
+        private OrganisationCategoryEntity() { }
 
         public static OrganisationCategoryEntity Create(PostOrganisationCategoryDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                throw new ValidationException("Name is required.");
-
-            ValidateParent(dto.CategoryId);
-
-            return new OrganisationCategoryEntity
-            {
-                Name = dto.Name.Trim(),
-                ParentCategoryId = dto.CategoryId
-            };
+            var entity = new OrganisationCategoryEntity();
+            entity.SetName(dto.Name);
+            entity.SetParentCategory(dto.CategoryId);
+            return entity;
         }
 
         public void Update(PutOrganisationCategoryDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                throw new ValidationException("Name is required.");
-
-            Name = dto.Name.Trim();
+            ArgumentNullException.ThrowIfNull(dto);
+            SetName(dto.Name);
         }
 
-        private static void ValidateParent(int? parentId)
+        public void SetName(string? name)
+        {
+            var trimmed = name?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                throw new ValidationException("Organisation category name is required.");
+            Name = trimmed;
+        }
+
+        public void SetParentCategory(int? parentId)
         {
             if (parentId.HasValue && parentId <= 0)
                 throw new ValidationException("Invalid parent category.");
+            ParentCategoryId = parentId;
         }
     }
 }

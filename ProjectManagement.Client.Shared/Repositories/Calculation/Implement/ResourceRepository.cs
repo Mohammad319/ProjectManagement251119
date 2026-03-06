@@ -12,7 +12,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
     {
         readonly HTTPRepository _httpRepository = httpsClient;
         static string ResourceURLBase => PMAPIConst.Resource;
-        public async Task<bool> ReOrderAsync(int Id, double newOrder)
+        public async Task<bool> ReOrderAsync(int Id, int newOrder)
         {
             return await _httpRepository.GetAsync<bool>(ResourceURLBase + URLConst.ReOrder + $"/{Id}/{newOrder}");
         }

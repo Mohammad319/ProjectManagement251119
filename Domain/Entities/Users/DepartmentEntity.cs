@@ -21,21 +21,32 @@ namespace Domain.Entities.Users
         [JsonIgnore]
         public ICollection<UserEntity> Users { get; private set; } = [];
 
-        private DepartmentEntity() { } // EF
+        private DepartmentEntity() { }
 
         public static DepartmentEntity Create(DepartmentBase dto)
         {
             return new DepartmentEntity
             {
-                Name = dto.Name,
-                Description = dto.Description
+                Name = NormalizeRequired(dto.Name),
+                Description = NormalizeOptional(dto.Description)
             };
         }
 
         public void Update(DepartmentBase dto)
         {
-            Name = dto.Name;
-            Description = dto.Description;
+            Name = NormalizeRequired(dto.Name);
+            Description = NormalizeOptional(dto.Description);
         }
+
+        private static string NormalizeRequired(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ValidationException("Department name is required.");
+
+            return value.Trim();
+        }
+
+        private static string? NormalizeOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

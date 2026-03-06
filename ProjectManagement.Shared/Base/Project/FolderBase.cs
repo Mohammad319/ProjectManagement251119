@@ -11,7 +11,7 @@ namespace ProjectManagement.Shared.Base.Project
 
         [StringLength(7, ErrorMessageResourceName = ErrorsMessages.StringLength, ErrorMessageResourceType = typeof(Resource.ResLocalize), MinimumLength = 7)]
         public string Color { get; set; } = "#08bf66";
-        public double Order { get; set; }
+        public int Order { get; set; }
         public bool IsVisible { get; set; } = true;
     }
 }

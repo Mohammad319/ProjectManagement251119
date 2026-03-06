@@ -141,7 +141,7 @@ public ResourceMetadata Clone()
         public ResourceTypesEnum ResType { get; set; }
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
-        public double Order { get; set; }
+        public int Order { get; set; }
         public bool Active { get; set; } = true;
     }
 }

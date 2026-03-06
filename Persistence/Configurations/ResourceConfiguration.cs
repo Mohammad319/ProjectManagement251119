@@ -27,8 +27,11 @@ internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<Resou
             .HasDatabaseName("IX_ResourceTypes_Tenant_Name");
 
         builder.ToTable(t =>
-            t.HasCheckConstraint("CK_ResourceTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0")
-        );
+        {
+            t.HasCheckConstraint("CK_ResourceTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_ResourceTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
+            t.HasCheckConstraint("CK_ResourceTypes_Account_Positive", "[AccountId] IS NULL OR [AccountId] > 0");
+        });
     }
 }
 
@@ -59,8 +62,11 @@ internal sealed class ResourceSortConfiguration : IEntityTypeConfiguration<Resou
             .HasDatabaseName("IX_ResourceSorts_Tenant_Type_Name");
 
         builder.ToTable(t =>
-            t.HasCheckConstraint("CK_ResourceSorts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0")
-        );
+        {
+            t.HasCheckConstraint("CK_ResourceSorts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_ResourceSorts_SortOrder_NonNegative", "[SortOrder] >= 0");
+            t.HasCheckConstraint("CK_ResourceSorts_Account_Positive", "[AccountId] IS NULL OR [AccountId] > 0");
+        });
     }
 }
 
@@ -151,15 +157,12 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
             .HasForeignKey(x => x.CalculationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ✅ شجرة + ترتيب داخل Calculation + Tenant filter (يدعم RecursiveTasksCte)
         builder.HasIndex(x => new { x.TenantId, x.CalculationId, x.ParentTaskId, x.SortOrder })
             .HasDatabaseName("IX_Tasks_Tenant_Calc_Parent_Sort");
 
-        // ✅ فلترة كثيرة على Status ضمن Calculation
         builder.HasIndex(x => new { x.TenantId, x.CalculationId, x.StatusId })
             .HasDatabaseName("IX_Tasks_Tenant_Calc_Status");
 
-        // ✅ دعم الحالات التي يتم فيها تحميل شجرة بدون CalculationId (fallback)
         builder.HasIndex(x => new { x.TenantId, x.ParentTaskId })
             .HasDatabaseName("IX_Tasks_Tenant_Parent");
     }
@@ -186,8 +189,6 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<OfferEntity>
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 
-        // ✅ Computed columns to allow server-side filtering by money fields inside JSON metadata (SQL Server)
-        // NOTE: These are *shadow properties* (not in OfferEntity class).
         builder.Property<decimal?>("CostValue")
             .HasColumnType("decimal(18,2)")
             .HasComputedColumnSql("TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.Cost'))", stored: true);
@@ -202,7 +203,6 @@ internal sealed class OfferConfiguration : IEntityTypeConfiguration<OfferEntity>
         builder.HasIndex("TenantId", "BaseCostValue")
             .HasDatabaseName("IX_Offers_Tenant_BaseCostValue");
 
-        // ✅ يخدم OfferService.GetByFilterAsync (Organisation filter + Date sort)
         builder.HasIndex(x => new { x.TenantId, x.OrganisationId, x.Date })
             .HasDatabaseName("IX_Offers_Tenant_Org_Date");
     }

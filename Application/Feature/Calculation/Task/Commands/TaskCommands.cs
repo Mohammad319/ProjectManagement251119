@@ -31,7 +31,7 @@ namespace Application.Feature.Calculation.Task.Commands
         public int NewNetCalcId { get; set; }
         public int? TaskParentID { get; set; }
         public List<ResourceTaskItemDTO> Items { get; set; } = [];
-        public double Order { get; set; } = 100;
+        public int Order { get; set; } = 100;
         public bool IsOH { get; set; } = false;
 
         public class CutTaskCommandHandler(ITaskService taskService) : IRequestHandler<CutTaskCommand, bool>
@@ -54,7 +54,7 @@ namespace Application.Feature.Calculation.Task.Commands
         }
     }
 
-    public sealed record NewOrderTaskCommand(int Id, double NewOrder) : IRequest<bool>;
+    public sealed record NewOrderTaskCommand(int Id, int NewOrder) : IRequest<bool>;
     public class NewOrderTaskCommandHandler(ITaskService taskService) : IRequestHandler<NewOrderTaskCommand, bool>
     {
         public async Task<bool> Handle(NewOrderTaskCommand request, CancellationToken ct) =>

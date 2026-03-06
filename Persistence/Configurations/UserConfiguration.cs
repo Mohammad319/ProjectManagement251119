@@ -23,9 +23,11 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<UserEntity>
         builder.HasIndex(u => new { u.TenantId, u.UserName })
             .HasDatabaseName("IX_Users_Tenant_UserName");
 
-        // ExternalAuthId (غير unique لأن قيمته قد تكون فارغة لبعض المستخدمين)
+        // ExternalAuthId يجب أن يكون unique داخل tenant عندما تكون القيمة موجودة فعلاً.
         builder.HasIndex(u => new { u.TenantId, u.ExternalAuthId })
-            .HasDatabaseName("IX_Users_Tenant_ExternalAuthId");
+            .IsUnique()
+            .HasFilter("[ExternalAuthId] IS NOT NULL AND [ExternalAuthId] <> ''")
+            .HasDatabaseName("UX_Users_Tenant_ExternalAuthId");
 
         // -------------------------
         // Lengths (تتماشى مع الـ DataAnnotations)

@@ -14,7 +14,6 @@ namespace Application.Mapping.CalcItems
 
         public static TaskListDTO MapToTaskListDTO(this TaskEntity t)
         {
-            // ✅ Hydrate duplicated fields from scalar columns to keep UI consistent
             var meta = t.Metadata?.Clone() ?? new TaskMetadata();
 
             if (!string.IsNullOrWhiteSpace(t.Note))
@@ -50,14 +49,8 @@ namespace Application.Mapping.CalcItems
         public static TaskEntity MapToTaskEntity(TaskPostDTO dto, int calcId)
         {
             var task = TaskEntity.Create(calcId, dto, dto.Order, dto.ParentTaskId);
-
-            task.OpportunityId = dto.OpportunityId;
-            task.StatusId = dto.StatusId;
-            task.Metadata = dto.Metadata;
-
             task.Resources = dto.Resources?.Select(x => x.Parse(dto.Id)).ToList() ?? [];
             task.Tasks = dto.Tasks?.Select(t => MapToTaskEntity(t, calcId)).ToList() ?? [];
-
             return task;
         }
     }

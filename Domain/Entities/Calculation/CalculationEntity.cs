@@ -20,8 +20,10 @@ namespace Domain.Entities.Calculation
             get => _metadata ??= new CalculationData();
             private set => _metadata = value;
         }
+
         public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; }
         public List<OHFactors> Factors { get; set; }
+
         public CalculationEntity()
         {
             Tasks = [];
@@ -32,6 +34,7 @@ namespace Domain.Entities.Calculation
             HourlyPrice = [];
             Factors = [];
         }
+
         // Denormalized for query performance
         public int DepartmentId { get; private set; }
         public void AssignDepartment(int departmentId)
@@ -41,9 +44,6 @@ namespace Domain.Entities.Calculation
 
             DepartmentId = departmentId;
         }
-        // -----------------------
-        // Basic fields
-        // -----------------------
 
         [Required, MaxLength(FieldLengths.Code)]
         public string Code { get; private set; } = string.Empty;
@@ -51,9 +51,6 @@ namespace Domain.Entities.Calculation
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; private set; } = string.Empty;
 
-        /// <summary>
-        /// نسبة الضريبة (0 - 100)
-        /// </summary>
         [Range(0, 100)]
         public int Tax { get; private set; } = 25;
 
@@ -64,21 +61,13 @@ namespace Domain.Entities.Calculation
         public DateTime StartDate { get; private set; } = DateTime.UtcNow;
         public DateTime EndDate { get; private set; } = DateTime.UtcNow.AddMonths(2);
 
-        public double SortOrder { get; set; }
+        public double SortOrder { get; private set; }
 
         public DateTime? PublicationDate { get; private set; } = DateTime.UtcNow;
         public DateTime? DecisionDate { get; private set; } = DateTime.UtcNow;
 
-
-
-
-
         public bool IsPrivate { get; private set; }
         public bool IsVisible { get; private set; } = true;
-
-        // -----------------------
-        // Organisation / Type / Status / Procurement / Contracting
-        // -----------------------
 
         public int? OrganisationId { get; private set; }
 
@@ -116,28 +105,16 @@ namespace Domain.Entities.Calculation
         [ForeignKey(nameof(ContractId))]
         public ContractEntity? Contract { get; private set; }
 
-        // -----------------------
-        // Project
-        // -----------------------
-
         public Guid ProjectId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(ProjectId))]
         public ProjectEntity Project { get; private set; } = null!;
 
-        // -----------------------
-        // Template
-        // -----------------------
-
         public int? TemplateId { get; private set; }
 
         [JsonIgnore]
         public TemplateEntity? Template { get; private set; }
-
-        // -----------------------
-        // Tenders / Attributes
-        // -----------------------
 
         [JsonIgnore]
         public ICollection<TenderAttributeDefinitionEntity> AttributesTender { get; private set; } = [];
@@ -145,15 +122,7 @@ namespace Domain.Entities.Calculation
         [JsonIgnore]
         public ICollection<TenderEntity> Tenders { get; private set; } = [];
 
-        // -----------------------
-        // Tasks
-        // -----------------------
-
         public ICollection<TaskEntity> Tasks { get; private set; } = [];
-
-        // -----------------------
-        // Shares / Offers / Opportunities / Applications
-        // -----------------------
 
         public ICollection<ShareCalcEntity> SharesCalc { get; private set; } = [];
 
@@ -162,11 +131,6 @@ namespace Domain.Entities.Calculation
 
         [JsonIgnore]
         public ICollection<ApplicationValuesEntity> Applications { get; private set; } = [];
-
-        // =========================================================
-        // Factory + Update methods
-        // =========================================================
-
 
         public static CalculationEntity CreateCopy(CalculationEntity original, Guid newProjectId, int userId)
         {
@@ -184,54 +148,61 @@ namespace Domain.Entities.Calculation
                 Tax = original.Tax,
                 PublicationDate = original.PublicationDate,
                 DecisionDate = original.DecisionDate,
-                HourlyPrice = original.HourlyPrice,//original.HourlyPriceFactorData.Clone(),
+                HourlyPrice = original.HourlyPrice,
                 Factors = original.Factors,
-                Metadata = new(),//original.Metadata.Clone(),
+                Metadata = new(),
                 CreatedBy = userId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsPrivate = original.IsPrivate,
+                IsVisible = original.IsVisible,
+                TypeId = original.TypeId,
+                StatusId = original.StatusId,
+                StartDate = original.StartDate,
+                EndDate = original.EndDate,
+                TenderDeadline = original.TenderDeadline,
+                TenderQA = original.TenderQA
             };
 
-            // clone child tasks + child resources
             foreach (var task in original.Tasks)
                 copy.Tasks.Add(TaskEntity.CloneForCalculation(task));
 
             return copy;
         }
+
         public void SetTemplate(int? tempId)
         {
             TemplateId = tempId;
         }
+
         public void UpdateFactors(List<OHFactors> factors)
         {
-            Factors = factors;
+            Factors = factors ?? [];
         }
+
         public void UpdateHourlyPriceList(List<HourlyPriceListGroupDTO> hourlyPriceList)
         {
-            HourlyPrice = hourlyPriceList;
+            HourlyPrice = hourlyPriceList ?? [];
         }
+
         public void Update(CalculationPostDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Code))
-                throw new ValidationException("Calculation code is required.");
+            ArgumentNullException.ThrowIfNull(dto);
 
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                throw new ValidationException("Calculation name is required.");
-
-            Code = dto.Code;
-            Name = dto.Name;
+            Code = NormalizeRequired(dto.Code, nameof(dto.Code), FieldLengths.Code, "Calculation code is required.");
+            Name = NormalizeRequired(dto.Name, nameof(dto.Name), FieldLengths.Name, "Calculation name is required.");
 
             SetTax(dto.Tax);
             Procurement = dto.Procurement;
 
             SetDates(dto.StartDate, dto.EndDate);
             SetTenderDates(dto.TenderDeadline, dto.TenderQA, dto.PublicationDate, dto.DecisionDate);
-
-            SortOrder = dto.Order;
+            UpdateOrder(dto.Order);
 
             Metadata = dto.Metadata ?? new CalculationData();
+            HourlyPrice = dto.HourlyPrice ?? [];
+            Factors = dto.Factors ?? [];
 
-            IsPrivate = dto.IsPrivate;
-            IsVisible = dto.IsVisible;
+            SetVisibility(dto.IsPrivate, dto.IsVisible);
 
             OrganisationId = dto.OrganisationId;
             TypeId = dto.TypeId;
@@ -241,10 +212,6 @@ namespace Domain.Entities.Calculation
             ContractId = dto.ContractId;
             TemplateId = dto.TemplateId;
         }
-
-        // =========================================================
-        // Small behavior methods (invariants)
-        // =========================================================
 
         public void SetTax(int tax)
         {
@@ -288,7 +255,31 @@ namespace Domain.Entities.Calculation
 
         public void AssignToProject(Guid projectId)
         {
+            if (projectId == Guid.Empty)
+                throw new ArgumentException("ProjectId cannot be empty.", nameof(projectId));
+
             ProjectId = projectId;
+        }
+
+        public void UpdateOrder(double newOrder)
+        {
+            if (double.IsNaN(newOrder) || double.IsInfinity(newOrder))
+                throw new ArgumentOutOfRangeException(nameof(newOrder), "SortOrder must be a finite number.");
+
+            SortOrder = newOrder;
+        }
+
+        private static string NormalizeRequired(string? value, string paramName, int maxLength, string requiredMessage)
+        {
+            var normalized = (value ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(normalized))
+                throw new ValidationException(requiredMessage);
+
+            if (normalized.Length > maxLength)
+                throw new ValidationException($"{paramName} exceeds max length {maxLength}.");
+
+            return normalized;
         }
     }
 }

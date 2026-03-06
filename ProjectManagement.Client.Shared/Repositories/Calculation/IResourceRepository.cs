@@ -10,7 +10,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
     {
         Task<ResourceFormDTO> GetConfigForm();
 
-        Task<bool> ReOrderAsync(int Id, double newOrder);
+        Task<bool> ReOrderAsync(int Id, int newOrder);
         Task<bool> CreateAsync(List<ResourcePostDTO> models, int taskId);
         Task<List<ResourceListMVVM>> GetByFilterAsync(FilterCalculationItemsDto offer);
         Task<bool> UpdateAsync(ResourcePostDTO model, int id);

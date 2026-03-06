@@ -8,7 +8,7 @@ namespace Application.Feature.Project.Folder
         Task<Guid> CreateAsync(PostFolderDTO dto, int userId, int departmentId, CancellationToken ct = default);
         Task<bool> UpdateAsync(Guid id, PostFolderDTO dto, int userId, int? departmentId, CancellationToken ct = default);
         Task<bool> DeleteAsync(Guid id, int userId, int? departmentId, CancellationToken ct = default);
-        Task<bool> UpdateOrderAsync(Guid id, double newOrder, CancellationToken ct = default);
+        Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct = default);
 
         // Queries
         Task<List<ListFolderDTO>> GetAllVisibleAsync(CancellationToken ct = default);

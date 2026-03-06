@@ -43,7 +43,7 @@ namespace Application.Feature.Calculation.Resource.Commands
         }
     }
 
-    public sealed record NewOrderResourceCommand(int Id, double NewOrder) : IRequest<bool>;
+    public sealed record NewOrderResourceCommand(int Id, int NewOrder) : IRequest<bool>;
 
     public class NewOrderResourceCommandHandler(IResourceService resService) : IRequestHandler<NewOrderResourceCommand, bool>
     {

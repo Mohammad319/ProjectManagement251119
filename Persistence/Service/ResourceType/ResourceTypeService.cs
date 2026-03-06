@@ -1,4 +1,4 @@
-﻿using Application.Feature.ResourceType;
+using Application.Feature.ResourceType;
 using Persistence.Context;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
@@ -8,9 +8,6 @@ namespace Persistence.Service.ResourceType
 {
     public sealed class ResourceTypeService(IDbContextFactoryTenant dbFactory) : IResourceTypeService
     {
-
-        // ---------------- Commands (Type) ----------------
-
         public async Task<int> CreateTypeAsync(PostResourceTypeDTO dto, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -42,12 +39,14 @@ namespace Persistence.Service.ResourceType
             var entity = await context.ResourceTypes.FindAsync(id, ct);
             if (entity == null) return false;
 
+            var isInUse = await context.ResourceSorts.AnyAsync(x => x.ResourceTypeId == id, ct)
+                          || await context.Resources.AnyAsync(x => x.ResourceTypeId == id, ct);
+            if (isInUse) return false;
+
             context.ResourceTypes.Remove(entity);
             await context.SaveChangesAsync(ct);
             return true;
         }
-
-        // ---------------- Commands (Sort) ----------------
 
         public async Task<int> CreateSortAsync(int resourceTypeId, PostResourceSortDTO dto, CancellationToken ct = default)
         {
@@ -86,12 +85,13 @@ namespace Persistence.Service.ResourceType
             var entity = await context.ResourceSorts.FindAsync(id, ct);
             if (entity == null) return false;
 
+            if (await context.Resources.AnyAsync(x => x.ResourceSortId == id, ct))
+                return false;
+
             context.ResourceSorts.Remove(entity);
             await context.SaveChangesAsync(ct);
             return true;
         }
-
-        // ---------------- Queries ----------------
 
         public async Task<List<ResourceTypeModel>> GetTypesAsync(bool isVisible, CancellationToken ct = default)
         {
@@ -109,8 +109,6 @@ namespace Persistence.Service.ResourceType
                     IsVisible = x.IsVisible,
                     Order = x.SortOrder,
                     AccountId = x.AccountId,
-
-                    // metadata
                     Cost = x.Metadata.Cost,
                     BaseCost = x.Metadata.BaseCost,
                     Unit = x.Metadata.Unit,
@@ -139,23 +137,20 @@ namespace Persistence.Service.ResourceType
                     Order = x.SortOrder,
                     ResourceTypeId = x.ResourceTypeId,
                     AccountId = x.AccountId,
-
-                    // metadata
                     Cost = x.Metadata.Cost,
                     BaseCost = x.Metadata.BaseCost,
                     Unit = x.Metadata.Unit,
                     FixedQ = x.Metadata.FixedQ,
-                    CO2 = x.Metadata.CO2,
-                    CapWaste = x.Metadata.CapWaste,
                     ChangeFactor1 = x.Metadata.ChangeFactor1,
-                    ChangeFactor2 = x.Metadata.ChangeFactor2
+                    ChangeFactor2 = x.Metadata.ChangeFactor2,
+                    CO2 = x.Metadata.CO2,
+                    CapWaste = x.Metadata.CapWaste
                 })
                 .ToListAsync(ct);
         }
 
         public async Task<ResourceFormDTO> GetVisualFormAsync(CancellationToken ct = default)
         {
-            // بديل نظيف لـ GetVisualResourcesQuery القديم :contentReference[oaicite:3]{index=3}
             var result = new ResourceFormDTO();
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -171,7 +166,6 @@ namespace Persistence.Service.ResourceType
                     Order = x.SortOrder,
                     IsVisible = x.IsVisible,
                     AccountId = x.AccountId ?? 0,
-
                     ChangeFactor1 = x.Metadata.ChangeFactor1,
                     ChangeFactor2 = x.Metadata.ChangeFactor2,
                     BaseCost = x.Metadata.BaseCost,
@@ -180,7 +174,6 @@ namespace Persistence.Service.ResourceType
                     Cost = x.Metadata.Cost,
                     FixedQ = x.Metadata.FixedQ,
                     Unit = x.Metadata.Unit,
-
                     ResourcesSort = x.ResourcesSort
                         .OrderBy(rs => rs.SortOrder)
                         .Select(rs => new ListResourceSortDTO
@@ -190,7 +183,6 @@ namespace Persistence.Service.ResourceType
                             Order = rs.SortOrder,
                             IsVisible = rs.IsVisible,
                             AccountId = rs.AccountId ?? 0,
-
                             ChangeFactor1 = rs.Metadata.ChangeFactor1,
                             ChangeFactor2 = rs.Metadata.ChangeFactor2,
                             BaseCost = rs.Metadata.BaseCost,

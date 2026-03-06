@@ -74,27 +74,34 @@ public sealed class TenantUserService(
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var localUser = await context.User
-                .FirstOrDefaultAsync(x => x.Email == request.Email);
+                .FirstOrDefaultAsync(x => x.Email == request.Email, ct);
 
             if (localUser is null)
             {
-                localUser = new UserEntity
-                {
-                    ExternalAuthId = identityUser.Id,
-                    FirstName = request.Firstname,
-                    LastName = request.Lastname,
-                    Email = request.Email ?? string.Empty,
-                    TenantId = currentTenant.TenantId,
-                    DepartmentId = request.DepartmentId,
-                    UserName = request.Email ?? string.Empty,
-                };
+                localUser = UserEntity.Create(
+                    currentTenant.TenantId,
+                    request.Email ?? string.Empty,
+                    request.Email ?? string.Empty,
+                    request.DepartmentId,
+                    request.Firstname,
+                    request.Lastname,
+                    identityUser.Id);
 
                 context.User.Add(localUser);
-                await context.SaveChangesAsync();
-
-                identityUser.UserId = localUser.Id;
-                await userManager.UpdateAsync(identityUser);
             }
+            else
+            {
+                localUser.SetEmail(request.Email ?? string.Empty);
+                localUser.SetUserName(request.Email ?? string.Empty);
+                localUser.UpdateProfile(request.Firstname, request.Lastname, request.DepartmentId);
+                localUser.SetExternalAuthId(identityUser.Id);
+                context.User.Update(localUser);
+            }
+
+            await context.SaveChangesAsync(ct);
+
+            identityUser.UserId = localUser.Id;
+            await userManager.UpdateAsync(identityUser);
 
             return true;
         }
@@ -119,12 +126,12 @@ public sealed class TenantUserService(
         await userManager.AddToRoleAsync(authUser, tenantUser.Role);
         await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == tenantUser.Id);
+        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == tenantUser.Id, ct);
         if (userEntity != null)
         {
-            userEntity.ExternalAuthId = authUser.Id;
+            userEntity.SetExternalAuthId(authUser.Id);
             context.User.Update(userEntity);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(ct);
         }
 
         return true;
@@ -153,16 +160,16 @@ public sealed class TenantUserService(
         await userManager.UpdateSecurityStampAsync(oldUser);
         await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == user.Id);
+        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == user.Id, ct);
         if (userEntity != null)
         {
-            userEntity.DepartmentId = user.DepartmentId;
-            userEntity.FirstName = user.Firstname;
-            userEntity.LastName = user.Lastname;
-            userEntity.ExternalAuthId = user.IdAuth ?? string.Empty;
+            userEntity.SetEmail(user.Email ?? string.Empty);
+            userEntity.SetUserName(user.Username ?? user.Email ?? string.Empty);
+            userEntity.UpdateProfile(user.Firstname, user.Lastname, user.DepartmentId);
+            userEntity.SetExternalAuthId(user.IdAuth);
 
             context.User.Update(userEntity);
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(ct);
         }
 
         var roles = await userManager.GetRolesAsync(oldUser);
@@ -190,19 +197,30 @@ public sealed class TenantUserService(
 
         if (!string.IsNullOrWhiteSpace(id))
             deletedFromAuth = await DeleteUserFromAuthAsync(id);
+
         await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-        var u = await context.User.FirstOrDefaultAsync(x => x.ExternalAuthId == id || x.Id == userid);
+        var u = await context.User.FirstOrDefaultAsync(x => x.ExternalAuthId == id || x.Id == userid, ct);
+        if (u == null)
+            return deletedFromAuth;
 
-        if (!onlyfromregister && u != null && deletedFromAuth)
+        if (onlyfromregister)
         {
-            await context.Calculations
-                .Where(x => x.IsPrivate && x.CreatedBy == u.Id)
-                .ExecuteDeleteAsync(ct);
-
-            context.User.Remove(u);
-            await context.SaveChangesAsync();
+            u.ClearExternalAuthId();
+            context.User.Update(u);
+            await context.SaveChangesAsync(ct);
+            return deletedFromAuth;
         }
+
+        if (!deletedFromAuth && !string.IsNullOrWhiteSpace(id))
+            return false;
+
+        await context.Calculations
+            .Where(x => x.IsPrivate && x.CreatedBy == u.Id)
+            .ExecuteDeleteAsync(ct);
+
+        context.User.Remove(u);
+        await context.SaveChangesAsync(ct);
 
         return true;
     }

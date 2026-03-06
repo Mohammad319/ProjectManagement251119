@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.ResourceType;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
@@ -17,8 +17,9 @@ namespace Domain.Entities.Calculation
         public ResourceMetadata Metadata
         {
             get => _metadata ??= new ResourceMetadata();
-            set => _metadata = value;
+            set => _metadata = NormalizeMetadata(value);
         }
+
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
@@ -26,16 +27,14 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Unit)]
         public string? Unit { get; set; }
         public ResourceTypesEnum ResType { get; set; }
+
         /// <summary>
-        /// SortOrder of task in UI display.
+        /// SortOrder of resource in UI display.
         /// </summary>
-        public double SortOrder { get; set; }
+        public int SortOrder { get; set; }
+
         [MaxLength(FieldLengths.Comment)]
         public string? Note { get; set; }
-
-        // -----------------------
-        // Relations
-        // -----------------------
 
         public int TaskId { get; set; }
 
@@ -68,32 +67,65 @@ namespace Domain.Entities.Calculation
         public ResourceTypeEntity? ResourceType { get; set; }
 
         public int? PrimaryOfferId { get; set; }
-        //public OfferEntity? PrimaryOffer { get; set; }
+
         [JsonIgnore]
         public ICollection<OfferEntity> Offers { get; set; } = [];
 
+        public static ResourceEntity Create(ResourcePostDTO dto, int sortOrder, int? parentTaskId = null)
+        {
+            ArgumentNullException.ThrowIfNull(dto);
+
+            var entity = new ResourceEntity();
+            entity.Update(dto);
+
+            if (parentTaskId is > 0)
+                entity.SetTask(parentTaskId.Value);
+
+            entity.SetSortOrder(sortOrder);
+            return entity;
+        }
+
+        public static ResourceEntity CloneForTask(ResourceEntity source)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+
+            var clone = new ResourceEntity
+            {
+                Name = source.Name,
+                ResType = source.ResType,
+                IsActive = source.IsActive,
+                Unit = source.Unit,
+                Note = source.Note,
+                Metadata = source.Metadata.Clone(),
+                AccountId = source.AccountId,
+                StatusId = source.StatusId,
+                ResourceSortId = source.ResourceSortId,
+                ResourceTypeId = source.ResourceTypeId,
+            };
+
+            clone.SetSortOrder(source.SortOrder);
+            return clone;
+        }
+
         public void Update(ResourcePostDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                throw new ArgumentException("Name is required", nameof(dto));
+            ArgumentNullException.ThrowIfNull(dto);
 
-            // --------- بيانات أساسية ---------
+            Name = NormalizeRequired(dto.Name, "Resource name is required.");
+            Note = NormalizeOptional(dto.Note);
+            Unit = NormalizeOptional(dto.Unit);
             ResType = dto.ResType;
-            Name = dto.Name;
-            SortOrder = dto.SortOrder;
             IsActive = dto.IsActive;
 
-            Note = dto.Note;
-            Unit = dto.Unit;
+            Metadata = dto.Data?.Clone() ?? new ResourceMetadata();
 
-            Metadata = dto.Data;
-
-            // ✅ keep duplicated fields in sync (avoid diverging sources between columns and JSON metadata)
+            // Keep duplicated fields in sync (scalar columns + JSON metadata)
             Metadata.Note = Note ?? string.Empty;
             Metadata.Unit = Unit ?? string.Empty;
-
             Metadata.Normalize();
-// --------- العلاقات ---------
+
+            SetSortOrder(dto.SortOrder);
+
             OpportunityId = dto.OpportunityId;
             AccountId = dto.AccountId;
             StatusId = dto.StatusId;
@@ -101,35 +133,78 @@ namespace Domain.Entities.Calculation
             ResourceTypeId = dto.ResourceTypeId;
             PrimaryOfferId = dto.OfferId;
         }
-        public static ResourceEntity CloneForTask(ResourceEntity r)
-        {
-            var clone = new ResourceEntity
-            {
-                Name = r.Name,
-                ResType = r.ResType,
-                IsActive = r.IsActive,
-                Unit = r.Unit,
-                Note = r.Note,
-                Metadata = r.Metadata.Clone(),
-                SortOrder = r.SortOrder,
-            };
 
-            return clone;
+        public void SetTask(int taskId)
+        {
+            if (taskId <= 0)
+                throw new ValidationException("TaskId must be greater than zero.");
+
+            TaskId = taskId;
         }
 
-        // (اختياري) دالة إنشاء جديدة من DTO:
-        public static ResourceEntity Create(int parentTaskId, ResourcePostDTO dto, double sortOrder)
+        public void SetSortOrder(int sortOrder)
         {
-            var entity = new ResourceEntity
-            {
-                TaskId = parentTaskId,
-                SortOrder = sortOrder,
-            };
+            ValidateSortOrder(sortOrder);
+            SortOrder = sortOrder;
+        }
 
-            entity.Update(dto);
+        public void MoveToTask(int taskId, int sortOrder)
+        {
+            SetTask(taskId);
+            SetSortOrder(sortOrder);
+        }
 
-            return entity;
+        public void ClearCrossCalculationState(bool resetQuantityParam)
+        {
+            OpportunityId = null;
+            Opportunity = null;
+            PrimaryOfferId = null;
+            Offers = [];
+
+            if (resetQuantityParam && !string.IsNullOrWhiteSpace(Metadata.QuantityParam))
+                Metadata.QuantityParam = PMValuesConst.FixedQ;
+        }
+
+        public void ResetIdentityForClone()
+        {
+            Id = 0;
+            RowVersion = Array.Empty<byte>();
+            TaskId = 0;
+            Task = null!;
+            Opportunity = null;
+            Account = null;
+            Status = null;
+            ResourceSort = null;
+            ResourceType = null;
+            PrimaryOfferId = null;
+            Offers = [];
+        }
+
+        private static ResourceMetadata NormalizeMetadata(ResourceMetadata? metadata)
+        {
+            var clean = metadata?.Clone() ?? new ResourceMetadata();
+            clean.Note = NormalizeOptional(clean.Note) ?? string.Empty;
+            clean.Unit = NormalizeOptional(clean.Unit) ?? string.Empty;
+            clean.QuantityParam = NormalizeOptional(clean.QuantityParam) ?? string.Empty;
+            clean.Normalize();
+            return clean;
+        }
+
+        private static string NormalizeRequired(string? value, string errorMessage)
+        {
+            var trimmed = value?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                throw new ValidationException(errorMessage);
+            return trimmed;
+        }
+
+        private static string? NormalizeOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        private static void ValidateSortOrder(double sortOrder)
+        {
+            if (double.IsNaN(sortOrder) || double.IsInfinity(sortOrder) || sortOrder < 0)
+                throw new ValidationException("SortOrder must be a finite number greater than or equal to zero.");
         }
     }
-
 }

@@ -10,84 +10,79 @@ using System.Text.Json.Serialization;
 namespace Domain.Entities.Project
 {
     public static class ProjectMappingExtensions
-{
-    public static ProjectData ToMetadata(this PostProjectDTO dto)
     {
-        return new ProjectData
+        public static ProjectData ToMetadata(this PostProjectDTO dto)
         {
-            Procurement = dto.Procurement,
-            ProjectManager = dto.ProjectManager,
-            Notes = dto.Notes,
-            ClientsContactPersonTender = dto.ClientsContactPersonTender,
-            Address = dto.Address,
-            ClientsManager = dto.ClientsManager,
-            Contacts = dto.Contacts,
-            Designer = dto.Designer,
-            Developer = dto.Developer,
-            Inspector = dto.Inspector,
-            OverviewInfoProject = dto.OverviewInfoProject,
-            Responsibles = dto.Responsibles,
-            Supervisor = dto.Supervisor
-        };
+            return new ProjectData
+            {
+                Procurement = dto.Procurement,
+                ProjectManager = dto.ProjectManager,
+                Notes = dto.Notes,
+                ClientsContactPersonTender = dto.ClientsContactPersonTender,
+                Address = dto.Address,
+                ClientsManager = dto.ClientsManager,
+                Contacts = dto.Contacts,
+                Designer = dto.Designer,
+                Developer = dto.Developer,
+                Inspector = dto.Inspector,
+                OverviewInfoProject = dto.OverviewInfoProject,
+                Responsibles = dto.Responsibles,
+                Supervisor = dto.Supervisor
+            };
+        }
     }
-}
 
     public sealed class ProjectEntity : AuditableSoftDeletableEntity<Guid>
     {
         [Range(0, 5)]
-        public int Priority { get; set; } = 3;
+        public int Priority { get; private set; } = 3;
+
         [Required, MaxLength(FieldLengths.Name)]
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; private set; } = string.Empty;
 
         [MaxLength(FieldLengths.Code)]
-        public string? Code { get; set; }
+        public string? Code { get; private set; }
 
-        public DateTime StartDate { get; set; } = DateTime.UtcNow;
-
-        public DateTime EndDate { get; set; } = DateTime.UtcNow.AddMonths(2);
-
-        public DateTime TenderDeadline { get; set; } = DateTime.UtcNow;
-
-        public DateTime TenderQA { get; set; } = DateTime.UtcNow;
+        public DateTime StartDate { get; private set; } = DateTime.UtcNow;
+        public DateTime EndDate { get; private set; } = DateTime.UtcNow.AddMonths(2);
+        public DateTime TenderDeadline { get; private set; } = DateTime.UtcNow;
+        public DateTime TenderQA { get; private set; } = DateTime.UtcNow;
 
         // ترتيب العرض العام
-        public double SortOrder { get; set; }
-        // ملاحظة: DepartmentId موجود على FolderEntity،
-        // ونستخرج/نفلتر المشاريع عبر Folder.DepartmentId.
-
+        public int SortOrder { get; private set; }
 
         private ProjectData? _metadata;
         public ProjectData Metadata
         {
             get => _metadata ??= new ProjectData();
-            set => _metadata = value;
+            private set => _metadata = value;
         }
 
         // نوع المشروع (اختياري)
-        public int? ProjectTypeId { get; set; }
-        public TypeEntity? ProjectType { get; set; }
+        public int? ProjectTypeId { get; private set; }
+        public TypeEntity? ProjectType { get; private set; }
 
         // مجلد المشروع (أساسي)
-        public Guid FolderId { get; set; }
-        public FolderEntity Folder { get; set; } = null!;
+        public Guid FolderId { get; private set; }
+        public FolderEntity Folder { get; private set; } = null!;
 
         // المنظمة المالكة (اختيارية)
-        public int? OrganisationId { get; set; }
-        public OrganisationEntity? Organisation { get; set; }
+        public int? OrganisationId { get; private set; }
+        public OrganisationEntity? Organisation { get; private set; }
 
-        public int? ProcurementMethodId { get; set; }
-        public ProcurementMethodEntity? ProcurementMethod { get; set; }
+        public int? ProcurementMethodId { get; private set; }
+        public ProcurementMethodEntity? ProcurementMethod { get; private set; }
 
-        public int? CompensationId { get; set; }
-        public CompensationEntity? Compensation { get; set; }
+        public int? CompensationId { get; private set; }
+        public CompensationEntity? Compensation { get; private set; }
 
-        public int? ContractId { get; set; }
-        public ContractEntity? Contract { get; set; }
+        public int? ContractId { get; private set; }
+        public ContractEntity? Contract { get; private set; }
 
-        public bool IsVisible { get; set; } = true;
+        public bool IsVisible { get; private set; } = true;
 
         [JsonIgnore]
-        public ICollection<CalculationEntity> Calculations { get; set; } = [];
+        public ICollection<CalculationEntity> Calculations { get; private set; } = [];
 
         private ProjectEntity() { } // EF
 
@@ -95,24 +90,28 @@ namespace Domain.Entities.Project
             PostProjectDTO dto,
             Guid folderId,
             int createdBy,
-            double sortOrder)
+            int sortOrder)
         {
+            if (folderId == Guid.Empty)
+                throw new ValidationException("FolderId is required.");
+
             var project = new ProjectEntity
             {
                 FolderId = folderId,
                 CreatedBy = createdBy,
                 SortOrder = sortOrder
             };
+
             project.Update(dto);
             return project;
         }
 
         public void Update(PostProjectDTO dto)
         {
-            Name = dto.Name;
-            Code = dto.Code;
-            StartDate = dto.StartDate;
-            EndDate = dto.EndDate;
+            Name = NormalizeRequired(dto.Name, nameof(dto.Name), FieldLengths.Name);
+            Code = NormalizeOptional(dto.Code, FieldLengths.Code);
+
+            SetDates(dto.StartDate, dto.EndDate);
             TenderDeadline = dto.TenderDeadline;
             TenderQA = dto.TenderQA;
             IsVisible = dto.IsVisible;
@@ -126,7 +125,63 @@ namespace Domain.Entities.Project
             Metadata = dto.ToMetadata();
         }
 
-        public void UpdateOrder(double newOrder) => SortOrder = newOrder;
-    }
+        public void UpdateOrder(int newOrder) => SortOrder = newOrder;
 
+        public void SetPriority(int priority)
+        {
+            if (priority < 0 || priority > 5)
+                throw new ValidationException("Priority must be between 0 and 5.");
+
+            Priority = priority;
+        }
+
+        public void MarkDeleted(int? deletedBy, DateTime? utcNow = null)
+        {
+            if (IsDeleted)
+                return;
+
+            IsDeleted = true;
+            DeletedAt = utcNow ?? DateTime.UtcNow;
+            DeletedBy = deletedBy;
+        }
+
+        public void Restore()
+        {
+            IsDeleted = false;
+            DeletedAt = null;
+            DeletedBy = null;
+        }
+
+        private void SetDates(DateTime startDate, DateTime endDate)
+        {
+            if (endDate < startDate)
+                throw new ValidationException("EndDate cannot be before StartDate.");
+
+            StartDate = startDate;
+            EndDate = endDate;
+        }
+
+        private static string NormalizeRequired(string? value, string fieldName, int maxLength)
+        {
+            var normalized = value?.Trim();
+
+            if (string.IsNullOrWhiteSpace(normalized))
+                throw new ValidationException($"{fieldName} is required.");
+
+            return normalized.Length > maxLength
+                ? normalized[..maxLength]
+                : normalized;
+        }
+
+        private static string? NormalizeOptional(string? value, int maxLength)
+        {
+            var normalized = value?.Trim();
+            if (string.IsNullOrWhiteSpace(normalized))
+                return null;
+
+            return normalized.Length > maxLength
+                ? normalized[..maxLength]
+                : normalized;
+        }
+    }
 }

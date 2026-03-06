@@ -41,7 +41,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         public DateTime TenderQA { get; set; } = DateTime.Now;
         public DateTime StartDate { get; set; } = DateTime.Now;
         public DateTime EndDate { get; set; } = DateTime.Now.AddMonths(2);
-        public double Order { get; set; }
+        public int Order { get; set; }
         public DateTime? PublicationDate { get; set; } = DateTime.Now;
         public DateTime? DecisionDate { get; set; } = DateTime.Now;
     }

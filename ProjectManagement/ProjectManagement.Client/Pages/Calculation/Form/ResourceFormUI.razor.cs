@@ -131,7 +131,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                 }
                 else if (resource.Id == 0)
                 {
-                    double maxOrder = 0;
+                    int maxOrder = 0;
                     var task = Calc?.Tasks?.FirstOrDefault(x => x.Id == resource.TaskId);
                     if (task?.Resources?.Count > 0)
                         maxOrder = task.Resources.Max(x => x.Order) + 100;

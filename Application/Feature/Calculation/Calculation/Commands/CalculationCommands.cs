@@ -32,7 +32,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
             => service.UpdateHourlyPriceListAsync(request.Id, request.HourlyPriceList, request.UserId, request.DepartmentId, ct);
     }
 
-    public sealed record NewOrderCalculationCommand(int Id, double NewOrder) : IRequest<bool>;
+    public sealed record NewOrderCalculationCommand(int Id, int NewOrder) : IRequest<bool>;
     public class NewOrderCalculationCommandHandler(ICalculationService service) : IRequestHandler<NewOrderCalculationCommand, bool>
     {
         public Task<bool> Handle(NewOrderCalculationCommand request, CancellationToken ct)

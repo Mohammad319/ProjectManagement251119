@@ -32,9 +32,10 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
         base.OnModelCreating(modelBuilder);
 
         ConfigureAuditUserRelations(modelBuilder);
-        ConfigureTenderAttributeRelations(modelBuilder);
 
         // Apply all IEntityTypeConfiguration<> in this assembly.
+        // TenderAttributeBind/Tender relations are now owned بالكامل by TenderConfiguration
+        // لتجنب تعريف العلاقة نفسها أكثر من مرة بمفاتيح/OnDelete مختلفة.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShardingSingleDbContext).Assembly);
 
         ConfigureJsonDataConversions(modelBuilder);
@@ -80,23 +81,6 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
                     .OnDelete(DeleteBehavior.Restrict);
             }
         }
-    }
-
-    private static void ConfigureTenderAttributeRelations(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<TenderAttributeBindEntity>()
-            .HasKey(m => new { m.TenderAttributeId, m.TenderId });
-
-        modelBuilder.Entity<TenderAttributeBindEntity>()
-            .HasOne(u => u.TenderAttribute)
-            .WithMany(u => u.TendersAttributes)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.ClientCascade);
-
-        modelBuilder.Entity<TenderAttributeBindEntity>()
-            .HasOne(pt => pt.Tender)
-            .WithMany(p => p.TendersAttributes)
-            .HasForeignKey(pt => pt.TenderId);
     }
 
     /// <summary>

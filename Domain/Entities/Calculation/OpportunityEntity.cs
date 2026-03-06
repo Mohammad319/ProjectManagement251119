@@ -32,19 +32,14 @@ namespace Domain.Entities.Calculation
         [JsonIgnore]
         public ICollection<TaskEntity> Tasks { get; private set; } = [];
 
-        // EF فقط
         private OpportunityEntity() { }
 
-        public OpportunityEntity(
-            string opportunitiesRisks,
-            string? opportunityType,
-            int calculationId,
-            OpportunityData metadata)
+        public OpportunityEntity(string opportunitiesRisks, string? opportunityType, int calculationId, OpportunityData metadata)
         {
             SetRisks(opportunitiesRisks);
-            OpportunityType = opportunityType;
+            OpportunityType = NormalizeOptional(opportunityType);
             CalculationId = calculationId;
-            Metadata = metadata ?? new OpportunityData();
+            Metadata = NormalizeMetadata(metadata);
         }
 
         public void SetRisks(string risks)
@@ -55,17 +50,13 @@ namespace Domain.Entities.Calculation
             OpportunitiesRisks = risks.Trim();
         }
 
-        public void Update(
-            string opportunitiesRisks,
-            string? opportunityType,
-            OpportunityData metadata)
+        public void Update(string opportunitiesRisks, string? opportunityType, OpportunityData metadata)
         {
             SetRisks(opportunitiesRisks);
-            OpportunityType = opportunityType;
-            Metadata = metadata ?? new OpportunityData();
+            OpportunityType = NormalizeOptional(opportunityType);
+            Metadata = NormalizeMetadata(metadata);
         }
 
-        // نسخة خفيفة للإرسال عبر Hub بدون مشاكل tracking
         public OpportunityEntity CreateSnapshot()
         {
             return new OpportunityEntity
@@ -74,8 +65,25 @@ namespace Domain.Entities.Calculation
                 OpportunitiesRisks = OpportunitiesRisks,
                 OpportunityType = OpportunityType,
                 CalculationId = CalculationId,
-                Metadata = Metadata
+                Metadata = new OpportunityData
+                {
+                    ProbabilityWorth = Metadata.ProbabilityWorth,
+                    ProbabilityPercent = Metadata.ProbabilityPercent,
+                    ProbabilityBest = Metadata.ProbabilityBest,
+                    Value = Metadata.Value,
+                    Comment = Metadata.Comment?.Trim() ?? string.Empty
+                }
             };
         }
+
+        private static OpportunityData NormalizeMetadata(OpportunityData? metadata)
+        {
+            metadata ??= new OpportunityData();
+            metadata.Comment = metadata.Comment?.Trim() ?? string.Empty;
+            return metadata;
+        }
+
+        private static string? NormalizeOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

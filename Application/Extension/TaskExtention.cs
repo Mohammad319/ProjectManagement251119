@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Calculation;
+using Domain.Entities.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Application.Extention
@@ -6,79 +6,68 @@ namespace Application.Extention
     public static class TaskExtention
     {
         public static List<TaskEntity> FlattenTasks(IEnumerable<TaskEntity> tasks)
-    => tasks.SelectMany(t => new[] { t }.Concat(FlattenTasks(t.Tasks ?? Enumerable.Empty<TaskEntity>()))).ToList();
+            => tasks.SelectMany(t => new[] { t }.Concat(FlattenTasks(t.Tasks ?? Enumerable.Empty<TaskEntity>()))).ToList();
+
         public static void SetCalculationIdRecursive(List<TaskEntity> tasks, bool oh, int calcId, int oldcalcId)
         {
             foreach (var task in tasks ?? Enumerable.Empty<TaskEntity>())
             {
-                task.CalculationId = calcId;
-                task.Id = 0;
-                task.ParentTaskId = null;
+                task.SetCalculation(calcId);
+                task.ResetIdentityForClone();
                 task.Metadata.IsOH = oh;
 
                 if (calcId != oldcalcId)
-                    task.OpportunityId = null;
-                foreach (var res in task.Resources ?? Enumerable.Empty<ResourceEntity>())
+                    task.ClearOpportunity();
+
+                foreach (var resource in task.Resources ?? Enumerable.Empty<ResourceEntity>())
                 {
                     if (calcId != oldcalcId)
-                    {
-                        res.OpportunityId = null;
-                        res.PrimaryOfferId = null;
-                        res.Offers = [];
-                    }
-                    res.Id = 0;
-                    res.TaskId = 0;
+                        resource.ClearCrossCalculationState(resetQuantityParam: false);
+
+                    resource.ResetIdentityForClone();
                 }
             }
         }
+
         public static void BuildTaskHierarchy(List<TaskEntity> all)
         {
             var lookup = all
                 .Where(x => x.ParentTaskId.HasValue)
                 .GroupBy(x => x.ParentTaskId!.Value)
                 .ToDictionary(g => g.Key, g => g.ToList());
+
             foreach (var task in all)
             {
-                if (lookup.TryGetValue(task.Id, out var children))
-                    task.Tasks = children;
-                else
-                    task.Tasks = [];
+                task.Tasks = lookup.TryGetValue(task.Id, out var children)
+                    ? children
+                    : [];
             }
         }
+
         public static void SetNetCalcId(TaskEntity task)
         {
-            foreach (var t in task.Tasks)
+            foreach (var child in task.Tasks)
             {
-                t.CalculationId = task.CalculationId;
-                t.Metadata.IsOH = task.Metadata.IsOH;
-                SetNetCalcId(t);
+                child.SetCalculation(task.CalculationId);
+                child.Metadata.IsOH = task.Metadata.IsOH;
+                SetNetCalcId(child);
             }
         }
+
         public static TaskEntity Reset(TaskEntity task)
         {
-            task.Id = 0;
-            task.ParentTaskId = null;
-            task.OpportunityId = null;
-            task.CalculationId = 0;
-            task.Opportunity = null;
-            task.ParentTask = null;
-            task.Status = null;
+            task.ResetIdentityForClone();
+            task.ClearOpportunity();
+            task.Calculation = null!;
 
-            //if (task.Resources != null) for (int i = 0; i < task.Resources.Count; i++)
-            //        task.Resources[i] = ResourceExtention.Reset(task.Resources.ElementAt(i));
             if (task.Resources != null)
             {
                 task.Resources = task.Resources
-                    .Select(r => ResourceExtention.Reset(r))
+                    .Select(ResourceExtention.Reset)
                     .ToList();
             }
 
-
-            //for (int i = 0; i < task?.Tasks?.Count; i++)
-            //    task.Tasks[i] = Reset(task.Tasks.ElementAt(i));
-            //foreach (var child in task.Tasks)Reset(child);
-            task.Tasks = [.. task.Tasks.Select(t => Reset(t))];
-
+            task.Tasks = [.. task.Tasks.Select(Reset)];
             return task;
         }
     }

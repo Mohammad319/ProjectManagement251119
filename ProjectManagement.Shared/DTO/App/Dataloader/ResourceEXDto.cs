@@ -41,7 +41,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     {
         public ResourceTypesEnum ResType { get; set; }
         public string Name { get; set; } = null!;
-        [Range(0, double.MaxValue)] public double SortOrder { get; set; }
+        [Range(0, int.MaxValue)] public int SortOrder { get; set; }
         private ResourceMetadata _data = new();
         public ResourceMetadata Data
         {

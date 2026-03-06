@@ -1,6 +1,7 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Base.Application;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -14,7 +15,7 @@ namespace Domain.Entities.Application
 
     public class ApplicationDataEntity : ApplicationDataBase
     {
-        public List<RowEntity> Rows { get; set; } = []; // كان Row
+        public List<RowEntity> Rows { get; set; } = [];
     }
 
     /// <summary>
@@ -27,18 +28,12 @@ namespace Domain.Entities.Application
 
         private ApplicationDataEntity _data = new();
 
-        /// <summary>
-        /// Dynamic metadata associated with the application.
-        /// </summary>
         public ApplicationDataEntity Data
         {
             get => _data;
             set => _data = value ?? new ApplicationDataEntity();
         }
 
-        /// <summary>
-        /// Department responsible for this application.
-        /// </summary>
         public int DepartmentId { get; set; }
 
         [JsonIgnore]
@@ -47,5 +42,47 @@ namespace Domain.Entities.Application
         [JsonIgnore]
         public int TenantId { get; set; }
 
+        public static ApplicationEntity Create(
+            int departmentId,
+            bool isVisible,
+            int userId,
+            string? name,
+            ApplicationDataEntity? data)
+        {
+            return new ApplicationEntity
+            {
+                DepartmentId = departmentId,
+                IsVisible = isVisible,
+                UserId = userId,
+                Name = NormalizeName(name),
+                Data = data ?? new ApplicationDataEntity(),
+                LastUpdate = DateTime.UtcNow
+            };
+        }
+
+        public void UpdateFrom(ApplicationEntity source)
+        {
+            if (source is null) throw new ArgumentNullException(nameof(source));
+
+            DepartmentId = source.DepartmentId;
+            IsVisible = source.IsVisible;
+            UserId = source.UserId;
+            Name = NormalizeName(source.Name);
+            Data = source.Data ?? new ApplicationDataEntity();
+            LastUpdate = DateTime.UtcNow;
+        }
+
+        public void TouchUtc()
+        {
+            LastUpdate = DateTime.UtcNow;
+        }
+
+        private static string NormalizeName(string? name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ValidationException("Application name is required.");
+
+            return name.Trim();
+        }
     }
 }

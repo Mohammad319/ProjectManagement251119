@@ -15,7 +15,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         public async Task<List<ListOrderDTO>> GetAsync(int? id = null) =>
     [.. (await _httpRepository.GetAsync<List<ListOrderDTO>>(TaskURLBase + $"status?id={id}")).OrderBy(x => x.SortOrder),];
 
-        public async Task<bool> ReOrderAsync(int Id, double newOrder)
+        public async Task<bool> ReOrderAsync(int Id, int newOrder)
         {
             return await _httpRepository.GetAsync<bool>(TaskURLBase + URLConst.ReOrder + $"/{Id}/{newOrder}");
         }

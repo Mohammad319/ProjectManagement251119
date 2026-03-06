@@ -13,8 +13,6 @@ namespace Persistence.Service.Offer
 {
     public sealed class OfferService(IDbContextFactoryTenant dbFactory, INotificationHub hub) : IOfferService
     {
-        // ---------------- Commands ----------------
-
         public async Task<int> CreateAsync(PostOfferDTO dto, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -22,31 +20,19 @@ namespace Persistence.Service.Offer
             var entity = new OfferEntity(
                 resourceId: dto.ResourceId,
                 organisationId: dto.OrganisationId,
-                metadata: new OfferData
-                {
-                    Cost = dto.Cost,
-                    BaseCost = dto.BaseCost,
-                    Contact = dto.Contact
-                },
-                comment: dto.Comment
-            );
+                metadata: BuildOfferData(dto),
+                comment: dto.Comment);
 
             context.Offers.Add(entity);
             await context.SaveChangesAsync(ct);
 
-            // استعلام واحد فقط لجلب البيانات اللازمة للإشعار (CalcId + DTO)
             var created = await context.Offers
                 .AsNoTracking()
                 .Where(x => x.Id == entity.Id)
                 .Select(ProjectOfferWithCalcId())
                 .FirstOrDefaultAsync(ct) ?? throw new InvalidOperationException("Offer was not found after creation.");
-            await NotifyOfferAsync(
-                calcId: created.CalcID,
-                op: OperationType.Add,
-                parentId: dto.ResourceId,
-                data: created.Offer
-            );
 
+            await NotifyOfferAsync(created.CalcID, OperationType.Add, dto.ResourceId, created.Offer);
             return entity.Id;
         }
 
@@ -54,29 +40,14 @@ namespace Persistence.Service.Offer
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // ملاحظة مهمة:
-            // Metadata مخزنة كـ JSON عبر ValueConverter (nvarchar(max)).
-            // لذلك ExecuteUpdateAsync على x.Metadata.* لن يترجم لـ SQL بشكل موثوق.
-            // هنا نفضّل Correctness على micro-optimization.
-            var entity = await context.Offers
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+            var entity = await context.Offers.FirstOrDefaultAsync(x => x.Id == id, ct);
+            if (entity is null)
+                return false;
 
-            if (entity is null) return false;
-
-            // optimistic concurrency: detect stale edits
             if (dto.RowVersion is { Length: > 0 })
                 context.Entry(entity).Property(x => x.RowVersion).OriginalValue = dto.RowVersion;
 
-            entity.Update(
-                organisationId: dto.OrganisationId,
-                metadata: new OfferData
-                {
-                    Cost = dto.Cost,
-                    BaseCost = dto.BaseCost,
-                    Contact = dto.Contact
-                },
-                comment: dto.Comment
-            );
+            entity.Update(dto.OrganisationId, BuildOfferData(dto), dto.Comment);
 
             try
             {
@@ -93,18 +64,11 @@ namespace Persistence.Service.Offer
                 .Select(ProjectOfferWithCalcId())
                 .FirstOrDefaultAsync(ct);
 
-            if (updated is null) return false;
+            if (updated is null)
+                return false;
 
-            // نفس شكل إشعاراتك السابقة (List<ListOfferDTO>)
             List<ListOfferDTO> list = [updated.Offer];
-
-            await NotifyOfferAsync(
-                calcId: updated.CalcID,
-                op: OperationType.Update,
-                parentId: 0,
-                data: list
-            );
-
+            await NotifyOfferAsync(updated.CalcID, OperationType.Update, 0, list);
             return true;
         }
 
@@ -113,10 +77,12 @@ namespace Persistence.Service.Offer
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var offer = await context.Offers
-                .Include(x => x.Resource).ThenInclude(x => x.Task)
+                .Include(x => x.Resource)
+                .ThenInclude(x => x.Task)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (offer is null) return false;
+            if (offer is null)
+                return false;
 
             var calculationId = offer.Resource.Task.CalculationId;
 
@@ -126,13 +92,7 @@ namespace Persistence.Service.Offer
             context.Offers.Remove(offer);
             await context.SaveChangesAsync(ct);
 
-            await NotifyOfferAsync(
-                calcId: calculationId,
-                op: OperationType.Remove,
-                parentId: 0,
-                data: id
-            );
-
+            await NotifyOfferAsync(calculationId, OperationType.Remove, 0, id);
             return true;
         }
 
@@ -144,16 +104,21 @@ namespace Persistence.Service.Offer
                 .Include(x => x.Offers)
                 .FirstOrDefaultAsync(x => x.Id == resourceId, ct);
 
-            if (resource is null) return false;
+            if (resource is null)
+                return false;
 
             var calculationId = await context.Tasks
                 .Where(r => r.Id == resource.TaskId)
                 .Select(r => r.CalculationId)
                 .SingleAsync(ct);
 
-            var offer = offerId.HasValue
-                ? resource.Offers.FirstOrDefault(o => o.Id == offerId.Value)
-                : null;
+            OfferEntity? offer = null;
+            if (offerId.HasValue)
+            {
+                offer = resource.Offers.FirstOrDefault(o => o.Id == offerId.Value);
+                if (offer is null)
+                    return false;
+            }
 
             resource.PrimaryOfferId = offerId;
 
@@ -161,9 +126,8 @@ namespace Persistence.Service.Offer
             {
                 resource.Metadata.Cost = offer.Metadata.Cost;
                 resource.Metadata.BaseCost = offer.Metadata.BaseCost;
-            
                 resource.Metadata.Normalize();
-}
+            }
 
             await context.SaveChangesAsync(ct);
 
@@ -173,27 +137,30 @@ namespace Persistence.Service.Offer
                 OperationType.Update,
                 new HubDataDto
                 {
-                    Parent = offerId?.ToString() ?? string.Empty, // Null-safe
+                    Parent = offerId?.ToString() ?? string.Empty,
                     ParentId = resourceId
-                }
-            );
+                });
 
             return true;
         }
 
         public async Task<bool> CalcAvgOfferAsync(int calcId, int organisationId, double avg, CancellationToken ct = default)
         {
+            if (double.IsNaN(avg) || double.IsInfinity(avg))
+                return false;
+
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var offers = await context.Offers
-                .Where(x => x.OrganisationId == organisationId &&
-                            x.Resource.Task.CalculationId == calcId)
+                .Where(x => x.OrganisationId == organisationId && x.Resource.Task.CalculationId == calcId)
                 .ToListAsync(ct);
 
-            if (offers.Count == 0) return false;
+            if (offers.Count == 0)
+                return false;
 
             decimal sum = offers.Sum(x => x.Metadata.Cost);
-            if (sum == 0) return false;
+            if (sum == 0)
+                return false;
 
             foreach (var o in offers)
                 o.SetBaseCost((o.Metadata.Cost * (decimal)avg) / sum);
@@ -202,22 +169,13 @@ namespace Persistence.Service.Offer
 
             var result = await context.Offers
                 .AsNoTracking()
-                .Where(x => x.OrganisationId == organisationId &&
-                            x.Resource.Task.CalculationId == calcId)
+                .Where(x => x.OrganisationId == organisationId && x.Resource.Task.CalculationId == calcId)
                 .Select(ProjectListOfferDto())
                 .ToListAsync(ct);
 
-            await NotifyOfferAsync(
-                calcId: calcId,
-                op: OperationType.Update,
-                parentId: 0,
-                data: result
-            );
-
+            await NotifyOfferAsync(calcId, OperationType.Update, 0, result);
             return true;
         }
-
-        // ---------------- Queries ----------------
 
         public async Task<List<ListOfferCalcInfo>> GetByFilterAsync(OfferFilterDTO f, CancellationToken ct = default)
         {
@@ -225,7 +183,6 @@ namespace Persistence.Service.Offer
 
             IQueryable<OfferEntity> q = context.Offers.AsNoTracking();
 
-            // ---------- Server-side (SQL) filters ----------
             if (f.CalculationID > 0)
                 q = q.Where(x => x.Resource.Task.CalculationId == f.CalculationID);
             else if (f.ProjectID.HasValue)
@@ -241,14 +198,9 @@ namespace Persistence.Service.Offer
                 q = q.Where(x => x.Resource.ResourceSortId == f.ResourceSortId);
             if (f.OrganisationId.HasValue)
                 q = q.Where(x => x.OrganisationId == f.OrganisationId);
-
-            // NOTE: OfferFilterDTO.Account refers to Resource.AccountId
             if (f.Account.HasValue)
                 q = q.Where(x => x.Resource.AccountId == f.Account);
 
-            // ---------- Money range filters (SQL via computed columns) ----------
-            // Offers.Metadata is stored as JSON (nvarchar(max)). We expose Cost/BaseCost as persisted computed columns
-            // (CostValue/BaseCostValue) so the database can filter efficiently.
             decimal? minCost = f.MinCost;
             decimal? maxCost = f.MaxCost;
             if (minCost.HasValue && maxCost.HasValue && minCost.Value > maxCost.Value)
@@ -295,8 +247,6 @@ namespace Persistence.Service.Offer
                 .ToListAsync(ct);
         }
 
-// ---------------- Hub notifications (unified) ----------------
-
         private Task NotifyOfferAsync(int calcId, OperationType op, int parentId, object data)
             => hub.SendNotificationAsync(
                 calcId.ToString(),
@@ -306,10 +256,16 @@ namespace Persistence.Service.Offer
                 {
                     ParentId = parentId,
                     Data = data
-                }
-            );
+                });
 
-        // ---------------- Projections (DRY + nullable-safe) ----------------
+        private static OfferData BuildOfferData(PostOfferDTO dto)
+            => new()
+            {
+                Cost = dto.Cost,
+                BaseCost = dto.BaseCost,
+                Contact = dto.Contact,
+                Comment = dto.Comment ?? string.Empty
+            };
 
         private static System.Linq.Expressions.Expression<Func<OfferEntity, ListOfferDTO>> ProjectListOfferDto() =>
             x => new ListOfferDTO
@@ -341,9 +297,7 @@ namespace Persistence.Service.Offer
                     OrganisationId = x.OrganisationId,
                     SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? x.Organisation.OrganisationCategory.Name : string.Empty,
                     Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? x.Organisation.OrganisationCategory.ParentCategory.Name : string.Empty
-                }
-            );
-
+                });
 
         private sealed record OfferWithCalcId(int CalcID, ListOfferDTO Offer);
     }

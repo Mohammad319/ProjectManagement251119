@@ -9,8 +9,6 @@ namespace Application.Extention
     {
         public static ResourceListDTO MapToResourceListDTO(this ResourceEntity r)
         {
-            // ✅ Hydrate duplicated fields from scalar columns to keep UI consistent
-            // (Note/Unit exist both as columns and inside JSON metadata)
             var data = r.Metadata?.Clone() ?? new ResourceMetadata();
 
             if (!string.IsNullOrWhiteSpace(r.Note))
@@ -65,39 +63,18 @@ namespace Application.Extention
 
         public static ResourceEntity Parse(this ResourcePostDTO res, int taskID)
         {
-            // ✅ ensure Data carries Note/Unit (DTO proxies already do, but keep it explicit)
             res.Data.Note = res.Note ?? res.Data.Note;
             res.Data.Unit = res.Unit ?? res.Data.Unit;
 
-            return new ResourceEntity()
-            {
-                StatusId = res.StatusId,
-                AccountId = res.AccountId,
-                PrimaryOfferId = res.OfferId,
-                OpportunityId = res.OpportunityId,
-                ResourceSortId = res.ResourceSortId,
-                ResourceTypeId = res.ResourceTypeId,
-                TaskId = taskID,
-                ResType = res.ResType,
-                IsActive = res.IsActive,
-                Name = res.Name,
-                SortOrder = res.SortOrder,
-                Note = res.Note,
-                Unit = res.Unit,
-                Metadata = res.Data,
-            };
+            return ResourceEntity.Create(res, res.SortOrder, taskID > 0 ? taskID : null);
         }
 
         public static ResourceEntity Reset(ResourceEntity res)
         {
-            return new ResourceEntity()
-            {
-                Name = res.Name,
-                Metadata = res.Metadata,
-                IsActive = res.IsActive,
-                ResType = res.ResType,
-                TenantId = res.TenantId,
-            };
+            var clone = ResourceEntity.CloneForTask(res);
+            clone.TenantId = res.TenantId;
+            clone.ResetIdentityForClone();
+            return clone;
         }
     }
 }

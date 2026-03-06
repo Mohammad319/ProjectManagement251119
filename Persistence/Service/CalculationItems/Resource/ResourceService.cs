@@ -66,8 +66,7 @@ namespace Persistence.Service.CalculationItems.Resource
                     res.OpportunityId = null;
                 }
 
-                res.TaskId = parentTaskId;
-                res.SortOrder = nextOrder;
+                res.MoveToTask(parentTaskId, nextOrder);
                 nextOrder += 100;
 
                 entities.Add(res);
@@ -123,7 +122,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
             foreach (var dto in items)
             {
-                var resource = ResourceEntity.Create(parentTaskId, dto, nextOrder);
+                var resource = ResourceEntity.Create(dto, nextOrder, parentTaskId);
                 nextOrder += 100;
                 entities.Add(resource);
             }
@@ -193,9 +192,9 @@ namespace Persistence.Service.CalculationItems.Resource
                     resource.OpportunityId = null;
                 }
 
-                resource.SortOrder = parent.Max.HasValue ? parent.Max.Value + 100 : 0;
+                var nextOrder = parent.Max.HasValue ? parent.Max.Value + 100 : 0;
+                resource.MoveToTask(taskId, nextOrder);
                 parent = parent with { Max = resource.SortOrder }; // تحديث max للعنصر التالي
-                resource.TaskId = taskId;
 
                 moved.Add(resource);
             }
@@ -290,7 +289,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
             if (resource is null) return false;
 
-            resource.Res.SortOrder = newOrder;
+            resource.Res.SetSortOrder(newOrder);
             await context.SaveChangesAsync(ct);
 
             var fullResource = await context.Resources

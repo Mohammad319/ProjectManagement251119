@@ -92,7 +92,7 @@ namespace ProjectManagement.Shared.DTO.Project
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public double Order { get; set; }
+        public int Order { get; set; }
         public string Code { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string Color { get; set; } = string.Empty;

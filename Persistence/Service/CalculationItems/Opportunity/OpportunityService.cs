@@ -8,27 +8,25 @@ namespace Persistence.Service.CalculationItems.Opportunity
 {
     public sealed class OpportunityService(IDbContextFactoryTenant dbFactory, INotificationHub notification) : IOpportunityService
     {
-
         public async Task<List<OpportunityEntity>> GetByCalculationAsync(int calculationId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.Opportunity
                 .Where(x => x.CalculationId == calculationId)
                 .AsNoTracking()
+                .OrderByDescending(x => x.Id)
                 .ToListAsync(ct);
         }
-        // -------------------------------------------------
-        // CREATE
-        // -------------------------------------------------
+
         public async Task<int> CreateAsync(PostOpportunityDTO dto, int calculationId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
             var entity = new OpportunityEntity(
                 dto.OpportunitiesRisks,
                 dto.OpportunityType,
                 calculationId,
-                dto.Metadata ?? new OpportunityData()
-            );
+                dto.Metadata ?? new OpportunityData());
 
             context.Opportunity.Add(entity);
             await context.SaveChangesAsync(ct);
@@ -37,61 +35,50 @@ namespace Persistence.Service.CalculationItems.Opportunity
                 calculationId.ToString(),
                 ObjectTypHub.Opportunity,
                 OperationType.Add,
-                entity);
+                entity.CreateSnapshot());
 
             return entity.Id;
         }
 
-        // -------------------------------------------------
-        // UPDATE
-        // -------------------------------------------------
         public async Task<bool> UpdateAsync(int id, PostOpportunityDTO dto, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var entity = await context.Opportunity
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+            var entity = await context.Opportunity.FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (entity == null)
+            if (entity is null)
                 return false;
 
             entity.Update(
                 dto.OpportunitiesRisks,
                 dto.OpportunityType,
-                dto.Metadata ?? new OpportunityData()
-            );
+                dto.Metadata ?? new OpportunityData());
 
             await context.SaveChangesAsync(ct);
-
-            var snapshot = entity.CreateSnapshot();
 
             await notification.SendNotificationAsync(
                 entity.CalculationId.ToString(),
                 ObjectTypHub.Opportunity,
                 OperationType.Update,
-                snapshot);
+                entity.CreateSnapshot());
 
             return true;
         }
 
-        // -------------------------------------------------
-        // DELETE
-        // -------------------------------------------------
         public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var opp = await context.Opportunity.FindAsync([id], cancellationToken: ct);
-            if (opp == null)
+            if (opp is null)
                 return false;
 
-            // فك الربط مع المهام والموارد مثل الكود القديم 
-            var tasks = context.Tasks.Where(x => x.OpportunityId == opp.Id);
-            var res = context.Resources.Where(x => x.OpportunityId == opp.Id);
+            var tasks = await context.Tasks.Where(x => x.OpportunityId == opp.Id).ToListAsync(ct);
+            var resources = await context.Resources.Where(x => x.OpportunityId == opp.Id).ToListAsync(ct);
 
-            foreach (var t in tasks)
-                t.OpportunityId = null;
+            foreach (var task in tasks)
+                task.OpportunityId = null;
 
-            foreach (var r in res)
-                r.OpportunityId = null;
+            foreach (var resource in resources)
+                resource.OpportunityId = null;
 
             context.Opportunity.Remove(opp);
             await context.SaveChangesAsync(ct);
@@ -105,5 +92,4 @@ namespace Persistence.Service.CalculationItems.Opportunity
             return true;
         }
     }
-
 }

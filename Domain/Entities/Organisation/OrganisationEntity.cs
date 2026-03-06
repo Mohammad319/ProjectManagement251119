@@ -29,10 +29,6 @@ namespace Domain.Entities.Organisation
 
         public bool IsVisible { get; private set; } = true;
 
-        // -----------------------
-        // Relations
-        // -----------------------
-
         [JsonIgnore]
         public ICollection<OfferEntity> Offers { get; private set; } = [];
 
@@ -45,7 +41,7 @@ namespace Domain.Entities.Organisation
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
 
-        private OrganisationEntity() { } // EF
+        private OrganisationEntity() { }
 
         public static OrganisationEntity Create(PostOrganisationDTO dto)
         {
@@ -56,7 +52,12 @@ namespace Domain.Entities.Organisation
 
         public void Update(PostOrganisationDTO dto)
         {
-            Name = dto.Name;
+            ArgumentNullException.ThrowIfNull(dto);
+
+            if (dto.CategoryId <= 0)
+                throw new ValidationException("Organisation category is required.");
+
+            Name = NormalizeName(dto.Name);
             OrganisationCategoryId = dto.CategoryId;
             OrganisationTypeId = dto.OrganisationTypeID;
             IsVisible = dto.IsVisible;
@@ -64,5 +65,18 @@ namespace Domain.Entities.Organisation
         }
 
         public void SetVisibility(bool visible) => IsVisible = visible;
+
+        private static string NormalizeName(string? value)
+        {
+            var normalized = (value ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(normalized))
+                throw new ValidationException("Organisation name is required.");
+
+            if (normalized.Length > FieldLengths.Name)
+                throw new ValidationException($"Organisation name exceeds max length {FieldLengths.Name}.");
+
+            return normalized;
+        }
     }
 }

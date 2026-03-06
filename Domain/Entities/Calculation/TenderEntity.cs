@@ -1,8 +1,10 @@
 ﻿using Domain.Entities.Base;
 using Domain.Entities.Organisation;
 using ProjectManagement.Shared.Constant;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
@@ -32,13 +34,15 @@ namespace Domain.Entities.Calculation
 
         public void SetValue(double value)
         {
-            // هنا يمكنك إضافة قواعد (min/max) إذا احتجت
+            if (double.IsNaN(value) || double.IsInfinity(value))
+                throw new ValidationException("Tender attribute value must be finite.");
+
             Value = value;
         }
     }
+
     public sealed class TenderEntity : IntBaseEntity
     {
-        // لو Attributes (string) لم تعد ضرورية يمكنك لاحقاً حذفها
         public string? Attributes { get; private set; }
 
         [MaxLength(FieldLengths.Comment)]
@@ -65,24 +69,22 @@ namespace Domain.Entities.Calculation
         {
             CalculationId = calculationId;
             OrganisationId = organisationId;
-            Note = note;
+            Note = NormalizeOptional(note);
         }
 
         public void UpdateNote(string? note)
         {
-            Note = note;
+            Note = NormalizeOptional(note);
         }
 
         public void SetAttributesRaw(string? json)
         {
-            Attributes = json;
+            Attributes = NormalizeOptional(json);
         }
 
         public void SetAttributeValue(int attributeId, double value)
         {
-            var existing = TendersAttributes
-                .FirstOrDefault(x => x.TenderAttributeId == attributeId);
-
+            var existing = TendersAttributes.FirstOrDefault(x => x.TenderAttributeId == attributeId);
             if (existing is null)
             {
                 TendersAttributes.Add(new TenderAttributeBindEntity(Id, attributeId, value));
@@ -92,6 +94,8 @@ namespace Domain.Entities.Calculation
                 existing.SetValue(value);
             }
         }
-    }
 
+        private static string? NormalizeOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
 }

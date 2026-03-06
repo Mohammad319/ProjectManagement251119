@@ -14,9 +14,19 @@ internal sealed class OrganisationCategoryConfiguration : IEntityTypeConfigurati
             .IsUnique()
             .HasDatabaseName("UX_OrganisationCategories_Tenant_Name");
 
+        builder.HasIndex(x => new { x.TenantId, x.ParentCategoryId })
+            .HasDatabaseName("IX_OrganisationCategories_Tenant_Parent");
+
         builder.ToTable(t =>
-            t.HasCheckConstraint("CK_OrganisationCategories_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0")
-        );
+        {
+            t.HasCheckConstraint("CK_OrganisationCategories_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_OrganisationCategories_Parent_Positive", "[ParentCategoryId] IS NULL OR [ParentCategoryId] > 0");
+        });
+
+        builder.HasOne(x => x.ParentCategory)
+            .WithMany(x => x.ChildCategories)
+            .HasForeignKey(x => x.ParentCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
 
@@ -42,15 +52,11 @@ internal sealed class OrganisationConfiguration : IEntityTypeConfiguration<Organ
     {
         builder.ToTable("Organisations");
 
-        // مهم لقائمة المنظمات داخل tenant
         builder.HasIndex(x => new { x.TenantId, x.IsVisible, x.Name })
             .HasDatabaseName("IX_Organisations_Tenant_Visible_Name");
 
         builder.HasIndex(x => new { x.TenantId, x.OrganisationCategoryId })
             .HasDatabaseName("IX_Organisations_Tenant_Category");
-
-        // (اختياري) إذا أردت منع تكرار الاسم داخل tenant:
-        // builder.HasIndex(x => new { x.TenantId, x.Name }).IsUnique().HasDatabaseName("UX_Organisations_Tenant_Name");
 
         builder.ToTable(t =>
             t.HasCheckConstraint("CK_Organisations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0")

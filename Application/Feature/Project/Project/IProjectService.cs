@@ -12,7 +12,7 @@ namespace Application.Feature.Project.Project
         Task<Guid> CreateAsync(PostProjectDTO dto, int userId, int? departmentId, CancellationToken ct);
         Task<bool> UpdateAsync(Guid id, PostProjectDTO dto, int userId, int? departmentId, CancellationToken ct);
         Task<bool> DeleteAsync(Guid id, int userId, int? departmentId, CancellationToken ct);
-        Task<bool> UpdateOrderAsync(Guid id, double newOrder, CancellationToken ct);
+        Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct);
 
         // Queries
         Task<GetProjectCalcConfigDTO> GetProjectCalcConfigAsync(

@@ -6,8 +6,8 @@ namespace Persistence.Configurations;
 
 internal static class LookupChecks
 {
-    // HEX color مثل #00ff00
     public const string HexColorCheck = "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'";
+    public const string NonNegativeSortOrderCheck = "[SortOrder] >= 0";
 }
 
 internal sealed class StatusLookupConfiguration : IEntityTypeConfiguration<StatusEntity>
@@ -26,6 +26,7 @@ internal sealed class StatusLookupConfiguration : IEntityTypeConfiguration<Statu
         {
             t.HasCheckConstraint("CK_Statuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_Statuses_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_Statuses_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
 }
@@ -46,6 +47,7 @@ internal sealed class TypeLookupConfiguration : IEntityTypeConfiguration<TypeEnt
         {
             t.HasCheckConstraint("CK_ProjectTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_ProjectTypes_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_ProjectTypes_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
 }
@@ -66,6 +68,7 @@ internal sealed class ContractLookupConfiguration : IEntityTypeConfiguration<Con
         {
             t.HasCheckConstraint("CK_Contracts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_Contracts_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_Contracts_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
 }
@@ -86,6 +89,7 @@ internal sealed class CompensationLookupConfiguration : IEntityTypeConfiguration
         {
             t.HasCheckConstraint("CK_Compensations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_Compensations_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_Compensations_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
 }
@@ -106,6 +110,7 @@ internal sealed class ProcurementMethodLookupConfiguration : IEntityTypeConfigur
         {
             t.HasCheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
             t.HasCheckConstraint("CK_ProcurementMethods_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
 }

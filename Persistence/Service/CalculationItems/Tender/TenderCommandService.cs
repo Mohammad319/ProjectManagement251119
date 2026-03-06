@@ -2,16 +2,16 @@
 
 using Application.Services.CalculationItems.Tender;
 using Domain.Entities.Calculation;
+using Persistence.Context;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Persistence.Service.CalculationItems.Tender
 {
     public sealed class TenderCommandService(IDbContextFactoryTenant dbFactory) : ITenderCommandService
     {
-        // -------------------------------------------------------
-        // Create Tender
-        // -------------------------------------------------------
         public async Task<int> CreateTenderAsync(
             TenderPostDTO dto,
             int calculationId,
@@ -19,40 +19,21 @@ namespace Persistence.Service.CalculationItems.Tender
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            // Transaction لضمان الذرّية (خصوصاً لأننا قد نحتاج SaveChanges مرتين بسبب Identity Id)
             await using var tx = await context.Database.BeginTransactionAsync(ct);
 
             var tender = new TenderEntity(
                 calculationId: calculationId,
                 organisationId: companyId,
-                note: dto.Note ?? string.Empty
-            );
+                note: dto.Note);
 
             context.Tenders.Add(tender);
-            await context.SaveChangesAsync(ct); // للحصول على tender.Id
+            await context.SaveChangesAsync(ct);
 
-            if (dto.AttributesValue is not null && dto.AttributesValue.Count > 0)
-            {
-                foreach (var x in dto.AttributesValue)
-                {
-                    context.TenderAttributeBind.Add(
-                        new TenderAttributeBindEntity(
-                            tenderId: tender.Id,
-                            attributeId: x.Key,
-                            value: x.Value));
-                }
-
-                await context.SaveChangesAsync(ct);
-            }
-
+            await SyncAttributeValuesAsync(context, tender.Id, dto.AttributesValue, ct);
             await tx.CommitAsync(ct);
             return tender.Id;
         }
 
-        // -------------------------------------------------------
-        // Update Tender
-        // -------------------------------------------------------
         public async Task<bool> UpdateTenderAsync(
             int id,
             int calculationId,
@@ -67,15 +48,16 @@ namespace Persistence.Service.CalculationItems.Tender
             if (tender is null)
                 return false;
 
-            tender.UpdateNote(dto.Note ?? string.Empty);
-            await context.SaveChangesAsync(ct);
+            tender.UpdateNote(dto.Note);
+
+            if (dto.AttributesValue is not null)
+                await SyncAttributeValuesAsync(context, tender.Id, dto.AttributesValue, ct);
+            else
+                await context.SaveChangesAsync(ct);
 
             return true;
         }
 
-        // -------------------------------------------------------
-        // Delete Tender
-        // -------------------------------------------------------
         public async Task<bool> DeleteTenderAsync(
             int id,
             int calculationId,
@@ -89,7 +71,6 @@ namespace Persistence.Service.CalculationItems.Tender
             if (tender is null)
                 return false;
 
-            // حذف binds + tender في SaveChanges واحد (بدون SaveChanges وسط العملية)
             var binds = await context.TenderAttributeBind
                 .Where(x => x.TenderId == id)
                 .ToListAsync(ct);
@@ -99,13 +80,9 @@ namespace Persistence.Service.CalculationItems.Tender
 
             context.Tenders.Remove(tender);
             await context.SaveChangesAsync(ct);
-
             return true;
         }
 
-        // -------------------------------------------------------
-        // Update Attribute Value for Tender
-        // -------------------------------------------------------
         public async Task<bool> UpdateTenderAttributeValueAsync(
             int tenderId,
             int attributeId,
@@ -115,17 +92,11 @@ namespace Persistence.Service.CalculationItems.Tender
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var bind = await context.TenderAttributeBind
-                .FirstOrDefaultAsync(
-                    x => x.TenderId == tenderId && x.TenderAttributeId == attributeId,
-                    ct);
+                .FirstOrDefaultAsync(x => x.TenderId == tenderId && x.TenderAttributeId == attributeId, ct);
 
             if (bind is null)
             {
-                context.TenderAttributeBind.Add(
-                    new TenderAttributeBindEntity(
-                        tenderId: tenderId,
-                        attributeId: attributeId,
-                        value: value));
+                context.TenderAttributeBind.Add(new TenderAttributeBindEntity(tenderId, attributeId, value));
             }
             else
             {
@@ -134,6 +105,39 @@ namespace Persistence.Service.CalculationItems.Tender
 
             await context.SaveChangesAsync(ct);
             return true;
+        }
+
+        private static async Task SyncAttributeValuesAsync(
+            ShardingSingleDbContext context,
+            int tenderId,
+            Dictionary<int, double> attributes,
+            CancellationToken ct)
+        {
+            attributes ??= [];
+
+            var existing = await context.TenderAttributeBind
+                .Where(x => x.TenderId == tenderId)
+                .ToListAsync(ct);
+
+            var incomingIds = attributes.Keys.ToHashSet();
+            var toRemove = existing.Where(x => !incomingIds.Contains(x.TenderAttributeId)).ToList();
+            if (toRemove.Count > 0)
+                context.TenderAttributeBind.RemoveRange(toRemove);
+
+            foreach (var pair in attributes)
+            {
+                var bind = existing.FirstOrDefault(x => x.TenderAttributeId == pair.Key);
+                if (bind is null)
+                {
+                    context.TenderAttributeBind.Add(new TenderAttributeBindEntity(tenderId, pair.Key, pair.Value));
+                }
+                else
+                {
+                    bind.SetValue(pair.Value);
+                }
+            }
+
+            await context.SaveChangesAsync(ct);
         }
     }
 }

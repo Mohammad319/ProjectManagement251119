@@ -15,19 +15,15 @@ internal sealed class TenderConfiguration : IEntityTypeConfiguration<TenderEntit
             .HasForeignKey(x => x.CalculationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // تنبيه: Cascade على Organisation غالباً خطير (يحذف كل tenders عند حذف Organisation)
-        // الأفضل Restrict (عدله حسب منطق النظام عندك)
+        // Cascade على Organisation قد يحذف عطاءات كثيرة بشكل غير مقصود.
         builder.HasOne(x => x.Organisation)
             .WithMany(x => x.Tenders)
             .HasForeignKey(x => x.OrganisationId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(x => x.TendersAttributes)
-            .WithOne(x => x.Tender)
-            .HasForeignKey(x => x.TenderId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // العلاقة مع TenderAttributeBindEntity تُضبط من جهة الـ bind configuration
+        // لتجنب تعريفها أكثر من مرة بمفاتيح / OnDelete مختلفة.
 
-        // Indexes (Tenant filter + الاستعلامات الشائعة)
         builder.HasIndex(x => new { x.TenantId, x.CalculationId })
             .HasDatabaseName("IX_Tenders_Tenant_Calc");
 
@@ -42,7 +38,7 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
     {
         builder.ToTable("TenderAttributeBinds");
 
-        // Use Id as PK (Identity) to avoid a useless non-identity Id column when using a composite PK.
+        // Id هو الـ PK الرسمي. منع التعريف المركب هنا مهم لأن DbContext كان يعرّفه سابقاً بشكل مختلف.
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).UseIdentityColumn();
 
@@ -56,7 +52,6 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
             .HasForeignKey(x => x.TenderAttributeId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        // Prevent duplicates inside the same tenant (and keep a good seek pattern for Tenant+Tender queries).
         builder.HasIndex(x => new { x.TenantId, x.TenderId, x.TenderAttributeId })
             .IsUnique()
             .HasDatabaseName("UX_TenderAttributeBinds_Tenant_Tender_Attr");
@@ -74,10 +69,7 @@ internal sealed class AttributeNameTenderConfiguration : IEntityTypeConfiguratio
             .HasForeignKey(x => x.CalculationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.TendersAttributes)
-            .WithOne(x => x.TenderAttribute)
-            .HasForeignKey(x => x.TenderAttributeId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // العلاقة مع TenderAttributeBindEntity تضبط من جهة الـ bind configuration فقط.
 
         builder.HasIndex(x => new { x.TenantId, x.CalculationId })
             .HasDatabaseName("IX_TenderAttrDefs_Tenant_Calc");

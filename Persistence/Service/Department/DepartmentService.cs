@@ -11,7 +11,6 @@ namespace Persistence.Service.Department
 {
     public sealed class DepartmentService(IDbContextFactoryTenant dbFactory) : IDepartmentService
     {
-        // ---------------- Commands ----------------
         public async Task<int> CreateAsync(DepartmentBase dto, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -26,7 +25,8 @@ namespace Persistence.Service.Department
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var entity = await context.Department.FirstOrDefaultAsync(x => x.Id == id, ct);
-            if (entity == null) return false;
+            if (entity is null)
+                return false;
 
             entity.Update(dto);
             await context.SaveChangesAsync(ct);
@@ -37,7 +37,6 @@ namespace Persistence.Service.Department
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // ممنوع الحذف إذا كان هناك مشاريع مرتبطة بهذا القسم (عبر Folder.DepartmentId)
             var hasProjects = await context.Projects
                 .AsNoTracking()
                 .AnyAsync(p => p.Folder.DepartmentId == id, ct);
@@ -46,14 +45,13 @@ namespace Persistence.Service.Department
                 return false;
 
             var entity = await context.Department.FirstOrDefaultAsync(x => x.Id == id, ct);
-            if (entity == null) return false;
+            if (entity is null)
+                return false;
 
             context.Department.Remove(entity);
             await context.SaveChangesAsync(ct);
             return true;
         }
-
-        // ---------------- Queries ----------------
 
         public async Task<List<ListDTO>> GetAsListAsync(CancellationToken ct)
         {
@@ -76,6 +74,7 @@ namespace Persistence.Service.Department
 
             return await context.Department
                 .AsNoTracking()
+                .OrderBy(x => x.Name)
                 .Select(x => new DepartmentDetailsDTO
                 {
                     Id = x.Id,
@@ -85,8 +84,6 @@ namespace Persistence.Service.Department
                     LastModified = x.UpdatedAt,
                     UsersCount = x.Users.Count,
                     FoldersCount = x.Folders.Count,
-
-                    // المشاريع مربوطة بالأقسام عبر Folder.DepartmentId
                     ProjectsCount = x.Folders.SelectMany(f => f.FolderProjects).Count()
                 })
                 .ToListAsync(ct);
@@ -97,8 +94,11 @@ namespace Persistence.Service.Department
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             return await context.User
-                .Where(x => x.DepartmentId == departmentId)
                 .AsNoTracking()
+                .Where(x => x.DepartmentId == departmentId)
+                .OrderBy(x => x.FirstName)
+                .ThenBy(x => x.LastName)
+                .ThenBy(x => x.UserName)
                 .Select(x => new TenantUserDto
                 {
                     Id = x.Id,

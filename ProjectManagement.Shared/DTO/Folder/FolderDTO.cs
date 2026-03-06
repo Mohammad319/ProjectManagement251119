@@ -14,7 +14,7 @@ namespace ProjectManagement.Shared.DTO.Folder
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public double Order { get; set; }
+        public int Order { get; set; }
         public string Color { get; set; } = "#08bf66";
     }
 }

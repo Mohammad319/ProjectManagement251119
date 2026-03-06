@@ -14,7 +14,6 @@ internal sealed class OpportunityConfiguration : IEntityTypeConfiguration<Opport
         builder.HasIndex(x => new { x.TenantId, x.CalculationId })
             .HasDatabaseName("IX_Opportunities_Tenant_Calc");
 
-        // جودة البيانات
         builder.ToTable(t =>
             t.HasCheckConstraint("CK_Opportunities_Risks_NotEmpty", "LEN(LTRIM(RTRIM([OpportunitiesRisks]))) > 0")
         );
@@ -32,7 +31,6 @@ internal sealed class ShareCalcConfiguration : IEntityTypeConfiguration<ShareCal
     {
         builder.ToTable("ShareCalcs");
 
-        // Multi-tenant safety: نفس Calculation لا يتكرر لنفس Department داخل نفس Tenant
         builder.HasIndex(x => new { x.TenantId, x.CalculationId, x.DepartmentId })
             .IsUnique()
             .HasDatabaseName("UX_ShareCalcs_Tenant_Calc_Department");
@@ -90,8 +88,8 @@ internal sealed class StatusResourcesConfiguration : IEntityTypeConfiguration<St
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_StatusResources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            // HEX color مثل #00ff00
-            t.HasCheckConstraint("CK_StatusResources_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
+            t.HasCheckConstraint("CK_StatusResources_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_StatusResources_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
 }
@@ -111,7 +109,8 @@ internal sealed class TaskStatusConfiguration : IEntityTypeConfiguration<TaskSta
         builder.ToTable(t =>
         {
             t.HasCheckConstraint("CK_TaskStatuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
-            t.HasCheckConstraint("CK_TaskStatuses_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
+            t.HasCheckConstraint("CK_TaskStatuses_Color_Hex", LookupChecks.HexColorCheck);
+            t.HasCheckConstraint("CK_TaskStatuses_SortOrder_NonNegative", LookupChecks.NonNegativeSortOrderCheck);
         });
     }
 }

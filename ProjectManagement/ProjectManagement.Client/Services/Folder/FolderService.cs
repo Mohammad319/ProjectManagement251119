@@ -40,7 +40,7 @@ namespace ProjectManagement.Client.Services.Folder
             var existing = folderState.FoldersList.FirstOrDefault(f => f.Id == folder.Id);
             if (existing == null)
             {
-                double newOrder = folderState.FoldersList.Any()
+                int newOrder = folderState.FoldersList.Any()
                     ? folderState.FoldersList.Max(f => f.Order) + 100
                     : 0;
 

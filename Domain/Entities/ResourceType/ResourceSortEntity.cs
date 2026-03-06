@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Constant;
@@ -37,29 +37,64 @@ namespace Domain.Entities.ResourceType
         [JsonIgnore]
         public ICollection<Domain.Entities.Calculation.ResourceEntity> Resources { get; private set; } = [];
 
-        private ResourceSortEntity() { } // EF
+        private ResourceSortEntity() { }
 
         public static ResourceSortEntity Create(PostResourceSortDTO dto, int resourceTypeId, int sortOrder)
         {
-            var e = new ResourceSortEntity
-            {
-                ResourceTypeId = resourceTypeId,
-                SortOrder = sortOrder
-            };
-            e.Update(dto);
-            return e;
+            var entity = new ResourceSortEntity();
+            entity.SetResourceType(resourceTypeId);
+            entity.SetSortOrder(sortOrder);
+            entity.Update(dto);
+            return entity;
         }
 
         public void Update(PostResourceSortDTO dto)
         {
-            Name = dto.Name;
-            IsVisible = dto.IsVisible;
-            AccountId = dto.AccountId;
+            ArgumentNullException.ThrowIfNull(dto);
 
-            Metadata = new ResourceTypeData();
-            dto.CopyPropertiesTo(Metadata);
+            Name = NormalizeName(dto.Name);
+            IsVisible = dto.IsVisible;
+            AccountId = NormalizeOptionalPositive(dto.AccountId, nameof(dto.AccountId));
+
+            var metadata = new ResourceTypeData();
+            dto.CopyPropertiesTo(metadata);
+            metadata.Unit = NormalizeOptional(metadata.Unit) ?? string.Empty;
+            metadata.Normalize();
+            Metadata = metadata;
         }
 
-        public void UpdateOrder(int sortOrder) => SortOrder = sortOrder;
+        public void UpdateOrder(int sortOrder) => SetSortOrder(sortOrder);
+
+        private void SetResourceType(int resourceTypeId)
+        {
+            if (resourceTypeId <= 0)
+                throw new ValidationException("ResourceTypeId is required.");
+            ResourceTypeId = resourceTypeId;
+        }
+
+        private void SetSortOrder(int sortOrder)
+        {
+            if (sortOrder < 0)
+                throw new ValidationException("SortOrder cannot be negative.");
+            SortOrder = sortOrder;
+        }
+
+        private static string NormalizeName(string? value)
+        {
+            var trimmed = value?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                throw new ValidationException("Resource sort name is required.");
+            return trimmed;
+        }
+
+        private static int? NormalizeOptionalPositive(int? value, string fieldName)
+        {
+            if (!value.HasValue || value.Value <= 0)
+                return null;
+            return value.Value;
+        }
+
+        private static string? NormalizeOptional(string? value)
+            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

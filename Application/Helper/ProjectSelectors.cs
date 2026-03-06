@@ -36,7 +36,7 @@ namespace Application.Helper
                 ContractId = x.ContractId,
                 TypeId = x.ProjectTypeId,
                 IsVisible = x.IsVisible,
-                Order = x.SortOrder
+                Order = (int)x.SortOrder
             };
     }
 }

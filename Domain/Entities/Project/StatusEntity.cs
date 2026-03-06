@@ -1,8 +1,7 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.General;
-using ProjectManagement.Shared.Resource;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -10,35 +9,58 @@ namespace Domain.Entities.Project
 {
     public sealed class StatusEntity : AuditableEntity<int>, IListOrderDTO
     {
-        /// <summary>
-        /// ترتيب العرض لجميع المستخدمين.
-        /// </summary>
-        public int SortOrder { get; private set; }
+        private const string DefaultColor = "#00ff00";
 
-        /// <summary>
-        /// هل الحالة مرئية في الواجهة؟
-        /// </summary>
+        public int SortOrder { get; private set; }
         public bool IsVisible { get; private set; } = true;
 
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; private set; } = string.Empty;
 
-        /// <summary>
-        /// اللون على هيئة HEX مثل #00FF00.
-        /// </summary>
         [Required, StringLength(FieldLengths.ColorHex, MinimumLength = FieldLengths.ColorHex)]
-        public string Color { get; private set; } = "#00ff00";
+        public string Color { get; private set; } = DefaultColor;
 
         [JsonIgnore]
-        public ICollection<CalculationEntity> Calculations { get; set; } = [];
+        public ICollection<CalculationEntity> Calculations { get; private set; } = [];
+
+        public StatusEntity() { }
+
+        public StatusEntity(string name, string color, int sortOrder, bool isVisible = true)
+        {
+            Update(name, color, sortOrder, isVisible);
+        }
 
         public void Update(string name, string color, int sortOrder, bool isVisible)
         {
-            Name = name;
-            Color = color;
-            SortOrder = sortOrder;
+            Name = NormalizeName(name);
+            Color = NormalizeColor(color);
+            SortOrder = NormalizeSortOrder(sortOrder);
             IsVisible = isVisible;
         }
-    }
 
+        private static string NormalizeName(string? value)
+        {
+            var trimmed = value?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                throw new ValidationException("Status name is required.");
+            return trimmed;
+        }
+
+        private static string NormalizeColor(string? value)
+        {
+            var trimmed = value?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                throw new ValidationException("Status color is required.");
+            if (trimmed.Length != FieldLengths.ColorHex || trimmed[0] != '#' || !trimmed[1..].All(Uri.IsHexDigit))
+                throw new ValidationException("Status color must be a valid HEX value like #00ff00.");
+            return trimmed.ToLowerInvariant();
+        }
+
+        private static int NormalizeSortOrder(int sortOrder)
+        {
+            if (sortOrder < 0)
+                throw new ValidationException("SortOrder cannot be negative.");
+            return sortOrder;
+        }
+    }
 }

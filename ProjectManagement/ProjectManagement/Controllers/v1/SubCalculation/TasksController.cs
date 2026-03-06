@@ -13,7 +13,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
     {
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpGet(URLConst.ReOrder + "/{TaskId}/{NewOrder}")]
-        public async Task<IActionResult> ReOrder(int TaskId, double NewOrder)
+        public async Task<IActionResult> ReOrder(int TaskId, int NewOrder)
         {
             var result = await MicroBus.Send(new NewOrderTaskCommand(TaskId, NewOrder));
             TrySetETag(result);

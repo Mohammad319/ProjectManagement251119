@@ -18,7 +18,7 @@ namespace Persistence.Service.Folder
                 .AsNoTracking()
                 .Where(x => x.DepartmentId == departmentId || x.CreatedBy == userId)
                 .OrderByDescending(x => x.SortOrder)
-                .Select(x => (double?)x.SortOrder)
+                .Select(x => (int?)x.SortOrder)
                 .FirstOrDefaultAsync(ct) ?? 0;
 
             var entity = new FolderEntity(
@@ -69,7 +69,7 @@ namespace Persistence.Service.Folder
             return true;
         }
 
-        public async Task<bool> UpdateOrderAsync(Guid id, double newOrder, CancellationToken ct = default)
+        public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             var folder = await context.Folders.FindAsync(id, ct);

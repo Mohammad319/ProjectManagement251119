@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Organisation;
 using System.ComponentModel.DataAnnotations;
@@ -16,26 +16,30 @@ namespace Domain.Entities.Organisation
         [JsonIgnore]
         public ICollection<OrganisationEntity> Organisations { get; private set; } = [];
 
-        private OrganisationTypeEntity() { } // EF
+        private OrganisationTypeEntity() { }
 
         public static OrganisationTypeEntity Create(PostOrganisationTypeDTO dto)
         {
-            return new OrganisationTypeEntity
-            {
-                Name = dto.Name,
-                IsVisible = dto.IsVisible
-            };
+            var entity = new OrganisationTypeEntity();
+            entity.Update(dto);
+            return entity;
         }
 
         public void Update(PostOrganisationTypeDTO dto)
         {
-            Name = dto.Name;
+            ArgumentNullException.ThrowIfNull(dto);
+            Name = NormalizeName(dto.Name);
             IsVisible = dto.IsVisible;
         }
 
-        public void SetVisibility(bool visible)
+        public void SetVisibility(bool visible) => IsVisible = visible;
+
+        private static string NormalizeName(string? value)
         {
-            IsVisible = visible;
+            var trimmed = value?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed))
+                throw new ValidationException("Organisation type name is required.");
+            return trimmed;
         }
     }
 }

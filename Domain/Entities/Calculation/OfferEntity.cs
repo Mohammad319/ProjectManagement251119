@@ -3,9 +3,9 @@ using Domain.Entities.Organisation;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using System;
 
 namespace Domain.Entities.Calculation
 {
@@ -34,39 +34,39 @@ namespace Domain.Entities.Calculation
         [JsonIgnore]
         public ResourceEntity Resource { get; private set; } = null!;
 
-        private OfferEntity() { } // EF
+        private OfferEntity() { }
 
-        public OfferEntity(
-            int resourceId,
-            int? organisationId,
-            OfferData metadata,
-            string? comment)
+        public OfferEntity(int resourceId, int? organisationId, OfferData metadata, string? comment)
         {
             ResourceId = resourceId;
             OrganisationId = organisationId;
-            Metadata = metadata;
-            
-            Metadata.Normalize();
-Comment = comment;
+            Metadata = NormalizeMetadata(metadata);
+            Comment = NormalizeComment(comment);
             Date = DateTime.UtcNow;
         }
 
-        public void Update(
-            int? organisationId,
-            OfferData metadata,
-            string? comment)
+        public void Update(int? organisationId, OfferData metadata, string? comment)
         {
             OrganisationId = organisationId;
-            Metadata = metadata;
-            
-            Metadata.Normalize();
-Comment = comment;
+            Metadata = NormalizeMetadata(metadata);
+            Comment = NormalizeComment(comment);
             Date = DateTime.UtcNow;
         }
 
         public void SetBaseCost(decimal baseCost)
         {
             Metadata.BaseCost = Math.Round(baseCost, 2, MidpointRounding.AwayFromZero);
+            Metadata.Normalize();
         }
+
+        private static OfferData NormalizeMetadata(OfferData? metadata)
+        {
+            metadata ??= new OfferData();
+            metadata.Normalize();
+            return metadata;
+        }
+
+        private static string? NormalizeComment(string? comment)
+            => string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
     }
 }

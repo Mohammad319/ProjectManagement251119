@@ -24,7 +24,7 @@ namespace Application.Feature.Calculation.Task
             int targetCalcId,
             int? parentTaskId,
             IReadOnlyList<ResourceTaskItemDTO> items,
-            double order = 100,
+            int order = 100,
             bool isOH = false,
             CancellationToken cancellationToken = default);
 
@@ -35,7 +35,7 @@ namespace Application.Feature.Calculation.Task
 
         Task<bool> NewOrderAsync(
             int taskId,
-            double newOrder,
+            int newOrder,
             CancellationToken cancellationToken = default);
 
         Task<bool> UpdateAsync(

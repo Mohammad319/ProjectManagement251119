@@ -222,7 +222,7 @@ namespace Persistence.Service.CalculationItems.Task
 
                     task.Metadata.IsOH = isOH;
                     TaskExtention.SetNetCalcId(task);
-                    task.ParentTaskId = parentTaskId;
+                    task.SetParentTask(parentTaskId);
 
                     // في الكود الأصلي لم تغيّر SortOrder هنا، فنحافظ على نفس السلوك
                     context.Tasks.Update(task);
@@ -271,7 +271,7 @@ namespace Persistence.Service.CalculationItems.Task
                     }
 
                     // إعداد خصائص الجذر في الـ Calculation الجديدة
-                    root.ParentTaskId = parentTaskId;
+                    root.SetParentTask(parentTaskId);
 
                     if (root.CalculationId != targetCalcId &&
                         !string.IsNullOrEmpty(root.Metadata.QuantityParam))
@@ -280,10 +280,10 @@ namespace Persistence.Service.CalculationItems.Task
                     }
 
                     root.Metadata.Quantity = item.Value;
-                    root.CalculationId = targetCalcId;
+                    root.SetCalculation(targetCalcId);
                     root.Metadata.IsOH = isOH;
 
-                    root.SortOrder = maxOrder.Value;
+                    root.SetSortOrder(maxOrder.Value);
                     maxOrder += 100;
 
                     TaskExtention.SetNetCalcId(root);
@@ -389,7 +389,7 @@ namespace Persistence.Service.CalculationItems.Task
             if (taskWithCalcId == null)
                 return false;
 
-            taskWithCalcId.Task.SortOrder = newOrder;
+            taskWithCalcId.Task.SetSortOrder(newOrder);
             return await SaveAndNotifyTaskAsync(context, taskWithCalcId.CalcId, taskId, ct);
         }
 
@@ -576,10 +576,10 @@ namespace Persistence.Service.CalculationItems.Task
             TaskExtention.SetCalculationIdRecursive(tasks, isOH, targetCalcId, sourceCalcId);
 
             if (parentTaskId.HasValue)
-                rootTask.ParentTaskId = parentTaskId;
+                rootTask.SetParentTask(parentTaskId);
 
             // ✅ استعمل الـ order اللي تم تمريره
-            rootTask.SortOrder = order;
+            rootTask.SetSortOrder(order);
 
             await context.Tasks.AddAsync(rootTask, ct);
             await context.SaveChangesAsync(ct);

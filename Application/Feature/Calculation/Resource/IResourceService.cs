@@ -11,7 +11,7 @@ namespace Application.Feature.Calculation.Resource
 
         Task<bool> CopyAsync(IReadOnlyList<ResourceTaskItemDTO> items, int parentTaskId, int sourceCalcId, CancellationToken ct);
         Task<bool> CutAsync(int targetTaskId, int sourceCalcId, IReadOnlyList<ResourceTaskItemDTO> items, CancellationToken ct);
-        Task<bool> NewOrderAsync(int id, double newOrder, CancellationToken ct);
+        Task<bool> NewOrderAsync(int id, int newOrder, CancellationToken ct);
 
     }
 }

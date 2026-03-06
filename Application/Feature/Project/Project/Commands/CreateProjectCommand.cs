@@ -30,7 +30,7 @@ namespace Application.Feature.Project.Project.Commands
             => service.DeleteAsync(request.Id, request.UserId, request.DepartmentId, ct);
     }
 
-    public sealed record NewOrderProjectCommand(Guid Id, double NewOrder) : IRequest<bool>;
+    public sealed record NewOrderProjectCommand(Guid Id, int NewOrder) : IRequest<bool>;
 
     public sealed class NewOrderProjectCommandHandler(IProjectService service)
         : IRequestHandler<NewOrderProjectCommand, bool>
