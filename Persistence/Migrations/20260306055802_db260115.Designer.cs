@@ -12,7 +12,7 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260305133255_db260115")]
+    [Migration("20260306055802_db260115")]
     partial class db260115
     {
         /// <inheritdoc />
@@ -1128,29 +1128,35 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Entities.Calculation.TenderAttributeBindEntity", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<int>("TenderAttributeId")
                         .HasColumnType("int");
 
                     b.Property<int>("TenderId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
                     b.Property<double>("Value")
                         .HasColumnType("float");
 
-                    b.HasKey("TenderAttributeId", "TenderId");
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenderAttributeId");
 
                     b.HasIndex("TenderId");
 
                     b.HasIndex("TenantId", "Id");
 
-                    b.HasIndex("TenantId", "TenderId")
-                        .HasDatabaseName("IX_TenderAttrBinds_Tenant_Tender");
+                    b.HasIndex("TenantId", "TenderId", "TenderAttributeId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TenderAttributeBinds_Tenant_Tender_Attr");
 
                     b.ToTable("TenderAttributeBinds", (string)null);
                 });

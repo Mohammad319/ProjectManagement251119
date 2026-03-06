@@ -1142,15 +1142,16 @@ namespace Persistence.Migrations
                 name: "TenderAttributeBinds",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     TenderId = table.Column<int>(type: "int", nullable: false),
                     TenderAttributeId = table.Column<int>(type: "int", nullable: false),
                     Value = table.Column<double>(type: "float", nullable: false),
-                    Id = table.Column<int>(type: "int", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TenderAttributeBinds", x => new { x.TenderAttributeId, x.TenderId });
+                    table.PrimaryKey("PK_TenderAttributeBinds", x => x.Id);
                     table.ForeignKey(
                         name: "FK_TenderAttributeBinds_TenderAttributeDefinitions_TenderAttributeId",
                         column: x => x.TenderAttributeId,
@@ -2163,19 +2164,25 @@ namespace Persistence.Migrations
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TenderAttrBinds_Tenant_Tender",
-                table: "TenderAttributeBinds",
-                columns: new[] { "TenantId", "TenderId" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_TenderAttributeBinds_TenantId_Id",
                 table: "TenderAttributeBinds",
                 columns: new[] { "TenantId", "Id" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_TenderAttributeBinds_TenderAttributeId",
+                table: "TenderAttributeBinds",
+                column: "TenderAttributeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TenderAttributeBinds_TenderId",
                 table: "TenderAttributeBinds",
                 column: "TenderId");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_TenderAttributeBinds_Tenant_Tender_Attr",
+                table: "TenderAttributeBinds",
+                columns: new[] { "TenantId", "TenderId", "TenderAttributeId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_TenderAttrDefs_Tenant_Calc",
