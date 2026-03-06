@@ -43,8 +43,11 @@ internal sealed class TenderAttributeBindConfiguration : IEntityTypeConfiguratio
     {
         builder.ToTable("TenderAttributeBinds");
 
-        builder.HasKey(m => new { m.TenderAttributeId, m.TenderId });
+        builder.HasKey(x => x.Id);
 
+        builder.HasIndex(x => new { x.TenantId, x.TenderId, x.TenderAttributeId })
+            .IsUnique()
+            .HasDatabaseName("UX_TenderAttributeBinds_Tenant_Tender_Attr");
         builder.HasOne(x => x.Tender)
             .WithMany(x => x.TendersAttributes)
             .HasForeignKey(x => x.TenderId)
