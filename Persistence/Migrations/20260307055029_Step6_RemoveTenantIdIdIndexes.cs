@@ -345,7 +345,9 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Folders", x => x.Id);
+                    table.CheckConstraint("CK_Folders_Department_Positive", "[DepartmentId] > 0");
                     table.CheckConstraint("CK_Folders_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_Folders_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_Folders_Departments_DepartmentId",
                         column: x => x.DepartmentId,
@@ -928,6 +930,9 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.CheckConstraint("CK_Tasks_Calculation_Positive", "[CalculationId] > 0");
+                    table.CheckConstraint("CK_Tasks_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_Tasks_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_Tasks_Calculations_CalculationId",
                         column: x => x.CalculationId,
@@ -998,6 +1003,8 @@ namespace Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Projects", x => x.Id);
                     table.CheckConstraint("CK_Projects_DateRange", "[EndDate] >= [StartDate]");
+                    table.CheckConstraint("CK_Projects_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_Projects_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_Projects_Compensations_CompensationId",
                         column: x => x.CompensationId,
@@ -1108,6 +1115,9 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Resources", x => x.Id);
+                    table.CheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_Resources_SortOrder_NonNegative", "[SortOrder] >= 0");
+                    table.CheckConstraint("CK_Resources_Task_Positive", "[TaskId] > 0");
                     table.ForeignKey(
                         name: "FK_Resources_Accounts_AccountId",
                         column: x => x.AccountId,

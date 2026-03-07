@@ -1,4 +1,5 @@
 ﻿using Domain.Entities.Calculation;
+using Application.Feature.Calculation.Opportunity;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Application.Services.CalculationItems.Opportunity
@@ -10,5 +11,6 @@ namespace Application.Services.CalculationItems.Opportunity
         Task<bool> DeleteAsync(int id, CancellationToken ct = default);
 
         Task<List<OpportunityEntity>> GetByCalculationAsync(int calculationId, CancellationToken ct = default);
+        Task<IReadOnlyList<OpportunityListItemDto>> GetListByCalculationAsync(int calculationId, CancellationToken ct = default);
     }
 }

@@ -127,6 +127,14 @@ namespace Domain.Entities.Project
 
         public void UpdateOrder(int newOrder) => SortOrder = newOrder;
 
+        public void MoveToFolder(Guid folderId)
+        {
+            if (folderId == Guid.Empty)
+                throw new ValidationException("FolderId is required.");
+
+            FolderId = folderId;
+        }
+
         public void SetPriority(int priority)
         {
             if (priority < 0 || priority > 5)

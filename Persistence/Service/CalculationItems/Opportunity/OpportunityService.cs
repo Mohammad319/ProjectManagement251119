@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Feature.Calculation.Opportunity;
 using Application.Services.CalculationItems.Opportunity;
 using Domain.Entities.Calculation;
 using Persistence.Factory;
@@ -18,9 +19,38 @@ namespace Persistence.Service.CalculationItems.Opportunity
                 .ToListAsync(ct);
         }
 
+        public async Task<IReadOnlyList<OpportunityListItemDto>> GetListByCalculationAsync(int calculationId, CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.Opportunity
+                .AsNoTracking()
+                .Where(x => x.CalculationId == calculationId)
+                .OrderByDescending(x => x.Id)
+                .Select(x => new OpportunityListItemDto
+                {
+                    Id = x.Id,
+                    CalculationId = x.CalculationId,
+                    OpportunitiesRisks = x.OpportunitiesRisks,
+                    OpportunityType = x.OpportunityType ?? string.Empty,
+                    ProbabilityWorth = x.Metadata.ProbabilityWorth,
+                    ProbabilityPercent = x.Metadata.ProbabilityPercent,
+                    ProbabilityBest = x.Metadata.ProbabilityBest,
+                    Value = x.Metadata.Value,
+                    Comment = x.Metadata.Comment ?? string.Empty
+                })
+                .ToListAsync(ct);
+        }
+
         public async Task<int> CreateAsync(PostOpportunityDTO dto, int calculationId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var calculationExists = await context.Calculations
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == calculationId, ct);
+
+            if (!calculationExists)
+                return 0;
 
             var entity = new OpportunityEntity(
                 dto.OpportunitiesRisks,

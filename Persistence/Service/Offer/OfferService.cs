@@ -17,6 +17,20 @@ namespace Persistence.Service.Offer
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            var resourceExists = await context.Resources
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == dto.ResourceId, ct);
+
+            if (!resourceExists)
+                return 0;
+
+            var organisationExists = await context.Organisation
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == dto.OrganisationId, ct);
+
+            if (!organisationExists)
+                return 0;
+
             var entity = new OfferEntity(
                 resourceId: dto.ResourceId,
                 organisationId: dto.OrganisationId,
@@ -42,6 +56,13 @@ namespace Persistence.Service.Offer
 
             var entity = await context.Offers.FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity is null)
+                return false;
+
+            var organisationExists = await context.Organisation
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == dto.OrganisationId, ct);
+
+            if (!organisationExists)
                 return false;
 
             if (dto.RowVersion is { Length: > 0 })

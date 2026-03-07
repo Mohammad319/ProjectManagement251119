@@ -14,6 +14,13 @@ namespace Persistence.Service.Folder
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            var departmentExists = await context.Department
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == departmentId, ct);
+
+            if (!departmentExists)
+                return Guid.Empty;
+
             var nextOrder = await context.Folders
                 .AsNoTracking()
                 .Where(x => x.DepartmentId == departmentId || x.CreatedBy == userId)
@@ -34,17 +41,15 @@ namespace Persistence.Service.Folder
             return entity.Id;
         }
 
-
-
         public async Task<bool> UpdateAsync(Guid id, PostFolderDTO dto, int userId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var folder = await context.Folders.FindAsync(id, ct);
+            var folder = await context.Folders.FindAsync([id], ct);
             if (folder == null || (departmentId.HasValue && folder.DepartmentId != departmentId))
                 return false;
 
             folder.Update(dto.Name, dto.Color, dto.IsVisible);
-            folder.CreatedBy = userId;
+            folder.UpdatedBy = userId;
 
             await context.SaveChangesAsync(ct);
             return true;
@@ -53,7 +58,7 @@ namespace Persistence.Service.Folder
         public async Task<bool> DeleteAsync(Guid id, int userId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var folder = await context.Folders.FindAsync(id, ct);
+            var folder = await context.Folders.FindAsync([id], ct);
             if (folder == null)
                 return false;
 
@@ -72,7 +77,7 @@ namespace Persistence.Service.Folder
         public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var folder = await context.Folders.FindAsync(id, ct);
+            var folder = await context.Folders.FindAsync([id], ct);
             if (folder == null) return false;
 
             folder.UpdateOrder(newOrder);
@@ -82,12 +87,14 @@ namespace Persistence.Service.Folder
 
         // ---------------- Queries ----------------
 
-        public async  Task<List<ListFolderDTO>> GetAllVisibleAsync(CancellationToken ct = default)
+        public async Task<List<ListFolderDTO>> GetAllVisibleAsync(CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.Folders
                 .AsNoTracking()
                 .Where(x => x.IsVisible)
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Name)
                 .Select(x => new ListFolderDTO
                 {
                     Id = x.Id,
@@ -106,6 +113,7 @@ namespace Persistence.Service.Folder
                 .AsNoTracking()
                 .Where(x => x.IsVisible == isVisible && (!departmentId.HasValue || x.DepartmentId == departmentId))
                 .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Name)
                 .Select(x => new ListFolderDTO
                 {
                     Id = x.Id,
@@ -115,12 +123,15 @@ namespace Persistence.Service.Folder
                 })
                 .ToListAsync(ct);
         }
+
         public async Task<List<ListFolderDTO>> GetFromOtherDepartmentAsync(int departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.Folders
                 .AsNoTracking()
                 .Where(x => x.IsVisible && x.DepartmentId == departmentId)
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Name)
                 .Select(x => new ListFolderDTO
                 {
                     Id = x.Id,

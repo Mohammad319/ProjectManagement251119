@@ -1,4 +1,4 @@
-﻿using Application.Feature.Application;
+using Application.Feature.Application;
 using Domain.Entities.Application;
 using Persistence.Factory;
 using ProjectManagement.Shared.Base.Application;
@@ -11,6 +11,7 @@ namespace Persistence.Service.Application
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             return await context.ApplicationValues
+                .AsNoTracking()
                 .Include(x => x.Application)
                 .Where(x => x.CalculationId == calcId)
                 .OrderByDescending(x => x.LastUpdate)
@@ -22,7 +23,7 @@ namespace Persistence.Service.Application
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var query = context.Applications.AsQueryable();
+            var query = context.Applications.AsNoTracking().AsQueryable();
             if (!withNoneVisible)
                 query = query.Where(x => x.IsVisible);
 
@@ -32,9 +33,65 @@ namespace Persistence.Service.Application
                 .ToListAsync(ct);
         }
 
+        public async Task<IReadOnlyList<ApplicationListItemDto>> GetApplicationListAsync(bool withNoneVisible, CancellationToken ct)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var query = context.Applications.AsNoTracking().AsQueryable();
+            if (!withNoneVisible)
+                query = query.Where(x => x.IsVisible);
+
+            return await query
+                .OrderByDescending(x => x.LastUpdate)
+                .ThenByDescending(x => x.Id)
+                .Select(x => new ApplicationListItemDto
+                {
+                    Id = x.Id,
+                    DepartmentId = x.DepartmentId,
+                    Name = x.Name,
+                    IsVisible = x.IsVisible,
+                    UserId = x.UserId,
+                    LastUpdate = x.LastUpdate,
+                    Description = x.Data.Description,
+                    RowCount = x.Data.Rows.Count
+                })
+                .ToListAsync(ct);
+        }
+
+        public async Task<IReadOnlyList<ApplicationValueListItemDto>> GetCalcAppListAsync(int calcId, CancellationToken ct)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            return await context.ApplicationValues
+                .AsNoTracking()
+                .Where(x => x.CalculationId == calcId)
+                .OrderByDescending(x => x.LastUpdate)
+                .ThenByDescending(x => x.Id)
+                .Select(x => new ApplicationValueListItemDto
+                {
+                    Id = x.Id,
+                    CalculationId = x.CalculationId,
+                    ApplicationId = x.ApplicationId,
+                    ApplicationName = x.Application.Name,
+                    Name = x.Name,
+                    Responsible = x.Responsible,
+                    UserId = x.UserId,
+                    LastUpdate = x.LastUpdate,
+                    AttributeValueCount = x.Data.Attributes.Count
+                })
+                .ToListAsync(ct);
+        }
+
         public async Task<int> CreateAsync(ApplicationEntity dto, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var departmentExists = await context.Department
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == dto.DepartmentId, ct);
+
+            if (!departmentExists)
+                return 0;
 
             var entity = ApplicationEntity.Create(
                 dto.DepartmentId,
@@ -52,6 +109,29 @@ namespace Persistence.Service.Application
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            var calculationExists = await context.Calculations
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == calculationId, ct);
+
+            if (!calculationExists)
+                return 0;
+
+            var applicationExists = await context.Applications
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == applicationId, ct);
+
+            if (!applicationExists)
+                return 0;
+
+            var existingId = await context.ApplicationValues
+                .AsNoTracking()
+                .Where(x => x.CalculationId == calculationId && x.ApplicationId == applicationId)
+                .Select(x => (int?)x.Id)
+                .FirstOrDefaultAsync(ct);
+
+            if (existingId.HasValue)
+                return existingId.Value;
+
             var entity = ApplicationValuesEntity.Create(
                 calculationId,
                 applicationId,
@@ -65,9 +145,19 @@ namespace Persistence.Service.Application
             return entity.Id;
         }
 
-        public async Task<bool> DeleteApplecationAsync(int id, CancellationToken ct)
+        public Task<bool> DeleteApplecationAsync(int id, CancellationToken ct)
+            => DeleteApplicationAsync(id, ct);
+
+        public async Task<bool> DeleteApplicationAsync(int id, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var isUsed = await context.ApplicationValues
+                .AsNoTracking()
+                .AnyAsync(x => x.ApplicationId == id, ct);
+
+            if (isUsed)
+                return false;
 
             var entity = await context.Applications.FindAsync([id], cancellationToken: ct);
             if (entity is null)

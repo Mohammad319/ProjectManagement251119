@@ -21,6 +21,15 @@ namespace Persistence.Service.CalculationItems.Tender
             await using var context = await dbFactory.CreateDbContextAsync(ct);
             await using var tx = await context.Database.BeginTransactionAsync(ct);
 
+            if (!await context.Calculations.AsNoTracking().AnyAsync(x => x.Id == calculationId, ct))
+                return 0;
+
+            if (!await context.Organisation.AsNoTracking().AnyAsync(x => x.Id == companyId, ct))
+                return 0;
+
+            if (!await AreAttributeIdsValidAsync(context, calculationId, dto.AttributesValue?.Keys, ct))
+                return 0;
+
             var tender = new TenderEntity(
                 calculationId: calculationId,
                 organisationId: companyId,
@@ -46,6 +55,9 @@ namespace Persistence.Service.CalculationItems.Tender
                 .FirstOrDefaultAsync(x => x.Id == id && x.CalculationId == calculationId, ct);
 
             if (tender is null)
+                return false;
+
+            if (!await AreAttributeIdsValidAsync(context, calculationId, dto.AttributesValue?.Keys, ct))
                 return false;
 
             tender.UpdateNote(dto.Note);
@@ -90,6 +102,22 @@ namespace Persistence.Service.CalculationItems.Tender
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var tenderInfo = await context.Tenders
+                .AsNoTracking()
+                .Where(x => x.Id == tenderId)
+                .Select(x => new { x.Id, x.CalculationId })
+                .FirstOrDefaultAsync(ct);
+
+            if (tenderInfo is null)
+                return false;
+
+            var attributeExists = await context.AttributeNameTender
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == attributeId && x.CalculationId == tenderInfo.CalculationId, ct);
+
+            if (!attributeExists)
+                return false;
 
             var bind = await context.TenderAttributeBind
                 .FirstOrDefaultAsync(x => x.TenderId == tenderId && x.TenderAttributeId == attributeId, ct);
@@ -138,6 +166,28 @@ namespace Persistence.Service.CalculationItems.Tender
             }
 
             await context.SaveChangesAsync(ct);
+        }
+
+        private static async Task<bool> AreAttributeIdsValidAsync(
+            ShardingSingleDbContext context,
+            int calculationId,
+            IEnumerable<int>? attributeIds,
+            CancellationToken ct)
+        {
+            var ids = attributeIds?
+                .Where(x => x > 0)
+                .Distinct()
+                .ToArray();
+
+            if (ids is null || ids.Length == 0)
+                return true;
+
+            var validCount = await context.AttributeNameTender
+                .AsNoTracking()
+                .Where(x => x.CalculationId == calculationId && ids.Contains(x.Id))
+                .CountAsync(ct);
+
+            return validCount == ids.Length;
         }
     }
 }

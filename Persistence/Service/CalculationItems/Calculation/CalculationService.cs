@@ -1,6 +1,8 @@
-﻿using Application.Feature.Calculation.Calculation;
+using Application.Feature.Calculation.Calculation;
 using Application.Interfaces;
 using Domain.Entities.Calculation;
+using Microsoft.EntityFrameworkCore;
+using Persistence.Context;
 using Persistence.Factory;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
@@ -25,10 +27,13 @@ namespace Persistence.Service.CalculationItems.Calculation
             var projectDepartmentId = await db.Projects
                 .AsNoTracking()
                 .Where(p => p.Id == projectId)
-                .Select(p => p.Folder.DepartmentId)
+                .Select(p => (int?)p.Folder.DepartmentId)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (projectDepartmentId != departmentId.Value)
+                return 0;
+
+            if (!await ValidateCalculationReferencesAsync(db, dto, projectId, departmentId.Value, null, cancellationToken))
                 return 0;
 
             var maxOrder = await db.Calculations
@@ -60,19 +65,18 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations
-                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
-
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null)
                 return false;
 
+            var effectiveDepartmentId = departmentId ?? calculation.DepartmentId;
+            if (!await ValidateCalculationReferencesAsync(db, dto, calculation.ProjectId, effectiveDepartmentId, id, cancellationToken))
+                return false;
+
             calculation.Update(dto);
-            if (departmentId.HasValue)
-                calculation.AssignDepartment(departmentId.Value);
+            calculation.AssignDepartment(effectiveDepartmentId);
 
-            calculation.UpdatedAt = DateTime.UtcNow;
-            calculation.UpdatedBy = userId;
-
+            Touch(calculation, userId);
             await db.SaveChangesAsync(cancellationToken);
 
             await notification.SendNotificationAsync(
@@ -92,9 +96,7 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations
-                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
-
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null)
                 return false;
 
@@ -124,8 +126,20 @@ namespace Persistence.Service.CalculationItems.Calculation
             if (original is null)
                 return 0;
 
+            var targetProjectDepartmentId = await db.Projects
+                .AsNoTracking()
+                .Where(p => p.Id == projectId)
+                .Select(p => (int?)p.Folder.DepartmentId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (!targetProjectDepartmentId.HasValue)
+                return 0;
+
+            if (departmentId.HasValue && targetProjectDepartmentId.Value != departmentId.Value)
+                return 0;
+
             var copy = CalculationEntity.CreateCopy(original, projectId, userId);
-            copy.AssignDepartment(original.DepartmentId);
+            copy.AssignDepartment(targetProjectDepartmentId.Value);
 
             var maxOrder = await db.Calculations
                 .Where(x => x.ProjectId == projectId)
@@ -164,15 +178,12 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations
-                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
-
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null)
                 return false;
 
             calculation.UpdateHourlyPriceList(hourlyPriceList);
-            calculation.UpdatedBy = userId;
-            calculation.UpdatedAt = DateTime.UtcNow;
+            Touch(calculation, userId);
 
             await db.SaveChangesAsync(cancellationToken);
 
@@ -193,13 +204,12 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations
-                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
-
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null)
                 return false;
 
             calculation.UpdateFactors(factors);
+            Touch(calculation, calculation.UpdatedBy ?? calculation.CreatedBy ?? 0);
             await db.SaveChangesAsync(cancellationToken);
 
             await notification.SendNotificationAsync(
@@ -219,14 +229,12 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations
-                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
-
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
             if (calculation is null)
                 return false;
 
             calculation.Metadata.QuanityList = model ?? [];
-            calculation.UpdatedAt = DateTime.UtcNow;
+            Touch(calculation, calculation.UpdatedBy ?? calculation.CreatedBy ?? 0);
             await db.SaveChangesAsync(cancellationToken);
 
             await notification.SendNotificationAsync(
@@ -236,6 +244,92 @@ namespace Persistence.Service.CalculationItems.Calculation
                 BuildPageDto(calculation));
 
             return true;
+        }
+
+        private static async Task<CalculationEntity?> GetEditableCalculationAsync(
+            ShardingSingleDbContext db,
+            int id,
+            int? departmentId,
+            CancellationToken cancellationToken)
+        {
+            return await db.Calculations
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
+        }
+
+        private static async Task<bool> ValidateCalculationReferencesAsync(
+            ShardingSingleDbContext db,
+            CalculationPostDTO dto,
+            Guid projectId,
+            int departmentId,
+            int? currentCalculationId,
+            CancellationToken cancellationToken)
+        {
+            var projectDepartmentId = await db.Projects
+                .AsNoTracking()
+                .Where(p => p.Id == projectId)
+                .Select(p => (int?)p.Folder.DepartmentId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (projectDepartmentId != departmentId)
+                return false;
+
+            if (dto.OrganisationId.HasValue &&
+                !await db.Organisation.AsNoTracking().AnyAsync(x => x.Id == dto.OrganisationId.Value, cancellationToken))
+                return false;
+
+            if (dto.TypeId.HasValue &&
+                !await db.CalcProjectType.AsNoTracking().AnyAsync(x => x.Id == dto.TypeId.Value, cancellationToken))
+                return false;
+
+            if (dto.StatusId.HasValue &&
+                !await db.CalculationStatus.AsNoTracking().AnyAsync(x => x.Id == dto.StatusId.Value, cancellationToken))
+                return false;
+
+            if (dto.ProcurementMethodsId.HasValue &&
+                !await db.ProcurementMethod.AsNoTracking().AnyAsync(x => x.Id == dto.ProcurementMethodsId.Value, cancellationToken))
+                return false;
+
+            if (dto.CompensationId.HasValue &&
+                !await db.Compensations.AsNoTracking().AnyAsync(x => x.Id == dto.CompensationId.Value, cancellationToken))
+                return false;
+
+            if (dto.ContractId.HasValue &&
+                !await db.Contracts.AsNoTracking().AnyAsync(x => x.Id == dto.ContractId.Value, cancellationToken))
+                return false;
+
+            if (dto.TemplateId.HasValue)
+            {
+                var templateAllowed = await db.Templates
+                    .AsNoTracking()
+                    .AnyAsync(x => x.Id == dto.TemplateId.Value && (x.DepartmentId == null || x.DepartmentId == departmentId), cancellationToken);
+
+                if (!templateAllowed)
+                    return false;
+            }
+
+            var normalizedCode = NormalizeCode(dto.Code);
+            if (!string.IsNullOrWhiteSpace(normalizedCode))
+            {
+                var duplicateCodeExists = await db.Calculations
+                    .AsNoTracking()
+                    .AnyAsync(x => x.ProjectId == projectId && x.Code == normalizedCode && (!currentCalculationId.HasValue || x.Id != currentCalculationId.Value), cancellationToken);
+
+                if (duplicateCodeExists)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static string? NormalizeCode(string? code)
+            => string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+
+        private static void Touch(CalculationEntity calculation, int userId)
+        {
+            if (userId > 0)
+                calculation.UpdatedBy = userId;
+
+            calculation.UpdatedAt = DateTime.UtcNow;
         }
 
         private static CalculationPageDTO BuildPageDto(CalculationEntity x)

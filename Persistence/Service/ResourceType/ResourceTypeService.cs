@@ -1,5 +1,5 @@
 using Application.Feature.ResourceType;
-using Persistence.Context;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.ResourceType;
@@ -11,6 +11,9 @@ namespace Persistence.Service.ResourceType
         public async Task<int> CreateTypeAsync(PostResourceTypeDTO dto, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            if (!await ValidateAccountReferenceAsync(context, dto.AccountId, ct))
+                return 0;
 
             var max = await context.ResourceTypes.MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
             var entity = Domain.Entities.ResourceType.ResourceTypeEntity.Create(dto, max + 100);
@@ -24,7 +27,10 @@ namespace Persistence.Service.ResourceType
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceTypes.FindAsync(id, ct);
+            if (!await ValidateAccountReferenceAsync(context, dto.AccountId, ct))
+                return false;
+
+            var entity = await context.ResourceTypes.FindAsync([id], ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -36,7 +42,7 @@ namespace Persistence.Service.ResourceType
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceTypes.FindAsync(id, ct);
+            var entity = await context.ResourceTypes.FindAsync([id], ct);
             if (entity == null) return false;
 
             var isInUse = await context.ResourceSorts.AnyAsync(x => x.ResourceTypeId == id, ct)
@@ -55,6 +61,9 @@ namespace Persistence.Service.ResourceType
             bool typeExists = await context.ResourceTypes.AnyAsync(x => x.Id == resourceTypeId, ct);
             if (!typeExists) return 0;
 
+            if (!await ValidateAccountReferenceAsync(context, dto.AccountId, ct))
+                return 0;
+
             var max = await context.ResourceSorts
                 .Where(x => x.ResourceTypeId == resourceTypeId)
                 .MaxAsync(x => (int?)x.SortOrder, ct) ?? 0;
@@ -70,7 +79,10 @@ namespace Persistence.Service.ResourceType
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceSorts.FindAsync(id, ct);
+            if (!await ValidateAccountReferenceAsync(context, dto.AccountId, ct))
+                return false;
+
+            var entity = await context.ResourceSorts.FindAsync([id], ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -82,7 +94,7 @@ namespace Persistence.Service.ResourceType
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceSorts.FindAsync(id, ct);
+            var entity = await context.ResourceSorts.FindAsync([id], ct);
             if (entity == null) return false;
 
             if (await context.Resources.AnyAsync(x => x.ResourceSortId == id, ct))
@@ -221,6 +233,14 @@ namespace Persistence.Service.ResourceType
                 .ToListAsync(ct);
 
             return result;
+        }
+
+        private static async Task<bool> ValidateAccountReferenceAsync(Persistence.Context.ShardingSingleDbContext context, int? accountId, CancellationToken ct)
+        {
+            if (!accountId.HasValue || accountId.Value <= 0)
+                return true;
+
+            return await context.Accounts.AsNoTracking().AnyAsync(x => x.Id == accountId.Value, ct);
         }
     }
 }

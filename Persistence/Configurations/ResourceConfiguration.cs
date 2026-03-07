@@ -74,7 +74,12 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
 {
     public void Configure(EntityTypeBuilder<ResourceEntity> builder)
     {
-        builder.ToTable("Resources");
+        builder.ToTable("Resources", t =>
+        {
+            t.HasCheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_Resources_SortOrder_NonNegative", "[SortOrder] >= 0");
+            t.HasCheckConstraint("CK_Resources_Task_Positive", "[TaskId] > 0");
+        });
 
         builder.Property(e => e.RowVersion).IsRowVersion();
 
@@ -130,7 +135,12 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 {
     public void Configure(EntityTypeBuilder<TaskEntity> builder)
     {
-        builder.ToTable("Tasks");
+        builder.ToTable("Tasks", t =>
+        {
+            t.HasCheckConstraint("CK_Tasks_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+            t.HasCheckConstraint("CK_Tasks_SortOrder_NonNegative", "[SortOrder] >= 0");
+            t.HasCheckConstraint("CK_Tasks_Calculation_Positive", "[CalculationId] > 0");
+        });
 
         builder.Property(e => e.RowVersion).IsRowVersion();
 

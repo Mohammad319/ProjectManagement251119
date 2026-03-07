@@ -16,14 +16,12 @@ namespace Persistence.Service.CalculationItems.ShareCalc
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // لو departmentId null: لا نفلتر بالقسم
             var query = context.ShareCalc
                 .AsNoTracking()
                 .Where(x => x.CalculationId == calculationId);
 
             if (departmentId.HasValue)
             {
-                // فلترة واضحة بالقسم (مقارنة int مع int)
                 var depId = departmentId.Value;
                 query = query.Where(x => x.Calculation.Project.Folder.DepartmentId == depId);
             }
@@ -34,19 +32,14 @@ namespace Persistence.Service.CalculationItems.ShareCalc
                     Id = x.Id,
                     DepartmentId = x.DepartmentId,
                     UserId = x.CreatedBy,
-
-                    // Null-safe (في حال CreatedAtUser لم يتم تحميله/كان null)
                     User = ((x.CreatedAtUser == null ? string.Empty : (x.CreatedAtUser.FirstName ?? string.Empty)) + " " +
                             (x.CreatedAtUser == null ? string.Empty : (x.CreatedAtUser.LastName ?? string.Empty))).Trim(),
-
                     Tap1 = x.Metadata.Tap1,
                     Tap2 = x.Metadata.Tap2,
                     Tap3 = x.Metadata.Tap3,
                     Tap4 = x.Metadata.Tap4,
                     Tap5 = x.Metadata.Tap5,
                     Tap6 = x.Metadata.Tap6,
-
-                    // Null-safe
                     Department = x.Department == null ? string.Empty : (x.Department.Name ?? string.Empty)
                 })
                 .ToListAsync(ct);
@@ -60,15 +53,20 @@ namespace Persistence.Service.CalculationItems.ShareCalc
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var data = new ShareCalcData
+            if (!await CalculationAndDepartmentExistAsync(context, dto.CalculationId, dto.DepartmentId, ct))
+                return 0;
+
+            var data = BuildMetadata(dto.Tap1, dto.Tap2, dto.Tap3, dto.Tap4, dto.Tap5, dto.Tap6);
+
+            var existing = await context.ShareCalc
+                .FirstOrDefaultAsync(x => x.CalculationId == dto.CalculationId && x.DepartmentId == dto.DepartmentId, ct);
+
+            if (existing is not null)
             {
-                Tap1 = dto.Tap1,
-                Tap2 = dto.Tap2,
-                Tap3 = dto.Tap3,
-                Tap4 = dto.Tap4,
-                Tap5 = dto.Tap5,
-                Tap6 = dto.Tap6
-            };
+                existing.Update(existing.DepartmentId, data);
+                await context.SaveChangesAsync(ct);
+                return existing.Id;
+            }
 
             var entity = new ShareCalcEntity(
                 calculationId: dto.CalculationId,
@@ -93,22 +91,11 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             var entity = await context.ShareCalc
                 .FirstOrDefaultAsync(x => x.Id == dto.Id, ct);
 
-            if (entity is null) return false;
+            if (entity is null)
+                return false;
 
-            // إن أردت تقييد التعديل على نفس القسم/المستخدم:
-            // if (entity.DepartmentId != fromDepartment || entity.CreatedBy != fromUser) return false;
+            var data = BuildMetadata(dto.Tap1, dto.Tap2, dto.Tap3, dto.Tap4, dto.Tap5, dto.Tap6);
 
-            var data = new ShareCalcData
-            {
-                Tap1 = dto.Tap1,
-                Tap2 = dto.Tap2,
-                Tap3 = dto.Tap3,
-                Tap4 = dto.Tap4,
-                Tap5 = dto.Tap5,
-                Tap6 = dto.Tap6
-            };
-
-            // استخدم Update الموجودة على الكيان (مثل Upsert)
             entity.Update(entity.DepartmentId, data);
 
             await context.SaveChangesAsync(ct);
@@ -123,10 +110,23 @@ namespace Persistence.Service.CalculationItems.ShareCalc
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            if (!await CalculationAndDepartmentExistAsync(context, dto.CalculationId, dto.DepartmentId, ct))
+                return 0;
+
             var data = new ShareCalcData { Tabs = dto.ResolveTabs() };
 
             if (dto.Id is null or 0)
             {
+                var existingForTarget = await context.ShareCalc
+                    .FirstOrDefaultAsync(x => x.CalculationId == dto.CalculationId && x.DepartmentId == dto.DepartmentId, ct);
+
+                if (existingForTarget is not null)
+                {
+                    existingForTarget.Update(existingForTarget.DepartmentId, data);
+                    await context.SaveChangesAsync(ct);
+                    return existingForTarget.Id;
+                }
+
                 var entity = new ShareCalcEntity(dto.CalculationId, dto.DepartmentId, userId, data);
                 context.ShareCalc.Add(entity);
                 await context.SaveChangesAsync(ct);
@@ -136,7 +136,16 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             var existing = await context.ShareCalc
                 .FirstOrDefaultAsync(x => x.Id == dto.Id.Value, ct);
 
-            if (existing is null) return 0;
+            if (existing is null)
+                return 0;
+
+            var duplicateTargetExists = await context.ShareCalc
+                .AnyAsync(x => x.Id != existing.Id &&
+                               x.CalculationId == existing.CalculationId &&
+                               x.DepartmentId == dto.DepartmentId, ct);
+
+            if (duplicateTargetExists)
+                return 0;
 
             existing.Update(dto.DepartmentId, data);
             await context.SaveChangesAsync(ct);
@@ -156,15 +165,50 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             var entity = await context.ShareCalc
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (entity is null) return false;
+            if (entity is null)
+                return false;
 
-            // إن أردت تقييد الحذف حسب القسم/المستخدم فعّل هذا:
-            if (departmentId.HasValue && entity.DepartmentId != departmentId.Value) return false;
-            if (userId.HasValue && entity.CreatedBy != userId.Value) return false;
+            if (departmentId.HasValue && entity.DepartmentId != departmentId.Value)
+                return false;
+
+            if (userId.HasValue && entity.CreatedBy != userId.Value)
+                return false;
 
             context.ShareCalc.Remove(entity);
             await context.SaveChangesAsync(ct);
             return true;
+        }
+
+        private static ShareCalcData BuildMetadata(bool tap1, bool tap2, bool tap3, bool tap4, bool tap5, bool tap6)
+            => new()
+            {
+                Tap1 = tap1,
+                Tap2 = tap2,
+                Tap3 = tap3,
+                Tap4 = tap4,
+                Tap5 = tap5,
+                Tap6 = tap6
+            };
+
+        private static async Task<bool> CalculationAndDepartmentExistAsync(
+            ShardingSingleDbContext context,
+            int calculationId,
+            int departmentId,
+            CancellationToken ct)
+        {
+            if (calculationId <= 0 || departmentId <= 0)
+                return false;
+
+            var calculationExists = await context.Calculations
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == calculationId, ct);
+
+            if (!calculationExists)
+                return false;
+
+            return await context.Department
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == departmentId, ct);
         }
     }
 }

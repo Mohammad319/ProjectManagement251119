@@ -5,6 +5,7 @@ using Application.Mapping.CalcItems;
 using Domain.Entities.Calculation;
 using Persistence.Factory;
 using Persistence.Service.Sql;
+using Microsoft.EntityFrameworkCore.Storage;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
@@ -203,34 +204,39 @@ namespace Persistence.Service.CalculationItems.Task
                 maxOrder += 100;
 
             var movedEntities = new List<TaskEntity>();
+            var removedRootIds = new List<int>();
+            IDbContextTransaction? transaction = null;
 
-            // --------------------------------------
-            // لكل عنصر (Task) نطبق نفس منطق CutTaskCommand
-            // --------------------------------------
-            foreach (var item in items)
+            if (sourceCalcId != targetCalcId)
+                transaction = await context.Database.BeginTransactionAsync(ct);
+
+            try
             {
-                // نفس الـ Calculation → فقط نغيّر Parent / IsOH
-                if (sourceCalcId == targetCalcId)
+                // --------------------------------------
+                // لكل عنصر (Task) نطبق نفس منطق CutTaskCommand
+                // --------------------------------------
+                foreach (var item in items)
                 {
-                    var task = await context.Tasks
-                        .FirstOrDefaultAsync(
-                            x => x.Id == item.Id && x.CalculationId == sourceCalcId,
-                            ct);
+                    // نفس الـ Calculation → فقط نغيّر Parent / IsOH
+                    if (sourceCalcId == targetCalcId)
+                    {
+                        var task = await context.Tasks
+                            .FirstOrDefaultAsync(
+                                x => x.Id == item.Id && x.CalculationId == sourceCalcId,
+                                ct);
 
-                    if (task == null)
+                        if (task == null)
+                            continue;
+
+                        task.Metadata.IsOH = isOH;
+                        TaskExtention.SetNetCalcId(task);
+                        task.SetParentTask(parentTaskId);
+
+                        context.Tasks.Update(task);
+                        movedEntities.Add(task);
                         continue;
+                    }
 
-                    task.Metadata.IsOH = isOH;
-                    TaskExtention.SetNetCalcId(task);
-                    task.SetParentTask(parentTaskId);
-
-                    // في الكود الأصلي لم تغيّر SortOrder هنا، فنحافظ على نفس السلوك
-                    context.Tasks.Update(task);
-                    movedEntities.Add(task);
-                }
-                else
-                {
-                    // نقل بين Calculation مختلفة → نحتاج الشجرة كاملة + الموارد
                     var tasks = await RecursiveTasksCte.Query(context, item.Id, sourceCalcId)
                         .AsNoTracking()
                         .ToListAsync(ct);
@@ -246,19 +252,15 @@ namespace Persistence.Service.CalculationItems.Task
                         .ToListAsync(ct);
 
                     foreach (var t in tasks)
-                    {
                         t.Resources = [.. resources.Where(r => r.TaskId == t.Id)];
-                    }
 
-                    // الجذر (Root) هو التاسك اللي ParentTaskId == null
-                    var root = tasks.FirstOrDefault(x => x.ParentTaskId == null);
+                    var root = tasks.FirstOrDefault(x => x.Id == item.Id);
                     if (root == null)
                         continue;
 
                     TaskExtention.BuildTaskHierarchy(tasks);
                     root = TaskExtention.Reset(root);
 
-                    // حذف الأصل من الـ Calculation القديمة
                     var originalRoot = await context.Tasks
                         .FirstOrDefaultAsync(
                             x => x.Id == item.Id && x.CalculationId == sourceCalcId,
@@ -267,22 +269,17 @@ namespace Persistence.Service.CalculationItems.Task
                     if (originalRoot != null)
                     {
                         context.Tasks.Remove(originalRoot);
-                        await context.SaveChangesAsync(ct);
+                        removedRootIds.Add(originalRoot.Id);
                     }
 
-                    // إعداد خصائص الجذر في الـ Calculation الجديدة
                     root.SetParentTask(parentTaskId);
 
-                    if (root.CalculationId != targetCalcId &&
-                        !string.IsNullOrEmpty(root.Metadata.QuantityParam))
-                    {
+                    if (!string.IsNullOrEmpty(root.Metadata.QuantityParam))
                         root.Metadata.QuantityParam = PMValuesConst.FixedQ;
-                    }
 
                     root.Metadata.Quantity = item.Value;
                     root.SetCalculation(targetCalcId);
                     root.Metadata.IsOH = isOH;
-
                     root.SetSortOrder(maxOrder.Value);
                     maxOrder += 100;
 
@@ -291,9 +288,23 @@ namespace Persistence.Service.CalculationItems.Task
                     await context.Tasks.AddAsync(root, ct);
                     movedEntities.Add(root);
                 }
-            }
 
-            await context.SaveChangesAsync(ct);
+                await context.SaveChangesAsync(ct);
+
+                if (transaction != null)
+                    await transaction.CommitAsync(ct);
+            }
+            catch
+            {
+                if (transaction != null)
+                    await transaction.RollbackAsync(ct);
+                throw;
+            }
+            finally
+            {
+                if (transaction != null)
+                    await transaction.DisposeAsync();
+            }
 
             // تحميل الـ Navigation المطلوبة (Status / Opportunity)
             foreach (var item in movedEntities)
@@ -322,7 +333,7 @@ namespace Persistence.Service.CalculationItems.Task
                     sourceCalcId.ToString(),
                     ObjectTypHub.task,
                     OperationType.RemoveRange,
-                    movedEntities.Select(x => x.Id));
+                    removedRootIds);
 
                 await notification.SendNotificationAsync(
                     targetCalcId.ToString(),
@@ -553,10 +564,14 @@ namespace Persistence.Service.CalculationItems.Task
             int order,
             CancellationToken ct)
         {
-            var tasks = await GetTaskWithChildrenAsync(rootTaskId, ct);
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            var tasks = await RecursiveTasksCte.Query(context, rootTaskId, sourceCalcId)
+                .AsNoTracking()
+                .ToListAsync(ct);
+
             if (tasks == null || tasks.Count == 0)
                 return null;
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var sourceTaskIds = tasks.Select(t => t.Id).ToList();
 

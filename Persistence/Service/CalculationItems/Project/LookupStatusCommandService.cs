@@ -1,4 +1,5 @@
 ﻿using Application.Feature.General;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.General;
@@ -48,6 +49,23 @@ namespace Persistence.Service.CalculationItems.Project
             set.Remove(entity);
             await context.SaveChangesAsync(ct);
             return true;
+        }
+
+        public async Task<IReadOnlyList<LookupAdminListItemDto>> GetAllListAsync(CancellationToken ct = default)
+        {
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+            return await context.Set<TS>()
+                .AsNoTracking()
+                .OrderBy(x => x.SortOrder)
+                .Select(x => new LookupAdminListItemDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Color = x.Color,
+                    SortOrder = x.SortOrder,
+                    IsVisible = x.IsVisible
+                })
+                .ToListAsync(ct);
         }
 
         // -------------------------------------------------

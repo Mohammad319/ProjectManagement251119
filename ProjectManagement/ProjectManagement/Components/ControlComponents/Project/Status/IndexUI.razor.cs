@@ -1,6 +1,5 @@
 ﻿using Application.Feature.Project.Status.Commands;
 using Application.Feature.Project.Status.Queries;
-using Application.Feature.Project.Status.Queries.Application.Feature.Calculation.Status.Queries;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;

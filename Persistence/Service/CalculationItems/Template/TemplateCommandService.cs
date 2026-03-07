@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
 using Application.Services.CalculationItems.TemplateTable;
 using Domain.Entities.Calculation;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
@@ -8,12 +8,12 @@ namespace Persistence.Service.CalculationItems.Template
 {
     public sealed class TemplateCommandService(IDbContextFactoryTenant dbFactory) : ITemplateCommandService
     {
-        // ------------------------------------------------------
-        // CREATE
-        // ------------------------------------------------------
         public async Task<TemplateModelDTO> CreateAsync(TemplateListPostDTO dto, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            if (departmentId.HasValue && !await context.Department.AsNoTracking().AnyAsync(x => x.Id == departmentId.Value, ct))
+                return new TemplateModelDTO();
 
             var template = new TemplateEntity(dto.Name, dto.Active, departmentId);
 
@@ -24,22 +24,20 @@ namespace Persistence.Service.CalculationItems.Template
             context.Templates.Add(template);
             await context.SaveChangesAsync(ct);
 
-            // تجنب CopyPropertiesTo مرتين
-            var model = new TemplateModelDTO { Name = template.Name };
+            var model = new TemplateModelDTO { Id = template.Id, Name = template.Name };
             meta.CopyPropertiesTo(model);
             return model;
         }
 
-        // ------------------------------------------------------
-        // UPDATE (مضمون: نحافظ على قواعد الدومين)
-        // ------------------------------------------------------
         public async Task<bool> UpdateAsync(int id, TemplateListPostDTO dto, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // تحميل كيان واحد فقط (Tracking) ثم تحديث عبر الدومين
+            if (departmentId.HasValue && !await context.Department.AsNoTracking().AnyAsync(x => x.Id == departmentId.Value, ct))
+                return false;
+
             var template = await context.Templates
-                .FirstOrDefaultAsync(x => x.Id == id, ct);
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
             if (template == null)
                 return false;
@@ -53,24 +51,21 @@ namespace Persistence.Service.CalculationItems.Template
             return true;
         }
 
-        // ------------------------------------------------------
-        // DELETE (مضمون + سريع)
-        // ------------------------------------------------------
         public async Task<bool> DeleteAsync(int id, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // تحقق وجود فقط (بدون تحميل entity)
-            var exists = await context.Templates.AnyAsync(x => x.Id == id, ct);
-            if (!exists)
+            var templateExists = await context.Templates
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
+
+            if (!templateExists)
                 return false;
 
-            // 1) فك ارتباط الحسابات في SQL مباشرة (عمود بسيط -> آمن)
             await context.Calculations
                 .Where(x => x.TemplateId == id)
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.TemplateId, (int?)null), ct);
 
-            // 2) حذف القالب مباشرة (بدون تحميل)
             await context.Templates
                 .Where(x => x.Id == id)
                 .ExecuteDeleteAsync(ct);
@@ -78,16 +73,12 @@ namespace Persistence.Service.CalculationItems.Template
             return true;
         }
 
-        // ------------------------------------------------------
-        // SET DEFAULT TEMPLATE (مضمون + أقل تحميل)
-        // ------------------------------------------------------
         public async Task<TemplateModelDTO?> SetDefaultAsync(int calculationId, int? templateId, int? departmentId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // تحميل calc لأنك تستخدم SetTemplate (دومين)
             var calc = await context.Calculations
-                .FirstOrDefaultAsync(x => x.Id == calculationId, ct);
+                .FirstOrDefaultAsync(x => x.Id == calculationId && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
 
             if (calc == null)
                 return null;
@@ -96,10 +87,11 @@ namespace Persistence.Service.CalculationItems.Template
 
             if (templateId is > 0)
             {
-                // هنا نحتاج template فقط لو سنعيد metadata
                 template = await context.Templates
-                    .AsNoTracking() // لا نحتاج tracking
-                    .FirstOrDefaultAsync(x => x.Id == templateId, ct);
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        x => x.Id == templateId && (!departmentId.HasValue || x.DepartmentId == null || x.DepartmentId == departmentId.Value),
+                        ct);
 
                 if (template == null)
                     return null;
@@ -108,7 +100,7 @@ namespace Persistence.Service.CalculationItems.Template
             calc.SetTemplate(templateId is > 0 ? templateId : null);
             await context.SaveChangesAsync(ct);
 
-            var model = new TemplateModelDTO { Name = calc.Name };
+            var model = new TemplateModelDTO { Id = template?.Id ?? 0, Name = template?.Name ?? calc.Name };
 
             if (template != null)
                 template.Metadata.CopyPropertiesTo(model);

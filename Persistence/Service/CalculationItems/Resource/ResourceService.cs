@@ -50,26 +50,25 @@ namespace Persistence.Service.CalculationItems.Resource
 
             int nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 100;
 
-            foreach (var res in sourceResources)
+            foreach (var source in sourceResources)
             {
-                // نسخة جديدة
-                var sourceId = res.Id;
-                res.Id = 0;
-                res.PrimaryOfferId = null;
+                var sourceId = source.Id;
+                var copy = ResourceExtention.Reset(source);
 
                 if (sourceCalcId != parent.NewCalcID)
                 {
-                    if (!string.IsNullOrEmpty(res.Metadata.QuantityParam))
-                        res.Metadata.QuantityParam = PMValuesConst.FixedQ;
-
-                    res.Metadata.Quantity = valueById.TryGetValue(sourceId, out var v) ? v : res.Metadata.Quantity;
-                    res.OpportunityId = null;
+                    copy.ClearCrossCalculationState(resetQuantityParam: true);
+                    copy.Metadata.Quantity = valueById.TryGetValue(sourceId, out var v) ? v : copy.Metadata.Quantity;
+                }
+                else
+                {
+                    copy.PrimaryOfferId = null;
                 }
 
-                res.MoveToTask(parentTaskId, nextOrder);
+                copy.MoveToTask(parentTaskId, nextOrder);
                 nextOrder += 100;
 
-                entities.Add(res);
+                entities.Add(copy);
             }
 
             if (entities.Count == 0) return true;

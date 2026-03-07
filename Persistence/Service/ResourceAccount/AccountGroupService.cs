@@ -119,6 +119,13 @@ namespace Persistence.Service.ResourceAccount
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            var hasAccounts = await context.Accounts
+                .AsNoTracking()
+                .AnyAsync(x => x.AccountGroupId == id, ct);
+
+            if (hasAccounts)
+                return false;
+
             var existing = await context.AccountGroup.FindAsync([id], ct);
             if (existing is null) return false;
 

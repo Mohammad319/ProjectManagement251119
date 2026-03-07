@@ -10,7 +10,6 @@ namespace Persistence.Service.CalculationItems.Storage
 {
     public sealed class StorageCommandService(IDbContextFactoryTenant dbFactory) : IStorageCommandService
     {
-        // (اختياري) إعدادات JSON أخف وأوضح (قلّلها/عدّلها حسب حاجتك)
         private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
         public async Task<bool> CreateAsync(
@@ -24,11 +23,20 @@ namespace Persistence.Service.CalculationItems.Storage
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
+            if (departmentId is > 0)
+            {
+                var departmentExists = await context.Department
+                    .AsNoTracking()
+                    .AnyAsync(x => x.Id == departmentId.Value, ct);
+
+                if (!departmentExists)
+                    return false;
+            }
+
             object? obj = null;
 
             if (type == CalculationItemType.task)
             {
-                // ✅ نحدد CalculationId مرة واحدة: هذا يحسّن أداء CTE لأنه يسمح باستعمال الفهرس المركّب
                 var calcId = await context.Tasks
                     .AsNoTracking()
                     .Where(t => t.Id == id)
@@ -38,7 +46,6 @@ namespace Persistence.Service.CalculationItems.Storage
                 if (calcId <= 0)
                     return false;
 
-                // جلب التاسك مع الأبناء
                 var tasks = await RecursiveTasksCte.Query(context, id, calcId)
                     .AsNoTracking()
                     .ToListAsync(ct);
@@ -46,21 +53,17 @@ namespace Persistence.Service.CalculationItems.Storage
                 if (tasks.Count == 0)
                     return false;
 
-                // IDs مرة واحدة
                 var taskIds = tasks.Select(t => t.Id).ToList();
 
-                // جلب الموارد مرة واحدة
                 var resources = await context.Resources
                     .Where(r => taskIds.Contains(r.TaskId))
                     .AsNoTracking()
                     .ToListAsync(ct);
 
-                // تجميع الموارد حسب TaskId مرة واحدة (O(n))
                 var resourcesByTaskId = resources
                     .GroupBy(r => r.TaskId)
                     .ToDictionary(g => g.Key, g => g.ToList());
 
-                // ربط الموارد بدون Where داخل loop
                 foreach (var t in tasks)
                     t.Resources = resourcesByTaskId.TryGetValue(t.Id, out var list) ? list : [];
 
@@ -108,7 +111,6 @@ namespace Persistence.Service.CalculationItems.Storage
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // أفضل من FindAsync هنا: حذف بدون تحميل كامل
             var deleted = await context.Storages
                 .Where(x => x.Id == id)
                 .ExecuteDeleteAsync(ct);

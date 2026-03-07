@@ -1,6 +1,8 @@
-﻿using Application.Feature.Project.Project;
+using Application.Feature.Project.Project;
 using Application.Helper;
 using Domain.Entities.Project;
+using Microsoft.EntityFrameworkCore;
+using Persistence.Context;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Project;
@@ -18,7 +20,18 @@ namespace Persistence.Service.Project
                 .Where(f => f.Id == dto.FolderId)
                 .AnyAsync(f => departmentId == null || f.DepartmentId == departmentId, ct);
 
-            if (!folderOk) return Guid.Empty;
+            if (!folderOk)
+                return Guid.Empty;
+
+            if (!await ValidateProjectReferencesAsync(context, dto, departmentId, currentProjectId: null, ct: ct))
+                return Guid.Empty;
+
+            var normalizedCode = NormalizeCode(dto.Code);
+            if (!string.IsNullOrWhiteSpace(normalizedCode) &&
+                await context.Projects.AsNoTracking().AnyAsync(x => x.Code == normalizedCode, ct))
+            {
+                return Guid.Empty;
+            }
 
             var maxOrder = await context.Projects
                 .AsNoTracking()
@@ -44,8 +57,25 @@ namespace Persistence.Service.Project
             if (project == null)
                 return false;
 
+            if (!await ValidateProjectReferencesAsync(context, dto, departmentId, id, ct))
+                return false;
+
+            var normalizedCode = NormalizeCode(dto.Code);
+            if (!string.IsNullOrWhiteSpace(normalizedCode) &&
+                await context.Projects.AsNoTracking().AnyAsync(x => x.Id != id && x.Code == normalizedCode, ct))
+            {
+                return false;
+            }
+
+            if (dto.FolderId == Guid.Empty)
+                return false;
+
+            if (project.FolderId != dto.FolderId)
+                project.MoveToFolder(dto.FolderId);
+
             project.Update(dto);
             project.UpdatedBy = userId;
+            project.UpdatedAt = DateTime.UtcNow;
 
             await context.SaveChangesAsync(ct);
             return true;
@@ -71,7 +101,7 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var project = await context.Projects.FindAsync(id, ct);
+            var project = await context.Projects.FindAsync([id], ct);
             if (project == null) return false;
 
             project.UpdateOrder(newOrder);
@@ -123,9 +153,10 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Projects.AsNoTracking()
+            return await context.Projects
+                .AsNoTracking()
                 .Where(x => x.Id == id)
-                .Select(x => new ProjectDetailsDTO())
+                .Select(ProjectSelectors.Details)
                 .FirstOrDefaultAsync(ct);
         }
 
@@ -145,6 +176,8 @@ namespace Persistence.Service.Project
             return await context.Projects.AsNoTracking()
                 .Where(x => x.FolderId == folderId && x.IsVisible == isVisible &&
                        (departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId))
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Name)
                 .Select(ProjectSelectors.List)
                 .ToListAsync(ct);
         }
@@ -157,15 +190,131 @@ namespace Persistence.Service.Project
                 .Where(x => x.FolderId == folderId && x.IsVisible &&
                     x.Calculations.SelectMany(c => c.SharesCalc)
                         .Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId))
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Name)
                 .Select(ProjectSelectors.List)
                 .ToListAsync(ct);
         }
 
-        public Task<IEnumerable<SearchProjectDTO>> SearchAsync(ProjectFilter filter, int userId, int? departmentId, CancellationToken ct)
+        public async Task<IEnumerable<SearchProjectDTO>> SearchAsync(ProjectFilter filter, int userId, int? departmentId, CancellationToken ct)
         {
-            // نفس منطقك السابق لكن داخل Service
-            // (اختصرته هنا، ويمكن نقله حرفيًا من Query القديم)
-            throw new NotImplementedException();
+            await using var context = await dbFactory.CreateDbContextAsync(ct);
+
+            filter ??= new ProjectFilter();
+
+            IQueryable<ProjectEntity> query = context.Projects
+                .AsNoTracking()
+                .Where(x => x.IsVisible == filter.IsVisible)
+                .Where(x => departmentId == null || x.Folder.DepartmentId == departmentId || x.CreatedBy == userId);
+
+            if (filter.FolderId.HasValue && filter.FolderId.Value != Guid.Empty)
+                query = query.Where(x => x.FolderId == filter.FolderId.Value);
+
+            if (filter.CustomerId.HasValue)
+                query = query.Where(x => x.OrganisationId == filter.CustomerId.Value);
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+            {
+                string name = filter.Name.Trim();
+                string op = (filter.NameOperator ?? string.Empty).Trim().ToLowerInvariant();
+
+                query = op switch
+                {
+                    "=" or "eq" or "equals" => query.Where(x => x.Name == name),
+                    "start" or "startswith" or "beginswith" => query.Where(x => x.Name.StartsWith(name)),
+                    "end" or "endswith" => query.Where(x => x.Name.EndsWith(name)),
+                    _ => query.Where(x => x.Name.Contains(name))
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Code))
+            {
+                string code = filter.Code.Trim();
+                query = query.Where(x => x.Code != null && x.Code.Contains(code));
+            }
+
+            if (filter.StartDate1.HasValue)
+                query = query.Where(x => x.StartDate >= filter.StartDate1.Value);
+
+            if (filter.StartDate2.HasValue)
+                query = query.Where(x => x.StartDate <= filter.StartDate2.Value);
+
+            if (filter.EndDate1.HasValue)
+                query = query.Where(x => x.EndDate >= filter.EndDate1.Value);
+
+            if (filter.EndDate2.HasValue)
+                query = query.Where(x => x.EndDate <= filter.EndDate2.Value);
+
+            query = filter.SortValue switch
+            {
+                ProjectFilter.Sort.Code => query.OrderBy(x => x.Code).ThenBy(x => x.Name),
+                ProjectFilter.Sort.StPro => query.OrderBy(x => x.StartDate).ThenBy(x => x.Name),
+                ProjectFilter.Sort.StProDes => query.OrderByDescending(x => x.StartDate).ThenBy(x => x.Name),
+                ProjectFilter.Sort.EnPro => query.OrderBy(x => x.EndDate).ThenBy(x => x.Name),
+                ProjectFilter.Sort.EnProDes => query.OrderByDescending(x => x.EndDate).ThenBy(x => x.Name),
+                _ => query.OrderByDescending(x => x.SortOrder).ThenBy(x => x.Name)
+            };
+
+            if (filter.Skip > 0)
+                query = query.Skip(filter.Skip);
+
+            return await query
+                .Select(ProjectSelectors.Search)
+                .ToListAsync(ct);
+        }
+
+        private static string? NormalizeCode(string? code)
+            => string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+
+        private static async Task<bool> ValidateProjectReferencesAsync(
+            ShardingSingleDbContext context,
+            PostProjectDTO dto,
+            int? departmentId,
+            Guid? currentProjectId,
+            CancellationToken ct)
+        {
+            if (dto.FolderId == Guid.Empty)
+                return false;
+
+            var folderOk = await context.Folders
+                .AsNoTracking()
+                .AnyAsync(f => f.Id == dto.FolderId && (!departmentId.HasValue || f.DepartmentId == departmentId.Value), ct);
+
+            if (!folderOk)
+                return false;
+
+            if (dto.OrganisationId.HasValue &&
+                !await context.Organisation.AsNoTracking().AnyAsync(x => x.Id == dto.OrganisationId.Value, ct))
+                return false;
+
+            if (dto.ProcurementMethodsId.HasValue &&
+                !await context.ProcurementMethod.AsNoTracking().AnyAsync(x => x.Id == dto.ProcurementMethodsId.Value, ct))
+                return false;
+
+            if (dto.CompensationId.HasValue &&
+                !await context.Compensations.AsNoTracking().AnyAsync(x => x.Id == dto.CompensationId.Value, ct))
+                return false;
+
+            if (dto.ContractId.HasValue &&
+                !await context.Contracts.AsNoTracking().AnyAsync(x => x.Id == dto.ContractId.Value, ct))
+                return false;
+
+            if (dto.TypeId.HasValue &&
+                !await context.CalcProjectType.AsNoTracking().AnyAsync(x => x.Id == dto.TypeId.Value, ct))
+                return false;
+
+            var normalizedCode = NormalizeCode(dto.Code);
+            if (!string.IsNullOrWhiteSpace(normalizedCode))
+            {
+                var duplicateCodeExists = await context.Projects
+                    .AsNoTracking()
+                    .AnyAsync(x => x.Code == normalizedCode && (!currentProjectId.HasValue || x.Id != currentProjectId.Value), ct);
+
+                if (duplicateCodeExists)
+                    return false;
+            }
+
+            return true;
         }
     }
 }

@@ -12,7 +12,7 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260307005626_Step6_RemoveTenantIdIdIndexes")]
+    [Migration("20260307055029_Step6_RemoveTenantIdIdIndexes")]
     partial class Step6_RemoveTenantIdIdIndexes
     {
         /// <inheritdoc />
@@ -677,7 +677,14 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "TaskId", "SortOrder")
                         .HasDatabaseName("IX_Resources_Tenant_Task_Sort");
 
-                    b.ToTable("Resources", (string)null);
+                    b.ToTable("Resources", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Resources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Resources_SortOrder_NonNegative", "[SortOrder] >= 0");
+
+                            t.HasCheckConstraint("CK_Resources_Task_Positive", "[TaskId] > 0");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.ShareCalcEntity", b =>
@@ -977,7 +984,14 @@ namespace Persistence.Migrations
                     b.HasIndex("TenantId", "CalculationId", "ParentTaskId", "SortOrder")
                         .HasDatabaseName("IX_Tasks_Tenant_Calc_Parent_Sort");
 
-                    b.ToTable("Tasks", (string)null);
+                    b.ToTable("Tasks", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Tasks_Calculation_Positive", "[CalculationId] > 0");
+
+                            t.HasCheckConstraint("CK_Tasks_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Tasks_SortOrder_NonNegative", "[SortOrder] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.TaskStatusEntity", b =>
@@ -1278,7 +1292,11 @@ namespace Persistence.Migrations
 
                     b.ToTable("Folders", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Folders_Department_Positive", "[DepartmentId] > 0");
+
                             t.HasCheckConstraint("CK_Folders_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Folders_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -1798,6 +1816,10 @@ namespace Persistence.Migrations
                     b.ToTable("Projects", null, t =>
                         {
                             t.HasCheckConstraint("CK_Projects_DateRange", "[EndDate] >= [StartDate]");
+
+                            t.HasCheckConstraint("CK_Projects_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Projects_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 

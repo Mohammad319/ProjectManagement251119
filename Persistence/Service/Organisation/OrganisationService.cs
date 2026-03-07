@@ -35,6 +35,21 @@ namespace Persistence.Service.Organisation
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
+            var isUsedByTenders = await db.Tenders
+                .AsNoTracking()
+                .AnyAsync(x => x.OrganisationId == id, ct);
+
+            var isUsedByProjects = await db.Projects
+                .AsNoTracking()
+                .AnyAsync(x => x.OrganisationId == id, ct);
+
+            var isUsedByCalculations = await db.Calculations
+                .AsNoTracking()
+                .AnyAsync(x => x.OrganisationId == id, ct);
+
+            if (isUsedByTenders || isUsedByProjects || isUsedByCalculations)
+                return false;
+
             var entity = await db.Organisation
                 .Include(x => x.Offers)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);

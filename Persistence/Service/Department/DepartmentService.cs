@@ -37,11 +37,31 @@ namespace Persistence.Service.Department
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var hasProjects = await context.Projects
+            var hasUsers = await context.User
                 .AsNoTracking()
-                .AnyAsync(p => p.Folder.DepartmentId == id, ct);
+                .AnyAsync(u => u.DepartmentId == id, ct);
 
-            if (hasProjects)
+            var hasFolders = await context.Folders
+                .AsNoTracking()
+                .AnyAsync(f => f.DepartmentId == id, ct);
+
+            var hasApplications = await context.Applications
+                .AsNoTracking()
+                .AnyAsync(a => a.DepartmentId == id, ct);
+
+            var hasTemplates = await context.Templates
+                .AsNoTracking()
+                .AnyAsync(t => t.DepartmentId == id, ct);
+
+            var hasStorages = await context.Storages
+                .AsNoTracking()
+                .AnyAsync(s => s.DepartmentId == id, ct);
+
+            var hasShares = await context.ShareCalc
+                .AsNoTracking()
+                .AnyAsync(s => s.DepartmentId == id, ct);
+
+            if (hasUsers || hasFolders || hasApplications || hasTemplates || hasStorages || hasShares)
                 return false;
 
             var entity = await context.Department.FirstOrDefaultAsync(x => x.Id == id, ct);

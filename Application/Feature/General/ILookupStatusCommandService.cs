@@ -11,6 +11,11 @@ namespace Application.Feature.General
         Task<List<TEntity>> GetAllAsync(CancellationToken ct = default);
 
         /// <summary>
+        /// يرجع قائمة إدارية خفيفة بدون تعريض كيانات EF مباشرة إلى طبقة Application/UI.
+        /// </summary>
+        Task<IReadOnlyList<LookupAdminListItemDto>> GetAllListAsync(CancellationToken ct = default);
+
+        /// <summary>
         /// يرجع قائمة خفيفة (Id, Name, SortOrder) للـ dropdowns:
         /// - لو Id = null => يرجع فقط العناصر المرئية (IsVisible = true).
         /// - لو Id != null => يرجع كل العناصر المرئية + هذا العنصر حتى لو كان IsVisible = false.

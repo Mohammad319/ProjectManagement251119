@@ -1,4 +1,4 @@
-﻿namespace Persistence.Service.CalculationItems.Calculation
+namespace Persistence.Service.CalculationItems.Calculation
 {
     using Domain.Entities.Calculation;
     using global::Application.Feature.Calculation.Calculation;
@@ -41,18 +41,28 @@
 
             return await context.Calculations
                 .AsNoTracking()
+                .Where(x => !x.IsDeleted && x.ProjectId == projectId)
                 .Where(x =>
-                    x.ProjectId == projectId &&
-                    (departmentId == null ||
-                     x.SharesCalc.Any(s => s.CreatedBy == userId || s.DepartmentId == departmentId)))
+                    departmentId == null ||
+                    x.DepartmentId == departmentId.Value ||
+                    x.SharesCalc.Any(s => s.DepartmentId == departmentId.Value))
+                .Where(x =>
+                    !x.IsPrivate ||
+                    x.CreatedBy == userId ||
+                    x.SharesCalc.Any(s => s.CreatedBy == userId || (departmentId != null && s.DepartmentId == departmentId.Value)))
+                .OrderBy(x => x.SortOrder)
                 .Select(x => new ListCalculationDTO
                 {
                     Id = x.Id,
                     Name = x.Name,
+                    Code = x.Code,
                     Order = x.SortOrder,
                     IsPrivate = x.IsPrivate,
                     TenderDeadline = x.TenderDeadline,
                     TenderQA = x.TenderQA,
+                    StartDate = x.StartDate,
+                    EndDate = x.EndDate,
+                    Status = x.Status != null ? x.Status.Name : string.Empty
                 })
                 .ToListAsync(ct);
         }
