@@ -132,7 +132,7 @@ namespace Persistence.Migrations
                     TenderQA = table.Column<DateTime>(type: "datetime2", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SortOrder = table.Column<double>(type: "float", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     PublicationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DecisionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsPrivate = table.Column<bool>(type: "bit", nullable: false),
@@ -158,7 +158,9 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Calculations", x => x.Id);
+                    table.CheckConstraint("CK_Calculations_Code_NotEmpty", "LEN(LTRIM(RTRIM([Code]))) > 0");
                     table.CheckConstraint("CK_Calculations_DateRange", "[EndDate] >= [StartDate]");
+                    table.CheckConstraint("CK_Calculations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
                     table.CheckConstraint("CK_Calculations_Tax_0_100", "[Tax] >= 0 AND [Tax] <= 100");
                 });
 
@@ -230,6 +232,7 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_Compensations", x => x.Id);
                     table.CheckConstraint("CK_Compensations_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_Compensations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_Compensations_SortOrder_NonNegative", "[SortOrder] >= 0");
                 });
 
             migrationBuilder.CreateTable(
@@ -254,6 +257,7 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_Contracts", x => x.Id);
                     table.CheckConstraint("CK_Contracts_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_Contracts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_Contracts_SortOrder_NonNegative", "[SortOrder] >= 0");
                 });
 
             migrationBuilder.CreateTable(
@@ -328,7 +332,7 @@ namespace Persistence.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
                     Color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: false),
-                    SortOrder = table.Column<double>(type: "float", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
@@ -381,11 +385,13 @@ namespace Persistence.Migrations
                 {
                     table.PrimaryKey("PK_OrganisationCategories", x => x.Id);
                     table.CheckConstraint("CK_OrganisationCategories_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_OrganisationCategories_Parent_Positive", "[ParentCategoryId] IS NULL OR [ParentCategoryId] > 0");
                     table.ForeignKey(
                         name: "FK_OrganisationCategories_OrganisationCategories_ParentCategoryId",
                         column: x => x.ParentCategoryId,
                         principalTable: "OrganisationCategories",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_OrganisationCategories_Users_CreatedBy",
                         column: x => x.CreatedBy,
@@ -455,6 +461,7 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_ProcurementMethods", x => x.Id);
                     table.CheckConstraint("CK_ProcurementMethods_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_ProcurementMethods_Users_CreatedBy",
                         column: x => x.CreatedBy,
@@ -491,6 +498,7 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_ProjectTypes", x => x.Id);
                     table.CheckConstraint("CK_ProjectTypes_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_ProjectTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_ProjectTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_ProjectTypes_Users_CreatedBy",
                         column: x => x.CreatedBy,
@@ -527,7 +535,9 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ResourceTypes", x => x.Id);
+                    table.CheckConstraint("CK_ResourceTypes_Account_Positive", "[AccountId] IS NULL OR [AccountId] > 0");
                     table.CheckConstraint("CK_ResourceTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_ResourceTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_ResourceTypes_Accounts_AccountId",
                         column: x => x.AccountId,
@@ -620,6 +630,7 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_Statuses", x => x.Id);
                     table.CheckConstraint("CK_Statuses_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_Statuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_Statuses_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_Statuses_Users_CreatedBy",
                         column: x => x.CreatedBy,
@@ -656,6 +667,7 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_StatusResources", x => x.Id);
                     table.CheckConstraint("CK_StatusResources_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_StatusResources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_StatusResources_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_StatusResources_Users_CreatedBy",
                         column: x => x.CreatedBy,
@@ -734,6 +746,7 @@ namespace Persistence.Migrations
                     table.PrimaryKey("PK_TaskStatuses", x => x.Id);
                     table.CheckConstraint("CK_TaskStatuses_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
                     table.CheckConstraint("CK_TaskStatuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_TaskStatuses_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_TaskStatuses_Users_CreatedBy",
                         column: x => x.CreatedBy,
@@ -858,7 +871,9 @@ namespace Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ResourceSorts", x => x.Id);
+                    table.CheckConstraint("CK_ResourceSorts_Account_Positive", "[AccountId] IS NULL OR [AccountId] > 0");
                     table.CheckConstraint("CK_ResourceSorts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                    table.CheckConstraint("CK_ResourceSorts_SortOrder_NonNegative", "[SortOrder] >= 0");
                     table.ForeignKey(
                         name: "FK_ResourceSorts_Accounts_AccountId",
                         column: x => x.AccountId,
@@ -895,7 +910,7 @@ namespace Persistence.Migrations
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     Unit = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: true),
                     Type = table.Column<int>(type: "int", nullable: false),
-                    SortOrder = table.Column<double>(type: "float", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     IsOH = table.Column<bool>(type: "bit", nullable: false),
@@ -960,7 +975,7 @@ namespace Persistence.Migrations
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TenderDeadline = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TenderQA = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SortOrder = table.Column<double>(type: "float", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProjectTypeId = table.Column<int>(type: "int", nullable: true),
                     FolderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1074,7 +1089,7 @@ namespace Persistence.Migrations
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     Unit = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: true),
                     ResType = table.Column<int>(type: "int", nullable: false),
-                    SortOrder = table.Column<double>(type: "float", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     TaskId = table.Column<int>(type: "int", nullable: false),
                     OpportunityId = table.Column<int>(type: "int", nullable: true),
@@ -1538,6 +1553,11 @@ namespace Persistence.Migrations
                 name: "IX_OrganisationCategories_ParentCategoryId",
                 table: "OrganisationCategories",
                 column: "ParentCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrganisationCategories_Tenant_Parent",
+                table: "OrganisationCategories",
+                columns: new[] { "TenantId", "ParentCategoryId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrganisationCategories_UpdatedBy",
@@ -2096,11 +2116,6 @@ namespace Persistence.Migrations
                 column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Users_Tenant_ExternalAuthId",
-                table: "Users",
-                columns: new[] { "TenantId", "ExternalAuthId" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Users_Tenant_UserName",
                 table: "Users",
                 columns: new[] { "TenantId", "UserName" });
@@ -2115,6 +2130,13 @@ namespace Persistence.Migrations
                 table: "Users",
                 columns: new[] { "TenantId", "Email" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "UX_Users_Tenant_ExternalAuthId",
+                table: "Users",
+                columns: new[] { "TenantId", "ExternalAuthId" },
+                unique: true,
+                filter: "[ExternalAuthId] IS NOT NULL AND [ExternalAuthId] <> ''");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AccountGroups_Users_CreatedBy",

@@ -36,7 +36,7 @@ namespace Persistence.Service.CalculationItems.Task
             var resultDtos = new List<TaskListDTO>();
 
             // ✅ نحسب الـ Order في الـ Target Calculation (وليس المصدر)
-            double order = await GetMaxOrderAsync(targetCalcId, parentTaskId, ct);
+            int order = await GetMaxOrderAsync(targetCalcId, parentTaskId, ct);
 
             foreach (var item in taskItems)
             {
@@ -143,7 +143,7 @@ namespace Persistence.Service.CalculationItems.Task
             int targetCalcId,
             int? parentTaskId,
             IReadOnlyList<ResourceTaskItemDTO> items,
-            double order = 100,
+            int order = 100,
             bool isOH = false,
             CancellationToken ct = default)
         {
@@ -155,7 +155,7 @@ namespace Persistence.Service.CalculationItems.Task
                 parentTaskId = null;
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            double? maxOrder = 0;
+            int? maxOrder = 0;
 
             // --------------------------------------
             // حساب أعلى SortOrder في الهدف (TaskParent أو Calculation)
@@ -179,7 +179,7 @@ namespace Persistence.Service.CalculationItems.Task
                 if (parent.Tasks == null || parent.Tasks.Count == 0)
                     maxOrder = null;
                 else
-                    maxOrder = parent.Tasks.Max(x => (double?)x.SortOrder);
+                    maxOrder = parent.Tasks.Max(x => (int?)x.SortOrder);
             }
             else
             {
@@ -194,11 +194,11 @@ namespace Persistence.Service.CalculationItems.Task
                 if (calc.Tasks == null || calc.Tasks.Count == 0)
                     maxOrder = null;
                 else
-                    maxOrder = calc.Tasks.Max(x => (double?)x.SortOrder);
+                    maxOrder = calc.Tasks.Max(x => (int?)x.SortOrder);
             }
 
             if (maxOrder == null)
-                maxOrder = 0;
+                maxOrder = 100;
             else
                 maxOrder += 100;
 
@@ -376,7 +376,7 @@ namespace Persistence.Service.CalculationItems.Task
         // -----------------------------------------------------
         public async Task<bool> NewOrderAsync(
             int taskId,
-            double newOrder,
+            int newOrder,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -513,7 +513,7 @@ namespace Persistence.Service.CalculationItems.Task
         // -----------------------------------------------------
         // Helper: get max SortOrder in calc / under parent
         // -----------------------------------------------------
-        private async Task<double> GetMaxOrderAsync(
+        private async Task<int> GetMaxOrderAsync(
             int calculationId,
             int? parentTaskId,
             CancellationToken ct)
@@ -524,19 +524,19 @@ namespace Persistence.Service.CalculationItems.Task
             {
                 var max = await context.Tasks
                     .Where(x => x.ParentTaskId == parentTaskId)
-                    .Select(x => (double?)x.SortOrder)
+                     .Select(x => (int?)x.SortOrder)
                     .MaxAsync(ct);
 
-                return max ?? 0;
+                return (max ?? 0) + 100;
             }
             else
             {
                 var max = await context.Tasks
                     .Where(x => x.CalculationId == calculationId && x.ParentTaskId == null)
-                    .Select(x => (double?)x.SortOrder)
+                     .Select(x => (int?)x.SortOrder)
                     .MaxAsync(ct);
 
-                return max ?? 0;
+                return (max ?? 0) + 100;
             }
         }
 
@@ -550,7 +550,7 @@ namespace Persistence.Service.CalculationItems.Task
             bool isOH,
             bool deleteOriginal,
             int? parentTaskId,
-            double order,
+            int order,
             CancellationToken ct)
         {
             var tasks = await GetTaskWithChildrenAsync(rootTaskId, ct);

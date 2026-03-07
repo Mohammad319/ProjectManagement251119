@@ -29,7 +29,7 @@ namespace Persistence.Service.CalculationItems.Resource
                 .Where(x => x.Id == parentTaskId)
                 .Select(x => new
                 {
-                    MaxOrder = x.Resources.Max(r => (double?)r.SortOrder),
+                    MaxOrder = x.Resources.Max(r => (int?)r.SortOrder),
                     NewCalcID = x.CalculationId,
                 })
                 .FirstOrDefaultAsync(ct);
@@ -48,7 +48,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
             var entities = new List<ResourceEntity>(sourceResources.Count);
 
-            double nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 0;
+            int nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 100;
 
             foreach (var res in sourceResources)
             {
@@ -110,7 +110,7 @@ namespace Persistence.Service.CalculationItems.Resource
                 .Where(x => x.Id == parentTaskId)
                 .Select(x => new
                 {
-                    MaxOrder = x.Resources.Max(r => (double?)r.SortOrder),
+                    MaxOrder = x.Resources.Max(r => (int?)r.SortOrder),
                     CalID = x.CalculationId,
                 })
                 .FirstOrDefaultAsync(ct);
@@ -118,7 +118,7 @@ namespace Persistence.Service.CalculationItems.Resource
             if (parent is null) return false;
 
             var entities = new List<ResourceEntity>(items.Count);
-            double nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 0;
+            int nextOrder = parent.MaxOrder.HasValue ? parent.MaxOrder.Value + 100 : 100;
 
             foreach (var dto in items)
             {
@@ -163,7 +163,7 @@ namespace Persistence.Service.CalculationItems.Resource
                 .Select(x => new
                 {
                     CalID = x.CalculationId,
-                    Max = x.Resources.Max(r => (double?)r.SortOrder),
+                    Max = x.Resources.Max(r => (int?)r.SortOrder),
                 })
                 .FirstOrDefaultAsync(ct);
 
@@ -192,7 +192,7 @@ namespace Persistence.Service.CalculationItems.Resource
                     resource.OpportunityId = null;
                 }
 
-                var nextOrder = parent.Max.HasValue ? parent.Max.Value + 100 : 0;
+                var nextOrder = parent.Max.HasValue ? parent.Max.Value + 100 : 100;
                 resource.MoveToTask(taskId, nextOrder);
                 parent = parent with { Max = resource.SortOrder }; // تحديث max للعنصر التالي
 
@@ -278,7 +278,7 @@ namespace Persistence.Service.CalculationItems.Resource
         // -----------------------------------------------------
         // New Order
         // -----------------------------------------------------
-        public async Task<bool> NewOrderAsync(int id, double newOrder, CancellationToken ct = default)
+        public async Task<bool> NewOrderAsync(int id, int newOrder, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 

@@ -33,16 +33,15 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var maxOrder = await db.Calculations
                 .Where(x => x.ProjectId == projectId)
-                .MaxAsync(x => (double?)x.SortOrder, cancellationToken);
+                .MaxAsync(x => (int?)x.SortOrder, cancellationToken);
 
             var sortOrder = (maxOrder ?? 0) + 100;
 
-            CalculationEntity calculation = new();
+            var calculation = new CalculationEntity();
             calculation.AssignToProject(projectId);
             calculation.AssignDepartment(departmentId.Value);
             calculation.Update(dto);
             calculation.UpdateOrder(sortOrder);
-
             calculation.CreatedBy = userId;
             calculation.CreatedAt = DateTime.UtcNow;
 
@@ -62,8 +61,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
             var calculation = await db.Calculations
-                .FilterByDepartment(departmentId)
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
 
             if (calculation is null)
                 return false;
@@ -95,8 +93,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
             var calculation = await db.Calculations
-                .FilterByDepartment(departmentId)
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
 
             if (calculation is null)
                 return false;
@@ -120,10 +117,9 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var original = await db.Calculations
                 .AsNoTracking()
-                .FilterByDepartment(departmentId)
                 .Include(c => c.Tasks)
                     .ThenInclude(t => t.Resources)
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
 
             if (original is null)
                 return 0;
@@ -133,7 +129,7 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var maxOrder = await db.Calculations
                 .Where(x => x.ProjectId == projectId)
-                .MaxAsync(x => (double?)x.SortOrder, cancellationToken);
+                .MaxAsync(x => (int?)x.SortOrder, cancellationToken);
 
             copy.UpdateOrder((maxOrder ?? 0) + 100);
 
@@ -145,7 +141,7 @@ namespace Persistence.Service.CalculationItems.Calculation
 
         public async Task<bool> NewOrderAsync(
             int id,
-            double newOrder,
+            int newOrder,
             CancellationToken cancellationToken = default)
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
@@ -169,8 +165,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
             var calculation = await db.Calculations
-                .FilterByDepartment(departmentId)
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
 
             if (calculation is null)
                 return false;
@@ -199,8 +194,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
             var calculation = await db.Calculations
-                .FilterByDepartment(departmentId)
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
 
             if (calculation is null)
                 return false;
@@ -219,59 +213,20 @@ namespace Persistence.Service.CalculationItems.Calculation
 
         public async Task<bool> UpdateQuantityListAsync(
             int id,
-            CalculationData value,
+            List<QuanityListDTO> model,
             int? departmentId,
-            int userId,
             CancellationToken cancellationToken = default)
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
             var calculation = await db.Calculations
-                .FilterByDepartment(departmentId)
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), cancellationToken);
 
             if (calculation is null)
                 return false;
 
-            var dto = new CalculationPostDTO();
-            dto.Metadata.Address = value.Address;
-            dto.Metadata.Contacts = value.Contacts;
-            dto.Metadata.Notes = value.Notes;
-            dto.Metadata.Responsibles = value.Responsibles;
-            dto.Metadata.Income = value.Income;
-            dto.Metadata.Maps = value.Maps;
-            dto.Metadata.Developer = value.Developer;
-            dto.Metadata.ClientsManager = value.ClientsManager;
-            dto.Metadata.Designer = value.Designer;
-            dto.Metadata.OverviewInfo = value.OverviewInfo;
-            dto.Metadata.ContactPerson = value.ContactPerson;
-            dto.Metadata.Supervisor = value.Supervisor;
-            dto.Metadata.Inspector = value.Inspector;
-
-            dto.Code = calculation.Code;
-            dto.Name = calculation.Name;
-            dto.Tax = calculation.Tax;
-            dto.Procurement = calculation.Procurement;
-            dto.StartDate = calculation.StartDate;
-            dto.EndDate = calculation.EndDate;
-            dto.TenderDeadline = calculation.TenderDeadline;
-            dto.TenderQA = calculation.TenderQA;
-            dto.Order = calculation.SortOrder;
-            dto.PublicationDate = calculation.PublicationDate;
-            dto.DecisionDate = calculation.DecisionDate;
-            dto.IsPrivate = calculation.IsPrivate;
-            dto.StatusId = calculation.StatusId;
-            dto.ContractId = calculation.ContractId;
-            dto.TypeId = calculation.TypeId;
-            dto.OrganisationId = calculation.OrganisationId;
-            dto.ProcurementMethodsId = calculation.ProcurementMethodsId;
-            dto.CompensationId = calculation.CompensationId;
-            dto.IsVisible = calculation.IsVisible;
-
-            calculation.Update(dto);
+            calculation.Metadata.QuanityList = model ?? [];
             calculation.UpdatedAt = DateTime.UtcNow;
-            calculation.UpdatedBy = userId;
-
             await db.SaveChangesAsync(cancellationToken);
 
             await notification.SendNotificationAsync(
@@ -288,7 +243,9 @@ namespace Persistence.Service.CalculationItems.Calculation
             return new CalculationPageDTO
             {
                 Factors = x.Factors,
+                QuanityList = x.Metadata.QuanityList,
                 Tax = x.Tax,
+                TimeMonth = x.Metadata.TimeMonth,
                 Name = x.Name,
                 Code = x.Code,
                 OrganisationId = x.OrganisationId,

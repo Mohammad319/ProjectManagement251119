@@ -107,7 +107,7 @@ namespace Persistence.Service.CalculationItems.Tender
             return true;
         }
 
-        private static async Task SyncAttributeValuesAsync(
+        private static async global::System.Threading.Tasks.Task SyncAttributeValuesAsync(
             ShardingSingleDbContext context,
             int tenderId,
             Dictionary<int, double> attributes,

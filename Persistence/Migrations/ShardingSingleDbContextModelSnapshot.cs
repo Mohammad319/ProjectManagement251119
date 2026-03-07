@@ -348,8 +348,8 @@ namespace Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<double>("SortOrder")
-                        .HasColumnType("float");
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -430,7 +430,11 @@ namespace Persistence.Migrations
 
                     b.ToTable("Calculations", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Calculations_Code_NotEmpty", "LEN(LTRIM(RTRIM([Code]))) > 0");
+
                             t.HasCheckConstraint("CK_Calculations_DateRange", "[EndDate] >= [StartDate]");
+
+                            t.HasCheckConstraint("CK_Calculations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
 
                             t.HasCheckConstraint("CK_Calculations_Tax_0_100", "[Tax] >= 0 AND [Tax] <= 100");
                         });
@@ -610,8 +614,8 @@ namespace Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<double>("SortOrder")
-                        .HasColumnType("float");
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.Property<int?>("StatusId")
                         .HasColumnType("int");
@@ -804,6 +808,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_StatusResources_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_StatusResources_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_StatusResources_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -921,8 +927,8 @@ namespace Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<double>("SortOrder")
-                        .HasColumnType("float");
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.Property<int?>("StatusId")
                         .HasColumnType("int");
@@ -1035,6 +1041,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_TaskStatuses_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_TaskStatuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_TaskStatuses_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -1239,8 +1247,8 @@ namespace Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<double>("SortOrder")
-                        .HasColumnType("float");
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -1320,9 +1328,14 @@ namespace Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_OrganisationCategories_Tenant_Name");
 
+                    b.HasIndex("TenantId", "ParentCategoryId")
+                        .HasDatabaseName("IX_OrganisationCategories_Tenant_Parent");
+
                     b.ToTable("OrganisationCategories", null, t =>
                         {
                             t.HasCheckConstraint("CK_OrganisationCategories_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_OrganisationCategories_Parent_Positive", "[ParentCategoryId] IS NULL OR [ParentCategoryId] > 0");
                         });
                 });
 
@@ -1512,6 +1525,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_Compensations_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_Compensations_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Compensations_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -1579,6 +1594,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_Contracts_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_Contracts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Contracts_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -1646,6 +1663,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_ProcurementMethods_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_ProcurementMethods_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_ProcurementMethods_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -1718,8 +1737,8 @@ namespace Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<double>("SortOrder")
-                        .HasColumnType("float");
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -1843,6 +1862,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_Statuses_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_Statuses_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_Statuses_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -1910,6 +1931,8 @@ namespace Persistence.Migrations
                             t.HasCheckConstraint("CK_ProjectTypes_Color_Hex", "[Color] LIKE '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'");
 
                             t.HasCheckConstraint("CK_ProjectTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_ProjectTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -1983,7 +2006,11 @@ namespace Persistence.Migrations
 
                     b.ToTable("ResourceSorts", null, t =>
                         {
+                            t.HasCheckConstraint("CK_ResourceSorts_Account_Positive", "[AccountId] IS NULL OR [AccountId] > 0");
+
                             t.HasCheckConstraint("CK_ResourceSorts_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_ResourceSorts_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -2057,7 +2084,11 @@ namespace Persistence.Migrations
 
                     b.ToTable("ResourceTypes", null, t =>
                         {
+                            t.HasCheckConstraint("CK_ResourceTypes_Account_Positive", "[AccountId] IS NULL OR [AccountId] > 0");
+
                             t.HasCheckConstraint("CK_ResourceTypes_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_ResourceTypes_SortOrder_NonNegative", "[SortOrder] >= 0");
                         });
                 });
 
@@ -2183,7 +2214,9 @@ namespace Persistence.Migrations
                         .HasDatabaseName("UX_Users_Tenant_Email");
 
                     b.HasIndex("TenantId", "ExternalAuthId")
-                        .HasDatabaseName("IX_Users_Tenant_ExternalAuthId");
+                        .IsUnique()
+                        .HasDatabaseName("UX_Users_Tenant_ExternalAuthId")
+                        .HasFilter("[ExternalAuthId] IS NOT NULL AND [ExternalAuthId] <> ''");
 
                     b.HasIndex("TenantId", "UserName")
                         .HasDatabaseName("IX_Users_Tenant_UserName");
@@ -2688,7 +2721,8 @@ namespace Persistence.Migrations
 
                     b.HasOne("Domain.Entities.Organisation.OrganisationCategoryEntity", "ParentCategory")
                         .WithMany("ChildCategories")
-                        .HasForeignKey("ParentCategoryId");
+                        .HasForeignKey("ParentCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
                         .WithMany()

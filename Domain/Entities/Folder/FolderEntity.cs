@@ -18,8 +18,7 @@ namespace Domain.Entities.Folder
         [Required, StringLength(FieldLengths.ColorHex, MinimumLength = FieldLengths.ColorHex)]
         public string Color { get; private set; } = "#08BF66";
 
-        public double SortOrder { get; private set; }
-
+        public int SortOrder { get; private set; }
         public bool IsVisible { get; private set; } = true;
 
         public int DepartmentId { get; private set; }
@@ -32,7 +31,7 @@ namespace Domain.Entities.Folder
 
         private FolderEntity() { }
 
-        public FolderEntity(string name, string color, int departmentId, int createdBy, double sortOrder)
+        public FolderEntity(string name, string color, int departmentId, int createdBy, int sortOrder)
         {
             if (departmentId <= 0)
                 throw new ArgumentOutOfRangeException(nameof(departmentId));
@@ -54,7 +53,7 @@ namespace Domain.Entities.Folder
             IsVisible = isVisible;
         }
 
-        public void UpdateOrder(double newOrder)
+        public void UpdateOrder(int newOrder)
         {
             if (double.IsNaN(newOrder) || double.IsInfinity(newOrder))
                 throw new ArgumentOutOfRangeException(nameof(newOrder), "SortOrder must be a finite number.");

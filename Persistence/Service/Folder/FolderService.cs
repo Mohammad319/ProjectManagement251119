@@ -93,7 +93,7 @@ namespace Persistence.Service.Folder
                     Id = x.Id,
                     Name = x.Name,
                     Color = x.Color,
-                    Order = x.SortOrder
+                    Order = (int)x.SortOrder
                 })
                 .ToListAsync(ct);
         }
@@ -111,7 +111,7 @@ namespace Persistence.Service.Folder
                     Id = x.Id,
                     Name = x.Name,
                     Color = x.Color,
-                    Order = x.SortOrder
+                    Order = (int)x.SortOrder
                 })
                 .ToListAsync(ct);
         }

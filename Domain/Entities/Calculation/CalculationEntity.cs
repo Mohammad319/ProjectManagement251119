@@ -61,7 +61,7 @@ namespace Domain.Entities.Calculation
         public DateTime StartDate { get; private set; } = DateTime.UtcNow;
         public DateTime EndDate { get; private set; } = DateTime.UtcNow.AddMonths(2);
 
-        public double SortOrder { get; private set; }
+        public int SortOrder { get; private set; }
 
         public DateTime? PublicationDate { get; private set; } = DateTime.UtcNow;
         public DateTime? DecisionDate { get; private set; } = DateTime.UtcNow;
@@ -261,7 +261,7 @@ namespace Domain.Entities.Calculation
             ProjectId = projectId;
         }
 
-        public void UpdateOrder(double newOrder)
+        public void UpdateOrder(int newOrder)
         {
             if (double.IsNaN(newOrder) || double.IsInfinity(newOrder))
                 throw new ArgumentOutOfRangeException(nameof(newOrder), "SortOrder must be a finite number.");
