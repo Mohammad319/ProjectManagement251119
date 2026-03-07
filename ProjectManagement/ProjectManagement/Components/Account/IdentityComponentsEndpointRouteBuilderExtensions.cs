@@ -66,16 +66,13 @@ internal static class IdentityComponentsEndpointRouteBuilderExtensions
 
         accountGroup.MapPost("/PasskeyRequestOptions", async (
             HttpContext context,
-            [FromServices] UserManager<ApplicationUser> userManager,
-            [FromServices] SignInManager<ApplicationUser> signInManager,
-            [FromServices] IAntiforgery antiforgery,
-            [FromQuery] string? username) =>
+            [FromServices] IAntiforgery antiforgery) =>
         {
             await antiforgery.ValidateRequestAsync(context);
-
-            var user = string.IsNullOrEmpty(username) ? null : await userManager.FindByNameAsync(username);
-            var optionsJson = await signInManager.MakePasskeyRequestOptionsAsync(user);
-            return TypedResults.Content(optionsJson, contentType: "application/json");
+            return Results.Problem(
+                detail: "Passkey sign-in is disabled for this application.",
+                statusCode: StatusCodes.Status501NotImplemented,
+                title: "Passkey sign-in disabled");
         });
 
         var manageGroup = accountGroup.MapGroup("/Manage").RequireAuthorization();

@@ -75,16 +75,6 @@
                     @PMResourceIdentity.login
                 </button>
             </div>
-            <div>
-                <PasskeySubmit Operation="PasskeyOperation.Request"
-                               Name="Input.Passkey"
-                               EmailName="Input.Email"
-                               class="w-full rounded-lg bg-blue-600 px-4 py-3 text-lg font-medium text-white shadow-sm
-                       transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                       dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                    @PMResourceIdentity.Auth_LoginWithPasskey
-                </PasskeySubmit>
-            </div>
 
             <!-- Error & Forgot Password -->
             <div class="mt-4 text-center">
@@ -129,30 +119,13 @@
 
     public async Task LoginUser()
     {
-        if (!string.IsNullOrEmpty(Input.Passkey?.Error))
+        if (!editContext.Validate())
         {
-            errorMessage =  ResourceApp.error + " " + Input.Passkey.Error;
             return;
         }
 
-        SignInResult result;
-        if (!string.IsNullOrEmpty(Input.Passkey?.CredentialJson))
-        {
-            // When performing passkey sign-in, don't perform form validation.
-            result = await SignInManager.PasskeySignInAsync(Input.Passkey.CredentialJson);
-        }
-        else
-        {
-            // If doing a password sign-in, validate the form.
-            if (!editContext.Validate())
-            {
-                return;
-            }
-
-            // Count failed attempts to activate Identity lockout policy
-            
-            result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
-        }
+        // Count failed attempts to activate Identity lockout policy
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {
@@ -189,7 +162,6 @@
         [Display(Name = "Remember me?")]
         public bool RememberMe { get; set; }
 
-        public PasskeyInputModel? Passkey { get; set; }
     }
 }
 
