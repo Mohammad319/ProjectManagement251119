@@ -13,49 +13,49 @@
         [
             new TabItem
             {
-                Key = "1",
+                Key = "type",
                 Text = CalcResource.type,
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Type.IndexUI />
             },
             new TabItem
             {
-                Key = "2",
+                Key = "contract",
                 Text = CalcResource.projectContract,
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Contract.IndexUI />
             },
             new TabItem
             {
-                Key = "3",
+                Key = "compensation",
                 Text = CalcResource.projectCompensation,
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Compensation.IndexUI />
             },
             new TabItem
             {
-                Key = "4",
+                Key = "procurement",
                 Text = CalcResource.procurementMethods,
                 Content = @<ProjectManagement.Components.ControlComponents.Project.ProcurementMethods.IndexUI />
             },
             new TabItem
             {
-                Key = "5",
+                Key = "status",
                 Text = CalcResource.status,
                 Content = @<ProjectManagement.Components.ControlComponents.Project.Status.IndexUI />
             },
             new TabItem
             {
-                Key = "6",
+                Key = "task-status",
                 Text = ResourceLoc.taskStatus,
                 Content = @<ProjectManagement.Components.ControlComponents.TaskStatus.IndexUI />
             },
             new TabItem
             {
-                Key = "7",
+                Key = "resource-status",
                 Text = CalcResource.resourcesStatus,
                 Content = @<ProjectManagement.Components.ControlComponents.ResourceStatus.IndexUI />
             }
         ];
 
-        // اختيار أول تاب تلقائياً
-        activeKey = Tabs.First().Key;
+        if (string.IsNullOrWhiteSpace(activeKey) && Tabs.Count > 0)
+            activeKey = Tabs[0].Key;
     }
 }

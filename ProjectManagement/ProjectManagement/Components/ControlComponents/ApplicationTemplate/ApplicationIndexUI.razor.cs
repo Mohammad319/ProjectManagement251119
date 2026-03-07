@@ -8,84 +8,156 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
 {
     public partial class ApplicationIndexUI
     {
-        bool IsVisible = true;
-        List<ApplicationEntity>? Applications;
-        ApplicationEntity? ApplicationForm;
-        void NewApp()
+        private bool IsVisible = true;
+        private bool Loading = true;
+        private List<ApplicationEntity> Applications = [];
+        private ApplicationEntity? ApplicationForm;
+
+        private List<ApplicationEntity> VisibleApplications
+            => Applications.Where(x => x.IsVisible == IsVisible).ToList();
+
+        private void ToggleVisibility() => IsVisible = !IsVisible;
+
+        private void OpenApplication(ApplicationEntity application)
+            => ApplicationForm = application;
+
+        private void NewApp()
         {
-            ApplicationForm = new()
+            ApplicationForm = new ApplicationEntity
             {
-                Data = new()
+                Name = string.Empty,
+                IsVisible = true,
+                Data = new ApplicationDataEntity
                 {
-                    Rows = [
-                    new (){Name = "Row_1", IsVisible = true, ID = Guid.NewGuid(),
-                        Style = "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
-                        StyleRow = "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
-                        Attributes = [
-                new () { Order = 0,AttributeType = AttributeType.Text, ID = Guid.NewGuid()
-             ,Style="color:#864184;background-color:#fff5ff;width:120px;margin-left:5px;margin-right:5px;font-weight:bold;"
-                 ,Required = true},
-                new () { Order = 1,AttributeType = AttributeType.Bool, ID = Guid.NewGuid()
-             ,Style="color:#864184;background-color:#321fed;width:25px;margin-left:5px;margin-right:5px;font-weight:bold;"},
-                new () { Order = 2,AttributeType = AttributeType.Int, ID = Guid.NewGuid()
-             ,Style="color:#864184;background-color:#fff5ff;width:100px;height: 25px;margin-left:5px;margin-right:5px;font-weight:bold;"},
-         ]},
-            new (){Name = "Row_2", IsVisible = true, ID = Guid.NewGuid(),
-                 Style = "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
-            StyleRow = "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
-            Attributes = [
-                new() { Order = 0,AttributeType = AttributeType.Text, ID = Guid.NewGuid()
-             ,Style="color:#864184;background-color:#fff5ff;width:200px;margin-left:5px;margin-right:5px;font-weight:bold;"
-                 ,Required = true},
-                new() { Order = 1,AttributeType = AttributeType.Date, ID = Guid.NewGuid()
-             ,Style="color:#864184;background-color:#fff5ff;width:180px;margin-left:5px;margin-right:5px;font-weight:bold;"},
-                new() { Order = 2,AttributeType = AttributeType.Int, ID = Guid.NewGuid()
-             ,Style="color:#864184;background-color:#fff5ff;width:100px;margin-left:5px;margin-right:5px;font-weight:bold;"},
-         ]},
-            new (){Name = "Row_3", IsVisible = true, ID = Guid.NewGuid(),
-                    Style = "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
-            StyleRow = "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
-            Attributes = [
-                 new () { Order = 0,AttributeType = AttributeType.Text, ID = Guid.NewGuid()
-             ,Style="color:#317c27;background-color:#f0fff4;width:170px;margin-left:5px;margin-right:5px;font-size:12px;text-align:center;",Required = true},
-                new () { Order = 1,AttributeType = AttributeType.Char, ID = Guid.NewGuid()
-             ,Style="color:#9a8932;background-color:#fffde5;width:50px;margin-left:5px;margin-right:5px;font-size:12px;text-align:center;"},
-                new () { Order = 2,AttributeType = AttributeType.Double, ID = Guid.NewGuid()
-             ,Style="color:#864184;background-color:#fff5ff;width:100px;margin-left:5px;margin-right:5px;font-weight:bold;"},
-         ]
-                }
-            ]
+                    Rows =
+                    [
+                        CreateRow(
+                            "Row_1",
+                            "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
+                            "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
+                            new AttributeBase
+                            {
+                                Order = 0,
+                                AttributeType = AttributeType.Text,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#864184;background-color:#fff5ff;width:120px;margin-left:5px;margin-right:5px;font-weight:bold;",
+                                Required = true
+                            },
+                            new AttributeBase
+                            {
+                                Order = 1,
+                                AttributeType = AttributeType.Bool,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#864184;background-color:#321fed;width:25px;margin-left:5px;margin-right:5px;font-weight:bold;"
+                            },
+                            new AttributeBase
+                            {
+                                Order = 2,
+                                AttributeType = AttributeType.Int,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#864184;background-color:#fff5ff;width:100px;height:25px;margin-left:5px;margin-right:5px;font-weight:bold;"
+                            }),
+                        CreateRow(
+                            "Row_2",
+                            "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
+                            "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
+                            new AttributeBase
+                            {
+                                Order = 0,
+                                AttributeType = AttributeType.Text,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#864184;background-color:#fff5ff;width:200px;margin-left:5px;margin-right:5px;font-weight:bold;",
+                                Required = true
+                            },
+                            new AttributeBase
+                            {
+                                Order = 1,
+                                AttributeType = AttributeType.Date,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#864184;background-color:#fff5ff;width:180px;margin-left:5px;margin-right:5px;font-weight:bold;"
+                            },
+                            new AttributeBase
+                            {
+                                Order = 2,
+                                AttributeType = AttributeType.Int,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#864184;background-color:#fff5ff;width:100px;margin-left:5px;margin-right:5px;font-weight:bold;"
+                            }),
+                        CreateRow(
+                            "Row_3",
+                            "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
+                            "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
+                            new AttributeBase
+                            {
+                                Order = 0,
+                                AttributeType = AttributeType.Text,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#317c27;background-color:#f0fff4;width:170px;margin-left:5px;margin-right:5px;font-size:12px;text-align:center;",
+                                Required = true
+                            },
+                            new AttributeBase
+                            {
+                                Order = 1,
+                                AttributeType = AttributeType.Char,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#9a8932;background-color:#fffde5;width:50px;margin-left:5px;margin-right:5px;font-size:12px;text-align:center;"
+                            },
+                            new AttributeBase
+                            {
+                                Order = 2,
+                                AttributeType = AttributeType.Double,
+                                ID = Guid.NewGuid(),
+                                Style = "color:#864184;background-color:#fff5ff;width:100px;margin-left:5px;margin-right:5px;font-weight:bold;"
+                            })
+                    ]
                 }
             };
         }
-        void Remove(ApplicationEntity app)
+
+        private static RowEntity CreateRow(string name, string style, string styleRow, params AttributeBase[] attributes)
+            => new()
+            {
+                Name = name,
+                IsVisible = true,
+                ID = Guid.NewGuid(),
+                Style = style,
+                StyleRow = styleRow,
+                Attributes = [.. attributes]
+            };
+
+        private void Remove(ApplicationEntity application)
+            => MHD.DeleteMessage(application.Name, EventCallback.Factory.Create(this, () => RemoveAsync(application)));
+
+        private async Task RemoveAsync(ApplicationEntity application)
         {
-            MHD.DeleteMessage(app.Name, EventCallback.Factory.Create(this, () => RemoveAsync(app)));
-        }
-        async Task RemoveAsync(ApplicationEntity app)
-        {
-            bool result = await MicroBus.Send(new DeleteApplicationCommand(app.Id));
+            var result = await Dispatcher.Send(new DeleteApplicationCommand(application.Id));
             if (result)
             {
-                Applications?.Remove(app);
-                StateHasChanged();
+                Applications.RemoveAll(x => x.Id == application.Id);
+                await InvokeAsync(StateHasChanged);
             }
+
             MHD.Notifications(ToastType.Delete, result);
         }
-        async Task BtnUpdateAsync(bool IsSuccess)
-        {
-            if (IsSuccess) await GetApplicationsAsync();
 
-            StateHasChanged();
+        private async Task BtnUpdateAsync(bool isSuccess)
+        {
+            if (!isSuccess)
+                return;
+
+            await GetApplicationsAsync();
             ApplicationForm = null;
+            await InvokeAsync(StateHasChanged);
         }
 
-        async Task GetApplicationsAsync()
+        private async Task GetApplicationsAsync()
         {
-            Applications = await MicroBus.Send(new GetApplicationQuery(true));
-            //ExHandlers.RunCheckTokenAsync(() => Repo.Applications.GetApplicationsAsync(true));
+            Loading = true;
+            Applications = await Dispatcher.Send(new GetApplicationQuery(true)) ?? [];
+            Loading = false;
         }
-        protected async override Task OnInitializedAsync()
+
+        protected override async Task OnInitializedAsync()
         {
             await GetApplicationsAsync();
         }

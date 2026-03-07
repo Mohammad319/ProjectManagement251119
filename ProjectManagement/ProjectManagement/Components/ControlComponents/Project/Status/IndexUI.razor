@@ -1,32 +1,63 @@
-﻿@using BlazorMHD.UI.Components.Data.Table
+@using BlazorMHD.UI.Components.Data.Table
 @using Domain.Entities.Project
-@using ProjectManagement.Client.Shared.Model.Project
-@using Microsoft.AspNetCore.Authorization
-@attribute [Authorize]
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+@inherits AppComponentBase
 
-    <MhdTable Items="Status?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)" ShowFilter="false">
-        <HeaderTemplate>
-            <th style="width:200px;" class="@CssClasses.Table.TH">
-                <div class="@CssClasses.Layout.FlexItemsCenter">
-                    <button @onclick="() => UpdateForm(new StatusEntity())" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
-                    <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
-                </div>
-            </th>
-            <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-        </HeaderTemplate>
-        <ChildContent>
-            <MhdTableColumn>
-                <Template Context="status">
-                    <div class="@CssClasses.Layout.FlexItemsCenter">
-                        <button @onclick="() => UpdateForm(status)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
-                        <button @onclick="() => Remove(status)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
-                    </div>
-                </Template>
-            </MhdTableColumn>
-            <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
-        </ChildContent>
-    </MhdTable>
+<div class="space-y-3">
+    <div class="flex items-center justify-between">
+        <div class="inline-flex items-center gap-1 rounded-full bg-slate-100/80 px-1.5 py-1 shadow-sm dark:bg-slate-800/80">
+            <button @onclick="CreateNewAsync"
+                    class="@CssClasses.Btn.IconButton.Success"
+                    title="@AppLoc[nameof(ResourceApp.newItem)]">
+                @((MarkupString)Icons.Plus2)
+            </button>
+            <button @onclick="ToggleVisibleAsync"
+                    class="@CssClasses.Btn.IconButton.Secondary"
+                    title="@AppLoc[nameof(ResourceApp.isVisible)]">
+                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+            </button>
+        </div>
+
+        <span class="text-xs text-slate-500 dark:text-slate-400">
+            @VisibleItems.Count() @CalcLoc[nameof(CalcResource.status)]
+        </span>
+    </div>
+
+    @if (IsLoading)
+    {
+        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+    }
+    else if (VisibleItems.Any())
+    {
+        <MhdTable Items="VisibleItems.ToList()" ShowFilter="false">
+            <HeaderTemplate>
+                <th style="width:200px;" class="@CssClasses.Table.TH"></th>
+                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.name)]</th>
+            </HeaderTemplate>
+            <ChildContent>
+                <MhdTableColumn>
+                    <Template Context="status">
+                        <div class="@CssClasses.Layout.FlexItemsCenter">
+                            <button @onclick="() => UpdateForm(status)"
+                                    class="@CssClasses.Btn.IconButton.Warning"
+                                    title="@AppLoc[nameof(ResourceApp.update)]">
+                                @Icons.Edit
+                            </button>
+                            <button @onclick="() => Remove(status)"
+                                    class="@CssClasses.Btn.IconButton.Danger"
+                                    title="@AppLoc[nameof(ResourceApp.delete)]">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+                        </div>
+                    </Template>
+                </MhdTableColumn>
+                <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.name)]" ValueSelector="c => c.Name" />
+            </ChildContent>
+        </MhdTable>
+    }
+    else
+    {
+        <div class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-6 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+            @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+        </div>
+    }
+</div>

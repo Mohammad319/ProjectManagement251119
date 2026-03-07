@@ -11,7 +11,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 {
     public partial class CategoriesUI
     {
-        private int PageNr = 0;
+        private int PageNr = 1;
 
         private List<ListOrganisationCategoryDTO> Categories { get; set; } = [];
         private ILookup<int?, ListOrganisationCategoryDTO> _byParent = default!;
@@ -32,7 +32,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             Categories = await Dispatcher.Send(new GetOrganisationCategoryQuery()) ?? [];
             RebuildIndex();
-            await InvokeAsync(StateHasChanged); // ✅ بدل StateHasChanged داخل async
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task<bool> CanManageAsync()
@@ -106,9 +106,11 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         {
             MHD.DeleteMessage(category.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(category)));
         }
+
         private Task OnOrganisationsClosed()
         {
             SelectedCategory = null;
+            PageNr = 1;
             return Task.CompletedTask;
         }
 
@@ -118,12 +120,17 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
             if (result)
             {
-                Categories.RemoveAll(x => x.Id == st.Id);
+                Categories.RemoveAll(x => x.Id == st.Id || x.ParentCategoryId == st.Id);
+                if (SelectedCategory?.Id == st.Id || SelectedCategory?.ParentCategoryId == st.Id)
+                {
+                    SelectedCategory = null;
+                    PageNr = 1;
+                }
                 RebuildIndex();
             }
 
             MHD.Notifications(ToastType.Delete, result);
-            await InvokeAsync(StateHasChanged); // ✅
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task CallbackAsync(bool isSuccess)
@@ -133,7 +140,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             if (isSuccess)
                 await LoadCategoriesAsync();
 
-            await InvokeAsync(StateHasChanged); // ✅
+            await InvokeAsync(StateHasChanged);
+        }
+
+        private void OpenTypePage()
+        {
+            PageNr = 1;
+            SelectedCategory = null;
         }
 
         private void OnTreeSelect(ListOrganisationCategoryDTO cat)

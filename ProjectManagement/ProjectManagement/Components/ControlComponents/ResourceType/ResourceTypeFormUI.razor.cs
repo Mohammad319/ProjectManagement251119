@@ -1,4 +1,4 @@
-﻿using Application.Feature.Account.Queries;
+using Application.Feature.Account.Queries;
 using Application.Feature.Calculation.ResourceType.Commands;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -7,74 +7,98 @@ using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.Enums;
 
-namespace ProjectManagement.Components.ControlComponents.ResourceType
-{
-    public partial class ResourceTypeFormUI
-    {
-        [Parameter] public EventCallback<bool> Callback { get; set; }
-        [Parameter] public ResourceTypeModel ResourceType { get; set; } = new();
-        PostResourceTypeDTO ResourceTypeUpdate { get; set; } = new();
-        bool IsLoading = false;
-        List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
-        ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
+namespace ProjectManagement.Components.ControlComponents.ResourceType;
 
-        async Task ChangeGroupAccount(ChangeEventArgs e)
+public partial class ResourceTypeFormUI : IDisposable
+{
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+    [Parameter] public ResourceTypeModel ResourceType { get; set; } = new();
+
+    private readonly PostResourceTypeDTO ResourceTypeUpdate = new();
+    private bool IsLoading;
+    private List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
+    private ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
+    private EditContext? editContext;
+    private ValidationMessageStore? messageStore;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(ResourceTypeUpdate);
+        editContext.OnValidationRequested += HandleValidationRequested;
+        messageStore = new ValidationMessageStore(editContext);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        PropertyCopier.CopyPropertiesTo(ResourceType, ResourceTypeUpdate);
+
+        AccountGroups ??= await Dispatcher.Send(new GetAccountGroupsAsListQuery());
+
+        if (ResourceType.Id > 0)
+        {
+            AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceTypeUpdate.AccountId));
+        }
+        else if (ResourceTypeUpdate.AccountId is null or 0)
         {
             AccountGroupSelected = null;
-            if (!int.TryParse(e.Value?.ToString(), out int id))
-                return;
-            await Task.Delay(1);
-            if (id == 0) return;
-            SelectedGroup(id);
         }
-        void SelectedGroup(int id) => AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Id == id);
-        protected async override Task OnInitializedAsync()
+    }
+
+    private async Task ChangeGroupAccount(ChangeEventArgs e)
+    {
+        AccountGroupSelected = null;
+        ResourceTypeUpdate.AccountId = null;
+
+        if (!int.TryParse(e.Value?.ToString(), out var id) || id == 0)
+            return;
+
+        await Task.Yield();
+        AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Id == id);
+    }
+
+    private void CloseModal() => MHD.Modal.Close();
+
+    private async Task HandleSubmitAsync()
+    {
+        if (IsLoading)
+            return;
+
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
         {
-            PropertyCopier.CopyPropertiesTo(ResourceType, ResourceTypeUpdate);
-            AccountGroups = await MicroBus.Send(new GetAccountGroupsAsListQuery());
-            if (ResourceType.Id > 0)
-            {
-                AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts.Any(a => a.Id == ResourceTypeUpdate.AccountId));
-            }
-        }
-        private async Task HandleSubmitAsync()
-        {
-            IsLoading = true;
-            bool result = false;
+            bool result;
+
             if (ResourceType.Id == 0)
-                result = await MicroBus.Send(new CreateResourceTypeCommand(ResourceTypeUpdate)) > 0;
-            else result = await MicroBus.Send(new UpdateResourceTypeCommand(ResourceType.Id,ResourceTypeUpdate));
+                result = await Dispatcher.Send(new CreateResourceTypeCommand(ResourceTypeUpdate)) > 0;
+            else
+                result = await Dispatcher.Send(new UpdateResourceTypeCommand(ResourceType.Id, ResourceTypeUpdate));
 
             MHD.Notifications(ResourceType.Id == 0 ? ToastType.Add : ToastType.Update, result);
             await Callback.InvokeAsync(result);
         }
-
-        private EditContext? editContext;
-        private ValidationMessageStore? messageStore;
-
-        protected override void OnInitialized()
+        finally
         {
-            editContext = new(ResourceTypeUpdate);
-            editContext.OnValidationRequested += HandleValidationRequested;
-            messageStore = new(editContext);
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
+    }
 
-        private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
-        {
-            messageStore?.Clear();
-            if (ResourceTypeUpdate.Type
-            == ResourceTypesEnum.Materials && (ResourceTypeUpdate.CapWaste < 0) || ResourceTypeUpdate.CapWaste > 999)
-            {
-                messageStore?.Add(() => ResourceTypeUpdate.CapWaste, AppLoc[LocalizerConst.CapWasteValid, CalcResource.waste]);
-            }
-        }
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
+    {
+        messageStore?.Clear();
 
-        public void Dispose()
+        if (ResourceTypeUpdate.Type == ResourceTypesEnum.Materials &&
+            (ResourceTypeUpdate.CapWaste < 0 || ResourceTypeUpdate.CapWaste > 999))
         {
-            if (editContext is not null)
-            {
-                editContext.OnValidationRequested -= HandleValidationRequested;
-            }
+            messageStore?.Add(() => ResourceTypeUpdate.CapWaste, AppLoc[LocalizerConst.CapWasteValid, CalcResource.waste]);
         }
+    }
+
+    public void Dispose()
+    {
+        if (editContext is not null)
+            editContext.OnValidationRequested -= HandleValidationRequested;
     }
 }

@@ -1,80 +1,78 @@
-﻿@using BlazorMHD.UI.Components.Data.Table
-@using Microsoft.AspNetCore.Authorization
+@using BlazorMHD.UI.Components.Data.Table
 @using ProjectManagement.Shared.DTO.ResourceType
-@using ProjectManagement.Client.Shared.Model.Project.Calculation
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+@inherits AppComponentBase
 
-@if (Sort != null)
+@if (Sort is not null)
 {
-    <ResourceSortUI ResourceTypeId="Sort.Id" Callback="() => Sort = null"></ResourceSortUI>
+    <ResourceSortUI ResourceTypeId="Sort.Id" Callback="CloseSortAsync" />
 }
 else
 {
-    <!-- شريط علوي للأكشنات -->
-    <div class="flex items-center justify-between pb-1">
-        <div class="inline-flex items-center gap-1 rounded-full px-1.5 py-1
-                        bg-slate-100/80 dark:bg-slate-800/80 shadow-sm">
-            <!-- إضافة نوع جديد -->
-            <button @onclick="() => UpdateForm(new ResourceTypeModel())"
-                    class="@CssClasses.Btn.IconButton.Success w-7 h-7 text-[11px]">
-                @((MarkupString)Icons.Plus)
-            </button>
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="inline-flex items-center gap-1 rounded-full bg-slate-100/80 px-1.5 py-1 shadow-sm dark:bg-slate-800/80">
+                <button @onclick="CreateNewAsync"
+                        class="@CssClasses.Btn.IconButton.Success"
+                        title="@AppLoc[nameof(ResourceApp.newItem)]">
+                    @((MarkupString)Icons.Plus)
+                </button>
 
-            <!-- إظهار/إخفاء العناصر -->
-            <button class="@CssClasses.Btn.IconButton.Secondary w-7 h-7 text-[11px]"
-                    @onclick="ReverseElements">
-                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-            </button>
+                <button class="@CssClasses.Btn.IconButton.Secondary"
+                        @onclick="ReverseElements"
+                        title="@AppLoc[nameof(ResourceApp.isVisible)]">
+                    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+                </button>
+            </div>
+
+            <span class="text-xs text-slate-500 dark:text-slate-400">
+                @VisibleItems.Count() @CalcLoc[nameof(CalcResource.resourceType)]
+            </span>
         </div>
 
-        <!-- عنوان بسيط / عداد (اختياري) -->
-        @if (Items != null)
+        @if (IsLoading)
         {
-            <span class="text-[11px] text-slate-500 dark:text-slate-400">
-                @Items.Count @AppLoc["resourceTypes"]
-            </span>
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+        }
+        else if (VisibleItems.Any())
+        {
+            <MhdTable Items="VisibleItems.ToList()" ShowFilter="false">
+                <HeaderTemplate>
+                    <th style="width:200px;" class="@CssClasses.Table.TH"></th>
+                    <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.name)]</th>
+                </HeaderTemplate>
+                <ChildContent>
+                    <MhdTableColumn>
+                        <Template Context="item">
+                            <div class="@($"{CssClasses.Layout.FlexItemsCenter} gap-1")">
+                                <button @onclick="() => UpdateForm(item)"
+                                        class="@CssClasses.Btn.IconButton.Warning"
+                                        title="@AppLoc[nameof(ResourceApp.update)]">
+                                    @Icons.Edit
+                                </button>
+
+                                <button @onclick="() => Remove(item)"
+                                        class="@CssClasses.Btn.IconButton.Danger"
+                                        title="@AppLoc[nameof(ResourceApp.delete)]">
+                                    @((MarkupString)Icons.DeleteSVG)
+                                </button>
+
+                                <button @onclick="() => OpenSort(item)"
+                                        class="@CssClasses.Btn.IconButton.Secondary"
+                                        title="@CalcLoc[nameof(CalcResource.sort)]">
+                                    @((MarkupString)Icons.List)
+                                </button>
+                            </div>
+                        </Template>
+                    </MhdTableColumn>
+                    <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.name)]" ValueSelector="c => c.Name" />
+                </ChildContent>
+            </MhdTable>
+        }
+        else
+        {
+            <div class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-6 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+            </div>
         }
     </div>
-    <MhdTable Items="Items?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.Order)"
-          ShowFilter="false">
-    <HeaderTemplate>
-        <th style="width:200px;" class="@CssClasses.Table.TH">
-        </th>
-        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-    </HeaderTemplate>
-    <ChildContent>
-        <MhdTableColumn>
-            <Template Context="item">
-                <div class="@($"{CssClasses.Layout.FlexItemsCenter} group")">
-                    <!-- الأزرار تظهر فقط عند مرور الماوس -->
-                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-
-                            <!-- تعديل -->
-                            <button @onclick="(e) => UpdateForm(item)"
-                                    class="@CssClasses.Btn.IconButton.Warning">
-                                @Icons.Edit
-                            </button>
-
-                            <!-- حذف -->
-                            <button @onclick="() => Remove(item)"
-                                    class="@CssClasses.Btn.IconButton.Danger">
-                                @((MarkupString)Icons.DeleteSVG)
-                            </button>
-
-                            <!-- الترتيب -->
-                            <button @onclick="() => Sort = item"
-                                    class="@CssClasses.Btn.IconButton.Secondary">
-                                @((MarkupString)Icons.List)
-                            </button>
-
-                        </div>
-                    </div>
-                </Template>
-        </MhdTableColumn>
-        <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
-    </ChildContent>
-</MhdTable>
 }

@@ -1,99 +1,151 @@
-﻿@using Application.Feature.Calculation.TemplateTable.Commands
-@using ProjectManagement.Client.Constant;
+@using Application.Feature.Calculation.TemplateTable.Commands
+@using ProjectManagement.Client.Constant
 @using ProjectManagement.Client.Pages.Calculation.Template
-@using ProjectManagement.Client.Shared.MVVM.Calculation;
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
-@using System.Security.Claims;
 @using ProjectManagement.Shared.DTO.Calculation.Template
-@using ProjectManagement.Shared.DTO.Identity
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+@inherits AppComponentBase
+
 <style>
     input, td, th {
         min-width: 40px;
         max-width: 250px;
     }
 </style>
-    @if (TemplateUpdate != null)
-    {
-        <div>
-            <button type="button" @onclick="HandleSubmitAsync" class="@CssClasses.Btn.Outline.Success" form="netTable" disabled="@btnSubmitDisabled">
-                @ResourceApp.save
-            </button>
-            <button type="button" @onclick="async () => await Callback.InvokeAsync(false)" class="@CssClasses.Btn.Outline.Secondary">
-                @((MarkupString)Icons.Back)
-            </button>
-        </div>
-        <EditForm Model="@TemplateUpdate" id="netTable">
-            <DataAnnotationsValidator />
-            <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-                <div>
-                    <label>@CalcResource.name</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Name" />
-                </div>
-                <div>
-                    <label>@ResourceApp.date</label>
-                    <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="@CssClasses.Input.Text">
-                            <option value="dd.MM.yyyy">dd.MM.yyyy</option>
-                            <option value="dd/MM/yyyy" >dd/MM/yyyy</option>
-                            <option value="dd-MM-yyyy" >dd-MM-yyyy</option>
-                        <option value="dd-MM-yyyy">dd MM yyyy</option>
-                        <option value="dd.MM.yyyy">yyyy.MM.dd</option>
-                        <option value="dd/MM/yyyy">yyyy/MM/dd</option>
-                        <option value="dd-MM-yyyy">yyyy-MM-dd</option>
-                        <option value="dd-MM-yyyy">yyyy MM dd</option>
-                    </InputSelect>
-                </div>
-                <div>
-                    <label>NumberFormat</label>
-                    <InputSelect @bind-Value="TemplateUpdate.MathRound" class="@CssClasses.Input.Text">
-                        <option value="0">0</option>
-                            <option value="1">0.0</option>
-                            <option value="2">0.00</option>
-                            <option value="3">0.000</option>
-                            <option value="4">0.0000</option>
-                            <option value="4">0.00000</option>
-                    </InputSelect>
-                </div>
-                <div>
-                    <label>@CalcResource.Currency</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Currency" />
-                </div>
+
+@if (TemplateUpdate is not null)
+{
+    <div class="@CssClasses.Layout.FlexItemsCenter pb-2">
+        <button type="submit"
+                form="netTable"
+                class="@CssClasses.Btn.Outline.Success"
+                disabled="@btnSubmitDisabled">
+            @ResourceApp.save
+        </button>
+
+        <button type="button"
+                @onclick="BackAsync"
+                class="@CssClasses.Btn.Outline.Secondary"
+                disabled="@btnSubmitDisabled">
+            @((MarkupString)Icons.Back)
+        </button>
+    </div>
+
+    <EditForm Model="@TemplateUpdate" id="netTable" OnValidSubmit="HandleSubmitAsync">
+        <DataAnnotationsValidator />
+
+        <div class="@CssClasses.Grid.Col.MD4 pb-2">
+            <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.name</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Name" />
+                <ValidationMessage For="() => TemplateUpdate.Name" />
             </div>
-          
-                    <NelCalculationTemplate2 Temp="TemplateUpdate"></NelCalculationTemplate2>
+
+            <div>
+                <label class="@CssClasses.Form.Label">@ResourceApp.date</label>
+                <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="@CssClasses.Input.Text">
+                    @foreach (var dateFormat in DateFormats)
+                    {
+                        <option value="@dateFormat">@dateFormat</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div>
+                <label class="@CssClasses.Form.Label">Number format</label>
+                <InputSelect @bind-Value="TemplateUpdate.MathRound" class="@CssClasses.Input.Text">
+                    @foreach (var numberFormat in NumberFormats)
+                    {
+                        <option value="@numberFormat.Value">@numberFormat.Label</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div>
+                <label class="@CssClasses.Form.Label">@CalcResource.Currency</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Currency" />
+                <ValidationMessage For="() => TemplateUpdate.Currency" />
+            </div>
+        </div>
+
+        <NelCalculationTemplate2 Temp="TemplateUpdate"></NelCalculationTemplate2>
         <SummarySheetTemplate Temp="TemplateUpdate"></SummarySheetTemplate>
-        </EditForm>
-    }
+    </EditForm>
+}
+
 @code {
-    TemplateListPostDTO TemplateUpdate = new();
+    private static readonly string[] DateFormats =
+    [
+        "dd.MM.yyyy",
+        "dd/MM/yyyy",
+        "dd-MM-yyyy",
+        "yyyy.MM.dd",
+        "yyyy/MM/dd",
+        "yyyy-MM-dd"
+    ];
+
+    private static readonly (int Value, string Label)[] NumberFormats =
+    [
+        (0, "0"),
+        (1, "0.0"),
+        (2, "0.00"),
+        (3, "0.000"),
+        (4, "0.0000"),
+        (5, "0.00000")
+    ];
+
+    private TemplateListPostDTO TemplateUpdate = new();
+
     [Parameter] public TemplateModelDTO TempForm { get; set; } = new();
+    [Parameter] public int? DepartmentId { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
-    bool btnSubmitDisabled = false;
-    protected override void OnInitialized()
+    private bool btnSubmitDisabled;
+
+    protected override void OnParametersSet()
     {
+        TemplateUpdate = new TemplateListPostDTO();
         TempForm.CopyPropertiesTo(TemplateUpdate);
+
+        TemplateUpdate.Name ??= string.Empty;
+        TemplateUpdate.Currency ??= "€";
+
+        if (string.IsNullOrWhiteSpace(TemplateUpdate.DateFormat))
+            TemplateUpdate.DateFormat = DateFormats[0];
     }
-    async Task HandleSubmitAsync()
+
+    private async Task HandleSubmitAsync()
     {
-        bool refresh = false;
+        if (btnSubmitDisabled)
+            return;
+
         btnSubmitDisabled = true;
+        var refresh = false;
+
         try
         {
             if (TempForm.Id > 0)
             {
-                refresh = await MicroBus.Send(new UpdateTemplateCommand(TemplateUpdate, TempForm.Id, null));
+                refresh = await Dispatcher.Send(new UpdateTemplateCommand(TemplateUpdate, TempForm.Id, DepartmentId));
+                MHD.Notifications(ToastType.Update, refresh);
             }
-            else if (await MicroBus.Send(new CreateTemplateCommand(TemplateUpdate, null)) != null)
-                refresh = true;
+            else
+            {
+                var created = await Dispatcher.Send(new CreateTemplateCommand(TemplateUpdate, DepartmentId));
+                refresh = created is not null && created.Id > 0;
+                MHD.Notifications(ToastType.Add, refresh);
+            }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine(ex.Message);
+            MHD.Notifications(TempForm.Id > 0 ? ToastType.Update : ToastType.Add, false);
         }
+        finally
+        {
+            btnSubmitDisabled = false;
+        }
+
         await Callback.InvokeAsync(refresh);
     }
+
+    private Task BackAsync() => Callback.InvokeAsync(false);
 }

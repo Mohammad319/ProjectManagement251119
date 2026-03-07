@@ -1,8 +1,9 @@
-﻿using Application.Feature.Account.Commands;
+using Application.Feature.Account.Commands;
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.DTO.Account;
 
 namespace ProjectManagement.Components.ControlComponents.Accounts;
@@ -20,7 +21,11 @@ public partial class AccountUI
     protected override async Task OnParametersSetAsync()
     {
         if (GroupSelected <= 0)
+        {
+            Accounts = null;
+            _lastGroupSelected = 0;
             return;
+        }
 
         if (_lastGroupSelected != GroupSelected)
         {
@@ -31,23 +36,23 @@ public partial class AccountUI
 
     private async Task LoadAccountsAsync()
     {
+        if (GroupSelected <= 0)
+        {
+            Accounts = null;
+            return;
+        }
+
         IsLoading = true;
         await InvokeAsync(StateHasChanged);
 
         try
         {
             var result = await Dispatcher.Send(new GetAccountQuery(GroupSelected));
+            var all = result?.ToList() ?? [];
 
-            if (result is null)
-            {
-                Accounts = null;
-                return;
-            }
-
-            // ✅ فلترة صحيحة
             Accounts = IsVisibleOnly
-                ? result.Where(x => x.IsVisible).ToList()
-                : result.ToList();
+                ? all.Where(x => x.IsVisible).ToList()
+                : all;
         }
         finally
         {
@@ -62,24 +67,32 @@ public partial class AccountUI
         await LoadAccountsAsync();
     }
 
-    private void CreateForm() => EditForm(new AccountManageDTO());
-
-    private void EditForm(AccountManageDTO item)
+    private void CreateForm() => OpenForm(0, new PostAccountDTO
     {
-        var model = new PostAccountDTO
+        AccountGroupId = GroupSelected,
+        IsVisible = true,
+        Data = new AccountData()
+    }, AppLoc[LocalizerConst.New, CalcResource.account]);
+
+    private void EditForm(AccountManageDTO item) => OpenForm(
+        item.Id,
+        new PostAccountDTO
         {
             Account = item.Code,
             Name = item.Name,
             AccountGroupId = GroupSelected,
             IsVisible = item.IsVisible,
-            Data = item.Metadata,
-        };
+            Data = item.Metadata ?? new AccountData(),
+        },
+        AppLoc[LocalizerConst.Update, item.Name]);
 
+    private void OpenForm(int id, PostAccountDTO model, string title)
+    {
         DialogService.ShowComponent<AccountsFormUI>(
-            AppLoc[LocalizerConst.Update, item.Name],
+            title,
             new Dictionary<string, object>
             {
-                [nameof(AccountsFormUI.Id)] = item.Id,
+                [nameof(AccountsFormUI.Id)] = id,
                 [nameof(AccountsFormUI.Model)] = model,
                 [nameof(AccountsFormUI.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, OnSavedAsync)
@@ -89,7 +102,9 @@ public partial class AccountUI
 
     private async Task OnSavedAsync(bool ok)
     {
-        if (!ok) return;
+        if (!ok)
+            return;
+
         await LoadAccountsAsync();
     }
 

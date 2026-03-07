@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Settings" xml:space="preserve"><value>Inställningar</value></data>
+  <data name="AdminSettings" xml:space="preserve"><value>Organisationsinställningar</value></data>
+  <data name="SettingsDescription" xml:space="preserve"><value>Hantera applikationsinställningar och preferenser.</value></data>
+  <data name="Close" xml:space="preserve"><value>Stäng</value></data>
+  <data name="ToggleLanguage" xml:space="preserve"><value>Byt språk</value></data>
+  <data name="ToggleTheme" xml:space="preserve"><value>Växla tema</value></data>
+  <data name="PageNotFoundTitle" xml:space="preserve"><value>Sidan hittades inte</value></data>
+  <data name="PageNotFoundMessage" xml:space="preserve"><value>Sidan du söker finns inte eller är inte längre tillgänglig.</value></data>
+  <data name="ReconnectFirstAttempt" xml:space="preserve"><value>Ansluter till servern igen...</value></data>
+  <data name="ReconnectRetrying" xml:space="preserve"><value>Återanslutning misslyckades... försöker igen om</value></data>
+  <data name="SecondsSuffix" xml:space="preserve"><value>sekunder.</value></data>
+  <data name="ReconnectFailed" xml:space="preserve"><value>Det gick inte att återansluta. Försök igen eller ladda om sidan.</value></data>
+  <data name="Retry" xml:space="preserve"><value>Försök igen</value></data>
+  <data name="SessionPausedByServer" xml:space="preserve"><value>Sessionen har pausats av servern.</value></data>
+  <data name="Resume" xml:space="preserve"><value>Fortsätt</value></data>
+  <data name="ResumeFailed" xml:space="preserve"><value>Det gick inte att återuppta sessionen. Ladda om sidan.</value></data>
+  <data name="SettingsMenu" xml:space="preserve"><value>Inställningsmeny</value></data>
+  <data name="DepartmentsTitle" xml:space="preserve"><value>Avdelningar</value></data>
+  <data name="DepartmentsDescription" xml:space="preserve"><value>Hantera avdelningar, användare och åtkomststruktur.</value></data>
+  <data name="NewDepartment" xml:space="preserve"><value>Ny avdelning</value></data>
+  <data name="QuickAction" xml:space="preserve"><value>Snabbåtgärd</value></data>
+  <data name="OpenAllUsers" xml:space="preserve"><value>Öppna alla användare</value></data>
+  <data name="AdminUsersDescription" xml:space="preserve"><value>Visar alla tenant-användare, även användare utan avdelning.</value></data>
+  <data name="AllUsersLabel" xml:space="preserve"><value>Alla tenant-användare</value></data>
+  <data name="UsersLabel" xml:space="preserve"><value>Användare</value></data>
+  <data name="OpenUsers" xml:space="preserve"><value>Öppna användare</value></data>
+  <data name="NoDepartmentsMessage" xml:space="preserve"><value>Inga avdelningar har skapats ännu.</value></data>
+  <data name="DepartmentUsersTitle" xml:space="preserve"><value>Avdelningsanvändare</value></data>
+  <data name="AllTenantUsersTitle" xml:space="preserve"><value>Tenant-användare</value></data>
+  <data name="DepartmentUsersDescription" xml:space="preserve"><value>Granska inloggningsstatus, roller, spärrinformation och användaråtgärder.</value></data>
+  <data name="BackToDepartments" xml:space="preserve"><value>Tillbaka till avdelningar</value></data>
+  <data name="Actions" xml:space="preserve"><value>Åtgärder</value></data>
+  <data name="RecreateAuthUser" xml:space="preserve"><value>Skapa inloggning igen</value></data>
+  <data name="RemoveFromRegisterOnly" xml:space="preserve"><value>Ta bort endast inloggning</value></data>
+  <data name="AuthStatus" xml:space="preserve"><value>Inloggningsstatus</value></data>
+  <data name="UserRegistered" xml:space="preserve"><value>Ansluten</value></data>
+  <data name="UserMissingAuth" xml:space="preserve"><value>Saknar inloggning</value></data>
+  <data name="Lockout" xml:space="preserve"><value>Spärr</value></data>
+  <data name="LockoutStart" xml:space="preserve"><value>Spärr start</value></data>
+  <data name="LockoutEnd" xml:space="preserve"><value>Spärr slut</value></data>
+  <data name="Enabled" xml:space="preserve"><value>Aktiverad</value></data>
+  <data name="Disabled" xml:space="preserve"><value>Inaktiverad</value></data>
+  <data name="NoUsersFound" xml:space="preserve"><value>Inga användare hittades för detta val.</value></data>
+  <data name="RegisterUserHint" xml:space="preserve"><value>Skapa en tenant-användare och dess inloggningskonto i ett steg.</value></data>
+  <data name="EditUserHint" xml:space="preserve"><value>Uppdatera profil, avdelningstilldelning och inloggningsbegränsningar.</value></data>
+  <data name="CreateDepartmentHint" xml:space="preserve"><value>Skapa en avdelning för att gruppera användare, mappar och projekt.</value></data>
+  <data name="EditDepartmentHint" xml:space="preserve"><value>Uppdatera avdelningens namn och beskrivning.</value></data>
+  <data name="Role" xml:space="preserve"><value>Roll</value></data>
+  <data name="AllUsersHint" xml:space="preserve"><value>Öppna hela tenantens användarlista.</value></data>
+  <data name="OrganisationTypesTitle" xml:space="preserve"><value>Organisationstyper</value></data>
+  <data name="OrganisationTypesDescription" xml:space="preserve"><value>Hantera den återanvändbara typ-listan som används av organisationer.</value></data>
+  <data name="OpenOrganisationTypes" xml:space="preserve"><value>Öppna organisationstyper</value></data>
+  <data name="NoOrganisationTypesFound" xml:space="preserve"><value>Inga organisationstyper hittades för valt synlighetsfilter.</value></data>
+  <data name="ToggleVisibility" xml:space="preserve"><value>Växla synlighet</value></data>
+  <data name="NewOrganisationType" xml:space="preserve"><value>Ny organisationstyp</value></data>
+  <data name="NewCategory" xml:space="preserve"><value>Ny kategori</value></data>
+  <data name="NoOrganisationCategories" xml:space="preserve"><value>Inga organisationskategorier har skapats ännu.</value></data>
+  <data name="OrganisationOverviewTitle" xml:space="preserve"><value>Organisationsöversikt</value></data>
+  <data name="SelectOrganisationCategoryHint" xml:space="preserve"><value>Välj en kategori i trädet för att granska organisationerna som är kopplade till den.</value></data>
+  <data name="OrganisationsInCategoryDescription" xml:space="preserve"><value>Granska organisationer i vald kategori och underhåll deras uppgifter.</value></data>
+  <data name="NoOrganisationsFound" xml:space="preserve"><value>Inga organisationer hittades i denna kategori för nuvarande filter.</value></data>
+  <data name="NewOrganisation" xml:space="preserve"><value>Ny organisation</value></data>
+  <data name="BasicInformation" xml:space="preserve"><value>Grundinformation</value></data>
+  <data name="Category" xml:space="preserve"><value>Kategori</value></data>
+  <data name="Notes" xml:space="preserve"><value>Anteckningar</value></data>
+  <data name="OrganisationNotesHint" xml:space="preserve"><value>Lägg till interna anteckningar eller kommentarer som hjälper att identifiera organisationen.</value></data>
+  <data name="NoNotesAdded" xml:space="preserve"><value>Inga anteckningar har lagts till ännu.</value></data>
+  <data name="RemoveNote" xml:space="preserve"><value>Ta bort anteckning</value></data>
+  <data name="LoadingOrganisationDetails" xml:space="preserve"><value>Laddar organisationsdetaljer...</value></data>
+  <data name="NoContactsAvailable" xml:space="preserve"><value>Det finns inga kontakter för denna organisation.</value></data>
+</root>

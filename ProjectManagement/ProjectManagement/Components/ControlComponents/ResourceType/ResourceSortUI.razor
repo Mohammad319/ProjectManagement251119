@@ -1,33 +1,42 @@
-﻿
 @using BlazorMHD.UI.Components.Data.Table
-@using ProjectManagement.Client.Shared.Model.Project.Calculation
 @using ProjectManagement.Shared.DTO.ResourceType
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+@inherits AppComponentBase
 
-<div class="@CssClasses.Layout.FlexItemsCenter p-1">
-    <button @onclick="() => UpdateForm(new ResourceSortModel())" class="@CssClasses.Btn.IconButton.Success">@((MarkupString)Icons.Plus)</button>
-    <button @onclick="async ()=>await Callback.InvokeAsync()" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.Back)</button>
-        </div>
+<div class="@CssClasses.Layout.FlexItemsCenter gap-2 p-1">
+    <button @onclick="CreateNewAsync" class="@CssClasses.Btn.IconButton.Success" title="@AppLoc[nameof(ResourceApp.newItem)]">
+        @((MarkupString)Icons.Plus)
+    </button>
 
-    @if (ResourceSorts != null)
-    {
+    <button @onclick="Callback" class="@CssClasses.Btn.IconButton.Secondary" title="@AppLoc[nameof(ResourceApp.cancel)]">
+        @((MarkupString)Icons.Back)
+    </button>
+</div>
+
+@if (IsLoading)
+{
+    <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+}
+else if (ResourceSorts.Count > 0)
+{
     <MhdTable TItem="ResourceSortModel" Items="ResourceSorts">
         <MhdTableColumn Title="@string.Empty">
             <Template Context="item">
-                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
-                        <div class="@CssClasses.Layout.FlexItemsCenter">
-                        <button @onclick="() => UpdateForm(item)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
-                        <button @onclick="() => Remove(item)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
-                        </div>
-                    </AuthorizeView>
+                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
+                    <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <button @onclick="() => UpdateForm(item)" class="@CssClasses.Btn.IconButton.Warning" title="@AppLoc[nameof(ResourceApp.update)]">@Icons.Edit</button>
+                        <button @onclick="() => Remove(item)" class="@CssClasses.Btn.IconButton.Danger" title="@AppLoc[nameof(ResourceApp.delete)]">@((MarkupString)Icons.DeleteSVG)</button>
+                    </div>
+                </AuthorizeView>
             </Template>
         </MhdTableColumn>
-        <MhdTableColumn Title="@CalcResource.name" ValueSelector="u => u.Name" Sortable="true" />
-        <MhdTableColumn Title="@CalcResource.cost" ValueSelector="u => u.Cost"></MhdTableColumn>
-        <MhdTableColumn Title="@CalcResource.baseCost" ValueSelector="u => u.BaseCost"></MhdTableColumn>
-
-        </MhdTable>
-    }
+        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.name)]" ValueSelector="u => u.Name" Sortable="true" />
+        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.cost)]" ValueSelector="u => u.Cost" />
+        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.baseCost)]" ValueSelector="u => u.BaseCost" />
+    </MhdTable>
+}
+else
+{
+    <div class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-6 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+        @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+    </div>
+}

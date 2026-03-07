@@ -1,30 +1,50 @@
-﻿using Application.Feature.Calculation.StatusResource.Commands;
+using Application.Feature.Calculation.StatusResource.Commands;
 using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.DTO.Calculation;
 
-namespace ProjectManagement.Components.ControlComponents.ResourceStatus
+namespace ProjectManagement.Components.ControlComponents.ResourceStatus;
+
+public partial class ResourceFormUI
 {
-    public partial class ResourceFormUI
+    [Parameter] public StatusResourcesEntity ResStatus { get; set; } = new("new status", "#00ff00", 0, true);
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    private PostTaskStatusDTO PostStatus { get; set; } = new();
+    private bool IsLoading;
+
+    protected override void OnParametersSet()
     {
-        [Parameter] public StatusResourcesEntity ResStatus { get; set; } = new("new status" ,"#00ff00", 0, true);
-        PostTaskStatusDTO PostStatus { get; set; } = new ();
-        [Parameter] public EventCallback<bool> Callback { get; set; }
-        bool IsLoading = false;
-        protected override void OnInitialized()
+        PostStatus = new PostTaskStatusDTO();
+        PropertyCopier.CopyPropertiesTo(ResStatus, PostStatus);
+    }
+
+    private void CloseModal() => MHD.Modal.Close();
+
+    private async Task HandleSubmitAsync()
+    {
+        if (IsLoading)
+            return;
+
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
         {
-            PropertyCopier.CopyPropertiesTo(ResStatus, PostStatus);
-        }
-        private async Task HandleSubmitAsync()
-        {
-            IsLoading = true;
-            bool result = false;
+            bool result;
+
             if (ResStatus.Id == 0)
-                result = await MicroBus.Send(new CreateResourceStatusCommand(PostStatus)) > 0;
-            else result = await MicroBus.Send(new UpdateResourceStatusCommand(ResStatus.Id, PostStatus));
+                result = await Dispatcher.Send(new CreateResourceStatusCommand(PostStatus)) > 0;
+            else
+                result = await Dispatcher.Send(new UpdateResourceStatusCommand(ResStatus.Id, PostStatus));
 
             MHD.Notifications(ResStatus.Id == 0 ? ToastType.Add : ToastType.Update, result);
             await Callback.InvokeAsync(result);
+        }
+        finally
+        {
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

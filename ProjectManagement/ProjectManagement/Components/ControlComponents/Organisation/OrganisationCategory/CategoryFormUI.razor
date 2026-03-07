@@ -1,11 +1,10 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Client.Shared.ResourceFiles.APP
 @inherits AppComponentBase
 
 <div class="@CssClasses.Modal.Body">
-
-    <EditForm Model="PostOffer" OnValidSubmit="HandleSubmitAsync">
+    <EditForm id="categoryForm" Model="PostOffer" OnValidSubmit="HandleSubmitAsync">
         <DataAnnotationsValidator />
 
         <div class="mb-3">
@@ -17,21 +16,21 @@
                        disabled="@IsLoading" />
             <ValidationMessage For="() => PostOffer.Name" />
         </div>
-
-        <div class="@CssClasses.Modal.Footer">
-            <button type="submit"
-                    class="@CssClasses.Btn.Outline.Success"
-                    disabled="@IsLoading">
-                @AppLoc[nameof(ResourceApp.save)]
-            </button>
-
-            <button type="button"
-                    class="@CssClasses.Btn.Outline.Secondary"
-                    disabled="@IsLoading"
-                    @onclick="Cancel">
-                @AppLoc[nameof(ResourceApp.cancel)]
-            </button>
-        </div>
     </EditForm>
+</div>
 
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit"
+            class="@CssClasses.Btn.Outline.Success"
+            form="categoryForm"
+            disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.save)]
+    </button>
+
+    <button type="button"
+            class="@CssClasses.Btn.Outline.Secondary"
+            disabled="@IsLoading"
+            @onclick="Cancel">
+        @AppLoc[nameof(ResourceApp.cancel)]
+    </button>
 </div>

@@ -1,4 +1,4 @@
-﻿@inherits AppComponentBase
+@inherits AppComponentBase
 
 <div class="@CssClasses.Modal.Body">
     <div class="@CssClasses.Grid.Col.MD4">
@@ -38,28 +38,42 @@
             <input type="text" class="@CssClasses.Input.Text"
                    placeholder="," @bind="Separator" />
         </div>
-
-        <div class="mt-5 flex flex-wrap gap-2 items-center">
-            <InputFile OnChange="OnFileSelection" disabled="@IsBusy" />
-
-            <button class="@CssClasses.Btn.Solid.Primary"
-                    @onclick="ImportByFormatAsync"
-                    disabled="@(!CanImport)">
-                @AppLoc[nameof(ResourceApp.import)]
-            </button>
-
-            <button class="@CssClasses.Btn.Solid.Success"
-                    @onclick="Save"
-                    disabled="@(CanSave == false)">
-                @AppLoc[nameof(ResourceApp.save)]
-            </button>
-
-            @if (IsBusy)
-            {
-                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
-            }
-        </div>
     </div>
+
+    <div class="mt-5 flex flex-wrap items-center gap-2">
+        <InputFile OnChange="OnFileSelection" disabled="@IsBusy" />
+
+        <button class="@CssClasses.Btn.Solid.Primary"
+                @onclick="ImportByFormatAsync"
+                disabled="@(!CanImport)">
+            @AppLoc[nameof(ResourceApp.import)]
+        </button>
+
+        <button class="@CssClasses.Btn.Solid.Success"
+                @onclick="Save"
+                disabled="@(CanSave == false)">
+            @AppLoc[nameof(ResourceApp.save)]
+        </button>
+
+        <button class="@CssClasses.Btn.Outline.Secondary"
+                @onclick="CloseModal"
+                disabled="@IsBusy">
+            @AppLoc[nameof(ResourceApp.cancel)]
+        </button>
+
+        @if (IsBusy)
+        {
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+        }
+    </div>
+
+    @if (Groups.Count > 0)
+    {
+        <div class="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            @Groups.Count @CalcLoc[nameof(CalcResource.accountGroups)] /
+            @Groups.Sum(x => x.Accounts.Count) @CalcLoc[nameof(CalcResource.account)]
+        </div>
+    }
 
     <table class="@CssClasses.Table.Tab mt-4">
         <thead class="@CssClasses.Table.Thead">

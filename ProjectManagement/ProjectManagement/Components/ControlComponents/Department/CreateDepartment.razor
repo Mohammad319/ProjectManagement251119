@@ -1,130 +1,54 @@
-﻿@using Application.Feature.Identity.Department.Commands
 @using Microsoft.AspNetCore.Components.Forms
-@using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Client.Shared.ResourceFiles
-@using ProjectManagement.Shared.DTO.Identity
-@using ProjectManagement.Shared.Base.Users
 @inherits AppComponentBase
 
 @if (editContext is not null)
 {
-    <EditForm EditContext="editContext"
-              class="@CssClasses.Modal.Body"
-              OnValidSubmit="HandleSubmitAsync">
-
-        <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
-                <InputText class="@CssClasses.Input.Text"
-                           @bind-Value="departmentPost!.Name"
-                           disabled="@IsSaving" />
-                <ValidationMessage For="() => departmentPost!.Name" />
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="@CssClasses.Form.Label">@ResourceLoc.description:</label>
-                <InputTextArea class="@CssClasses.Input.Text"
-                               @bind-Value="departmentPost!.Description"
-                               disabled="@IsSaving" />
-                <ValidationMessage For="() => departmentPost!.Description" />
-            </div>
-
-            <div class="col-12 d-flex justify-content-end gap-2">
-                <button type="submit" class="@CssClasses.Btn.Outline.Success" disabled="@IsSaving">
-                    @AppLoc[nameof(ResourceApp.save)]
-                </button>
-
-                <button type="button" class="@CssClasses.Btn.Outline.Secondary" disabled="@IsSaving" @onclick="Close">
-                    @AppLoc[nameof(ResourceApp.cancel)]
-                </button>
-            </div>
-        </div>
-    </EditForm>
-}
-
-@code {
-    [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
-    [Parameter] public DepartmentDetailsDTO? DepartmentList { get; set; }
-
-    private DepartmentBase? departmentPost;
-    private EditContext? editContext;
-    private bool IsSaving;
-
-    private int _loadedId;
-    private string? _loadedName;
-    private string? _loadedDesc;
-
-    protected override void OnParametersSet()
-    {
-        var id = DepartmentList?.Id ?? 0;
-        var name = DepartmentList?.Name ?? string.Empty;
-        var desc = DepartmentList?.Description;
-
-        // لا تعيد تهيئة الموديل إذا نفس البيانات (حتى لا ينقطع/يرجع الإدخال)
-        if (editContext is not null &&
-            _loadedId == id &&
-            _loadedName == name &&
-            _loadedDesc == desc)
-        {
-            return;
-        }
-
-        _loadedId = id;
-        _loadedName = name;
-        _loadedDesc = desc;
-
-        departmentPost = new DepartmentBase
-        {
-            Name = name,
-            Description = desc ?? string.Empty
-        };
-
-        editContext = new EditContext(departmentPost);
-    }
-
-    private async Task Close()
-    {
-        if (OnClickCallback.HasDelegate)
-            await OnClickCallback.InvokeAsync(false);
-    }
-
-    private async Task HandleSubmitAsync()
-    {
-        if (departmentPost is null)
-        {
-            if (OnClickCallback.HasDelegate)
-                await OnClickCallback.InvokeAsync(false);
-            return;
-        }
-
-        if (IsSaving) return;
-
-        IsSaving = true;
-        try
-        {
-            departmentPost.Name = (departmentPost.Name ?? string.Empty).Trim();
-            departmentPost.Description = (departmentPost.Description ?? string.Empty).Trim();
-
-            // Update
-            if ((DepartmentList?.Id ?? 0) > 0)
+    <div class="space-y-4">
+        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
+            @if ((DepartmentList?.Id ?? 0) > 0)
             {
-                var ok = await Dispatcher.Send(new UpdateDepartmentCommand(DepartmentList!.Id, departmentPost));
-
-                if (OnClickCallback.HasDelegate)
-                    await OnClickCallback.InvokeAsync(ok);
-
-                return;
+                <span>@WebLoc["EditDepartmentHint"]</span>
             }
+            else
+            {
+                <span>@WebLoc["CreateDepartmentHint"]</span>
+            }
+        </div>
 
-            // Create
-            var newId = await Dispatcher.Send(new CreateDepartmentCommand(departmentPost));
+        <EditForm EditContext="editContext"
+                  id="createDepartmentForm"
+                  class="@CssClasses.Modal.Body"
+                  OnValidSubmit="HandleSubmitAsync">
+            <DataAnnotationsValidator />
 
-            if (OnClickCallback.HasDelegate)
-                await OnClickCallback.InvokeAsync(newId > 0);
-        }
-        finally
-        {
-            IsSaving = false;
-        }
-    }
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+                    <InputText class="@CssClasses.Input.Text"
+                               @bind-Value="departmentPost!.Name"
+                               disabled="@IsSaving" />
+                    <ValidationMessage For="() => departmentPost!.Name" />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@ResourceLoc.description:</label>
+                    <InputTextArea class="@CssClasses.Input.Text"
+                                   @bind-Value="departmentPost!.Description"
+                                   disabled="@IsSaving" />
+                    <ValidationMessage For="() => departmentPost!.Description" />
+                </div>
+            </div>
+        </EditForm>
+    </div>
+
+    <div class="@CssClasses.Modal.Footer">
+        <button type="submit" form="createDepartmentForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsSaving">
+            @AppLoc[nameof(ResourceApp.save)]
+        </button>
+
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" disabled="@IsSaving" @onclick="Close">
+            @AppLoc[nameof(ResourceApp.cancel)]
+        </button>
+    </div>
 }

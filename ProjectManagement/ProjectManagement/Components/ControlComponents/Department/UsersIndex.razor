@@ -1,65 +1,106 @@
-﻿@using BlazorMHD.UI.Components.Data.Table
+@using BlazorMHD.UI.Components.Data.Table
 @using Domain.DTO.User
-@using ProjectManagement.Shared.DTO.Identity
 @using ProjectManagement.Client.Shared.Constants
 @using ProjectManagement.Shared
 
 @inherits AppComponentBase
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <button class="@CssClasses.Btn.Outline.Secondary"
-            disabled="@IsBusy"
-            @onclick="Back">
-        @((MarkupString)Icons.Back)
-    </button>
+<div class="space-y-4">
+    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@PageTitle</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">@WebLoc["DepartmentUsersDescription"]</p>
+        </div>
+
+        <button class="@CssClasses.Btn.Outline.Secondary"
+                disabled="@IsBusy"
+                @onclick="Back">
+            @((MarkupString)Icons.Back)
+            <span class="ml-1">@WebLoc["BackToDepartments"]</span>
+        </button>
+    </div>
 
     @if (IsLoading)
     {
-        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+        </div>
+    }
+    else if (Users?.Any() == true)
+    {
+        <div class="overflow-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900" style="overflow:auto">
+            <MhdTable TItem="TenantUserDto" Items="Users">
+                <MhdTableColumn Title='@WebLoc["Actions"]'>
+                    <Template Context="user">
+                        <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                            @if (user.IsInAuth)
+                            {
+                                <button class="@CssClasses.Btn.Outline.Warning"
+                                        disabled="@IsBusy"
+                                        title="@AppLoc[nameof(ResourceApp.edit)]"
+                                        @onclick="() => EditUser(user)">
+                                    @((MarkupString)Icons.Edit)
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="@CssClasses.Btn.Outline.Success"
+                                        disabled="@IsBusy"
+                                        title='@WebLoc["RecreateAuthUser"]'
+                                        @onclick="() => RecreateUserAsync(user)">
+                                    @WebLoc["RecreateAuthUser"]
+                                </button>
+                            }
+
+                            <button class="@CssClasses.Btn.Outline.Danger"
+                                    disabled="@IsBusy"
+                                    title="@AppLoc[nameof(ResourceApp.delete)]"
+                                    @onclick="() => AskDeleteUser(user)">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+
+                            @if (user.IsInAuth || !string.IsNullOrWhiteSpace(user.IdAuth))
+                            {
+                                <button class="@CssClasses.Btn.Outline.Secondary"
+                                        disabled="@IsBusy"
+                                        title='@WebLoc["RemoveFromRegisterOnly"]'
+                                        @onclick="() => AskRemoveOnlyFromRegister(user)">
+                                    @WebLoc["RemoveFromRegisterOnly"]
+                                </button>
+                            }
+                        </div>
+                    </Template>
+                </MhdTableColumn>
+
+                <MhdTableColumn Title="@ResourceIdentity.email" ValueSelector="u => u.Email" Sortable="true" />
+                <MhdTableColumn Title="@CalcResource.name" ValueSelector="u => GetDisplayName(u)" Sortable="true" />
+                <MhdTableColumn Title='@WebLoc["Role"]' ValueSelector='u => string.IsNullOrWhiteSpace(u.Role) ? "—" : u.Role' />
+                <MhdTableColumn Title='@WebLoc["AuthStatus"]'>
+                    <Template Context="user">
+                        @if (user.IsInAuth)
+                        {
+                            <span class="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                @WebLoc["UserRegistered"]
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                                @WebLoc["UserMissingAuth"]
+                            </span>
+                        }
+                    </Template>
+                </MhdTableColumn>
+                <MhdTableColumn Title='@WebLoc["Lockout"]' ValueSelector='u => u.LockoutEnabled ? WebLoc["Enabled"].Value : WebLoc["Disabled"].Value' />
+                <MhdTableColumn Title='@WebLoc["LockoutStart"]' ValueSelector='u => FormatDate(u.LockoutStart)' />
+                <MhdTableColumn Title='@WebLoc["LockoutEnd"]' ValueSelector='u => FormatDate(u.LockoutEnd)' />
+            </MhdTable>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+            @WebLoc["NoUsersFound"]
+        </div>
     }
 </div>
-
-@if (!IsLoading && Users is not null)
-{
-    <div class="overflow-auto" style="overflow:auto">
-        <MhdTable TItem="TenantUserDto" Items="Users">
-            <MhdTableColumn Title="">
-                <Template Context="user">
-                    <div class="@CssClasses.Layout.FlexItemsCenter" style="gap:8px; flex-wrap:wrap">
-                        <button class="@CssClasses.Btn.Outline.Warning"
-                                disabled="@IsBusy"
-                                title="@AppLoc[nameof(ResourceApp.edit)]"
-                                @onclick="() => EditUser(user)">
-                            @((MarkupString)Icons.Edit)
-                        </button>
-
-                        <button class="@CssClasses.Btn.Outline.Danger"
-                                disabled="@IsBusy"
-                                title="@AppLoc[nameof(ResourceApp.delete)]"
-                                @onclick="() => AskDeleteUser(user)">
-                            @((MarkupString)Icons.DeleteSVG)
-                        </button>
-
-                        <button class="@CssClasses.Btn.Outline.Danger"
-                                disabled="@IsBusy"
-                                title="@AppLoc["removeOnlyFromRegister"]"
-                                @onclick="() => AskRemoveOnlyFromRegister(user)">
-                            @AppLoc["removeOnlyFromRegister"]
-                        </button>
-                    </div>
-                </Template>
-            </MhdTableColumn>
-
-            <MhdTableColumn Title="@ResourceIdentity.email" ValueSelector="u => u.Email" Sortable="true" />
-            <MhdTableColumn Title="@CalcResource.name" ValueSelector="@(u => (u.Firstname + " " + u.Lastname))" />
-            <MhdTableColumn Title="Role" ValueSelector="u => u.Role" />
-            <MhdTableColumn Title="LockoutStart" ValueSelector="u => u.LockoutStart" />
-            <MhdTableColumn Title="LockoutEnd" ValueSelector="u => u.LockoutEnd" />
-            <MhdTableColumn Title="Lockout" ValueSelector="u => u.LockoutEnabled" />
-        </MhdTable>
-    </div>
-}
-else if (!IsLoading)
-{
-    <div class="text-muted">@AppLoc[nameof(ResourceApp.notFoundData)]</div>
-}

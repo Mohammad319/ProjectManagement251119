@@ -1,30 +1,33 @@
-﻿@using Application.Feature.Identity.Department.Queries
 @using Domain.DTO.User
-@using Domain.Entities.Users
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.AspNetCore.Identity
 @using ProjectManagement.Client.Shared.Constants
-@using ProjectManagement.Services
 @using ProjectManagement.Shared
-@using ProjectManagement.Shared.Constant
-@using ProjectManagement.Shared.DTO.General
-@using ProjectManagement.Shared.DTO.Identity
-@using ProjectManagement.Shared.Models.Account
 @inherits AppComponentBase
 
-@inject UserManager<ApplicationUser> _userManager
-@inject ITenantUserService TenantUserService
-
-@if (Form is not null)
+@if (IsLoading)
 {
-    <div class="flex flex-col min-h-full">
-        <!-- المحتوى -->
-        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync" id="userForm" class="space-y-3">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-xs text-rose-600 bg-rose-50 dark:bg-rose-900/20 p-2 rounded-md" />
+    <div class="@CssClasses.Modal.Body">
+        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+    </div>
+}
+else if (Form is not null)
+{
+    <div class="flex flex-col gap-4">
+        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
+            @if (UserForm.Id == 0)
+            {
+                <span>@WebLoc["RegisterUserHint"]</span>
+            }
+            else
+            {
+                <span>@WebLoc["EditUserHint"]</span>
+            }
+        </div>
 
-            <div class="@CssClasses.Grid.Col.MD4">
+        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync" id="userForm" class="space-y-4">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300" />
+
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.firstname:</label>
                     <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Firstname" disabled="@IsBusy" />
@@ -42,6 +45,36 @@
                     <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Email" disabled="@IsBusy" />
                     <ValidationMessage For="() => Form.Email" />
                 </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.phone:</label>
+                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.PhoneNumber" disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.PhoneNumber" />
+                </div>
+
+                <div>
+                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.role:</label>
+                    <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.Role" disabled="@IsBusy">
+                        <option value="@PMRolesConst.Tenant.Admin">@PMResourceIdentity.Admin</option>
+                        <option value="@PMRolesConst.Tenant.SuperManger">@PMResourceIdentity.SuperManger</option>
+                        <option value="@PMRolesConst.Tenant.Manger">@PMResourceIdentity.Manger</option>
+                        <option value="@PMRolesConst.Tenant.User">@PMResourceIdentity.User</option>
+                    </InputSelect>
+                </div>
+
+                @if (Departments?.Any() == true && Form.Role != PMRolesConst.Tenant.Admin)
+                {
+                    <div>
+                        <label class="@CssClasses.Form.Label">@PMResourceIdentity.department:</label>
+                        <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.DepartmentId" disabled="@IsBusy">
+                            @foreach (var dep in Departments)
+                            {
+                                <option value="@dep.Id">@dep.Name</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => Form.DepartmentId" />
+                    </div>
+                }
 
                 <div>
                     <label class="@CssClasses.Form.Label">@PMResourceIdentity.lockoutStart:</label>
@@ -71,12 +104,6 @@
                     <ValidationMessage For="() => Form.LockoutEnd" />
                 </div>
 
-                <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.phone:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.PhoneNumber" disabled="@IsBusy" />
-                    <ValidationMessage For="() => Form.PhoneNumber" />
-                </div>
-
                 <div class="@CssClasses.Form.CheckWrapperM">
                     <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.PhoneNumberConfirmed" disabled="@IsBusy" />
                     <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.phoneNumberConfirmed</label>
@@ -86,32 +113,7 @@
                     <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.LockoutEnabled" disabled="@IsBusy" />
                     <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.logout</label>
                 </div>
-
-                @if (Departments?.Any() == true && Form.Role != PMRolesConst.Tenant.Admin)
-                {
-                    <div>
-                        <label class="@CssClasses.Form.Label">@PMResourceIdentity.department:</label>
-                        <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.DepartmentId" disabled="@IsBusy">
-                            @foreach (var dep in Departments)
-                            {
-                                <option value="@dep.Id">@dep.Name</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="() => Form.DepartmentId" />
-                    </div>
-                }
-
-                <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.role:</label>
-                    <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.Role" disabled="@IsBusy">
-                        <option value="@PMRolesConst.Tenant.Admin">@PMResourceIdentity.Admin</option>
-                        <option value="@PMRolesConst.Tenant.SuperManger">@PMResourceIdentity.SuperManger</option>
-                        <option value="@PMRolesConst.Tenant.Manger">@PMResourceIdentity.Manger</option>
-                        <option value="@PMRolesConst.Tenant.User">@PMResourceIdentity.User</option>
-                    </InputSelect>
-                </div>
             </div>
-
         </EditForm>
     </div>
 
@@ -130,144 +132,4 @@
             @AppLoc[nameof(ResourceApp.cancel)]
         </button>
     </div>
-}
-
-@code {
-    [Parameter] public EventCallback<bool> Callback { get; set; }
-    [Parameter] public TenantUserDto UserForm { get; set; } = default!;
-    [Parameter] public int? DepartmentId { get; set; }
-
-    private TenantUserDto? Form { get; set; }
-    private List<ListDTO>? Departments;
-    private IList<string> Roles = [];
-
-    private bool IsLoading = true;
-    private bool IsSaving = false;
-    private bool IsBusy => IsLoading || IsSaving;
-
-    private string? oldRole;
-
-    protected override async Task OnInitializedAsync()
-    {
-        IsLoading = true;
-
-        try
-        {
-            // normalize incoming DepartmentId
-            if (DepartmentId == 0) DepartmentId = null;
-
-            // load lookups
-            Departments = await Dispatcher.Send(new GetDepartmentsAsListQuery());
-
-            // build form
-            var sourceUser = UserForm ?? new TenantUserDto();
-            Form = new TenantUserDto
-            {
-                Email = sourceUser.Email,
-                Firstname = sourceUser.Firstname,
-                Lastname = sourceUser.Lastname,
-                DepartmentId = DepartmentId ?? sourceUser.DepartmentId,
-                LockoutEnabled = sourceUser.LockoutEnabled,
-                IdAuth = sourceUser.IdAuth,
-                LockoutStart = sourceUser.LockoutStart,
-                LockoutEnd = sourceUser.LockoutEnd,
-                PhoneNumber = sourceUser.PhoneNumber,
-                PhoneNumberConfirmed = sourceUser.PhoneNumberConfirmed,
-                Id = sourceUser.Id,
-                Username = sourceUser.Username,
-            };
-
-            await InitRolesAndDefaultsAsync();
-
-            // set role
-            Form.Role = Roles.FirstOrDefault() ?? PMRolesConst.Tenant.Manger;
-            oldRole = Form.Role;
-        }
-        finally
-        {
-            IsLoading = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
-    private async Task InitRolesAndDefaultsAsync()
-    {
-        if (Form is null) return;
-
-        // ✅ لا نغيّر DepartmentId إلا لو فعلاً null
-        if (!Form.DepartmentId.HasValue && Departments?.Any() == true)
-            Form.DepartmentId = Departments[0].Id;
-
-        if (UserForm.Id > 0 && !string.IsNullOrWhiteSpace(UserForm.Username))
-            Roles = await GetRolesAsync(UserForm.Username);
-        else
-            Roles = new List<string> { PMRolesConst.Tenant.Manger };
-    }
-
-    private async Task<IList<string>> GetRolesAsync(string username)
-    {
-        var user = await _userManager.FindByNameAsync(username);
-        if (user is null) return new List<string>();
-        return await _userManager.GetRolesAsync(user);
-    }
-
-    private void ClearLockoutStart()
-    {
-        if (Form is null) return;
-        Form.LockoutStart = null;
-    }
-
-    private void ClearLockoutEnd()
-    {
-        if (Form is null) return;
-        Form.LockoutEnd = null;
-    }
-
-    private async Task Cancel()
-    {
-        if (Callback.HasDelegate)
-            await Callback.InvokeAsync(false);
-    }
-
-    private async Task HandleSubmitAsync()
-    {
-        if (Form is null)
-        {
-            if (Callback.HasDelegate)
-                await Callback.InvokeAsync(false);
-            return;
-        }
-
-        if (IsSaving) return;
-
-        // rules
-        if (Form.Role == PMRolesConst.Tenant.Admin)
-            Form.DepartmentId = null;
-        else if (!Form.DepartmentId.HasValue)
-            return;
-
-        IsSaving = true;
-
-        try
-        {
-            Form.Email = Form.Email?.Trim();
-            Form.Firstname = Form.Firstname?.Trim();
-            Form.Lastname = Form.Lastname?.Trim();
-            Form.PhoneNumber = Form.PhoneNumber?.Trim();
-
-            bool ok;
-            if (UserForm.Id == 0)
-                ok = await TenantUserService.RegisterAsync(Form);
-            else
-                ok = await TenantUserService.UpdateUserAsync(Form);
-
-            if (Callback.HasDelegate)
-                await Callback.InvokeAsync(ok);
-        }
-        finally
-        {
-            IsSaving = false;
-            await InvokeAsync(StateHasChanged);
-        }
-    }
 }

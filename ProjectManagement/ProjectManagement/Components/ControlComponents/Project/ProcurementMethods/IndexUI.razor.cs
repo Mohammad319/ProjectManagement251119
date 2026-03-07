@@ -9,41 +9,71 @@ namespace ProjectManagement.Components.ControlComponents.Project.ProcurementMeth
 {
     public partial class IndexUI
     {
-        bool IsVisible = true;
-        List<ProcurementMethodEntity>? Status;
-        void UpdateForm(ProcurementMethodEntity model) =>
-    MHD.Modal.ShowComponent<PMFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.procurementMethods] :
-                AppLoc[LocalizerConst.Update, model.Name],
-new Dictionary<string, object> { [nameof(PMFormUI.Procurement)] = model, [nameof(PMFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate) });
+        private bool IsVisible = true;
+        private bool IsLoading = true;
+        private List<ProcurementMethodEntity> ProcurementMethods = [];
 
-        void Remove(ProcurementMethodEntity status)
+        private List<ProcurementMethodEntity> FilteredProcurementMethods =>
+            ProcurementMethods
+                .Where(x => x.IsVisible == IsVisible)
+                .OrderByDescending(x => x.SortOrder)
+                .ToList();
+
+        private void CreateForm() => UpdateForm(new ProcurementMethodEntity());
+
+        private void ToggleVisibleFilter() => IsVisible = !IsVisible;
+
+        private void UpdateForm(ProcurementMethodEntity model) =>
+            MHD.Modal.ShowComponent<PMFormUI>(
+                model.Id == 0
+                    ? AppLoc[LocalizerConst.New, CalcResource.procurementMethods]
+                    : AppLoc[LocalizerConst.Update, model.Name],
+                new Dictionary<string, object>
+                {
+                    [nameof(PMFormUI.Procurement)] = model,
+                    [nameof(PMFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+                });
+
+        private void Remove(ProcurementMethodEntity item) =>
+            MHD.DeleteMessage(item.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(item)));
+
+        private async Task ConfirmRemoveAsync(ProcurementMethodEntity item)
         {
-            MHD.DeleteMessage(status.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
-        }
-        async Task ConfirmRemoveAsync(ProcurementMethodEntity st)
-        {
-            bool result = await MicroBus.Send(new DeleteProcurementMethodCommand(st.Id));
+            bool result = await MicroBus.Send(new DeleteProcurementMethodCommand(item.Id));
             if (result)
             {
-                Status?.Remove(st);
+                ProcurementMethods.RemoveAll(x => x.Id == item.Id);
+                await InvokeAsync(StateHasChanged);
             }
+
             MHD.Notifications(ToastType.Delete, result);
-
-            StateHasChanged();
         }
-        async Task BtnUpdate(bool IsSuccess)
+
+        private async Task BtnUpdate(bool isSuccess)
         {
+            if (!isSuccess)
+                return;
+
             MHD.Modal.Close();
-            if (IsSuccess)
-            {
-                Status = await MicroBus.Send(new GetProcurementMethodsQuery());
-            }
-            StateHasChanged();
+            await LoadAsync();
         }
 
-        protected async override Task OnInitializedAsync()
+        protected override Task OnInitializedAsync() => LoadAsync();
+
+        private async Task LoadAsync()
         {
-            Status = await MicroBus.Send(new GetProcurementMethodsQuery());
+            IsLoading = true;
+            await InvokeAsync(StateHasChanged);
+
+            try
+            {
+                ProcurementMethods = await MicroBus.Send(new GetProcurementMethodsQuery()) ?? [];
+            }
+            finally
+            {
+                IsLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 }

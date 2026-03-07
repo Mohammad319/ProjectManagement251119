@@ -6,24 +6,39 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@UpdateObj" OnValidSubmit="async () => await HandleSubmitAsync()">
+<EditForm id="contractForm"
+          class="@CssClasses.Modal.Body"
+          Model="@UpdateObj"
+          OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
     <div class="flex flex-wrap items-center gap-4">
         <div class="flex flex-col">
             <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
             <InputText class="@CssClasses.Input.Text" @bind-Value="@UpdateObj.Name" />
-            <ValidationMessage For=@(() => UpdateObj.Name) />
+            <ValidationMessage For="@(() => UpdateObj.Name)" />
         </div>
+
         <div class="@CssClasses.Form.CheckWrapperM">
-            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" id="inlineFormCheck" @bind-Value="@UpdateObj.IsVisible" />
-            <label class="@CssClasses.Form.Label" for="inlineFormCheck">
+            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" id="contractVisible" @bind-Value="@UpdateObj.IsVisible" />
+            <label class="@CssClasses.Form.Label" for="contractVisible">
                 @ResourceApp.isVisible
             </label>
         </div>
+
+        <div class="flex flex-col">
+            <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
+            <InputText type="color" class="@CssClasses.Input.Color" @bind-Value="@UpdateObj.Color" />
+            <ValidationMessage For="@(() => UpdateObj.Color)" />
+        </div>
     </div>
 </EditForm>
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
-            @ResourceApp.save
-        </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick=" () => MHD.Modal.Close()">@ResourceApp.cancel</button>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="contractForm" disabled="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">
+        @ResourceApp.cancel
+    </button>
 </div>

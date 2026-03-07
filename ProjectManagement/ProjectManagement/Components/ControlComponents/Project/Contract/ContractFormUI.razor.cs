@@ -8,25 +8,44 @@ namespace ProjectManagement.Components.ControlComponents.Project.Contract
 {
     public partial class ContractFormUI
     {
-        [Parameter] public ContractEntity Contract { get; set; } = new("new", "#00ff00", 0, true);
-        PostTaskStatusDTO UpdateObj { get; set; } = new();
+        [Parameter] public ContractEntity Contract { get; set; } = new();
         [Parameter] public EventCallback<bool> Callback { get; set; }
-        bool IsLoading = false;
-        protected override void OnInitialized()
+
+        private PostTaskStatusDTO UpdateObj { get; set; } = new();
+        private bool IsLoading;
+
+        protected override void OnParametersSet()
         {
+            UpdateObj = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Contract, UpdateObj);
+
+            if (string.IsNullOrWhiteSpace(UpdateObj.Color))
+                UpdateObj.Color = "#00ff00";
         }
+
         private async Task HandleSubmitAsync()
         {
+            if (IsLoading) return;
+
             IsLoading = true;
+            try
+            {
+                bool result = Contract.Id == 0
+                    ? await MicroBus.Send(new CreateContractCommand(UpdateObj)) > 0
+                    : await MicroBus.Send(new UpdateContractCommand(Contract.Id, UpdateObj));
 
-            bool result;
-            if (Contract.Id == 0)
-                result = await MicroBus.Send(new CreateContractCommand(UpdateObj)) > 0;
-            else result = await MicroBus.Send(new UpdateContractCommand(Contract.Id,UpdateObj));
+                MHD.Notifications(Contract.Id == 0 ? ToastType.Add : ToastType.Update, result);
 
-            MHD.Notifications(Contract.Id == 0 ? ToastType.Add : ToastType.Update, result);
-            await Callback.InvokeAsync(result);
+                if (result && Callback.HasDelegate)
+                    await Callback.InvokeAsync(true);
+            }
+            finally
+            {
+                IsLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
+
+        private void Close() => MHD.Modal.Close();
     }
 }

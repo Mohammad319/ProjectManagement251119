@@ -31,7 +31,12 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private async Task GetAsync()
         {
-            if (Category?.Id is null || Category.Id <= 0) return;
+            if (Category?.Id is null || Category.Id <= 0)
+            {
+                Organistion = [];
+                return;
+            }
+
             Organistion = await Dispatcher.Send(new GetOrganisationsQuery(Category.Id, IsVisible)) ?? [];
         }
 
@@ -90,19 +95,31 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private void OrganisationDetails(ShortListOrganisationDTO obj)
         {
-            // لاحقًا
+            if (obj.Id <= 0)
+                return;
+
+            MHD.Modal.ShowComponent<OrganisationDetailsUI>(
+                obj.Name,
+                new Dictionary<string, object>
+                {
+                    [nameof(OrganisationDetailsUI.CompanyId)] = obj.Id
+                },
+                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
         }
 
         private void UpdateForm(ShortListOrganisationDTO model)
         {
+            if (Category?.Id is not > 0)
+                return;
+
             MHD.Modal.ShowComponent<OrganisationFormUI>(
                 model.Id != 0
                     ? AppLoc[LocalizerConst.Update, model.Name]
-                    : AppLoc[LocalizerConst.New, ResourceLoc.category],
+                    : AppLoc[LocalizerConst.New, AppLoc[nameof(ResourceApp.organisation)]],
                 new Dictionary<string, object>
                 {
                     [nameof(OrganisationFormUI.ID)] = model.Id,
-                    [nameof(OrganisationFormUI.CategoryID)] = Category!.Id,
+                    [nameof(OrganisationFormUI.CategoryID)] = Category.Id,
                     [nameof(OrganisationFormUI.Callback)] =
                         EventCallback.Factory.Create<bool>(this, RefreshAsync)
                 },

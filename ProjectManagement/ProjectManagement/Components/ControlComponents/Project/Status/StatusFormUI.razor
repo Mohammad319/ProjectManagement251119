@@ -1,31 +1,32 @@
-﻿@using ProjectManagement.Client.Shared.Model.Project
-@using ProjectManagement.Shared.DTO.Project
-@using ProjectManagement.Shared.Base.Project
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@StatusUpdate" OnValidSubmit="async () => await HandleSubmitAsync()">
+@inherits AppComponentBase
+
+<EditForm id="projectStatusForm" class="@CssClasses.Modal.Body" Model="@StatusUpdate" OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
     <div class="flex flex-wrap items-center gap-4">
         <div class="flex flex-col">
-            <label class="mt-2">@CalcResource.name:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@StatusUpdate.Name" />
-                    <ValidationMessage For=@(() => StatusUpdate.Name) />
-            </div>
-        <div class="@CssClasses.Form.CheckWrapperM">
-            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@StatusUpdate.IsVisible" />
-            <label class="@CssClasses.Form.Label" for="inlineFormCheck">
-                @ResourceApp.isVisible
-            </label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.name)]</label>
+            <InputText class="@CssClasses.Input.Text" @bind-Value="@StatusUpdate.Name" />
+            <ValidationMessage For="@(() => StatusUpdate.Name)" />
         </div>
+
+        <div class="@CssClasses.Form.CheckWrapperM">
+            <InputCheckbox id="projectStatusVisible" class="@CssClasses.Input.Check" @bind-Value="@StatusUpdate.IsVisible" />
+            <label class="@CssClasses.Form.Label" for="projectStatusVisible">@AppLoc[nameof(ResourceApp.isVisible)]</label>
+        </div>
+
         <div class="flex flex-col">
-            <InputText type="color" class="@CssClasses.Input.Color" @bind-value="StatusUpdate.Color" />
-            </div>
+            <label class="@CssClasses.Form.Label">@Loc[nameof(ResourceLoc.color)]</label>
+            <InputText type="color" class="@CssClasses.Input.Color" @bind-Value="StatusUpdate.Color" />
+        </div>
     </div>
 </EditForm>
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
-            @ResourceApp.save
-        </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick=" () => MHD.Modal.Close()">@ResourceApp.cancel</button>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="projectStatusForm" disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.save)]
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="CloseModal" disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.cancel)]
+    </button>
 </div>

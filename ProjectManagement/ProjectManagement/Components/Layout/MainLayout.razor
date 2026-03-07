@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@implements IDisposable
 @using Microsoft.AspNetCore.Components.Routing
 @using ProjectManagement.Services
 @inject NavigationManager Nav
@@ -41,28 +42,24 @@
 
     private RenderFragment HandleUiError(Exception ex) => builder =>
     {
-        // خزّن الخطأ مرة واحدة فقط (بدون side-effect مباشر)
         if (_pendingError is null)
         {
             _pendingError = ex;
             _dialogShown = false;
 
-            // نفّذ فتح الـ dialog بعد render
             _ = InvokeAsync(async () =>
             {
                 if (_dialogShown) return;
                 _dialogShown = true;
 #if DEBUG
-Console.Error.WriteLine(ex.ToString());
+                Console.Error.WriteLine(ex.ToString());
 #endif
 
                 var msg = "حدث خطأ في الواجهة. حاول تحديث الصفحة.";
                 ErrorDialog.Show("خطأ", msg, traceId: null);
 
-                // أعطِ UI فرصة يتنفس
                 await Task.Yield();
 
-                // Recover + force recreate boundary
                 _boundary?.Recover();
                 _pendingError = null;
                 _errorKey++;
@@ -76,11 +73,15 @@ Console.Error.WriteLine(ex.ToString());
         Nav.LocationChanged += OnLocationChanged;
     }
 
-    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _ = HandleLocationChangedAsync();
+    }
+
+    private async Task HandleLocationChangedAsync()
     {
         try
         {
-            // نعيد تطبيق الثيم من localStorage بعد التنقل
             await JS.InvokeVoidAsync("applyThemeFromStorage");
         }
         catch

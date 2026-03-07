@@ -1,12 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Shared.Model.Application
-@using ProjectManagement.Client.Shared.Repositories
 @using ProjectManagement.Client.Shared.ViewModel
+@using ProjectManagement.Services.UI
 @using ProjectManagement.Shared.Base.Application
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
-@inject ICommandDispatcher MicroBus
-@inject IUnitOfWorkRepository Repo
+@inject IApplicationValuesViewService ApplicationValuesViewService
 <div class="d-flex justify-content-between mt-1">
     <div>
         <select @onchange="Change2" class="form-select">
@@ -21,13 +20,13 @@
         </select>
     </div>
     <div>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await CallbackUpdate.InvokeAsync(null)">@((MarkupString)Icons.Back)</button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="GoBackAsync">@((MarkupString)Icons.Back)</button>
     </div>
 </div>
 
 @if (Application != null)
 {
-    <EditForm Model="@ApplicationValues" OnValidSubmit="async () => await SaveAsync()">
+    <EditForm Model="@ApplicationValues" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
         <div class="@CssClasses.Grid.Col.MD6">
             <div>
@@ -48,7 +47,7 @@
                     {
                         @if (attr.AttributeType == AttributeType.Text)
                         {
-                            <input type="text" min="@attr.ValdTextVM.Max" maxlength="@attr.ValdTextVM.Min" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            <input type="text" minlength="@attr.ValdTextVM.Min" maxlength="@attr.ValdTextVM.Max" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
                         }
                         else if (attr.AttributeType == AttributeType.Char)
                         {
@@ -56,7 +55,7 @@
                         }
                         else if (attr.AttributeType == AttributeType.TextArea)
                         {
-                            <textarea min="@attr.ValdTextVM.Max" maxlength="@attr.ValdTextVM.Min" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style"></textarea>
+                            <textarea minlength="@attr.ValdTextVM.Min" maxlength="@attr.ValdTextVM.Max" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style"></textarea>
                         }
                         else if (attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.Time)
                         {
@@ -87,32 +86,26 @@
     </EditForm>
 }
 @code {
-    List<ApplicationModel> Applications = [];
-    ApplicationModel? Application { get; set; }
+    private List<ApplicationModel> Applications = [];
+    private ApplicationModel? Application { get; set; }
+
     [Parameter] public ApplicationValuesModel ApplicationValues { get; set; } = new();
     [Parameter] public EventCallback<ApplicationValuesModel> CallbackUpdate { get; set; }
-    protected async override Task OnInitializedAsync()
+
+    protected override async Task OnInitializedAsync()
     {
-        Applications = await Repo.Application.GetApplicationsAsync(true) ?? [];
-        if (ApplicationValues.Application != null)
+        Applications = await ApplicationValuesViewService.GetApplicationsAsync(true) ?? [];
+
+        if (ApplicationValues.Application is not null)
         {
             Application = ApplicationValues.Application;
-            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
-            {
-                var savedValue = ApplicationValues.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value;
-                if (string.IsNullOrWhiteSpace(savedValue))
-                    continue;
-
-                if (attr.AttributeType == AttributeType.Bool)
-                    attr.ValueBool = bool.TryParse(savedValue, out var boolValue) && boolValue;
-                else if (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Time)
-                    attr.Date = DateTime.TryParse(savedValue, out var dateValue) ? dateValue : null;
-                else attr.Value = savedValue;
-            }
+            ApplyStoredValues(Application, ApplicationValues);
         }
     }
 
-    void Change2(ChangeEventArgs e)
+    private async Task GoBackAsync() => await CallbackUpdate.InvokeAsync(null);
+
+    private void Change2(ChangeEventArgs e)
     {
         var selectedValue = e.Value?.ToString();
         if (!string.IsNullOrWhiteSpace(selectedValue) && int.TryParse(selectedValue, out var id))
@@ -121,22 +114,78 @@
             if (Application is null)
                 return;
 
-            foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
+            ApplyDefaultValues(Application);
+        }
+    }
+
+    private void ApplyStoredValues(ApplicationModel application, ApplicationValuesModel values)
+    {
+        foreach (var attr in application.Data.Row.SelectMany(x => x.Attributes ?? []))
+        {
+            var savedValue = values.Data.Attributes.FirstOrDefault(x => x.Key == attr.ID).Value;
+            if (string.IsNullOrWhiteSpace(savedValue))
+                continue;
+
+            if (attr.AttributeType == AttributeType.Bool)
             {
-                if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double))
-                    attr.Value = attr.ValdNumberVM.Default.ToString();
-                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Text || attr.AttributeType == AttributeType.TextArea))
-                    attr.Value = attr.ValdTextVM.Default;
-                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Select))
-                    attr.Value = attr.ValdSelectVM.Values[attr.ValdSelectVM.DefaultIndex];
-                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Bool))
-                    attr.ValueBool = attr.ValdBoolVM.Default ?? false;
-                else if (!string.IsNullOrEmpty(attr.Validation) && (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime))
-                    attr.Date = attr.ValdDateVM.Default;
+                attr.ValueBool = bool.TryParse(savedValue, out var boolValue) && boolValue;
+                attr.Value = savedValue;
+            }
+            else if (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Time)
+            {
+                attr.Value = TryFormatDateValue(attr.AttributeType, savedValue);
+            }
+            else
+            {
+                attr.Value = savedValue;
             }
         }
     }
-    async Task SaveAsync()
+
+    private void ApplyDefaultValues(ApplicationModel application)
+    {
+        foreach (var attr in application.Data.Row.SelectMany(x => x.Attributes ?? []))
+        {
+            if (string.IsNullOrEmpty(attr.Validation))
+                continue;
+
+            if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
+                attr.Value = attr.ValdNumberVM.Default?.ToString();
+            else if (attr.AttributeType == AttributeType.Text || attr.AttributeType == AttributeType.TextArea)
+                attr.Value = attr.ValdTextVM.Default;
+            else if (attr.AttributeType == AttributeType.Select)
+                attr.Value = attr.ValdSelectVM.Values.Count > attr.ValdSelectVM.DefaultIndex
+                    ? attr.ValdSelectVM.Values[attr.ValdSelectVM.DefaultIndex]
+                    : string.Empty;
+            else if (attr.AttributeType == AttributeType.Bool)
+                attr.ValueBool = attr.ValdBoolVM.Default ?? false;
+            else if (attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Time)
+                attr.Value = FormatDateValue(attr.AttributeType, attr.ValdDateVM.Default);
+        }
+    }
+
+    private static string TryFormatDateValue(AttributeType type, string rawValue)
+    {
+        if (!DateTime.TryParse(rawValue, out var dateValue))
+            return rawValue;
+
+        return FormatDateValue(type, dateValue);
+    }
+
+    private static string FormatDateValue(AttributeType type, DateTime? value)
+    {
+        if (!value.HasValue)
+            return string.Empty;
+
+        return type switch
+        {
+            AttributeType.DateTime => value.Value.ToString("yyyy-MM-ddTHH:mm"),
+            AttributeType.Date => value.Value.ToString("yyyy-MM-dd"),
+            _ => value.Value.ToString("HH:mm")
+        };
+    }
+
+    private async Task SaveAsync()
     {
         if (Application is null)
             return;
@@ -146,21 +195,23 @@
         {
             if (attr.AttributeType == AttributeType.Bool)
                 attr.Value = attr.ValueBool.ToString();
-            else if (attr.AttributeType == AttributeType.Time || attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.DateTime)
-                attr.Value = attr.Date.ToString();
-            ApplicationValues.Data.Attributes.Add(attr.ID, attr.Value ?? string.Empty);
+
+            ApplicationValues.Data.Attributes[attr.ID] = attr.Value ?? string.Empty;
         }
-      ApplicationValues.ApplicationId = Application.Id; 
+
+        ApplicationValues.ApplicationId = Application.Id;
+        ApplicationValues.Application = Application;
+
         if (ApplicationValues.Id == 0)
         {
-            ApplicationValues.Id = await Repo.Application.CreateAsync(ApplicationValues);
-            ApplicationValues.Application = Application;
+            ApplicationValues.Id = await ApplicationValuesViewService.CreateAsync(ApplicationValues);
             if (ApplicationValues.Id > 0)
                 await CallbackUpdate.InvokeAsync(ApplicationValues);
-        }
-        else if (await Repo.Application.UpdateAsync(ApplicationValues))
-            await CallbackUpdate.InvokeAsync(ApplicationValues);
 
-        await CallbackUpdate.InvokeAsync(null);
+            return;
+        }
+
+        if (await ApplicationValuesViewService.UpdateAsync(ApplicationValues))
+            await CallbackUpdate.InvokeAsync(ApplicationValues);
     }
-} 
+}

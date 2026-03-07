@@ -13,8 +13,9 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private PostOrganisationCategoryDTO PostOffer { get; set; } = new();
         private bool IsLoading { get; set; }
 
-        protected override void OnInitialized()
+        protected override void OnParametersSet()
         {
+            PostOffer = new PostOrganisationCategoryDTO();
             OrganisationCategory.CopyPropertiesTo(PostOffer);
             PostOffer.CategoryId = OrganisationCategory.ParentCategoryId;
         }
@@ -58,7 +59,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             finally
             {
                 IsLoading = false;
-                await InvokeAsync(StateHasChanged); // ✅ آمن في Blazor Server
+                await InvokeAsync(StateHasChanged);
             }
         }
     }

@@ -1,189 +1,70 @@
-﻿@using Application.Feature.Organisation.OrganisationType.Commands
-@using Application.Feature.Organisation.OrganisationType.Queries
 @using BlazorMHD.UI.Components.Data.Table
-@using Domain.DTO.Category
-@using ProjectManagement.Shared.DTO.Organisation
-
-@inject ICommandDispatcher MicroBus
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+@using ProjectManagement.Shared
+@inherits OrganisationsTypeUiBase
+@inject IStringLocalizer<PMWebResource> WebLoc
 
 <div>
-    <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-        <button class="@CssClasses.Btn.IconButton.Success"
-                @onclick="NewOrganisationType"
-                disabled="@IsLoading">
-            @((MarkupString)Icons.Plus)
-        </button>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">@WebLoc[nameof(PMWebResource.OrganisationTypesTitle)]</div>
+            <div class="text-sm text-slate-600 dark:text-slate-300">@WebLoc[nameof(PMWebResource.OrganisationTypesDescription)]</div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button class="@CssClasses.Btn.IconButton.Success"
+                    @onclick="NewOrganisationType"
+                    title="@WebLoc[nameof(PMWebResource.NewOrganisationType)]"
+                    disabled="@IsLoading">
+                @((MarkupString)Icons.Plus)
+            </button>
+
+            <button class="@CssClasses.Btn.IconButton.Secondary"
+                    @onclick="ToggleVisibilityAsync"
+                    title="@WebLoc[nameof(PMWebResource.ToggleVisibility)]"
+                    disabled="@IsLoading">
+                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+            </button>
+        </div>
     </div>
 
     @if (IsLoading)
     {
         <div class="py-2">
-            @* إذا عندك كومبوننت Loader استخدمه بدل هذا *@
             <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
         </div>
     }
     else if (OrganisationTypes is null || OrganisationTypes.Count == 0)
     {
-        <div class="py-2">
-            <span>@ResourceApp.notFoundData</span>
+        <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+            @WebLoc[nameof(PMWebResource.NoOrganisationTypesFound)]
         </div>
     }
     else
     {
-        @* مثال Grid: فعّلها إذا تبغى تعرض القائمة *@
-        @* 
-        <Grid TItem="ListOrganisationTypeDTO" Items="OrganisationTypes" ShowFilter="false">
-            <Column>
-                <Template Context="item">
-                    <div class="@CssClasses.Layout.FlexItemsCenter">
-                        <button class="@CssClasses.Btn.IconButton.Warning"
-                                @onclick="() => OpenEditModal(item)">
-                            @Icons.Edit
-                        </button>
-                        <button class="@CssClasses.Btn.IconButton.Danger"
-                                @onclick="() => AskDelete(item)">
-                            @((MarkupString)Icons.DeleteSVG)
-                        </button>
-                    </div>
-                </Template>
-            </Column>
-
-            <Column Title="@CalcResource.name" ValueSelector="c => c.Name"></Column>
-        </Grid>
-        *@
-
-        <MhdTable Items="OrganisationTypes?.Where(x => x.IsVisible == IsVisible)" ShowFilter="false">
- <HeaderTemplate>
-        <th style="width:200px;" class="@CssClasses.Table.TH">
-            <div class="@CssClasses.Layout.FlexItemsCenter">
-                        <button @onclick="NewOrganisationType" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
-                <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
-            </div>
-        </th>
-        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-    </HeaderTemplate>
-    <ChildContent>
-        <MhdTableColumn>
-            <Template Context="status">
-                <div class="@CssClasses.Layout.FlexItemsCenter">
-                            <button @onclick="() => OpenEditModal(status)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
-                   <button @onclick="() => AskDelete(status)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
-                </div>
-            </Template>
-        </MhdTableColumn>
-        <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
-    </ChildContent>
-</MhdTable>
-
+        <MhdTable Items="OrganisationTypes" ShowFilter="false">
+            <HeaderTemplate>
+                <th style="width:200px;" class="@CssClasses.Table.TH">@WebLoc[nameof(PMWebResource.Actions)]</th>
+                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+            </HeaderTemplate>
+            <ChildContent>
+                <MhdTableColumn>
+                    <Template Context="status">
+                        <div class="@CssClasses.Layout.FlexItemsCenter">
+                            <button @onclick="() => OpenEditModal(status)"
+                                    class="@CssClasses.Btn.IconButton.Warning"
+                                    title="@AppLoc[nameof(ResourceApp.edit)]">
+                                @Icons.Edit
+                            </button>
+                            <button @onclick="() => AskDelete(status)"
+                                    class="@CssClasses.Btn.IconButton.Danger"
+                                    title="@AppLoc[nameof(ResourceApp.delete)]">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+                        </div>
+                    </Template>
+                </MhdTableColumn>
+                <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
+            </ChildContent>
+        </MhdTable>
     }
 </div>
-
-@code {
-    private List<ListOrganisationTypeDTO>? OrganisationTypes;
-    private bool IsLoading;
-    private bool IsVisible = true;
-
-    protected override async Task OnInitializedAsync()
-        => await ReloadAsync();
-
-    private void NewOrganisationType()
-        => OpenModal(new ListOrganisationTypeDTO());
-
-    private void OpenEditModal(ListOrganisationTypeDTO item)
-        => OpenModal(item);
-
-    private void OpenModal(ListOrganisationTypeDTO model)
-    {
-        // نرسل DTO للـ Form ويُعيد لنا نفس DTO بعد التعديل
-        MHD.Modal.ShowComponent<OrganisationTypeFormUI>(
-            AppLoc[LocalizerConst.New, ResourceIdentity.customerGroup],
-            new Dictionary<string, object>
-            {
-                [nameof(OrganisationTypeFormUI.IsLoading)] = IsLoading,
-                [nameof(OrganisationTypeFormUI.CustomerGroup)] = model,
-                [nameof(OrganisationTypeFormUI.OnValidSubmit)] =
-                    EventCallback.Factory.Create<ListOrganisationTypeDTO>(this, HandleSubmitAsync),
-            });
-    }
-
-    private async Task HandleSubmitAsync(ListOrganisationTypeDTO model)
-    {
-        if (IsLoading) return;
-        if (model is null) return;
-
-        IsLoading = true;
-        try
-        {
-            // تحويل UI-DTO إلى DTO الخاص بالأوامر
-            PostOrganisationTypeDTO entity = new();
-            PropertyCopier.CopyPropertiesTo(model, entity);
-
-            bool ok;
-            if (model.Id == 0)
-                ok = await MicroBus.Send(new CreateOrganisationTypeCommand(entity)) > 0;
-            else
-                ok = await MicroBus.Send(new UpdateOrganisationTypeCommand(entity, model.Id));
-
-            if (ok)
-                await ReloadAsync();
-
-            // إشعار حفظ/تعديل
-            MHD.Notifications(model.Id == 0 ? ToastType.Add : ToastType.Update, ok);
-        }
-        finally
-        {
-            IsLoading = false;
-            MHD.Modal.Close();
-            StateHasChanged();
-        }
-    }
-
-    private void AskDelete(ListOrganisationTypeDTO item)
-    {
-        if (item is null) return;
-
-        MHD.DeleteMessage(
-            item.Name,
-            EventCallback.Factory.Create(this, () => ConfirmDeleteAsync(item)));
-    }
-
-    private async Task ConfirmDeleteAsync(ListOrganisationTypeDTO item)
-    {
-        if (IsLoading) return;
-        if (item is null) return;
-
-        IsLoading = true;
-        try
-        {
-            var ok = await MicroBus.Send(new DeleteOrganisationTypeCommand(item.Id));
-            if (ok)
-            {
-                OrganisationTypes?.Remove(item);
-                // لا نحتاج Reload إذا حذفنا من القائمة محلياً
-                StateHasChanged();
-            }
-
-            MHD.Notifications(ToastType.Delete, ok);
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private async Task ReloadAsync()
-    {
-        IsLoading = true;
-        try
-        {
-            OrganisationTypes = await MicroBus.Send(new GetAllOrganisationsTypeQuery(IsVisible));
-        }
-        finally
-        {
-            IsLoading = false;
-            StateHasChanged();
-        }
-    }
-}

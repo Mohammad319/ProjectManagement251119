@@ -1,10 +1,17 @@
-﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Shared.DTO.App.List
 @using ProjectManagement.Shared.DTO.Organisation
+@using ProjectManagement.Shared
 @attribute [Authorize]
 
 <div class="@CssClasses.Modal.Body">
-    @if (Company is not null)
+    @if (Company is null)
+    {
+        <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+            @WebLoc[nameof(PMWebResource.LoadingOrganisationDetails)]
+        </div>
+    }
+    else
     {
         <div class="flex justify-between">
             <ul class="@CssClasses.Tabs.UL" role="tablist">
@@ -22,7 +29,7 @@
 
         @if (Part == 1)
         {
-            <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 p-2 text-sm">
+            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 p-2 text-sm md:grid-cols-4">
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.name</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Company.Name</dd>
 
@@ -52,7 +59,7 @@
 
                 @if (Company.Notes is not null)
                 {
-                    foreach (var note in Company.Notes)
+                    foreach (var note in Company.Notes.Where(x => !string.IsNullOrWhiteSpace(x)))
                     {
                         <dt class="font-medium text-gray-700 dark:text-gray-300">@CalcResource.note</dt>
                         <dd class="text-gray-900 dark:text-gray-100">@note</dd>
@@ -62,7 +69,7 @@
         }
         else if (Part == 2)
         {
-            <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2 p-2 text-sm">
+            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 p-2 text-sm md:grid-cols-4">
                 <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.rating</dt>
                 <dd class="text-gray-900 dark:text-gray-100">@Company.Rating</dd>
 
@@ -87,9 +94,9 @@
         }
         else if (Part == 3)
         {
-            <dl>
-                <dt class="@CssClasses.Grid.Col.MD4">@ResourceLoc.baseCategory</dt>
-                <dd class="@CssClasses.Grid.Col.MD8">@Company.Category</dd>
+            <dl class="grid grid-cols-1 gap-y-2 p-2 text-sm md:grid-cols-4">
+                <dt class="font-medium text-gray-700 dark:text-gray-300">@ResourceLoc.baseCategory</dt>
+                <dd class="text-gray-900 dark:text-gray-100 md:col-span-3">@Company.Category</dd>
             </dl>
         }
         else if (Part == 4)
@@ -133,6 +140,18 @@
                     </tbody>
                 </table>
             }
+            else
+            {
+                <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+                    @WebLoc[nameof(PMWebResource.NoContactsAvailable)]
+                </div>
+            }
         }
     }
+</div>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">
+        @WebLoc[nameof(PMWebResource.Close)]
+    </button>
 </div>

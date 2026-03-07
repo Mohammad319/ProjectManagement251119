@@ -1,28 +1,27 @@
-﻿@using ProjectManagement.Client.Shared.Model.Project
-@using ProjectManagement.Shared.DTO.Project
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+@inherits AppComponentBase
 
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@UpdateObj" OnValidSubmit="async () => await HandleSubmitAsync()">
+<EditForm id="projectTypeForm" class="@CssClasses.Modal.Body" Model="@UpdateObj" OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
     <div class="flex flex-wrap items-center gap-4">
         <div class="flex flex-col">
-            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.name)]</label>
             <InputText class="@CssClasses.Input.Text" @bind-Value="@UpdateObj.Name" />
-            <ValidationMessage For=@(() => UpdateObj.Name) />
-    </div>
+            <ValidationMessage For="@(() => UpdateObj.Name)" />
+        </div>
+
         <div class="@CssClasses.Form.CheckWrapperM">
-            <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" id="inlineFormCheck" @bind-Value="@UpdateObj.IsVisible" />
-            <label class="@CssClasses.Form.Label" for="inlineFormCheck">
-                    @ResourceApp.isVisible
-            </label>
+            <InputCheckbox id="projectTypeVisible" class="@CssClasses.Input.Check" @bind-Value="@UpdateObj.IsVisible" />
+            <label class="@CssClasses.Form.Label" for="projectTypeVisible">@AppLoc[nameof(ResourceApp.isVisible)]</label>
         </div>
     </div>
-    </EditForm>
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
-            @ResourceApp.save
-        </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick=" () => MHD.Modal.Close()">@ResourceApp.cancel</button>
+</EditForm>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="projectTypeForm" disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.save)]
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="CloseModal" disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.cancel)]
+    </button>
 </div>

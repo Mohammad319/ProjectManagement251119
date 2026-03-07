@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.SignalR;
 using Persistence.Factory;
 using Persistence.Interceptors;
 using ProjectManagement.BlazorServer;
-using ProjectManagement.Client.DependencyInjection;
 using ProjectManagement.Services;
 using ProjectManagement.SignalR;
 
@@ -27,7 +26,7 @@ public static class ProjectServicesRegistrationExtensions
         services.AddRazorPages();
         services.AddHttpClient();
         services.AddApiVersioning();
-        services.AddClientServices();
+        services.AddProjectWebUiServices();
 
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());

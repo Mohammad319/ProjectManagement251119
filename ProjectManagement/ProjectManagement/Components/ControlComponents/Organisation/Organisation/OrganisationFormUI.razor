@@ -1,4 +1,4 @@
-﻿@using Application.Feature.Organisation.Organisation.Commands
+@using Application.Feature.Organisation.Organisation.Commands
 @using Application.Feature.Organisation.Organisation.Queries
 @using Application.Feature.Organisation.OrganisationCategory.Queries
 @using Application.Feature.Organisation.OrganisationType.Queries
@@ -15,13 +15,14 @@
 @using ProjectManagement.Shared.DTO.Organisation
 @using ProjectManagement.Shared.Base.Organisation
 @using System.Text.Json
+@using ProjectManagement.Shared
 
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminSuperManger)]
 
 @if (PostCompany is not null)
 {
     <div class="@CssClasses.Modal.Body">
-        <EditForm Model="@PostCompany" OnValidSubmit="HandleSubmitAsync" id="custForm">
+        <EditForm Model="@PostCompany" OnValidSubmit="HandleSubmitAsync" id="organisationForm">
             <DataAnnotationsValidator />
 
             <div class="flex justify-between">
@@ -103,23 +104,43 @@
                         <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Mobile" />
                         <ValidationMessage For="@(() => PostCompany.Mobile)" />
                     </div>
-
-                    <div>
-                        <button type="button"
-                                class="@CssClasses.Btn.Solid.Primary mt-6"
-                                @onclick="() => PostCompany.Notes.Add(string.Empty)">
-                            @AppLoc[LocalizerConst.New, CalcResource.note];
-                        </button>
-                    </div>
                 </div>
 
-                <div>
-                    @for (int o = 0; o < PostCompany.Notes.Count; o++)
-                    {
+                <div class="mt-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                    <div class="mb-3 flex items-center justify-between gap-2">
                         <div>
-                            <label class="@CssClasses.Form.Label">@CalcResource.note @(o + 1)</label>
-                            <input type="text" class="@CssClasses.Input.Text" @bind="PostCompany.Notes[o]" />
+                            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">@WebLoc[nameof(PMWebResource.Notes)]</div>
+                            <div class="text-sm text-slate-600 dark:text-slate-300">@WebLoc[nameof(PMWebResource.OrganisationNotesHint)]</div>
                         </div>
+                        <button type="button"
+                                class="@CssClasses.Btn.Solid.Primary"
+                                @onclick="AddNote">
+                            @AppLoc[LocalizerConst.New, CalcResource.note]
+                        </button>
+                    </div>
+
+                    @if (PostCompany.Notes.Count == 0)
+                    {
+                        <div class="text-sm text-slate-500 dark:text-slate-400">@WebLoc[nameof(PMWebResource.NoNotesAdded)]</div>
+                    }
+                    else
+                    {
+                        @for (int o = 0; o < PostCompany.Notes.Count; o++)
+                        {
+                            var noteIndex = o;
+                            <div class="mb-3 flex items-start gap-2">
+                                <div class="flex-1">
+                                    <label class="@CssClasses.Form.Label">@CalcResource.note @(noteIndex + 1)</label>
+                                    <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Notes[noteIndex]" />
+                                </div>
+                                <button type="button"
+                                        class="@CssClasses.Btn.IconButton.Danger mt-6"
+                                        title="@WebLoc[nameof(PMWebResource.RemoveNote)]"
+                                        @onclick="() => RemoveNote(noteIndex)">
+                                    @((MarkupString)Icons.DeleteSVG)
+                                </button>
+                            </div>
+                        }
                     }
                 </div>
             }
@@ -197,7 +218,7 @@
                             {
                                 foreach (var category in Categories.Where(x => x.ParentCategoryId == null))
                                 {
-                                    <option value="@category.Id">@category.Name</option>
+                                    <option value="@category.Id" selected="@(CategorySelected?.Id == category.Id)">@category.Name</option>
                                 }
                             }
                         </select>
@@ -233,7 +254,7 @@
     </div>
 
     <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="custForm" disabled="@IsLoading">
+        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="organisationForm" disabled="@IsLoading">
             @ResourceApp.save
         </button>
         <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">

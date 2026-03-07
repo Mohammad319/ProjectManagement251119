@@ -6,24 +6,39 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@CompensationUpdate" OnValidSubmit="async () => await HandleSubmitAsync()">
+<EditForm id="compensationForm"
+          class="@CssClasses.Modal.Body"
+          Model="@CompensationUpdate"
+          OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
     <div class="flex flex-wrap items-center gap-4">
         <div class="flex flex-col">
             <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
             <InputText class="@CssClasses.Input.Text" @bind-Value="@CompensationUpdate.Name" />
-            <ValidationMessage For=@(() => CompensationUpdate.Name) />
+            <ValidationMessage For="@(() => CompensationUpdate.Name)" />
         </div>
+
         <div class="@CssClasses.Form.CheckWrapperM">
             <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@CompensationUpdate.IsVisible" />
-            <label class="@CssClasses.Form.Label" for="inlineFormCheck">
+            <label class="@CssClasses.Form.Label">
                 @ResourceApp.visible
             </label>
         </div>
+
+        <div class="flex flex-col">
+            <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
+            <InputText type="color" class="@CssClasses.Input.Color" @bind-Value="@CompensationUpdate.Color" />
+            <ValidationMessage For="@(() => CompensationUpdate.Color)" />
+        </div>
     </div>
-    </EditForm>
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
-            @ResourceApp.save
-        </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
-    </div>
+</EditForm>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="compensationForm" disabled="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">
+        @ResourceApp.cancel
+    </button>
+</div>

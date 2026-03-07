@@ -8,26 +8,63 @@
 @inject MhdServices MHD
 @inject IStringLocalizer<ResourceApp> AppLoc
 
- <MhdTable TItem="ContractEntity" Items="ContractList?.Where(x => x.IsVisible == IsVisible)?.OrderByDescending(x => x.SortOrder)"
-      ShowFilter="false">
-    <HeaderTemplate>
-        <th style="width:200px;" class="@CssClasses.Table.TH">
-            <div class="@CssClasses.Layout.FlexItemsCenter">
-                <button @onclick="@(() => UpdateForm(new ContractEntity("new status" ,"#00ff00", 0, true)))" class="@CssClasses.Btn.IconButton.Success">@Icons.Plus2</button>
-                <button @onclick="() => IsVisible = !IsVisible" class="@CssClasses.Btn.IconButton.Secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</button>
-            </div>
-        </th>
-        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-    </HeaderTemplate>
-    <ChildContent>
-        <MhdTableColumn>
-            <Template Context="status">
+@if (IsLoading)
+{
+    <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+}
+else if (FilteredContractList.Count > 0)
+{
+    <MhdTable TItem="ContractEntity" Items="FilteredContractList" ShowFilter="false">
+        <HeaderTemplate>
+            <th style="width:200px;" class="@CssClasses.Table.TH">
                 <div class="@CssClasses.Layout.FlexItemsCenter">
-                    <button @onclick="() => UpdateForm(status)" class="@CssClasses.Btn.IconButton.Warning">@Icons.Edit</button>
-                   <button @onclick="() => Remove(status)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                    <button @onclick="CreateForm"
+                            class="@CssClasses.Btn.IconButton.Success"
+                            title="@AppLoc[LocalizerConst.New, CalcResource.projectContract]"
+                            aria-label="@AppLoc[LocalizerConst.New, CalcResource.projectContract]">
+                        @Icons.Plus2
+                    </button>
+                    <button @onclick="ToggleVisibleFilter"
+                            class="@CssClasses.Btn.IconButton.Secondary"
+                            title="@AppLoc[nameof(ResourceApp.isVisible)]"
+                            aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
+                        @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+                    </button>
                 </div>
-            </Template>
-        </MhdTableColumn>
-        <MhdTableColumn Title="" ValueSelector="c => c.Name"></MhdTableColumn>
-    </ChildContent>
-</MhdTable> 
+            </th>
+            <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+        </HeaderTemplate>
+        <ChildContent>
+            <MhdTableColumn>
+                <Template Context="item">
+                    <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <button @onclick="() => UpdateForm(item)"
+                                class="@CssClasses.Btn.IconButton.Warning"
+                                title="@AppLoc[LocalizerConst.Update, item.Name]"
+                                aria-label="@AppLoc[LocalizerConst.Update, item.Name]">
+                            @Icons.Edit
+                        </button>
+                        <button @onclick="() => Remove(item)"
+                                class="@CssClasses.Btn.IconButton.Danger"
+                                title="@AppLoc[nameof(ResourceApp.delete)]"
+                                aria-label="@AppLoc[nameof(ResourceApp.delete)]">
+                            @((MarkupString)Icons.DeleteSVG)
+                        </button>
+                    </div>
+                </Template>
+            </MhdTableColumn>
+            <MhdTableColumn Title="@CalcResource.name">
+                <Template Context="item">
+                    <span style="width:25px; height:25px; background-color:@item.Color; display:inline-block; border-radius:9999px; margin-right:8px;"></span>
+                    @item.Name
+                </Template>
+            </MhdTableColumn>
+        </ChildContent>
+    </MhdTable>
+}
+else
+{
+    <div class="p-3 text-sm text-slate-400">
+        @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+    </div>
+}

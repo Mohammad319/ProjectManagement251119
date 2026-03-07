@@ -1,4 +1,4 @@
-﻿@using Domain.Entities.Application
+@using Domain.Entities.Application
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Shared.Model.Application
 @using ProjectManagement.Shared
@@ -8,11 +8,11 @@
 @inherits AppComponentBase
 @inject ICommandDispatcher MicroBus
 
-<div class="container">
+<div class="space-y-4">
     @if (AttributeForm == null)
     {
-        <nav>
-            <div class="flex space-x-2 border-b border-gray-300" role="tablist">
+        <nav class="overflow-x-auto">
+            <div class="flex min-w-max space-x-2 border-b border-gray-300 pb-1 dark:border-gray-700" role="tablist">
                 <button class="px-4 py-2 text-sm font-medium border-b-2 transition duration-150 ease-in-out
                        @(PartPage == 0 ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300")"
                         @onclick="() => PartPage = 0">
@@ -265,61 +265,3 @@
         <AttributeFormUI Attribute="@AttributeForm" Callback="CallBackField"></AttributeFormUI>
     }
 </div>
-@code {
-    [Parameter] public RowEntity RowParameter { get; set; } = new();
-    [Parameter] public int PartPage { get; set; } = 0;
-
-    RowEntity RowUpdate { get; set; } = new();
-    AttributeBase AttributeForm = new();
-    StyleVM Style { get; set; } = new StyleVM();
-    StyleVM StyleRow { get; set; } = new StyleVM();
-    [Parameter] public EventCallback<RowEntity> Callback { get; set; }
-    bool IsLoading = false;
-
-    string StyleStr = string.Empty;
-    string StyleRowStr = string.Empty;
-    int Part = 0;
-    void updateStyle()
-    {
-        StyleStr = Style.GetString();
-        StyleRowStr = StyleRow.GetString();
-    }
-
-    protected override void OnInitialized()
-    {
-        Style.Set(RowParameter.Style);
-        StyleRow.Set(RowParameter.StyleRow);
-        StyleStr = Style.GetString();
-        StyleRowStr = StyleRow.GetString();
-        PropertyCopier.CopyPropertiesTo(RowParameter, RowUpdate);
-    }
-    private async Task HandleSubmitAsync()
-    {
-        RowUpdate.Style = Style.GetString();
-        RowUpdate.StyleRow = StyleRow.GetString();
-        await Callback.InvokeAsync(RowUpdate);
-    }
-    void CallBackField(AttributeBase attr)
-    {
-        AttributeForm = new();
-        if (attr == null) return;
-        if (attr.ID == Guid.Empty){
-            attr.ID = Guid.NewGuid();
-            RowUpdate.Attributes.Add(attr);
-        }
-        else{
-            var oldAttr = RowUpdate.Attributes.FirstOrDefault(x=>x.ID == attr.ID);
-            if (oldAttr != null) attr.CopyPropertiesTo(oldAttr);
-        }
-    }
-    void Remove(AttributeBase attr)
-    {
-        @* MHD.DeleteMessage(attr.AttributeType.ToString(), () => RemoveAsync(attr)); *@
-    }
-    bool RemoveAsync(AttributeBase st)
-    {
-        RowUpdate.Attributes.Remove(st);
-        StateHasChanged();
-        return true;
-    }
-}

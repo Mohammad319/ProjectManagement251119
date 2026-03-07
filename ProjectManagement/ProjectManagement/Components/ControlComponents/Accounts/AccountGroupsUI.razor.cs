@@ -1,4 +1,4 @@
-﻿using Application.Feature.Account.Commands;
+using Application.Feature.Account.Commands;
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
@@ -14,27 +14,55 @@ public partial class AccountGroupsUI
 {
     private int? GroupSelected;
     private List<ListDTO>? Groups;
+    private bool IsLoading;
 
     protected override async Task OnInitializedAsync()
     {
-        Groups = await LoadGroupsAsync();
+        await RefreshGroupsAsync();
     }
 
-    private Task<List<ListDTO>> LoadGroupsAsync() =>
-        Dispatcher.Send(new GetAccountGroupsQuery());
+    private async Task<List<ListDTO>> LoadGroupsAsync() =>
+        await Dispatcher.Send(new GetAccountGroupsQuery());
+
+    private async Task RefreshGroupsAsync()
+    {
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            Groups = await LoadGroupsAsync();
+
+            if (GroupSelected.HasValue && Groups?.Any(x => x.Id == GroupSelected.Value) == true)
+                return;
+
+            GroupSelected = Groups?.FirstOrDefault()?.Id;
+        }
+        finally
+        {
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
     private async Task ChangeAccountGroupSelectedAsync(ListDTO item)
     {
-        GroupSelected = null;
-        await InvokeAsync(StateHasChanged);
+        if (GroupSelected == item.Id)
+            return;
 
         GroupSelected = item.Id;
+        await InvokeAsync(StateHasChanged);
     }
 
     private void ImportForm() =>
         DialogService.ShowComponent<AccountImportFromFile>(
             AppLoc[LocalizerConst.Import, CalcResource.accountGroups],
-            Icons.ImportFromFile);
+            new Dictionary<string, object>
+            {
+                [nameof(AccountImportFromFile.OnSaved)] =
+                    EventCallback.Factory.Create<bool>(this, OnImportSavedAsync)
+            },
+            DialogSize.ExtraLarge);
 
     private void CreateForm()
     {
@@ -63,12 +91,20 @@ public partial class AccountGroupsUI
             });
     }
 
+    private async Task OnImportSavedAsync(bool refresh)
+    {
+        if (!refresh)
+            return;
+
+        await RefreshGroupsAsync();
+    }
+
     private async Task RefreshAsync(bool refresh)
     {
-        if (!refresh) return;
+        if (!refresh)
+            return;
 
-        Groups = await LoadGroupsAsync();
-        await InvokeAsync(StateHasChanged);
+        await RefreshGroupsAsync();
     }
 
     private void Remove(ListDTO item) =>
@@ -85,7 +121,7 @@ public partial class AccountGroupsUI
             Groups?.Remove(item);
 
             if (GroupSelected == item.Id)
-                GroupSelected = null;
+                GroupSelected = Groups?.FirstOrDefault()?.Id;
 
             await InvokeAsync(StateHasChanged);
         }

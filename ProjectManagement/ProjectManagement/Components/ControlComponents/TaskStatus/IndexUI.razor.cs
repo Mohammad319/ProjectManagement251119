@@ -1,51 +1,87 @@
-﻿using Application.Feature.Calculation.TaskStatus.Commands;
+using Application.Feature.Calculation.TaskStatus.Commands;
 using Application.Feature.Calculation.TaskStatus.Queries;
 using Domain.Entities.Calculation;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles;
 
-namespace ProjectManagement.Components.ControlComponents.TaskStatus
+namespace ProjectManagement.Components.ControlComponents.TaskStatus;
+
+public partial class IndexUI
 {
-    public partial class IndexUI
+    private bool IsVisible = true;
+    private bool IsLoading;
+    private List<TaskStatusEntity>? Status;
+
+    private IEnumerable<TaskStatusEntity> VisibleStatuses =>
+        (Status ?? [])
+            .Where(x => x.IsVisible == IsVisible)
+            .OrderByDescending(x => x.SortOrder);
+
+    protected override async Task OnInitializedAsync()
     {
+        await LoadStatusesAsync();
+    }
 
-        bool IsVisible = true;
-        List<TaskStatusEntity>? Status;
+    private async Task LoadStatusesAsync()
+    {
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
 
-        void UpdateForm(TaskStatusEntity model) =>
-            MHD.Modal.ShowComponent<TaskFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, ResourceLoc.taskStatus] :
-                AppLoc[LocalizerConst.Update, model.Name],
-        new Dictionary<string, object> { [nameof(TaskFormUI.Status)] = model, [nameof(TaskFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate) });
-
-        void Remove(TaskStatusEntity status)
+        try
         {
-            MHD.DeleteMessage(status.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
+            Status = await Dispatcher.Send(new GetTaskStatusQuery());
         }
-
-        async Task ConfirmRemoveAsync(TaskStatusEntity st)
+        finally
         {
-            bool result = await MicroBus.Send(new DeleteTaskStatusCommand(st.Id));
-            if (result)
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task CreateNewAsync()
+    {
+        UpdateForm(new TaskStatusEntity("New status", "#00ff00", 0, true));
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleVisibleAsync()
+    {
+        IsVisible = !IsVisible;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateForm(TaskStatusEntity model) =>
+        MHD.Modal.ShowComponent<TaskFormUI>(
+            model.Id == 0 ? AppLoc[LocalizerConst.New, ResourceLoc.taskStatus] : AppLoc[LocalizerConst.Update, model.Name],
+            new Dictionary<string, object>
             {
-                Status?.Remove(st);
-                StateHasChanged();
-            }
-            MHD.Notifications(ToastType.Delete, result);
+                [nameof(TaskFormUI.Status)] = model,
+                [nameof(TaskFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdateAsync)
+            });
+
+    private void Remove(TaskStatusEntity status)
+    {
+        MHD.DeleteMessage(status.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(status)));
+    }
+
+    private async Task ConfirmRemoveAsync(TaskStatusEntity st)
+    {
+        var result = await Dispatcher.Send(new DeleteTaskStatusCommand(st.Id));
+
+        if (result)
+        {
+            Status?.Remove(st);
+            await InvokeAsync(StateHasChanged);
         }
 
-        async Task BtnUpdate(bool IsSuccess)
-        {
-            MHD.Modal.Close();
-            if (IsSuccess)
-            {
-                Status = await MicroBus.Send(new GetTaskStatusQuery());
-                StateHasChanged();
-            }
-        }
+        MHD.Notifications(ToastType.Delete, result);
+    }
 
-        protected async override Task OnInitializedAsync()
-        {
-            Status = await MicroBus.Send(new GetTaskStatusQuery());
-        }
+    private async Task BtnUpdateAsync(bool isSuccess)
+    {
+        MHD.Modal.Close();
+
+        if (isSuccess)
+            await LoadStatusesAsync();
     }
 }

@@ -9,42 +9,71 @@ namespace ProjectManagement.Components.ControlComponents.Project.Contract
 {
     public partial class IndexUI
     {
-        bool IsVisible = true;
+        private bool IsVisible = true;
+        private bool IsLoading = true;
+        private List<ContractEntity> ContractList = [];
 
-        List<ContractEntity>? ContractList;
-        void UpdateForm(ContractEntity model) =>
-    MHD.Modal.ShowComponent<ContractFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectContract] :
-                AppLoc[LocalizerConst.Update, model.Name],
-new Dictionary<string, object> { [nameof(ContractFormUI.Contract)] = model, [nameof(ContractFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate) });
+        private List<ContractEntity> FilteredContractList =>
+            ContractList
+                .Where(x => x.IsVisible == IsVisible)
+                .OrderByDescending(x => x.SortOrder)
+                .ToList();
 
-        void Remove(ContractEntity model)
-        {
+        private void CreateForm() => UpdateForm(new ContractEntity());
+
+        private void ToggleVisibleFilter() => IsVisible = !IsVisible;
+
+        private void UpdateForm(ContractEntity model) =>
+            MHD.Modal.ShowComponent<ContractFormUI>(
+                model.Id == 0
+                    ? AppLoc[LocalizerConst.New, CalcResource.projectContract]
+                    : AppLoc[LocalizerConst.Update, model.Name],
+                new Dictionary<string, object>
+                {
+                    [nameof(ContractFormUI.Contract)] = model,
+                    [nameof(ContractFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+                });
+
+        private void Remove(ContractEntity model) =>
             MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
-        }
-        async Task ConfirmRemoveAsync(ContractEntity model)
+
+        private async Task ConfirmRemoveAsync(ContractEntity model)
         {
             bool result = await MicroBus.Send(new DeleteContractCommand(model.Id));
             if (result)
             {
-                ContractList?.Remove(model);
+                ContractList.RemoveAll(x => x.Id == model.Id);
+                await InvokeAsync(StateHasChanged);
             }
+
             MHD.Notifications(ToastType.Delete, result);
-
-            StateHasChanged();
         }
-        async Task BtnUpdate(bool IsSuccess)
+
+        private async Task BtnUpdate(bool isSuccess)
         {
+            if (!isSuccess)
+                return;
+
             MHD.Modal.Close();
-            if (IsSuccess)
-            {
-                ContractList = await MicroBus.Send(new GetContractQuery());
-            }
-            StateHasChanged();
+            await LoadAsync();
         }
 
-        protected async override Task OnInitializedAsync()
+        protected override Task OnInitializedAsync() => LoadAsync();
+
+        private async Task LoadAsync()
         {
-            ContractList = await MicroBus.Send(new GetContractQuery());
+            IsLoading = true;
+            await InvokeAsync(StateHasChanged);
+
+            try
+            {
+                ContractList = await MicroBus.Send(new GetContractQuery()) ?? [];
+            }
+            finally
+            {
+                IsLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 }

@@ -7,25 +7,44 @@ namespace ProjectManagement.Components.ControlComponents.Project.Compensation
 {
     public partial class CompensationFormUI
     {
-        [Parameter] public CompensationEntity Compensation { get; set; } = new("new ", "#00ff00", 0, true);
+        [Parameter] public CompensationEntity Compensation { get; set; } = new();
         [Parameter] public EventCallback<bool> Callback { get; set; }
 
-        PostTaskStatusDTO CompensationUpdate { get; set; } = new();
-        bool IsLoading = false;
-        protected override void OnInitialized()
+        private PostTaskStatusDTO CompensationUpdate { get; set; } = new();
+        private bool IsLoading;
+
+        protected override void OnParametersSet()
         {
+            CompensationUpdate = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Compensation, CompensationUpdate);
+
+            if (string.IsNullOrWhiteSpace(CompensationUpdate.Color))
+                CompensationUpdate.Color = "#00ff00";
         }
+
         private async Task HandleSubmitAsync()
         {
-            IsLoading = true;
-            bool result = false;
-            if (Compensation.Id == 0)
-                result = await MicroBus.Send(new CreateCompensationCommand(CompensationUpdate)) > 0;
-            else result = await MicroBus.Send(new UpdateCompensationCommand(Compensation.Id, CompensationUpdate));
+            if (IsLoading) return;
 
-            MHD.Notifications(Compensation.Id == 0 ? ToastType.Add : ToastType.Update, result);
-            await Callback.InvokeAsync(result);
+            IsLoading = true;
+            try
+            {
+                bool result = Compensation.Id == 0
+                    ? await MicroBus.Send(new CreateCompensationCommand(CompensationUpdate)) > 0
+                    : await MicroBus.Send(new UpdateCompensationCommand(Compensation.Id, CompensationUpdate));
+
+                MHD.Notifications(Compensation.Id == 0 ? ToastType.Add : ToastType.Update, result);
+
+                if (result && Callback.HasDelegate)
+                    await Callback.InvokeAsync(true);
+            }
+            finally
+            {
+                IsLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
+
+        private void Close() => MHD.Modal.Close();
     }
 }

@@ -1,39 +1,50 @@
-﻿using Application.Feature.Project.Type.Commands;
+using Application.Feature.Project.Type.Commands;
 using Domain.Entities.Project;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Services.MHDBlazor;
-using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.DTO.General;
-using ProjectManagement.Shared.DTO.Project;
-using System.Threading.Tasks;
 
-namespace ProjectManagement.Components.ControlComponents.Project.Type
+namespace ProjectManagement.Components.ControlComponents.Project.Type;
+
+public partial class TypeFormUI
 {
-    public partial class TypeFormUI
+    [Parameter] public TypeEntity Status { get; set; } = new();
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    private bool IsLoading;
+    private PostTaskStatusDTO UpdateObj { get; set; } = new();
+
+    protected override void OnParametersSet()
     {
-        [Parameter] public TypeEntity Status { get; set; } = new();
-        [Parameter] public EventCallback<bool> Callback { get; set; }
+        UpdateObj = new PostTaskStatusDTO();
+        PropertyCopier.CopyPropertiesTo(Status, UpdateObj);
+    }
 
-        bool IsLoading = false;
-        private PostTaskStatusDTO UpdateObj = new();
+    private void CloseModal() => MHD.Modal.Close();
 
-        protected override void OnInitialized()
+    private async Task HandleSubmitAsync()
+    {
+        if (IsLoading)
+            return;
+
+        IsLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
         {
-            UpdateObj.Name = Status.Name;
-            UpdateObj.Color = Status.Color; 
-            UpdateObj.Order = Status.SortOrder;       
-        }
-        private async Task HandleSubmitAsync()
-        {
-            IsLoading = true;
-            bool result = false;
+            bool result;
+
             if (Status.Id == 0)
-                result = await MicroBus.Send(new CreateTypeCommand(UpdateObj)) > 0;
-            else result = await MicroBus.Send(new UpdateTypeCommand(Status.Id,UpdateObj));
+                result = await Dispatcher.Send(new CreateTypeCommand(UpdateObj)) > 0;
+            else
+                result = await Dispatcher.Send(new UpdateTypeCommand(Status.Id, UpdateObj));
 
             MHD.Notifications(Status.Id == 0 ? ToastType.Add : ToastType.Update, result);
             await Callback.InvokeAsync(result);
+        }
+        finally
+        {
+            IsLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

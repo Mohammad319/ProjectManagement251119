@@ -1,4 +1,4 @@
-﻿@using Domain.DTO.Category
+@using Domain.DTO.Category
 
 @inject MhdServices MHD
 
@@ -39,31 +39,3 @@
         @ResourceApp.cancel
     </button>
 </div>
-
-@code {
-    [Parameter] public bool IsLoading { get; set; }
-
-    // الاسم بقي كما هو لتوافق استدعاء المودال عندك
-    [Parameter] public ListOrganisationTypeDTO? CustomerGroup { get; set; }
-
-    [Parameter] public EventCallback<ListOrganisationTypeDTO> OnValidSubmit { get; set; }
-
-    private ListOrganisationTypeDTO EditModel = new();
-
-    protected override void OnInitialized()
-    {
-        // OnParametersSet أفضل من OnInitialized لأن المودال ممكن يعيد تمرير باراميترات
-        EditModel = new ListOrganisationTypeDTO();
-        if (CustomerGroup is not null)
-            PropertyCopier.CopyPropertiesTo(CustomerGroup, EditModel);
-    }
-
-    private async Task SubmitAsync()
-    {
-        if (IsLoading) return;
-        await OnValidSubmit.InvokeAsync(EditModel);
-    }
-
-    private void Close()
-        => MHD.Modal.Close();
-}

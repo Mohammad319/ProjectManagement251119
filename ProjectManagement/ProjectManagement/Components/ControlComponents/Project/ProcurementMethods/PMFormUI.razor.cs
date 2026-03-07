@@ -10,21 +10,42 @@ namespace ProjectManagement.Components.ControlComponents.Project.ProcurementMeth
     {
         [Parameter] public ProcurementMethodEntity Procurement { get; set; } = new();
         [Parameter] public EventCallback<bool> Callback { get; set; }
-        PostTaskStatusDTO ProcurementUpdate { get; set; } = new ();
-        bool IsLoading = false;
-        protected override void OnInitialized()
+
+        private PostTaskStatusDTO ProcurementUpdate { get; set; } = new();
+        private bool IsLoading;
+
+        protected override void OnParametersSet()
         {
+            ProcurementUpdate = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Procurement, ProcurementUpdate);
+
+            if (string.IsNullOrWhiteSpace(ProcurementUpdate.Color))
+                ProcurementUpdate.Color = "#00ff00";
         }
+
         private async Task HandleSubmitAsync()
         {
+            if (IsLoading) return;
+
             IsLoading = true;
-            bool result;
-            if (Procurement.Id == 0)
-                result = await MicroBus.Send(new CreateProcurementMethodCommand(ProcurementUpdate)) > 0;
-            else result = await MicroBus.Send(new UpdateProcurementMethodCommand(Procurement.Id,ProcurementUpdate));
-            MHD.Notifications(Procurement.Id == 0 ? ToastType.Add : ToastType.Update, result);
-            await Callback.InvokeAsync(result);
+            try
+            {
+                bool result = Procurement.Id == 0
+                    ? await MicroBus.Send(new CreateProcurementMethodCommand(ProcurementUpdate)) > 0
+                    : await MicroBus.Send(new UpdateProcurementMethodCommand(Procurement.Id, ProcurementUpdate));
+
+                MHD.Notifications(Procurement.Id == 0 ? ToastType.Add : ToastType.Update, result);
+
+                if (result && Callback.HasDelegate)
+                    await Callback.InvokeAsync(true);
+            }
+            finally
+            {
+                IsLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
+
+        private void Close() => MHD.Modal.Close();
     }
 }

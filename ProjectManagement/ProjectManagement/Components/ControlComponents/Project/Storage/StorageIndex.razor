@@ -1,25 +1,22 @@
 ﻿@using Application.Feature.Calculation.Storage.Commands
-@using Application.Feature.Calculation.Storage.Queries
-@using Microsoft.EntityFrameworkCore
-@using Persistence.Factory
 @using ProjectManagement.Client.Pages.Project.Storage.Row
+@using ProjectManagement.Services.UI
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Project;
 @using ProjectManagement.Shared.Enums
-@using System.Text.Json
 @inherits AppComponentBase
 @inject ICommandDispatcher MicroBus
-@inject IDbContextFactoryTenant DbContextFactory
+@inject IStorageViewService StorageViewService
 <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
     <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            @onchange="(e) => GetAuthorityStorage(e)">
+            @onchange="GetAuthorityStorage">
         <option value="@(AuthorityStorage._private)" selected>@ResourceApp._private</option>
         <option value="@(AuthorityStorage.department)">@ResourceApp.department</option>
         <option value="@(AuthorityStorage._public)">@ResourceApp._public</option>
     </select>
 
     <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            @onchange="(e) => GetStorageSort(e)">
+            @onchange="GetStorageSort">
         @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
         {
             <option value="@level">@ResourceLocalize.GetStorageSort(level)</option>
@@ -35,109 +32,101 @@
     @if (BtnImportIsVisible)
     {
         <button class="@CssClasses.Btn.IconButton.Primary"
-                @onclick="async () => await GetAsync()">
+                @onclick="GetAsync">
             @((MarkupString)Icons.ImportFromCloud)
         </button>
     }
 </div>
 
-
 <table class="@CssClasses.Table.Tab">
     <HeaderStorageUI></HeaderStorageUI>
     <tbody class="@CssClasses.Table.TBody">
-        @if (Post.Type == CalculationItemType.task && Tasks != null) foreach (var Storage in Tasks)
+        @if (Post.Type == CalculationItemType.task && Tasks != null)
+        {
+            foreach (var storage in Tasks)
             {
-                <TaskStorage Task="Storage.StorageValue" WithContent="true">
-                    <span role="button" @onclick="() => Remove(Storage.Id, Storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
+                <TaskStorage Task="storage.StorageValue" WithContent="true">
+                    <span role="button" @onclick="() => Remove(storage.Id, storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
                 </TaskStorage>
             }
-        @if (Post.Type == CalculationItemType.resource && Resources != null) foreach (var Storage in Resources)
+        }
+
+        @if (Post.Type == CalculationItemType.resource && Resources != null)
+        {
+            foreach (var storage in Resources)
             {
-                <ResourcesStorage Resource="Storage.StorageValue">
-                    <span role="button" @onclick="() => Remove(Storage.Id, Storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
+                <ResourcesStorage Resource="storage.StorageValue">
+                    <span role="button" @onclick="() => Remove(storage.Id, storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
                 </ResourcesStorage>
             }
+        }
     </tbody>
 </table>
 
 @code {
-        bool BtnImportIsVisible = true;
-        void Remove(int id, string name)  => MHD.DeleteMessage(name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(id)));
-    async Task ConfirmRemoveAsync(int id)
+    private bool BtnImportIsVisible = true;
+    private List<StorageDTO<TaskPostDTO>>? Tasks;
+    private List<StorageDTO<ResourcePostDTO>>? Resources;
+    private GetFilterDTO Post = new();
+
+    private void Remove(int id, string name) => MHD.DeleteMessage(name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(id)));
+
+    private async Task ConfirmRemoveAsync(int id)
     {
-        bool result = await MicroBus.Send(new DeleteStorageCommand(id));
+        var result = await MicroBus.Send(new DeleteStorageCommand(id));
         if (result)
         {
             if (Post.Type == CalculationItemType.task)
                 Tasks?.RemoveAll(x => x.Id == id);
             else if (Post.Type == CalculationItemType.resource)
                 Resources?.RemoveAll(x => x.Id == id);
+
             StateHasChanged();
         }
+
         MHD.Notifications(ToastType.Delete, result);
     }
-    List<StorageDTO<TaskPostDTO>>? Tasks;
-    List<StorageDTO<ResourcePostDTO>>? Resources;
-    GetFilterDTO Post = new GetFilterDTO();
 
-    async Task StorageTypeSet(ChangeEventArgs e)
+    private async Task StorageTypeSet(ChangeEventArgs e)
     {
         Reset();
         if (Enum.TryParse<CalculationItemType>(e.Value?.ToString(), out var calculationItemType))
             Post.Type = calculationItemType;
+
         await GetAsync();
     }
-    void Reset(){
+
+    private void Reset()
+    {
         Resources = null;
         Tasks = null;
     }
-    async Task GetAsync()
+
+    private async Task GetAsync()
     {
         BtnImportIsVisible = false;
-        await using var context = await DbContextFactory.CreateDbContextAsync();
-        var data = await context.Storages.Where(x =>
-            x.StorageType == Post.Type &&
-            x.StorageLevel == Post.AuthoritySelected &&
-            x.StorageSort == Post.SortSelected).ToListAsync();
 
-        await MicroBus.Send(new GetStorageQuery(Post.Type, Post.AuthoritySelected, Post.SortSelected));
         if (Post.Type == CalculationItemType.task)
-        {
-            Tasks = data.Select(x => new StorageDTO<TaskPostDTO>
-            {
-                Id = x.Id,
-                StorageValue = JsonSerializer.Deserialize<TaskPostDTO>(x.StorageValue) ?? new TaskPostDTO(),
-                StorageLevel = x.StorageLevel,
-                StorageSort = x.StorageSort,
-                StorageType = x.StorageType
-            }).ToList();
-        }
-
+            Tasks = await StorageViewService.GetTasksAsync(Post);
         else if (Post.Type == CalculationItemType.resource)
-        {
-            Resources = data.Select(x => new StorageDTO<ResourcePostDTO>
-            {
-                Id = x.Id,
-                StorageValue = JsonSerializer.Deserialize<ResourcePostDTO>(x.StorageValue) ?? new ResourcePostDTO(),
-                StorageLevel = x.StorageLevel,
-                StorageSort = x.StorageSort,
-                StorageType = x.StorageType
-            }).ToList();
-        }
+            Resources = await StorageViewService.GetResourcesAsync(Post);
     }
 
-    async Task GetStorageSort(ChangeEventArgs e)
+    private async Task GetStorageSort(ChangeEventArgs e)
     {
         Reset();
         if (Enum.TryParse<StorageSort>(e.Value?.ToString(), out var storageSort))
             Post.SortSelected = storageSort;
+
         await GetAsync();
     }
-    async Task GetAuthorityStorage(ChangeEventArgs e)
+
+    private async Task GetAuthorityStorage(ChangeEventArgs e)
     {
         Reset();
         if (Enum.TryParse<AuthorityStorage>(e.Value?.ToString(), out var authorityStorage))
             Post.AuthoritySelected = authorityStorage;
+
         await GetAsync();
     }
 }

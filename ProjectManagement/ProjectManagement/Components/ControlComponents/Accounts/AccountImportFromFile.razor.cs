@@ -1,11 +1,8 @@
-﻿using Application.Feature.Account.Commands;
+using Application.Feature.Account.Commands;
 using BlazorMHD.UI.Core.DesignSystem;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
-using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
-using ProjectManagement.Shared;
 using ProjectManagement.Shared.DTO.Account;
 using System.Text;
 
@@ -13,26 +10,31 @@ namespace ProjectManagement.Components.ControlComponents.Accounts;
 
 public partial class AccountImportFromFile
 {
+    [Parameter] public EventCallback<bool> OnSaved { get; set; }
+
     private IBrowserFile? File;
     private bool IsBusy;
 
     private readonly List<PostAccountGroupWithAccountsDTO> Groups = [];
-    private readonly Dictionary<string, PostAccountGroupWithAccountsDTO> _groupMap = new(StringComparer.Ordinal);
 
     private int RowStart = 1;
-
-    // Column numbers (1-based)
     private int GroupCol = 3;
     private int NameCol = 4;
     private int CodeCol = 5;
     private int Comment1Col = 6;
     private int Comment2Col = 7;
-
     private string Separator = ",";
 
     private bool CanImport => File is not null && !IsBusy;
     private bool CanSave => Groups.Count > 0 && !IsBusy;
-    private void OnFileSelection(InputFileChangeEventArgs e) => File = e.File;
+
+    private void OnFileSelection(InputFileChangeEventArgs e)
+    {
+        File = e.File;
+        Groups.Clear();
+    }
+
+    private void CloseModal() => DialogService.Close();
 
     private void Save()
     {
@@ -45,7 +47,8 @@ public partial class AccountImportFromFile
 
     private async Task ImportByFormatAsync()
     {
-        if (File is null || IsBusy) return;
+        if (File is null || IsBusy)
+            return;
 
         IsBusy = true;
         StateHasChanged();
@@ -53,7 +56,6 @@ public partial class AccountImportFromFile
         try
         {
             Groups.Clear();
-            _groupMap.Clear();
 
             if (GroupCol == NameCol)
                 await ImportHierarchicalAsync();
@@ -72,18 +74,26 @@ public partial class AccountImportFromFile
         using var stream = File!.OpenReadStream(10 * 1024 * 1024);
         using var reader = new StreamReader(stream);
 
-        var content = await reader.ReadToEndAsync();
-        var lines = content.Split(Environment.NewLine).Skip(Math.Max(0, RowStart - 1));
-
-        foreach (var line in lines)
+        var toSkip = Math.Max(0, RowStart - 1);
+        for (var i = 0; i < toSkip; i++)
         {
-            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (await reader.ReadLineAsync() is null)
+                return;
+        }
 
-            var cols = line.Split(Separator);
+        while (true)
+        {
+            var line = await reader.ReadLineAsync();
+            if (line is null)
+                break;
 
-            // safe access helper
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            var cols = SplitCsv(line, Separator);
+
             string GetCol(int col1Based) =>
-                col1Based <= 0 || col1Based > cols.Length ? string.Empty : cols[col1Based - 1].Trim();
+                col1Based <= 0 || col1Based > cols.Count ? string.Empty : cols[col1Based - 1].Trim();
 
             var groupName = GetCol(GroupCol);
             var name = GetCol(NameCol);
@@ -109,36 +119,48 @@ public partial class AccountImportFromFile
             var c1 = GetCol(Comment1Col);
             var c2 = GetCol(Comment2Col);
 
-            if (!string.IsNullOrEmpty(c1)) account.Data.Comments.Add(c1);
-            if (!string.IsNullOrEmpty(c2)) account.Data.Comments.Add(c2);
+            if (!string.IsNullOrEmpty(c1))
+                account.Data.Comments.Add(c1);
+
+            if (!string.IsNullOrEmpty(c2))
+                account.Data.Comments.Add(c2);
 
             group.Accounts.Add(account);
         }
     }
+
     private async Task ImportHierarchicalAsync()
     {
         using var stream = File!.OpenReadStream(10 * 1024 * 1024);
         using var reader = new StreamReader(stream);
 
-        var content = await reader.ReadToEndAsync();
-        var lines = content.Split(Environment.NewLine).Skip(Math.Max(0, RowStart - 1));
+        var toSkip = Math.Max(0, RowStart - 1);
+        for (var i = 0; i < toSkip; i++)
+        {
+            if (await reader.ReadLineAsync() is null)
+                return;
+        }
 
         PostAccountGroupWithAccountsDTO? current = null;
 
-        foreach (var line in lines)
+        while (true)
         {
-            if (string.IsNullOrWhiteSpace(line)) continue;
+            var line = await reader.ReadLineAsync();
+            if (line is null)
+                break;
 
-            var cols = line.Split(Separator);
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            var cols = SplitCsv(line, Separator);
 
             string GetCol(int col1Based) =>
-                col1Based <= 0 || col1Based > cols.Length ? string.Empty : cols[col1Based - 1].Trim();
+                col1Based <= 0 || col1Based > cols.Count ? string.Empty : cols[col1Based - 1].Trim();
 
             var groupName = GetCol(GroupCol);
             var name = GetCol(NameCol);
             var code = GetCol(CodeCol);
 
-            // إذا الكود فاضي اعتبره صف مجموعة
             if (string.IsNullOrEmpty(code))
             {
                 if (!string.IsNullOrEmpty(groupName))
@@ -146,12 +168,13 @@ public partial class AccountImportFromFile
                     current = new PostAccountGroupWithAccountsDTO { Name = groupName };
                     Groups.Add(current);
                 }
+
                 continue;
             }
 
-            // صف حساب
             current ??= new PostAccountGroupWithAccountsDTO { Name = "G1_" };
-            if (!Groups.Contains(current)) Groups.Add(current);
+            if (!Groups.Contains(current))
+                Groups.Add(current);
 
             current.Accounts.Add(new PostAccountDTO
             {
@@ -161,57 +184,43 @@ public partial class AccountImportFromFile
             });
         }
 
-        // تنظيف المجموعة الافتراضية إن كانت فارغة
         if (Groups.Count > 0 && Groups[0].Name == "G1_" && !Groups[0].Accounts.Any())
             Groups.RemoveAt(0);
     }
 
-    private void RemoveGroup(PostAccountGroupWithAccountsDTO group)
-    {
-        Groups.Remove(group);
-        _groupMap.Remove(group.Name);
-    }
+    private void RemoveGroup(PostAccountGroupWithAccountsDTO group) => Groups.Remove(group);
 
-    private void RemoveAccount(PostAccountGroupWithAccountsDTO group, PostAccountDTO account) =>
+    private void RemoveAccount(PostAccountGroupWithAccountsDTO group, PostAccountDTO account)
+    {
         group.Accounts.Remove(account);
+
+        if (group.Accounts.Count == 0)
+            Groups.Remove(group);
+    }
 
     private async Task SaveConfirmAsync()
     {
-        if (IsBusy || Groups.Count == 0) return;
+        if (IsBusy || Groups.Count == 0)
+            return;
 
         IsBusy = true;
         StateHasChanged();
 
         try
         {
-            await Dispatcher.Send(new CreateRangeAccountGroupCommand(Groups));
+            var result = await Dispatcher.Send(new CreateRangeAccountGroupCommand(Groups));
+            var ok = result is { Count: > 0 };
+
+            MHD.Notifications(ToastType.Add, ok);
+            await OnSaved.InvokeAsync(ok);
+
+            if (ok)
+                CloseModal();
         }
         finally
         {
             IsBusy = false;
             StateHasChanged();
-        }
-    }
-
-    private async IAsyncEnumerable<IReadOnlyList<string>> ReadFileRowsAsync()
-    {
-        using var stream = File!.OpenReadStream(10 * 1024 * 1024);
-        using var reader = new StreamReader(stream);
-
-        var toSkip = Math.Max(0, RowStart - 1);
-        for (var i = 0; i < toSkip; i++)
-        {
-            if (await reader.ReadLineAsync() is null)
-                yield break;
-        }
-
-        while (true)
-        {
-            var line = await reader.ReadLineAsync();
-            if (line is null) yield break;
-            if (string.IsNullOrWhiteSpace(line)) continue;
-
-            yield return SplitCsv(line, Separator);
         }
     }
 
@@ -223,7 +232,7 @@ public partial class AccountImportFromFile
         var sb = new StringBuilder();
         var inQuotes = false;
 
-        for (int i = 0; i < line.Length; i++)
+        for (var i = 0; i < line.Length; i++)
         {
             var c = line[i];
 
@@ -238,10 +247,11 @@ public partial class AccountImportFromFile
                 {
                     inQuotes = !inQuotes;
                 }
+
                 continue;
             }
 
-            if (!inQuotes && c == sepChar)
+            if (c == sepChar && !inQuotes)
             {
                 result.Add(sb.ToString());
                 sb.Clear();

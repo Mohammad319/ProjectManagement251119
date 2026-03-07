@@ -1,30 +1,37 @@
-﻿@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
+@inherits AppComponentBase
 
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@PostStatus" OnValidSubmit="async () => await HandleSubmitAsync()">
-        <DataAnnotationsValidator />
+<EditForm id="resourceStatusForm"
+          class="@CssClasses.Modal.Body"
+          Model="@PostStatus"
+          OnValidSubmit="HandleSubmitAsync">
+    <DataAnnotationsValidator />
+
     <div class="flex flex-wrap items-center gap-4">
         <div class="flex flex-col">
-            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
+            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.name)]</label>
             <InputText class="@CssClasses.Input.Text" @bind-Value="@PostStatus.Name" />
-            <ValidationMessage For=@(() => PostStatus.Name) />
+            <ValidationMessage For="@(() => PostStatus.Name)" />
         </div>
+
         <div class="@CssClasses.Form.CheckWrapperM">
-                <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@PostStatus.IsVisible" />
-                <label class="@CssClasses.Form.Label" for="inlineFormCheck">@ResourceApp.isVisible</label>
-            </div>
-        <div class="flex flex-col">
-            <InputText type="color" class="@CssClasses.Input.Color" @bind-value="PostStatus.Color" />
-            </div>
-
+            <InputCheckbox id="resourceStatusVisible"
+                           class="@CssClasses.Input.Check"
+                           @bind-Value="@PostStatus.IsVisible" />
+            <label class="@CssClasses.Form.Label" for="resourceStatusVisible">@AppLoc[nameof(ResourceApp.isVisible)]</label>
         </div>
-    </EditForm>
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@IsLoading">
-            @ResourceApp.save
-        </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick=" () => MHD.Modal.Close()">@ResourceApp.cancel</button>
-</div>
 
+        <div class="flex flex-col">
+            <label class="@CssClasses.Form.Label">@Loc[nameof(ResourceLoc.color)]</label>
+            <InputText type="color" class="@CssClasses.Input.Color" @bind-Value="PostStatus.Color" />
+        </div>
+    </div>
+</EditForm>
+
+<div class="@CssClasses.Modal.Footer">
+    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="resourceStatusForm" disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.save)]
+    </button>
+    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="CloseModal" disabled="@IsLoading">
+        @AppLoc[nameof(ResourceApp.cancel)]
+    </button>
+</div>

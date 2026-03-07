@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Shared.Model.Application
 @using ProjectManagement.Client.Shared.ViewModel
 @using ProjectManagement.Shared
@@ -8,8 +8,8 @@
 @inject ICommandDispatcher MicroBus
 @inject IStringLocalizer<AppFormatResource> FormatResource
 
-<nav>
-    <div class="flex space-x-2 border-b border-gray-300" role="tablist">
+<nav class="overflow-x-auto">
+    <div class="flex min-w-max space-x-2 border-b border-gray-300 pb-1 dark:border-gray-700" role="tablist">
         <button type="button"
                 class="px-4 py-2 font-medium text-sm rounded-t-md focus:outline-none transition-all duration-200
                        @(PartPage == 0 ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-600 hover:text-blue-500")"
@@ -31,7 +31,7 @@
     </div>
 </nav>
 
-<div style="padding-top:20px;">
+<div class="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900" style="padding-top:20px;">
     <div>
         <label style="@StyleStr">Test</label>
     </div>
@@ -223,85 +223,8 @@
         }
 
  
-    <div>
-        <button type="submit" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success" style="margin-right:5px;">@ResourceApp.save</button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
+    <div class="mt-4 flex items-center gap-2">
+        <button type="submit" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success">@ResourceApp.save</button>
+        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="CancelAsync">@ResourceApp.cancel</button>
     </div>
 </EditForm>
-@code {
-    void Refresh()
-    {
-        StyleStr = Style.GetString();
-    }
-    int PartPage = 0;
-    [Parameter] public AttributeBase Attribute { get; set; } = new();
-    AttributeBase AttributeUpdate { get; set; } = new();
-    StyleVM Style { get; set; } = new StyleVM();
-    string StyleStr = "";
-    [Parameter] public EventCallback<AttributeBase> Callback { get; set; }
-    bool IsLoading = false;
-    ValidSelectVM ValidSelectVM = new ValidSelectVM();
-    string SelectV = string.Empty;
-    ValidTextVM ValidTextVM = new ValidTextVM();
-    ValidNumberVM ValidNumberVM = new ValidNumberVM();
-    ValidBoolVM ValidBoolVM = new ValidBoolVM();
-    ValidDateVM ValidDateVM = new ValidDateVM();
-    protected override void OnInitialized()
-    {
-            Style.Set(Attribute.Style);
-        StyleStr = Attribute.Style;
-        PropertyCopier.CopyPropertiesTo(Attribute, AttributeUpdate);
-        if (AttributeUpdate.ID != Guid.Empty)
-        {
-            PartPage = 1;
-            if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Int || AttributeUpdate.AttributeType == AttributeType.Double))
-                ValidNumberVM = System.Text.Json.JsonSerializer.Deserialize<ValidNumberVM>(AttributeUpdate.Validation) ?? new ValidNumberVM();
-            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Text || AttributeUpdate.AttributeType == AttributeType.TextArea))
-                ValidTextVM = System.Text.Json.JsonSerializer.Deserialize<ValidTextVM>(AttributeUpdate.Validation) ?? new ValidTextVM();
-            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Select))
-                ValidSelectVM = System.Text.Json.JsonSerializer.Deserialize<ValidSelectVM>(AttributeUpdate.Validation) ?? new ValidSelectVM();
-            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.Bool))
-                ValidBoolVM = System.Text.Json.JsonSerializer.Deserialize<ValidBoolVM>(AttributeUpdate.Validation) ?? new ValidBoolVM();
-            else if (!string.IsNullOrEmpty(AttributeUpdate.Validation) && (AttributeUpdate.AttributeType == AttributeType.DateTime 
-            || AttributeUpdate.AttributeType == AttributeType.Date || AttributeUpdate.AttributeType == AttributeType.Time))
-                ValidDateVM = System.Text.Json.JsonSerializer.Deserialize<ValidDateVM>(AttributeUpdate.Validation) ?? new ValidDateVM();
-
-        }
-        else PartPage = 0;
-    }
-    private async Task HandleSubmitAsync()
-    {
-        IsLoading = true;
-        AttributeUpdate.Style = System.Text.Json.JsonSerializer.Serialize(Style);
-        AttributeUpdate.Style = Style.GetString();
-
-        if (AttributeUpdate.AttributeType == AttributeType.Select)
-        {
-            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidSelectVM);
-            string SelectV = string.Empty;
-        }
-        else if (AttributeUpdate.AttributeType == AttributeType.Text || AttributeUpdate.AttributeType == AttributeType.TextArea)
-            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidTextVM);
-
-        else if (AttributeUpdate.AttributeType == AttributeType.Int || AttributeUpdate.AttributeType == AttributeType.Double)
-            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidNumberVM);
-
-        else if (AttributeUpdate.AttributeType == AttributeType.Bool)
-            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidBoolVM);
-
-        else if (AttributeUpdate.AttributeType == AttributeType.DateTime || AttributeUpdate.AttributeType == AttributeType.Date
-        || AttributeUpdate.AttributeType == AttributeType.Time)
-            AttributeUpdate.Validation = System.Text.Json.JsonSerializer.Serialize(ValidDateVM);
-
-        await Callback.InvokeAsync(AttributeUpdate);
-    }
-
-    bool ShowSelect = true;
-    async Task RemoveSelect(int i)
-    {
-        ShowSelect = false;
-        await Task.Delay(1);
-        ValidSelectVM.Values.RemoveAt(i - 1);
-        ShowSelect = true;
-    }
-}

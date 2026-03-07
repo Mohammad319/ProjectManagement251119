@@ -1,5 +1,6 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@using System.Globalization
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.Name">
 
 <head>
     <meta charset="utf-8" />
@@ -8,7 +9,6 @@
     <script src="js/theme-init.js"></script>
     <ResourcePreloader />
     <link rel="stylesheet" href="@Assets["ProjectManagement.styles.css"]" />
-    <!-- Tailwind الناتج -->
     <link rel="stylesheet" href="css/custom.css" />
     <link rel="stylesheet" href="_content/BlazorMHD.UI/css/mhd.css" />
     <link href="_content/ContextMenuMHD/css/tailwind-contextmenu.css" rel="stylesheet" />
@@ -25,8 +25,8 @@
     <script src="_content/BlazorMHD.UI/js/BlazorMHDUI.js"></script>
     <script src="js/resizableTable.js"></script>
     <script src="_content/ContextMenuMHD/js/contextMenuMHD.js"></script>
-
     <script src="js/reorderHelper.js"></script>
+
     <script>
         (function () {
             var culture = localStorage['BlazorCulture'];
@@ -34,6 +34,7 @@
                 document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
             }
         })();
+
         window.blazorCulture = {
             get: () => localStorage['BlazorCulture'],
             set: (value) => { localStorage['BlazorCulture'] = value; }
@@ -42,4 +43,3 @@
 </body>
 
 </html>
-

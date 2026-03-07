@@ -1,22 +1,13 @@
-﻿@page "/control"
+@page "/control"
 @using BlazorMHD.UI.Components.Navigation.Tabs
+@using BlazorMHD.UI.Core.Navigation
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
-@using Organisation.OrganisationCategory
-@using Organisation.OrganisationsType
-@using ProjectManagement.Client.Helper
-@using ProjectManagement.Client.Constant
 @using ProjectManagement.Components.ControlComponents.ApplicationTemplate
 @using ProjectManagement.Components.ControlComponents.Project.Storage
-@using BlazorMHD.UI.Core.Navigation
 @using ProjectManagement.Components.ControlComponents.Template
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 
-@inject NavigationManager _navigationManager
-@inject ICommandDispatcher MicroBus
-@inject ContextMenuService ContextService
-@inject MhdServices MHD
-@inject IStringLocalizer<ResourceApp> AppLoc
 @inject AuthenticationStateProvider AuthStateProvider
 
 <div class="pointer-events-auto max-h-[90vh] rounded-2xl bg-white dark:bg-gray-800 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 flex box-border overflow-hidden h-full w-full">
@@ -25,109 +16,66 @@
              Size="MhdSize.Md"
              Collapsible="true"
              @bind-IsCollapsed="collapsed"
-             @bind-ActiveKey="ActiveKey"
-    >
+             @bind-ActiveKey="ActiveKey">
     </MhdTabs>
 </div>
 
-
 @code {
     [Parameter] public string? ActiveKey { get; set; }
-    private List<TabItem> Tabs { get; set; } = new();
-    private bool collapsed = false;
+
+    private List<TabItem> Tabs { get; set; } = [];
+    private bool collapsed;
+
     protected override async Task OnInitializedAsync()
     {
+        Tabs.Clear();
+
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        // تبويبات خاصة بدور Admin
-        if (user.IsInRole(PMRolesConst.Tenant.Admin))
+        var isAdmin = user.IsInRole(PMRolesConst.Tenant.Admin);
+        var isSuperManager = user.IsInRole(PMRolesConst.Tenant.Super_Manger)
+                             || user.IsInRole(PMRolesConst.Tenant.SuperManger);
+
+        if (isAdmin)
         {
-            Tabs.Add(new TabItem
-            {
-                Key = "department",
-                Text = ResourceApp.department,
-                Icon = "fa fa-building",
-                Content = @<ProjectManagement.Components.ControlComponents.Department.Index />
-            });
-
-            Tabs.Add(new TabItem
-            {
-                Key = "resourceType",
-                Text = CalcResource.resourceType,
-                Icon = "fa fa-cubes",
-                Content = @<ProjectManagement.Components.ControlComponents.ResourceType.ResourceTypeUI />
-            });
-
-            Tabs.Add(new TabItem
-            {
-                Key = "project",
-                Text = CalcResource.project,
-                Icon = "fa fa-diagram-project",
-                Content = @<ProjectManagement.Components.ControlComponents.Project.ProjectPages.ProjectControl />
-            });
-
-            Tabs.Add(new TabItem
-            {
-                Key = "templates-admin",
-                Text = ResourceLoc.templates,
-                Icon = "fa fa-layer-group",
-                Content = @<TemplateIndex />
-            });
-
-            Tabs.Add(new TabItem
-            {
-                Key = "organisation",
-                Text = ResourceApp.organisation,
-                Icon = "fa fa-sitemap",
-                Content = @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />
-            });
+            AddTab("department", ResourceApp.department, "fa fa-building", @<ProjectManagement.Components.ControlComponents.Department.Index />);
+            AddTab("resourceType", CalcResource.resourceType, "fa fa-cubes", @<ProjectManagement.Components.ControlComponents.ResourceType.ResourceTypeUI />);
+            AddTab("project", CalcResource.project, "fa fa-diagram-project", @<ProjectManagement.Components.ControlComponents.Project.ProjectPages.ProjectControl />);
+            AddTab("templates-admin", ResourceLoc.templates, "fa fa-layer-group", @<TemplateIndex />);
+            AddTab("organisation", ResourceApp.organisation, "fa fa-sitemap", @<ProjectManagement.Components.ControlComponents.Organisation.OrganisationCategory.CategoriesUI />);
         }
 
-        // تبويبات خاصة بدور SuperManger
-        if (user.IsInRole(PMRolesConst.Tenant.Super_Manger))
+        if (isSuperManager)
+            AddTab("templates-super", ResourceLoc.templates, "fa fa-layer-group", @<TemplateIndex />);
+
+        if (isAdmin || isSuperManager)
         {
-            Tabs.Add(new TabItem
-            {
-                Key = "templates-super",
-                Text = ResourceLoc.templates,
-                Icon = "fa fa-layer-group",
-                Content = @<TemplateIndex />
-            });
+            AddTab("selfInspection", ResourceLoc.selfInspection, "fa fa-clipboard-check", @<ApplicationIndexUI />);
+            AddTab("accounts", CalcResource.account, "fa fa-file-invoice-dollar", @<ProjectManagement.Components.ControlComponents.Accounts.AccountGroupsUI />);
+            AddTab("storage", CalcResource.StorageSort, "fa fa-boxes-stacked", @<StorageIndex />);
         }
 
-        // تبويبات خاصة بدور AdminSuperManger
-        if (user.IsInRole(PMRolesConst.Tenant.Admin) || user.IsInRole(PMRolesConst.Tenant.SuperManger))
+        EnsureActiveKey();
+    }
+
+    private void AddTab(string key, string text, string icon, RenderFragment content)
+    {
+        Tabs.Add(new TabItem
         {
-            Tabs.Add(new TabItem
-            {
-                Key = "selfInspection",
-                Text = ResourceLoc.selfInspection,
-                Icon = "fa fa-clipboard-check",
-                Content = @<ApplicationIndexUI />
-            });
+            Key = key,
+            Text = text,
+            Icon = icon,
+            Content = content
+        });
+    }
 
-            Tabs.Add(new TabItem
-            {
-                Key = "accounts",
-                Text = CalcResource.account,
-                Icon = "fa fa-file-invoice-dollar",
-                Content = @<ProjectManagement.Components.ControlComponents.Accounts.AccountGroupsUI />
-            });
+    private void EnsureActiveKey()
+    {
+        if (!Tabs.Any())
+            return;
 
-            Tabs.Add(new TabItem
-            {
-                Key = "storage",
-                Text = CalcResource.StorageSort,
-                Icon = "fa fa-boxes-stacked",
-                Content = @<StorageIndex />
-            });
-        }
-
-        // لو المستخدم ما عنده أي تبويب مناسب لدوره
-        if (Tabs.Any())
-        {
+        if (string.IsNullOrWhiteSpace(ActiveKey) || Tabs.All(x => x.Key != ActiveKey))
             ActiveKey = Tabs.First().Key;
-        }
     }
 }

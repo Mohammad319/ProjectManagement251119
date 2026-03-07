@@ -1,29 +1,46 @@
-﻿
 using Domain.Repository.AuthPermissions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ProjectManagement.Server.Controllers.v1.Identity
 {
     [ApiVersion("1.0")]
-    public class Initialize2022sController(IAuthRepository _userRepo, IConfiguration configuration) : BaseApiController
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public class Initialize2022sController(
+        IAuthRepository userRepo,
+        IConfiguration configuration,
+        IWebHostEnvironment environment,
+        ILogger<Initialize2022sController> logger) : BaseApiController
     {
-        [HttpGet("[action]")]
-        public async Task<ActionResult> StartUserRole()
+        [AllowAnonymous]
+        [HttpPost("[action]")]
+        public async Task<ActionResult<bool>> StartUserRole()
         {
+            // هذا endpoint مخصص فقط لتهيئة أولية استثنائية.
+            // لا يتم تفعيله إلا في Development أو عند تفعيل explicit flag.
+            var explicitlyEnabled = configuration.GetValue<bool>("Bootstrap:EnableInitialize2022");
+            if (!environment.IsDevelopment() && !explicitlyEnabled)
+            {
+                return NotFound();
+            }
+
+            var email = configuration["User:Email"];
+            var password = configuration["User:Password"];
+
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                return BadRequest("Bootstrap credentials are missing.");
+            }
+
             try
             {
-                string Email = configuration.GetSection("User:Email").Get<string>() ?? string.Empty;
-                string Password = configuration.GetSection("User:Password").Get<string>() ?? string.Empty;
-                if (string.IsNullOrEmpty(Email)) return BadRequest();
-                if (string.IsNullOrEmpty(Password)) Password = Email;
-
-                if (await _userRepo.Initialize(Email, Password))
-                    return Ok();
-                return Ok(false);
+                var initialized = await userRepo.Initialize(email, password);
+                return Ok(initialized);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                logger.LogError(ex, "Bootstrap initialization failed for {Email}", email);
+                return Problem(title: "Initialization failed.", statusCode: StatusCodes.Status500InternalServerError);
             }
         }
     }

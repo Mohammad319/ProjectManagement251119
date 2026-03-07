@@ -1,4 +1,4 @@
-﻿@using Application.Feature.Organisation.Organisation.Commands
+@using Application.Feature.Organisation.Organisation.Commands
 @using Application.Feature.Organisation.Organisation.Queries
 @using Domain.DTO.Category
 @using Domain.Entities.Organisation
@@ -7,34 +7,47 @@
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Shared.DTO.Offer
 @using ProjectManagement.Shared.DTO.Organisation
+@using ProjectManagement.Shared
 @inherits AppComponentBase
+@inject IStringLocalizer<PMWebResource> WebLoc
 
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 
-@if (Organistion is not null)
+@if (Category is null)
 {
-    <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
-        <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
-            <button class="@CssClasses.Btn.IconButton.Success"
-                    @onclick="() => UpdateForm(new ShortListOrganisationDTO())"
-                    title="@FormatLoc[nameof(PMAppFormatResource.add)]">
-                @((MarkupString)Icons.Plus)
-            </button>
-        </AuthorizeView>
-
-        <button class="@CssClasses.Btn.IconButton.Secondary"
-                @onclick="ReverseElements"
-                title="@AppLoc[nameof(ResourceApp.filter)]">
-            @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-        </button>
+    <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+        @WebLoc[nameof(PMWebResource.SelectOrganisationCategoryHint)]
     </div>
+}
+else
+{
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">@Category.Name</div>
+            <div class="text-sm text-slate-600 dark:text-slate-300">@WebLoc[nameof(PMWebResource.OrganisationsInCategoryDescription)]</div>
+        </div>
 
-    <br />
+        <div class="flex items-center gap-2">
+            <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
+                <button class="@CssClasses.Btn.IconButton.Success"
+                        @onclick="() => UpdateForm(new ShortListOrganisationDTO())"
+                        title="@WebLoc[nameof(PMWebResource.NewOrganisation)]">
+                    @((MarkupString)Icons.Plus)
+                </button>
+            </AuthorizeView>
+
+            <button class="@CssClasses.Btn.IconButton.Secondary"
+                    @onclick="ReverseElements"
+                    title="@AppLoc[nameof(ResourceApp.filter)]">
+                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+            </button>
+        </div>
+    </div>
 
     @if (Organistion.Count == 0)
     {
-        <div class="text-muted">
-            @AppLoc[nameof(ResourceApp.notFoundData)]
+        <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+            @WebLoc[nameof(PMWebResource.NoOrganisationsFound)]
         </div>
     }
     else

@@ -6,6 +6,7 @@ using Domain.DTO.Category;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Identity;
+using ProjectManagement.Shared;
 using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.DTO.App.List;
 using ProjectManagement.Shared.DTO.General;
@@ -19,6 +20,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         [Inject] ContextMenuService ContextService { get; set; } = default!;
         [Inject] MhdServices MHD { get; set; } = default!;
         [Inject] IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
+        [Inject] IStringLocalizer<PMWebResource> WebLoc { get; set; } = default!;
 
         private int Part = 1;
 
@@ -32,16 +34,18 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private ListOrganisationCategoryDTO? CategorySelected { get; set; }
         private IEnumerable<ListDTO> CustomerGroups { get; set; } = [];
 
-        private static readonly List<TabItem> Tabs = new()
-        {
-            new(1, "Basic information"),
-            new(2, ResourceApp.Assessment),
-            new(3, "Category"),
-            new(4, ResourceIdentity.contact),
-        };
+        private List<TabItem> Tabs { get; set; } = [];
 
         protected override async Task OnInitializedAsync()
         {
+            Tabs =
+            [
+                new(1, WebLoc[nameof(PMWebResource.BasicInformation)]),
+                new(2, ResourceApp.Assessment),
+                new(3, WebLoc[nameof(PMWebResource.Category)]),
+                new(4, ResourceIdentity.contact),
+            ];
+
             Categories = await MicroBus.Send(new GetOrganisationCategoryQuery()) ?? [];
 
             if (ID > 0)
@@ -49,20 +53,58 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             else
                 PostCompany = new PostOrganisationDTO { CategoryId = CategoryID };
 
-            // تحديد الـ Base category من CategoryID
-            if (CategoryID > 0)
-            {
-                var sub = Categories.FirstOrDefault(x => x.Id == CategoryID);
-                if (sub?.ParentCategoryId is not null)
-                    CategorySelected = Categories.FirstOrDefault(x => x.Id == sub.ParentCategoryId);
-            }
+            EnsureCollections();
+            ResolveSelectedBaseCategory();
 
             CustomerGroups = await MicroBus.Send(new GetListOrganisationsTypeQuery(PostCompany.OrganisationTypeID, ID > 0 ? ID : null)) ?? [];
         }
 
+        private void EnsureCollections()
+        {
+            PostCompany.Notes ??= [];
+            PostCompany.Contacts ??= [];
+            PostCompany.Address ??= new();
+        }
+
+        private void ResolveSelectedBaseCategory()
+        {
+            var selectedCategoryId = PostCompany.CategoryId > 0 ? PostCompany.CategoryId : CategoryID;
+            if (selectedCategoryId <= 0)
+            {
+                CategorySelected = null;
+                return;
+            }
+
+            var selected = Categories.FirstOrDefault(x => x.Id == selectedCategoryId);
+            if (selected is null)
+            {
+                CategorySelected = null;
+                return;
+            }
+
+            CategorySelected = selected.ParentCategoryId is null
+                ? selected
+                : Categories.FirstOrDefault(x => x.Id == selected.ParentCategoryId);
+        }
+
+        private void AddNote() => PostCompany.Notes.Add(string.Empty);
+
+        private void RemoveNote(int noteIndex)
+        {
+            if (noteIndex < 0 || noteIndex >= PostCompany.Notes.Count)
+                return;
+
+            PostCompany.Notes.RemoveAt(noteIndex);
+        }
+
         private void CategoryChange(ChangeEventArgs e)
         {
-            if (e.Value is null) { CategorySelected = null; return; }
+            if (e.Value is null)
+            {
+                CategorySelected = null;
+                PostCompany.CategoryId = 0;
+                return;
+            }
 
             if (!int.TryParse(e.Value.ToString(), out var id) || id <= 0)
             {
@@ -72,7 +114,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             }
 
             CategorySelected = Categories.FirstOrDefault(x => x.Id == id);
-            PostCompany.CategoryId = 0; // reset sub category selection
+            PostCompany.CategoryId = 0;
         }
 
         private async Task HandleSubmitAsync()
@@ -97,18 +139,5 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 IsLoading = false;
             }
         }
-
-        // إذا تحتاج هذي لاحقاً ابقها، لكن حالياً غير مستخدمة
-        private UnderContactOrganisationBase? underContact;
-
-        private void Add()
-        {
-            if (underContact is null) return;
-            PostCompany.Contacts.Add(underContact);
-            underContact = null;
-        }
-
-        private void Remove(UnderContactOrganisationBase contact) =>
-            PostCompany.Contacts.Remove(contact);
     }
 }
