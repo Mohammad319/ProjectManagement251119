@@ -37,6 +37,7 @@ public static class AuthRegistration
 
         services.Configure<IdentityOptions>(options =>
         {
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
             options.User.RequireUniqueEmail = true;
 
             options.Lockout.AllowedForNewUsers = true;
