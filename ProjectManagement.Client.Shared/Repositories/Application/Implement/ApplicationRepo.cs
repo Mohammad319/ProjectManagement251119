@@ -1,8 +1,6 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Client.Shared.Model.Application;
 using ProjectManagement.Shared.Constant;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Application.Implement
 {

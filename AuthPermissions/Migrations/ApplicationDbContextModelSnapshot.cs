@@ -17,7 +17,7 @@ namespace AuthPermissions.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -35,7 +35,9 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DB")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
@@ -48,10 +50,14 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Firstname")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Lastname")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -80,6 +86,7 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("RefreshToken")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -112,6 +119,12 @@ namespace AuthPermissions.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
+                    b.HasIndex("TenantId", "DepartmentId")
+                        .HasDatabaseName("IX_AspNetUsers_Tenant_Department");
+
+                    b.HasIndex("TenantId", "UserId")
+                        .HasDatabaseName("IX_AspNetUsers_Tenant_UserId");
+
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
@@ -124,18 +137,23 @@ namespace AuthPermissions.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Exception")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Level")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Message")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MessageTemplate")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Properties")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("TenantID")
@@ -145,6 +163,7 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -164,14 +183,22 @@ namespace AuthPermissions.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ConnectionString")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("TenantDatabase");
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TenantDatabase_Name");
+
+                    b.ToTable("TenantDatabase", (string)null);
                 });
 
             modelBuilder.Entity("AuthPermissions.Entity.TenantEntity", b =>
@@ -183,21 +210,26 @@ namespace AuthPermissions.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BuildNumber")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("City")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Country")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset?>("DateExpire")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Fax")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("MaxCalculations")
@@ -207,6 +239,7 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Mobile")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -215,26 +248,32 @@ namespace AuthPermissions.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Note")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PostCode")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Street")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("TenantDBId")
                         .HasColumnType("int");
 
                     b.Property<string>("Website")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantDBId");
+                    b.HasIndex("TenantDBId", "Name")
+                        .HasDatabaseName("IX_Tenants_TenantDB_Name");
 
                     b.ToTable("Tenants");
                 });
@@ -376,7 +415,8 @@ namespace AuthPermissions.Migrations
                 {
                     b.HasOne("AuthPermissions.Entity.TenantDatabaseEntity", "TenantDB")
                         .WithMany("Tenants")
-                        .HasForeignKey("TenantDBId");
+                        .HasForeignKey("TenantDBId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("TenantDB");
                 });

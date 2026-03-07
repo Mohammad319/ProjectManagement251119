@@ -1,4 +1,4 @@
-﻿using AuthPermissions;
+using AuthPermissions;
 using TaskResourceBlueprints;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -32,7 +32,6 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddApplicationServices();
-builder.Services.AddAuthPermissionsLayer();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddCustomAuthentication(connectionString);
@@ -43,18 +42,6 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     }));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-
-//builder.Services.AddIdentityCore<ApplicationUser>(options =>
-//    {
-//        options.SignIn.RequireConfirmedAccount = true;
-//        options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
-//    })
-//    .AddEntityFrameworkStores<ApplicationDbContext>()
-//    .AddSignInManager()
-//    .AddDefaultTokenProviders();
-
-//builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(options => options.DetailedErrors = true);
@@ -68,6 +55,8 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
 var app = builder.Build();
+
+await app.InitializeAuthPermissionsAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -100,4 +89,3 @@ app.MapRazorComponents<App>()
 app.MapAdditionalIdentityEndpoints();
 
 app.Run();
-

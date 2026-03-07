@@ -1,4 +1,6 @@
-﻿using AuthPermissions.Entity;
+using AuthPermissions.Context;
+using AuthPermissions.Entity;
+using AuthPermissions.Services;
 using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
@@ -17,14 +19,14 @@ using ProjectManagement.Shared.Models.Account;
 
 namespace ProjectManagement.Adminstrator.Services.Users
 {
-    public class UsersService(UserManager<ApplicationUser> _userManager,
+    public class UsersService(
+        UserManager<ApplicationUser> _userManager,
         IServiceScopeFactory _scopeFactory,
-          IDbContextFactory<ApplicationDbContext> ContextFactory
-       ) : IUsersService
+        IDbContextFactory<ApplicationDbContext> ContextFactory) : IUsersService
     {
         public async Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null)
         {
-            var dataAccess = await CreateDbContext(tenantId, userId);
+            var dataAccess = await CreateTenantDbContextAsync(tenantId, userId);
             var changed = 0;
 
             var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
@@ -194,7 +196,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             var defaultContracts = new (string Name, string Color, int SortOrder, bool IsVisible)[]
             {
                 ("Traditional procurement", "#0ea5e9", 100, true),
-                 ("Design & Build Contract", "#00a590", 200, true),
+                ("Design & Build Contract", "#00a590", 200, true),
             };
 
             var existingContracts = await dataAccess.Contracts.ToListAsync();
@@ -257,7 +259,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 var status = new StatusEntity();
                 status.Update("Not Started", "#22c55e", 100, true);
                 var status2 = new StatusEntity();
-                status.Update("Planned", "#00aaff", 200, true);
+                status2.Update("Planned", "#00aaff", 200, true);
                 var status3 = new StatusEntity();
                 status3.Update("In Progress", "#a2a239", 300, true);
                 var status4 = new StatusEntity();
@@ -272,7 +274,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 dataAccess.CalculationStatus.Add(status4);
                 dataAccess.CalculationStatus.Add(status5);
                 dataAccess.CalculationStatus.Add(status6);
-
             }
 
             if (!await dataAccess.CalcProjectType.AnyAsync())
@@ -292,50 +293,62 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<List<GetTenantsDTO>> GetAsync()
         {
-            using var _appContext = ContextFactory.CreateDbContext();
-            return await _appContext.Tenants.Select(x => new GetTenantsDTO()
-            {
-                Name = x.Name,
-                DateExpire = x.DateExpire,
-                DB = x.TenantDB.Name,
-                Id = x.Id,
-            }).ToListAsync();
+            using var appContext = ContextFactory.CreateDbContext();
+            return await appContext.Tenants
+                .AsNoTracking()
+                .Select(x => new GetTenantsDTO
+                {
+                    Name = x.Name,
+                    DateExpire = x.DateExpire,
+                    DB = x.TenantDB != null ? x.TenantDB.Name : string.Empty,
+                    Id = x.Id,
+                    HasOwnDb = x.TenantDBId.HasValue,
+                    DatabaseInfoName = x.TenantDB != null ? x.TenantDB.Name : string.Empty,
+                })
+                .ToListAsync();
         }
 
         public async Task<TenantEntity> GetByIdAsync(int id)
         {
-            using var _appContext = ContextFactory.CreateDbContext();
-            return (await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id))!;
+            using var appContext = ContextFactory.CreateDbContext();
+            return (await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id))!;
         }
+
         public async Task<int> CreateAsync(TenantEntity tenant)
         {
-            using var _appContext = ContextFactory.CreateDbContext();
-            TenantEntity t = new();
-            t.Name = tenant.Name;
-            t.Street = tenant.Street;
-            t.City = tenant.City;
-            t.Country = tenant.Country;
-            t.Fax = tenant.Fax;
-            t.BuildNumber = tenant.BuildNumber;
-            t.PostCode = tenant.PostCode;
-            t.MaxCalculations = tenant.MaxCalculations;
-            t.MaxUsers = tenant.MaxUsers;
-            t.Fax = tenant.Fax;
-            t.Website = tenant.Website;
-            t.Phone = tenant.Phone;
-            t.Mobile = tenant.Mobile;
-            t.Email = tenant.Email;
-            t.DateExpire = tenant.DateExpire;
-            t.Note = tenant.Note;
-            _appContext.Tenants.Add(t);
-            await _appContext.SaveChangesAsync();
+            using var appContext = ContextFactory.CreateDbContext();
+            var t = new TenantEntity
+            {
+                Name = tenant.Name,
+                Street = tenant.Street,
+                City = tenant.City,
+                Country = tenant.Country,
+                Fax = tenant.Fax,
+                BuildNumber = tenant.BuildNumber,
+                PostCode = tenant.PostCode,
+                MaxCalculations = tenant.MaxCalculations,
+                MaxUsers = tenant.MaxUsers,
+                Website = tenant.Website,
+                Phone = tenant.Phone,
+                Mobile = tenant.Mobile,
+                Email = tenant.Email,
+                DateExpire = tenant.DateExpire,
+                Note = tenant.Note,
+                TenantDBId = tenant.TenantDBId
+            };
+
+            appContext.Tenants.Add(t);
+            await appContext.SaveChangesAsync();
             return t.Id;
         }
+
         public async Task<bool> UpdateAsync(TenantEntity tenant)
         {
-            using var _appContext = ContextFactory.CreateDbContext();
-            var t = await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == tenant.Id);
-            if (t == null) { return false; }
+            using var appContext = ContextFactory.CreateDbContext();
+            var t = await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == tenant.Id);
+            if (t == null)
+                return false;
+
             t.Name = tenant.Name;
             t.Street = tenant.Street;
             t.City = tenant.City;
@@ -345,75 +358,71 @@ namespace ProjectManagement.Adminstrator.Services.Users
             t.PostCode = tenant.PostCode;
             t.MaxCalculations = tenant.MaxCalculations;
             t.MaxUsers = tenant.MaxUsers;
-            t.Fax = tenant.Fax;
             t.Website = tenant.Website;
             t.Phone = tenant.Phone;
             t.Mobile = tenant.Mobile;
             t.Email = tenant.Email;
             t.DateExpire = tenant.DateExpire;
-
             t.Note = tenant.Note;
-            _appContext.Tenants.Update(t);
-            await _appContext.SaveChangesAsync();
+            t.TenantDBId = tenant.TenantDBId;
+
+            appContext.Tenants.Update(t);
+            await appContext.SaveChangesAsync();
             return true;
         }
+
         public async Task<IList<string>> GetRolesAsync(string username)
         {
             using var scope = _scopeFactory.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await userManager.FindByNameAsync(username);
+
+            ApplicationUser? user = null;
+
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                user = await userManager.FindByNameAsync(username)
+                    ?? await userManager.FindByEmailAsync(username)
+                    ?? await userManager.FindByIdAsync(username);
+            }
+
             if (user == null)
                 return new List<string>();
-            var roles = await userManager.GetRolesAsync(user);
-            return roles;
+
+            return await userManager.GetRolesAsync(user);
         }
-         async Task<ShardingSingleDbContext> CreateDbContext(int tenantId, int? currentUserId = null)
+
+        private async Task<ShardingSingleDbContext> CreateTenantDbContextAsync(int tenantId, int? currentUserId = null)
         {
-            using var _appContext = ContextFactory.CreateDbContext();
-            string? ConnectionString = await _appContext.Tenants
+            using var appContext = ContextFactory.CreateDbContext();
+            var connectionString = await appContext.Tenants
                 .Where(x => x.Id == tenantId)
-                .Select(x => x.TenantDB.ConnectionString)
+                .Select(x => x.TenantDB != null ? x.TenantDB.ConnectionString : null)
                 .FirstOrDefaultAsync();
-            if (string.IsNullOrEmpty(ConnectionString))
-                throw new Exception($"No database found for tenant {tenantId}");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException($"No database found for tenant {tenantId}");
+
             var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
-            optionsBuilder.UseSqlServer(ConnectionString, sqlOptions =>
+            optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
             {
                 sqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(5), errorNumbersToAdd: null);
                 sqlOptions.CommandTimeout(30);
             });
             optionsBuilder.AddInterceptors(new TenantAuditSaveChangesInterceptor());
-            var db = new ShardingSingleDbContext(optionsBuilder.Options)
+
+            return new ShardingSingleDbContext(optionsBuilder.Options)
             {
                 TenantId = tenantId,
                 CurrentUserId = currentUserId
             };
-
-            return db;
         }
 
-        public async Task<ShardingSingleDbContext> CreateDbContext(int tenantId)
-        {
-            using var _appContext = ContextFactory.CreateDbContext();
-            string? ConnectionString = await _appContext.Tenants
-                .Where(x => x.Id == tenantId)
-                .Select(x => x.TenantDB.ConnectionString)
-                .FirstOrDefaultAsync();
-            if (string.IsNullOrEmpty(ConnectionString))
-                throw new Exception($"No database found for tenant {tenantId}");
-            var optionsBuilder = new DbContextOptionsBuilder<ShardingSingleDbContext>();
-            optionsBuilder.UseSqlServer(ConnectionString);
-            optionsBuilder.AddInterceptors(new TenantAuditSaveChangesInterceptor());
-            var db = new ShardingSingleDbContext(optionsBuilder.Options)
-            {
-                TenantId = tenantId
-            };
+        public Task<ShardingSingleDbContext> CreateDbContext(int tenantId)
+            => CreateTenantDbContextAsync(tenantId, null);
 
-            return db;
-        }
         public async Task<bool> RemoveTenant(int TenantId)
         {
-            var dataAccess = await CreateDbContext(TenantId);
+            var dataAccess = await CreateTenantDbContextAsync(TenantId);
 
             dataAccess.User.RemoveRange(dataAccess.User.Where(x => x.TenantId == TenantId));
             dataAccess.Department.RemoveRange(dataAccess.Department.Where(x => x.TenantId == TenantId));
@@ -421,9 +430,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
             dataAccess.Applications.RemoveRange(dataAccess.Applications.Where(x => x.TenantId == TenantId));
             dataAccess.OrganisationCategory.RemoveRange(dataAccess.OrganisationCategory.Where(x => x.TenantId == TenantId));
             await dataAccess.SaveChangesAsync();
+
             dataAccess.Folders.RemoveRange(dataAccess.Folders.Where(x => x.TenantId == TenantId));
             dataAccess.OrganisationType.RemoveRange(dataAccess.OrganisationType.Where(x => x.TenantId == TenantId));
-
             await dataAccess.SaveChangesAsync();
 
             dataAccess.Opportunity.RemoveRange(dataAccess.Opportunity.Where(x => x.TenantId == TenantId));
@@ -433,200 +442,283 @@ namespace ProjectManagement.Adminstrator.Services.Users
             dataAccess.CalculationStatus.RemoveRange(dataAccess.CalculationStatus.Where(x => x.TenantId == TenantId));
             dataAccess.ResourceStatus.RemoveRange(dataAccess.ResourceStatus.Where(x => x.TenantId == TenantId));
             dataAccess.Templates.RemoveRange(dataAccess.Templates.Where(x => x.TenantId == TenantId));
-
             await dataAccess.SaveChangesAsync();
 
-            using var _appContext = ContextFactory.CreateDbContext();
-            var users = await _appContext.Users.Where(x => x.TenantId == TenantId).ToListAsync();
-            foreach (var u in users)
-            {
-                _appContext.Users.Remove(u);
-            }
-            await _appContext.SaveChangesAsync();
-            var tenant = await _appContext.Tenants.FirstOrDefaultAsync(x => x.Id == TenantId);
-            if (tenant is null) return false;
-            _appContext.Tenants.Remove(tenant);
-            await _appContext.SaveChangesAsync();
-
-            return false;
-        }
-        public async Task<bool> UpdateUserAsync(UserPostDTO user, int? tentnid)
-        {
             using var appContext = ContextFactory.CreateDbContext();
+            var users = await appContext.Users.Where(x => x.TenantId == TenantId).ToListAsync();
+            if (users.Count > 0)
+            {
+                appContext.Users.RemoveRange(users);
+                await appContext.SaveChangesAsync();
+            }
 
-            ApplicationUser? olduser = await appContext.Users.FindAsync(user.Id);
-            if (olduser == null || olduser.TenantId != tentnid)
+            var tenant = await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == TenantId);
+            if (tenant is null)
                 return false;
 
-            olduser.Firstname = user.Firstname;
-            olduser.Lastname = user.Lastname;
-            olduser.PhoneNumber = user.PhoneNumber;
-            olduser.PhoneNumberConfirmed = user.PhoneNumberConfirmed;
-            olduser.LockoutEnabled = user.LockoutEnabled;
-            olduser.LockoutStart = user.LockoutStart;
-            olduser.LockoutEnd = user.LockoutEnd;
+            appContext.Tenants.Remove(tenant);
+            await appContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateUserAsync(UserPostDTO user, int? tentnid)
+        {
+            var oldUser = await _userManager.FindByIdAsync(user.Id);
+            if (oldUser == null || oldUser.TenantId != tentnid)
+                return false;
+
+            var isAppUser = !tentnid.HasValue;
+            var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(user.Role, isAppUser);
+            if (normalizedRole is null)
+                return false;
+
+            IdentityUserSyncHelper.ApplyToIdentityUser(
+                oldUser,
+                user.Email,
+                user.Email,
+                tentnid,
+                user.DepartmentId,
+                oldUser.UserId,
+                user.Firstname,
+                user.Lastname,
+                user.PhoneNumber,
+                user.PhoneNumberConfirmed,
+                user.LockoutEnabled,
+                user.LockoutStart,
+                user.LockoutEnd,
+                isAppUser);
 
             if (tentnid.HasValue)
             {
-                var dataAccess = await CreateDbContext(tentnid.Value);
+                await using var dataAccess = await CreateTenantDbContextAsync(tentnid.Value);
 
                 UserEntity? userEntity = null;
-
-                if (olduser.UserId.HasValue)
+                if (oldUser.UserId.HasValue)
                 {
-                    userEntity = await dataAccess.User.FindAsync(olduser.UserId.Value);
+                    userEntity = await dataAccess.User.FindAsync(oldUser.UserId.Value);
                 }
 
+                userEntity ??= await dataAccess.User.FirstOrDefaultAsync(x => x.ExternalAuthId == user.Id);
                 if (userEntity == null)
-                {
-                    userEntity = await dataAccess.User
-                        .FirstOrDefaultAsync(x => x.ExternalAuthId == user.Id);
-                }
-
-                if (userEntity == null)
-                {
                     return false;
+
+                IdentityUserSyncHelper.ApplyToLocalUser(
+                    userEntity,
+                    user.Email,
+                    user.Email,
+                    user.DepartmentId,
+                    user.Firstname,
+                    user.Lastname,
+                    user.Id);
+
+                await dataAccess.SaveChangesAsync();
+                oldUser.UserId = userEntity.Id;
+            }
+
+            var updateResult = await _userManager.UpdateAsync(oldUser);
+            if (!updateResult.Succeeded)
+                return false;
+
+            if (!await IdentityUserSyncHelper.EnsureSingleRoleAsync(_userManager, oldUser, normalizedRole))
+                return false;
+
+            await _userManager.UpdateSecurityStampAsync(oldUser);
+            return true;
+        }
+
+        public async Task<bool> RemoveUserAsync(string id, int? tenantId)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null || (tenantId.HasValue && user.TenantId != tenantId))
+                return false;
+
+            if (tenantId.HasValue && user.TenantId.HasValue)
+            {
+                await using var dataAccess = await CreateTenantDbContextAsync(user.TenantId.Value);
+                UserEntity? localUser = null;
+
+                if (user.UserId.HasValue)
+                {
+                    localUser = await dataAccess.User.FindAsync(user.UserId.Value);
                 }
 
-                userEntity.UpdateProfile(user.Firstname, user.Lastname, user.DepartmentId);
-                userEntity.SetExternalAuthId(user.Id);
+                localUser ??= await dataAccess.User.FirstOrDefaultAsync(x => x.ExternalAuthId == id);
+                if (localUser == null)
+                    return false;
 
+                await dataAccess.Calculations
+                    .Where(x => x.IsPrivate && x.CreatedBy == localUser.Id)
+                    .ExecuteDeleteAsync();
+
+                dataAccess.User.Remove(localUser);
                 await dataAccess.SaveChangesAsync();
             }
 
-            if (!await _userManager.IsInRoleAsync(olduser, user.Role))
+            var result = await _userManager.DeleteAsync(user);
+            return result.Succeeded;
+        }
+
+        public async Task<bool> BlockTenantAsync(int TenantId, bool block)
+        {
+            using var appContext = ContextFactory.CreateDbContext();
+            var users = await appContext.Users.Where(x => x.TenantId == TenantId).ToListAsync();
+            if (users.Count == 0)
+                return false;
+
+            foreach (var item in users)
             {
-                var roles = await _userManager.GetRolesAsync(olduser);
-                await _userManager.RemoveFromRolesAsync(olduser, roles);
-                await _userManager.AddToRoleAsync(olduser, user.Role);
+                item.LockoutEnabled = block;
             }
 
             await appContext.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> RemoveUserAsync(string id, int? tenantId)
-        {
-            using var _appContext = ContextFactory.CreateDbContext();
-            bool result = false;
-            var user = await _appContext.Users.FirstOrDefaultAsync(x => x.Id == id && (tenantId == null || x.TenantId == tenantId));
-            if (user == null) return false;
-            if (tenantId.HasValue && user.TenantId.HasValue)
-            {
-                var dataAccess = await CreateDbContext(user.TenantId.Value);
-                var usert = dataAccess.User.Find(user.UserId);
-                if (usert == null) return false;
-                var calcs = dataAccess.Calculations.Where(x => x.IsPrivate && x.CreatedBy == user.UserId);
-                if (calcs != null)
-                    dataAccess.Calculations.RemoveRange(calcs);
 
-                dataAccess.User.Remove(usert);
-                await dataAccess.SaveChangesAsync();
-            }
-            if (result || !tenantId.HasValue)
-            {
-                _appContext.Users.Remove(user);
-                await _appContext.SaveChangesAsync();
-                return true;
-            }
-            return false;
-        }
-        public async Task<bool> BlockTenantAsync(int TenantId, bool block)
-        {
-            using var _appContext = ContextFactory.CreateDbContext();
-            var users = await _appContext.Users.Where(x => x.TenantId == TenantId).ToListAsync();
-            if (users == null || users.Count == 0) return false;
-            foreach (var item in users)
-            {
-                item.LockoutEnabled = block;
-            }
-            await _appContext.SaveChangesAsync();
-            return true;
-        }
         public async Task<bool> BlockTenantAsync(string userid, bool block)
         {
-            using var _appContext = ContextFactory.CreateDbContext();
-            var user = await _appContext.Users.FirstOrDefaultAsync(x => x.Id == userid);
-            if (user == null) return false;
+            using var appContext = ContextFactory.CreateDbContext();
+            var user = await appContext.Users.FirstOrDefaultAsync(x => x.Id == userid);
+            if (user == null)
+                return false;
+
             user.LockoutEnabled = block;
-            await _appContext.SaveChangesAsync();
+            await appContext.SaveChangesAsync();
             return true;
         }
+
         public async Task<List<ApplicationUser>> GetUsersAsync(int? TenantId, int? department = null)
         {
-            using var _appContext = ContextFactory.CreateDbContext();
-            var users = _appContext.Users.AsQueryable();
+            using var appContext = ContextFactory.CreateDbContext();
+            var users = appContext.Users.AsQueryable();
+
             if (TenantId.HasValue && TenantId > 0)
             {
-                users = users.Where(x => x.TenantId == TenantId && x.DepartmentId == department);
+                users = users.Where(x => x.TenantId == TenantId);
+                if (department.HasValue && department > 0)
+                {
+                    users = users.Where(x => x.DepartmentId == department);
+                }
             }
-            else users = users.Where(x => !x.TenantId.HasValue);
-            return await users.ToListAsync();
+            else
+            {
+                users = users.Where(x => !x.TenantId.HasValue);
+            }
+
+            return await users.OrderBy(x => x.Email).ToListAsync();
         }
+
         public async Task<bool> RegisterAsync(UserPostDTO request, int? tenantId)
         {
-            int? userId = null;
-            UserEntity? ue = null;
-
-            if (tenantId.HasValue)
-            {
-                ue = UserEntity.Create(
-                    tenantId: tenantId.Value,
-                    email: request.Email,
-                    userName: request.Email,
-                    departmentId: request.DepartmentId,
-                    firstName: request.Firstname,
-                    lastName: request.Lastname,
-                    externalAuthId: null
-                );
-
-                var dbTenant = await CreateDbContext(tenantId.Value);
-                dbTenant.User.Add(ue);
-                await dbTenant.SaveChangesAsync();
-                userId = ue.Id;
-            }
-
-            var response = new RegisterDto.Response();
-
-            var userEntity = new ApplicationUser
-            {
-                Email = request.Email,
-                Firstname = request.Firstname,
-                Lastname = request.Lastname,
-                UserName = request.Email,
-                TenantId = tenantId,
-                DepartmentId = null,
-                UserId = userId,
-                LockoutEnabled = request.LockoutEnabled,
-                LockoutStart = request.LockoutStart,
-                LockoutEnd = request.LockoutEnd,
-                PhoneNumber = request.PhoneNumber,
-                PhoneNumberConfirmed = request.PhoneNumberConfirmed,
-            };
-
-            if (tenantId.HasValue && ue is not null && ue.Id == 0)
-            {
+            var isAppUser = !tenantId.HasValue;
+            var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(request.Role, isAppUser);
+            if (normalizedRole is null)
                 return false;
-            }
 
-            var result = await _userManager.CreateAsync(userEntity, request.Email);
+            ShardingSingleDbContext? tenantDb = null;
+            UserEntity? localUser = null;
+            ApplicationUser? identityUser = null;
 
-            if (result.Succeeded)
+            try
             {
-                if (tenantId.HasValue && ue is not null)
+                if (tenantId.HasValue)
                 {
-                    ue.SetExternalAuthId(userEntity.Id);
+                    tenantDb = await CreateTenantDbContextAsync(tenantId.Value);
+                    localUser = UserEntity.Create(
+                        tenantId.Value,
+                        request.Email,
+                        request.Email,
+                        request.DepartmentId,
+                        request.Firstname,
+                        request.Lastname,
+                        null);
 
-                    var dbTenant = await CreateDbContext(tenantId.Value);
-                    dbTenant.User.Update(ue);
-                    await dbTenant.SaveChangesAsync();
+                    tenantDb.User.Add(localUser);
+                    await tenantDb.SaveChangesAsync();
                 }
 
-                await _userManager.AddToRoleAsync(userEntity, request.Role);
-                response.IsSuccessfulRegistration = true;
-                await _userManager.GenerateEmailConfirmationTokenAsync(userEntity);
-            }
+                identityUser = new ApplicationUser
+                {
+                    EmailConfirmed = true
+                };
 
-            return result.Succeeded;
+                IdentityUserSyncHelper.ApplyToIdentityUser(
+                    identityUser,
+                    request.Email,
+                    request.Email,
+                    tenantId,
+                    request.DepartmentId,
+                    localUser?.Id,
+                    request.Firstname,
+                    request.Lastname,
+                    request.PhoneNumber,
+                    request.PhoneNumberConfirmed,
+                    request.LockoutEnabled,
+                    request.LockoutStart,
+                    request.LockoutEnd,
+                    isAppUser);
+
+                var createResult = await _userManager.CreateAsync(
+                    identityUser,
+                    IdentityUserSyncHelper.GenerateTemporaryPassword());
+                if (!createResult.Succeeded)
+                {
+                    if (tenantDb != null && localUser != null)
+                    {
+                        tenantDb.User.Remove(localUser);
+                        await tenantDb.SaveChangesAsync();
+                    }
+
+                    return false;
+                }
+
+                if (!await IdentityUserSyncHelper.EnsureSingleRoleAsync(_userManager, identityUser, normalizedRole))
+                {
+                    await _userManager.DeleteAsync(identityUser);
+
+                    if (tenantDb != null && localUser != null)
+                    {
+                        tenantDb.User.Remove(localUser);
+                        await tenantDb.SaveChangesAsync();
+                    }
+
+                    return false;
+                }
+
+                if (tenantDb != null && localUser != null)
+                {
+                    localUser.SetExternalAuthId(identityUser.Id);
+                    tenantDb.User.Update(localUser);
+                    await tenantDb.SaveChangesAsync();
+
+                    identityUser.UserId = localUser.Id;
+                    var updateResult = await _userManager.UpdateAsync(identityUser);
+                    if (!updateResult.Succeeded)
+                    {
+                        await _userManager.DeleteAsync(identityUser);
+                        tenantDb.User.Remove(localUser);
+                        await tenantDb.SaveChangesAsync();
+                        return false;
+                    }
+                }
+
+                await _userManager.UpdateSecurityStampAsync(identityUser);
+                return true;
+            }
+            catch
+            {
+                if (identityUser != null && !string.IsNullOrWhiteSpace(identityUser.Id))
+                {
+                    await _userManager.DeleteAsync(identityUser);
+                }
+
+                if (tenantDb != null && localUser != null)
+                {
+                    tenantDb.User.Remove(localUser);
+                    await tenantDb.SaveChangesAsync();
+                }
+
+                return false;
+            }
         }
     }
 }

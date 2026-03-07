@@ -119,6 +119,7 @@
     [Parameter] public ApplicationUser? UserForm { get; set; }
     [Parameter] public int? DepartmentId { get; set; }
     [Parameter] public int? TenantId { get; set; }
+    [Parameter] public int? DBID { get; set; }
 
     UserPostDTO Form = new();
     bool IsLoading = true;
@@ -147,6 +148,7 @@
                     LockoutEnd = UserForm.LockoutEnd,
                     PhoneNumber = UserForm.PhoneNumber ?? string.Empty,
                     PhoneNumberConfirmed = UserForm.PhoneNumberConfirmed,
+                    
                 };
             await IniUserApp();
             Form.Role = Roles.FirstOrDefault() ?? string.Empty;

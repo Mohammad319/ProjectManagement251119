@@ -25,14 +25,17 @@ namespace ProjectManagement.Services
 
             var rows = await catalogDb.Tenants
                 .AsNoTracking()
-                .Where(t => t.TenantDB != null)
+                .Where(t => t.TenantDB != null && !string.IsNullOrWhiteSpace(t.TenantDB!.ConnectionString))
                 .Select(t => new { t.Id, t.TenantDB!.ConnectionString })
                 .ToListAsync(ct);
 
             _map.Clear();
-            foreach (var r in rows)
-                _map.TryAdd(r.Id, r.ConnectionString);
+            foreach (var row in rows)
+            {
+                _map[row.Id] = row.ConnectionString;
+            }
         }
+
         public async Task ReloadTenantAsync(int tenantId, CancellationToken ct = default)
         {
             using var scope = scopeFactory.CreateScope();
@@ -44,9 +47,13 @@ namespace ProjectManagement.Services
                 .Select(t => t.TenantDB!.ConnectionString)
                 .SingleOrDefaultAsync(ct);
 
-            if (!string.IsNullOrWhiteSpace(row))
-                _map[tenantId] = row;
-        }
+            if (string.IsNullOrWhiteSpace(row))
+            {
+                _map.TryRemove(tenantId, out _);
+                return;
+            }
 
+            _map[tenantId] = row;
+        }
     }
 }

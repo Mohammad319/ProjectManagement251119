@@ -20,7 +20,6 @@ var conn = AppConnectionStringsReader.Read(builder.Configuration);
 builder.Services.AddProjectManagementApp(builder, conn);
 
 var app = builder.Build();
-
 // Pipeline
 app.UseProjectManagementPipeline();
 

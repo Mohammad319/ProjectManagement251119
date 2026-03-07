@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AuthPermissions.Migrations
 {
     /// <inheritdoc />
-    public partial class db250829 : Migration
+    public partial class db250830 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,15 +30,15 @@ namespace AuthPermissions.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RefreshToken = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    RefreshToken = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: true),
                     TenantId = table.Column<int>(type: "int", nullable: true),
-                    DB = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DB = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: true),
                     LockoutStart = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    Firstname = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Lastname = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Firstname = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Lastname = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -65,8 +65,8 @@ namespace AuthPermissions.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConnectionString = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ConnectionString = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -187,17 +187,17 @@ namespace AuthPermissions.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenantDBId = table.Column<int>(type: "int", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Mobile = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Fax = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Website = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PostCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Street = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BuildNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Mobile = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Fax = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Website = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PostCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Street = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BuildNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateExpire = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     MaxUsers = table.Column<int>(type: "int", nullable: false),
                     MaxCalculations = table.Column<int>(type: "int", nullable: false)
@@ -209,7 +209,8 @@ namespace AuthPermissions.Migrations
                         name: "FK_Tenants_TenantDatabase_TenantDBId",
                         column: x => x.TenantDBId,
                         principalTable: "TenantDatabase",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -245,6 +246,16 @@ namespace AuthPermissions.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_Tenant_Department",
+                table: "AspNetUsers",
+                columns: new[] { "TenantId", "DepartmentId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_Tenant_UserId",
+                table: "AspNetUsers",
+                columns: new[] { "TenantId", "UserId" });
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -252,9 +263,15 @@ namespace AuthPermissions.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tenants_TenantDBId",
+                name: "UX_TenantDatabase_Name",
+                table: "TenantDatabase",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tenants_TenantDB_Name",
                 table: "Tenants",
-                column: "TenantDBId");
+                columns: new[] { "TenantDBId", "Name" });
         }
 
         /// <inheritdoc />

@@ -1,12 +1,11 @@
-﻿using AuthPermissions.Context;
+using AuthPermissions.Context;
+using AuthPermissions.Services;
 using Domain.DTO.User;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.Constant;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace ProjectManagement.Services;
 
@@ -15,73 +14,112 @@ public sealed class TenantUserService(
     IDbContextFactoryTenant dbFactory,
     ITenantContext currentTenant) : ITenantUserService
 {
-    private static string GenerateRandomPassword(int length = 12)
+
+    private async Task<(ApplicationUser? User, bool CreatedNew)> EnsureAuthUserAsync(
+        TenantUserDto tenantUser,
+        string temporaryPassword)
     {
-        const string validChars = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*?";
-        var bytes = RandomNumberGenerator.GetBytes(length);
-        var sb = new StringBuilder(length);
+        if (tenantUser is null || string.IsNullOrWhiteSpace(tenantUser.Email))
+            return (null, false);
 
-        for (int i = 0; i < length; i++)
-            sb.Append(validChars[bytes[i] % validChars.Length]);
+        ApplicationUser? identityUser = null;
 
-        return sb.ToString();
-    }
+        if (!string.IsNullOrWhiteSpace(tenantUser.IdAuth))
+            identityUser = await userManager.FindByIdAsync(tenantUser.IdAuth);
 
-    private async Task<ApplicationUser?> AuthRegisterUserAsync(TenantUserDto tenantUser, string temporaryPassword)
-    {
-        if (tenantUser is null) return null;
+        identityUser ??= await userManager.FindByEmailAsync(tenantUser.Email);
 
-        if (string.IsNullOrWhiteSpace(tenantUser.Email))
-            return null;
+        if (identityUser != null)
+        {
+            if (identityUser.TenantId != currentTenant.TenantId)
+                return (null, false);
 
-        var existingUser = await userManager.FindByEmailAsync(tenantUser.Email);
-        if (existingUser != null) return existingUser;
+            IdentityUserSyncHelper.ApplyToIdentityUser(
+                identityUser,
+                tenantUser.Email,
+                tenantUser.Username ?? tenantUser.Email,
+                currentTenant.TenantId,
+                tenantUser.DepartmentId,
+                identityUser.UserId ?? (tenantUser.Id > 0 ? tenantUser.Id : null),
+                tenantUser.Firstname,
+                tenantUser.Lastname,
+                tenantUser.PhoneNumber,
+                tenantUser.PhoneNumberConfirmed,
+                tenantUser.LockoutEnabled,
+                tenantUser.LockoutStart,
+                tenantUser.LockoutEnd,
+                isAppUser: false);
+
+            var updateExistingResult = await userManager.UpdateAsync(identityUser);
+            if (!updateExistingResult.Succeeded)
+                return (null, false);
+
+            return (identityUser, false);
+        }
 
         var newUser = new ApplicationUser
         {
-            Email = tenantUser.Email,
-            Firstname = tenantUser.Firstname,
-            Lastname = tenantUser.Lastname,
-            UserName = tenantUser.Email,
-            TenantId = currentTenant.TenantId,
-            DepartmentId = tenantUser.DepartmentId,
-            LockoutEnabled = tenantUser.LockoutEnabled,
-            LockoutStart = tenantUser.LockoutStart,
-            LockoutEnd = tenantUser.LockoutEnd,
-            PhoneNumber = tenantUser.PhoneNumber,
-            PhoneNumberConfirmed = tenantUser.PhoneNumberConfirmed,
-            UserId = tenantUser.Id
+            EmailConfirmed = true
         };
 
-        var result = await userManager.CreateAsync(newUser, temporaryPassword);
-        return result.Succeeded ? newUser : null;
+        IdentityUserSyncHelper.ApplyToIdentityUser(
+            newUser,
+            tenantUser.Email,
+            tenantUser.Username ?? tenantUser.Email,
+            currentTenant.TenantId,
+            tenantUser.DepartmentId,
+            tenantUser.Id > 0 ? tenantUser.Id : null,
+            tenantUser.Firstname,
+            tenantUser.Lastname,
+            tenantUser.PhoneNumber,
+            tenantUser.PhoneNumberConfirmed,
+            tenantUser.LockoutEnabled,
+            tenantUser.LockoutStart,
+            tenantUser.LockoutEnd,
+            isAppUser: false);
+
+        var createResult = await userManager.CreateAsync(newUser, temporaryPassword);
+        return createResult.Succeeded ? (newUser, true) : (null, false);
     }
 
     public async Task<bool> RegisterAsync(TenantUserDto request, CancellationToken ct = default)
     {
-        if (request is null) return false;
-        if (string.IsNullOrEmpty(request.Role)) request.Role = PMRolesConst.Tenant.Admin;
+        if (request is null)
+            return false;
 
-        // ✅ كلمة مرور مؤقتة آمنة (لا تجعلها email)
-        var password = GenerateRandomPassword();
+        var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(request.Role, isAppUser: false);
+        if (normalizedRole is null)
+            return false;
 
-        var identityUser = await AuthRegisterUserAsync(request, password);
-        if (identityUser is null) return false;
+        var password = IdentityUserSyncHelper.GenerateTemporaryPassword();
+        var (identityUser, createdNew) = await EnsureAuthUserAsync(request, password);
+        if (identityUser is null)
+            return false;
 
         try
         {
-            await userManager.AddToRoleAsync(identityUser, request.Role);
+            if (!await IdentityUserSyncHelper.EnsureSingleRoleAsync(userManager, identityUser, normalizedRole))
+            {
+                if (createdNew)
+                    await userManager.DeleteAsync(identityUser);
+
+                return false;
+            }
+
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var localUser = await context.User
-                .FirstOrDefaultAsync(x => x.Email == request.Email, ct);
+            var localUser = request.Id > 0
+                ? await context.User.FirstOrDefaultAsync(x => x.Id == request.Id, ct)
+                : null;
+
+            localUser ??= await context.User.FirstOrDefaultAsync(x => x.Email == request.Email, ct);
 
             if (localUser is null)
             {
                 localUser = UserEntity.Create(
                     currentTenant.TenantId,
                     request.Email ?? string.Empty,
-                    request.Email ?? string.Empty,
+                    request.Username ?? request.Email ?? string.Empty,
                     request.DepartmentId,
                     request.Firstname,
                     request.Lastname,
@@ -91,101 +129,164 @@ public sealed class TenantUserService(
             }
             else
             {
-                localUser.SetEmail(request.Email ?? string.Empty);
-                localUser.SetUserName(request.Email ?? string.Empty);
-                localUser.UpdateProfile(request.Firstname, request.Lastname, request.DepartmentId);
-                localUser.SetExternalAuthId(identityUser.Id);
+                IdentityUserSyncHelper.ApplyToLocalUser(
+                    localUser,
+                    request.Email,
+                    request.Username ?? request.Email,
+                    request.DepartmentId,
+                    request.Firstname,
+                    request.Lastname,
+                    identityUser.Id);
+
                 context.User.Update(localUser);
             }
 
             await context.SaveChangesAsync(ct);
 
             identityUser.UserId = localUser.Id;
-            await userManager.UpdateAsync(identityUser);
+            var syncResult = await userManager.UpdateAsync(identityUser);
+            if (!syncResult.Succeeded)
+            {
+                if (createdNew)
+                {
+                    await userManager.DeleteAsync(identityUser);
+                }
 
+                return false;
+            }
+
+            await userManager.UpdateSecurityStampAsync(identityUser);
             return true;
         }
         catch
         {
-            // rollback على مستوى auth user
-            await userManager.DeleteAsync(identityUser);
+            if (createdNew)
+                await userManager.DeleteAsync(identityUser);
+
             return false;
         }
     }
 
     public async Task<bool> RecreateUserAsync(TenantUserDto tenantUser, CancellationToken ct = default)
     {
-        if (tenantUser is null) return false;
-        if (string.IsNullOrEmpty(tenantUser.Role)) tenantUser.Role = PMRolesConst.Tenant.Admin;
+        if (tenantUser is null)
+            return false;
 
-        var password = GenerateRandomPassword();
+        var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(tenantUser.Role, isAppUser: false);
+        if (normalizedRole is null)
+            return false;
 
-        var authUser = await AuthRegisterUserAsync(tenantUser, password);
-        if (authUser is null) return false;
+        var password = IdentityUserSyncHelper.GenerateTemporaryPassword();
+        var (authUser, createdNew) = await EnsureAuthUserAsync(tenantUser, password);
+        if (authUser is null)
+            return false;
 
-        await userManager.AddToRoleAsync(authUser, tenantUser.Role);
-        await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == tenantUser.Id, ct);
-        if (userEntity != null)
+        if (!await IdentityUserSyncHelper.EnsureSingleRoleAsync(userManager, authUser, normalizedRole))
         {
-            userEntity.SetExternalAuthId(authUser.Id);
-            context.User.Update(userEntity);
-            await context.SaveChangesAsync(ct);
+            if (createdNew)
+                await userManager.DeleteAsync(authUser);
+
+            return false;
         }
 
+        await using var context = await dbFactory.CreateDbContextAsync(ct);
+        var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == tenantUser.Id, ct);
+        if (userEntity == null)
+            return false;
+
+        IdentityUserSyncHelper.ApplyToLocalUser(
+            userEntity,
+            tenantUser.Email,
+            tenantUser.Username ?? tenantUser.Email,
+            tenantUser.DepartmentId,
+            tenantUser.Firstname,
+            tenantUser.Lastname,
+            authUser.Id);
+
+        context.User.Update(userEntity);
+        await context.SaveChangesAsync(ct);
+
+        authUser.UserId = userEntity.Id;
+        var updateResult = await userManager.UpdateAsync(authUser);
+        if (!updateResult.Succeeded)
+            return false;
+
+        await userManager.UpdateSecurityStampAsync(authUser);
         return true;
     }
 
     public async Task<bool> UpdateUserAsync(TenantUserDto user, CancellationToken ct = default)
     {
-        if (user is null) return false;
+        if (user is null)
+            return false;
+
+        var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(user.Role, isAppUser: false);
+        if (normalizedRole is null)
+            return false;
 
         ApplicationUser? oldUser = null;
         if (!string.IsNullOrWhiteSpace(user.IdAuth))
             oldUser = await userManager.FindByIdAsync(user.IdAuth);
 
+        oldUser ??= !string.IsNullOrWhiteSpace(user.Email)
+            ? await userManager.FindByEmailAsync(user.Email)
+            : null;
+
         if (oldUser is null || oldUser.TenantId != currentTenant.TenantId)
             return false;
 
-        oldUser.Firstname = user.Firstname;
-        oldUser.Lastname = user.Lastname;
-        oldUser.PhoneNumber = user.PhoneNumber;
-        oldUser.PhoneNumberConfirmed = user.PhoneNumberConfirmed;
-        oldUser.LockoutEnabled = user.LockoutEnabled;
-        oldUser.LockoutStart = user.LockoutStart;
-        oldUser.LockoutEnd = user.LockoutEnd;
+        IdentityUserSyncHelper.ApplyToIdentityUser(
+            oldUser,
+            user.Email,
+            user.Username ?? user.Email,
+            currentTenant.TenantId,
+            user.DepartmentId,
+            oldUser.UserId ?? (user.Id > 0 ? user.Id : null),
+            user.Firstname,
+            user.Lastname,
+            user.PhoneNumber,
+            user.PhoneNumberConfirmed,
+            user.LockoutEnabled,
+            user.LockoutStart,
+            user.LockoutEnd,
+            isAppUser: false);
 
-        await userManager.UpdateAsync(oldUser);
-        await userManager.UpdateSecurityStampAsync(oldUser);
+        var updateResult = await userManager.UpdateAsync(oldUser);
+        if (!updateResult.Succeeded)
+            return false;
+
         await using var context = await dbFactory.CreateDbContextAsync(ct);
 
         var userEntity = await context.User.FirstOrDefaultAsync(x => x.Id == user.Id, ct);
         if (userEntity != null)
         {
-            userEntity.SetEmail(user.Email ?? string.Empty);
-            userEntity.SetUserName(user.Username ?? user.Email ?? string.Empty);
-            userEntity.UpdateProfile(user.Firstname, user.Lastname, user.DepartmentId);
-            userEntity.SetExternalAuthId(user.IdAuth);
+            IdentityUserSyncHelper.ApplyToLocalUser(
+                userEntity,
+                user.Email,
+                user.Username ?? user.Email,
+                user.DepartmentId,
+                user.Firstname,
+                user.Lastname,
+                oldUser.Id);
 
             context.User.Update(userEntity);
             await context.SaveChangesAsync(ct);
+            oldUser.UserId = userEntity.Id;
+            await userManager.UpdateAsync(oldUser);
         }
 
-        var roles = await userManager.GetRolesAsync(oldUser);
-        if (!string.IsNullOrWhiteSpace(user.Role) && !roles.Contains(user.Role))
-        {
-            await userManager.RemoveFromRolesAsync(oldUser, roles);
-            await userManager.AddToRoleAsync(oldUser, user.Role);
-        }
+        if (!await IdentityUserSyncHelper.EnsureSingleRoleAsync(userManager, oldUser, normalizedRole))
+            return false;
 
+        await userManager.UpdateSecurityStampAsync(oldUser);
         return true;
     }
 
     private async Task<bool> DeleteUserFromAuthAsync(string authId)
     {
         var user = await userManager.FindByIdAsync(authId);
-        if (user is null || user.TenantId != currentTenant.TenantId) return false;
+        if (user is null || user.TenantId != currentTenant.TenantId)
+            return false;
 
         var result = await userManager.DeleteAsync(user);
         return result.Succeeded;
@@ -230,16 +331,13 @@ public sealed class TenantUserService(
         await using var context = await dbFactory.CreateDbContextAsync(ct);
 
         var tenantUsersQuery = context.User.AsQueryable();
-
         if (department.HasValue)
             tenantUsersQuery = tenantUsersQuery.Where(x => x.DepartmentId == department.Value);
 
-        // 1) اسحب مستخدمي التينانت من DB (خفيف)
         var tenantUsers = await tenantUsersQuery
             .AsNoTracking()
             .ToListAsync(ct);
 
-        // 2) اسحب من Identity فقط الأعمدة المطلوبة (بدون تحميل entity كاملة)
         var authDict = await userManager.Users
             .Where(x => x.TenantId == currentTenant.TenantId)
             .AsNoTracking()
@@ -248,11 +346,12 @@ public sealed class TenantUserService(
                 x.Id,
                 x.LockoutEnabled,
                 x.LockoutEnd,
-                x.LockoutStart
+                x.LockoutStart,
+                x.PhoneNumber,
+                x.PhoneNumberConfirmed
             })
             .ToDictionaryAsync(x => x.Id, x => x, StringComparer.Ordinal, ct);
 
-        // 3) Merge
         var result = new List<TenantUserDto>(tenantUsers.Count);
 
         foreach (var tUser in tenantUsers)
@@ -271,7 +370,9 @@ public sealed class TenantUserService(
                 IsInAuth = appUser != null,
                 LockoutEnabled = appUser?.LockoutEnabled ?? false,
                 LockoutEnd = appUser?.LockoutEnd,
-                LockoutStart = appUser?.LockoutStart
+                LockoutStart = appUser?.LockoutStart,
+                PhoneNumber = appUser?.PhoneNumber,
+                PhoneNumberConfirmed = appUser?.PhoneNumberConfirmed ?? false
             });
         }
 

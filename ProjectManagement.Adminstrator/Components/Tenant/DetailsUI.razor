@@ -71,11 +71,11 @@
     </div>
 
     <!-- أزرار إدارية -->
-    <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
+    @* <AuthorizeView Roles="@PMRolesConst.APP.Admin"> *@
         <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom2" @onclick="(e) => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
             New User
         </button>
-    </AuthorizeView>
+    @* </AuthorizeView> *@
 
     @if (Users == null || !Users.Any())
     {
@@ -116,13 +116,13 @@
                             </td>
                             <td class="@CsS.Table.Td">@user.DepartmentId</td>
                             <td class="@CsS.Table.Td">
-                                <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
+                                @* <AuthorizeView Roles="@PMRolesConst.APP.Admin"> *@
                                     <button class="@CsS.Btn.Outline.Primary"
                                             @onclick="() => AddBasicCompanyInfoAsync(user)"
                                             disabled="@IsAddingCompanyInfoFor(user)">
                                         @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
                                     </button>
-                                </AuthorizeView>
+                                @* </AuthorizeView> *@
                             </td>
                         </tr>
                     }

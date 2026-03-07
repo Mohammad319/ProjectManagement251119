@@ -1,7 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-	  <TargetFramework>net10.0</TargetFramework>
-	  <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,9 +18,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
-	<ItemGroup>
-		<Content Update="shardingsettings.Development.json">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
+
+  <ItemGroup>
+    <Content Update="shardingsettings.Development.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

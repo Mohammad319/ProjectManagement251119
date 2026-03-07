@@ -1,74 +1,120 @@
-﻿using AuthPermissions.Context;
+using AuthPermissions.Context;
 using Domain.Repository.AuthPermissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Models.Account;
-namespace AuthPermissions.Services.Implement
+
+namespace AuthPermissions.Services.Implement;
+
+public class AuthRepository(
+    ApplicationDbContext appContext,
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager) : IAuthRepository
 {
-    public class AuthRepository(ApplicationDbContext _appContext, UserManager<ApplicationUser> _userManager,
-        RoleManager<IdentityRole> _roleManager) : IAuthRepository
+    public static string[] GetRoles() => [.. IdentityUserSyncHelper.GetAllRoles()];
+
+    public async Task<bool> Initialize(string email, string pass)
     {
-        public static string[] GetRoles()
-        {
-            return [PMRolesConst.APP.Admin, PMRolesConst.APP.SuperManger, PMRolesConst.APP.Manger, PMRolesConst.APP.User,
-            PMRolesConst.Tenant.Admin,PMRolesConst.Tenant.SuperManger,PMRolesConst.Tenant.Manger,PMRolesConst.Tenant.User];
-        }
-        public async Task<bool> Initialize(string email, string pass)
-        {
-            foreach (var role in GetRoles())
-            {
-                if (!await _roleManager.RoleExistsAsync(role))
-                    await _roleManager.CreateAsync(new IdentityRole { Name = role, NormalizedName = role, ConcurrencyStamp = role });
-            }
+        if (!await IdentityUserSyncHelper.EnsureRolesExistAsync(roleManager, IdentityUserSyncHelper.GetAllRoles()))
+            return false;
 
-            var Admin = new ApplicationUser
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(pass))
+            return true;
+
+        var normalizedEmail = email.Trim();
+        var admin = await userManager.FindByEmailAsync(normalizedEmail);
+        var created = false;
+
+        if (admin is null)
+        {
+            admin = new ApplicationUser
             {
-                UserName = email,
-                Email = email,
+                UserName = normalizedEmail,
+                Email = normalizedEmail,
                 EmailConfirmed = true,
+                TenantId = null,
+                DepartmentId = null
             };
-            var result = await _userManager.CreateAsync(Admin, pass);
-            if (result.Succeeded)
-            {
-                await _userManager.AddToRoleAsync(Admin, PMRolesConst.APP.Admin);
-            }
-            return result.Succeeded;
-        }
-        public async Task<IEnumerable<UserAuthModel>> GetUsersAsync(int? TenantId, int? DepartmentId)
-        {
-            var users = _appContext.Users.AsQueryable();
-            if (TenantId.HasValue && TenantId > 0)
-            {
-                users = users.Where(x => x.TenantId == TenantId);
-                if (DepartmentId.HasValue && DepartmentId > 0)
-                    users = users.Where(x => x.DepartmentId == DepartmentId);
-                else users = users.Where(x => x.DepartmentId == null);
-            }
-            else users = users.Where(x => !x.TenantId.HasValue);
-            IList<UserAuthModel> model = [];
-            foreach (var user in await users.ToListAsync())
-            {
-                model.Add(new UserAuthModel()
-                {
-                    Firstname = user.Firstname,
-                    Lastname = user.Lastname,
-                    LockoutStart = user.LockoutStart,
-                    Email = user.Email,
-                    UserId = user.UserId,
-                    DepartmentId = user.DepartmentId,
-                    Username = user.UserName,
-                    PhoneNumber = user.PhoneNumber,
-                    PhoneNumberConfirmed = user.PhoneNumberConfirmed,
-                    Id = user.Id,
-                    LockoutEnabled = user.LockoutEnabled,
-                    LockoutEnd = user.LockoutEnd,
-                    NormalizedEmail = user.NormalizedEmail,
-                    //Roles = await _userManager.GetRolesAsync(user)
-                });
-            }
 
-            return model;
+            var createResult = await userManager.CreateAsync(admin, pass);
+            if (!createResult.Succeeded)
+                return false;
+
+            created = true;
         }
+        else
+        {
+            IdentityUserSyncHelper.ApplyToIdentityUser(
+                admin,
+                normalizedEmail,
+                normalizedEmail,
+                tenantId: null,
+                departmentId: null,
+                localUserId: null,
+                firstName: admin.Firstname,
+                lastName: admin.Lastname,
+                phoneNumber: admin.PhoneNumber,
+                phoneNumberConfirmed: admin.PhoneNumberConfirmed,
+                lockoutEnabled: admin.LockoutEnabled,
+                lockoutStart: admin.LockoutStart,
+                lockoutEnd: admin.LockoutEnd,
+                isAppUser: true);
+
+            admin.EmailConfirmed = true;
+
+            var updateResult = await userManager.UpdateAsync(admin);
+            if (!updateResult.Succeeded)
+                return false;
+        }
+
+        if (!await IdentityUserSyncHelper.EnsureExactRolesAsync(
+                userManager,
+                admin,
+                IdentityUserSyncHelper.GetAppRoles(),
+                IdentityUserSyncHelper.GetAllRoles()))
+        {
+            return false;
+        }
+
+        if (!created)
+            await userManager.UpdateSecurityStampAsync(admin);
+
+        return true;
+    }
+
+    public async Task<IEnumerable<UserAuthModel>> GetUsersAsync(int? tenantId, int? departmentId)
+    {
+        var users = appContext.Users.AsNoTracking().AsQueryable();
+
+        if (tenantId.HasValue && tenantId > 0)
+        {
+            users = users.Where(x => x.TenantId == tenantId);
+            if (departmentId.HasValue && departmentId > 0)
+                users = users.Where(x => x.DepartmentId == departmentId);
+        }
+        else
+        {
+            users = users.Where(x => !x.TenantId.HasValue);
+        }
+
+        return await users
+            .OrderBy(x => x.Email)
+            .Select(user => new UserAuthModel
+            {
+                Firstname = user.Firstname,
+                Lastname = user.Lastname,
+                LockoutStart = user.LockoutStart,
+                Email = user.Email ?? string.Empty,
+                UserId = user.UserId,
+                DepartmentId = user.DepartmentId,
+                Username = user.UserName ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                Id = user.Id,
+                LockoutEnabled = user.LockoutEnabled,
+                LockoutEnd = user.LockoutEnd,
+                NormalizedEmail = user.NormalizedEmail ?? string.Empty
+            })
+            .ToListAsync();
     }
 }

@@ -41,7 +41,11 @@
                     <InputText class="@CsS.Input.Text" @bind-Value="@Put.Name" />
                     <ValidationMessage For="@(() => Put.Name)" class="@CsS.Text.Danger" />
                 </div>
-
+                <div>
+                    <label class="@CsS.Form.Label">url:</label>
+                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Website" />
+                    <ValidationMessage For="@(() => Put.Website)" class="@CsS.Text.Danger" />
+                </div>
                 <div>
                     <label class="@CsS.Form.Label">@AppControll.expire:</label>
                     <InputDate class="@CsS.Input.Date" @bind-Value="@Put.DateExpire" />

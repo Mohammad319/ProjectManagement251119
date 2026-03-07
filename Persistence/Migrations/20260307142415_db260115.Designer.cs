@@ -12,8 +12,8 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260307055029_Step6_RemoveTenantIdIdIndexes")]
-    partial class Step6_RemoveTenantIdIdIndexes
+    [Migration("20260307142415_db260115")]
+    partial class db260115
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
