@@ -21,14 +21,6 @@
 		<DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**</DefaultItemExcludes>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <Content Remove="C:\Users\ataya\.nuget\packages\contextmenumhd\1.4.5\contentFiles\any\net10.0\package-lock.json" />
-	  <Content Remove="C:\Users\ataya\.nuget\packages\contextmenumhd\1.4.5\contentFiles\any\net10.0\package.json" />
-	  <Content Remove="C:\Users\ataya\.nuget\packages\pax.blazorchartjs\0.8.5\contentFiles\any\net8.0\tsconfig.json" />
-	  <Content Remove="C:\Users\engmo\.nuget\packages\contextmenumhd\1.4.5\contentFiles\any\net10.0\package-lock.json" />
-	  <Content Remove="C:\Users\engmo\.nuget\packages\contextmenumhd\1.4.5\contentFiles\any\net10.0\package.json" />
-	  <Content Remove="C:\Users\engmo\.nuget\packages\pax.blazorchartjs\0.8.5\contentFiles\any\net8.0\tsconfig.json" />
-	</ItemGroup>
 
 	<ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />

@@ -8,11 +8,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
+namespace ProjectManagement.Client.Shared.Repositories.Folder
 {
     public class FolderRepository(HTTPRepository _httpRepository) : IFolderRepository
     {
-        static string FolderURLBase => "api/v1/folders/";
+        static string FolderURLBase => PMAPIConst.Folders;
         public async Task<List<FolderMVVM>> GetByDepartmentAsync(int DepartmentId)
             => (await _httpRepository.GetAsync<List<FolderMVVM>>(FolderURLBase + URLConst.Folder.GetFoldersByDepartmentId + $"/{DepartmentId}")).OrderByDescending(x => x.Order).ToList();
         public async Task<List<FolderMVVM>> GetByVisible(bool IsVisible)

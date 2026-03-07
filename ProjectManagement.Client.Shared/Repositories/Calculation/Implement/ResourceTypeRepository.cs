@@ -12,17 +12,17 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
     public class ResourceTypeRepository(HTTPRepository _httpRepository) : IResourceTypeRepository
     {
         static string ResourceTypeURLBase => PMAPIConst.ResourceType;
-        static List<ListResourceTypeDTO> resourceTypes;
+        private List<ListResourceTypeDTO>? _resourceTypes;
         public async Task<List<ListResourceTypeDTO>> GetLocalAsync()
         {
-            if (resourceTypes == null)
+            if (_resourceTypes == null)
                 await GetVisualResourcesAsync();
-            return resourceTypes;
+            return _resourceTypes ?? [];
         }
         public async Task<List<ListResourceTypeDTO>> GetVisualResourcesAsync()
         {
-            resourceTypes = [.. (await _httpRepository.GetAsync<List<ListResourceTypeDTO>>(ResourceTypeURLBase + URLConst.GetAll)).OrderBy(x => x.Order)];
-            return resourceTypes;
+            _resourceTypes = [.. (await _httpRepository.GetAsync<List<ListResourceTypeDTO>>(ResourceTypeURLBase + URLConst.GetAll)).OrderBy(x => x.Order)];
+            return _resourceTypes;
         }
         public async Task<List<ResourceSortModel>> GetResourceSortAsync(int resourceId)
         {

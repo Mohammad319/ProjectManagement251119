@@ -2,7 +2,6 @@
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.MVVM.Offer;
-using ProjectManagement.Client.Shared.Repositories;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.Project;
 using ProjectManagement.Shared.DTO.ResourceType;
@@ -24,7 +23,6 @@ namespace ProjectManagement.Client.Pages.Offer
         List<ListProjectMVVM>? Projects;
         List<ListCalculationMVVM>? Calcs;
         List<ListDTO> Organisations = [];
-        [Inject] HTTPRepository _httpRepository { get; set; } = default!;
         private void OnInputOrgChanged(ChangeEventArgs e)
         {
             var selectedName = e.Value?.ToString();
@@ -98,7 +96,7 @@ namespace ProjectManagement.Client.Pages.Offer
             if (Post.Type == CalculationItemType.task)
             {
                 ResourceTypes = await Repo.ResType.GetLocalAsync();
-                Statues = [.. (await _httpRepository.GetAsync<List<ListOrderDTO>>(PMAPIConst.ResourceStatus + $"?id={null}"))];
+                Statues = [.. await Repo.Resource.GetStatusesAsync()];
             }
             else
             {

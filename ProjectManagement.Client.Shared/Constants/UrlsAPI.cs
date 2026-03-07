@@ -1,8 +1,8 @@
 ﻿namespace ProjectManagement.Client.Shared.Constants
 {
-    public class PMAPIConst
+    public static class PMAPIConst
     {
-        public static string Server { private get; set; }
+        public static string Server { private get; set; } = string.Empty;
         public static string ApiV1 => Server + "api/v1/";
         public static string Projects => ApiV1 + "projects/";
         public static string Opportunity => ApiV1 + "opportunity/";
@@ -35,6 +35,8 @@
         public static string Account => ApiV1 + "accounts/";
         public static string Tenant => ApiV1 + "Tenant/";
         public static string ResourceType => ApiV1 + "ResourceType/";
+        public static string Departments => ApiV1 + "Departments/";
+        public static string ItemCalcCategory => ApiV1 + "ItemCalcCategory/";
         public static string Details => "details/";
 
     }

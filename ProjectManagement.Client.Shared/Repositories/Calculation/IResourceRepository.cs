@@ -9,6 +9,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
     public interface IResourceRepository
     {
         Task<ResourceFormDTO> GetConfigForm();
+        Task<List<ListOrderDTO>> GetStatusesAsync(int? id = null);
 
         Task<bool> ReOrderAsync(int Id, int newOrder);
         Task<bool> CreateAsync(List<ResourcePostDTO> models, int taskId);

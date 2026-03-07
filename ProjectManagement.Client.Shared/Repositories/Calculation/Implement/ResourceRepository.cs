@@ -42,5 +42,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         {
             return await _httpRepository.GetAsync<ResourceFormDTO>(ResourceURLBase + $"");
         }
+
+        public async Task<List<ListOrderDTO>> GetStatusesAsync(int? id = null)
+        {
+            return await _httpRepository.GetAsync<List<ListOrderDTO>>(PMAPIConst.ResourceStatus + $"?id={id}");
+        }
     }
 }

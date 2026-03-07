@@ -14,6 +14,7 @@ namespace ProjectManagement.Client.Services
         ResourceService Resource { get; }
         TaskService Task { get; }
         FolderService Folder { get; }
+        FolderState FolderState { get; }
         MhdServices Mhd { get; }
     }
 

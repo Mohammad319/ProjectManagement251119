@@ -10,7 +10,7 @@ namespace ProjectManagement.Client.DependencyInjection
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<FolderService>();
-            services.AddSingleton<FolderState>();
+            services.AddScoped<FolderState>();
             services.AddScoped<CalculationService>();
             services.AddScoped<ResourceService>();
             services.AddScoped<TaskService>();

@@ -2,6 +2,7 @@
 using ProjectManagement.Client.Shared.Repositories;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Client.Handless
 {
@@ -134,10 +135,11 @@ namespace ProjectManagement.Client.Handless
         {
             public string? Title { get; set; }
             public string? Detail { get; set; }
-            public Dictionary<string, object>? Extensions { get; set; }
+            [JsonExtensionData]
+            public Dictionary<string, JsonElement>? Extensions { get; set; }
 
             public string? TraceId =>
-                Extensions != null && Extensions.TryGetValue("traceId", out var v) ? v?.ToString() : null;
+                Extensions != null && Extensions.TryGetValue("traceId", out var v) ? v.GetString() ?? v.ToString() : null;
         }
     }
 }

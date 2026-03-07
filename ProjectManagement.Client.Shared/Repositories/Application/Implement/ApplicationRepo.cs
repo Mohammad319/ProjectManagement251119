@@ -15,7 +15,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Application.Implement
             return await _httpRepository.GetAsync<List<ApplicationModel>>(ApplicationURLBase + $"?wnv={withNoneVisible}");
         }
 
-        public async Task<List<ApplicationValuesModel>> GetGetCalcAppValuesAsync(int calcId)
+        public async Task<List<ApplicationValuesModel>> GetCalcAppValuesAsync(int calcId)
         {
             return await _httpRepository.GetAsync<List<ApplicationValuesModel>>(ApplicationURLBase + URLConst.Application.AppCalculationValues + $"/{calcId}");
         }

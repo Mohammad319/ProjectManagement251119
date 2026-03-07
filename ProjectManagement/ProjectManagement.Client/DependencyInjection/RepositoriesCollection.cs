@@ -44,7 +44,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 
-            services.AddSingleton<AppState>();
+            services.AddScoped<AppState>();
             return services;
         }
     }
