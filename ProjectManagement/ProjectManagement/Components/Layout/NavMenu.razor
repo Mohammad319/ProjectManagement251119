@@ -82,7 +82,7 @@
         <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index:17;">
             <div class="pointer-events-auto w-[90vw] h-[90vh] rounded-2xl bg-white text-slate-900 shadow-2xl ring-1 ring-black/5
                                 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10 box-border flex flex-col overflow-hidden">
-                <div class="p-5 flex items-start justify-between gap-4 border-b border-slate-200 dark:border-slate-700">
+                <div class="p-2 flex items-start justify-between gap-4 border-b border-slate-200 dark:border-slate-700">
                     <div>
                         <h2 class="text-xl font-semibold">@GetDialogTitle()</h2>
                         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">@PMWebResource.SettingsDescription</p>
@@ -95,7 +95,7 @@
                         ×
                     </button>
                 </div>
-                <div class="flex-1 p-5 overflow-auto">
+                <div class="flex-1 p-1 overflow-auto">
                     @if (Page == "control")
                     {
                         <Control />
