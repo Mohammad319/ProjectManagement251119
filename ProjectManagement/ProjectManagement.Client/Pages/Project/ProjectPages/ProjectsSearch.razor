@@ -8,24 +8,29 @@
 @inherits AppComponentBase
 @using ProjectManagement.Shared.Enums
 
-<style>
-    .maxWidth {
-    max-width: 200px;
-    }
-</style>
-<div class="@CssClasses.Modal.Body">
-    <EditForm id="myForm" Model="@projectFilter" OnValidSubmit="async () => await HandleSubmitAsync()">
+<div class="@($"{CssClasses.Modal.Body} flex flex-col gap-4")">
+    <EditForm id="myForm" Model="@projectFilter" OnValidSubmit="async () => await HandleSubmitAsync()" class="rounded-xl border border-slate-200 bg-slate-50 p-4">
         <DataAnnotationsValidator />
-        <div class="@CssClasses.Grid.Col.MD4">
-            <div class="@CssClasses.Grid.Span.MD2">
+
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h5 class="m-0 text-lg font-bold">Projects Search</h5>
+            <button class="@($"{CssClasses.Btn.Solid.Primary} inline-flex items-center gap-2")" type="button" disabled="@IsLoading" @onclick="() => DetailsDiv = !DetailsDiv">
+                <span class="oi @(DetailsDiv ? "oi-arrow-top" : "oi-arrow-bottom")"></span>
+                <span>@(DetailsDiv ? "Hide details" : "Show details")</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div class="min-w-0 md:col-span-2 xl:col-span-4">
                 <label class="@CssClasses.Form.Label">@CalcResource.name</label>
                 <InputText class="@CssClasses.Input.Text" @bind-Value="@projectFilter.Name" />
                 <ValidationMessage For="(() => projectFilter.Name)" />
             </div>
+
             @if (DetailsDiv)
             {
-                <div>
-                    <label class="@CssClasses.Form.Label"></label>
+                <div class="min-w-0">
+                    <label class="@CssClasses.Form.Label">@CalcResource.name</label>
                     <InputSelect @bind-Value="projectFilter.NameOperator" class="@CssClasses.Input.Text">
                         <option value="%var%" selected>%Var%</option>
                         <option value="==">==</option>
@@ -35,33 +40,38 @@
                     </InputSelect>
                     <ValidationMessage For="(() => projectFilter.NameOperator)" />
                 </div>
-                <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.startDate 1: </label>
+
+                <div class="min-w-0">
+                    <label class="@CssClasses.Form.Label">@CalcResource.startDate 1</label>
                     <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.StartDate1"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.StartDate1)" />
                 </div>
-                <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.startDate 2: </label>
+
+                <div class="min-w-0">
+                    <label class="@CssClasses.Form.Label">@CalcResource.startDate 2</label>
                     <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.StartDate2"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.StartDate2)" />
                 </div>
 
-                <div>
+                <div class="min-w-0">
                     <label class="@CssClasses.Form.Label">@CalcResource.endDate 1</label>
                     <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.EndDate1"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.EndDate1)" />
                 </div>
-                <div>
+
+                <div class="min-w-0">
                     <label class="@CssClasses.Form.Label">@CalcResource.endDate 2</label>
                     <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.EndDate2"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.EndDate2)" />
                 </div>
-                <div>
+
+                <div class="min-w-0">
                     <label class="@CssClasses.Form.Label">@CalcResource.code</label>
                     <InputText class="@CssClasses.Input.Text" @bind-Value="@projectFilter.Code" />
                     <ValidationMessage For="@(() => projectFilter.Code)" />
                 </div>
-                <div>
+
+                <div class="min-w-0">
                     <label class="@CssClasses.Form.Label">@ResourceIdentity.customer</label>
                     <InputSelect @bind-Value="projectFilter.CustomerId" class="@CssClasses.Input.Text">
                         <option></option>
@@ -75,43 +85,46 @@
                     </InputSelect>
                     <ValidationMessage For="@(() => projectFilter.CustomerId)" />
                 </div>
-                    <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@projectFilter.IsVisible" />
-                        <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
-                    </div>
+
+                <div class="@($"{CssClasses.Form.CheckWrapperM} flex items-center gap-2 pt-7")">
+                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@projectFilter.IsVisible" />
+                    <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
+                </div>
             }
-            <div>
-                <button type="submit" form="myForm" class="@CssClasses.Btn.Solid.Primary" disabled="@IsLoading"><span>@((MarkupString)Icons.Search)</span></button>
-                <button class="@CssClasses.Btn.Solid.Primary" disabled="@IsLoading" @onclick="() => DetailsDiv = !DetailsDiv"> <span class="oi @(DetailsDiv?"oi-arrow-top":"oi-arrow-bottom") "></span> </button>
-                <button class="@CssClasses.Btn.Solid.Danger" disabled="@IsLoading" @onclick="async () => await CallBack.InvokeAsync()">@ResourceApp.cancel</button>
-            </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-2">
+            <button type="submit" form="myForm" class="@CssClasses.Btn.Solid.Primary" disabled="@IsLoading"><span>@((MarkupString)Icons.Search)</span> Search</button>
+            <button class="@CssClasses.Btn.Solid.Danger" type="button" disabled="@IsLoading" @onclick="async () => await CallBack.InvokeAsync()">@ResourceApp.cancel</button>
         </div>
     </EditForm>
 
-    <table class ="@CssClasses.Table.Tab">
-        <thead class="@CssClasses.Table.Thead">
-            <tr>
-                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                <th class="@CssClasses.Table.TH">@CalcResource.code</th>
-                <th class="@CssClasses.Table.TH">@CalcResource.startDate</th>
-                <th class="@CssClasses.Table.TH">@CalcResource.endDate</th>
-            </tr>
-        </thead>
-        <tbody class="@CssClasses.Table.TBody">
-            @if (projects != null)
-                foreach (var project in projects)
-                {
-                    <tr>
-                        <td scope="row">
-                            <button class="@CssClasses.Btn.Link" @onclick="async ()=> await ProjectSelected(project)" disabled="@IsLoading">@project.Name</button>
-                        </td>
-                        <td>@project.Code</td>
-                        <td>@project.StartDate.ToString(ConstValues.DateFormat)</td>
-                        <td>@project.EndDate.ToString(ConstValues.DateFormat)</td>
-                    </tr>
-                }
-        </tbody>
-    </table>
+    <div class="overflow-auto rounded-xl border border-slate-200 bg-white">
+        <table class="@CssClasses.Table.Tab">
+            <thead class="@CssClasses.Table.Thead">
+                <tr>
+                    <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+                    <th class="@CssClasses.Table.TH">@CalcResource.code</th>
+                    <th class="@CssClasses.Table.TH">@CalcResource.startDate</th>
+                    <th class="@CssClasses.Table.TH">@CalcResource.endDate</th>
+                </tr>
+            </thead>
+            <tbody class="@CssClasses.Table.TBody">
+                @if (projects != null)
+                    foreach (var project in projects)
+                    {
+                        <tr>
+                            <td scope="row">
+                                <button class="@CssClasses.Btn.Link" @onclick="async ()=> await ProjectSelected(project)" disabled="@IsLoading">@project.Name</button>
+                            </td>
+                            <td>@project.Code</td>
+                            <td>@project.StartDate.ToString(ConstValues.DateFormat)</td>
+                            <td>@project.EndDate.ToString(ConstValues.DateFormat)</td>
+                        </tr>
+                    }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @code {
