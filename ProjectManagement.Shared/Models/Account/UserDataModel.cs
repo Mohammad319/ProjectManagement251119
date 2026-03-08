@@ -35,6 +35,8 @@ namespace ProjectManagement.Shared.Models.Account
         public DateTimeOffset? LockoutStart { get; set; }
         public int? DepartmentId { get; set; }
         public string Role { get; set; } = PMRolesConst.Tenant.Manger;
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
 
     }
 }

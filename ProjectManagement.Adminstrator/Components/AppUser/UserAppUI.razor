@@ -4,7 +4,7 @@
 @using ProjectManagement.Shared.Models.Account
 @inherits AppComponentBase
 @inject IUsersService UsersService
-@attribute [Authorize(Roles = PMRolesConst.APP.Users)]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
     <table class="@CsS.Table.Tab">

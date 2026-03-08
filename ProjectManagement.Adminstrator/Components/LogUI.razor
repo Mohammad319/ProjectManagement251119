@@ -5,7 +5,7 @@
 @using ProjectManagement.Client.Adminstrator.Services.MHDBlazor
 @using ProjectManagement.Shared.DTO.Tenant
 @using ProjectManagement.Shared.DTO.Tenant.Logs
-@attribute [Authorize(Roles = PMRolesConst.APP.Users)]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject ApplicationDbContext context
 @inject IUsersService TenantRepo

@@ -1,4 +1,4 @@
-using AuthPermissions.Context;
+﻿using AuthPermissions.Context;
 using AuthPermissions.Entity;
 using AuthPermissions.Services;
 using Domain.Entities.Calculation;
@@ -568,6 +568,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
             foreach (var item in users)
             {
                 item.LockoutEnabled = block;
+                item.LockoutStart = block ? DateTimeOffset.UtcNow : null;
+                item.LockoutEnd = block ? DateTimeOffset.UtcNow.AddYears(100) : null;
             }
 
             await appContext.SaveChangesAsync();
@@ -582,6 +584,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 return false;
 
             user.LockoutEnabled = block;
+            user.LockoutStart = block ? DateTimeOffset.UtcNow : null;
+            user.LockoutEnd = block ? DateTimeOffset.UtcNow.AddYears(100) : null;
             await appContext.SaveChangesAsync();
             return true;
         }
@@ -657,9 +661,11 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     request.LockoutEnd,
                     isAppUser);
 
-                var createResult = await _userManager.CreateAsync(
-                    identityUser, identityUser.Email);
-                  //  IdentityUserSyncHelper.GenerateTemporaryPassword());
+                var password = string.IsNullOrWhiteSpace(request.Password)
+                    ? IdentityUserSyncHelper.GenerateTemporaryPassword()
+                    : request.Password.Trim();
+
+                var createResult = await _userManager.CreateAsync(identityUser, password);
                 if (!createResult.Succeeded)
                 {
                     if (tenantDb != null && localUser != null)

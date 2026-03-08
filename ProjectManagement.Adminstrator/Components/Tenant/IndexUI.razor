@@ -1,7 +1,7 @@
 ﻿@using Domain.Repository.AuthPermissions
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.DTO.Tenant;
-@attribute [Authorize(Roles = PMRolesConst.APP.Users)]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
 @using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3

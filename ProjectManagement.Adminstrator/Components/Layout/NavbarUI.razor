@@ -4,7 +4,7 @@
 @using ProjectManagement.Adminstrator.Components.Shared
 @using System.Globalization
 @inject NavigationManager _navigationManager
-@attribute [Authorize]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject IJSRuntime JS
 

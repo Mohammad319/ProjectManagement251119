@@ -1,4 +1,4 @@
-@using AuthPermissions.Entity
+﻿@using AuthPermissions.Entity
 @using ContextMenuMHD
 @using Domain.Repository.AuthPermissions
 @using Microsoft.EntityFrameworkCore
@@ -6,7 +6,7 @@
 @using ProjectManagement.Adminstrator.Services.Users
 
 @using ProjectManagement.Shared.DTO.Tenant;
-@attribute [Authorize(Roles = PMRolesConst.APP.Users)]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminSuperManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
 @inject ApplicationDbContext context

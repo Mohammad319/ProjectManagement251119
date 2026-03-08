@@ -12,6 +12,12 @@
     {
         <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync2" class="">
             <DataAnnotationsValidator />
+            <ValidationSummary class="@CsS.Text.Error" />
+
+            @if (!string.IsNullOrWhiteSpace(FormError))
+            {
+                <div class="@CsS.Text.Error">@FormError</div>
+            }
 
             <div class="@CsS.Grid.Col.MD4">
                 <div>
@@ -31,6 +37,18 @@
                     <InputText id="email" class="@CsS.Input.Text" @bind-Value="Form.Email" />
                     <ValidationMessage For="@(() => Form.Email)" class="@CsS.Text.Danger" />
                 </div>
+
+                @if (string.IsNullOrEmpty(UserForm?.Id))
+                {
+                    <div>
+                        <label class="@CsS.Form.Label" for="password">Password:</label>
+                        <InputText id="password" type="password" class="@CsS.Input.Text" @bind-Value="Form.Password" />
+                    </div>
+                    <div>
+                        <label class="@CsS.Form.Label" for="confirmPassword">Confirm password:</label>
+                        <InputText id="confirmPassword" type="password" class="@CsS.Input.Text" @bind-Value="Form.ConfirmPassword" />
+                    </div>
+                }
 
                 <!-- LockoutStart -->
                 <div>
@@ -123,6 +141,7 @@
 
     UserPostDTO Form = new();
     bool IsLoading = true;
+    string? FormError;
     IList<string> Roles = [];
     [Inject] AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
     async Task<int> GetUserTenant()
@@ -166,8 +185,22 @@
 
     async Task HandleSubmitAsync2()
     {
+        FormError = null;
+
         if (string.IsNullOrEmpty(UserForm?.Id))
         {
+            if (string.IsNullOrWhiteSpace(Form.Password))
+            {
+                FormError = "Password is required for new users.";
+                return;
+            }
+
+            if (!string.Equals(Form.Password, Form.ConfirmPassword, StringComparison.Ordinal))
+            {
+                FormError = "Password and confirmation password do not match.";
+                return;
+            }
+
             var result = await UsersService.RegisterAsync(Form, TenantId);
             await Callback.InvokeAsync(result);
         }

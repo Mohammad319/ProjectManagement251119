@@ -1,4 +1,4 @@
-using AuthPermissions;
+﻿using AuthPermissions;
 using TaskResourceBlueprints;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -81,6 +81,9 @@ else
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+app.UseRequestLocalization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseAntiforgery();
 app.UseMiddleware<GlobalErrorHandling>();

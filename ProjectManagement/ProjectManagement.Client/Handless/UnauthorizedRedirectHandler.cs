@@ -6,7 +6,7 @@
     public class UnauthorizedRedirectHandler(IErrorDialog ui, NavigationManager nav) : DelegatingHandler
     {
         private static DateTime _lastDialogUtc = DateTime.MinValue;
-        private const string LoginPath = "/login";
+        private const string LoginPath = "/Account/Login";
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
