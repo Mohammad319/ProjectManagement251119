@@ -19,7 +19,6 @@
 
 @if (TenantPut is TenantEntity tenant)
 {
-    <!-- بطاقة تفاصيل التينانت -->
     <div class="@CC.Card.Panel @CsS.Spacing.M.Bottom3">
         <table class="@CsS.Table.Tab">
             <tbody class="@CsS.Table.TBody">
@@ -70,12 +69,12 @@
         </table>
     </div>
 
-    <!-- أزرار إدارية -->
-    <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
-        <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom2" @onclick="(e) => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
+    @if (CanManageTenantUsers)
+    {
+        <button class="@CsS.Btn.Outline.Success CsS.Spacing.M.Bottom2" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
             New User
         </button>
-    </AuthorizeView>
+    }
 
     @if (Users == null || !Users.Any())
     {
@@ -85,13 +84,12 @@
     }
     else
     {
-        <!-- جدول المستخدمين -->
         <div class="@CC.Card.Panel">
             <table class="@CsS.Table.Tab">
                 <thead class="@CsS.Table.Thead">
                     <tr>
                         <th class="@CsS.Table.TH">@ResourceIdentity.email</th>
-                        <th class="@CsS.Table.TH">@CalcResource.code</th> <!-- حقل ثانٍ للاسم/الاسم المستخدم -->
+                        <th class="@CsS.Table.TH">@CalcResource.code</th>
                         <th class="@CsS.Table.TH">@CalcResource.name</th>
                         <th class="@CsS.Table.TH">@ResourceIdentity.lockoutEnd</th>
                         <th class="@CsS.Table.TH">@ResourceIdentity.lockoutStart</th>
@@ -109,20 +107,21 @@
                             <td class="@CsS.Table.Td">@user.Firstname @user.Lastname</td>
                             <td class="@CsS.Table.Td">
                                 <input type="checkbox" class="@CsS.Input.Check" disabled value="@user.LockoutEnabled" />
-                                @(user.LockoutEnd.HasValue? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : string.Empty)
+                                @(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : string.Empty)
                             </td>
                             <td class="@CsS.Table.Td">
-                                @(user.LockoutStart.HasValue? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)
+                                @(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)
                             </td>
                             <td class="@CsS.Table.Td">@user.DepartmentId</td>
                             <td class="@CsS.Table.Td">
-                                <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
+                                @if (CanManageTenantUsers)
+                                {
                                     <button class="@CsS.Btn.Outline.Primary"
                                             @onclick="() => AddBasicCompanyInfoAsync(user)"
                                             disabled="@IsAddingCompanyInfoFor(user)">
                                         @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
                                     </button>
-                                </AuthorizeView>
+                                }
                             </td>
                         </tr>
                     }
@@ -134,11 +133,13 @@
 
 @code{
     bool IsAddingCompanyInfoFor(ApplicationUser user) =>
-    !string.IsNullOrWhiteSpace(AddingCompanyInfoForUserId) && AddingCompanyInfoForUserId == user.Id;
+        !string.IsNullOrWhiteSpace(AddingCompanyInfoForUserId) && AddingCompanyInfoForUserId == user.Id;
+
     string? AddingCompanyInfoForUserId;
+
     async Task AddBasicCompanyInfoAsync(ApplicationUser user)
     {
-        if (Id <= 0 || user is null || string.IsNullOrWhiteSpace(user.Id) || IsAddingCompanyInfoFor(user)) return;
+        if (!CanManageTenantUsers || Id <= 0 || user is null || string.IsNullOrWhiteSpace(user.Id) || IsAddingCompanyInfoFor(user)) return;
 
         if (!user.UserId.HasValue || user.UserId.Value <= 0)
         {
@@ -158,5 +159,4 @@
             StateHasChanged();
         }
     }
-
 }

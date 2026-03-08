@@ -17,18 +17,16 @@ public sealed class TenantContextResolver(
     AuthenticationStateProvider authStateProvider)
     : ITenantContextResolver
 {
-    private int _resolved = 0;
-
     public async Task EnsureResolvedAsync(CancellationToken ct = default)
     {
         if (tenantContext.TenantId > 0)
             return;
-        if (Interlocked.Exchange(ref _resolved, 1) == 1)
-            return;
+
         var state = await authStateProvider.GetAuthenticationStateAsync();
         var user = state.User;
         if (user?.Identity?.IsAuthenticated != true)
             return;
+
         tenantContext.TenantId = GetIntClaim(user, PMClaimsConst.Tenant);
         tenantContext.UserId = GetNullableIntClaim(user, PMClaimsConst.UserId);
         tenantContext.DepartmentId = GetNullableIntClaim(user, PMClaimsConst.DepartmentId);

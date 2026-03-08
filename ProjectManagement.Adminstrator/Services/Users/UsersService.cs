@@ -1,32 +1,113 @@
-﻿using AuthPermissions.Context;
+using AuthPermissions.Context;
 using AuthPermissions.Entity;
 using AuthPermissions.Services;
 using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Domain.Entities.ResourceType;
 using Domain.Entities.Users;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
 using Persistence.Interceptors;
 using ProjectManagement.Shared.Base.Users;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Account;
 using ProjectManagement.Shared.DTO.Identity;
 using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.DTO.Tenant;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Models.Account;
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace ProjectManagement.Adminstrator.Services.Users
 {
     public class UsersService(
         UserManager<ApplicationUser> _userManager,
         IServiceScopeFactory _scopeFactory,
-        IDbContextFactory<ApplicationDbContext> ContextFactory) : IUsersService
+        IDbContextFactory<ApplicationDbContext> ContextFactory,
+        AuthenticationStateProvider _authStateProvider) : IUsersService
     {
+        private static readonly EmailAddressAttribute EmailValidator = new();
+
+        private async Task<ClaimsPrincipal> GetCurrentPrincipalAsync()
+            => (await _authStateProvider.GetAuthenticationStateAsync()).User;
+
+        private async Task<ApplicationUser?> GetCurrentIdentityUserAsync()
+        {
+            var principal = await GetCurrentPrincipalAsync();
+            return principal.Identity?.IsAuthenticated == true
+                ? await _userManager.GetUserAsync(principal)
+                : null;
+        }
+
+        private static bool HasAnyRole(ClaimsPrincipal? principal, string rolesCsv)
+        {
+            if (principal?.Identity?.IsAuthenticated != true || string.IsNullOrWhiteSpace(rolesCsv))
+                return false;
+
+            foreach (var role in rolesCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (principal.IsInRole(role))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private async Task<bool> HasAnyRoleAsync(string rolesCsv)
+            => HasAnyRole(await GetCurrentPrincipalAsync(), rolesCsv);
+
+        private static bool IsValidEmail(string? email)
+            => !string.IsNullOrWhiteSpace(email) && EmailValidator.IsValid(email.Trim());
+
+        private async Task<bool> EnsureEmailIsAvailableAsync(string? email, string? currentUserId = null)
+        {
+            var normalizedEmail = email?.Trim();
+            if (!IsValidEmail(normalizedEmail))
+                return false;
+
+            var existingUser = await _userManager.FindByEmailAsync(normalizedEmail!);
+            return existingUser == null || string.Equals(existingUser.Id, currentUserId, StringComparison.Ordinal);
+        }
+
+        private async Task<bool> TenantExistsAsync(int tenantId)
+        {
+            using var appContext = ContextFactory.CreateDbContext();
+            return await appContext.Tenants
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == tenantId);
+        }
+
+        private async Task<bool> IsCurrentUserAsync(string userId)
+        {
+            var currentUser = await GetCurrentIdentityUserAsync();
+            return currentUser != null && string.Equals(currentUser.Id, userId, StringComparison.Ordinal);
+        }
+
+        private async Task<bool> IsLastSiteAdminAsync(ApplicationUser user)
+        {
+            if (user.TenantId.HasValue)
+                return false;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains(PMRolesConst.APP.Admin, StringComparer.Ordinal))
+                return false;
+
+            var admins = await _userManager.GetUsersInRoleAsync(PMRolesConst.APP.Admin);
+            return admins.Count <= 1 && admins.Any(x => string.Equals(x.Id, user.Id, StringComparison.Ordinal));
+        }
+
         public async Task<bool> AddBasicCompanyInfoAsync(int tenantId, int? userId = null)
         {
-            var dataAccess = await CreateTenantDbContextAsync(tenantId, userId);
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+                return false;
+
+            if (tenantId <= 0 || !await TenantExistsAsync(tenantId))
+                return false;
+
+            await using var dataAccess = await CreateTenantDbContextAsync(tenantId, userId);
             var changed = 0;
 
             var defaultResourceStatuses = new (string Name, string Color, int SortOrder, bool IsVisible)[]
@@ -293,6 +374,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<List<GetTenantsDTO>> GetAsync()
         {
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
+                return [];
+
             using var appContext = ContextFactory.CreateDbContext();
             return await appContext.Tenants
                 .AsNoTracking()
@@ -310,16 +394,32 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<TenantEntity> GetByIdAsync(int id)
         {
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
+                return new TenantEntity();
+
             using var appContext = ContextFactory.CreateDbContext();
-            return (await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id))!;
+            return await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id) ?? new TenantEntity();
         }
 
         public async Task<int> CreateAsync(TenantEntity tenant)
         {
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+                return 0;
+
+            if (tenant == null || string.IsNullOrWhiteSpace(tenant.Name))
+                return 0;
+
             using var appContext = ContextFactory.CreateDbContext();
+
+            var normalizedName = tenant.Name.Trim();
+            var exists = await appContext.Tenants
+                .AsNoTracking()
+                .AnyAsync(x => x.Name == normalizedName);
+            if (exists)
+                return 0;
             var t = new TenantEntity
             {
-                Name = tenant.Name,
+                Name = normalizedName,
                 Street = tenant.Street,
                 City = tenant.City,
                 Country = tenant.Country,
@@ -344,12 +444,25 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> UpdateAsync(TenantEntity tenant)
         {
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+                return false;
+
+            if (tenant == null || tenant.Id <= 0 || string.IsNullOrWhiteSpace(tenant.Name))
+                return false;
+
             using var appContext = ContextFactory.CreateDbContext();
             var t = await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == tenant.Id);
             if (t == null)
                 return false;
 
-            t.Name = tenant.Name;
+            var normalizedName = tenant.Name.Trim();
+            var duplicateNameExists = await appContext.Tenants
+                .AsNoTracking()
+                .AnyAsync(x => x.Id != tenant.Id && x.Name == normalizedName);
+            if (duplicateNameExists)
+                return false;
+
+            t.Name = normalizedName;
             t.Street = tenant.Street;
             t.City = tenant.City;
             t.Country = tenant.Country;
@@ -373,6 +486,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<IList<string>> GetRolesAsync(string username)
         {
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
+                return [];
+
             using var scope = _scopeFactory.CreateScope();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
@@ -389,6 +505,20 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 return new List<string>();
 
             return await userManager.GetRolesAsync(user);
+        }
+
+        private async Task<bool> CanManageUserScopeAsync(int? tenantId, bool writeOperation)
+        {
+            if (tenantId.HasValue)
+            {
+                return await HasAnyRoleAsync(writeOperation
+                    ? PMRolesConst.APP.AdminSuperManger
+                    : PMRolesConst.APP.AdminManger);
+            }
+
+            return await HasAnyRoleAsync(writeOperation
+                ? PMRolesConst.APP.Admin
+                : PMRolesConst.APP.AdminManger);
         }
 
         private async Task<ShardingSingleDbContext> CreateTenantDbContextAsync(int tenantId, int? currentUserId = null)
@@ -422,7 +552,13 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> RemoveTenant(int TenantId)
         {
-            var dataAccess = await CreateTenantDbContextAsync(TenantId);
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.Admin))
+                return false;
+
+            if (TenantId <= 0 || !await TenantExistsAsync(TenantId))
+                return false;
+
+            await using var dataAccess = await CreateTenantDbContextAsync(TenantId);
 
             dataAccess.User.RemoveRange(dataAccess.User.Where(x => x.TenantId == TenantId));
             dataAccess.Department.RemoveRange(dataAccess.Department.Where(x => x.TenantId == TenantId));
@@ -463,6 +599,12 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> UpdateUserAsync(UserPostDTO user, int? tentnid)
         {
+            if (!await CanManageUserScopeAsync(tentnid, writeOperation: true))
+                return false;
+
+            if (user == null || string.IsNullOrWhiteSpace(user.Id) || !await EnsureEmailIsAvailableAsync(user.Email, user.Id))
+                return false;
+
             var oldUser = await _userManager.FindByIdAsync(user.Id);
             if (oldUser == null || oldUser.TenantId != tentnid)
                 return false;
@@ -471,6 +613,30 @@ namespace ProjectManagement.Adminstrator.Services.Users
             var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(user.Role, isAppUser);
             if (normalizedRole is null)
                 return false;
+
+            var isCurrentUser = await IsCurrentUserAsync(oldUser.Id);
+            var isLastSiteAdmin = await IsLastSiteAdminAsync(oldUser);
+
+            if (isAppUser && oldUser.TenantId.HasValue)
+                return false;
+
+            if (isAppUser && isCurrentUser)
+            {
+                if (user.LockoutEnabled)
+                    return false;
+
+                if (!string.Equals(normalizedRole, PMRolesConst.APP.Admin, StringComparison.Ordinal))
+                    return false;
+            }
+
+            if (isAppUser && isLastSiteAdmin)
+            {
+                if (user.LockoutEnabled)
+                    return false;
+
+                if (!string.Equals(normalizedRole, PMRolesConst.APP.Admin, StringComparison.Ordinal))
+                    return false;
+            }
 
             IdentityUserSyncHelper.ApplyToIdentityUser(
                 oldUser,
@@ -528,9 +694,31 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> RemoveUserAsync(string id, int? tenantId)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null || (tenantId.HasValue && user.TenantId != tenantId))
+            if (!await CanManageUserScopeAsync(tenantId, writeOperation: true))
                 return false;
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return false;
+
+            if (tenantId.HasValue)
+            {
+                if (user.TenantId != tenantId)
+                    return false;
+            }
+            else if (user.TenantId.HasValue)
+            {
+                return false;
+            }
+
+            if (!tenantId.HasValue)
+            {
+                if (await IsCurrentUserAsync(user.Id))
+                    return false;
+
+                if (await IsLastSiteAdminAsync(user))
+                    return false;
+            }
 
             if (tenantId.HasValue && user.TenantId.HasValue)
             {
@@ -560,6 +748,12 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> BlockTenantAsync(int TenantId, bool block)
         {
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminSuperManger))
+                return false;
+
+            if (TenantId <= 0 || !await TenantExistsAsync(TenantId))
+                return false;
+
             using var appContext = ContextFactory.CreateDbContext();
             var users = await appContext.Users.Where(x => x.TenantId == TenantId).ToListAsync();
             if (users.Count == 0)
@@ -578,9 +772,18 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> BlockTenantAsync(string userid, bool block)
         {
+            if (!await HasAnyRoleAsync(PMRolesConst.APP.Admin))
+                return false;
+
             using var appContext = ContextFactory.CreateDbContext();
             var user = await appContext.Users.FirstOrDefaultAsync(x => x.Id == userid);
-            if (user == null)
+            if (user == null || user.TenantId.HasValue)
+                return false;
+
+            if (block && await IsCurrentUserAsync(user.Id))
+                return false;
+
+            if (block && await IsLastSiteAdminAsync(user))
                 return false;
 
             user.LockoutEnabled = block;
@@ -592,6 +795,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<List<ApplicationUser>> GetUsersAsync(int? TenantId, int? department = null)
         {
+            if (!await CanManageUserScopeAsync(TenantId, writeOperation: false))
+                return [];
+
             using var appContext = ContextFactory.CreateDbContext();
             var users = appContext.Users.AsQueryable();
 
@@ -613,6 +819,15 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
         public async Task<bool> RegisterAsync(UserPostDTO request, int? tenantId)
         {
+            if (!await CanManageUserScopeAsync(tenantId, writeOperation: true))
+                return false;
+
+            if (request == null || !await EnsureEmailIsAvailableAsync(request.Email))
+                return false;
+
+            if (tenantId.HasValue && !await TenantExistsAsync(tenantId.Value))
+                return false;
+
             var isAppUser = !tenantId.HasValue;
             var normalizedRole = IdentityUserSyncHelper.NormalizeRoleForUserScope(request.Role, isAppUser);
             if (normalizedRole is null)
@@ -624,13 +839,20 @@ namespace ProjectManagement.Adminstrator.Services.Users
 
             try
             {
+                if (!string.IsNullOrWhiteSpace(request.Password) &&
+                    !string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
                 if (tenantId.HasValue)
                 {
                     tenantDb = await CreateTenantDbContextAsync(tenantId.Value);
+                    var normalizedEmail = request.Email.Trim();
                     localUser = UserEntity.Create(
                         tenantId.Value,
-                        request.Email,
-                        request.Email,
+                        normalizedEmail,
+                        normalizedEmail,
                         request.DepartmentId,
                         request.Firstname,
                         request.Lastname,

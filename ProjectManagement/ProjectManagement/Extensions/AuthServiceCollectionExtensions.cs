@@ -1,4 +1,5 @@
-﻿using AuthPermissions.Context;
+using AuthPermissions.Context;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +34,11 @@ public static class AuthRegistration
             options.Cookie.SameSite = SameSiteMode.Lax;
             options.Cookie.HttpOnly = true;
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Events = new CookieAuthenticationEvents
+            {
+                OnRedirectToLogin = ctx => HandleApiRedirectAsync(ctx, StatusCodes.Status401Unauthorized),
+                OnRedirectToAccessDenied = ctx => HandleApiRedirectAsync(ctx, StatusCodes.Status403Forbidden)
+            };
         });
 
         services.Configure<IdentityOptions>(options =>
@@ -52,5 +58,34 @@ public static class AuthRegistration
         });
 
         return services;
+    }
+
+    private static Task HandleApiRedirectAsync(RedirectContext<CookieAuthenticationOptions> context, int statusCode)
+    {
+        if (IsApiRequest(context.Request))
+        {
+            context.Response.StatusCode = statusCode;
+            return Task.CompletedTask;
+        }
+
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    }
+
+    private static bool IsApiRequest(HttpRequest request)
+    {
+        if (request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase) ||
+            request.Path.StartsWithSegments("/notification", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var acceptsJson = request.Headers.Accept.Any(h =>
+            !string.IsNullOrWhiteSpace(h) &&
+            (h.Contains("application/json", StringComparison.OrdinalIgnoreCase) ||
+             h.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase)));
+
+        return acceptsJson ||
+               string.Equals(request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
     }
 }

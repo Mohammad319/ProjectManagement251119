@@ -23,7 +23,8 @@ namespace Persistence.Service.Organisation
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await db.Organisation.FindAsync([id], ct);
+            var entity = await db.Organisation
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);

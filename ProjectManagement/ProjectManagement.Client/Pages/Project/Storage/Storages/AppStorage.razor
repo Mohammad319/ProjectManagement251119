@@ -1,4 +1,4 @@
-﻿@using ProjectManagement.Client.Extensions.Storage
+@using ProjectManagement.Client.Extensions.Storage
 @using ProjectManagement.Client.Shared.Model.Tenant
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @using ProjectManagement.Shared.DTO.Calculation
@@ -145,8 +145,8 @@
          
                                         <span role="button" @onclick="() => AddRemoveRes(task.Id,res.Id)"
                                               @onclick:stopPropagation="true"
-                                              class="@(TaskResSelecteds.Any(x => x.Id == task.Id) && TaskResSelecteds.First(x=>x.Id == task.Id).Resoueces?.Any(r=>r == res.Id) == true ? "text-danger" : "text-primary")">
-@((MarkupString)(TaskResSelecteds.Any(x => x.Id == task.Id) && TaskResSelecteds.First(x => x.Id == task.Id).Resoueces?.Any(r => r == res.Id) == true ? Icons.Minus : Icons.Plus2))
+                                              class="@(IsTaskResourceSelected(task.Id, res.Id) ? "text-danger" : "text-primary")">
+@((MarkupString)(IsTaskResourceSelected(task.Id, res.Id) ? Icons.Minus : Icons.Plus2))
                                         </span>
                                         <span>  @res.Name</span>
                                       
@@ -295,6 +295,21 @@
             else o?.Resoueces?.Remove(resId);
         }
     }
+    bool IsTaskResourceSelected(int taskId, int resourceId)
+        => TaskResSelecteds.FirstOrDefault(x => x.Id == taskId)?.Resoueces?.Contains(resourceId) == true;
+
+    static bool TryRestoreResourceDefaults(ResourceEXDto resource)
+    {
+        if (resource.Values is null || resource.Values.Count < 4)
+            return false;
+
+        resource.Data.CapWaste = resource.Values[0];
+        resource.Data.ChangeFactor1 = resource.Values[1];
+        resource.Data.ChangeFactor2 = resource.Values[2];
+        resource.Data.BaseCost = resource.Values[3];
+        return true;
+    }
+
     public async Task GetAsync()
     {
         tasks = null;
@@ -350,11 +365,9 @@
     .Where(x => x.Value.HasValue).ToDictionary(x => x.VariableName, x => x.Value.GetValueOrDefault());
         if (task.Resources != null) foreach (var resource in task.Resources)
             {
-                resource.Data.CapWaste = resource.Values[0];
-                resource.Data.ChangeFactor1 = resource.Values[1];
-                resource.Data.ChangeFactor2 = resource.Values[2];
-                resource.Data.BaseCost = resource.Values[3];
-                @* resource.Data.Cost = resource.Values[4]; *@
+                if (!TryRestoreResourceDefaults(resource))
+                    continue;
+                @* resource.Data.Cost = resource.Values.Count > 4 ? resource.Values[4] : resource.Data.Cost; *@
 
                 var conds = task.ConditionEffect.Where(x => resource.ConditionTaskIds.Any(c => c == x.Id))
                             .SelectMany(x => x.Items).Where(x => x.IsSelected).ToList();

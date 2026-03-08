@@ -14,44 +14,43 @@
 else
 {
     <div class="CsS.Spacing.M.Bottom2">
-        <button class="@CsS.Btn.Outline.Success" @onclick="() => UpdateForm(new())">
-            @ResourceApp.newItem
-        </button>
-
-        <AuthorizeView Roles="@PMRolesConst.APP.AdminSuperManger">
-            @* ضع أزرارًا إضافية هنا إن لزم *@
-        </AuthorizeView>
+        @if (CanManageTenants)
+        {
+            <button class="@CsS.Btn.Outline.Success" @onclick="() => UpdateForm(new())">
+                @ResourceApp.newItem
+            </button>
+        }
     </div>
 
-        <table class="@CsS.Table.Tab">
-            <thead class="@CsS.Table.Thead">
-                <tr>
-                    <th class="@CsS.Table.TH">@CalcResource.name</th>
-                    <th class="@CsS.Table.TH">@AppControll.Db</th>
-                    <th class="@CsS.Table.TH">@AppControll.dateExpire</th>
-                    <th class="@CsS.Table.TH">@AppControll.hasOwnDb</th>
-                </tr>
-            </thead>
-            <tbody class="@CsS.Table.TBody">
-                @if (Tenants != null)
+    <table class="@CsS.Table.Tab">
+        <thead class="@CsS.Table.Thead">
+            <tr>
+                <th class="@CsS.Table.TH">@CalcResource.name</th>
+                <th class="@CsS.Table.TH">@AppControll.Db</th>
+                <th class="@CsS.Table.TH">@AppControll.dateExpire</th>
+                <th class="@CsS.Table.TH">@AppControll.hasOwnDb</th>
+            </tr>
+        </thead>
+        <tbody class="@CsS.Table.TBody">
+            @if (Tenants != null)
+            {
+                foreach (var tenant in Tenants)
                 {
-                    foreach (var tenant in Tenants)
-                    {
-                        <tr class="@CsS.Table.Tr"
-                            @onclick="() => DetailsPage = tenant"
-                            @oncontextmenu:preventDefault
-                            @oncontextmenu="() => Context(tenant)">
-                            <td class="@CsS.Table.Td">@tenant.Name</td>
-                            <td class="@CsS.Table.Td">@tenant.DB @tenant.DatabaseInfoName</td>
-                            <td class="@CsS.Table.Td">
-                                @(tenant.DateExpire.HasValue? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : string.Empty)
-                            </td>
-                            <td class="@CsS.Table.Td">
-                                <input type="checkbox" class="@CsS.Input.Check" checked="@tenant.HasOwnDb" disabled />
-                            </td>
-                        </tr>
-                    }
+                    <tr class="@CsS.Table.Tr"
+                        @onclick="() => DetailsPage = tenant"
+                        @oncontextmenu:preventDefault
+                        @oncontextmenu="() => Context(tenant)">
+                        <td class="@CsS.Table.Td">@tenant.Name</td>
+                        <td class="@CsS.Table.Td">@tenant.DB @tenant.DatabaseInfoName</td>
+                        <td class="@CsS.Table.Td">
+                            @(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : string.Empty)
+                        </td>
+                        <td class="@CsS.Table.Td">
+                            <input type="checkbox" class="@CsS.Input.Check" checked="@tenant.HasOwnDb" disabled />
+                        </td>
+                    </tr>
                 }
-            </tbody>
-        </table>
+            }
+        </tbody>
+    </table>
 }

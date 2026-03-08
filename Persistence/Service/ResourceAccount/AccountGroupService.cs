@@ -126,7 +126,8 @@ namespace Persistence.Service.ResourceAccount
             if (hasAccounts)
                 return false;
 
-            var existing = await context.AccountGroup.FindAsync([id], ct);
+            var existing = await context.AccountGroup
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (existing is null) return false;
 
             context.AccountGroup.Remove(existing);

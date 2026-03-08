@@ -481,7 +481,10 @@ namespace Persistence.Service.CalculationItems.Task
                 .Include(t => t.Opportunity)
                 .Include(t => t.Resources)
                 .ThenInclude(r => r.Offers)
-                .FirstAsync(t => t.Id == taskId, ct);
+                .FirstOrDefaultAsync(t => t.Id == taskId, ct);
+
+            if (taskWithNav is null)
+                return false;
 
             // Load resource lookups (optional, but keeps UI consistent)
             // (EF doesn't allow multiple ThenInclude branches from same Include chain in one go, so we repeat Include)

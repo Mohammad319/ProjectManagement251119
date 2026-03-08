@@ -9,7 +9,7 @@ using ProjectManagement.Adminstrator.Components;
 using ProjectManagement.Adminstrator.Components.Account;
 using ProjectManagement.Adminstrator.Factory;
 using ProjectManagement.Adminstrator.Middleware;
-using ProjectManagement.Client.Adminstrator.DependencyInjection;
+using ProjectManagement.Adminstrator.DependencyInjection;
 using Serilog;
 using System.Globalization;
 

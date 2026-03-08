@@ -101,7 +101,8 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var project = await context.Projects.FindAsync([id], ct);
+            var project = await context.Projects
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (project == null) return false;
 
             project.UpdateOrder(newOrder);

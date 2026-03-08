@@ -4,9 +4,8 @@
 @using Microsoft.EntityFrameworkCore
 @using Persistence.Factory
 @using ProjectManagement.Adminstrator.Services.Users
-.AppControll
 @using ProjectManagement.Shared.DTO.Tenant
-@attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
+@attribute [Authorize(Roles = PMRolesConst.APP.AdminSuperManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory

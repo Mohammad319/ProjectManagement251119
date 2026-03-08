@@ -130,8 +130,11 @@ namespace Persistence.Service.Offer
 
             var calculationId = await context.Tasks
                 .Where(r => r.Id == resource.TaskId)
-                .Select(r => r.CalculationId)
-                .SingleAsync(ct);
+                .Select(r => (int?)r.CalculationId)
+                .FirstOrDefaultAsync(ct);
+
+            if (calculationId is null or <= 0)
+                return false;
 
             OfferEntity? offer = null;
             if (offerId.HasValue)
@@ -153,7 +156,7 @@ namespace Persistence.Service.Offer
             await context.SaveChangesAsync(ct);
 
             await hub.SendNotificationAsync(
-                calculationId.ToString(),
+                calculationId.Value.ToString(),
                 ObjectTypHub.Offer,
                 OperationType.Update,
                 new HubDataDto

@@ -1,7 +1,7 @@
 ﻿using ProjectManagement.Adminstrator.Shared.ResourceFiles;
 using ProjectManagement.Shared.Enums;
 
-namespace ProjectManagement.Client.Adminstrator.Shared.ResourceFiles
+namespace ProjectManagement.Adminstrator.Shared.ResourceFiles
 {
     public static class ResourceLocalize
     {

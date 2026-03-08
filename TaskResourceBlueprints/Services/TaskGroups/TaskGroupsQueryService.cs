@@ -117,6 +117,7 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
 
     private static void SyncQuestionGroups(TaskDefinition dbTask, TaskDefinition incomingTask)
     {
+        var existingById = dbTask.QuestionGroups.ToDictionary(x => x.Id);
         var incomingById = incomingTask.QuestionGroups
             .Where(x => x.Id != 0)
             .ToDictionary(x => x.Id);
@@ -153,7 +154,8 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
                 continue;
             }
 
-            var target = dbTask.QuestionGroups.First(x => x.Id == incoming.Id);
+            if (!existingById.TryGetValue(incoming.Id, out var target))
+                throw new InvalidOperationException($"Question group #{incoming.Id} does not belong to task #{dbTask.Id}.");
             target.DisplayName = incoming.DisplayName;
             target.SortOrder = incoming.SortOrder;
             target.SelectionMode = incoming.SelectionMode;
@@ -165,6 +167,7 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
 
     private static void SyncQuestionOptions(QuestionGroupDefinition targetGroup, QuestionGroupDefinition incomingGroup)
     {
+        var existingById = targetGroup.Options.ToDictionary(x => x.Id);
         var incomingById = incomingGroup.Options
             .Where(x => x.Id != 0)
             .ToDictionary(x => x.Id);
@@ -191,7 +194,8 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
                 continue;
             }
 
-            var target = targetGroup.Options.First(x => x.Id == incoming.Id);
+            if (!existingById.TryGetValue(incoming.Id, out var target))
+                throw new InvalidOperationException($"Question option #{incoming.Id} does not belong to question group #{targetGroup.Id}.");
             target.DisplayName = incoming.DisplayName;
             target.SortOrder = incoming.SortOrder;
             target.RevealedSectionKeys = incoming.RevealedSectionKeys?.ToList() ?? [];
@@ -200,6 +204,7 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
 
     private static void SyncResourceSelectors(TaskDefinition dbTask, TaskDefinition incomingTask)
     {
+        var existingById = dbTask.ResourceSelectors.ToDictionary(x => x.Id);
         var incomingById = incomingTask.ResourceSelectors
             .Where(x => x.Id != 0)
             .ToDictionary(x => x.Id);
@@ -234,7 +239,8 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
                 continue;
             }
 
-            var target = dbTask.ResourceSelectors.First(x => x.Id == incoming.Id);
+            if (!existingById.TryGetValue(incoming.Id, out var target))
+                throw new InvalidOperationException($"Resource selector #{incoming.Id} does not belong to task #{dbTask.Id}.");
             target.DisplayName = incoming.DisplayName;
             target.SortOrder = incoming.SortOrder;
             target.SectionKey = incoming.SectionKey;
@@ -245,6 +251,7 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
 
     private static void SyncSelectorItems(ResourceSelectorDefinition targetSelector, ResourceSelectorDefinition incomingSelector)
     {
+        var existingById = targetSelector.Items.ToDictionary(x => x.Id);
         var incomingById = incomingSelector.Items
             .Where(x => x.Id != 0)
             .ToDictionary(x => x.Id);
@@ -270,7 +277,8 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
                 continue;
             }
 
-            var target = targetSelector.Items.First(x => x.Id == incoming.Id);
+            if (!existingById.TryGetValue(incoming.Id, out var target))
+                throw new InvalidOperationException($"Resource option item #{incoming.Id} does not belong to selector #{targetSelector.Id}.");
             target.SortOrder = incoming.SortOrder;
             target.ResourceId = incoming.ResourceId;
         }
@@ -278,6 +286,7 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
 
     private static void SyncNumericQuestions(TaskDefinition dbTask, TaskDefinition incomingTask)
     {
+        var existingById = dbTask.NumericQuestions.ToDictionary(x => x.Id);
         var incomingById = incomingTask.NumericQuestions
             .Where(x => x.Id != 0)
             .ToDictionary(x => x.Id);
@@ -306,7 +315,8 @@ public sealed class TaskGroupsQueryService(IDbContextFactory<TaskResourceBluepri
                 continue;
             }
 
-            var target = dbTask.NumericQuestions.First(x => x.Id == incoming.Id);
+            if (!existingById.TryGetValue(incoming.Id, out var target))
+                throw new InvalidOperationException($"Numeric question #{incoming.Id} does not belong to task #{dbTask.Id}.");
             target.DisplayName = incoming.DisplayName;
             target.SortOrder = incoming.SortOrder;
             target.MinInputValue = incoming.MinInputValue;

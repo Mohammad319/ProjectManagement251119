@@ -1,9 +1,10 @@
-﻿﻿global using Asp.Versioning;
+﻿global using Asp.Versioning;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using ProjectManagement.Server.Controllers.Filters;
+using ProjectManagement.Services;
 using ProjectManagement.Shared.Constant;
 using System.Collections;
 using System.Security.Cryptography;
@@ -18,20 +19,32 @@ namespace ProjectManagement.Server.Controllers
     {
         protected int? GetTenantId()
         {
+            var tenantContext = HttpContext.RequestServices.GetService<TenantContext>();
+            if (tenantContext?.TenantId > 0)
+                return tenantContext.TenantId;
+
             var tenantIdClaim = User?.FindFirst(PMClaimsConst.Tenant)?.Value;
-            return int.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
+            return int.TryParse(tenantIdClaim, out var tenantId) && tenantId > 0 ? tenantId : null;
         }
 
         protected int? GetDepartmentId()
         {
-            return int.TryParse(User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.DepartmentId)?.Value, out var dId)
+            var tenantContext = HttpContext.RequestServices.GetService<TenantContext>();
+            if (tenantContext?.DepartmentId > 0)
+                return tenantContext.DepartmentId;
+
+            return int.TryParse(User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.DepartmentId)?.Value, out var dId) && dId > 0
                 ? dId
                 : null;
         }
 
         protected int GetUserId()
         {
-            return int.TryParse(User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.UserId)?.Value, out var uId)
+            var tenantContext = HttpContext.RequestServices.GetService<TenantContext>();
+            if (tenantContext?.UserId > 0)
+                return tenantContext.UserId.Value;
+
+            return int.TryParse(User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.UserId)?.Value, out var uId) && uId > 0
                 ? uId
                 : 0;
         }

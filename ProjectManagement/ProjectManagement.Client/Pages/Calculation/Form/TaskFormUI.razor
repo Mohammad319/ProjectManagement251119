@@ -1,4 +1,4 @@
-﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Model.Project.Calculation;
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.Base.Calculation
@@ -309,8 +309,9 @@
             else
             {
                 int maxOrder = 0;
-                if (Calc.Tasks.Where(x => x.TaskId == Task.TaskId).Any())
-                    maxOrder = Calc.Tasks.OrderByDescending(x => x.Order).First().Order + 100;
+                var siblingTasks = Calc.Tasks.Where(x => x.TaskId == Task.TaskId).ToList();
+                if (siblingTasks.Count > 0)
+                    maxOrder = siblingTasks.Max(x => x.Order) + 100;
                 foreach (var item in PostList)
                 {
                     CheckTaskType(item);

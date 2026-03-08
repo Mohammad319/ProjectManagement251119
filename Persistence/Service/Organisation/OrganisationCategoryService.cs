@@ -15,7 +15,8 @@ namespace Persistence.Service.Organisation
 
             if (dto.CategoryId.HasValue)
             {
-                var parent = await db.OrganisationCategory.FindAsync([dto.CategoryId.Value], ct);
+                var parent = await db.OrganisationCategory
+                    .FirstOrDefaultAsync(x => x.Id == dto.CategoryId.Value, ct);
 
                 if (parent == null || parent.ParentCategoryId.HasValue)
                     throw new ValidationException("Only one level of hierarchy is allowed.");
@@ -31,7 +32,8 @@ namespace Persistence.Service.Organisation
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await db.OrganisationCategory.FindAsync([dto.Id], ct);
+            var entity = await db.OrganisationCategory
+                .FirstOrDefaultAsync(x => x.Id == dto.Id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -49,7 +51,8 @@ namespace Persistence.Service.Organisation
             if (await db.Organisation.AnyAsync(x => x.OrganisationCategoryId == id, ct))
                 return false;
 
-            var entity = await db.OrganisationCategory.FindAsync([id], ct);
+            var entity = await db.OrganisationCategory
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             db.OrganisationCategory.Remove(entity);

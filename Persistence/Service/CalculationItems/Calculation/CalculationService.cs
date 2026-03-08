@@ -160,7 +160,8 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var calculation = await db.Calculations.FindAsync([id], cancellationToken);
+            var calculation = await db.Calculations
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
             if (calculation is null)
                 return false;
 

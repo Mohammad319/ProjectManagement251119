@@ -159,7 +159,8 @@ namespace Persistence.Service.Application
             if (isUsed)
                 return false;
 
-            var entity = await context.Applications.FindAsync([id], cancellationToken: ct);
+            var entity = await context.Applications
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity is null)
                 return false;
 
@@ -172,7 +173,8 @@ namespace Persistence.Service.Application
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ApplicationValues.FindAsync([id], cancellationToken: ct);
+            var entity = await context.ApplicationValues
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity is null)
                 return false;
 
@@ -185,7 +187,8 @@ namespace Persistence.Service.Application
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.Applications.FindAsync([dto.Id], cancellationToken: ct);
+            var entity = await context.Applications
+                .FirstOrDefaultAsync(x => x.Id == dto.Id, ct);
             if (entity is null)
                 return false;
 
@@ -198,7 +201,8 @@ namespace Persistence.Service.Application
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ApplicationValues.FindAsync([dto.Id], cancellationToken: ct);
+            var entity = await context.ApplicationValues
+                .FirstOrDefaultAsync(x => x.Id == dto.Id, ct);
             if (entity is null)
                 return false;
 

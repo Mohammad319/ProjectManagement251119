@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using System.Threading.Tasks;
 
-namespace ProjectManagement.Client.Adminstrator.Shared.Error
+namespace ProjectManagement.Adminstrator.Shared.Error
 {
     public class CustomErrorBoundary: ErrorBoundary
     {

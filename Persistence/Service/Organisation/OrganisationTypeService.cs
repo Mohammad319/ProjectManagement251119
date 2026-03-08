@@ -24,7 +24,8 @@ namespace Persistence.Service.Organisation
         public async Task<bool> UpdateAsync(int id, PostOrganisationTypeDTO dto, CancellationToken ct = default)
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
-            var entity = await db.OrganisationType.FindAsync([id], ct);
+            var entity = await db.OrganisationType
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);

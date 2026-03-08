@@ -1,10 +1,10 @@
 ﻿using ContextMenuMHD;
 using ProjectManagement.Adminstrator.Handless;
+using ProjectManagement.Adminstrator.Services.MHDBlazor;
 using ProjectManagement.Adminstrator.Services.Users;
-using ProjectManagement.Client.Adminstrator.Handless;
-using ProjectManagement.Client.Adminstrator.Services.MHDBlazor;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
-namespace ProjectManagement.Client.Adminstrator.DependencyInjection
+
+namespace ProjectManagement.Adminstrator.DependencyInjection
 {
     public static class ServiceCollection
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace ProjectManagement.Client.Adminstrator.Handless
+namespace ProjectManagement.Adminstrator.Handless
 {
     public interface IExceptionHandlers
     {

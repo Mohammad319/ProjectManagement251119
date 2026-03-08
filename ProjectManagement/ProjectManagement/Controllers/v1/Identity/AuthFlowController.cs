@@ -1,7 +1,8 @@
-﻿using AuthPermissions.Context;
+using AuthPermissions.Context;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using ProjectManagement.Shared.Constant;
 
 namespace ProjectManagement.Controllers.v1.Identity
 {
@@ -16,7 +17,7 @@ namespace ProjectManagement.Controllers.v1.Identity
             _signInManager = signInManager;
             _userManager = userManager;
         }
-        [Authorize]
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("/auth/refresh")]
         public async Task<IActionResult> Refresh(string? returnUrl = "/")
         {
@@ -26,7 +27,7 @@ namespace ProjectManagement.Controllers.v1.Identity
 
             return LocalRedirect(returnUrl ?? "/");
         }
-        [Authorize]
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("/auth/refresh2")]
         public async Task<IActionResult> Refresh2(string? returnUrl = "/")
         {

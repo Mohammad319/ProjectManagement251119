@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Adminstrator.Constants;
 
-namespace ProjectManagement.Client.Adminstrator.Services.MHDBlazor
+namespace ProjectManagement.Adminstrator.Services.MHDBlazor
 {
     public enum ToastType
     {

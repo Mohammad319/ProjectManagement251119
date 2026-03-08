@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Localization;
 using ProjectManagement.Adminstrator.Shared.ResourceFiles;
-using ProjectManagement.Client.Adminstrator.Services.MHDBlazor;
+using ProjectManagement.Adminstrator.Services.MHDBlazor;
 
 namespace ProjectManagement.Adminstrator.Handless
 {

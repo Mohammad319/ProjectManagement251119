@@ -40,12 +40,14 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
                 SortOrder = g.SortOrder,
                 TaskId = g.TaskId,
                 Items = g.Items
-                    .OrderBy(o => o.Id)
+                    .OrderBy(o => o.SortOrder)
+                    .ThenBy(o => o.Id)
                     .Select(o => new ResourceOptionItem
                     {
                         Id = o.Id,
                         SelectorId = o.SelectorId,
                         ResourceId = o.ResourceId,
+                        SortOrder = o.SortOrder,
                         Resource = o.Resource
                     }).ToList()
             })
@@ -85,12 +87,15 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
                 SortOrder = g.SortOrder,
                 TaskId = g.TaskId,
                 Options = g.Options
-                    .OrderBy(o => o.Id)
+                    .OrderBy(o => o.SortOrder)
+                    .ThenBy(o => o.Id)
                     .Select(o => new QuestionOptionDefinition
                     {
                         Id = o.Id,
                         DisplayName = o.DisplayName,
-                        QuestionGroupId = o.QuestionGroupId
+                        QuestionGroupId = o.QuestionGroupId,
+                        SortOrder = o.SortOrder,
+                        RevealedSectionKeys = o.RevealedSectionKeys
                     }).ToList()
             })
             .ToListAsync(ct);
@@ -276,22 +281,32 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
 
+        await EnsureResourceAssignmentExistsAsync(db, raId, ct);
+        await EnsureChoiceOptionExistsAsync(db, vm.ChoiceGroupId, vm.ChoiceOptionId, ct);
+
+        var cleanedFormulas = CleanFormulas(vm.Formulas);
+
         if (vm.Id == 0)
         {
             var entity = new OptionResourceAssignment
             {
                 OptionId = vm.ChoiceOptionId,
                 AssignmentId = raId,
-                Expressions = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
+                Expressions = cleanedFormulas
             };
             db.OptionResourceAssignments.Add(entity);
             await db.SaveChangesAsync(ct);
             return entity.Id;
         }
 
-        var existing = await db.OptionResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
+        var existing = await db.OptionResourceAssignments.FirstOrDefaultAsync(x => x.Id == vm.Id, ct)
+            ?? throw new InvalidOperationException($"Option binding #{vm.Id} was not found.");
+
+        if (existing.AssignmentId != raId)
+            throw new InvalidOperationException("Option binding does not belong to the selected resource assignment.");
+
         existing.OptionId = vm.ChoiceOptionId;
-        existing.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
+        existing.Expressions = cleanedFormulas;
         await db.SaveChangesAsync(ct);
         return existing.Id;
     }
@@ -299,6 +314,11 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
     public async Task<int> UpsertNumericBindingAsync(int raId, NumericBindVM vm, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
+
+        await EnsureResourceAssignmentExistsAsync(db, raId, ct);
+        await EnsureNumericQuestionExistsAsync(db, vm.NumericId, ct);
+
+        var cleanedFormulas = CleanFormulas(vm.Formulas);
 
         if (vm.Id == 0)
         {
@@ -308,20 +328,57 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
                 AssignmentId = raId,
                 MinInputValue = vm.InputMinValue,
                 MaxInputValue = vm.InputMaxValue,
-                Expressions = vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s)).ToList()
+                Expressions = cleanedFormulas
             };
             db.NumericResourceAssignments.Add(entity);
             await db.SaveChangesAsync(ct);
             return entity.Id;
         }
 
-        var existing = await db.NumericResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
+        var existing = await db.NumericResourceAssignments.FirstOrDefaultAsync(x => x.Id == vm.Id, ct)
+            ?? throw new InvalidOperationException($"Numeric binding #{vm.Id} was not found.");
+
+        if (existing.AssignmentId != raId)
+            throw new InvalidOperationException("Numeric binding does not belong to the selected resource assignment.");
+
         existing.NumericId = vm.NumericId;
         existing.MinInputValue = vm.InputMinValue;
         existing.MaxInputValue = vm.InputMaxValue;
-        existing.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
+        existing.Expressions = cleanedFormulas;
         await db.SaveChangesAsync(ct);
         return existing.Id;
+    }
+
+    private static List<string> CleanFormulas(IEnumerable<string>? formulas)
+        => formulas?
+            .Select(s => s?.Trim())
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Cast<string>()
+            .ToList() ?? [];
+
+    private static async Task EnsureResourceAssignmentExistsAsync(TaskResourceBlueprintsContext db, int assignmentId, CancellationToken ct)
+    {
+        if (!await db.ConditionResourceAssignments.AsNoTracking().AnyAsync(x => x.Id == assignmentId, ct))
+            throw new InvalidOperationException($"Resource assignment #{assignmentId} was not found.");
+    }
+
+    private static async Task EnsureChoiceOptionExistsAsync(TaskResourceBlueprintsContext db, int choiceGroupId, int choiceOptionId, CancellationToken ct)
+    {
+        var option = await db.QuestionOptions
+            .AsNoTracking()
+            .Where(x => x.Id == choiceOptionId)
+            .Select(x => new { x.Id, x.QuestionGroupId })
+            .FirstOrDefaultAsync(ct)
+            ?? throw new InvalidOperationException($"Choice option #{choiceOptionId} was not found.");
+
+        if (choiceGroupId > 0 && option.QuestionGroupId != choiceGroupId)
+            throw new InvalidOperationException("Selected choice option does not belong to the selected choice group.");
+    }
+
+    private static async Task EnsureNumericQuestionExistsAsync(TaskResourceBlueprintsContext db, int numericId, CancellationToken ct)
+    {
+        if (!await db.NumericQuestions.AsNoTracking().AnyAsync(x => x.Id == numericId, ct))
+            throw new InvalidOperationException($"Numeric question #{numericId} was not found.");
     }
 
     private static void SyncCollection<T>(

@@ -2,8 +2,8 @@
 using ContextMenuMHD;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
-using ProjectManagement.Client.Adminstrator.Handless;
-using ProjectManagement.Client.Adminstrator.Services.MHDBlazor;
+using ProjectManagement.Adminstrator.Handless;
+using ProjectManagement.Adminstrator.Services.MHDBlazor;
 
 namespace ProjectManagement.Adminstrator.Components
 {

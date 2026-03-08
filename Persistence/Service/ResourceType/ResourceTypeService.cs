@@ -30,7 +30,8 @@ namespace Persistence.Service.ResourceType
             if (!await ValidateAccountReferenceAsync(context, dto.AccountId, ct))
                 return false;
 
-            var entity = await context.ResourceTypes.FindAsync([id], ct);
+            var entity = await context.ResourceTypes
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -42,7 +43,8 @@ namespace Persistence.Service.ResourceType
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceTypes.FindAsync([id], ct);
+            var entity = await context.ResourceTypes
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             var isInUse = await context.ResourceSorts.AnyAsync(x => x.ResourceTypeId == id, ct)
@@ -82,7 +84,8 @@ namespace Persistence.Service.ResourceType
             if (!await ValidateAccountReferenceAsync(context, dto.AccountId, ct))
                 return false;
 
-            var entity = await context.ResourceSorts.FindAsync([id], ct);
+            var entity = await context.ResourceSorts
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             entity.Update(dto);
@@ -94,7 +97,8 @@ namespace Persistence.Service.ResourceType
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceSorts.FindAsync([id], ct);
+            var entity = await context.ResourceSorts
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (entity == null) return false;
 
             if (await context.Resources.AnyAsync(x => x.ResourceSortId == id, ct))

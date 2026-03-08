@@ -1,110 +1,135 @@
 ﻿@using ContextMenuMHD
+@using Microsoft.AspNetCore.Components.Authorization
 @using ProjectManagement.Adminstrator.Constants
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.Models.Account
 @inherits AppComponentBase
 @inject IUsersService UsersService
+@inject AuthenticationStateProvider AuthStateProvider
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
-    <table class="@CsS.Table.Tab">
-        <thead class="@CsS.Table.Thead">
-            <tr>
-                <th class="@CsS.Table.TH">
-                    <AuthorizeView Roles="@PMRolesConst.APP.Admin">
-                        <button class="@CsS.Btn.Outline.Success" @onclick="() => RegisterModal()">
-                            @ResourceIdentity.register
-                        </button>
-                    </AuthorizeView>
-                </th>
-                <th class="@CsS.Table.TH">@ResourceIdentity.email</th>
-                <th class="@CsS.Table.TH">@CalcResource.name</th>
-                <th class="@CsS.Table.TH">@ResourceIdentity.lockoutEnd</th>
-                <th class="@CsS.Table.TH">@ResourceIdentity.lockoutStart</th>
-            </tr>
-        </thead>
+<table class="@CsS.Table.Tab">
+    <thead class="@CsS.Table.Thead">
+        <tr>
+            <th class="@CsS.Table.TH">
+                @if (CanManageSiteUsers)
+                {
+                    <button class="@CsS.Btn.Outline.Success" @onclick="RegisterModal">
+                        @ResourceIdentity.register
+                    </button>
+                }
+            </th>
+            <th class="@CsS.Table.TH">@ResourceIdentity.email</th>
+            <th class="@CsS.Table.TH">@CalcResource.name</th>
+            <th class="@CsS.Table.TH">@ResourceIdentity.lockoutEnd</th>
+            <th class="@CsS.Table.TH">@ResourceIdentity.lockoutStart</th>
+        </tr>
+    </thead>
 
     <tbody class="@CsS.Table.TBody">
-            @if (Users != null)
+        @if (Users != null)
+        {
+            foreach (var user in Users)
             {
-                foreach (var user in Users)
-                {
-                    <tr class="@CsS.Table.Tr"
-                        role="button"
-                        @oncontextmenu:preventDefault
-                        @oncontextmenu="() => ContextM(user)">
-                        <td class="@CsS.Table.Td">@user.Email</td>
-                        <td class="@CsS.Table.Td">@user.UserName</td>
-                        <td class="@CsS.Table.Td">@user.Firstname, @user.Lastname</td>
-                        <td class="@CsS.Table.Td">
-                            <input type="checkbox"
-                                   disabled
-                                   checked="@user.LockoutEnabled"
-                                   class="@CsS.Input.Check" />
-                            @(user.LockoutEnd?.ToString("dd.MM.yyyy") ?? string.Empty)
-                        </td>
-                        <td class="@CsS.Table.Td">
-                            @(user.LockoutStart?.ToString("dd.MM.yyyy") ?? string.Empty)
-                        </td>
-                    </tr>
-                }
+                <tr class="@CsS.Table.Tr"
+                    role="button"
+                    @oncontextmenu:preventDefault
+                    @oncontextmenu="() => ContextM(user)">
+                    <td class="@CsS.Table.Td">@user.Email</td>
+                    <td class="@CsS.Table.Td">@user.UserName</td>
+                    <td class="@CsS.Table.Td">@user.Firstname, @user.Lastname</td>
+                    <td class="@CsS.Table.Td">
+                        <input type="checkbox"
+                               disabled
+                               checked="@user.LockoutEnabled"
+                               class="@CsS.Input.Check" />
+                        @(user.LockoutEnd?.ToString("dd.MM.yyyy") ?? string.Empty)
+                    </td>
+                    <td class="@CsS.Table.Td">
+                        @(user.LockoutStart?.ToString("dd.MM.yyyy") ?? string.Empty)
+                    </td>
+                </tr>
             }
-        </tbody>
-    </table>
+        }
+    </tbody>
+</table>
 
 @code {
-    async Task ContextM(ApplicationUser item) =>
+    private bool CanManageSiteUsers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+        CanManageSiteUsers = principal.IsInRole(PMRolesConst.APP.Admin);
+
+        await GetUsersAsync();
+    }
+
+    async Task ContextM(ApplicationUser item)
+    {
+        if (!CanManageSiteUsers)
+        {
+            return;
+        }
+
         await ContextService.ShowMenuAsync(new()
-            {
-                    new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => {UpdateUser(item); return Task.CompletedTask; } },
-                    new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () =>{ Delete_Click(item); return Task.CompletedTask; } }
-            });
+        {
+            new MenuItem { Label = $"✏️ {ResourceApp.update}", OnClickAsync = () => { UpdateUser(item); return Task.CompletedTask; } },
+            new MenuItem { Label = $"🗑️ {ResourceApp.delete}", OnClickAsync = () => { Delete_Click(item); return Task.CompletedTask; } }
+        });
+    }
+
     void UpdateUser(ApplicationUser user) =>
         Modal.ShowComponent<UpdateUserUI>(AppLoc[LocalizerConst.Update, user.Id], new Dictionary<string, object>
         {
             [nameof(UpdateUserUI.UserForm)] = user,
             [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack),
         });
+
     void RegisterModal() =>
-    Modal.ShowComponent<UpdateUserUI>(ResourceIdentity.register, new Dictionary<string, object>
-    {
-        [nameof(UpdateUserUI.UserForm)] = new ApplicationUser(){Id = string.Empty},
-        [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack),
-    });
+        Modal.ShowComponent<UpdateUserUI>(ResourceIdentity.register, new Dictionary<string, object>
+        {
+            [nameof(UpdateUserUI.UserForm)] = new ApplicationUser() { Id = string.Empty },
+            [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack),
+        });
 
     async Task CallBack(bool refresh)
     {
         if (refresh) await GetUsersAsync();
         Modal.Close();
     }
+
     private async Task RemoveAsync(ApplicationUser deleteConfirmed)
     {
-        if (await ExHandlers.RunCheckTokenAsync(() => UsersService.RemoveUserAsync(deleteConfirmed.Id,null)))
+        if (await ExHandlers.RunCheckTokenAsync(() => UsersService.RemoveUserAsync(deleteConfirmed.Id, null)))
+        {
             Users?.Remove(deleteConfirmed);
+        }
+
         StateHasChanged();
     }
+
     bool Remove(ApplicationUser user)
     {
         MHD.MessageYesNo(ResourceApp.delete, AppLoc[LocalizerConst.deleteConfirmMsg, user.Email ?? string.Empty], MhdState.Warning, EventCallback.Factory.Create(this, () => RemoveAsync(user)));
         return true;
     }
+
     void Delete_Click(ApplicationUser user)
     {
         MHD.DeleteMessage(user.Email, EventCallback.Factory.Create(this, () => Remove(user)));
-
     }
+
     List<ApplicationUser>? Users;
 
     async Task GetUsersAsync()
     {
         MHD.Loading.Begin();
         Users = null;
-        Users = await  UsersService.GetUsersAsync(null);
+        Users = await UsersService.GetUsersAsync(null);
         MHD.Loading.End();
         StateHasChanged();
-    }
-    protected async override Task OnInitializedAsync()
-    {
-        await GetUsersAsync();
     }
 }

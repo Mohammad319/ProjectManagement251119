@@ -44,7 +44,8 @@ namespace TaskResourceBlueprints.Services.ResourceProperties
 
             return await context.ResourceAttributeSets
                 .AsNoTracking()
-                .OrderBy(x => x.Id) // لو عندك Name أو SortOrder استبدل Id به
+                .OrderBy(x => x.DisplayName)
+                .ThenBy(x => x.Id)
                 .ToListAsync(ct);
         }
 

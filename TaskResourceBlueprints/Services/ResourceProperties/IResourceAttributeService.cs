@@ -28,7 +28,7 @@ namespace TaskResourceBlueprints.Services.ResourceProperties
         {
             await using var context = await contextFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceAttributes.FindAsync(id);
+            var entity = await context.ResourceAttributes.FindAsync([id], ct);
             if (entity is null)
                 return false;
 
@@ -45,7 +45,8 @@ namespace TaskResourceBlueprints.Services.ResourceProperties
             return await context.ResourceAttributes
                 .AsNoTracking()
                 .Where(x => x.AttributeSetId == groupId)
-                .OrderBy(x => x.Id) // لو عندك SortOrder استخدمه هنا بدل Id
+                .OrderBy(x => x.DisplayName)
+                .ThenBy(x => x.Id)
                 .ToListAsync(ct);
         }
 
@@ -53,7 +54,7 @@ namespace TaskResourceBlueprints.Services.ResourceProperties
         {
             await using var context = await contextFactory.CreateDbContextAsync(ct);
 
-            var entity = await context.ResourceAttributes.FindAsync(attribute.Id);
+            var entity = await context.ResourceAttributes.FindAsync([attribute.Id], ct);
             if (entity is null)
                 return false;
 

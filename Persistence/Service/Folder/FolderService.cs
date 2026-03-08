@@ -44,7 +44,8 @@ namespace Persistence.Service.Folder
         public async Task<bool> UpdateAsync(Guid id, PostFolderDTO dto, int userId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var folder = await context.Folders.FindAsync([id], ct);
+            var folder = await context.Folders
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (folder == null || (departmentId.HasValue && folder.DepartmentId != departmentId))
                 return false;
 
@@ -58,7 +59,8 @@ namespace Persistence.Service.Folder
         public async Task<bool> DeleteAsync(Guid id, int userId, int? departmentId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var folder = await context.Folders.FindAsync([id], ct);
+            var folder = await context.Folders
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (folder == null)
                 return false;
 
@@ -77,7 +79,8 @@ namespace Persistence.Service.Folder
         public async Task<bool> UpdateOrderAsync(Guid id, int newOrder, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            var folder = await context.Folders.FindAsync([id], ct);
+            var folder = await context.Folders
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (folder == null) return false;
 
             folder.UpdateOrder(newOrder);

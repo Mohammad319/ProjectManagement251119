@@ -92,12 +92,12 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             }
 
 
-            var actionsTask = Run(db => db.Actions.OrderBy(x => x.Name));
-            var actionTypesTask = Run(db => db.ActionTypes.OrderBy(x => x.Name));
-            var fallsTask = Run(db => db.Falls.OrderBy(x => x.Name));
-            var locationsTask = Run(db => db.Locations.OrderBy(x => x.Name));
+            var actionsTask = Run(db => db.Actions.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
+            var actionTypesTask = Run(db => db.ActionTypes.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
+            var fallsTask = Run(db => db.Falls.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
+            var locationsTask = Run(db => db.Locations.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
             var unitGroupsTask = Run(db => db.TaskUnitGroups.OrderBy(x => x.DisplayName));
-            var foldersTask = Run(db => db.ResourceCategories.OrderBy(x => x.SortOrder));
+            var foldersTask = Run(db => db.ResourceCategories.OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName));
 
             await Task.WhenAll(actionsTask, actionTypesTask, fallsTask, locationsTask, unitGroupsTask, foldersTask);
 

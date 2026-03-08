@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ProjectManagement.Client.Shared.ViewModel
@@ -23,67 +23,51 @@ namespace ProjectManagement.Client.Shared.ViewModel
 
         public void Set(string style)
         {
-            if (!string.IsNullOrEmpty(style))
+            if (string.IsNullOrWhiteSpace(style))
+                return;
+
+            Dictionary<string, string> items = style
+                .Split(';')
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0 && s.Contains(':'))
+                .Select(s => new
+                {
+                    Key = s[..s.IndexOf(':')].Trim(),
+                    Value = s[(s.IndexOf(':') + 1)..].Trim()
+                })
+                .GroupBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Last().Value, StringComparer.OrdinalIgnoreCase);
+
+            static int? ParsePx(Dictionary<string, string> source, string key)
             {
-                Dictionary<string, string> items = style.Split(';').Select(s => s.Trim()).Where(s => s.Length > 0)
-               .ToDictionary(s => s.Substring(0, s.IndexOf(':')).Trim(), d => d.Substring(d.IndexOf(':') + 1).Trim()
-               );
-                string w = items.FirstOrDefault(x => x.Key == "width").Value;
-                if (!string.IsNullOrEmpty(w))
-                    Width = int.Parse(w.Substring(0, w.IndexOf("px")));
-                else Width = null;
+                if (!source.TryGetValue(key, out var raw) || string.IsNullOrWhiteSpace(raw))
+                    return null;
 
-                string h = items.FirstOrDefault(x => x.Key == "height").Value;
-                if (!string.IsNullOrEmpty(h))
-                    Height = int.Parse(h.Substring(0, h.IndexOf("px")));
+                raw = raw.Trim();
+                if (raw.EndsWith("px", StringComparison.OrdinalIgnoreCase))
+                    raw = raw[..^2].Trim();
 
-                string ml = items.FirstOrDefault(x => x.Key == "margin-left").Value;
-                if (!string.IsNullOrEmpty(ml))
-                    MarginLeft = int.Parse(ml.Substring(0, ml.IndexOf("px")));
-                else MarginLeft = null;
-
-                string mb = items.FirstOrDefault(x => x.Key == "margin-bottom").Value;
-                if (!string.IsNullOrEmpty(mb))
-                    MarginBottom = int.Parse(mb.Substring(0, mb.IndexOf("px")));
-
-                string mt = items.FirstOrDefault(x => x.Key == "margin-top").Value;
-                if (!string.IsNullOrEmpty(mt))
-                    MarginTop = int.Parse(mt.Substring(0, mt.IndexOf("px")));
-
-                string pl = items.FirstOrDefault(x => x.Key == "padding-left").Value;
-                if (!string.IsNullOrEmpty(pl))
-                    PaddingLeft = int.Parse(pl.Substring(0, pl.IndexOf("px")));
-
-                string pr = items.FirstOrDefault(x => x.Key == "padding-right").Value;
-
-                string pb = items.FirstOrDefault(x => x.Key == "padding-bottom").Value;
-
-                string pt = items.FirstOrDefault(x => x.Key == "padding-top").Value;
-                if (!string.IsNullOrEmpty(pt))
-                    PaddingTop = int.Parse(pt.Substring(0, pt.IndexOf("px")));
-
-                string fs = items.FirstOrDefault(x => x.Key == "font-size").Value;
-                if (!string.IsNullOrEmpty(fs))
-                    FontSize = int.Parse(fs.Substring(0, fs.IndexOf("px")));
-                else FontSize = null;
-
-                if (!string.IsNullOrEmpty(items.FirstOrDefault(x => x.Key == "color").Value))
-                    Color = items.FirstOrDefault(x => x.Key == "color").Value;
-                else Color = string.Empty;
-                if (!string.IsNullOrEmpty(items.FirstOrDefault(x => x.Key == "background-color").Value))
-                    BackgroundColor = items.FirstOrDefault(x => x.Key == "background-color").Value;
-                else BackgroundColor = string.Empty;
-
-                if (!string.IsNullOrEmpty(items.FirstOrDefault(x => x.Key == "border-color").Value))
-                    BorderColor = items.FirstOrDefault(x => x.Key == "border-color").Value;
-                if (!string.IsNullOrEmpty(items.FirstOrDefault(x => x.Key == "border-style").Value))
-                    BorderStyle = items.FirstOrDefault(x => x.Key == "border-style").Value;
-                if (!string.IsNullOrEmpty(items.FirstOrDefault(x => x.Key == "text-align").Value))
-                    TextAlign = items.FirstOrDefault(x => x.Key == "text-align").Value;
-                if (!string.IsNullOrEmpty(items.FirstOrDefault(x => x.Key == "font-weight").Value))
-                    FontWeight = items.FirstOrDefault(x => x.Key == "font-weight").Value;
-
+                return int.TryParse(raw, out var value) ? value : null;
             }
+
+            static string GetValue(Dictionary<string, string> source, string key)
+                => source.TryGetValue(key, out var value) ? value : string.Empty;
+
+            Width = ParsePx(items, "width");
+            Height = ParsePx(items, "height");
+            MarginLeft = ParsePx(items, "margin-left");
+            MarginBottom = ParsePx(items, "margin-bottom");
+            MarginTop = ParsePx(items, "margin-top");
+            PaddingLeft = ParsePx(items, "padding-left");
+            PaddingTop = ParsePx(items, "padding-top");
+            FontSize = ParsePx(items, "font-size");
+
+            Color = GetValue(items, "color");
+            BackgroundColor = GetValue(items, "background-color");
+            BorderColor = GetValue(items, "border-color");
+            BorderStyle = GetValue(items, "border-style");
+            TextAlign = GetValue(items, "text-align");
+            FontWeight = GetValue(items, "font-weight");
         }
         public string GetString()
         {

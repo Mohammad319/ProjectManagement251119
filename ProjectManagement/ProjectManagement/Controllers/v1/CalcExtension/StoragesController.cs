@@ -1,4 +1,4 @@
-﻿using Application.Feature.Calculation.Resource.Commands;
+using Application.Feature.Calculation.Resource.Commands;
 using Application.Feature.Calculation.Storage.Commands;
 using Application.Feature.Calculation.Storage.Queries;
 using Application.Feature.Calculation.Task.Commands;
@@ -18,7 +18,7 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
     [ApiVersion("1.0")]
     public class StoragesController(ITaskDefinitionService TaskService) : BaseApiController
     {
-        [Authorize]
+        [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost("updaterestenant/{resId}")]
         public async Task<IActionResult> UpdateResourceAppStorageTenantAsync(int resId,[FromBody] ResourceTenantLinkBase f)
         {
@@ -26,7 +26,7 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
             if (!tenantId.HasValue) return BadRequest();
             return Ok(await TaskService.UpdateResourceAppStorageTenantAsync(tenantId.Value, resId, f, CancellationToken.None));
         }
-        [Authorize]
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpPost("tasksapp2")]
         public async Task<IActionResult> TasksApp2([FromBody] ProjectTaskFilterDto f)
         {
@@ -38,7 +38,7 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
             }
             return Ok(_tasks);
         }
-        [Authorize]
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("tasksapp2/{id}")]
         public async Task<IActionResult> TasksApp2(int id)
         {
@@ -50,14 +50,14 @@ namespace ProjectManagement.Server.Controllers.v1.CalcExtension
             }
             return Ok(_tasks);
         }
-        [Authorize]
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("tasksapp")]
         public async Task<IActionResult> TasksApp()
         {
             var tasks = await TaskService.GetTasksWithAdjustedResources(null, null, null, null);
             return Ok(tasks);
         }
-        [Authorize]
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("resapp")]
         public Task<IActionResult> ResourcesApp()
         {

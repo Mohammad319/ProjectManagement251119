@@ -112,7 +112,8 @@ namespace Persistence.Service.ResourceAccount
             if (isUsedByResources || isUsedByResourceTypes || isUsedByResourceSorts)
                 return false;
 
-            var existing = await context.Accounts.FindAsync([id], ct);
+            var existing = await context.Accounts
+                .FirstOrDefaultAsync(x => x.Id == id, ct);
             if (existing is null) return false;
 
             context.Accounts.Remove(existing);

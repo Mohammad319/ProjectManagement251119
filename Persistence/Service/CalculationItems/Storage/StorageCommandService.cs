@@ -69,7 +69,10 @@ namespace Persistence.Service.CalculationItems.Storage
 
                 TaskExtention.BuildTaskHierarchy(tasks);
 
-                var root = tasks.First(t => t.Id == id);
+                var root = tasks.FirstOrDefault(t => t.Id == id);
+                if (root is null)
+                    return false;
+
                 obj = TaskExtention.Reset(root);
             }
             else if (type == CalculationItemType.resource)

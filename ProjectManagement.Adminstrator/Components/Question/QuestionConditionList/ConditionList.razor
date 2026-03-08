@@ -15,7 +15,7 @@
     [Parameter] public List<ResourceSelectorDefinition> ResourceGroups { get; set; } = new();
     [Parameter] public List<NumericQuestionDefinition> NumericGroups { get; set; } = new();
 
-    bool ResourceAssignments = false;
+    private readonly HashSet<int> ExpandedAssignmentConditionIds = new();
     private static string RangeLabel(decimal? min, decimal? max)
         => min.HasValue && max.HasValue ? $"[{min}..{max}]" :
            min.HasValue ? $">= {min}" : max.HasValue ? $"<= {max}" : "(any)";
@@ -23,9 +23,12 @@
     private static IEnumerable<IGrouping<int, T>> GroupBySetKey<T>(IEnumerable<T> rows, Func<T, int> keySelector)
         => rows.GroupBy(keySelector).OrderBy(g => g.Key);
 
-    void ResourceAssignmentsFunf()
+    void ToggleResourceAssignments(int conditionId)
     {
-        ResourceAssignments = !ResourceAssignments;
+        if (!ExpandedAssignmentConditionIds.Add(conditionId))
+        {
+            ExpandedAssignmentConditionIds.Remove(conditionId);
+        }
     }
 }
 
@@ -49,7 +52,7 @@ else
                 <div class="@CsS.Layout.FlexWrap">
                     @if (c.Assignments.Count > 0)
                     {
-                        <button class="@CsS.Btn.Outline.Primary" @onclick="ResourceAssignmentsFunf">
+                        <button class="@CsS.Btn.Outline.Primary" @onclick="() => ToggleResourceAssignments(c.Id)">
                             Resource Assignments
                         </button>
                     }
@@ -135,7 +138,7 @@ else
                                     @foreach (var r in set)
                                     {
                                         var g = NumericGroups.FirstOrDefault(x => x.Id == r.NumericQuestionId);
-                                        <div>• @g?.DisplayName — @RangeLabel(r.MaxAllowedValue, r.MinAllowedValue)</div>
+                                        <div>• @g?.DisplayName — @RangeLabel(r.MinAllowedValue, r.MaxAllowedValue)</div>
                                     }
                                 </div>
                             </div>
@@ -145,7 +148,7 @@ else
             </div>
 
             <!-- Resource Assignments (optional block) -->
-            @if (ResourceAssignments)
+            @if (ExpandedAssignmentConditionIds.Contains(c.Id))
             {
                 @if (c.Assignments.Count == 0)
                 {

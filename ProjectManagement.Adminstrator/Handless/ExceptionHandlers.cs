@@ -2,7 +2,7 @@
 using ProjectManagement.Adminstrator.Handless;
 using System.Security.Claims;
 
-namespace ProjectManagement.Client.Adminstrator.Handless
+namespace ProjectManagement.Adminstrator.Handless
 {
     public class ExceptionHandlers(
         ILoggerPM _loger,

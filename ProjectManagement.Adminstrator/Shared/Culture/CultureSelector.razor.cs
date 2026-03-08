@@ -2,7 +2,7 @@
 using Microsoft.JSInterop;
 using System.Globalization;
 
-namespace ProjectManagement.Client.Adminstrator.Shared.Culture
+namespace ProjectManagement.Adminstrator.Shared.Culture
 {
     public partial class CultureSelector
     {

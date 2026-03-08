@@ -4,10 +4,10 @@
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <RedirectToLogin />
+                <RedirectToLoginOrAccessDenied />
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
- <ContextMenu @rendermode="InteractiveServer" /> 
+<ContextMenu @rendermode="InteractiveServer" />

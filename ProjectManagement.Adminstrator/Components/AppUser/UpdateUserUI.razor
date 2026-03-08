@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.DTO.General
 @using ProjectManagement.Shared.Models.Account
@@ -170,7 +170,11 @@
                     
                 };
             await IniUserApp();
-            Form.Role = Roles.FirstOrDefault() ?? string.Empty;
+            if (!string.IsNullOrEmpty(UserForm?.Id))
+            {
+                Form.Role = Roles.FirstOrDefault() ?? string.Empty;
+            }
+
             IsLoading = false;
         }
     }
@@ -178,9 +182,21 @@
     async Task IniUserApp()
     {
         if (!string.IsNullOrEmpty(UserForm?.Id))
+        {
             Roles = await UsersService.GetRolesAsync(UserForm.UserName ?? string.Empty);
+            return;
+        }
+
+        if (TenantId.HasValue)
+        {
+            Roles.Add(PMRolesConst.Tenant.Manger);
+            Form.Role = PMRolesConst.Tenant.Manger;
+        }
         else
+        {
             Roles.Add(PMRolesConst.APP.Manger);
+            Form.Role = PMRolesConst.APP.Manger;
+        }
     }
 
     async Task HandleSubmitAsync2()
@@ -202,11 +218,23 @@
             }
 
             var result = await UsersService.RegisterAsync(Form, TenantId);
+            if (!result)
+            {
+                FormError = "User could not be created. Check email uniqueness, role selection, and your permissions.";
+                return;
+            }
+
             await Callback.InvokeAsync(result);
         }
         else
         {
             var result = await UsersService.UpdateUserAsync(Form, TenantId);
+            if (!result)
+            {
+                FormError = "User could not be updated. Check permissions, role changes, and protection rules.";
+                return;
+            }
+
             await Callback.InvokeAsync(result);
         }
     }
