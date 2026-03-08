@@ -6,19 +6,15 @@
 @inject IJSRuntime JS
 @inject AppErrorDialog ErrorDialog
 
-<div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <div class="mx-auto flex min-h-screen max-w-[1900px] flex-col">
-        <ErrorBoundary @ref="_boundary" @key="_errorKey">
+<div class="mainContainer">
+    <ErrorBoundary @ref="_boundary" @key="_errorKey">
             <ChildContent>
                 <AuthorizeView>
                     <Authorized>
                         <NavMenu @rendermode="InteractiveServer"></NavMenu>
                     </Authorized>
                 </AuthorizeView>
-
-                <main class="flex-1 px-3 pb-4 pt-3 sm:px-4 lg:px-6 lg:pb-6 lg:pt-4">
-                    @Body
-                </main>
+                @Body
             </ChildContent>
 
             <ErrorContent Context="ex">
@@ -29,7 +25,6 @@
             </ErrorContent>
         </ErrorBoundary>
     </div>
-</div>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

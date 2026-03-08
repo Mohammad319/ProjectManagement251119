@@ -28,7 +28,7 @@
 
 <ContextMenu @rendermode="InteractiveServer" />
 <ContextMenu @rendermode="InteractiveWebAssembly" />
-<MhdDialog @rendermode="InteractiveServer" />
+@* <MhdDialog @rendermode="InteractiveServer" />
 <MhdDialog @rendermode="InteractiveWebAssembly" />
 
 <MhdMessageBox @rendermode="InteractiveServer" />
@@ -38,3 +38,7 @@
 
 <BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveServer"></BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay>
 <BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveWebAssembly"></BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay>
+ *@
+
+<BlazorMHD.UI.MHD @rendermode="InteractiveServer" />
+<BlazorMHD.UI.MHD @rendermode="InteractiveWebAssembly" />

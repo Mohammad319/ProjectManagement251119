@@ -3,8 +3,6 @@
 @using ProjectManagement.Client.Pages.Folder
 @attribute [Authorize]
 
-<div class="space-y-4">
-    <div class="min-h-[calc(100vh-13rem)]">
-        <FolderIndex @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
-    </div>
+<div class="flex-container">
+    <FolderIndex @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
 </div>
