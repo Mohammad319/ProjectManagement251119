@@ -8,25 +8,38 @@
 }
 else
 {
-    <div class="space-y-4">
-        <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@CalcLoc[nameof(CalcResource.resourceType)]</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">@VisibleItems.Count() @CalcLoc[nameof(CalcResource.resourceType)]</p>
-            </div>
+    <div class="space-y-5">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h3 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                            @CalcLoc[nameof(CalcResource.resourceType)]
+                        </h3>
 
-            <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
-                <button @onclick="CreateNewAsync"
-                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700"
-                        title="@AppLoc[nameof(ResourceApp.newItem)]">
-                    @((MarkupString)Icons.Plus)
-                </button>
+                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                            @VisibleItems.Count() @CalcLoc[nameof(CalcResource.resourceType)]
+                        </span>
+                    </div>
 
-                <button class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                        @onclick="ReverseElements"
-                        title="@AppLoc[nameof(ResourceApp.isVisible)]">
-                    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-                </button>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        @AppLoc[nameof(ResourceApp.newItem)]
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button @onclick="CreateNewAsync"
+                            class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                        <span class="text-base leading-none">@((MarkupString)Icons.Plus)</span>
+                        <span>@AppLoc[nameof(ResourceApp.newItem)]</span>
+                    </button>
+
+                    <button @onclick="ReverseElements"
+                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                        <span class="text-base leading-none">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</span>
+                        <span>@AppLoc[nameof(ResourceApp.isVisible)]</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -37,53 +50,91 @@ else
         else if (VisibleItems.Any())
         {
             <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <div class="overflow-x-auto p-4">
-                    <MhdTable Items="VisibleItems.ToList()" ShowFilter="false">
-                        <HeaderTemplate>
-                            <th class="w-44 p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
-                            <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</th>
-                        </HeaderTemplate>
-                        <ChildContent>
-                            <MhdTableColumn>
-                                <Template Context="item">
-                                    <div class="flex items-center gap-2">
-                                        <button @onclick="() => UpdateForm(item)"
-                                                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300"
-                                                title="@AppLoc[nameof(ResourceApp.update)]">
-                                            @Icons.Edit
-                                        </button>
+                <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                    <div class="grid grid-cols-12 gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        <div class="col-span-12 md:col-span-3">
+                            @AppLoc[nameof(ResourceApp.update)]
+                        </div>
+                        <div class="col-span-12 md:col-span-5">
+                            @CalcLoc[nameof(CalcResource.name)]
+                        </div>
+                        <div class="col-span-12 md:col-span-4">
+                            @CalcLoc[nameof(CalcResource.resourceType)]
+                        </div>
+                    </div>
+                </div>
 
-                                        <button @onclick="() => Remove(item)"
-                                                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
-                                                title="@AppLoc[nameof(ResourceApp.delete)]">
-                                            @((MarkupString)Icons.DeleteSVG)
-                                        </button>
+                <div class="divide-y divide-slate-200 dark:divide-slate-800">
+                    @foreach (var item in VisibleItems)
+                    {
+                        <div class="px-4 py-4 transition hover:bg-slate-50/80 dark:hover:bg-slate-900/60">
+                            <div class="grid grid-cols-12 gap-4">
+                                <div class="col-span-12 flex flex-wrap items-center gap-2 md:col-span-3">
+                                    <button @onclick="() => UpdateForm(item)"
+                                            class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-950/60"
+                                            title="@AppLoc[nameof(ResourceApp.update)]">
+                                        <span class="text-sm leading-none">@((MarkupString)Icons.Edit)</span>
+                                        <span class="hidden sm:inline">@AppLoc[nameof(ResourceApp.update)]</span>
+                                    </button>
 
-                                        <button @onclick="() => OpenSort(item)"
-                                                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-700 transition hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300"
-                                                title="@CalcLoc[nameof(CalcResource.sort)]">
-                                            @((MarkupString)Icons.List)
-                                        </button>
+                                    <button @onclick="() => Remove(item)"
+                                            class="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60"
+                                            title="@AppLoc[nameof(ResourceApp.delete)]">
+                                        <span class="text-sm leading-none">@((MarkupString)Icons.DeleteSVG)</span>
+                                        <span class="hidden sm:inline">@AppLoc[nameof(ResourceApp.delete)]</span>
+                                    </button>
+
+                                    <button @onclick="() => OpenSort(item)"
+                                            class="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300 dark:hover:bg-sky-950/60"
+                                            title="@CalcLoc[nameof(CalcResource.sort)]">
+                                        <span class="text-sm leading-none">@((MarkupString)Icons.List)</span>
+                                        <span class="hidden sm:inline">@CalcLoc[nameof(CalcResource.sort)]</span>
+                                    </button>
+                                </div>
+
+                                <div class="col-span-12 flex items-center md:col-span-5">
+                                    <div class="min-w-0">
+                                        <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                            @item.Name
+                                        </div>
                                     </div>
-                                </Template>
-                            </MhdTableColumn>
-                            <MhdTableColumn>
-                                <Template Context="item">
-                                    <div>
-                                        <div class="font-medium text-slate-900 dark:text-slate-100">@item.Name</div>
-                                        <div class="text-xs text-slate-500 dark:text-slate-400">@ResourceLocalize.GetResourceType(item.Type)</div>
-                                    </div>
-                                </Template>
-                            </MhdTableColumn>
-                        </ChildContent>
-                    </MhdTable>
+                                </div>
+
+                                <div class="col-span-12 flex items-center md:col-span-4">
+                                    <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                                        @ResourceLocalize.GetResourceType(item.Type)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         }
         else
         {
-            <div class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-6 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-                @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
+                <div class="mx-auto max-w-md">
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-500">
+                        <span class="text-xl">@((MarkupString)Icons.Plus)</span>
+                    </div>
+
+                    <h4 class="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">
+                        @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+                    </h4>
+
+                    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                        @AppLoc[nameof(ResourceApp.newItem)]
+                    </p>
+
+                    <div class="mt-5">
+                        <button @onclick="CreateNewAsync"
+                                class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                            <span>@((MarkupString)Icons.Plus)</span>
+                            <span>@AppLoc[nameof(ResourceApp.newItem)]</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         }
     </div>
