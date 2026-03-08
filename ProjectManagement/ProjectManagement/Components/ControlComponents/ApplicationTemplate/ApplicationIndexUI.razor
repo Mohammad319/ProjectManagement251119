@@ -15,55 +15,55 @@ else if (Loading)
 }
 else
 {
-    <table class="@CssClasses.Table.Tab">
-        <thead class="@CssClasses.Table.Thead">
+    <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
+        <thead class="bg-slate-50 dark:bg-slate-800/80">
             <tr>
-                <th class="@CssClasses.Table.TH" style="width:250px;">
-                    <div class="@CssClasses.Layout.FlexItemsCenter">
-                        <button @onclick="NewApp" class="@CssClasses.Btn.IconButton.Success" type="button">
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:250px;">
+                    <div class="flex items-center gap-2">
+                        <button @onclick="NewApp" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50" type="button">
                             @((MarkupString)Icons.Plus2)
                         </button>
 
                         <button @onclick="ToggleVisibility"
-                                class="@CssClasses.Btn.IconButton.Secondary"
+                                class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                                 type="button"
                                 title="@(IsVisible ? nameof(ResourceApp.isVisible) : nameof(ResourceApp.notFoundData))">
                             @((MarkupString)Icons.GetVisibleIcon(IsVisible))
                         </button>
                     </div>
                 </th>
-                <th class="@CssClasses.Table.TH" style="width:170px;">@ResourceApp.lastUpdate</th>
-                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:170px;">@ResourceApp.lastUpdate</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
             </tr>
         </thead>
-        <tbody class="@CssClasses.Table.TBody">
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
             @if (VisibleApplications.Count == 0)
             {
-                <tr class="@CssClasses.Table.Tr">
-                    <td class="@CssClasses.Table.Td" colspan="3">@ResourceApp.notFoundData</td>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                    <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200" colspan="3">@ResourceApp.notFoundData</td>
                 </tr>
             }
             else
             {
                 @foreach (var application in VisibleApplications)
                 {
-                    <tr class="@CssClasses.Table.Tr">
-                        <td class="@CssClasses.Table.Td">
-                            <div class="@CssClasses.Layout.FlexItemsCenter">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
+                            <div class="flex items-center gap-2">
                                 <button @onclick="() => OpenApplication(application)"
-                                        class="@CssClasses.Btn.IconButton.Warning"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
                                         type="button">
                                     @Icons.Edit
                                 </button>
                                 <button @onclick="() => Remove(application)"
-                                        class="@CssClasses.Btn.IconButton.Danger"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                                         type="button">
                                     @((MarkupString)Icons.DeleteSVG)
                                 </button>
                             </div>
                         </td>
-                        <td class="@CssClasses.Table.Td">@application.LastUpdate.ToString("dd.MM.yyyy HH.mm")</td>
-                        <td class="@CssClasses.Table.Td">@application.Name</td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.LastUpdate.ToString("dd.MM.yyyy HH.mm")</td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@application.Name</td>
                     </tr>
                 }
             }
