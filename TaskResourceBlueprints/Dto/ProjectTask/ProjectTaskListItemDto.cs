@@ -13,11 +13,15 @@
     };
 
     public sealed record ResourceTaskIndexDto(
-    int Id,
-    string DisplayName,
+        int AssignmentId,
+        int ResourceId,
+        string DisplayName,
         decimal Chf1,
-    decimal Chf2,
-    string Unit,
-    bool IsActive
-);
+        decimal Chf2,
+        string Unit,
+        bool IsActive)
+    {
+        // Backward-compatible alias for UI paths that still read Id as the resource id.
+        public int Id => ResourceId;
+    }
 }

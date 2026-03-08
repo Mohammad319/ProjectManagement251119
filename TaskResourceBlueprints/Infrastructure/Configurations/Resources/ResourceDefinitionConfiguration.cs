@@ -9,29 +9,23 @@ using ProjectManagement.Shared.DTO.App.Dataloader;
 
 namespace TaskResourceBlueprints.Infrastructure.Configurations.Resources;
 
-/// <summary>
-/// Configuration for resource templates (metadata, cost, roles, etc.).
-/// </summary>
 public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<ResourceDefinition>
 {
     public void Configure(EntityTypeBuilder<ResourceDefinition> b)
     {
-        // مثال لو عندك Name/Code/Category, تقدر تضيف MaxLength هنا لاحقًا
+        b.Property(x => x.Name)
+            .HasMaxLength(Lengths.DisplayName);
 
-        // CostRoles: List<RoleDTO> as JSON + comparer
         b.Property(e => e.CostRoles)
-            .HasJsonListComparer();
+            .HasJsonListComparer<RoleDTO>();
 
-        // Metadata: ResourceMetadata as JSON + comparer
         b.Property(e => e.Data)
             .HasJsonConversionWithComparer();
 
-        // CalcResCost: CalcResCost as JSON + comparer
         b.Property(e => e.CalcResCost)
             .HasJsonConversionWithComparer();
 
-        // لو عندك أرقام مالية إضافية تقدر تستخدم Precision:
-        // b.Attribute(e => e.SomeMoneyField)
-        //     .HasPrecision(Precision.MoneyPrecision, Precision.MoneyScale);
+        b.HasIndex(x => new { x.FolderId, x.SortOrder, x.Name });
+        b.HasIndex(x => new { x.IsActive, x.IsVisible, x.Name });
     }
 }

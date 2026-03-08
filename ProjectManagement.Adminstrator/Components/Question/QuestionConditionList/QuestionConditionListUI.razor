@@ -4,26 +4,22 @@
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using Microsoft.AspNetCore.Components
 @using Microsoft.EntityFrameworkCore
-@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
 @using TaskResourceBlueprints.Services.QuestionConditions
-@using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
-@using ProjectManagement.Shared.Base.ProjectAppStorage
-@using ProjectManagement.Shared.Enums
 @inject ITaskConditionsService ConditionsService
 
 @code {
     [Parameter] public int TaskId { get; set; }
+
     private List<ConditionDefinition> conditions = new();
     private ConditionDefinition? editing;
     private bool isLoading = true;
     private string? error;
     private List<QuestionGroupDefinition> taskChoiceGroups = new();
     private List<NumericQuestionDefinition> taskNumericGroups = new();
-    List<ResourceSelectorDefinition> ResourceGroups = new();
+    private List<ResourceSelectorDefinition> resourceGroups = new();
 
-    // مفاتيح الربط: AssignmentId -> VMs
     private readonly Dictionary<int, List<OptionBindVM>> optBindsByRA = new();
     private readonly Dictionary<int, List<NumericBindVM>> numBindsByRA = new();
 
@@ -33,18 +29,17 @@
     {
         try
         {
-            isLoading = true; error = null;
+            isLoading = true;
+            error = null;
 
-            // 1) الشروط
             conditions = await ConditionsService.GetConditionsAsync(TaskId, CancellationToken.None);
-
-            // 2) مجموعات الـ ParentTask
-            ResourceGroups = await ConditionsService.GetResourceGroupsAsync(TaskId, CancellationToken.None);
+            resourceGroups = await ConditionsService.GetResourceGroupsAsync(TaskId, CancellationToken.None);
             taskChoiceGroups = await ConditionsService.GetChoiceGroupsAsync(TaskId, CancellationToken.None);
             taskNumericGroups = await ConditionsService.GetNumericGroupsAsync(TaskId, CancellationToken.None);
 
-            // 3) تحميل Bindings حسب ResourceAssignmentIds
-            optBindsByRA.Clear(); numBindsByRA.Clear();
+            optBindsByRA.Clear();
+            numBindsByRA.Clear();
+
             var raIds = conditions
                 .SelectMany(c => c.Assignments)
                 .Select(a => a.Id)
@@ -56,8 +51,11 @@
                 var optDict = await ConditionsService.GetOptionBindsByResourceAssignmentsAsync(raIds, CancellationToken.None);
                 var numDict = await ConditionsService.GetNumericBindsByResourceAssignmentsAsync(raIds, CancellationToken.None);
 
-                foreach (var (k, v) in optDict) optBindsByRA[k] = v;
-                foreach (var (k, v) in numDict) numBindsByRA[k] = v;
+                foreach (var pair in optDict)
+                    optBindsByRA[pair.Key] = pair.Value;
+
+                foreach (var pair in numDict)
+                    numBindsByRA[pair.Key] = pair.Value;
             }
         }
         catch (Exception ex)
@@ -84,29 +82,38 @@
             NumericRules = new(),
             Assignments = new()
         };
+
+        optBindsByRA.Clear();
+        numBindsByRA.Clear();
     }
 
     private async Task EditConditionAsync(int id)
     {
         editing = await ConditionsService.GetConditionAsync(id, CancellationToken.None);
-        if (editing is null) return;
+        if (editing is null)
+            return;
 
-        // تعبئة الـ bindings الخاصة بهذه الـ condition فقط
         var raIds = editing.Assignments.Select(a => a.Id).Distinct().ToArray();
-        optBindsByRA.Clear(); numBindsByRA.Clear();
+        optBindsByRA.Clear();
+        numBindsByRA.Clear();
+
         foreach (var raId in raIds)
         {
             optBindsByRA[raId] = new();
             numBindsByRA[raId] = new();
         }
 
-        if (raIds.Length == 0) return;
+        if (raIds.Length == 0)
+            return;
 
         var optDict = await ConditionsService.GetOptionBindsByResourceAssignmentsAsync(raIds, CancellationToken.None);
         var numDict = await ConditionsService.GetNumericBindsByResourceAssignmentsAsync(raIds, CancellationToken.None);
 
-        foreach (var (k, v) in optDict) optBindsByRA[k] = v;
-        foreach (var (k, v) in numDict) numBindsByRA[k] = v;
+        foreach (var pair in optDict)
+            optBindsByRA[pair.Key] = pair.Value;
+
+        foreach (var pair in numDict)
+            numBindsByRA[pair.Key] = pair.Value;
     }
 
     private async Task DeleteConditionAsync(int id)
@@ -117,9 +124,9 @@
 
     private async Task SaveConditionAsync()
     {
-        if (editing is null) return;
+        if (editing is null)
+            return;
 
-        // مهم: لا نمرر Resources مرفقة لتفادي مشاكل الـ tracking
         foreach (var ra in editing.Assignments)
             ra.Resource = null!;
 
@@ -128,81 +135,119 @@
         await LoadAsync();
     }
 
-    private void CancelEdit() { editing = null; }
+    private void CancelEdit() => editing = null;
 
-    internal static string CGLabel(QuestionGroupDefinition g) => $"{g.DisplayName}";
-    internal static string NGLabel(NumericQuestionDefinition g) => $"{g.DisplayName}";
-
-    // ---------- حفظ الربطات ----------
     private async Task SaveOptionBindingAsync(int raId, OptionBindVM vm)
     {
-        if (vm.ChoiceOptionId == 0) { vm.LastError = "اختر خيارًا."; return; }
+        if (vm.ChoiceOptionId == 0)
+        {
+            vm.LastError = "اختر خيارًا.";
+            return;
+        }
+
         try
         {
             var id = await ConditionsService.UpsertOptionBindingAsync(raId, vm, CancellationToken.None);
-            vm.Id = id; vm.SavedOk = true; vm.LastError = null;
+            vm.Id = id;
+            vm.SavedOk = true;
+            vm.LastError = null;
         }
-        catch (DbUpdateException ex) { vm.SavedOk = false; vm.LastError = ex.InnerException?.Message ?? ex.Message; }
-        catch (Exception ex) { vm.SavedOk = false; vm.LastError = ex.Message; }
+        catch (DbUpdateException ex)
+        {
+            vm.SavedOk = false;
+            vm.LastError = ex.InnerException?.Message ?? ex.Message;
+        }
+        catch (Exception ex)
+        {
+            vm.SavedOk = false;
+            vm.LastError = ex.Message;
+        }
     }
 
     private async Task SaveNumericBindingAsync(int raId, NumericBindVM vm)
     {
-        if (vm.NumericId == 0) { vm.LastError = "اختر مجموعة رقمية."; return; }
+        if (vm.NumericId == 0)
+        {
+            vm.LastError = "اختر مجموعة رقمية.";
+            return;
+        }
+
         try
         {
             var id = await ConditionsService.UpsertNumericBindingAsync(raId, vm, CancellationToken.None);
-            vm.Id = id; vm.SavedOk = true; vm.LastError = null;
+            vm.Id = id;
+            vm.SavedOk = true;
+            vm.LastError = null;
         }
-        catch (DbUpdateException ex) { vm.SavedOk = false; vm.LastError = ex.InnerException?.Message ?? ex.Message; }
-        catch (Exception ex) { vm.SavedOk = false; vm.LastError = ex.Message; }
+        catch (DbUpdateException ex)
+        {
+            vm.SavedOk = false;
+            vm.LastError = ex.InnerException?.Message ?? ex.Message;
+        }
+        catch (Exception ex)
+        {
+            vm.SavedOk = false;
+            vm.LastError = ex.Message;
+        }
+    }
+
+    private async Task DeleteOptionBindingAsync(int raId, OptionBindVM vm)
+    {
+        if (vm.Id > 0)
+            await ConditionsService.DeleteOptionBindingAsync(vm.Id, CancellationToken.None);
+
+        if (optBindsByRA.TryGetValue(raId, out var list))
+            list.Remove(vm);
+    }
+
+    private async Task DeleteNumericBindingAsync(int raId, NumericBindVM vm)
+    {
+        if (vm.Id > 0)
+            await ConditionsService.DeleteNumericBindingAsync(vm.Id, CancellationToken.None);
+
+        if (numBindsByRA.TryGetValue(raId, out var list))
+            list.Remove(vm);
     }
 }
 
-<div class="" dir="ltr">
-
+<div dir="ltr">
     @if (isLoading)
     {
-        <div class="@CsS.Background.Info">
-            Loading…
-        </div>
+        <div class="@CsS.Background.Info">Loading…</div>
     }
     else if (!string.IsNullOrEmpty(error))
     {
-        <div class="@CsS.Background.Danger">
-            Error: @error
-        </div>
+        <div class="@CsS.Background.Danger">Error: @error</div>
+    }
+    else if (editing is null)
+    {
+        <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Bottom1" @onclick="NewCondition">
+            Add Condition
+        </button>
+
+        <ConditionList Conditions="conditions"
+                       ResourceGroups="resourceGroups"
+                       ChoiceGroups="taskChoiceGroups"
+                       NumericGroups="taskNumericGroups"
+                       OnEdit="EditConditionAsync"
+                       OnDelete="DeleteConditionAsync" />
     }
     else
     {
-        @if (editing is null)
-        {
-                <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.Bottom1" @onclick="NewCondition">
-                    Add Condition
-                </button>
+        <div class="@CsS.Layout.FlexWrap @CsS.Spacing.M.Bottom1">
+            <button class="@CsS.Btn.Outline.Primary" @onclick="SaveConditionAsync">Save</button>
+            <button class="@CsS.Btn.Outline.Danger" @onclick="CancelEdit">Cancel</button>
+        </div>
 
-                <ConditionList Conditions="conditions"
-                               ResourceGroups="ResourceGroups"
-                               ChoiceGroups="taskChoiceGroups"
-                               NumericGroups="taskNumericGroups"
-                               OnEdit="EditConditionAsync"
-                               OnDelete="DeleteConditionAsync" />
-        }
-        else
-        {
-                    <div class="@CsS.Layout.FlexWrap @CsS.Spacing.M.Bottom1">
-                        <button class="@CsS.Btn.Outline.Primary" @onclick="SaveConditionAsync">Save</button>
-                        <button class="@CsS.Btn.Outline.Danger" @onclick="CancelEdit">Cancel</button>
-                    </div>
-
-                <ConditionEditor Condition="editing"
-                                 ResourceGroups="ResourceGroups"
-                                 TaskChoiceGroups="taskChoiceGroups"
-                                 TaskNumericGroups="taskNumericGroups"
-                                 OptBindsByRA="optBindsByRA"
-                                 NumBindsByRA="numBindsByRA"
-                                 OnSaveOption="SaveOptionBindingAsync"
-                                 OnSaveNumeric="SaveNumericBindingAsync" />
-        }
+        <ConditionEditor Condition="editing"
+                         ResourceGroups="resourceGroups"
+                         TaskChoiceGroups="taskChoiceGroups"
+                         TaskNumericGroups="taskNumericGroups"
+                         OptBindsByRA="optBindsByRA"
+                         NumBindsByRA="numBindsByRA"
+                         OnSaveOption="SaveOptionBindingAsync"
+                         OnSaveNumeric="SaveNumericBindingAsync"
+                         OnDeleteOption="DeleteOptionBindingAsync"
+                         OnDeleteNumeric="DeleteNumericBindingAsync" />
     }
 </div>

@@ -7,6 +7,7 @@ public class OptionItemDto
 {
     public int Id { get; set; }
     public string DisplayName { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
 
     public int OptionGroupId { get; set; }
     public List<string> RevealedSectionKeys { get; set; } = [];

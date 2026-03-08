@@ -101,6 +101,8 @@ public static class ProjectTaskProjection
                             QuantityParam = z.a.Resource == null ? string.Empty : z.a.Resource.Data.QuantityParam,
                         }
                     })
+                    .OrderBy(r => r.SortOrder)
+                    .ThenBy(r => r.Name)
                     .ToList(),
             });
     }
@@ -132,7 +134,10 @@ public static class ProjectTaskProjection
                     DisplayName = t.TaskUnitGroup.DisplayName,
                     Keys = t.TaskUnitGroup.Keys,
                 },
-                OptionGroups = t.QuestionGroups.Select(g => new OptionGroupDto
+                OptionGroups = t.QuestionGroups
+                    .OrderBy(g => g.SortOrder)
+                    .ThenBy(g => g.Id)
+                    .Select(g => new OptionGroupDto
                 {
                     Id = g.Id,
                     DisplayName = g.DisplayName,
@@ -140,27 +145,41 @@ public static class ProjectTaskProjection
                     SelectionMode = g.SelectionMode,
                     SortOrder = g.SortOrder,
                     TaskId = g.TaskId,
-                    Options = g.Options.Select(o => new OptionItemDto
+                    Options = g.Options
+                        .OrderBy(o => o.SortOrder)
+                        .ThenBy(o => o.Id)
+                        .Select(o => new OptionItemDto
                     {
                         Id = o.Id,
                         DisplayName = o.DisplayName,
+                        SortOrder = o.SortOrder,
                         RevealedSectionKeys = o.RevealedSectionKeys,
                         OptionGroupId = o.QuestionGroupId,
                     }).ToList()
                 }).ToList(),
-                ResourceOptionGroups = t.ResourceSelectors.Select(g => new ResourceOptionGroupDto
+                ResourceOptionGroups = t.ResourceSelectors
+                    .OrderBy(g => g.SortOrder)
+                    .ThenBy(g => g.Id)
+                    .Select(g => new ResourceOptionGroupDto
                 {
                     Id = g.Id,
                     DisplayName = g.DisplayName,
                     SectionKey = g.SectionKey,
                     SortOrder = g.SortOrder,
-                    Items = g.Items.Select(i => new ResourceOptionItemDto
+                    Items = g.Items
+                        .OrderBy(i => i.SortOrder)
+                        .ThenBy(i => i.Id)
+                        .Select(i => new ResourceOptionItemDto
                     {
                         Id = i.Id,
                         ResourceName = i.Resource.Name,
+                        SortOrder = i.SortOrder,
                     }).ToList()
                 }).ToList(),
-                NumericInputs = t.NumericQuestions.Select(n => new NumericInputDto
+                NumericInputs = t.NumericQuestions
+                    .OrderBy(n => n.SortOrder)
+                    .ThenBy(n => n.Id)
+                    .Select(n => new NumericInputDto
                 {
                     Id = n.Id,
                     DisplayName = n.DisplayName,

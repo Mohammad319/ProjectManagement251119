@@ -8,4 +8,5 @@ public class ConditionVariableRequirementDto
     public string VariableName { get; set; } = string.Empty;
     public double? MinAllowedValue { get; set; }
     public double? MaxAllowedValue { get; set; }
+    public int SetKey { get; set; } = 1;
 }

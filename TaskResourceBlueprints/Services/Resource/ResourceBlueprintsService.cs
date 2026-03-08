@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using TaskResourceBlueprints.Dto.Resource;
 using TaskResourceBlueprints.Entities;
@@ -21,12 +21,17 @@ namespace TaskResourceBlueprints.Services.Resource
         {
             await using var context = await dbContextFactory.CreateDbContextAsync(ct);
 
-            term = term.Trim();
+            term = (term ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(term))
+                return [];
+
+            maxResults = Math.Clamp(maxResults, 1, 100);
+
+            var pattern = $"%{term}%";
 
             return await context.Resources
                 .AsNoTracking()
-                .Where(r => r.IsActive &&
-                            (r.Name.Contains(term))) // عدّل حسب الحاجة
+                .Where(r => r.IsActive && EF.Functions.Like(r.Name, pattern))
                 .OrderBy(r => r.Name)
                 .Take(maxResults)
                 .Select(r => new ResourceLookupDto
@@ -37,6 +42,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 })
                 .ToListAsync(ct);
         }
+
         public async Task<int> CreateAsync(ResourceDefinition resource)
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
@@ -65,12 +71,14 @@ namespace TaskResourceBlueprints.Services.Resource
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
 
-            // نتأكد أولاً أن الـ Resource موجود
-            var resource = await context.Resources.FindAsync(id);
+            var resource = await context.Resources
+                .Include(r => r.AttributeValues)
+                .Include(r => r.TenantLinks)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
             if (resource is null)
                 return false;
 
-            // حذف العلاقات المرتبطة
             var conditionAssignments = await context.ConditionResourceAssignments
                 .Where(x => x.ResourceId == id)
                 .ToListAsync();
@@ -83,9 +91,20 @@ namespace TaskResourceBlueprints.Services.Resource
                 .Where(x => x.ResourceId == id)
                 .ToListAsync();
 
-            context.RemoveRange(conditionAssignments);
-            context.RemoveRange(resourceChoices);
-            context.RemoveRange(taskAssignments);
+            if (conditionAssignments.Count > 0)
+                context.RemoveRange(conditionAssignments);
+
+            if (resourceChoices.Count > 0)
+                context.RemoveRange(resourceChoices);
+
+            if (taskAssignments.Count > 0)
+                context.RemoveRange(taskAssignments);
+
+            if (resource.AttributeValues.Count > 0)
+                context.RemoveRange(resource.AttributeValues);
+
+            if (resource.TenantLinks.Count > 0)
+                context.RemoveRange(resource.TenantLinks);
 
             context.Resources.Remove(resource);
 

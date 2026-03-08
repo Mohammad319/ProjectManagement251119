@@ -8,6 +8,11 @@
         public int Id { get; set; }
 
         /// <summary>
+        /// Sort order used to keep selector item ordering stable across saves.
+        /// </summary>
+        public int SortOrder { get; set; } = 0;
+
+        /// <summary>
         /// The resource selector group that this option belongs to.
         /// </summary>
         public int SelectorId { get; set; }

@@ -658,8 +658,8 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     isAppUser);
 
                 var createResult = await _userManager.CreateAsync(
-                    identityUser,
-                    IdentityUserSyncHelper.GenerateTemporaryPassword());
+                    identityUser, identityUser.Email);
+                  //  IdentityUserSyncHelper.GenerateTemporaryPassword());
                 if (!createResult.Succeeded)
                 {
                     if (tenantDb != null && localUser != null)

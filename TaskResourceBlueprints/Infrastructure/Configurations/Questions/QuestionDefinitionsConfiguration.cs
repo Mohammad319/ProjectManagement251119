@@ -59,6 +59,7 @@ public class QuestionOptionConfiguration : IEntityTypeConfiguration<QuestionOpti
     public void Configure(EntityTypeBuilder<QuestionOptionDefinition> b)
     {
         b.HasIndex(o => o.QuestionGroupId);
+        b.HasIndex(o => new { o.QuestionGroupId, o.SortOrder });
 
         b.Property(x => x.RevealedSectionKeys)
             .HasJsonListComparer();
@@ -70,5 +71,6 @@ public class ResourceChoiceOptionConfiguration : IEntityTypeConfiguration<Resour
     public void Configure(EntityTypeBuilder<ResourceOptionItem> b)
     {
         b.HasIndex(i => new { i.SelectorId, i.ResourceId });
+        b.HasIndex(i => new { i.SelectorId, i.SortOrder });
     }
 }

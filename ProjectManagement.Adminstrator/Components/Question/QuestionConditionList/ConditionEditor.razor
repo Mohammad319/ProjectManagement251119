@@ -1,10 +1,8 @@
 ﻿@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using Microsoft.AspNetCore.Components
-@using Microsoft.EntityFrameworkCore
 @using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
-@using TaskResourceBlueprints.Infrastructure
 @using TaskResourceBlueprints.Services.QuestionConditions
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
 
@@ -19,50 +17,53 @@
 
     [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; } = (_, _) => Task.CompletedTask;
     [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; } = (_, _) => Task.CompletedTask;
+    [Parameter] public Func<int, OptionBindVM, Task> OnDeleteOption { get; set; } = (_, _) => Task.CompletedTask;
+    [Parameter] public Func<int, NumericBindVM, Task> OnDeleteNumeric { get; set; } = (_, _) => Task.CompletedTask;
 }
 
-
 <div class="@CsS.Grid.Col.MD3 @CsS.Spacing.M.Bottom1">
-        <div>
-            <label class="@CsS.Form.Label">Choice ↔ Resource</label>
-            <InputSelect TValue="ConditionLogic"
-                         @bind-Value="Condition.OptionResourceLogic"
-                         class="@CsS.Input.Select">
-                <option value="And">AND</option>
-                <option value="Or">OR</option>
-            </InputSelect>
-        </div>
-
-        <div>
-            <label class="@CsS.Form.Label">Choice ↔ Numeric</label>
-            <InputSelect TValue="ConditionLogic"
-                         @bind-Value="Condition.OptionNumericLogic"
-                         class="@CsS.Input.Select">
-                <option value="And">AND</option>
-                <option value="Or">OR</option>
-            </InputSelect>
-        </div>
-
-        <div>
-            <label class="@CsS.Form.Label">Numeric ↔ @ResourceLoc.resource</label>
-            <InputSelect TValue="ConditionLogic"
-                         @bind-Value="Condition.NumericResourceLogic"
-                         class="@CsS.Input.Select">
-                <option value="And">AND</option>
-                <option value="Or">OR</option>
-            </InputSelect>
-        </div>
+    <div>
+        <label class="@CsS.Form.Label">Choice ↔ Resource</label>
+        <InputSelect TValue="ConditionLogic"
+                     @bind-Value="Condition.OptionResourceLogic"
+                     class="@CsS.Input.Select">
+            <option value="And">AND</option>
+            <option value="Or">OR</option>
+        </InputSelect>
     </div>
 
-    <RequirementsPanel Condition="Condition"
-                       ChoiceGroups="TaskChoiceGroups"
-                       NumericGroups="TaskNumericGroups"
-                       ResourceGroups="ResourceGroups" />
+    <div>
+        <label class="@CsS.Form.Label">Choice ↔ Numeric</label>
+        <InputSelect TValue="ConditionLogic"
+                     @bind-Value="Condition.OptionNumericLogic"
+                     class="@CsS.Input.Select">
+            <option value="And">AND</option>
+            <option value="Or">OR</option>
+        </InputSelect>
+    </div>
 
-    <ResourceAssignmentsPanel Condition="Condition"
-                              TaskChoiceGroups="TaskChoiceGroups"
-                              TaskNumericGroups="TaskNumericGroups"
-                              OptBindsByRA="OptBindsByRA"
-                              NumBindsByRA="NumBindsByRA"
-                              OnSaveOption="OnSaveOption"
-                              OnSaveNumeric="OnSaveNumeric" />
+    <div>
+        <label class="@CsS.Form.Label">Numeric ↔ @ResourceLoc.resource</label>
+        <InputSelect TValue="ConditionLogic"
+                     @bind-Value="Condition.NumericResourceLogic"
+                     class="@CsS.Input.Select">
+            <option value="And">AND</option>
+            <option value="Or">OR</option>
+        </InputSelect>
+    </div>
+</div>
+
+<RequirementsPanel Condition="Condition"
+                   ChoiceGroups="TaskChoiceGroups"
+                   NumericGroups="TaskNumericGroups"
+                   ResourceGroups="ResourceGroups" />
+
+<ResourceAssignmentsPanel Condition="Condition"
+                          TaskChoiceGroups="TaskChoiceGroups"
+                          TaskNumericGroups="TaskNumericGroups"
+                          OptBindsByRA="OptBindsByRA"
+                          NumBindsByRA="NumBindsByRA"
+                          OnSaveOption="OnSaveOption"
+                          OnSaveNumeric="OnSaveNumeric"
+                          OnDeleteOption="OnDeleteOption"
+                          OnDeleteNumeric="OnDeleteNumeric" />

@@ -34,13 +34,15 @@ namespace TaskResourceBlueprints.Services.Resource
                 .Select(tr => tr.ResourceId)
                 .ToListAsync(ct);
 
-            var folderName = await db.Resources.AsNoTracking()
+            var folderName = await db.ResourceCategories.AsNoTracking()
                 .Where(f => f.Id == folderId)
-                .Select(f => f.Name)
+                .Select(f => f.DisplayName)
                 .FirstOrDefaultAsync(ct) ?? string.Empty;
 
             var rows = await db.Resources.AsNoTracking()
                 .Where(r => r.FolderId == folderId)
+                .OrderBy(r => r.SortOrder)
+                .ThenBy(r => r.Name)
                 .Select(r => new ResourceRowDto(
                     r.Id,
                     r.Name,
@@ -66,7 +68,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 .Where(x => x.TaskId == taskId && x.ResourceId == resourceId)
                 .Select(x => new TaskResourceDto
                 {
-                    Active = x.Resource == null ? false : x.Resource.IsActive,
+                    Active = x.IsActive,
                     MenuId = x.MenuId,
                     BaseCost = x.BaseCost,
                     CapRole = x.CapacityRoles,
@@ -88,6 +90,7 @@ namespace TaskResourceBlueprints.Services.Resource
                 (x => x.TaskId == TaskId && x.ResourceId == ResourceId, ct);
             if (zz != null)
             {
+                zz.IsActive = taskResourceDto.Active;
                 zz.MenuId = taskResourceDto.MenuId;
                 zz.ChangeFactor1 = taskResourceDto.ChangeFactor1;
                 zz.ChangeFactor2 = taskResourceDto.ChangeFactor2;
@@ -102,12 +105,11 @@ namespace TaskResourceBlueprints.Services.Resource
             return false;
         }
         public async Task<bool> AddAssignmentAsync(
-    TaskResourceAssignment assignment,
-    CancellationToken cancellationToken = default)
+            TaskResourceAssignment assignment,
+            CancellationToken cancellationToken = default)
         {
             await using var context = await factory.CreateDbContextAsync(cancellationToken);
 
-            // يمكن التحقق من عدم التكرار إن احتجت:
             var exists = await context.TaskResourceAssignments
                 .AsNoTracking()
                 .AnyAsync(x =>

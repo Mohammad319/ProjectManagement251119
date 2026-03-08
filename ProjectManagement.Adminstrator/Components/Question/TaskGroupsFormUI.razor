@@ -35,6 +35,7 @@
 
     private async Task SaveAsync()
     {
+        NormalizeNestedSortOrders();
         await TaskGroupsQuery.SaveTaskConditionsAsync(Task, CancellationToken.None);
         await OnSaved.InvokeAsync(true);
         Close();
@@ -50,10 +51,21 @@
         => Task.QuestionGroups.Remove(g);
 
     private void AddChoiceOption(QuestionGroupDefinition g)
-        => g.Options.Add(new QuestionOptionDefinition { QuestionGroupId = g.Id, DisplayName = "Option" });
+    {
+        g.Options.Add(new QuestionOptionDefinition
+        {
+            QuestionGroupId = g.Id,
+            DisplayName = "Option",
+            SortOrder = g.Options.Count
+        });
+        NormalizeNestedSortOrders();
+    }
 
     private void RemoveChoiceOption(QuestionGroupDefinition g, QuestionOptionDefinition o)
-        => g.Options.Remove(o);
+    {
+        g.Options.Remove(o);
+        NormalizeNestedSortOrders();
+    }
 
     // ====== Numeric ======
     private void AddNumericGroup()
@@ -70,10 +82,20 @@
         => Task.ResourceSelectors.Remove(g);
 
     private void AddResourceItem(ResourceSelectorDefinition g)
-        => g.Items.Add(new ResourceOptionItem { SelectorId = g.Id });
+    {
+        g.Items.Add(new ResourceOptionItem
+        {
+            SelectorId = g.Id,
+            SortOrder = g.Items.Count
+        });
+        NormalizeNestedSortOrders();
+    }
 
     private void RemoveResourceItem(ResourceSelectorDefinition g, ResourceOptionItem it)
-        => g.Items.Remove(it);
+    {
+        g.Items.Remove(it);
+        NormalizeNestedSortOrders();
+    }
 
     void AddDelete(ResourceSelectorDefinition group, ResourceDefinition res)
     {
@@ -84,9 +106,17 @@
         }
         else
         {
-            var toadd = new ResourceOptionItem { SelectorId = group.Id, ResourceId = res.Id, Resource = res };
+            var toadd = new ResourceOptionItem
+            {
+                SelectorId = group.Id,
+                ResourceId = res.Id,
+                Resource = res,
+                SortOrder = group.Items.Count
+            };
             group.Items.Add(toadd);
         }
+
+        NormalizeNestedSortOrders();
     }
 
     async Task LoadResourcesAsync(ResourceCategory folders)
@@ -111,6 +141,45 @@
     {
         var i = list.IndexOf(item);
         if (i >= 0 && i < list.Count - 1) (list[i + 1], list[i]) = (list[i], list[i + 1]);
+    }
+
+    private void NormalizeNestedSortOrders()
+    {
+        foreach (var group in Task.QuestionGroups ?? [])
+        {
+            for (var i = 0; i < group.Options.Count; i++)
+                group.Options[i].SortOrder = i;
+        }
+
+        foreach (var selector in Task.ResourceSelectors ?? [])
+        {
+            for (var i = 0; i < selector.Items.Count; i++)
+                selector.Items[i].SortOrder = i;
+        }
+    }
+
+    private void MoveChoiceOptionUp(QuestionGroupDefinition group, QuestionOptionDefinition option)
+    {
+        MoveUp(group.Options, option);
+        NormalizeNestedSortOrders();
+    }
+
+    private void MoveChoiceOptionDown(QuestionGroupDefinition group, QuestionOptionDefinition option)
+    {
+        MoveDown(group.Options, option);
+        NormalizeNestedSortOrders();
+    }
+
+    private void MoveResourceItemUp(ResourceSelectorDefinition group, ResourceOptionItem item)
+    {
+        MoveUp(group.Items, item);
+        NormalizeNestedSortOrders();
+    }
+
+    private void MoveResourceItemDown(ResourceSelectorDefinition group, ResourceOptionItem item)
+    {
+        MoveDown(group.Items, item);
+        NormalizeNestedSortOrders();
     }
 
     // ====== Helpers: RevealSectionKeys ======
@@ -222,10 +291,10 @@ else
 
                                                 <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
                                                     <div class="@CsS.Layout.Inline">
-                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveUp(g.Options, o))">Set Default</button>
+                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveChoiceOptionUp(g, o))">Set Default</button>
 
-                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveUp(g.Options, o))">↑</button>
-                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveDown(g.Options, o))">↓</button>
+                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
+                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveChoiceOptionDown(g, o))">↓</button>
                                                         <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveChoiceOption(g, o))">x</button>
                                                     </div>
                                                 </div>
@@ -350,8 +419,8 @@ else
 
                                             <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
                                                 <div class="@CsS.Layout.Inline">
-                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveUp(g.Items, it))">↑</button>
-                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveDown(g.Items, it))">↓</button>
+                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
+                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
                                                     <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveResourceItem(g, it))">x</button>
                                                 </div>
                                             </div>

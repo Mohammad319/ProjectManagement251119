@@ -2,19 +2,16 @@
 @using System.Collections.Generic
 @using System.Linq
 @using Microsoft.AspNetCore.Components
-@using Microsoft.EntityFrameworkCore
 @using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Questions.Assignments
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
-@using TaskResourceBlueprints.Infrastructure
 @using TaskResourceBlueprints.Services.QuestionConditions
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
 @using ProjectManagement.Shared.Base.AppTenant
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.Enums
-@inject IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory2
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 @code {
@@ -27,109 +24,175 @@
     [Parameter] public Dictionary<int, List<NumericBindVM>> NumBindsByRA { get; set; } = new();
     [Parameter] public Func<int, OptionBindVM, Task> OnSaveOption { get; set; } = (_, _) => Task.CompletedTask;
     [Parameter] public Func<int, NumericBindVM, Task> OnSaveNumeric { get; set; } = (_, _) => Task.CompletedTask;
+    [Parameter] public Func<int, OptionBindVM, Task> OnDeleteOption { get; set; } = (_, _) => Task.CompletedTask;
+    [Parameter] public Func<int, NumericBindVM, Task> OnDeleteNumeric { get; set; } = (_, _) => Task.CompletedTask;
+
     private bool CanAddBindingsFor(ConditionResourceAssignment a) => a.Id > 0;
-    private void AddAssignment() =>
-        Condition.Assignments.Add(
-            new ConditionResourceAssignment
-            {
-                Resource = new ResourceDefinition
-                {
-                    Data = new () // تأكد من النوع الصحيح لجدول Metadata لديك
-                },
-                CapacityRoles = [] // أو النوع الفعلي لقائمة CapacityRoles
-            }); private void RemoveAssignment(ConditionResourceAssignment a) => Condition.Assignments.Remove(a);
-    private void RemoveAssignment(ResourceDefinition resource)
+
+    private void RemoveAssignment(ConditionResourceAssignment a)
+    {
+        Condition.Assignments.Remove(a);
+        OptBindsByRA.Remove(a.Id);
+        NumBindsByRA.Remove(a.Id);
+    }
+
+    private void ToggleAssignment(ResourceDefinition resource)
     {
         if (resource is null) return;
-        if (Condition.Assignments.Any(x => x.ResourceId == resource.Id))
-            Condition.Assignments.RemoveAll(x => x.ResourceId == resource.Id);
-        else
+
+        var existing = Condition.Assignments.FirstOrDefault(x => x.ResourceId == resource.Id);
+        if (existing is not null)
         {
-            var metadata = resource.Data;
-            Condition.Assignments.Add(new ConditionResourceAssignment()
-            {
-                ResourceId = resource.Id,
-                ChangeFactor1 = metadata?.ChangeFactor1 ?? 0,
-                ChangeFactor2 = metadata?.ChangeFactor2 ?? 0,
-                CapWaste = metadata?.CapWaste ?? 0,
-                BaseCost = metadata?.BaseCost ?? 0,
-                IsActive = resource.IsActive,
-                Resource = new ResourceDefinition
-                {
-                    Id = resource.Id,
-                    Name = resource.Name,
-                    Data = new ResourceMetadata
-                    {
-                        Cost = metadata?.Cost ?? 0,
-                        ChangeFactor1 = metadata?.ChangeFactor1 ?? 0,
-                        ChangeFactor2 = metadata?.ChangeFactor2 ?? 0,
-                        CapWaste = metadata?.CapWaste ?? 0,
-                        BaseCost = metadata?.BaseCost ?? 0
-                    }
-                }
-            });
+            RemoveAssignment(existing);
+            StateHasChanged();
+            return;
         }
+
+        var metadata = resource.Data;
+        Condition.Assignments.Add(new ConditionResourceAssignment
+        {
+            ResourceId = resource.Id,
+            ChangeFactor1 = metadata?.ChangeFactor1 ?? 0,
+            ChangeFactor2 = metadata?.ChangeFactor2 ?? 0,
+            CapWaste = metadata?.CapWaste ?? 0,
+            BaseCost = metadata?.BaseCost ?? 0,
+            IsActive = resource.IsActive,
+            Resource = new ResourceDefinition
+            {
+                Id = resource.Id,
+                Name = resource.Name,
+                ResType = resource.ResType,
+                Data = new ResourceMetadata
+                {
+                    Cost = metadata?.Cost ?? 0,
+                    ChangeFactor1 = metadata?.ChangeFactor1 ?? 0,
+                    ChangeFactor2 = metadata?.ChangeFactor2 ?? 0,
+                    CapWaste = metadata?.CapWaste ?? 0,
+                    BaseCost = metadata?.BaseCost ?? 0,
+                    Unit = metadata?.Unit ?? string.Empty
+                }
+            },
+            CapacityRoles = []
+        });
+
         StateHasChanged();
     }
 
     private void AddOptionBindingUI(int raId)
     {
-        if (!OptBindsByRA.TryGetValue(raId, out var list)) OptBindsByRA[raId] = list = new();
+        if (!OptBindsByRA.TryGetValue(raId, out var list))
+            OptBindsByRA[raId] = list = new();
+
         var firstGroup = TaskChoiceGroups.FirstOrDefault();
         var firstOpt = firstGroup?.Options.FirstOrDefault();
-        list.Add(new OptionBindVM { Id = 0, ChoiceGroupId = firstGroup?.Id ?? 0, ChoiceOptionId = firstOpt?.Id ?? 0, Formulas = new() });
+        list.Add(new OptionBindVM
+        {
+            Id = 0,
+            ChoiceGroupId = firstGroup?.Id ?? 0,
+            ChoiceOptionId = firstOpt?.Id ?? 0,
+            Formulas = new()
+        });
         StateHasChanged();
     }
-    private void RemoveOptionBindingUI(int raId, OptionBindVM vm)
+
+    private async Task RemoveOptionBindingUIAsync(int raId, OptionBindVM vm)
     {
-        if (OptBindsByRA.TryGetValue(raId, out var list)) list.Remove(vm);
+        if (vm.Id > 0)
+            await OnDeleteOption(raId, vm);
+
+        if (OptBindsByRA.TryGetValue(raId, out var list))
+            list.Remove(vm);
     }
+
     private void OnOptionGroupChanged(OptionBindVM vm, ChangeEventArgs e)
     {
-        if (int.TryParse(Convert.ToString(e.Value), out var gid)) { vm.ChoiceGroupId = gid; vm.ChoiceOptionId = 0; }
+        if (int.TryParse(Convert.ToString(e.Value), out var gid))
+        {
+            vm.ChoiceGroupId = gid;
+            vm.ChoiceOptionId = 0;
+        }
     }
-    private void AddOptionEq(int raId, OptionBindVM vm) => vm.Formulas.Add(string.Empty);
-    private void RemoveOptionEq(int raId, OptionBindVM vm, int idx) { if (idx >= 0 && idx < vm.Formulas.Count) vm.Formulas.RemoveAt(idx); }
+
+    private void AddOptionEq(OptionBindVM vm) => vm.Formulas.Add(string.Empty);
+
+    private void RemoveOptionEq(OptionBindVM vm, int idx)
+    {
+        if (idx >= 0 && idx < vm.Formulas.Count)
+            vm.Formulas.RemoveAt(idx);
+    }
 
     private void AddNumericBindingUI(int raId)
     {
-        if (!NumBindsByRA.TryGetValue(raId, out var list)) NumBindsByRA[raId] = list = new();
+        if (!NumBindsByRA.TryGetValue(raId, out var list))
+            NumBindsByRA[raId] = list = new();
+
         var firstNg = TaskNumericGroups.FirstOrDefault();
-        list.Add(new NumericBindVM { Id = 0, NumericId = firstNg?.Id ?? 0, Formulas = new() });
+        list.Add(new NumericBindVM
+        {
+            Id = 0,
+            NumericId = firstNg?.Id ?? 0,
+            Formulas = new()
+        });
         StateHasChanged();
     }
-    private void RemoveNumericBindingUI(int raId, NumericBindVM vm)
-    {
-        if (NumBindsByRA.TryGetValue(raId, out var list)) list.Remove(vm);
-    }
-    private void AddNumericEq(int raId, NumericBindVM vm) => vm.Formulas.Add(string.Empty);
-    private void RemoveNumericEq(int raId, NumericBindVM vm, int idx) { if (idx >= 0 && idx < vm.Formulas.Count) vm.Formulas.RemoveAt(idx); }
 
-    void AddRole(ConditionResourceAssignment a)
+    private async Task RemoveNumericBindingUIAsync(int raId, NumericBindVM vm)
     {
-        a.CapacityRoles ??= new();  // ← مهم
+        if (vm.Id > 0)
+            await OnDeleteNumeric(raId, vm);
+
+        if (NumBindsByRA.TryGetValue(raId, out var list))
+            list.Remove(vm);
+    }
+
+    private void AddNumericEq(NumericBindVM vm) => vm.Formulas.Add(string.Empty);
+
+    private void RemoveNumericEq(NumericBindVM vm, int idx)
+    {
+        if (idx >= 0 && idx < vm.Formulas.Count)
+            vm.Formulas.RemoveAt(idx);
+    }
+
+    private void AddRole(ConditionResourceAssignment a)
+    {
+        a.CapacityRoles ??= new();
         if (a.CapacityRoles.Count != 0)
-            a.CapacityRoles.Add(new() { Min = a.CapacityRoles.Last().Max, Max = a.CapacityRoles.Last().Max + 10, Value = a.CapacityRoles.Last().Value + 1 });
+        {
+            a.CapacityRoles.Add(new RoleDTO
+            {
+                Min = a.CapacityRoles.Last().Max,
+                Max = a.CapacityRoles.Last().Max + 10,
+                Value = a.CapacityRoles.Last().Value + 1
+            });
+        }
         else
-            a.CapacityRoles.Add(new() { Min = 0, Max = 10, Value = 5 });
+        {
+            a.CapacityRoles.Add(new RoleDTO
+            {
+                Min = 0,
+                Max = 10,
+                Value = 5
+            });
+        }
+
         StateHasChanged();
     }
-
 }
 
 <div class="@NewCC.Card.Panel">
     <div class="@CsS.Layout.FlexItemsCenter">
         <h5 class="@NewCC.Text.H5">Resource Assignments</h5>
-        @* <button class="@CsS.Btn.Outline.Primary" @onclick="AddAssignment">Add</button> *@
     </div>
+
     <div>
         <FolderResourcesAddUI TaskId="Condition.TaskId"
                               ResIds="Condition.Assignments.Select(x => x.ResourceId).ToList()"
-                              OnSave="(e)=>RemoveAssignment(e)"></FolderResourcesAddUI>
+                              OnSave="ToggleAssignment" />
     </div>
+
     @if (Condition.Assignments.Count == 0)
     {
-        <div class="">None</div>
+        <div>None</div>
     }
     else
     {
@@ -142,9 +205,7 @@
                         <ResourceAutocomplete MinChars="2" PageSize="20"
                                               Value="a.ResourceId"
                                               ValueChanged="@(v => a.ResourceId = v ?? 0)"
-                                              InitialName="@(a.Resource?.Name)"
-                                              @* OnPicked="@(sel => { a.ResourceId = sel.id; StateHasChanged(); })"  *@
-                                              />
+                                              InitialName="@(a.Resource?.Name)" />
                     </div>
                     <div>
                         <label class="@CsS.Form.Label">Factor1</label>
@@ -182,7 +243,7 @@
 
                     <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
                         @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
-                                        a.Resource?.ResType == ResourceTypesEnum.Worker)
+                             a.Resource?.ResType == ResourceTypesEnum.Worker)
                         {
                             <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole(a))">Add Role</button>
                         }
@@ -192,7 +253,7 @@
                 </div>
 
                 @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
-                        a.Resource?.ResType == ResourceTypesEnum.Worker)
+                     a.Resource?.ResType == ResourceTypesEnum.Worker)
                 {
                     <div class="@NewCC.Card.SoftMuted @CsS.Spacing.M.Top2">
                         <div class="@CsS.Layout.Inline">
@@ -200,18 +261,18 @@
                             <div>@AppControll.min</div>
                             <div>@AppControll.max</div>
                             <div>@CalcResource.cap</div>
-                            <div class=" ">#</div>
+                            <div>#</div>
                         </div>
 
                         @if (a.CapacityRoles is not null && a.CapacityRoles.Count > 0)
                         {
                             @for (int i = 0; i < a.CapacityRoles.Count; i++)
                             {
-                                int d = i;
-                                var role = a.CapacityRoles[d];
+                                var index = i;
+                                var role = a.CapacityRoles[index];
 
                                 <div class="@CsS.Layout.Inline">
-                                    <div class="flex items-center ">
+                                    <div class="flex items-center">
                                         <button type="button" title="Remove"
                                                 class="@CsS.Btn.Outline.Danger h-6 w-6 p-0 flex items-center justify-center"
                                                 @onclick="() => a.CapacityRoles.Remove(role)">
@@ -223,9 +284,7 @@
                                     <input type="number" class="@CsS.Input.Number" @bind="role.Max" />
                                     <input type="number" class="@CsS.Input.Number" @bind="role.Value" />
 
-                                    <div class="@NewCC.Text.MutedXs">
-                                        @(d + 1)
-                                    </div>
+                                    <div class="@NewCC.Text.MutedXs">@(index + 1)</div>
                                 </div>
                             }
                         }
@@ -235,13 +294,13 @@
                 @if (a.Expressions is not null && a.Expressions.Count > 0)
                 {
                     <div class="@NewCC.Text.H5 @CsS.Spacing.M.Top2">Formulas</div>
-                    <div class="@CsS.Grid.Col.MD4  @CsS.Spacing.M.Bottom2">
+                    <div class="@CsS.Grid.Col.MD4 @CsS.Spacing.M.Bottom2">
                         @for (int i = 0; i < a.Expressions.Count; i++)
                         {
-                            int d = i;
+                            var index = i;
                             <div class="@CsS.Layout.FlexItemsCenter">
-                                <button class="@CsS.Btn.Outline.Danger" @onclick="() => a.Expressions.RemoveAt(d)">x</button>
-                                <input type="text" class="@CsS.Input.Text" @bind="a.Expressions[d]" />
+                                <button class="@CsS.Btn.Outline.Danger" @onclick="() => a.Expressions.RemoveAt(index)">x</button>
+                                <input type="text" class="@CsS.Input.Text" @bind="a.Expressions[index]" />
                             </div>
                         }
                     </div>
@@ -263,82 +322,73 @@
                         }
                     </div>
 
-                    @* Choice Bindings *@
                     @if (OptBindsByRA.TryGetValue(a.Id, out var obList) && obList.Count > 0)
                     {
                         <div class="@CsS.Spacing.M.Top1">
                             @foreach (var b in obList)
                             {
                                 <section class="@NewCC.Card.SoftMuted p-3 @CsS.Spacing.M.Bottom1">
-                                    <div class="">
-                                        <div class="@CsS.Layout.FlexJustifyBetween">
-                                            <div class="@CsS.Layout.Inline">
-                                                    <select class="@CsS.Input.Select"
-                                                            value="@b.ChoiceGroupId"
-                                                            aria-label="Choice group"
-                                                            @onchange="e => OnOptionGroupChanged(b, e)">
-                                                        <option value="0">-- select --</option>
-                                                        @foreach (var g in TaskChoiceGroups)
-                                                        {
-                                                            <option value="@g.Id">@g.DisplayName</option>
-                                                        }
-                                                    </select>
+                                    <div class="@CsS.Layout.FlexJustifyBetween">
+                                        <div class="@CsS.Layout.Inline">
+                                            <select class="@CsS.Input.Select"
+                                                    value="@b.ChoiceGroupId"
+                                                    aria-label="Choice group"
+                                                    @onchange="e => OnOptionGroupChanged(b, e)">
+                                                <option value="0">-- select --</option>
+                                                @foreach (var g in TaskChoiceGroups)
+                                                {
+                                                    <option value="@g.Id">@g.DisplayName</option>
+                                                }
+                                            </select>
 
-                                                    <select class="@CsS.Input.Select" @bind="b.ChoiceOptionId" aria-label="Choice option">
-                                                        <option value="0">-- select --</option>
-                                                        @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
-                                                        {
-                                                            <option value="@o.Id">@o.DisplayName</option>
-                                                        }
-                                                    </select>
-                                            </div>
-                                            <div>
-                                                <button class="@CsS.Btn.Outline.Primary" title="Save binding" @onclick="async () => await OnSaveOption(a.Id, b)">Save</button>
-                                                <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddOptionEq(a.Id, b)">Add Equation</button>
-                                                <button class="@CsS.Btn.Outline.Danger" title="Delete binding" @onclick="() => RemoveOptionBindingUI(a.Id, b)">Delete</button>
-                                            </div>
+                                            <select class="@CsS.Input.Select" @bind="b.ChoiceOptionId" aria-label="Choice option">
+                                                <option value="0">-- select --</option>
+                                                @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
+                                                {
+                                                    <option value="@o.Id">@o.DisplayName</option>
+                                                }
+                                            </select>
                                         </div>
+                                        <div>
+                                            <button class="@CsS.Btn.Outline.Primary" title="Save binding" @onclick="async () => await OnSaveOption(a.Id, b)">Save</button>
+                                            <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddOptionEq(b)">Add Equation</button>
+                                            <button class="@CsS.Btn.Outline.Danger" title="Delete binding" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">Delete</button>
+                                        </div>
+                                    </div>
 
-                                            @if (b.LastError is not null)
-                                            {
-                                                <div class="@CsS.Text.Error">⚠ @b.LastError</div>
-                                            }
-                                            @if (b.SavedOk)
-                                            {
-                                            <div class="@CsS.Text.Success">✓ Saved</div>
-                                            }
+                                    @if (b.LastError is not null)
+                                    {
+                                        <div class="@CsS.Text.Error">⚠ @b.LastError</div>
+                                    }
+                                    @if (b.SavedOk)
+                                    {
+                                        <div class="@CsS.Text.Success">✓ Saved</div>
+                                    }
 
-                                            @if (b.Formulas.Count == 0)
+                                    @if (b.Formulas.Count == 0)
+                                    {
+                                        <div>— No Formulas —</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="@CsS.Grid.Col.MD3">
+                                            @for (int i = 0; i < b.Formulas.Count; i++)
                                             {
-                                                <div class="">— No Formulas —</div>
-                                            }
-                                            else
-                                            {
-                                            <div class="@CsS.Grid.Col.MD3">
-                                                    @for (int i = 0; i < b.Formulas.Count; i++)
-                                                    {
-                                                        var idx = i;
-                                                        <div class="@CsS.Layout.FlexItemsCenter">
-                                                            <input class="@CsS.Input.Text"
-                                                                   placeholder="expr…"
-                                                                   aria-label="Equation"
-                                                                   @bind="b.Formulas[idx]" />
-                                                        <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
-                                                                    title="Remove this equation"
-                                                                    @onclick="() => RemoveOptionEq(a.Id, b, idx)">✕
-                                                            </button>
-                                                        </div>
-                                                    }
+                                                var idx = i;
+                                                <div class="@CsS.Layout.FlexItemsCenter">
+                                                    <input class="@CsS.Input.Text" placeholder="expr…" aria-label="Equation" @bind="b.Formulas[idx]" />
+                                                    <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
+                                                            title="Remove this equation"
+                                                            @onclick="() => RemoveOptionEq(b, idx)">✕</button>
                                                 </div>
                                             }
-
-                                    </div>
+                                        </div>
+                                    }
                                 </section>
                             }
                         </div>
                     }
 
-                    @* Numeric Bindings *@
                     @if (NumBindsByRA.TryGetValue(a.Id, out var nbList) && nbList.Count > 0)
                     {
                         <div class="@CsS.Spacing.M.Top4">
@@ -350,9 +400,8 @@
                             @foreach (var b in nbList)
                             {
                                 <section class="@NewCC.Card.SoftMuted p-3 @CsS.Spacing.M.Bottom3">
-                                    <div class="">
-                                        <div class="@CsS.Layout.FlexJustifyBetween">
-                                            <div class="@CsS.Layout.Inline">
+                                    <div class="@CsS.Layout.FlexJustifyBetween">
+                                        <div class="@CsS.Layout.Inline">
                                             <div>
                                                 <select class="@CsS.Input.Select" @bind="b.NumericId" aria-label="Numeric group">
                                                     <option value="0">-- select --</option>
@@ -363,59 +412,51 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <input type="number" class="@CsS.Input.Number" @bind="b.InputMinValue" placeholder="Min"/>
+                                                <input type="number" class="@CsS.Input.Number" @bind="b.InputMinValue" placeholder="Min" />
                                             </div>
                                             <div>
                                                 <input type="number" class="@CsS.Input.Number" @bind="b.InputMaxValue" placeholder="Max" />
                                             </div>
-                                            </div>
-                                            <div>
-                                                <button class="@CsS.Btn.Outline.Primary" title="Save numeric binding" @onclick="async () => await OnSaveNumeric(a.Id, b)">Save</button>
-                                                <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddNumericEq(a.Id, b)">Add Equation</button>
-
-                                                <button class="@CsS.Btn.Outline.Danger" title="Delete numeric binding" @onclick="() => RemoveNumericBindingUI(a.Id, b)">Delete</button>
-                                            </div>
-                                          </div>
-                               
-                                            @if (b.Formulas.Count == 0)
-                                            {
-                                                <div class="">— none —</div>
-                                            }
-                                            else
-                                            {
-                                            <div class="@CsS.Grid.Col.MD3">
-                                                    @for (int i = 0; i < b.Formulas.Count; i++)
-                                                    {
-                                                        var idx = i;
-                                                    <div class="@CsS.Layout.Inline">
-                                                            <input class="@CsS.Input.Text"
-                                                                   placeholder="expr…"
-                                                                   aria-label="Equation"
-                                                                   @bind="b.Formulas[idx]" />
-                                                        <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
-                                                                    title="Remove this equation"
-                                                                    @onclick="() => RemoveNumericEq(a.Id, b, idx)">
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    }
-                                            </div>
-                                            }
-
-                                            @if (b.LastError is not null)
-                                            {
-                                            <div class="@CsS.Text.Error">⚠ @b.LastError</div>
-                                            }
-                                            @if (b.SavedOk)
-                                            {
-                                            <div class="@CsS.Text.Success">✓ Saved</div>
-                                            }
+                                        </div>
+                                        <div>
+                                            <button class="@CsS.Btn.Outline.Primary" title="Save numeric binding" @onclick="async () => await OnSaveNumeric(a.Id, b)">Save</button>
+                                            <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddNumericEq(b)">Add Equation</button>
+                                            <button class="@CsS.Btn.Outline.Danger" title="Delete numeric binding" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">Delete</button>
+                                        </div>
                                     </div>
+
+                                    @if (b.Formulas.Count == 0)
+                                    {
+                                        <div>— none —</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="@CsS.Grid.Col.MD3">
+                                            @for (int i = 0; i < b.Formulas.Count; i++)
+                                            {
+                                                var idx = i;
+                                                <div class="@CsS.Layout.Inline">
+                                                    <input class="@CsS.Input.Text" placeholder="expr…" aria-label="Equation" @bind="b.Formulas[idx]" />
+                                                    <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
+                                                            title="Remove this equation"
+                                                            @onclick="() => RemoveNumericEq(b, idx)">✕</button>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+
+                                    @if (b.LastError is not null)
+                                    {
+                                        <div class="@CsS.Text.Error">⚠ @b.LastError</div>
+                                    }
+                                    @if (b.SavedOk)
+                                    {
+                                        <div class="@CsS.Text.Success">✓ Saved</div>
+                                    }
                                 </section>
                             }
                         </div>
                     }
-
                 </div>
             </div>
         }

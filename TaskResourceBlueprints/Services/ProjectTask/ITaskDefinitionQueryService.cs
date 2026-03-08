@@ -18,7 +18,9 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 
-            return await db.Tasks.AsNoTracking().OrderBy(t => t.SortOrder)
+            return await db.Tasks.AsNoTracking()
+                .OrderBy(t => t.SortOrder)
+                .ThenBy(t => t.Name)
                 .Select(t => new ProjectTaskListItemDto(
                     t.Id,
                     t.Code,
@@ -79,13 +81,15 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 .AsNoTracking()
                 .Where(t => t.TaskId == id)
                 .OrderBy(t => t.Resource != null ? t.Resource.Name : string.Empty)
+                .ThenBy(t => t.ResourceId)
                 .Select(t => new ResourceTaskIndexDto(
+                    t.Id,
                     t.ResourceId,
                     t.Resource != null ? t.Resource.Name : string.Empty,
-                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.ChangeFactor1 : 0,
-                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.ChangeFactor2 : 0,
+                    t.ChangeFactor1,
+                    t.ChangeFactor2,
                     t.Resource != null && t.Resource.Data != null ? t.Resource.Data.Unit : string.Empty,
-                    t.Resource != null && t.Resource.IsActive
+                    t.IsActive && (t.Resource == null || t.Resource.IsActive)
                 ))
                 .ToListAsync(ct);
         }

@@ -15,6 +15,11 @@ namespace TaskResourceBlueprints.Entities.Questions.Groups
         public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>
+        /// Sort order used to keep option ordering stable across saves.
+        /// </summary>
+        public int SortOrder { get; set; } = 0;
+
+        /// <summary>
         /// The question group this option belongs to.
         /// </summary>
         public int QuestionGroupId { get; set; }

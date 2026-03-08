@@ -14,9 +14,14 @@ public class ConditionResourceAssignmentConfiguration : IEntityTypeConfiguration
         b.Property(e => e.CapacityRoles)
             .HasJsonListComparer<RoleDTO>();
 
+        b.Property(e => e.Expressions)
+            .HasJsonListComparer();
+
         b.Property(x => x.BaseCost).HasPrecision(Precision.MoneyPrecision, Precision.MoneyScale);
         b.Property(x => x.ChangeFactor1).HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
         b.Property(x => x.ChangeFactor2).HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
         b.Property(x => x.CapWaste).HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        b.HasIndex(x => new { x.ConditionId, x.ResourceId, x.MenuId });
     }
 }

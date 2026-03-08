@@ -1,4 +1,4 @@
-﻿@using System.Linq
+@using System.Linq
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using TaskResourceBlueprints.Dto.Resource
@@ -6,7 +6,7 @@
 
 @inherits ComponentBase
 
-@inject ResourceBlueprintsService ResourceService
+@inject IResourceBlueprintsService ResourceService
 
 <div class="relative">
     <input class="@InputCss"
@@ -48,12 +48,11 @@
 </div>
 
 @code {
-    // ========= Parameters =========
     [Parameter] public int? Value { get; set; }
     [Parameter] public EventCallback<int?> ValueChanged { get; set; }
-
-    // لو حاب تلتقط الـ Resources كاملة من أعلى
     [Parameter] public EventCallback<ResourceLookupDto?> ResourceChanged { get; set; }
+
+    [Parameter] public string? InitialName { get; set; }
 
     [Parameter] public string? Placeholder { get; set; } = "Search resource...";
     [Parameter] public bool Disabled { get; set; }
@@ -62,27 +61,35 @@
     [Parameter] public int SearchDelayMs { get; set; } = 250;
     [Parameter] public int PageSize { get; set; } = 10;
 
-    // CSS قابلة للتهيئة من برّا لو حاب
     [Parameter] public string InputCss { get; set; } = "form-input w-full";
     [Parameter] public string DropdownCss { get; set; } = "absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow";
     [Parameter] public string ItemCss { get; set; } = "px-3 py-2 cursor-pointer text-sm";
     [Parameter] public string ItemActiveCss { get; set; } = "bg-blue-600 text-white";
 
-    // ========= State =========
     private string _searchText = string.Empty;
     private bool _isOpen;
     private bool _hasMore;
     private int _activeIndex = -1;
     private List<ResourceLookupDto> _suggestions = new();
     private CancellationTokenSource? _cts;
+    private int? _lastAppliedValue;
+    private string? _lastAppliedInitialName;
 
     protected override async Task OnParametersSetAsync()
     {
-        // لو عندك Value (resourceId) وتحب عند الفتح يعرض الاسم بدل Id
-        if (Value is int id && string.IsNullOrWhiteSpace(_searchText))
+        if (Value != _lastAppliedValue || !string.Equals(InitialName, _lastAppliedInitialName, StringComparison.Ordinal))
         {
-            // يمكنك هنا النداء إلى خدمة أخرى GetByIdAsync لتعبئة الاسم
-            // أو تمرير الاسم من الأعلى في باراميتر آخر عند الحاجة
+            _lastAppliedValue = Value;
+            _lastAppliedInitialName = InitialName;
+
+            if (!string.IsNullOrWhiteSpace(InitialName))
+            {
+                _searchText = InitialName!;
+            }
+            else if (Value is null or 0)
+            {
+                _searchText = string.Empty;
+            }
         }
 
         await base.OnParametersSetAsync();
@@ -93,11 +100,29 @@
         _searchText = e.Value?.ToString() ?? string.Empty;
         _isOpen = true;
 
-        // إلغاء أي بحث سابق
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
 
-        if (string.IsNullOrWhiteSpace(_searchText) || _searchText.Length < MinChars)
+        if (string.IsNullOrWhiteSpace(_searchText))
+        {
+            _suggestions.Clear();
+            _hasMore = false;
+            _activeIndex = -1;
+
+            if (Value is not null)
+            {
+                Value = null;
+                await ValueChanged.InvokeAsync(Value);
+            }
+
+            if (ResourceChanged.HasDelegate)
+                await ResourceChanged.InvokeAsync(null);
+
+            StateHasChanged();
+            return;
+        }
+
+        if (_searchText.Length < MinChars)
         {
             _suggestions.Clear();
             _hasMore = false;
@@ -110,13 +135,11 @@
 
         try
         {
-            // Debounce
             await Task.Delay(SearchDelayMs, token);
             await LoadSuggestionsAsync(token);
         }
         catch (OperationCanceledException)
         {
-            // تجاهل – تم إلغاء الطلب
         }
     }
 

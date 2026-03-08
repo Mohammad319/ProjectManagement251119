@@ -89,8 +89,8 @@ namespace TaskResourceBlueprints.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DisplayName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: true),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     ParentCategoryId = table.Column<int>(type: "int", nullable: true)
@@ -158,8 +158,8 @@ namespace TaskResourceBlueprints.Migrations
                     AdminNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CostRoles = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ResType = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SortOrder = table.Column<double>(type: "float", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     Data = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -182,7 +182,7 @@ namespace TaskResourceBlueprints.Migrations
                     Responsible = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     AdminNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FieldNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Quantity = table.Column<double>(type: "float", nullable: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     UnitCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ChangeFactor1 = table.Column<double>(type: "float", nullable: false),
                     ChangeFactor2 = table.Column<double>(type: "float", nullable: false),
@@ -198,7 +198,7 @@ namespace TaskResourceBlueprints.Migrations
                     RowNotes = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     VisibleFolderIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CapacityResourceId = table.Column<int>(type: "int", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -274,8 +274,8 @@ namespace TaskResourceBlueprints.Migrations
                     ResourceSortId = table.Column<int>(type: "int", nullable: true),
                     AccountId = table.Column<int>(type: "int", nullable: true),
                     Co2 = table.Column<double>(type: "float", nullable: true),
-                    Cost = table.Column<double>(type: "float", nullable: true),
-                    Quantity = table.Column<double>(type: "float", nullable: true)
+                    Cost = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -364,10 +364,10 @@ namespace TaskResourceBlueprints.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    ChangeFactor1 = table.Column<double>(type: "float", nullable: false),
-                    ChangeFactor2 = table.Column<double>(type: "float", nullable: false),
-                    CapWaste = table.Column<double>(type: "float", nullable: false),
-                    BaseCost = table.Column<double>(type: "float", nullable: true),
+                    ChangeFactor1 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    ChangeFactor2 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    CapWaste = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    BaseCost = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true),
                     Uncontrollable = table.Column<bool>(type: "bit", nullable: false),
                     CapacityRoles = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Expressions = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -399,6 +399,7 @@ namespace TaskResourceBlueprints.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     QuestionGroupId = table.Column<int>(type: "int", nullable: false),
                     RevealedSectionKeys = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
@@ -419,6 +420,7 @@ namespace TaskResourceBlueprints.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     SelectorId = table.Column<int>(type: "int", nullable: false),
                     ResourceId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -448,10 +450,10 @@ namespace TaskResourceBlueprints.Migrations
                     ResourceId = table.Column<int>(type: "int", nullable: false),
                     ConditionId = table.Column<int>(type: "int", nullable: false),
                     MenuId = table.Column<int>(type: "int", nullable: true),
-                    ChangeFactor1 = table.Column<double>(type: "float(18)", precision: 18, scale: 6, nullable: false),
-                    ChangeFactor2 = table.Column<double>(type: "float(18)", precision: 18, scale: 6, nullable: false),
-                    CapWaste = table.Column<double>(type: "float(18)", precision: 18, scale: 6, nullable: false),
-                    BaseCost = table.Column<double>(type: "float(18)", precision: 18, scale: 4, nullable: true),
+                    ChangeFactor1 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    ChangeFactor2 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    CapWaste = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    BaseCost = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: true),
                     Uncontrollable = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CapacityRoles = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -476,8 +478,8 @@ namespace TaskResourceBlueprints.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     NumericId = table.Column<int>(type: "int", nullable: false),
                     AssignmentId = table.Column<int>(type: "int", nullable: false),
-                    MinInputValue = table.Column<double>(type: "float", nullable: true),
-                    MaxInputValue = table.Column<double>(type: "float", nullable: true),
+                    MinInputValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    MaxInputValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     Expressions = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -556,9 +558,9 @@ namespace TaskResourceBlueprints.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ConditionId = table.Column<int>(type: "int", nullable: false),
                     NumericQuestionId = table.Column<int>(type: "int", nullable: false),
-                    MaxAllowedValue = table.Column<double>(type: "float", nullable: true),
-                    MinAllowedValue = table.Column<double>(type: "float", nullable: true),
-                    DefaultValue = table.Column<double>(type: "float", nullable: true),
+                    MaxAllowedValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    MinAllowedValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    DefaultValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     GroupKey = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -670,9 +672,9 @@ namespace TaskResourceBlueprints.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ConditionResourceAssignments_ConditionId",
+                name: "IX_ConditionResourceAssignments_ConditionId_ResourceId_MenuId",
                 table: "ConditionResourceAssignments",
-                column: "ConditionId");
+                columns: new[] { "ConditionId", "ResourceId", "MenuId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ConditionResourceAssignments_ResourceId",
@@ -768,6 +770,11 @@ namespace TaskResourceBlueprints.Migrations
                 column: "QuestionGroupId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_QuestionOptions_QuestionGroupId_SortOrder",
+                table: "QuestionOptions",
+                columns: new[] { "QuestionGroupId", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ResourceAttributes_AttributeSetId",
                 table: "ResourceAttributes",
                 column: "AttributeSetId");
@@ -783,9 +790,9 @@ namespace TaskResourceBlueprints.Migrations
                 column: "ResourceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ResourceCategories_ParentCategoryId",
+                name: "IX_ResourceCategories_ParentCategoryId_SortOrder_DisplayName",
                 table: "ResourceCategories",
-                column: "ParentCategoryId");
+                columns: new[] { "ParentCategoryId", "SortOrder", "DisplayName" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ResourceChoiceOptions_ResourceId",
@@ -796,6 +803,11 @@ namespace TaskResourceBlueprints.Migrations
                 name: "IX_ResourceChoiceOptions_SelectorId_ResourceId",
                 table: "ResourceChoiceOptions",
                 columns: new[] { "SelectorId", "ResourceId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ResourceChoiceOptions_SelectorId_SortOrder",
+                table: "ResourceChoiceOptions",
+                columns: new[] { "SelectorId", "SortOrder" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ResourceRequirements_ConditionId_SelectorId_SelectorItemId_GroupKey",
@@ -814,9 +826,14 @@ namespace TaskResourceBlueprints.Migrations
                 column: "SelectorItemId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Resources_FolderId",
+                name: "IX_Resources_FolderId_SortOrder_Name",
                 table: "Resources",
-                column: "FolderId");
+                columns: new[] { "FolderId", "SortOrder", "Name" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Resources_IsActive_IsVisible_Name",
+                table: "Resources",
+                columns: new[] { "IsActive", "IsVisible", "Name" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ResourceSelectors_TaskId_SectionKey_SortOrder",
@@ -845,14 +862,15 @@ namespace TaskResourceBlueprints.Migrations
                 column: "ResourceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskResourceAssignments_TaskId",
+                name: "IX_TaskResourceAssignments_TaskId_ResourceId",
                 table: "TaskResourceAssignments",
-                column: "TaskId");
+                columns: new[] { "TaskId", "ResourceId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_ActionId",
+                name: "IX_Tasks_ActionId_LocationId_FallId_ActionTypeId",
                 table: "Tasks",
-                column: "ActionId");
+                columns: new[] { "ActionId", "LocationId", "FallId", "ActionTypeId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_ActionTypeId",
@@ -868,6 +886,11 @@ namespace TaskResourceBlueprints.Migrations
                 name: "IX_Tasks_LocationId",
                 table: "Tasks",
                 column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Status_SortOrder",
+                table: "Tasks",
+                columns: new[] { "Status", "SortOrder" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_TaskUnitGroupId",

@@ -19,7 +19,6 @@ public sealed class UserAnswers
     public HashSet<int> SelectedChoiceOptionIds { get; } = [];
     public HashSet<int> SelectedResourceChoiceItemIds { get; } = [];
 
-    // كانت double? -> صارت decimal?
     public Dictionary<int, decimal?> NumericValuesByGroupId { get; } = [];
 }
 
@@ -28,14 +27,9 @@ public interface ITasksUserComputationServiceWasm
     UserAnswers A(int taskId);
     void ReCalcCostResources(List<ResourceDto> resources);
     void ReCalcCapResources(List<ResourceDto> resources);
-
-    // كانت double? -> صارت decimal?
     void CalcQuantityResource(List<ResourceDto> resource, decimal? taskQuantity);
-
     bool BuildFinalRows(ProjectTaskDto task);
     bool Combine(bool a, bool b, ConditionLogic op);
-
-    // التحويلات الفيزيائية خليه double (لا علاقة بالمال)
     decimal ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters);
 }
 
@@ -129,16 +123,19 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             var choiceOk = EvaluateChoices(cond, ans);
             var resOk = EvaluateResources(cond, ans);
             var numOk = EvaluateNumeric(cond, ans);
+            var varOk = EvaluateVariables(task, cond);
 
             if (cond.OptionRequirements.Count == 0) choiceOk = true;
             if (cond.ResourceRequirements.Count == 0) resOk = true;
             if (cond.NumericRequirements.Count == 0) numOk = true;
+            if (cond.VariableRequirements.Count == 0) varOk = true;
 
             bool cr = Combine(choiceOk, resOk, cond.OptionToResourceLogic);
             bool cn = Combine(choiceOk, numOk, cond.OptionToNumericLogic);
             bool nr = Combine(numOk, resOk, cond.NumericToResourceLogic);
 
-            if (!(cr && cn && nr)) continue;
+            if (!(cr && cn && nr && varOk))
+                continue;
 
             foreach (var ra in cond.ConditionResourceAssignments)
             {
@@ -268,4 +265,60 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                         && (!r.MinAllowedValue.HasValue || val.Value >= r.MinAllowedValue.Value);
                 })
            );
+
+    public bool EvaluateVariables(ProjectTaskDto task, TaskConditionDto cond)
+        => cond.VariableRequirements.Count == 0 || cond.VariableRequirements
+            .GroupBy(r => r.SetKey)
+            .All(set => set.Any(r => EvaluateSingleVariable(task, r)));
+
+    private static bool EvaluateSingleVariable(ProjectTaskDto task, ConditionVariableRequirementDto rule)
+    {
+        var variableValue = GetVariableValue(task, rule.VariableName);
+        if (!variableValue.HasValue)
+            return false;
+
+        return (!rule.MaxAllowedValue.HasValue || variableValue.Value <= rule.MaxAllowedValue.Value)
+            && (!rule.MinAllowedValue.HasValue || variableValue.Value >= rule.MinAllowedValue.Value);
+    }
+
+    private static double? GetVariableValue(ProjectTaskDto task, string? variableName)
+    {
+        if (string.IsNullOrWhiteSpace(variableName))
+            return null;
+
+        switch (variableName.Trim().ToLowerInvariant())
+        {
+            case "thickness":
+                return task.ParameterValues.TryGetValue(ParamName.Thickness, out var thickness)
+                    ? (double)thickness
+                    : null;
+
+            case "width":
+                return task.ParameterValues.TryGetValue(ParamName.Width, out var width)
+                    ? (double)width
+                    : null;
+
+            case "length":
+                return task.ParameterValues.TryGetValue(ParamName.Length, out var length)
+                    ? (double)length
+                    : null;
+
+            case "density":
+                return task.ParameterValues.TryGetValue(ParamName.Density, out var density)
+                    ? (double)density
+                    : null;
+
+            case "quantity":
+                return task.Quantity.HasValue ? (double)task.Quantity.Value : null;
+
+            case "cost":
+                return (double)task.BaseResources.Sum(r => r.Data.Cost);
+
+            case "basecost":
+                return (double)task.BaseResources.Sum(r => r.Data.BaseCost.GetValueOrDefault());
+
+            default:
+                return null;
+        }
+    }
 }

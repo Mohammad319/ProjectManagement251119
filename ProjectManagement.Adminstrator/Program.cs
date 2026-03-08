@@ -18,10 +18,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-var TaskResourceBlueprintsDb = builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+var taskResourceBlueprintsDb =
+    builder.Configuration.GetConnectionString("TaskResourceBlueprintsConnection")
+    ?? builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb")
+    ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsConnection' (or 'TaskResourceBlueprintsDb') not found.");
+
 builder.Services.AddTaskResourceBlueprints();
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
-    options.UseSqlServer(TaskResourceBlueprintsDb, sqlOptions =>
+    options.UseSqlServer(taskResourceBlueprintsDb, sqlOptions =>
     {
         sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     }));
@@ -33,7 +38,9 @@ builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddApplicationServices();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddCustomAuthentication(connectionString);
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
@@ -45,6 +52,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddServerSideBlazor()
     .AddCircuitOptions(options => options.DetailedErrors = true);
+
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
     var supportedCultures = new[] { "en-US", "sv-SE" };
@@ -52,8 +60,10 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedCultures = [.. supportedCultures.Select(c => new CultureInfo(c))];
     options.SupportedUICultures = [.. supportedCultures.Select(c => new CultureInfo(c))];
 });
+
 Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
+
 var app = builder.Build();
 
 await app.InitializeAuthPermissionsAsync();
@@ -66,9 +76,9 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
@@ -82,6 +92,7 @@ app.UseSerilogRequestLogging(opts =>
         if (userId is not null) ctx.Set("UserId", userId);
     };
 });
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

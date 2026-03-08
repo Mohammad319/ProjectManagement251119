@@ -39,9 +39,7 @@
                            @bind-value:event="oninput"/>
                 </div>
                 <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
-                    <label for="cf1" class="@CssClasses.Form.Label">
-                        @CalcResource.changeFactor1
-                    </label>
+                    <label for="cf1" class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
                     <input id="cf1"
                            type="number"
                            step="0.01"
@@ -49,16 +47,10 @@
                            min="0"
                            class="@CsS.Input.Number"
                            @bind-value="TaskResource.ChangeFactor1"
-                           @bind-value:event="oninput"
-                           aria-describedby="cf1-help" />
-                    <small id="cf1-help" class="@CssClasses.Text.Secondary">Update</small>
+                           @bind-value:event="oninput" />
                 </div>
-
-                <!-- ChangeFactor2 -->
                 <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
-                    <label for="cf2" class="@CssClasses.Form.Label">
-                        @CalcResource.changeFactor2
-                    </label>
+                    <label for="cf2" class="@CssClasses.Form.Label">@CalcResource.changeFactor2</label>
                     <input id="cf2"
                            type="number"
                            step="0.01"
@@ -69,7 +61,6 @@
                            @bind-value:event="oninput" />
                 </div>
 
-                <!-- Cap/Waste (يتغير بحسب النوع) -->
                 <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
                     <label for="cap" class="@CssClasses.Form.Label">
                         @if (TaskResource?.ResType == ResourceTypesEnum.Materials)
@@ -91,7 +82,6 @@
                            @bind-value:event="oninput" />
                 </div>
 
-                <!-- BaseCost -->
                 <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
                     <label for="baseCost" class="@CssClasses.Form.Label">
                         @CalcResource.baseCost
@@ -106,12 +96,9 @@
                            @bind-value:event="oninput" />
                 </div>
 
-                <!-- أزرار سريعة -->
-
             </div>
         </div>
 
-        <!-- بطاقة: الأدوار (Machines/Workers فقط) -->
         @if (TaskResource?.ResType == ResourceTypesEnum.MachinesAndEquipments
             || TaskResource?.ResType == ResourceTypesEnum.Worker)
         {
@@ -139,7 +126,6 @@
                         {
                             var role = TaskResource.CapRole[i];
                             <div class="@CsS.Grid.Col.MD6 items-center">
-                                <!-- Remove -->
                                 <div class="flex items-center">
                                     <button type="button"
                                             title="@ResourceApp.delete"
@@ -149,7 +135,6 @@
                                     </button>
                                 </div>
 
-                                <!-- Min -->
                                 <input type="number"
                                        step="1"
                                        min="0"
@@ -158,7 +143,6 @@
                                        @bind-value:event="oninput"
                                        aria-label="Min" />
 
-                                <!-- Max -->
                                 <input type="number"
                                        step="1"
                                        min="0"
@@ -167,7 +151,6 @@
                                        @bind-value:event="oninput"
                                        aria-label="Max" />
 
-                                <!-- Value -->
                                 <input type="number"
                                        step="0.01"
                                        min="0"
@@ -175,8 +158,6 @@
                                        @bind-value="role.Value"
                                        @bind-value:event="oninput"
                                        aria-label="Cap" />
-
-                                <!-- Index -->
                             </div>
                         }
                     }
@@ -190,7 +171,6 @@
             </div>
         }
 
-        <!-- بطاقة: الصيغ -->
         <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top2">
             <div class="@CsS.Layout.FlexJustifyBetween">
                 <h5 class="@CC.Text.H5">@CalcResource.Formulas</h5>
@@ -226,7 +206,6 @@
         </div>
     }
 
-    <!-- تذييل المودال -->
     <div class="@CsS.Modal.Footer @CsS.Spacing.M.Top3">
         <div class="@CsS.Layout.ButtonGroup">
             <button type="button"
@@ -264,7 +243,7 @@
     protected override async Task OnInitializedAsync()
     {
         TaskResource = await TaskResourceService.GetTaskResourceAsync
-        (Task.Id, Resource.Id, CancellationToken.None) ?? new TaskResourceDto();
+        (Task.Id, Resource.ResourceId, CancellationToken.None) ?? new TaskResourceDto();
         TaskResource.CapRole ??= [];
         TaskResource.Formulas ??= [];
     }
@@ -273,14 +252,14 @@
         if (TaskResource is null)
             return;
 
-        if (await TaskResourceService.UpdateAssignmentAsync(Task.Id, Resource.Id, TaskResource, CancellationToken.None))
+        if (await TaskResourceService.UpdateAssignmentAsync(Task.Id, Resource.ResourceId, TaskResource, CancellationToken.None))
         {
             MHD.Modal.Close();
         }
         else
         {
             MHD.MessageOk("Error", "There was an error saving the resource.", MhdState.Danger);
-        } 
+        }
     }
 
 }

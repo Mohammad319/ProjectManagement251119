@@ -14,9 +14,7 @@
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <!-- 3 حقول في السطر -->
         <div class="@CsS.Grid.Col.MD4">
-            <!-- Action -->
             <div>
                 <label class="@CsS.Form.Label">Action</label>
                 <InputSelect @bind-Value="UpdateForm.ActionId" class="@CsS.Input.Select">
@@ -31,7 +29,6 @@
                 </InputSelect>
             </div>
 
-            <!-- Location -->
             <div>
                 <label class="@CsS.Form.Label">Location</label>
                 <InputSelect @bind-Value="UpdateForm.LocationId" class="@CsS.Input.Select">
@@ -46,7 +43,6 @@
                 </InputSelect>
             </div>
 
-            <!-- Fall -->
             <div>
                 <label class="@CsS.Form.Label">Fall</label>
                 <InputSelect @bind-Value="UpdateForm.FallId" class="@CsS.Input.Select">
@@ -61,7 +57,6 @@
                 </InputSelect>
             </div>
 
-            <!-- ActionType -->
             <div>
                 <label class="@CsS.Form.Label">ActionType</label>
                 <InputSelect @bind-Value="UpdateForm.ActionTypeId" class="@CsS.Input.Select">
@@ -76,13 +71,11 @@
                 </InputSelect>
             </div>
 
-            <!-- Code -->
             <div>
                 <label class="@CsS.Form.Label">@CalcResource.code</label>
                 <InputText @bind-Value="UpdateForm.Code" class="@CsS.Input.Text" />
             </div>
 
-            <!-- Name -->
             <div>
                 <label class="@CsS.Form.Label">@CalcResource.name</label>
                 <InputText @bind-Value="UpdateForm.DisplayName" class="@CsS.Input.Text" />
@@ -91,11 +84,10 @@
                 <label class="@CsS.Form.Label">@CalcResource.responsible</label>
                 <InputText @bind-Value="UpdateForm.Responsible" class="@CsS.Input.Text" />
             </div>
-            <!-- Groups -->
             <div>
                 <label class="@CsS.Form.Label">Groups</label>
                 <select class="@CsS.Input.Select" @onchange="ChangeGroup">
-                    <option>Select Group</option>
+                    <option value="">Select Group</option>
                     @if (Groups != null)
                     {
                         foreach (var action in Groups)
@@ -112,14 +104,9 @@
                     <label class="@CsS.Form.Label">Units</label>
                     <InputSelect @bind-Value="UpdateForm.UnitCode" class="@CsS.Input.Select">
                         <option value="">Select Unit</option>
-                        @if (Groups != null)
+                        @foreach (var item in SelectedGroup.Keys)
                         {
-                            foreach (var item in SelectedGroup.Keys)
-                        {
-                                Console.WriteLine("SelectedGroup.Key" + item);
-                                <option value="@item">@item</option>
-
-                        }
+                            <option value="@item">@item</option>
                         }
                     </InputSelect>
                 </div>
@@ -134,25 +121,21 @@
 
                 </InputSelect>
             </div>
-            <!-- Quantity -->
             <div>
                 <label class="@CsS.Form.Label">@CalcResource.quantity</label>
                 <InputNumber @bind-Value="UpdateForm.Quantity" class="@CsS.Input.Number" />
             </div>
 
-            <!-- ChangeFactor1 -->
             <div>
                 <label class="@CsS.Form.Label">@CalcResource.changeFactor1</label>
                 <InputNumber @bind-Value="UpdateForm.ChangeFactor1" class="@CsS.Input.Number" />
             </div>
 
-            <!-- ChangeFactor2 -->
             <div>
                 <label class="@CsS.Form.Label">@CalcResource.changeFactor2</label>
                 <InputNumber @bind-Value="UpdateForm.ChangeFactor2" class="@CsS.Input.Number" />
             </div>
 
-            <!-- Thickness / Width / Length -->
             <div>
                 <label class="@CsS.Form.Label">Thickness</label>
                 <InputNumber @bind-Value="UpdateForm.Thickness" class="@CsS.Input.Number" />
@@ -166,7 +149,6 @@
                 <InputNumber @bind-Value="UpdateForm.Length" class="@CsS.Input.Number" />
             </div>
 
-            <!-- Active Checkbox (صف أفقي) -->
             <div class="@CsS.Form.CheckWrapper">
                 <InputCheckbox @bind-Value="UpdateForm.IsActive" class="@CsS.Input.Check" />
                 <label class="@CsS.Form.Label">@CalcResource.active</label>
@@ -175,7 +157,6 @@
                 <InputCheckbox @bind-Value="UpdateForm.Uncontrollable" class="@CsS.Input.Check" />
                 <label class="@CsS.Form.Label">Hide the resource and show the total cost only (UE).</label>
             </div>
-            <!-- Note: تمتد عرض 3 أعمدة -->
             <div class="@CsS.Grid.Span.MD3">
                 <label class="@CsS.Form.Label">@CalcResource.note</label>
                 <InputTextArea @bind-Value="UpdateForm.Note" class="@CsS.Input.Text" />
@@ -198,8 +179,6 @@
             }
         </div>
 
-
-        <!-- Footer -->
         <div class="@CsS.Modal.Footer">
             <button type="submit" class="@CsS.Btn.Outline.Success">@ResourceApp.save</button>
             <button type="button" @onclick="Close" class="@CsS.Btn.Outline.Secondary">@ResourceApp.cancel</button>
@@ -212,18 +191,23 @@
         if (int.TryParse(e.Value?.ToString(), out int groupId))
         {
             UpdateForm.UnitGroupId = groupId;
-        }else 
+            var selectedGroup = Groups.FirstOrDefault(g => g.Id == groupId);
+            if (selectedGroup is null || string.IsNullOrWhiteSpace(UpdateForm.UnitCode) || !selectedGroup.Keys.Contains(UpdateForm.UnitCode))
+            {
+                UpdateForm.UnitCode = selectedGroup?.Keys.FirstOrDefault();
+            }
+        }
+        else
+        {
             UpdateForm.UnitGroupId = null;
-            UpdateForm.UnitCode = null; // Reset UnitCode when Group changes
+            UpdateForm.UnitCode = null;
+        }
     }
-    // Parameter (Id für Edit, null für Create)
     [Parameter] public int? TaskId { get; set; }
     [Parameter] public EventCallback<bool> Saved { get; set; }
 
-    // Formularmodell (DTO)
     private TaskDefinitionEditDto UpdateForm { get; set; } = new();
 
-    // Lookups
     private List<ActionEntity> ActionsTasks = new();
     private List<ActionTypeEntity> ActionTypesList = new();
     private List<FallEntity> FallsList = new();
@@ -250,7 +234,6 @@
             UpdateForm = await TaskQueries.GetForEditAsync(TaskId.Value, CancellationToken.None);
     }
 
-    // Deutsch: Sichtbarkeit von Ordnern toggeln
     private void ToggleFolder(int folderId)
     {
         if (UpdateForm.VisibleFolderIds.Contains(folderId))
@@ -258,8 +241,6 @@
         else
             UpdateForm.VisibleFolderIds.Add(folderId);
     }
-
-
 
     private async Task HandleSubmit()
     {

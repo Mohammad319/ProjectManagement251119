@@ -16,7 +16,7 @@ namespace TaskResourceBlueprints.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -121,30 +121,30 @@ namespace TaskResourceBlueprints.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double?>("BaseCost")
+                    b.Property<decimal?>("BaseCost")
                         .HasPrecision(18, 4)
-                        .HasColumnType("float(18)");
+                        .HasColumnType("decimal(18,4)");
 
-                    b.Property<double>("CapWaste")
+                    b.Property<decimal>("CapWaste")
                         .HasPrecision(18, 6)
-                        .HasColumnType("float(18)");
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("CapacityRoles")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("ChangeFactor1")
+                    b.Property<decimal>("ChangeFactor1")
                         .HasPrecision(18, 6)
-                        .HasColumnType("float(18)");
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double>("ChangeFactor2")
+                    b.Property<decimal>("ChangeFactor2")
                         .HasPrecision(18, 6)
-                        .HasColumnType("float(18)");
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<int>("ConditionId")
                         .HasColumnType("int");
 
-                    b.PrimitiveCollection<string>("Expressions")
+                    b.Property<string>("Expressions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -162,9 +162,9 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConditionId");
-
                     b.HasIndex("ResourceId");
+
+                    b.HasIndex("ConditionId", "ResourceId", "MenuId");
 
                     b.ToTable("ConditionResourceAssignments");
                 });
@@ -184,11 +184,13 @@ namespace TaskResourceBlueprints.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("MaxInputValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MaxInputValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double?>("MinInputValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MinInputValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<int>("NumericId")
                         .HasColumnType("int");
@@ -239,23 +241,27 @@ namespace TaskResourceBlueprints.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double?>("BaseCost")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("BaseCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
-                    b.Property<double>("CapWaste")
-                        .HasColumnType("float");
+                    b.Property<decimal>("CapWaste")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("CapacityRoles")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("ChangeFactor1")
-                        .HasColumnType("float");
+                    b.Property<decimal>("ChangeFactor1")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double>("ChangeFactor2")
-                        .HasColumnType("float");
+                    b.Property<decimal>("ChangeFactor2")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.PrimitiveCollection<string>("Expressions")
+                    b.Property<string>("Expressions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -278,7 +284,8 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasIndex("ResourceId");
 
-                    b.HasIndex("TaskId");
+                    b.HasIndex("TaskId", "ResourceId")
+                        .IsUnique();
 
                     b.ToTable("TaskResourceAssignments");
                 });
@@ -331,17 +338,20 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<int>("ConditionId")
                         .HasColumnType("int");
 
-                    b.Property<double?>("DefaultValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("DefaultValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<int>("GroupKey")
                         .HasColumnType("int");
 
-                    b.Property<double?>("MaxAllowedValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MaxAllowedValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double?>("MinAllowedValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MinAllowedValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<int>("NumericQuestionId")
                         .HasColumnType("int");
@@ -541,9 +551,14 @@ namespace TaskResourceBlueprints.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("QuestionGroupId");
+
+                    b.HasIndex("QuestionGroupId", "SortOrder");
 
                     b.ToTable("QuestionOptions");
                 });
@@ -562,11 +577,16 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<int>("SelectorId")
                         .HasColumnType("int");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ResourceId");
 
                     b.HasIndex("SelectorId", "ResourceId");
+
+                    b.HasIndex("SelectorId", "SortOrder");
 
                     b.ToTable("ResourceChoiceOptions");
                 });
@@ -637,17 +657,20 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<int>("ResType")
                         .HasColumnType("int");
 
-                    b.Property<double>("SortOrder")
-                        .HasColumnType("float");
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FolderId");
+                    b.HasIndex("FolderId", "SortOrder", "Name");
+
+                    b.HasIndex("IsActive", "IsVisible", "Name");
 
                     b.ToTable("Resources");
                 });
@@ -748,13 +771,15 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("IsVisible")
                         .HasColumnType("bit");
 
                     b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<int?>("ParentCategoryId")
                         .HasColumnType("int");
@@ -764,7 +789,7 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ParentCategoryId");
+                    b.HasIndex("ParentCategoryId", "SortOrder", "DisplayName");
 
                     b.ToTable("ResourceCategories");
                 });
@@ -783,14 +808,16 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<double?>("Co2")
                         .HasColumnType("float");
 
-                    b.Property<double?>("Cost")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Cost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("Quantity")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<int>("ResourceId")
                         .HasColumnType("int");
@@ -883,15 +910,17 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
-                    b.Property<double?>("Quantity")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("Responsible")
                         .HasColumnType("nvarchar(max)");
 
-                    b.PrimitiveCollection<string>("RowNotes")
+                    b.Property<string>("RowNotes")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -910,17 +939,15 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<string>("UnitCode")
                         .HasColumnType("nvarchar(max)");
 
-                    b.PrimitiveCollection<string>("VisibleFolderIds")
+                    b.Property<string>("VisibleFolderIds")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.PrimitiveCollection<string>("WorkloadThresholds")
+                    b.Property<string>("WorkloadThresholds")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ActionId");
 
                     b.HasIndex("ActionTypeId");
 
@@ -929,6 +956,10 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("LocationId");
 
                     b.HasIndex("TaskUnitGroupId");
+
+                    b.HasIndex("Status", "SortOrder");
+
+                    b.HasIndex("ActionId", "LocationId", "FallId", "ActionTypeId");
 
                     b.ToTable("Tasks");
                 });

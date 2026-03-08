@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TaskResourceBlueprints.Entities.Questions.Assignments;
 using TaskResourceBlueprints.Entities.Questions.Conditions;
 using TaskResourceBlueprints.Entities.Questions.Groups;
@@ -8,48 +8,76 @@ namespace TaskResourceBlueprints.Services.QuestionConditions;
 
 public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprintsContext> _factory) : ITaskConditionsService
 {
-    // ===== تحميل الصفحة =====
     public async Task<List<ConditionDefinition>> GetConditionsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
         return await db.Conditions
-            .AsNoTracking().AsSplitQuery()
+            .AsNoTracking()
+            .AsSplitQuery()
             .Where(c => c.TaskId == taskId)
+            .OrderBy(c => c.Id)
             .Include(c => c.OptionRules)
             .Include(c => c.VariableRules)
             .Include(c => c.ResourceRules)
             .Include(c => c.NumericRules)
-            .Include(c => c.Assignments).ThenInclude(a => a.Resource)
+            .Include(c => c.Assignments)
+                .ThenInclude(a => a.Resource)
             .ToListAsync(ct);
     }
 
     public async Task<List<ResourceSelectorDefinition>> GetResourceGroupsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.ResourceSelectors.AsNoTracking()
+        return await db.ResourceSelectors
+            .AsNoTracking()
             .Where(g => g.TaskId == taskId)
+            .OrderBy(g => g.SortOrder)
+            .ThenBy(g => g.Id)
             .Select(g => new ResourceSelectorDefinition
             {
                 Id = g.Id,
                 DisplayName = g.DisplayName,
                 SortOrder = g.SortOrder,
                 TaskId = g.TaskId,
-                Items = g.Items.Select(o => new ResourceOptionItem
-                {
-                    Id = o.Id,
-                    SelectorId = o.SelectorId,
-                    ResourceId = o.ResourceId,
-                    Resource = o.Resource
-                }).ToList()
+                Items = g.Items
+                    .OrderBy(o => o.Id)
+                    .Select(o => new ResourceOptionItem
+                    {
+                        Id = o.Id,
+                        SelectorId = o.SelectorId,
+                        ResourceId = o.ResourceId,
+                        Resource = o.Resource
+                    }).ToList()
             })
             .ToListAsync(ct);
     }
+    public async Task DeleteOptionBindingAsync(int id, CancellationToken ct)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var entity = await db.OptionResourceAssignments.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (entity is null) return;
 
+        db.OptionResourceAssignments.Remove(entity);
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task DeleteNumericBindingAsync(int id, CancellationToken ct)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var entity = await db.NumericResourceAssignments.FirstOrDefaultAsync(x => x.Id == id, ct);
+        if (entity is null) return;
+
+        db.NumericResourceAssignments.Remove(entity);
+        await db.SaveChangesAsync(ct);
+    }
     public async Task<List<QuestionGroupDefinition>> GetChoiceGroupsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.QuestionGroups.AsNoTracking()
+        return await db.QuestionGroups
+            .AsNoTracking()
             .Where(g => g.TaskId == taskId)
+            .OrderBy(g => g.SortOrder)
+            .ThenBy(g => g.Id)
             .Select(g => new QuestionGroupDefinition
             {
                 Id = g.Id,
@@ -57,20 +85,25 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
                 SortOrder = g.SortOrder,
                 TaskId = g.TaskId,
                 Options = g.Options
+                    .OrderBy(o => o.Id)
                     .Select(o => new QuestionOptionDefinition
                     {
                         Id = o.Id,
                         DisplayName = o.DisplayName,
                         QuestionGroupId = o.QuestionGroupId
                     }).ToList()
-            }).ToListAsync(ct);
+            })
+            .ToListAsync(ct);
     }
 
     public async Task<List<NumericQuestionDefinition>> GetNumericGroupsAsync(int taskId, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-        return await db.NumericQuestions.AsNoTracking()
+        return await db.NumericQuestions
+            .AsNoTracking()
             .Where(ng => ng.TaskId == taskId)
+            .OrderBy(ng => ng.SortOrder)
+            .ThenBy(ng => ng.Id)
             .Select(ng => new NumericQuestionDefinition
             {
                 Id = ng.Id,
@@ -79,7 +112,8 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
                 TaskId = ng.TaskId,
                 MinInputValue = ng.MinInputValue,
                 MaxInputValue = ng.MaxInputValue
-            }).ToListAsync(ct);
+            })
+            .ToListAsync(ct);
     }
 
     public async Task<Dictionary<int, List<OptionBindVM>>> GetOptionBindsByResourceAssignmentsAsync(int[] raIds, CancellationToken ct)
@@ -88,8 +122,11 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
         if (raIds.Length == 0) return result;
 
         await using var db = await _factory.CreateDbContextAsync(ct);
-        var rows = await db.OptionResourceAssignments.AsNoTracking()
+        var rows = await db.OptionResourceAssignments
+            .AsNoTracking()
             .Where(b => raIds.Contains(b.AssignmentId))
+            .OrderBy(b => b.AssignmentId)
+            .ThenBy(b => b.Id)
             .Select(b => new
             {
                 b.Id,
@@ -117,8 +154,11 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
         if (raIds.Length == 0) return result;
 
         await using var db = await _factory.CreateDbContextAsync(ct);
-        var rows = await db.NumericResourceAssignments.AsNoTracking()
+        var rows = await db.NumericResourceAssignments
+            .AsNoTracking()
             .Where(b => raIds.Contains(b.AssignmentId))
+            .OrderBy(b => b.AssignmentId)
+            .ThenBy(b => b.Id)
             .Select(b => new
             {
                 b.Id,
@@ -142,7 +182,6 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
         return result;
     }
 
-    // ===== شرط واحد =====
     public async Task<ConditionDefinition?> GetConditionAsync(int id, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
@@ -159,10 +198,6 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
     public async Task<int> UpsertConditionAsync(ConditionDefinition editing, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
-
-        //// لا تمرر Resource مرفقة عند الإضافة/التحديث
-        //foreach (var ra in editing.Assignments)
-        //    ra.Resource = null;
 
         if (editing.Id == 0)
         {
@@ -213,7 +248,6 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
             x.GroupKey = y.GroupKey;
         });
 
-        // اختياري: مزامنة تعيين الموارد التابعة للشرط
         SyncCollection(db, dbCond.Assignments, editing.Assignments, (x, y) =>
         {
             x.ResourceId = y.ResourceId;
@@ -238,7 +272,6 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
         await db.SaveChangesAsync(ct);
     }
 
-    // ===== ربطات Option/Numeric =====
     public async Task<int> UpsertOptionBindingAsync(int raId, OptionBindVM vm, CancellationToken ct)
     {
         await using var db = await _factory.CreateDbContextAsync(ct);
@@ -255,14 +288,12 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
             await db.SaveChangesAsync(ct);
             return entity.Id;
         }
-        else
-        {
-            var entity = await db.OptionResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
-            entity.OptionId = vm.ChoiceOptionId;
-            entity.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
-            await db.SaveChangesAsync(ct);
-            return entity.Id;
-        }
+
+        var existing = await db.OptionResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
+        existing.OptionId = vm.ChoiceOptionId;
+        existing.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
+        await db.SaveChangesAsync(ct);
+        return existing.Id;
     }
 
     public async Task<int> UpsertNumericBindingAsync(int raId, NumericBindVM vm, CancellationToken ct)
@@ -283,19 +314,16 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
             await db.SaveChangesAsync(ct);
             return entity.Id;
         }
-        else
-        {
-            var entity = await db.NumericResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
-            entity.NumericId = vm.NumericId;
-            entity.MinInputValue = vm.InputMinValue;
-            entity.MaxInputValue = vm.InputMaxValue;
-            entity.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
-            await db.SaveChangesAsync(ct);
-            return entity.Id;
-        }
+
+        var existing = await db.NumericResourceAssignments.FirstAsync(x => x.Id == vm.Id, ct);
+        existing.NumericId = vm.NumericId;
+        existing.MinInputValue = vm.InputMinValue;
+        existing.MaxInputValue = vm.InputMaxValue;
+        existing.Expressions = [.. vm.Formulas.Where(s => !string.IsNullOrWhiteSpace(s))];
+        await db.SaveChangesAsync(ct);
+        return existing.Id;
     }
 
-    // === Helper عام لمزامنة التجميعات (نفس منطقك) ===
     private static void SyncCollection<T>(
         DbContext db,
         ICollection<T> dbItems,
@@ -303,7 +331,7 @@ public sealed class TaskConditionsService(IDbContextFactory<TaskResourceBlueprin
         Action<T, T> mapProps) where T : class
     {
         uiItems ??= Array.Empty<T>().ToList();
-        int GetId(T e) => (int)e!.GetType().GetProperty("Id")!.GetValue(e)!;
+        static int GetId(T e) => (int)e!.GetType().GetProperty("Id")!.GetValue(e)!;
 
         var dbById = dbItems.ToDictionary(GetId);
         var uiById = uiItems.Where(i => GetId(i) != 0).ToDictionary(GetId);

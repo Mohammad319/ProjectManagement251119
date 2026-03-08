@@ -69,7 +69,7 @@ else
                             <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="@CsS.Btn.Outline.Primary">
                                 @ResourceLoc.resource
                             </button>
-                            @if(ColspanTaskIDs.Any(x => x == item.Id))
+                            @if (ColspanTaskIDs.Any(x => x == item.Id))
                             {
                                 <button @onclick="async () => await Collspan(item)" class="@CssClasses.Btn.Outline.Info">^</button>
                             }
@@ -96,19 +96,19 @@ else
                     </td>
                 </tr>
                 @if (ColspanTaskIDs.Any(x => x == item.Id) && item.ResourceTasks != null)
-                    {
-                        foreach(var res in item.ResourceTasks)
                 {
-                   
-                <tr class="@CsS.Table.Tr">
+                    foreach (var res in item.ResourceTasks)
+                    {
+                        <tr class="@CsS.Table.Tr">
                             <td class="@CsS.Table.Td">
-                                <button class="@CsS.Btn.Outline.Primary" @onclick="() => TaskChoiceResourceBin(item,res)">
+                                <button class="@CsS.Btn.Outline.Primary" @onclick="() => TaskChoiceResourceBin(item, res)">
                                     @((MarkupString)Icons.Machines)
                                 </button>
                                 <button class="@CsS.Btn.Outline.Danger" @onclick="() => RemoveAsync(item, res)">
                                     @((MarkupString)Icons.Delete)
                                 </button>
-                                @res.DisplayName</td>
+                                @res.DisplayName
+                            </td>
                             <td class="@CsS.Table.Td">@res.Unit</td>
                             <td class="@CsS.Table.Td">@res.Chf1</td>
                             <td class="@CsS.Table.Td">@res.Chf2</td>
@@ -124,15 +124,15 @@ else
                                 }
                             </td>
                         </tr>
+                    }
                 }
-            }
             }
         </tbody>
     </table>
 }
 
 @code {
-    void TaskChoiceResourceBin(ProjectTaskListItemDto model,ResourceTaskIndexDto resourceId) => MHD.Modal.ShowComponent<TaskResourceUI>
+    void TaskChoiceResourceBin(ProjectTaskListItemDto model, ResourceTaskIndexDto resourceId) => MHD.Modal.ShowComponent<TaskResourceUI>
     (model.DisplayName + " Resource",
 new Dictionary<string, object>
 {
@@ -145,24 +145,25 @@ new Dictionary<string, object>
     private void ConfirmDelete(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
     => MHD.DeleteMessage(res.DisplayName, EventCallback.Factory.Create(this, () => RemoveAsync(task, res)));
 
-    async Task RemoveAsync(ProjectTaskListItemDto task,ResourceTaskIndexDto res)
+    async Task RemoveAsync(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
     {
-        if (await FoldersService.RemoveAssignmentAsync(res.Id))
-            task.ResourceTasks?.RemoveAll(x => x.Id == res.Id);
+        if (await FoldersService.RemoveAssignmentAsync(res.AssignmentId))
+        {
+            task.ResourceTasks?.RemoveAll(x => x.AssignmentId == res.AssignmentId);
             StateHasChanged();
         }
+    }
 
-    
     async Task Collspan(ProjectTaskListItemDto task)
     {
-        if(ColspanTaskIDs.Any(x => x == task.Id))
+        if (ColspanTaskIDs.Any(x => x == task.Id))
         {
             ColspanTaskIDs.Remove(task.Id);
         }
         else
         {
-                task.ResourceTasks = (await TaskQueries.GetResourcesForTaskAsync(task.Id, CancellationToken.None)).ToList();
-            
+            task.ResourceTasks = (await TaskQueries.GetResourcesForTaskAsync(task.Id, CancellationToken.None)).ToList();
+
             ColspanTaskIDs.Add(task.Id);
         }
         StateHasChanged();
@@ -175,7 +176,7 @@ new Dictionary<string, object>
         {
             errorMessage = null;
             tasks = (await TaskQueries.GetListAsync(CancellationToken.None)).ToList();
-                    StateHasChanged();
+            StateHasChanged();
 
         }
         catch (Exception ex)
@@ -208,7 +209,6 @@ new Dictionary<string, object>
 
     private void OpenTaskFolders(int id, string name)
     {
-        // Wichtig: ParentTaskId an Child übergeben (Child erwartet ParentTaskId, nicht ProjectTask)
         MHD.Modal.ShowComponent<TaskFolders>(ResourceLoc.resource, new Dictionary<string, object>
         {
             [nameof(TaskFolders.TaskId)] = id
