@@ -2,27 +2,6 @@
 @using Domain.Entities.Calculation
 @inherits AppComponentBase
 
-<div class="space-y-4">
-    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@Loc[nameof(ResourceLoc.taskStatus)]</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400">@VisibleStatuses.Count() @Loc[nameof(ResourceLoc.taskStatus)]</p>
-        </div>
-
-        <div class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/70">
-            <button @onclick="CreateNewAsync"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                    title="@AppLoc[nameof(ResourceApp.newItem)]">
-                @((MarkupString)Icons.Plus2)
-            </button>
-            <button @onclick="ToggleVisibleAsync"
-                    class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-                    title="@AppLoc[nameof(ResourceApp.isVisible)]">
-                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-            </button>
-        </div>
-    </div>
-
     @if (IsLoading)
     {
         <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
@@ -32,8 +11,23 @@
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <MhdTable TItem="TaskStatusEntity" Items="VisibleStatuses.ToList()" ShowFilter="false">
                 <HeaderTemplate>
-                    <th class="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300"></th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">@CalcLoc[nameof(CalcResource.name)]</th>
+                    <th style="width:200px;" class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">
+                        <div class="flex items-center gap-2">
+                            <button @onclick="CreateNewAsync"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
+                                    title="@AppLoc[LocalizerConst.New, CalcResource.procurementMethods]"
+                                    aria-label="@AppLoc[LocalizerConst.New, CalcResource.procurementMethods]">
+                                @Icons.Plus2
+                            </button>
+                            <button @onclick="ToggleVisibleAsync"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                    title="@AppLoc[nameof(ResourceApp.isVisible)]"
+                                    aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
+                                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+                            </button>
+                        </div>
+                    </th>
+                    <th></th>
                 </HeaderTemplate>
                 <ChildContent>
                     <MhdTableColumn>
@@ -70,4 +64,3 @@
             @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
         </div>
     }
-</div>
