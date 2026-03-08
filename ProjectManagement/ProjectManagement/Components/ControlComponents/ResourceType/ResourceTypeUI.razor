@@ -27,15 +27,15 @@ else
                     </p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="grid w-full grid-cols-2 gap-2 lg:flex lg:w-auto lg:flex-wrap lg:items-center">
                     <button @onclick="CreateNewAsync"
-                            class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 lg:w-auto">
                         <span class="text-base leading-none">@((MarkupString)Icons.Plus)</span>
                         <span>@AppLoc[nameof(ResourceApp.newItem)]</span>
                     </button>
 
                     <button @onclick="ReverseElements"
-                            class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 lg:w-auto">
                         <span class="text-base leading-none">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</span>
                         <span>@AppLoc[nameof(ResourceApp.isVisible)]</span>
                     </button>
