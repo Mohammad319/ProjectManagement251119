@@ -1,4 +1,4 @@
-using AuthPermissions.Context;
+﻿using AuthPermissions.Context;
 using AuthPermissions.Entity;
 using AuthPermissions.Services;
 using Domain.Entities.Calculation;
@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
+using ProjectManagement.Adminstrator.Components.Account;
 using Persistence.Interceptors;
 using ProjectManagement.Shared.Base.Users;
 using ProjectManagement.Shared.Constant;
@@ -27,7 +28,9 @@ namespace ProjectManagement.Adminstrator.Services.Users
         UserManager<ApplicationUser> _userManager,
         IServiceScopeFactory _scopeFactory,
         IDbContextFactory<ApplicationDbContext> ContextFactory,
-        AuthenticationStateProvider _authStateProvider) : IUsersService
+        AuthenticationStateProvider _authStateProvider,
+        IAccountNotificationEmailSender _accountNotificationEmailSender,
+        ILogger<UsersService> _logger) : IUsersService
     {
         private static readonly EmailAddressAttribute EmailValidator = new();
 
@@ -930,6 +933,20 @@ namespace ProjectManagement.Adminstrator.Services.Users
                 }
 
                 await _userManager.UpdateSecurityStampAsync(identityUser);
+
+                try
+                {
+                    await _accountNotificationEmailSender.SendUserCreatedAsync(
+                        identityUser.Email ?? request.Email,
+                        $"{request.Firstname} {request.Lastname}".Trim(),
+                        string.IsNullOrWhiteSpace(request.Password) ? password : null,
+                        string.IsNullOrWhiteSpace(request.Password));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "User {Email} was created but the notification email could not be sent.", identityUser.Email ?? request.Email);
+                }
+
                 return true;
             }
             catch

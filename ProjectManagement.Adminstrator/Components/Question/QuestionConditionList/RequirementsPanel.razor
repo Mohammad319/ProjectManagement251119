@@ -3,7 +3,6 @@
 @using System.Linq
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using Microsoft.AspNetCore.Components
-@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
@@ -62,9 +61,9 @@
 <div class="">
 
     <!-- Choice -->
-    <div class="@NewCC.Card.Panel">
+    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
         <div class="@CsS.Layout.FlexItemsCenter">
-            <h5 class="@NewCC.Text.H5">Choice Requirements</h5>
+            <h5 class="font-medium text-gray-800 dark:text-gray-100">Choice Requirements</h5>
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddChoiceReq">Add</button>
         </div>
 
@@ -113,9 +112,9 @@
     </div>
 
     <!-- Resource -->
-    <div class="@NewCC.Card.Panel">
+    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
         <div class="@CsS.Layout.FlexItemsCenter">
-            <h5 class="@NewCC.Text.H5">Resource Requirements</h5>
+            <h5 class="font-medium text-gray-800 dark:text-gray-100">Resource Requirements</h5>
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddResReq">Add</button>
         </div>
 
@@ -164,9 +163,9 @@
     </div>
 
     <!-- Numeric -->
-    <div class="@NewCC.Card.Panel">
+    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
         <div class="@CsS.Layout.FlexItemsCenter">
-            <h5 class="@NewCC.Text.H5">Numeric Requirements</h5>
+            <h5 class="font-medium text-gray-800 dark:text-gray-100">Numeric Requirements</h5>
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddNumReq">Add</button>
         </div>
 
@@ -214,9 +213,9 @@
     </div>
 
     <!-- Variable -->
-    <div class="@NewCC.Card.Panel">
+    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
         <div class="@CsS.Layout.FlexItemsCenter">
-            <h5 class="@NewCC.Text.H5">Variable Requirements</h5>
+            <h5 class="font-medium text-gray-800 dark:text-gray-100">Variable Requirements</h5>
             <button class="@CsS.Btn.Outline.Primary @CsS.Spacing.M.LeftAuto" @onclick="AddVarReq">Add</button>
         </div>
 

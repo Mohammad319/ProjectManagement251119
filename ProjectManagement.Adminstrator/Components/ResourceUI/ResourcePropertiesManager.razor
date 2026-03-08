@@ -4,7 +4,6 @@
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Infrastructure
 @inject IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory
-@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 
@@ -12,7 +11,7 @@
 <div class="@CsS.Modal.Body">
     @if (isLoading)
     {
-        <div class="@CC.Card.Panel">جاري التحميل…</div>
+        <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">جاري التحميل…</div>
     }
     else if (!string.IsNullOrWhiteSpace(loadError))
     {
@@ -22,9 +21,9 @@
     {
         @foreach (var set in propertySets)
         {
-            <div class="@CC.Card.Panel">
+            <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
                 <div class="@CsS.Layout.FlexJustifyBetween @CsS.Layout.FlexItemsCenter @CsS.Spacing.P.All2">
-                    <h3 class="@CC.Text.Size12">@set.DisplayName (@set.Attributes.Count)</h3>
+                    <h3 class="text-[12px]">@set.DisplayName (@set.Attributes.Count)</h3>
                     <div class="@CsS.Layout.Inline">
                         <button class="@CsS.Btn.Outline.Secondary" @onclick="() => LinkAllInSetAsync(set)">تحديد الكل</button>
                         <button class="@CsS.Btn.Outline.Secondary" @onclick="() => UnlinkAllInSetAsync(set)">إلغاء الكل</button>
@@ -45,7 +44,7 @@
                                        @onchange="async e => await ToggleBindAsync(p, ((ChangeEventArgs)e).Value is bool b && b)" />
 
                                 <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Left2">
-                                    <span class="@CC.Text.Sm">(@("p" + p.Id)) @p.DisplayName</span>
+                                    <span class="text-sm">(@("p" + p.Id)) @p.DisplayName</span>
                                 </div>
                             </div>
 

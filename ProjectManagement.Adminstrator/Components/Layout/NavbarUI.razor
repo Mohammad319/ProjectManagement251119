@@ -1,132 +1,170 @@
-﻿@using Microsoft.JSInterop
-@using ProjectManagement.Adminstrator.Components.AppUser
-@using ProjectManagement.Adminstrator.Components.Folder
+@using Microsoft.JSInterop
 @using ProjectManagement.Adminstrator.Components.Shared
 @using System.Globalization
 @inject NavigationManager _navigationManager
+@inject IJSRuntime JS
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
-@inject IJSRuntime JS
 
-<nav class="shadow-md bg-white dark:bg-gray-800">
-    <div class="w-full flex flex-wrap items-center justify-between p-0.5">
-        <a class="flex items-center">
-            <img src="Icons/Logo.png" alt="Logo" class="h-8 w-auto" />
-        </a>
-        <button class="text-gray-700 dark:text-white md:hidden focus:outline-none"
-                @onclick="ToggleNavMenu" aria-controls="navbarMenu"
-                aria-expanded="@isNavOpen" aria-label="Toggle navigation">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85">
+    <div class="mx-auto flex max-w-[1800px] items-center justify-between gap-3 px-3 py-2 sm:px-4 lg:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+            <a class="flex items-center gap-3" href="/" aria-label="ProjectManagement Admin home">
+                <img src="Icons/Logo.png" alt="Logo" class="h-9 w-auto rounded-lg ring-1 ring-slate-200 dark:ring-slate-800" />
+                <div class="min-w-0">
+                    <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">ProjectManagement Admin</div>
+                    <div class="truncate text-xs text-slate-500 dark:text-slate-400">Site administration workspace</div>
+                </div>
+            </a>
+        </div>
+
+        <button type="button"
+                class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100 md:hidden"
+                @onclick="ToggleNavMenu"
+                aria-controls="navbarMenu"
+                aria-expanded="@isNavOpen"
+                aria-label="Toggle navigation">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
-        <div class="@($"w-full md:flex md:items-center md:w-auto {(isNavOpen ? "" : "hidden")}")" id="navbarMenu">
-            <ul class="flex flex-col mt-0.5 md:flex-row md:space-x-3 md:mt-0 w-full md:justify-end">
-                <li class="text-right md:text-left flex-grow">
-                    <button class="btn nav-link" @onclick="ChangeLanguage">
-                        @((MarkupString)(CultureInfo.CurrentCulture.Name == "en-US" ? Icons.SE : Icons.EN))
-                    </button>
-                </li>
-                    <li class="text-right md:text-left flex-grow">
-                        <button class="btn nav-link" @onclick="ToggleTheme">
-                            <span>@((MarkupString)(IsDark ? Icons.Sun : Icons.DarkMode))</span>
-                        </button>
-                    </li>
 
-                    <AuthorizeView>
-                        <Authorized>
-                            <li class="text-right md:text-left flex-grow">
-                                <button class="btn nav-link" @onclick="PersonalSettingFun">
-                                    @((MarkupString)Icons.Person)
-                                </button>
-                            </li>
-                            <li class="text-right md:text-left flex-grow">
-                                <form action="Account/Logout" method="post" class="inline">
-                                    <AntiforgeryToken />
-                                    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                                    <button type="submit" class="btn nav-link flex items-center space-x-2">
-                                        <span aria-hidden="true">@((MarkupString)Icons.Logout)</span>
-                                    </button>
-                                </form>
-                            </li>
-                        </Authorized>
-                    </AuthorizeView>
-                </ul>
+        <div id="navbarMenu" class="@(isNavOpen ? "block" : "hidden") w-full md:block md:w-auto">
+            <div class="mt-3 flex flex-col gap-2 md:mt-0 md:flex-row md:items-center md:justify-end">
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        @onclick="ChangeLanguage"
+                        title="Switch language"
+                        aria-label="Switch language">
+                    <span class="mr-2 text-base" aria-hidden="true">@((MarkupString)(CultureInfo.CurrentCulture.Name == "en-US" ? Icons.SE : Icons.EN))</span>
+                    <span>@(CultureInfo.CurrentCulture.Name == "en-US" ? "Svenska" : "English")</span>
+                </button>
+
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        @onclick="ToggleTheme"
+                        title="Toggle theme"
+                        aria-label="Toggle theme">
+                    <span class="mr-2 text-base" aria-hidden="true">@((MarkupString)(IsDark ? Icons.Sun : Icons.DarkMode))</span>
+                    <span>@(IsDark ? "Light" : "Dark")</span>
+                </button>
+
+                <AuthorizeView>
+                    <Authorized>
+                        <button type="button"
+                                class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                @onclick="PersonalSettingFun"
+                                title="Personal settings"
+                                aria-label="Personal settings">
+                            <span class="mr-2 text-base" aria-hidden="true">@((MarkupString)Icons.Person)</span>
+                            <span>Profile</span>
+                        </button>
+
+                        <form action="Account/Logout" method="post" class="inline">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                            <button type="submit"
+                                    class="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 shadow-sm transition hover:bg-rose-100 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:bg-rose-900/60"
+                                    title="Sign out"
+                                    aria-label="Sign out">
+                                <span class="mr-2 text-base" aria-hidden="true">@((MarkupString)Icons.Logout)</span>
+                                <span>Sign out</span>
+                            </button>
+                        </form>
+                    </Authorized>
+                </AuthorizeView>
             </div>
         </div>
-    </nav>
-    @if (!string.IsNullOrEmpty(Page))
+    </div>
+</header>
+
+@if (!string.IsNullOrEmpty(Page))
 {
     <div aria-hidden="true">
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-[2px]"></div>
-        <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index:17;">
-            <div class="pointer-events-auto w-[90vw] h-[90vh] rounded-2xl bg-white text-slate-900 shadow-2xl ring-1 ring-black/5
-                        dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10 box-border flex flex-col overflow-hidden">
-                                <div class="p-5 flex items-start justify-between gap-4">
-                    <h2 class="text-xl font-semibold">Setting</h2>
-                    <button type="button" class="rounded-lg px-2.5 py-1.5 text-sm ring-1 ring-slate-300/60
-                           hover:bg-slate-100 dark:ring-slate-700/60 dark:hover:bg-slate-700/50"
-                            @onclick="() => Page=string.Empty">
-                        X
+        <div class="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-[2px]" @onclick="CloseDialog"></div>
+        <div class="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-5">
+            <div class="flex h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Settings</h2>
+                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your profile and account preferences.</p>
+                    </div>
+
+                    <button type="button"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            @onclick="CloseDialog"
+                            aria-label="Close settings">
+                        ×
                     </button>
                 </div>
-                <div class="flex-1 p-5 overflow-auto">
- 
+
+                <div class="flex-1 overflow-auto px-5 py-5">
                     @if (Page == "identity")
                     {
-                        <PersonalSettings></PersonalSettings>
+                        <PersonalSettings />
                     }
                 </div>
-
             </div>
         </div>
     </div>
 }
 
 @code {
-    string Page = string.Empty;
+    private string Page = string.Empty;
     private string? currentUrl;
+    private bool IsDark;
+    private bool isNavOpen;
+
+    [Parameter] public EventCallback<string> OnMenuClick { get; set; }
 
     protected override void OnInitialized()
     {
         currentUrl = _navigationManager.ToBaseRelativePath(_navigationManager.Uri);
         _navigationManager.LocationChanged += OnLocationChanged;
     }
+
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = _navigationManager.ToBaseRelativePath(e.Location);
         StateHasChanged();
     }
-    private bool IsDark;
+
     private async Task ToggleTheme()
     {
         var newTheme = await JS.InvokeAsync<string>("toggleDarkClass");
-        IsDark = !IsDark;
-        StateHasChanged();
+        IsDark = newTheme == "dark";
+        await InvokeAsync(StateHasChanged);
     }
-    //--------------
-    private bool isNavOpen = true;
-    [Parameter] public EventCallback<string> OnMenuClick { get; set; }
-    private void Setting(string ty = "control") => Page = ty;
-    private void PersonalSettingFun() => Page = "identity";
 
-    private void ToggleNavMenu()
+    private void PersonalSettingFun()
     {
-        isNavOpen = !isNavOpen;
+        Page = "identity";
+        isNavOpen = false;
     }
 
-    void TermsOfUse() { }
+    private void ToggleNavMenu() => isNavOpen = !isNavOpen;
+
+    private void CloseDialog() => Page = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
         {
             var currentTheme = await JS.InvokeAsync<string>("getCurrentTheme");
             IsDark = currentTheme == "dark";
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
         }
     }
 
-    async Task ChangeLanguage()
+    private async Task ChangeLanguage()
     {
         var newCulture = CultureInfo.CurrentCulture.Name == "sv-SE" || string.IsNullOrEmpty(CultureInfo.CurrentCulture.Name)
             ? "en-US"
@@ -134,5 +172,10 @@
 
         await JS.InvokeVoidAsync("blazorCulture.set", newCulture);
         _navigationManager.NavigateTo(_navigationManager.Uri, forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        _navigationManager.LocationChanged -= OnLocationChanged;
     }
 }

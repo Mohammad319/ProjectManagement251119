@@ -1,5 +1,4 @@
-﻿@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
-@using ContextMenuMHD
+﻿@using ContextMenuMHD
 @using Microsoft.EntityFrameworkCore
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
@@ -13,10 +12,10 @@
 @inject IResourceCategoryService ResourceFolderService
 
 <div class="@CsS.Layout.FlexWrap">
-    <div class="@CssClasses.Layout.FlexWidth200 @CC.Card.Panel">
+    <div class="w-[200px] rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
         @if (EnableFolderContext)
         {
-            <div class="@CsS.Layout.FlexItemsCenter CsS.Spacing.M.Bottom2">
+            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom2">
                 <button class="@CsS.Btn.Outline.Primary" @onclick="() => AddFolder(null)">
                     @((MarkupString)Icons.Plus)
                 </button>
@@ -36,11 +35,11 @@
     <div class="@CsS.Layout.FlexMinWidth350 @CsS.Spacing.M.All2">
         @if (!selectedFolderIds.Any())
                 {
-        <p class="@CC.Text.MutedXs">Select one or more folders to see resources.</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Select one or more folders to see resources.</p>
                 }
                 else if (!resourcesToShow.Any())
         {
-            <p class="@CC.Text.MutedXs">No resources in the selected folders.</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">No resources in the selected folders.</p>
         }
         else
         {
@@ -58,7 +57,7 @@
                         <th class="@CsS.Table.TH">@CalcResource.cost</th>
                     </tr>
                 </thead>
-                <tbody class="@CsS.Table.TH">
+                <tbody class="@CsS.Table.TBody">
                     @foreach (var r in resourcesToShow)
                     {
                         <tr class="@CsS.Table.Tr">

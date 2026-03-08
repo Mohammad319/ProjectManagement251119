@@ -2,23 +2,38 @@
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
-<div class="@CssClasses.Modal.Body">
-    <EditForm Model="@Put" OnValidSubmit="HandleSubmitAsync" id="tenantForm">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-        <div class="@CssClasses.Grid.Span.MD4">
-            <div>
-                <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@Put.Name" />
-                <ValidationMessage For="@(() => Put.Name)" />
-            </div>
-            <div>
-                <label class="@CssClasses.Form.Label">ConnectionString:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@Put.ConnectionString" />
-                <ValidationMessage For="@(() => Put.ConnectionString)" />
-            </div>
+<EditForm Model="@Put" OnValidSubmit="HandleSubmitAsync" id="tenantForm" class="space-y-5 px-1 py-1">
+    <DataAnnotationsValidator />
+
+    <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+            <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                       @bind-Value="@Put.Name" />
+            <ValidationMessage For="@(() => Put.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
-    </EditForm>
+
+        <div class="space-y-2 md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">ConnectionString</label>
+            <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                       @bind-Value="@Put.ConnectionString" />
+            <ValidationMessage For="@(() => Put.ConnectionString)" class="text-sm text-rose-600 dark:text-rose-400" />
+        </div>
+    </div>
+</EditForm>
+
+<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <button type="submit"
+            form="tenantForm"
+            class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+        @ResourceApp.save
+    </button>
+
+    <button type="button"
+            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            @onclick="() => Callback.InvokeAsync(false)">
+        @ResourceApp.cancel
+    </button>
 </div>
 
 @code {

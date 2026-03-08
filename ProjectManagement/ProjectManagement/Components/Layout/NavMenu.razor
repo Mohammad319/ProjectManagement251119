@@ -81,7 +81,7 @@
         <div class="fixed inset-0 bg-black/50 backdrop-blur-[2px]" @onclick="CloseDialog"></div>
         <div class="fixed inset-0 flex items-center justify-center pointer-events-none" style="z-index:17;">
             <div class="pointer-events-auto w-[90vw] h-[90vh] rounded-2xl bg-white text-slate-900 shadow-2xl ring-1 ring-black/5
-                            dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10 box-border flex flex-col overflow-hidden">
+                                dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10 box-border flex flex-col overflow-hidden">
                 <div class="p-5 flex items-start justify-between gap-4 border-b border-slate-200 dark:border-slate-700">
                     <div>
                         <h2 class="text-xl font-semibold">@GetDialogTitle()</h2>
@@ -114,11 +114,12 @@
     </div>
 }
 
+
 @code {
     private string Page = string.Empty;
     private string? currentUrl;
     private bool IsDark;
-    private bool isNavOpen = true;
+    private bool isNavOpen;
 
     [Parameter] public EventCallback<string> OnMenuClick { get; set; }
 
@@ -172,7 +173,6 @@
     private string GetDialogTitle() => Page switch
     {
         "org" => PMWebResource.AdminSettings,
-        "identity" => PMResourceIdentity.Menu_Profile,
         _ => PMWebResource.Settings
     };
 

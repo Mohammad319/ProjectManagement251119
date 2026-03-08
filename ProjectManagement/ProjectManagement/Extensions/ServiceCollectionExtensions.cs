@@ -23,7 +23,9 @@ public static class ServiceCollectionExtensions
         AppConnectionStrings conn)
     {
         // Settings + Identity helpers
-        services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+        services.AddScoped<LocalizedIdentityEmailSender>();
+        services.AddScoped<IEmailSender<ApplicationUser>>(sp => sp.GetRequiredService<LocalizedIdentityEmailSender>());
+        services.AddScoped<IAccountNotificationEmailSender>(sp => sp.GetRequiredService<LocalizedIdentityEmailSender>());
         services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
         // Layers

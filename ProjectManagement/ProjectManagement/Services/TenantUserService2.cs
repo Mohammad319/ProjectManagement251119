@@ -1,10 +1,11 @@
-using AuthPermissions.Context;
+﻿using AuthPermissions.Context;
 using AuthPermissions.Services;
 using Domain.DTO.User;
 using Domain.Entities.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
+using ProjectManagement.Components.Account;
 using ProjectManagement.Shared.Constant;
 
 namespace ProjectManagement.Services;
@@ -12,7 +13,9 @@ namespace ProjectManagement.Services;
 public sealed class TenantUserService(
     UserManager<ApplicationUser> userManager,
     IDbContextFactoryTenant dbFactory,
-    ITenantContext currentTenant) : ITenantUserService
+    ITenantContext currentTenant,
+    IAccountNotificationEmailSender accountNotificationEmailSender,
+    ILogger<TenantUserService> logger) : ITenantUserService
 {
 
     private async Task<(ApplicationUser? User, bool CreatedNew)> EnsureAuthUserAsync(
@@ -156,6 +159,24 @@ public sealed class TenantUserService(
             }
 
             await userManager.UpdateSecurityStampAsync(identityUser);
+
+            if (createdNew)
+            {
+                try
+                {
+                    await accountNotificationEmailSender.SendUserCreatedAsync(
+                        identityUser.Email ?? request.Email ?? string.Empty,
+                        $"{request.Firstname} {request.Lastname}".Trim(),
+                        password,
+                        passwordWasGenerated: true,
+                        ct);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Tenant user {Email} was created but the notification email could not be sent.", identityUser.Email ?? request.Email);
+                }
+            }
+
             return true;
         }
         catch

@@ -2,7 +2,6 @@
 @using ProjectManagement.Adminstrator.Services.MHDBlazor
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @inject MhdServices MHD
-@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @inject TaskResourceBlueprints.Services.Resource.IResourceBlueprintsService ResourceService
 
@@ -11,15 +10,15 @@
         <DataAnnotationsValidator />
         <ValidationSummary class="@CsS.Text.Danger" />
         <div class="@CsS.Grid.Col.MD4">
-            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">Period</div>
-            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@Resource?.Data?.Quantity</div>
-            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">%</div>
-            <div class="@CC.Text.MutedXs @CC.Text.SemiBold">@Resource?.Data?.Cost</div>
-            <div class="@CC.Text.Sm @CsS.Text.Secondary">Morning</div>
+            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">Period</div>
+            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">@Resource?.Data?.Quantity</div>
+            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">%</div>
+            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">@Resource?.Data?.Cost</div>
+            <div class="text-sm text-gray-600 dark:text-gray-300">Morning</div>
             <div>
                 <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Morgen" class="@CsS.Input.Number" />
             </div>
-            <div class="@CC.Text.Sm @CsS.Text.Secondary">
+            <div class="text-sm text-gray-600 dark:text-gray-300">
                 @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100m) / (Resource?.Data?.Quantity ?? 1m), 2) : 0)%
             </div>
             <div>
@@ -27,11 +26,11 @@
             </div>
 
             <!-- Day -->
-            <div class="@CC.Text.Sm @CsS.Text.Secondary">Day</div>
+            <div class="text-sm text-gray-600 dark:text-gray-300">Day</div>
             <div>
                 <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Day" class="@CsS.Input.Number" />
             </div>
-            <div class="@CC.Text.Sm @CsS.Text.Secondary">
+            <div class="text-sm text-gray-600 dark:text-gray-300">
                 @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100m) / (Resource?.Data?.Quantity ?? 1m), 2) : 0)%
             </div>
             <div>
@@ -44,11 +43,11 @@
                 CalcResCost.Evening = Convert.ToInt32(eveningQty);
                 var eveningPct = totalQty > 0 ? Math.Round((eveningQty * 100m) / totalQty, 2) : 0;
             }
-            <div class="@CC.Text.Sm @CsS.Text.Secondary">Evening</div>
+            <div class="text-sm text-gray-600 dark:text-gray-300">Evening</div>
             <div>
                 <input disabled value="@eveningQty" class="@CsS.Input.Number" />
             </div>
-            <div class="@CC.Text.Sm @CsS.Text.Secondary">@eveningPct%</div>
+            <div class="text-sm text-gray-600 dark:text-gray-300">@eveningPct%</div>
             <div>
                 <InputNumber @bind-Value="CalcResCost.EveningCost" class="@CsS.Input.Number" />
             </div>

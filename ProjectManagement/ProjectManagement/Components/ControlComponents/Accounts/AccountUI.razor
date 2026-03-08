@@ -2,81 +2,92 @@
 @using ProjectManagement.Components.Shared
 @inherits AppComponentBase
 
-<div class="flex-1 p-1 overflow-auto">
+<div class="space-y-4 overflow-auto">
     @if (GroupSelected > 0)
     {
-        <div class="@CssClasses.Layout.FlexItemsCenter pb-1 gap-2">
-            <button class="@CssClasses.Btn.IconButton.Success mt-1 flex items-center gap-2"
-                    @onclick="CreateForm"
-                    title="@AppLoc[nameof(ResourceApp.newItem)]"
-                    aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
-                @((MarkupString)Icons.Plus2)
-            </button>
+        <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@CalcLoc[nameof(CalcResource.account)]</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">@AppLoc[nameof(ResourceApp.selectAccountGroupHint)]</p>
+            </div>
 
-            <button class="@CssClasses.Btn.IconButton.Secondary mt-1"
-                    @onclick="ToggleVisibleFilter"
-                    title="@AppLoc[nameof(ResourceApp.isVisible)]"
-                    aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
-                @((MarkupString)Icons.GetVisibleIcon(IsVisibleOnly))
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                        @onclick="CreateForm"
+                        title="@AppLoc[nameof(ResourceApp.newItem)]"
+                        aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
+                    @((MarkupString)Icons.Plus2)
+                </button>
+
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        @onclick="ToggleVisibleFilter"
+                        title="@AppLoc[nameof(ResourceApp.isVisible)]"
+                        aria-label="@AppLoc[nameof(ResourceApp.isVisible)]">
+                    @((MarkupString)Icons.GetVisibleIcon(IsVisibleOnly))
+                </button>
+            </div>
         </div>
 
         @if (IsLoading)
         {
-            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            </div>
         }
         else if (Accounts is { Count: > 0 })
         {
-            <table class="@CssClasses.Table.Tab">
-                <thead class="@CssClasses.Table.Thead">
-                    <tr>
-                        <th class="@CssClasses.Table.TH" style="width:105px;">
-                            @CalcLoc[nameof(CalcResource.account)]
-                        </th>
-                        <th class="@CssClasses.Table.TH" style="width:105px;">
-                            @AppLoc[nameof(ResourceApp.isVisible)]
-                        </th>
-                        <th class="@CssClasses.Table.TH">
-                            @CalcLoc[nameof(CalcResource.name)]
-                        </th>
-                        <th class="@CssClasses.Table.TH">
-                            @CalcLoc[nameof(CalcResource.comment)]
-                        </th>
-                    </tr>
-                </thead>
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50/80 dark:bg-slate-800/60">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcLoc[nameof(CalcResource.account)]</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@AppLoc[nameof(ResourceApp.isVisible)]</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcLoc[nameof(CalcResource.name)]</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcLoc[nameof(CalcResource.comment)]</th>
+                            </tr>
+                        </thead>
 
-                <tbody class="@CssClasses.Table.TBody">
-                    @foreach (var account in Accounts)
-                    {
-                        <tr class="@CssClasses.Table.Tr"
-                            @oncontextmenu:preventDefault
-                            @oncontextmenu="() => AccountContextM(account)">
-
-                            <td class="@CssClasses.Table.Td">@account.Code</td>
-
-                            <td class="@CssClasses.Table.Td">
-                                <input type="checkbox" disabled checked="@account.IsVisible" />
-                            </td>
-
-                            <td class="@CssClasses.Table.Td">@account.Name</td>
-
-                            <td class="@CssClasses.Table.Td">
-                                @if (account.Metadata?.Comments is { Count: > 0 })
-                                {
-                                    @foreach (var comm in account.Metadata.Comments)
-                                    {
-                                        <div class="truncate">@comm</div>
-                                    }
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                            @foreach (var account in Accounts)
+                            {
+                                <tr class="cursor-context-menu transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                                    @oncontextmenu:preventDefault
+                                    @oncontextmenu="() => AccountContextM(account)">
+                                    <td class="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-200">@account.Code</td>
+                                    <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                                        <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium @(account.IsVisible ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300")">
+                                            @(account.IsVisible ? AppLoc[nameof(ResourceApp.visible)] : AppLoc[nameof(ResourceApp.hiddenItems)])
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-200">@account.Name</td>
+                                    <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                                        @if (account.Metadata?.Comments is { Count: > 0 })
+                                        {
+                                            <div class="space-y-1">
+                                                @foreach (var comm in account.Metadata.Comments)
+                                                {
+                                                    <div class="max-w-xl truncate">@comm</div>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-slate-400 dark:text-slate-500">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         }
         else
         {
-            <div class="p-3 text-sm text-slate-400">
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                 @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
             </div>
         }

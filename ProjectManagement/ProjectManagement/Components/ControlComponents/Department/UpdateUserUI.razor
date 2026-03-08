@@ -5,13 +5,13 @@
 
 @if (IsLoading)
 {
-    <div class="@CssClasses.Modal.Body">
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
     </div>
 }
 else if (Form is not null)
 {
-    <div class="flex flex-col gap-4">
+    <div class="space-y-4">
         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
             @if (UserForm.Id == 0)
             {
@@ -29,32 +29,42 @@ else if (Form is not null)
 
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.firstname:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Firstname" disabled="@IsBusy" />
-                    <ValidationMessage For="() => Form.Firstname" />
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.firstname</label>
+                    <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                               @bind-Value="Form.Firstname"
+                               disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.Firstname" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.lastname:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Lastname" disabled="@IsBusy" />
-                    <ValidationMessage For="() => Form.Lastname" />
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.lastname</label>
+                    <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                               @bind-Value="Form.Lastname"
+                               disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.Lastname" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.email:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.Email" disabled="@IsBusy" />
-                    <ValidationMessage For="() => Form.Email" />
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.email</label>
+                    <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                               @bind-Value="Form.Email"
+                               disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.Email" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.phone:</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="Form.PhoneNumber" disabled="@IsBusy" />
-                    <ValidationMessage For="() => Form.PhoneNumber" />
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.phone</label>
+                    <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                               @bind-Value="Form.PhoneNumber"
+                               disabled="@IsBusy" />
+                    <ValidationMessage For="() => Form.PhoneNumber" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.role:</label>
-                    <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.Role" disabled="@IsBusy">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.role</label>
+                    <InputSelect class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                 @bind-Value="Form.Role"
+                                 disabled="@IsBusy">
                         <option value="@PMRolesConst.Tenant.Admin">@PMResourceIdentity.Admin</option>
                         <option value="@PMRolesConst.Tenant.SuperManger">@PMResourceIdentity.SuperManger</option>
                         <option value="@PMRolesConst.Tenant.Manger">@PMResourceIdentity.Manger</option>
@@ -65,71 +75,81 @@ else if (Form is not null)
                 @if (Departments?.Any() == true && Form.Role != PMRolesConst.Tenant.Admin)
                 {
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMResourceIdentity.department:</label>
-                        <InputSelect class="@CssClasses.Input.Text" @bind-Value="Form.DepartmentId" disabled="@IsBusy">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.department</label>
+                        <InputSelect class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                     @bind-Value="Form.DepartmentId"
+                                     disabled="@IsBusy">
                             @foreach (var dep in Departments)
                             {
                                 <option value="@dep.Id">@dep.Name</option>
                             }
                         </InputSelect>
-                        <ValidationMessage For="() => Form.DepartmentId" />
+                        <ValidationMessage For="() => Form.DepartmentId" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                     </div>
                 }
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.lockoutStart:</label>
-                    <div class="@CssClasses.Layout.ButtonGroup">
-                        <InputDate class="@CssClasses.Input.Date" @bind-Value="Form.LockoutStart" disabled="@IsBusy" />
-                        <button class="@CssClasses.Btn.Outline.Danger"
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.lockoutStart</label>
+                    <div class="flex items-center gap-2">
+                        <InputDate class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                   @bind-Value="Form.LockoutStart"
+                                   disabled="@IsBusy" />
+                        <button class="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
                                 type="button"
                                 disabled="@IsBusy"
                                 @onclick="ClearLockoutStart">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
                     </div>
-                    <ValidationMessage For="() => Form.LockoutStart" />
+                    <ValidationMessage For="() => Form.LockoutStart" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMResourceIdentity.lockoutEnd:</label>
-                    <div class="@CssClasses.Layout.ButtonGroup">
-                        <InputDate class="@CssClasses.Input.Date" @bind-Value="Form.LockoutEnd" disabled="@IsBusy" />
-                        <button class="@CssClasses.Btn.Outline.Danger"
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.lockoutEnd</label>
+                    <div class="flex items-center gap-2">
+                        <InputDate class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                                   @bind-Value="Form.LockoutEnd"
+                                   disabled="@IsBusy" />
+                        <button class="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50"
                                 type="button"
                                 disabled="@IsBusy"
                                 @onclick="ClearLockoutEnd">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
                     </div>
-                    <ValidationMessage For="() => Form.LockoutEnd" />
+                    <ValidationMessage For="() => Form.LockoutEnd" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
 
-                <div class="@CssClasses.Form.CheckWrapperM">
-                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.PhoneNumberConfirmed" disabled="@IsBusy" />
-                    <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.phoneNumberConfirmed</label>
+                <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/60">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                                   @bind-Value="Form.PhoneNumberConfirmed"
+                                   disabled="@IsBusy" />
+                    <label class="text-sm text-slate-700 dark:text-slate-200">@PMResourceIdentity.phoneNumberConfirmed</label>
                 </div>
 
-                <div class="@CssClasses.Form.CheckWrapperM">
-                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="Form.LockoutEnabled" disabled="@IsBusy" />
-                    <label class="@CssClasses.Form.CheckLabel">@PMResourceIdentity.logout</label>
+                <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/60">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                                   @bind-Value="Form.LockoutEnabled"
+                                   disabled="@IsBusy" />
+                    <label class="text-sm text-slate-700 dark:text-slate-200">@PMResourceIdentity.logout</label>
                 </div>
             </div>
         </EditForm>
-    </div>
 
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit"
-                form="userForm"
-                class="@CssClasses.Btn.Outline.Success"
-                disabled="@IsBusy">
-            @AppLoc[nameof(ResourceApp.save)]
-        </button>
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
+            <button type="submit"
+                    form="userForm"
+                    class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                    disabled="@IsBusy">
+                @AppLoc[nameof(ResourceApp.save)]
+            </button>
 
-        <button type="button"
-                class="@CssClasses.Btn.Outline.Secondary"
-                disabled="@IsBusy"
-                @onclick="Cancel">
-            @AppLoc[nameof(ResourceApp.cancel)]
-        </button>
+            <button type="button"
+                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    disabled="@IsBusy"
+                    @onclick="Cancel">
+                @AppLoc[nameof(ResourceApp.cancel)]
+            </button>
+        </div>
     </div>
 }

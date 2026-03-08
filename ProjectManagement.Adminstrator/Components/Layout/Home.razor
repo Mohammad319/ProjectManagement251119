@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @using ProjectManagement.Adminstrator.Components.AppUser
 @using ProjectManagement.Adminstrator.Components.Folder
 @using ProjectManagement.Adminstrator.Components.Property.PropertyGroups
@@ -9,75 +9,60 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
-    <div class="w-full p-2 dark:bg-gray-900 overflow-hidden">
-        <div class="flex items-start">
-            <div class="flex flex-col w-56 space-y-2 pr-2">
-                <button type="button" class="@ButtonClasses(null)" @onclick="() => Component = null">
-                    @AppControll.index
-                </button>
-                <button type="button" class="@ButtonClasses(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">
-                    Folders
-                </button>
-                <button type="button" class="@ButtonClasses(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">
-                    @AppControll.appUsers
-                </button>
-
-                <button type="button" class="@ButtonClasses(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">
-                    @AppControll.tenant
-                </button>
-
-                <button type="button" class="@ButtonClasses(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">
-                    Logs
-                </button>
-                <button type="button" class="@ButtonClasses(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">
-                    Actions
-                </button>
-                <button type="button" class="@ButtonClasses(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">
-                Task & Qusation
-                </button>
-            @*    <button type="button" 
-                class="@ButtonClasses(typeof(TaskUI.TaskUser_Client.TaskList))"
-                    @onclick="() => Component = typeof(TaskUI.TaskUser_Client.TaskList)">
-                Tasks for users
-            </button>
-          <button type="button"
-                    class="@ButtonClasses(typeof(TaskList))"
-                    @onclick="() => Component = typeof(TaskList)">
-                Tasks for users
-            </button> *@
-@*             <button type="button" class="@ButtonClasses(typeof(TasksUserUI))" @onclick="() => Component = typeof(TasksUserUI)">
-                TasksUserUI
-            </button> *@
-            <button type="button" class="@ButtonClasses(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">
-                Units
-            </button>
-            <button type="button" class="@ButtonClasses(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">
-                Property
-            </button>
-            </div>
-
-            <div class="flex-1">
-                @if (Component != null)
-                {
-                    <DynamicComponent Type="Component" />
-                }
-                else
-                {
-                    <img src="Icons/BigLogo.png" class="w-full" />
-                }
-            </div>
+<div class="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
+    <aside class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="mb-3 border-b border-slate-200 pb-3 dark:border-slate-800">
+            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Site Admin</div>
+            <h1 class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">Control Center</h1>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Global management for folders, tenants, users, logs, actions, units, and resource blueprints.
+            </p>
         </div>
-    </div>
 
+        <nav class="space-y-1.5">
+            <button type="button" class="@ButtonClasses(null)" @onclick="() => Component = null">@AppControll.index</button>
+            <button type="button" class="@ButtonClasses(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">Folders</button>
+            <button type="button" class="@ButtonClasses(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">@AppControll.appUsers</button>
+            <button type="button" class="@ButtonClasses(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
+            <button type="button" class="@ButtonClasses(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
+            <button type="button" class="@ButtonClasses(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">Actions</button>
+            <button type="button" class="@ButtonClasses(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">Task &amp; Question</button>
+            <button type="button" class="@ButtonClasses(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">Units</button>
+            <button type="button" class="@ButtonClasses(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">Property</button>
+        </nav>
+    </aside>
+
+    <section class="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        @if (Component is not null)
+        {
+            <div class="min-w-0 overflow-x-auto p-3 sm:p-4 lg:p-5">
+                <DynamicComponent Type="Component" />
+            </div>
+        }
+        else
+        {
+            <div class="flex min-h-[70vh] flex-col items-center justify-center gap-6 p-8 text-center">
+                <img src="Icons/BigLogo.png" alt="ProjectManagement Admin" class="max-h-52 w-auto opacity-90 dark:opacity-80" />
+                <div class="max-w-2xl">
+                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Welcome to the site administration area</h2>
+                    <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                        This application is reserved for global administration tasks. Tenant-facing workflows stay inside the main ProjectManagement app.
+                    </p>
+                </div>
+            </div>
+        }
+    </section>
+</div>
 
 @code {
+    private Type? Component;
+
     private string ButtonClasses(Type? cmp)
     {
-        const string common = "text-left px-4 py-2 rounded-md transition-colors";
-        const string active = "bg-blue-600 text-white dark:bg-blue-500";
-        const string inactive = "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700";
+        const string common = "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium transition";
+        const string active = "bg-blue-600 text-white shadow-sm dark:bg-blue-500";
+        const string inactive = "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-slate-100";
+
         return $"{common} {(Component == cmp ? active : inactive)}";
     }
-    Type? Component;
 }
-

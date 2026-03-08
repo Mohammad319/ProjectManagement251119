@@ -1,20 +1,23 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
 @using BlazorMHD.UI.Components.Feedback.Dialog
 @using BlazorMHD.UI.Components.Feedback.MessageBox
 @using BlazorMHD.UI.Components.Feedback.Toast
 @using ContextMenuMHD
-@using Microsoft.JSInterop
 @using ProjectManagement.Adminstrator.Shared.Error
-<div class ="mainContainer">
-    <NavbarUI @rendermode="InteractiveServer"></NavbarUI>
-@Body
+
+<div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="mx-auto flex min-h-screen max-w-[1800px] flex-col">
+        <NavbarUI @rendermode="InteractiveServer" />
+
+        <main class="flex-1 px-3 pb-4 pt-3 sm:px-4 lg:px-6 lg:pb-6 lg:pt-4">
+            @Body
+        </main>
+    </div>
 </div>
 
 <MhdDialog @rendermode="InteractiveServer" />
 <MhdMessageBox @rendermode="InteractiveServer" />
 <MhdToastContainer @rendermode="InteractiveServer" />
-<BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveServer"></BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay>
-
+<BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveServer" />
 <ContextMenu @rendermode="InteractiveServer" />
-

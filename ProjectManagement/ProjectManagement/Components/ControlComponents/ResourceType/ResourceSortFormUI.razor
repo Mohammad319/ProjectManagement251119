@@ -4,21 +4,21 @@
 @using ProjectManagement.Shared.DTO.ResourceType
 @inherits AppComponentBase
 
-<EditForm id="resourceSortForm" class="@CssClasses.Modal.Body" Model="EditModel" OnValidSubmit="HandleSubmitAsync">
+<EditForm id="resourceSortForm" Model="EditModel" OnValidSubmit="HandleSubmitAsync" class="space-y-6 px-1 py-1">
     <DataAnnotationsValidator />
 
-    <div class="@CssClasses.Grid.Col.MD4">
-        <div class="@CssClasses.Grid.Span.MD2">
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.name)]</label>
-            <InputText class="@CssClasses.Input.Text" @bind-Value="@EditModel.Name" />
-            <ValidationMessage For="@(() => EditModel.Name)" />
+    <div class="grid gap-4 md:grid-cols-4">
+        <div class="space-y-2 md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</label>
+            <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@EditModel.Name" />
+            <ValidationMessage For="@(() => EditModel.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
         @if (AccountGroups is not null)
         {
-            <div>
-                <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.accountGroups)]</label>
-                <select @onchange="ChangeGroupAccount" class="@CssClasses.Input.Text">
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.accountGroups)]</label>
+                <select @onchange="ChangeGroupAccount" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                     <option value="0"></option>
                     @foreach (var item in AccountGroups)
                     {
@@ -29,74 +29,74 @@
 
             @if (AccountGroupSelected?.Accounts is { Count: > 0 })
             {
-                <div>
-                    <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.account)]</label>
-                    <InputSelect @bind-Value="EditModel.AccountId" class="@CssClasses.Input.Text">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.account)]</label>
+                    <InputSelect @bind-Value="EditModel.AccountId" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                         <option></option>
                         @foreach (var item in AccountGroupSelected.Accounts)
                         {
                             <option value="@item.Id">@item.Name</option>
                         }
                     </InputSelect>
-                    <ValidationMessage For="@(() => EditModel.AccountId)" />
+                    <ValidationMessage For="@(() => EditModel.AccountId)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
             }
         }
 
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.unit)]</label>
-            <InputText @bind-Value="EditModel.Unit" class="@CssClasses.Input.Text" />
-            <ValidationMessage For="@(() => EditModel.Unit)" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.unit)]</label>
+            <InputText @bind-Value="EditModel.Unit" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <ValidationMessage For="@(() => EditModel.Unit)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.cost)]</label>
-            <InputNumber @bind-Value="EditModel.Cost" class="@CssClasses.Input.Text" />
-            <ValidationMessage For="@(() => EditModel.Cost)" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.cost)]</label>
+            <InputNumber @bind-Value="EditModel.Cost" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <ValidationMessage For="@(() => EditModel.Cost)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.fixedQ)]</label>
-            <InputNumber @bind-Value="EditModel.FixedQ" class="@CssClasses.Input.Text" />
-            <ValidationMessage For="@(() => EditModel.FixedQ)" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.fixedQ)]</label>
+            <InputNumber @bind-Value="EditModel.FixedQ" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <ValidationMessage For="@(() => EditModel.FixedQ)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.changeFactor1)]</label>
-            <InputNumber @bind-Value="EditModel.ChangeFactor1" class="@CssClasses.Input.Text" />
-            <ValidationMessage For="@(() => EditModel.ChangeFactor1)" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.changeFactor1)]</label>
+            <InputNumber @bind-Value="EditModel.ChangeFactor1" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <ValidationMessage For="@(() => EditModel.ChangeFactor1)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.changeFactor2)]</label>
-            <InputNumber @bind-Value="EditModel.ChangeFactor2" class="@CssClasses.Input.Text" />
-            <ValidationMessage For="@(() => EditModel.ChangeFactor2)" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.changeFactor2)]</label>
+            <InputNumber @bind-Value="EditModel.ChangeFactor2" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <ValidationMessage For="@(() => EditModel.ChangeFactor2)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.co2)]</label>
-            <InputNumber @bind-Value="EditModel.CO2" class="@CssClasses.Input.Text" />
-            <ValidationMessage For="@(() => EditModel.CO2)" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.co2)]</label>
+            <InputNumber @bind-Value="EditModel.CO2" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <ValidationMessage For="@(() => EditModel.CO2)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.baseCost)]</label>
-            <InputNumber @bind-Value="EditModel.BaseCost" class="@CssClasses.Input.Text" />
-            <ValidationMessage For="@(() => EditModel.BaseCost)" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.baseCost)]</label>
+            <InputNumber @bind-Value="EditModel.BaseCost" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+            <ValidationMessage For="@(() => EditModel.BaseCost)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <div class="@CssClasses.Form.CheckWrapperM">
-            <InputCheckbox id="resourceSortVisible" class="@CssClasses.Input.Check" @bind-Value="@EditModel.IsVisible" />
-            <label class="@CssClasses.Form.CheckLabel" for="resourceSortVisible">@AppLoc[nameof(ResourceApp.isVisible)]</label>
+        <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900 md:col-span-4">
+            <InputCheckbox id="resourceSortVisible" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" @bind-Value="@EditModel.IsVisible" />
+            <label class="text-sm font-medium text-slate-700 dark:text-slate-200" for="resourceSortVisible">@AppLoc[nameof(ResourceApp.isVisible)]</label>
         </div>
     </div>
 </EditForm>
 
-<div class="@CssClasses.Modal.Footer">
-    <button type="submit" form="resourceSortForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <button type="submit" form="resourceSortForm" class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" disabled="@IsLoading">
         @AppLoc[nameof(ResourceApp.save)]
     </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="CloseModal" disabled="@IsLoading">
+    <button type="button" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="CloseModal" disabled="@IsLoading">
         @AppLoc[nameof(ResourceApp.cancel)]
     </button>
 </div>

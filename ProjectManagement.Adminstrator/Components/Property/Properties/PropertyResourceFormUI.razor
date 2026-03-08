@@ -1,107 +1,94 @@
-﻿@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore
+@using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Infrastructure
+@using TaskResourceBlueprints.Services.ResourceProperties
 @inherits AppComponentBase
 @inject IResourceAttributeService ResourcePropertiesService
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
-@using TaskResourceBlueprints.Services.ResourceProperties
-@using ProjectManagement.Shared.DTO.ProjectAppStorage
 
-<EditForm id="myForm"
-          class="@CsS.Modal.Body"
-          Model="@ResourceProp"
-          OnValidSubmit="async () => await HandleSubmitAsync()">
+<EditForm id="propertyResourceForm" Model="@ResourceProp" OnValidSubmit="HandleSubmitAsync" class="space-y-6 px-1 py-1">
     <DataAnnotationsValidator />
 
-    <!-- شبكة: 3 أعمدة من md+ -->
-    <div class="@CsS.Grid.Col.MD3">
-
-        <!-- Name: صف كامل -->
-        <div class="@CsS.Form.Field">
-            <label class="@CsS.Form.Label" for="rp-name">@CalcResource.name:</label>
+    <div class="grid gap-4 md:grid-cols-3">
+        <div class="space-y-2 md:col-span-3">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="rp-name">@CalcResource.name</label>
             <InputText id="rp-name"
-                       class="@CsS.Input.Text"
+                       class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                        @bind-Value="@ResourceProp.DisplayName"
                        aria-invalid="@(EditContext?.GetValidationMessages(() => ResourceProp.DisplayName).Any() == true)" />
-            <ValidationMessage For="@(() => ResourceProp.DisplayName)" class="@CsS.Text.Danger" />
+            <ValidationMessage For="@(() => ResourceProp.DisplayName)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
-        <!-- IsEditable (Checkbox) -->
-        <div class="@CsS.Form.CheckWrapper">
+        <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900">
             <InputCheckbox id="rp-editable"
-                           class="@CsS.Input.Check"
+                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950"
                            @bind-Value="ResourceProp.IsUserEditable" />
-            <label for="rp-editable" class="@CsS.Form.CheckLabel">IsEditable</label>
+            <label for="rp-editable" class="text-sm font-medium text-slate-700 dark:text-slate-200">IsEditable</label>
         </div>
 
-        <!-- Kind -->
-        <div class="@CsS.Form.Field">
-            <label class="@CsS.Form.Label" for="rp-kind">Kind:</label>
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="rp-kind">Kind</label>
             <InputSelect id="rp-kind"
-                         class="@CsS.Input.Select"
+                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                          @bind-Value="@ResourceProp.DataType">
                 @foreach (var kind in Enum.GetValues<DataType>())
                 {
                     <option value="@kind">@kind</option>
                 }
             </InputSelect>
-            <ValidationMessage For="@(() => ResourceProp.DataType)" class="@CsS.Text.Danger" />
+            <ValidationMessage For="@(() => ResourceProp.DataType)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
 
         @if (ResourceProp.DataType == DataType.Number)
         {
-            <!-- MinValue -->
-            <div class="@CsS.Grid.Span.MD1 @CsS.Form.Field">
-                <label class="@CsS.Form.Label" for="rp-min">MinValue:</label>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="rp-min">MinValue</label>
                 <InputNumber id="rp-min"
-                             class="@CsS.Input.Number"
+                             class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                              @bind-Value="@ResourceProp.StepValue" />
-                <ValidationMessage For="@(() => ResourceProp.StepValue)" class="@CsS.Text.Danger" />
+                <ValidationMessage For="@(() => ResourceProp.StepValue)" class="text-sm text-rose-600 dark:text-rose-400" />
             </div>
 
-            <!-- MaxValue -->
-            <div class="@CsS.Grid.Span.MD1 @CsS.Form.Field">
-                <label class="@CsS.Form.Label" for="rp-max">MaxValue:</label>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="rp-max">MaxValue</label>
                 <InputNumber id="rp-max"
-                             class="@CsS.Input.Number"
+                             class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                              @bind-Value="@ResourceProp.MaxNumericValue" />
-                <ValidationMessage For="@(() => ResourceProp.MaxNumericValue)" class="@CsS.Text.Danger" />
+                <ValidationMessage For="@(() => ResourceProp.MaxNumericValue)" class="text-sm text-rose-600 dark:text-rose-400" />
             </div>
 
-            <!-- NumberDefault -->
-            <div class="@CsS.Grid.Span.MD1 @CsS.Form.Field">
-                <label class="@CsS.Form.Label" for="rp-numdef">NumberDefault:</label>
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="rp-numdef">NumberDefault</label>
                 <InputNumber id="rp-numdef"
-                             class="@CsS.Input.Number"
+                             class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                              @bind-Value="@ResourceProp.DefaultNumericValue" />
-                <ValidationMessage For="@(() => ResourceProp.DefaultNumericValue)" class="@CsS.Text.Danger" />
+                <ValidationMessage For="@(() => ResourceProp.DefaultNumericValue)" class="text-sm text-rose-600 dark:text-rose-400" />
             </div>
         }
         else
         {
-            <!-- TextDefault: صف كامل -->
-            <div class="@CsS.Grid.Span.MD3 @CsS.Form.Field">
-                <label class="@CsS.Form.Label" for="rp-textdef">TextDefault:</label>
+            <div class="space-y-2 md:col-span-3">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="rp-textdef">TextDefault</label>
                 <InputText id="rp-textdef"
-                           class="@CsS.Input.Text"
+                           class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                            @bind-Value="@ResourceProp.DefaultTextValue" />
-                <ValidationMessage For="@(() => ResourceProp.DefaultTextValue)" class="@CsS.Text.Danger" />
+                <ValidationMessage For="@(() => ResourceProp.DefaultTextValue)" class="text-sm text-rose-600 dark:text-rose-400" />
             </div>
         }
     </div>
 </EditForm>
 
-<div class="@CsS.Modal.Footer">
+<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
     <button type="submit"
-            class="@CsS.Btn.Outline.Success"
-            form="myForm"
+            class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            form="propertyResourceForm"
             disabled="@IsLoading"
             aria-busy="@IsLoading">
         @ResourceApp.save
     </button>
     <button type="button"
-            class="@CsS.Btn.Outline.Secondary"
+            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             @onclick="async () => await Callback.InvokeAsync(false)">
         @ResourceApp.cancel
     </button>
@@ -121,11 +108,14 @@
         if (ResourceProp.Id == 0)
         {
             await ResourcePropertiesService.CreateAsync(ResourceProp);
+            result = true;
         }
         else
         {
             await ResourcePropertiesService.UpdateAsync(ResourceProp);
+            result = true;
         }
+        MHD.Notifications(ResourceProp.Id == 0 ? ToastType.Add : ToastType.Update, result);
         await Callback.InvokeAsync(result);
     }
 }

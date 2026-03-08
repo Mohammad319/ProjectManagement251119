@@ -7,7 +7,6 @@
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @using ProjectManagement.Shared.Enums
 @inject IResourceBlueprintsService ResourceService
-@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @inherits AppComponentBase
 
@@ -135,7 +134,7 @@
                                 <input type="number" class="@CsS.Input.Number" @bind="role.Min" />
                                 <input type="number" class="@CsS.Input.Number" @bind="role.Max" />
                                 <input type="number" class="@CsS.Input.Number" @bind="role.Value" />
-                                <div class="@CC.Text.MutedXs">@(d + 1)</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">@(d + 1)</div>
                             </div>
                         }
                     }

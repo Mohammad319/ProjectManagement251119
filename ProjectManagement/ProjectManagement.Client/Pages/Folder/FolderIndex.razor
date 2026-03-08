@@ -1,4 +1,4 @@
-﻿@using BlazorMHD.UI.Components.Feedback.Splitter
+@using BlazorMHD.UI.Components.Feedback.Splitter
 @using ContextMenuMHD
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Pages.Project.ProjectPages
@@ -8,88 +8,156 @@
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<HorizontalSplitter Class="h-[80vh] border border-zinc-200 dark:border-zinc-800 rounded-2xl"
-                    InitialLeftWidth="150"
-                    MinLeftWidth="25"
-                    MinRightWidth="260"
-                    SplitterThickness="6"
-                    LiveResize="true"
-                    StorageKey="folders-layout-horizontal-splitter">
+<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <HorizontalSplitter Class="h-[78vh] bg-transparent"
+                        InitialLeftWidth="280"
+                        MinLeftWidth="220"
+                        MinRightWidth="420"
+                        SplitterThickness="6"
+                        LiveResize="true"
+                        StorageKey="folders-layout-horizontal-splitter">
 
-    <LeftContent>
-        <div class="flex justify-between items-center w-full">
+        <LeftContent>
+            @if (SideBarVisible)
+            {
+                <div class="flex h-full flex-col border-r border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/60">
+                    <div class="border-b border-slate-200 px-3 py-3 dark:border-slate-800 sm:px-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Workspace</div>
+                                <h2 class="mt-1 truncate text-base font-semibold text-slate-900 dark:text-slate-100">Folders</h2>
+                                <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                                    Browse private, shared, and department folders.
+                                </p>
+                            </div>
 
-            <div class="@CssClasses.Layout.ButtonGroup">
-                <AuthorizeView Roles="@PMRolesConst.Tenant.SuperManger">
-                    <span role="button" @onclick="ModalSeachForm" class="focus-ring focus-ring-primary">
-                        @((MarkupString)Icons.Search)
-                    </span>
+                            <button type="button"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                                    @onclick="() => SideBarVisible = false"
+                                    title="Hide sidebar"
+                                    aria-label="Hide sidebar">
+                                @((MarkupString)Icons.ChevronLeft)
+                            </button>
+                        </div>
 
-                    <span role="button" @onclick="GetDepartmentAsync">
-                        @((MarkupString)Icons.Department)
-                    </span>
+                        <AuthorizeView Roles="@PMRolesConst.Tenant.SuperManger">
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <button type="button"
+                                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        @onclick="ModalSeachForm"
+                                        title="Search projects">
+                                    <span aria-hidden="true">@((MarkupString)Icons.Search)</span>
+                                </button>
 
-                    @if (!Folder.State.OtherDepartment)
+                                <button type="button"
+                                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        @onclick="GetDepartmentAsync"
+                                        title="Departments">
+                                    <span aria-hidden="true">@((MarkupString)Icons.Department)</span>
+                                </button>
+
+                                @if (!Folder.State.OtherDepartment)
+                                {
+                                    <button type="button"
+                                            class="inline-flex items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
+                                            @onclick="() => ModalForm(new() { IsVisible = UoWService.Folder.IsVisible })"
+                                            title="New folder">
+                                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                                    </button>
+
+                                    <button type="button"
+                                            class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                            @onclick="UoWService.Folder.LoadHiddenVisibleFoldersAsync"
+                                            title="Visibility filter">
+                                        <span aria-hidden="true">@((MarkupString)(Icons.GetVisibleIcon(UoWService.Folder.IsVisible)))</span>
+                                    </button>
+                                }
+                            </div>
+                        </AuthorizeView>
+                    </div>
+
+                    @if (Folder.State.OtherDepartment)
                     {
-                        <span role="button"
-                              @onclick="() => ModalForm(new() { IsVisible = UoWService.Folder.IsVisible })"
-                              class="mx-1">
-                            @((MarkupString)Icons.Plus)
-                        </span>
-
-                        <span role="button" @onclick="UoWService.Folder.LoadHiddenVisibleFoldersAsync">
-                            @((MarkupString)(Icons.GetVisibleIcon(UoWService.Folder.IsVisible)))
-                        </span>
+                        <div class="border-b border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 dark:border-slate-800 dark:text-slate-400 sm:px-4">
+                            @ResourceApp.depSharedFolders
+                        </div>
                     }
-                </AuthorizeView>
-            </div>
 
-            <div>
-                <span role="button" @onclick="() => SideBarVisible = !SideBarVisible">
-                    @((MarkupString)Icons.ChevronLeft)
-                </span>
-            </div>
-        </div>
-
-        @if (Folder.State.OtherDepartment)
-        {
-            <div style="border-top:1px solid #dee2e6">
-                <label style="font-size:13px">@ResourceApp.depSharedFolders</label>
-            </div>
-        }
-
-        @if (Folder.State.Departments != null && (Folder.State.OtherDepartment || Admin))
-        {
-            <div style="border-top:1px solid #dee2e6">
-                <select class="@CssClasses.Input.Text"
-                        @onchange="async e => await UoWService.Folder.LoadFoldersByDepartmentAsync(e.Value?.ToString() ?? string.Empty)">
-                    <option value="0"></option>
-                    @foreach (var department in Folder.State.Departments)
+                    @if (Folder.State.Departments != null && (Folder.State.OtherDepartment || Admin))
                     {
-                        <option value="@department.Id">@department.Name</option>
+                        <div class="border-b border-slate-200 px-3 py-3 dark:border-slate-800 sm:px-4">
+                            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    @onchange="async e => await UoWService.Folder.LoadFoldersByDepartmentAsync(e.Value?.ToString() ?? string.Empty)">
+                                <option value="0"></option>
+                                @foreach (var department in Folder.State.Departments)
+                                {
+                                    <option value="@department.Id">@department.Name</option>
+                                }
+                            </select>
+                        </div>
                     }
-                </select>
+
+                    <div class="min-h-0 flex-1 overflow-auto px-2 py-2 sm:px-3 sm:py-3">
+                        @if (UoWService.Folder.State.FoldersList != null && UoWService.Folder.State.FoldersList.Any())
+                        {
+                            <FoldersTree></FoldersTree>
+                        }
+                        else
+                        {
+                            <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                                No folders available.
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="flex h-full items-start justify-center border-r border-slate-200 bg-slate-50 px-2 py-3 dark:border-slate-800 dark:bg-slate-950/60">
+                    <button type="button"
+                            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            @onclick="() => SideBarVisible = true"
+                            title="Open sidebar"
+                            aria-label="Open sidebar">
+                        @((MarkupString)Icons.ChevronRight)
+                    </button>
+                </div>
+            }
+        </LeftContent>
+
+        <RightContent>
+            <div class="h-full overflow-auto bg-white dark:bg-slate-900">
+                @if (Folder.State.Calculation != null)
+                {
+                    <div class="p-3 sm:p-4 lg:p-5">
+                        <ProjectManagement.Client.Pages.Calculation.CalculationPageUI @key="Folder.State.Calculation.Id" />
+                    </div>
+                }
+                else if (Folder.State.ProjectSelected != null)
+                {
+                    <div class="p-3 sm:p-4 lg:p-5">
+                        <ProjectManagement.Client.Pages.Project.ProjectPages.ProjectsCalculationList @key="Folder.State.ProjectSelected.Id" />
+                    </div>
+                }
+                else if (Folder.State.FolderSelected != null)
+                {
+                    <div class="p-3 sm:p-4 lg:p-5">
+                        <ProjectsUI @key="Folder.State.FolderSelected.Id" />
+                    </div>
+                }
+                else
+                {
+                    <div class="flex h-full min-h-[60vh] items-center justify-center p-6">
+                        <div class="max-w-xl rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-950/60">
+                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Workspace</div>
+                            <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Select a folder or project</h3>
+                            <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                                The right side shows project lists, calculations, and details based on the current folder selection.
+                            </p>
+                        </div>
+                    </div>
+                }
             </div>
-        }
-
-        @if (UoWService.Folder.State.FoldersList != null && UoWService.Folder.State.FoldersList.Any())
-        {
-            <FoldersTree></FoldersTree>
-        }
-    </LeftContent>
-
-    <RightContent>
-            @if (Folder.State.Calculation != null)
-            {
-                <ProjectManagement.Client.Pages.Calculation.CalculationPageUI @key="Folder.State.Calculation.Id" />
-            }
-            else if (Folder.State.ProjectSelected != null)
-            {
-                <ProjectManagement.Client.Pages.Project.ProjectPages.ProjectsCalculationList @key="Folder.State.ProjectSelected.Id" />
-            }
-            else if (Folder.State.FolderSelected != null)
-            {
-                <ProjectsUI @key="Folder.State.FolderSelected.Id" />
-            }
-    </RightContent>
-</HorizontalSplitter>
+        </RightContent>
+    </HorizontalSplitter>
+</div>

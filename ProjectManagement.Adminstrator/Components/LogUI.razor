@@ -10,7 +10,6 @@
 @inject ApplicationDbContext context
 @inject IUsersService TenantRepo
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
-@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 
 <EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
     <!-- شبكة: 5 أعمدة من md+ مع gap=1 -->
@@ -58,7 +57,7 @@
 
         <!-- Tools -->
         <div>
-            <label class="@CC.Text.LabelXs">@AppControll.Delete_older_from_Month_Day</label>
+            <label class="text-xs text-gray-700 dark:text-gray-200">@AppControll.Delete_older_from_Month_Day</label>
             <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Y1">
                 <input type="number" placeholder="MM" class="@CsS.Input.Text" @bind="month" />
                 <input type="number" placeholder="DD" class="@CsS.Input.Text @CsS.Spacing.M.Left1" @bind="day" />
@@ -86,7 +85,7 @@
 </EditForm>
 
 <!-- جدول ضمن بطاقة -->
-<div class="@CsS.Spacing.M.Top2 @CC.Card.Panel overflow-hidden">
+<div class="mt-2 rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60 overflow-hidden">
     <div class="overflow-x-auto min-w-0">
         <table class="table-fixed w-full text-sm">
             <!-- عدّل النسب هنا عند الحاجة -->
@@ -125,7 +124,7 @@
                             <!-- TimeStamp / Level -->
                             <td class="@CsS.Table.Td whitespace-nowrap">
                                 <div>@log.TimeStamp.ToString("dd.MM.yyyy HH:mm")</div>
-                                <div class="@CC.Text.MutedXs">@log.Level</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">@log.Level</div>
                             </td>
 
                             <!-- Message: يلتف داخل العرض -->

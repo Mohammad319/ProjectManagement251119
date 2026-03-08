@@ -1,127 +1,98 @@
-﻿@using ProjectManagement.Client.Shared.Repositories.Calculation
+@using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ResourceType
 @inject IStorageRepository IStorageRepository
 
 @if (editContext is null)
 {
-    <div role="status" class="flex items-center gap-2 p-3">
-        <span class="animate-spin rounded-full h-4 w-4 border border-current border-t-transparent"></span>
+    <div role="status" class="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
+        <span class="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent"></span>
         <span class="sr-only">Loading…</span>
         <span>Loading…</span>
     </div>
 }
 else
 {
-    <EditForm id="resForm"
-              class="@CssClasses.Modal.Body"
-              EditContext="editContext"
-              OnValidSubmit="HandleSubmitAsync">
+    <EditForm id="resForm" EditContext="editContext" OnValidSubmit="HandleSubmitAsync" class="space-y-4">
         <DataAnnotationsValidator />
-        <ValidationSummary />
+        <ValidationSummary class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300" />
 
-        <div class="@CssClasses.Layout.FlexWrap">
-            <div class="@CssClasses.Layout.FlexMinWidth350">
-                <label class="@CssClasses.Form.Label" for="res-name">@CalcResource.name</label>
-                <InputText id="res-name" @bind-Value="ResourceUpdate!.Name" class="@CssClasses.Input.Text" />
-                <ValidationMessage For="@(() => ResourceUpdate!.Name)" />
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <div class="mb-4">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Resource overrides</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Change user-facing values without modifying the underlying blueprint.</p>
             </div>
 
-            <div class="@CssClasses.Layout.FlexMinWidth150">
-                <label class="@CssClasses.Form.Label" for="res-cost">@CalcResource.cost</label>
-                <InputNumber id="res-cost" @bind-Value="ResourceUpdate!.Cost" class="@CssClasses.Input.Number" />
-                <ValidationMessage For="@(() => ResourceUpdate!.Cost)" />
-            </div>
-
-            <div class="@CssClasses.Layout.FlexMinWidth150">
-                <label class="@CssClasses.Form.Label" for="res-co2">@CalcResource.co2</label>
-                <InputNumber id="res-co2" @bind-Value="ResourceUpdate!.Co2" class="@CssClasses.Input.Number" />
-                <ValidationMessage For="@(() => ResourceUpdate!.Co2)" />
-            </div>
-
-            @if (!isRefreshing && Config.AccountGroups is not null)
-            {
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label" for="res-acct-group">@CalcResource.accountGroups</label>
-                    <InputSelect id="res-acct-group" class="@CssClasses.Input.Select" @bind-Value="accountGroupId" @bind-Value:after="OnGroupChanged">
-                        <option value="">—</option>
-                        @foreach (var group in Config.AccountGroups)
-                        {
-                            <option value="@group.Id">@group.Name</option>
-                        }
-                    </InputSelect>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div class="xl:col-span-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-name">@CalcResource.name</label>
+                    <InputText id="res-name" @bind-Value="ResourceUpdate!.Name" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
                 </div>
 
-                @if (AccountGroupSelected?.Accounts is not null)
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-cost">@CalcResource.cost</label>
+                    <InputNumber id="res-cost" @bind-Value="ResourceUpdate!.Cost" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-co2">@CalcResource.co2</label>
+                    <InputNumber id="res-co2" @bind-Value="ResourceUpdate!.Co2" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                @if (Config.ResourceTypes is not null)
                 {
-                    <div class="@CssClasses.Layout.FlexWidth160">
-                        <label class="@CssClasses.Form.Label" for="res-account">@CalcResource.account</label>
-                        <InputSelect id="res-account" class="@CssClasses.Input.Select" @bind-Value="ResourceUpdate!.AccountId">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-type">@CalcResource.resourceType</label>
+                        <InputSelect id="res-type" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="ResourceUpdate!.ResourceTypeId" @bind-Value:after="OnTypeChanged">
                             <option value="">—</option>
-                            @foreach (var acc in AccountGroupSelected.Accounts)
+                            @foreach (var rt in Config.ResourceTypes)
                             {
-                                <option value="@acc.Id">@($"{acc.Account} ({acc.Name})")</option>
+                                <option value="@rt.Id">@rt.Name</option>
                             }
                         </InputSelect>
                     </div>
                 }
-            }
-        </div>
 
-        <div class="@CssClasses.Layout.FlexWrap">
-            @if (Config.ResourceTypes is not null)
-            {
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label" for="res-type">@CalcResource.resourceType</label>
-                    <InputSelect id="res-type" class="@CssClasses.Input.Select" @bind-Value="ResourceUpdate!.ResourceTypeId" @bind-Value:after="OnTypeChanged">
-                        <option value="">—</option>
-                        @foreach (var rt in Config.ResourceTypes)
-                        {
-                            <option value="@rt.Id">@rt.Name</option>
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => ResourceUpdate!.ResourceTypeId)" />
-                </div>
-            }
+                @if (ResTypeSelected?.ResourcesSort is not null && ResTypeSelected.ResourcesSort.Any())
+                {
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-sort">@CalcResource.resourceSort</label>
+                        <InputSelect id="res-sort" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="ResourceUpdate!.ResourceSortId">
+                            <option value="">—</option>
+                            @foreach (var sort in ResTypeSelected.ResourcesSort)
+                            {
+                                <option value="@sort.Id">@sort.Name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
 
-            @if (ResTypeSelected?.ResourcesSort is not null && ResTypeSelected.ResourcesSort.Any())
-            {
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label" for="res-sort">@CalcResource.resourceSort</label>
-                    <InputSelect id="res-sort" class="@CssClasses.Input.Select" @bind-Value="ResourceUpdate!.ResourceSortId">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-status">@CalcResource.status</label>
+                    <InputSelect id="res-status" @bind-Value="ResourceUpdate!.StatusId" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
                         <option value="">—</option>
-                        @foreach (var sort in ResTypeSelected.ResourcesSort)
+                        @if (Config.Statues is not null)
                         {
-                            <option value="@sort.Id">@sort.Name</option>
+                            @foreach (var status in Config.Statues)
+                            {
+                                <option value="@status.Id">@status.Name</option>
+                            }
                         }
                     </InputSelect>
                 </div>
-            }
-
-            <div class="@CssClasses.Layout.FlexWidth160">
-                <label class="@CssClasses.Form.Label" for="res-status">@CalcResource.status</label>
-                <InputSelect id="res-status" @bind-Value="ResourceUpdate!.StatusId" class="@CssClasses.Input.Select">
-                    <option value="">—</option>
-                    @if (Config.Statues is not null)
-                    {
-                        @foreach (var status in Config.Statues)
-                        {
-                            <option value="@status.Id">@status.Name</option>
-                        }
-                    }
-                </InputSelect>
-                <ValidationMessage For="@(() => ResourceUpdate!.StatusId)" />
             </div>
-        </div>
+        </section>
 
-        <div class="mt-4 flex gap-2 justify-end">
-            <button type="submit" class="@CssClasses.Btn.Outline.Primary" disabled="@isSubmitting">save</button>
-            <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="ResetForm" disabled="@isSubmitting">reset</button>
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <button type="button" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="ResetForm" disabled="@isSubmitting">reset</button>
+            <button type="submit" class="inline-flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60" disabled="@isSubmitting">save</button>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(error))
         {
-            <div class="text-red-600 mt-2">@error</div>
+            <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">@error</div>
         }
     </EditForm>
 }
@@ -133,21 +104,12 @@ else
     [Parameter] public ResourceFormDTO Config { get; set; } = new();
 
     private EditContext? editContext;
-
-    // UI state
-    private bool isRefreshing = false;
     private bool isSubmitting = false;
     private string? error;
-
-    // Selections
-    private AccountGroupsListDto? AccountGroupSelected;
-    private int? accountGroupId;
     private ListResourceTypeDTO? ResTypeSelected;
 
     protected override async Task OnParametersSetAsync()
     {
-        // Initialize ResourceUpdate from Resource if needed
-
         if (ResourceUpdate is null)
         {
             ResourceUpdate = new ResourceTenantLinkBase
@@ -162,36 +124,11 @@ else
             };
         }
 
-        // Preselect account group from existing AccountId
-        if (Resource?.AccountId is int accId && Config.AccountGroups is not null)
-        {
-            AccountGroupSelected = Config.AccountGroups.FirstOrDefault(g => g.Accounts?.Any(a => a.Id == accId) == true);
-            accountGroupId = AccountGroupSelected?.Id;
-        }
-
-        // Preselect resource type details
         if (ResourceUpdate?.ResourceTypeId is int rtId)
-        {
             ResTypeSelected = Config.ResourceTypes?.FirstOrDefault(x => x.Id == rtId);
-        }
 
         editContext ??= new EditContext(ResourceUpdate!);
         await Task.CompletedTask;
-    }
-
-    private void OnGroupChanged()
-    {
-        AccountGroupSelected = null;
-        ResourceUpdate!.AccountId = null;
-
-        if (accountGroupId.HasValue)
-        {
-            AccountGroupSelected = Config.AccountGroups?.FirstOrDefault(x => x.Id == accountGroupId.Value);
-        }
-        else
-        {
-            accountGroupId = null;
-        }
     }
 
     private void OnTypeChanged()
@@ -200,32 +137,9 @@ else
         ResourceUpdate!.ResourceSortId = null;
 
         if (ResourceUpdate.ResourceTypeId.HasValue)
-        {
             ResTypeSelected = Config.ResourceTypes?.FirstOrDefault(x => x.Id == ResourceUpdate.ResourceTypeId.Value);
-        }
         else
-        {
             ResourceUpdate.ResourceTypeId = null;
-        }
-    }
-
-    private Task OnTypeChanged(ChangeEventArgs args)
-    {
-        ResTypeSelected = null;
-        ResourceUpdate!.ResourceSortId = null;
-
-        if (int.TryParse(Convert.ToString(args?.Value), out var id))
-        {
-            ResourceUpdate.ResourceTypeId = id;
-            ResTypeSelected = Config.ResourceTypes?.FirstOrDefault(x => x.Id == id);
-        }
-        else
-        {
-            ResourceUpdate.ResourceTypeId = null;
-        }
-
-        StateHasChanged();
-        return Task.CompletedTask;
     }
 
     private async Task HandleSubmitAsync()
@@ -239,22 +153,18 @@ else
             var ok = await IStorageRepository.UpdateResourceAppStorageTenantAsync(Resource.Id, ResourceUpdate);
             if (ok)
             {
-                // Sync the displayed resource with edited values
                 Resource.NameUserValue = ResourceUpdate.Name;
                 if (Resource.Data is not null)
                     Resource.Data.CO2 = ResourceUpdate.Co2;
                 Resource.CostUserValue = ResourceUpdate.Cost;
-
-                Resource.AccountId = ResourceUpdate.AccountId;
                 Resource.ResourceTypeId = ResourceUpdate.ResourceTypeId;
                 Resource.ResourceSortId = ResourceUpdate.ResourceSortId;
                 Resource.StatusId = ResourceUpdate.StatusId;
-
                 await OnChanged.InvokeAsync();
             }
             else
             {
-                error = "Failed to save changes."; // Localize as needed
+                error = "Failed to save changes.";
             }
         }
         catch (Exception ex)
@@ -270,28 +180,13 @@ else
     private void ResetForm()
     {
         if (Resource is null || ResourceUpdate is null) return;
-
         ResourceUpdate.Name = Resource.Name;
-        ResourceUpdate.AccountId = Resource.AccountId;
         ResourceUpdate.ResourceTypeId = Resource.ResourceTypeId;
         ResourceUpdate.ResourceSortId = Resource.ResourceSortId;
         ResourceUpdate.StatusId = Resource.StatusId;
-
-        // Re-evaluate dependent selections
-        accountGroupId = null;
-        AccountGroupSelected = null;
-        if (Resource.AccountId.HasValue && Config.AccountGroups is not null)
-        {
-            AccountGroupSelected = Config.AccountGroups.FirstOrDefault(g => g.Accounts?.Any(a => a.Id == Resource.AccountId.Value) == true);
-            accountGroupId = AccountGroupSelected?.Id;
-        }
-
         ResTypeSelected = null;
         if (Resource.ResourceTypeId.HasValue)
-        {
             ResTypeSelected = Config.ResourceTypes?.FirstOrDefault(x => x.Id == Resource.ResourceTypeId.Value);
-        }
-
         editContext = new EditContext(ResourceUpdate);
     }
 }

@@ -4,7 +4,6 @@
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
-@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 @if (DetailsPage != null)
@@ -13,7 +12,7 @@
 }
 else
 {
-    <div class="CsS.Spacing.M.Bottom2">
+    <div class="mb-3">
         @if (CanManageTenants)
         {
             <button class="@CsS.Btn.Outline.Success" @onclick="() => UpdateForm(new())">

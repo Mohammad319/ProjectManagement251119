@@ -18,37 +18,44 @@
 
         <EditForm EditContext="editContext"
                   id="createDepartmentForm"
-                  class="@CssClasses.Modal.Body"
+                  class="space-y-4"
                   OnValidSubmit="HandleSubmitAsync">
             <DataAnnotationsValidator />
+            <ValidationSummary class="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300" />
 
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
-                    <InputText class="@CssClasses.Input.Text"
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+                    <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                @bind-Value="departmentPost!.Name"
                                disabled="@IsSaving" />
-                    <ValidationMessage For="() => departmentPost!.Name" />
+                    <ValidationMessage For="() => departmentPost!.Name" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
 
-                <div>
-                    <label class="@CssClasses.Form.Label">@ResourceLoc.description:</label>
-                    <InputTextArea class="@CssClasses.Input.Text"
+                <div class="md:col-span-2">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.description</label>
+                    <InputTextArea class="min-h-28 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                    @bind-Value="departmentPost!.Description"
                                    disabled="@IsSaving" />
-                    <ValidationMessage For="() => departmentPost!.Description" />
+                    <ValidationMessage For="() => departmentPost!.Description" class="mt-1 block text-xs text-rose-600 dark:text-rose-300" />
                 </div>
             </div>
         </EditForm>
-    </div>
 
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" form="createDepartmentForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsSaving">
-            @AppLoc[nameof(ResourceApp.save)]
-        </button>
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
+            <button type="submit"
+                    form="createDepartmentForm"
+                    class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                    disabled="@IsSaving">
+                @AppLoc[nameof(ResourceApp.save)]
+            </button>
 
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" disabled="@IsSaving" @onclick="Close">
-            @AppLoc[nameof(ResourceApp.cancel)]
-        </button>
+            <button type="button"
+                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    disabled="@IsSaving"
+                    @onclick="Close">
+                @AppLoc[nameof(ResourceApp.cancel)]
+            </button>
+        </div>
     </div>
 }

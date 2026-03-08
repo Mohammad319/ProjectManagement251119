@@ -1,7 +1,6 @@
 ﻿@using System.Globalization
 @using System.Linq
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
-@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using TaskResourceBlueprints.Entities
 @inherits AppComponentBase
 @using TaskResourceBlueprints.Services.UnitGroups
@@ -38,7 +37,7 @@
     <!-- From units -->
     <div class="@CsS.Spacing.M.Top4">
         <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom2">
-            <h3 class="@NewCC.Text.H5">
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Available units
             </h3>
         </div>
@@ -49,7 +48,7 @@
                 var selected = HasKey(u);
 
                 <div class="@CsS.Spacing.M.Bottom1 rounded-lg border px-3 py-2 bg-gray-50 dark:bg-gray-900/60 border-gray-200 dark:border-gray-700 @CsS.Layout.FlexJustifyBetween">
-                    <span class="@NewCC.Text.Sm">@u</span>
+                    <span class="text-sm text-slate-700 dark:text-slate-300">@u</span>
 
                     @if (!selected)
                     {
@@ -74,11 +73,11 @@
 
     <!-- Selected keys -->
     <div class="@CsS.Spacing.M.Top4">
-        <h3 class="@NewCC.Text.H5 @CsS.Spacing.M.Bottom1">Selected pairs (Keys)</h3>
+        <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 @CsS.Spacing.M.Bottom1">Selected pairs (Keys)</h3>
 
         @if (_model.Keys.Count == 0)
         {
-            <div class="@NewCC.Text.MutedXs">There are no specific keys yet.</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">There are no specific keys yet.</div>
         }
         else
         {

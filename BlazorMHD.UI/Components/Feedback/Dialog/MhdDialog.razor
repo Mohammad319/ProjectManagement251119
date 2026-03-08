@@ -11,10 +11,8 @@
 {
     var dialogs = DialogService.Dialogs;
 
-    <!-- حاوية لكل النوافذ، تستمع لزر Esc بدون ما تاخذ الفوكس -->
     <div @onkeydown="OnKeyDown">
-        <!-- Overlay واحد -->
-        <div class="fixed inset-0 z-40 bg-black/50 dialog-overlay-animate-in"
+        <div class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-[2px] dialog-overlay-animate-in"
              @onclick="OnOverlayClick">
         </div>
 
@@ -23,75 +21,69 @@
             var model = item.Model;
             var zIndex = 50 + item.Index * 10;
 
-            <!-- الحاوية الخارجية: تثبيت في أعلى الشاشة -->
-            <div class="fixed inset-0 flex items-start justify-center pt-8"
+            <div class="fixed inset-0 overflow-y-auto px-3 py-4 sm:px-6 sm:py-8"
                  style="z-index:@zIndex;">
+                <div class="flex min-h-full items-start justify-center">
+                    <div class="relative dialog-animate-in"
+                         style="@GetDialogStyle(model)"
+                         @onmousemove="e => OnMouseMove(model, e)"
+                         @onmouseup="e => OnMouseUp(model, e)"
+                         @onmouseleave="e => OnMouseUp(model, e)">
 
-                <!-- الحاوية الداخلية: تتحرك فقط بالـ transform (للسحب) -->
-                <div class="relative dialog-animate-in"
-                     style="@GetDialogStyle(model)"
-                     @onmousemove="e => OnMouseMove(model, e)"
-                     @onmouseup="e => OnMouseUp(model, e)"
-                     @onmouseleave="e => OnMouseUp(model, e)">
+                        <div class="@($"{DialogStyles.GetPanelClasses(model)} flex flex-col overflow-hidden border border-slate-200/80 bg-white shadow-2xl ring-1 ring-black/5 dark:border-slate-700/80 dark:bg-slate-900 dark:ring-white/10")"
+                             style="@GetPanelStyle(model)"
+                             role="dialog"
+                             aria-modal="true"
+                             aria-label="@model.Title">
 
-                    <!-- اللوحة -->
-                    <div class="@($"{DialogStyles.GetPanelClasses(model)} flex flex-col")"
-                         style="@GetPanelStyle(model)">
+                            <div class="flex items-start justify-between gap-4 border-b border-slate-200/80 bg-slate-50/90 px-4 py-3 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/90 sm:px-5"
+                                 @onmousedown="e => OnHeaderMouseDown(model, e)">
+                                <div class="min-w-0 select-none @(model.IsDraggable ? "cursor-move" : string.Empty)">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex h-2.5 w-2.5 shrink-0 rounded-full shadow-sm @DialogStyles.GetHeaderAccent(model.State)"></span>
+                                        @if (!string.IsNullOrWhiteSpace(model.Icon))
+                                        {
+                                            <span class="text-slate-500 dark:text-slate-300">@((MarkupString)model.Icon)</span>
+                                        }
+                                        <span class="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
+                                            @model.Title
+                                        </span>
+                                    </div>
 
-                        <!-- الهيدر -->
-                        <div class="px-4 py-3
-                                            flex items-center justify-between
-                                            select-none cursor-move
-                                            border-b border-slate-200/80 dark:border-slate-800/80
-                                            shadow-sm dark:shadow-[0_1px_0_rgba(15,23,42,0.9)]
-                                            @DialogStyles.GetHeaderBackground(model.State)"
-                             @onmousedown="e => OnHeaderMouseDown(model, e)">
-
-                            <div class="flex flex-col gap-0.5">
-                                <div class="flex items-center gap-2">
-                                    <span class="inline-flex w-2.5 h-2.5 rounded-full shadow-sm @DialogStyles.GetHeaderAccent(model.State)"></span>
-                                    @if (!string.IsNullOrWhiteSpace(model.Icon))
+                                    @if (!string.IsNullOrWhiteSpace(model.Description))
                                     {
-                                        @((MarkupString)model.Icon)
+                                        <p class="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
+                                            @model.Description
+                                        </p>
                                     }
-                                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate">
-                                        @model.Title
-                                    </span>
                                 </div>
 
-                                @if (!string.IsNullOrWhiteSpace(model.Description))
-                                {
-                                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
-                                        @model.Description
-                                    </p>
-                                }
+                                <button type="button"
+                                        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                                        aria-label="Close"
+                                        @onclick="@(() => Close(model))">
+                                    ✕
+                                </button>
                             </div>
 
-                            <button class="inline-flex items-center justify-center rounded-full px-2 py-1 text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                                    @onclick="@(() => Close(model))">
-                                ✕
-                            </button>
-                        </div>
-
-                        <!-- الجسم (يتمدد ويكون قابل للتمرير فقط هو) -->
-                        <div class="px-4 py-4 overflow-auto flex-1">
-                            @model.Content
-                        </div>
-
-                        <!-- الأزرار -->
-                        @if (model.Buttons?.Any() == true)
-                        {
-                            <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-2">
-                                @foreach (var btn in model.Buttons)
-                                {
-                                    <button type="button"
-                                            class="@GetButtonClasses(btn)"
-                                            @onclick="() => OnButtonClick(btn, model)">
-                                        @btn.Text
-                                    </button>
-                                }
+                            <div class="flex-1 overflow-auto px-4 py-4 sm:px-5 sm:py-5">
+                                @model.Content
                             </div>
-                        }
+
+                            @if (model.Buttons?.Any() == true)
+                            {
+                                <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900 sm:px-5">
+                                    @foreach (var btn in model.Buttons)
+                                    {
+                                        <button type="button"
+                                                class="@GetButtonClasses(btn)"
+                                                @onclick="() => OnButtonClick(btn, model)">
+                                            @btn.Text
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -100,20 +92,18 @@
 }
 
 @code {
-    // --- أبعاد اللوحة حسب الحجم ---
     private string GetPanelStyle(DialogModel model)
     {
         if (model.Size == DialogSize.FullScreen)
-            return "width: 100vw; height: 100vh;";
+            return "width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; border-radius: 0;";
 
-        // نستخدم max-height مع flex-col حتى يبقى الهيدر ثابت والسكول داخل الجسم فقط
         return model.Size switch
         {
-            DialogSize.Small => "width: 360px; max-height: 80vh;",
-            DialogSize.Medium => "width: 480px; max-height: 80vh;",
-            DialogSize.Large => "width: 640px; max-height: 80vh;",
-            DialogSize.ExtraLarge => "width: min(90vw, 1100px); max-height: 80vh;",
-            _ => "width: 480px; max-height: 80vh;"
+            DialogSize.Small => "width: min(100%, 26rem); max-height: min(88vh, 52rem);",
+            DialogSize.Medium => "width: min(100%, 34rem); max-height: min(88vh, 56rem);",
+            DialogSize.Large => "width: min(100%, 48rem); max-height: min(88vh, 60rem);",
+            DialogSize.ExtraLarge => "width: min(96vw, 72rem); max-height: min(90vh, 64rem);",
+            _ => "width: min(100%, 34rem); max-height: min(88vh, 56rem);"
         };
     }
 
@@ -127,7 +117,6 @@
         DialogService.OnChange -= StateHasChanged;
     }
 
-    // إغلاق أعلى نافذة (للتوافق مع كود قديم)
     private void Close()
     {
         DialogService.Close();
@@ -153,7 +142,6 @@
         return DesignSystemService.GetButtonClass(button.State, MhdVariant.Outline, MhdSize.Md);
     }
 
-    // --- السحب ---
     private bool _isDragging;
     private DialogModel? _draggingModel;
     private double _dragStartMouseX;
@@ -197,13 +185,11 @@
         }
     }
 
-    // الآن التحويل فقط بالسحب، بدون -50% وبدون center
     private string GetDialogStyle(DialogModel model)
     {
         return $"transform: translate({model.OffsetX}px, {model.OffsetY}px);";
     }
 
-    // إغلاق أعلى نافذة عند الضغط على الـ Overlay (لو مسموح)
     private void OnOverlayClick(MouseEventArgs e)
     {
         var top = DialogService.Dialogs.LastOrDefault();
@@ -213,7 +199,6 @@
         }
     }
 
-    // إغلاق أعلى نافذة عند الضغط على زر Esc
     private void OnKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Escape" || e.Key == "Esc")

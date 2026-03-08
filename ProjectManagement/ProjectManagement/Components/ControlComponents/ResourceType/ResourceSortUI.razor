@@ -2,41 +2,62 @@
 @using ProjectManagement.Shared.DTO.ResourceType
 @inherits AppComponentBase
 
-<div class="@CssClasses.Layout.FlexItemsCenter gap-2 p-1">
-    <button @onclick="CreateNewAsync" class="@CssClasses.Btn.IconButton.Success" title="@AppLoc[nameof(ResourceApp.newItem)]">
-        @((MarkupString)Icons.Plus)
-    </button>
+<div class="space-y-4">
+    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@CalcLoc[nameof(CalcResource.sort)]</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">@ResourceSorts.Count @CalcLoc[nameof(CalcResource.name)]</p>
+        </div>
 
-    <button @onclick="Callback" class="@CssClasses.Btn.IconButton.Secondary" title="@AppLoc[nameof(ResourceApp.cancel)]">
-        @((MarkupString)Icons.Back)
-    </button>
-</div>
+        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
+            <button @onclick="CreateNewAsync" class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700" title="@AppLoc[nameof(ResourceApp.newItem)]">
+                @((MarkupString)Icons.Plus)
+            </button>
 
-@if (IsLoading)
-{
-    <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
-}
-else if (ResourceSorts.Count > 0)
-{
-    <MhdTable TItem="ResourceSortModel" Items="ResourceSorts">
-        <MhdTableColumn Title="@string.Empty">
-            <Template Context="item">
-                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
-                    <div class="@CssClasses.Layout.FlexItemsCenter">
-                        <button @onclick="() => UpdateForm(item)" class="@CssClasses.Btn.IconButton.Warning" title="@AppLoc[nameof(ResourceApp.update)]">@Icons.Edit</button>
-                        <button @onclick="() => Remove(item)" class="@CssClasses.Btn.IconButton.Danger" title="@AppLoc[nameof(ResourceApp.delete)]">@((MarkupString)Icons.DeleteSVG)</button>
-                    </div>
-                </AuthorizeView>
-            </Template>
-        </MhdTableColumn>
-        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.name)]" ValueSelector="u => u.Name" Sortable="true" />
-        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.cost)]" ValueSelector="u => u.Cost" />
-        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.baseCost)]" ValueSelector="u => u.BaseCost" />
-    </MhdTable>
-}
-else
-{
-    <div class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-6 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
-        @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+            <button @onclick="Callback" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900" title="@AppLoc[nameof(ResourceApp.cancel)]">
+                @((MarkupString)Icons.Back)
+            </button>
+        </div>
     </div>
-}
+
+    @if (IsLoading)
+    {
+        <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+    }
+    else if (ResourceSorts.Count > 0)
+    {
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <div class="overflow-x-auto p-4">
+                <MhdTable TItem="ResourceSortModel" Items="ResourceSorts" ShowFilter="false">
+                    <HeaderTemplate>
+                        <th class="w-36 p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
+                        <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</th>
+                        <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.cost)]</th>
+                        <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.baseCost)]</th>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        <MhdTableColumn>
+                            <Template Context="item">
+                                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
+                                    <div class="flex items-center gap-2">
+                                        <button @onclick="() => UpdateForm(item)" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300" title="@AppLoc[nameof(ResourceApp.update)]">@Icons.Edit</button>
+                                        <button @onclick="() => Remove(item)" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300" title="@AppLoc[nameof(ResourceApp.delete)]">@((MarkupString)Icons.DeleteSVG)</button>
+                                    </div>
+                                </AuthorizeView>
+                            </Template>
+                        </MhdTableColumn>
+                        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.name)]" ValueSelector="u => u.Name" Sortable="true" />
+                        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.cost)]" ValueSelector="u => u.Cost" />
+                        <MhdTableColumn Title="@CalcLoc[nameof(CalcResource.baseCost)]" ValueSelector="u => u.BaseCost" />
+                    </ChildContent>
+                </MhdTable>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-xl border border-dashed border-slate-200 bg-white/50 px-6 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+            @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+        </div>
+    }
+</div>

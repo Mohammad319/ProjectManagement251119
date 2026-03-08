@@ -8,7 +8,6 @@
 @using ProjectManagement.Shared.Base.ProjectAppStorage
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
-@using NewCC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using TaskResourceBlueprints.Services.Resource
 @inject TaskResourceBlueprints.Services.TaskGroups.ITaskGroupsQueryService TaskGroupsQuery
@@ -202,7 +201,7 @@
 
 @if (Task == null)
 {
-    <div class="@NewCC.Text.MutedXs">Loading…</div>
+    <div class="text-xs text-gray-500 dark:text-gray-400">Loading…</div>
 }
 else
 {
@@ -224,9 +223,9 @@ else
             </div>
 
             <!-- Choice Groups -->
-            <section class="@NewCC.Card.Panel">
+            <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
                 <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
-                    <h4 class="@NewCC.Text.SemiBold">Choice Groups</h4>
+                    <h4 class="font-semibold">Choice Groups</h4>
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddChoiceGroup">Add Group</button>
                 </div>
 
@@ -234,7 +233,7 @@ else
                 {
                     @foreach (var g in questionGroups.OrderBy(x => x.SortOrder))
                     {
-                        <div class="@NewCC.Card.SubPanel">
+                        <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
                             <div class="@CsS.Grid.Col.MD12">
                                 <div class="@CsS.Grid.Span.MD3">
                                     <label class="@CsS.Form.Label">@CalcResource.name</label>
@@ -272,7 +271,7 @@ else
                                 <div class="@CsS.Spacing.M.Top2">
                                     @foreach (var o in g.Options)
                                     {
-                                        <div class="@NewCC.Card.SoftMuted @CsS.Spacing.P.All2 @CsS.Spacing.M.Bottom2">
+                                        <div class="rounded-lg border border-gray-100 bg-white/70 p-2 mb-2 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
                                             <div class="@CsS.Grid.Col.MD12">
                                                 <div class="@CsS.Grid.Span.MD4">
                                                     <label class="@CsS.Form.Label">Option Label</label>
@@ -280,7 +279,7 @@ else
                                                 </div>
 
                                                 <div class="@CsS.Grid.Span.MD6">
-                                                    <label class="@NewCC.Text.LabelXs @CsS.Spacing.M.Bottom1">
+                                                    <label class="mb-1 text-xs text-gray-700 dark:text-gray-200">
                                                         Reveal Section Keys (comma-separated)
                                                     </label>
                                                     <input class="@CsS.Input.Text"
@@ -308,14 +307,14 @@ else
                 }
                 else
                 {
-                    <div class="@NewCC.Text.MutedXs">No choice groups.</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">No choice groups.</div>
                 }
             </section>
 
             <!-- Numeric Groups -->
-            <section class="@NewCC.Card.Panel">
+            <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
                 <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
-                    <h4 class="@NewCC.Text.SemiBold">Numeric Groups</h4>
+                    <h4 class="font-semibold">Numeric Groups</h4>
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddNumericGroup">Add Group</button>
                 </div>
 
@@ -323,7 +322,7 @@ else
                 {
                     @foreach (var g in Task.NumericQuestions!.OrderBy(x => x.SortOrder))
                     {
-                        <div class="@NewCC.Card.SubPanel">
+                        <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
                             <!-- NOTE: this row is 8 columns; keep spans sum = 8 -->
                             <div class="@CsS.Grid.Col.MD8">
                                 <div class="@CsS.Grid.Span.MD2">
@@ -360,14 +359,14 @@ else
                 }
                 else
                 {
-                    <div class="@NewCC.Text.MutedXs">No numeric groups.</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">No numeric groups.</div>
                 }
             </section>
 
             <!-- Resource Choice Groups -->
-            <section class="@NewCC.Card.Panel">
+            <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
                 <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
-                    <h4 class="@NewCC.Text.SemiBold">Resource Choice Groups</h4>
+                    <h4 class="font-semibold">Resource Choice Groups</h4>
                     <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddResourceGroup">Add Group</button>
                 </div>
 
@@ -375,7 +374,7 @@ else
                 {
                     @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
                     {
-                        <div class="@NewCC.Card.SubPanel">
+                        <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
                             <div class="@CsS.Grid.Col.MD12">
                                 <div class="@CsS.Grid.Span.MD4">
                                     <label class="@CsS.Form.Label">Name</label>
@@ -433,7 +432,7 @@ else
                 }
                 else
                 {
-                    <div class="@NewCC.Text.MutedXs">No resource groups.</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">No resource groups.</div>
                 }
             </section>
 

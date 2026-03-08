@@ -1,59 +1,84 @@
 ﻿@using ContextMenuMHD
 @using Microsoft.AspNetCore.Components.Authorization
-@using ProjectManagement.Adminstrator.Constants
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.Models.Account
 @inherits AppComponentBase
 @inject IUsersService UsersService
 @inject AuthenticationStateProvider AuthStateProvider
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
-<table class="@CsS.Table.Tab">
-    <thead class="@CsS.Table.Thead">
-        <tr>
-            <th class="@CsS.Table.TH">
-                @if (CanManageSiteUsers)
-                {
-                    <button class="@CsS.Btn.Outline.Success" @onclick="RegisterModal">
-                        @ResourceIdentity.register
-                    </button>
-                }
-            </th>
-            <th class="@CsS.Table.TH">@ResourceIdentity.email</th>
-            <th class="@CsS.Table.TH">@CalcResource.name</th>
-            <th class="@CsS.Table.TH">@ResourceIdentity.lockoutEnd</th>
-            <th class="@CsS.Table.TH">@ResourceIdentity.lockoutStart</th>
-        </tr>
-    </thead>
+<div class="space-y-4">
+    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@ResourceIdentity.users</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Settings</p>
+        </div>
 
-    <tbody class="@CsS.Table.TBody">
-        @if (Users != null)
+        @if (CanManageSiteUsers)
         {
-            foreach (var user in Users)
-            {
-                <tr class="@CsS.Table.Tr"
-                    role="button"
-                    @oncontextmenu:preventDefault
-                    @oncontextmenu="() => ContextM(user)">
-                    <td class="@CsS.Table.Td">@user.Email</td>
-                    <td class="@CsS.Table.Td">@user.UserName</td>
-                    <td class="@CsS.Table.Td">@user.Firstname, @user.Lastname</td>
-                    <td class="@CsS.Table.Td">
-                        <input type="checkbox"
-                               disabled
-                               checked="@user.LockoutEnabled"
-                               class="@CsS.Input.Check" />
-                        @(user.LockoutEnd?.ToString("dd.MM.yyyy") ?? string.Empty)
-                    </td>
-                    <td class="@CsS.Table.Td">
-                        @(user.LockoutStart?.ToString("dd.MM.yyyy") ?? string.Empty)
-                    </td>
-                </tr>
-            }
+            <button type="button"
+                    class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
+                    @onclick="RegisterModal">
+                @ResourceIdentity.register
+            </button>
         }
-    </tbody>
-</table>
+    </div>
+
+    @if (Users is null)
+    {
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+        </div>
+    }
+    else if (Users.Count > 0)
+    {
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead class="bg-slate-50/80 dark:bg-slate-800/60">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@ResourceIdentity.email</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.active</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@ResourceIdentity.lockoutStart</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@ResourceIdentity.lockoutEnd</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                        @foreach (var user in Users)
+                        {
+                            <tr class="cursor-context-menu transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                                @oncontextmenu:preventDefault
+                                @oncontextmenu="() => ContextM(user)">
+                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-200">
+                                    <div class="font-medium">@user.Email</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400">@user.UserName</div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-200">@user.Firstname @user.Lastname</td>
+                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-200">@(user.LockoutEnabled ? ResourceIdentity.logout : CalcResource.active)</td>
+                                <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">@(user.LockoutStart?.ToString("dd.MM.yyyy") ?? "—")</td>
+                                <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium @(user.LockoutEnabled ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300")">
+                                            @(user.LockoutEnabled ? ResourceIdentity.logout : CalcResource.active)
+                                        </span>
+                                        <span>@(user.LockoutEnd?.ToString("dd.MM.yyyy") ?? "—")</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+            @ResourceApp.ThereAreNoItemsToDisplay
+        </div>
+    }
+</div>
 
 @code {
     private bool CanManageSiteUsers;
@@ -121,6 +146,7 @@
     {
         MHD.DeleteMessage(user.Email, EventCallback.Factory.Create(this, () => Remove(user)));
     }
+
 
     List<ApplicationUser>? Users;
 

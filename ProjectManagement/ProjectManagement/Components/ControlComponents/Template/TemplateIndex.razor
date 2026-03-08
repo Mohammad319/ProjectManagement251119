@@ -9,87 +9,107 @@
 @inherits AppComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<style>
-    input, td, th {
-        min-width: 40px;
-        max-width: 250px;
-    }
-</style>
-
 @if (Form is not null)
 {
     <TemplateForm TempForm="Form"
                   DepartmentId="SelectedDepartmentId"
                   Callback="CallBack"></TemplateForm>
 }
-else if (Loading)
-{
-    <div class="p-3 text-muted">Loading templates...</div>
-}
 else
 {
-    <table class="@CssClasses.Table.Tab">
-        <thead class="@CssClasses.Table.Thead">
-            <tr>
-                <th class="@CssClasses.Table.TH" style="width:260px;">
-                    <div class="@CssClasses.Layout.FlexItemsCenter">
-                        @if (CanChooseDepartment && Departments.Any())
-                        {
-                            <select @onchange="ChangeDepartmentAsync" class="@CssClasses.Input.Select">
+    <section class="space-y-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@ResourceLoc.templates</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Saved templates</p>
+                </div>
+
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    @if (CanChooseDepartment && Departments.Any())
+                    {
+                        <div class="min-w-[240px]">
+                            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">@ResourceApp.department</label>
+                            <select @onchange="ChangeDepartmentAsync"
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
                                 <option value="">@ResourceApp.department</option>
                                 @foreach (var department in Departments)
                                 {
                                     <option value="@department.Id" selected="@(department.Id == SelectedDepartmentId)">@department.Name</option>
                                 }
                             </select>
-                        }
+                        </div>
+                    }
 
-                        <button @onclick="OpenCreate"
-                                class="@CssClasses.Btn.IconButton.Success"
-                                disabled="@(!CanCreateTemplate)">
-                            @((MarkupString)Icons.Plus2)
-                        </button>
-                    </div>
-                </th>
-                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-            </tr>
-        </thead>
+                    <button @onclick="OpenCreate"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+                            disabled="@(!CanCreateTemplate)">
+                        <span class="text-base leading-none">+</span>
+                        <span>New template</span>
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        <tbody class="@CssClasses.Table.TBody">
-            @if (List.Count == 0)
-            {
-                <tr class="@CssClasses.Table.Tr">
-                    <td class="@CssClasses.Table.Td" colspan="2">@ResourceApp.notFoundData</td>
-                </tr>
-            }
-            else
-            {
-                @foreach (var item in List)
-                {
-                    <tr class="@CssClasses.Table.Tr">
-                        <td class="@CssClasses.Table.Td">
-                            <div class="@CssClasses.Layout.FlexItemsCenter">
-                                <button @onclick="() => FormUI(item.Id)"
-                                        class="@CssClasses.Btn.IconButton.Warning"
-                                        disabled="@Loading"
-                                        type="button">
-                                    @Icons.Edit
-                                </button>
+        @if (Loading)
+        {
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="animate-pulse space-y-3">
+                    <div class="h-10 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                    <div class="h-10 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                    <div class="h-10 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                </div>
+            </div>
+        }
+        else if (List.Count == 0)
+        {
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">T</div>
+                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">@ResourceApp.notFoundData</h3>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">@ResourceLoc.templates</p>
+            </div>
+        }
+        else
+        {
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-800/70">
+                            <tr>
+                                <th class="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            @foreach (var item in List)
+                            {
+                                <tr class="transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                    <td class="px-4 py-3 align-top">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <button @onclick="() => FormUI(item.Id)"
+                                                    class="inline-flex items-center rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200 dark:hover:bg-amber-900/60"
+                                                    disabled="@Loading"
+                                                    type="button">
+                                                @Icons.Edit
+                                            </button>
 
-                                <button @onclick="() => Remove(item)"
-                                        class="@CssClasses.Btn.IconButton.Danger"
-                                        disabled="@Loading"
-                                        type="button">
-                                    @((MarkupString)Icons.DeleteSVG)
-                                </button>
-                            </div>
-                        </td>
-                        <td scope="row" class="@CssClasses.Table.Td">@item.Name</td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
+                                            <button @onclick="() => Remove(item)"
+                                                    class="inline-flex items-center rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-700 dark:bg-rose-950/50 dark:text-rose-200 dark:hover:bg-rose-900/60"
+                                                    disabled="@Loading"
+                                                    type="button">
+                                                @((MarkupString)Icons.DeleteSVG)
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">@item.Name</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </section>
 }
 
 @code {
@@ -135,6 +155,7 @@ else
     private async Task LoadTemplatesAsync()
     {
         Loading = true;
+        await InvokeAsync(StateHasChanged);
         List = await Dispatcher.Send(new GetTemplatesByUserQuery(EffectiveDepartmentId)) ?? [];
         Loading = false;
         await InvokeAsync(StateHasChanged);

@@ -2,6 +2,8 @@
 using ProjectManagement.Adminstrator.Handless;
 using ProjectManagement.Adminstrator.Services.MHDBlazor;
 using ProjectManagement.Adminstrator.Services.Users;
+using ProjectManagement.Adminstrator.Components.Account;
+using Microsoft.AspNetCore.Identity;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 
 namespace ProjectManagement.Adminstrator.DependencyInjection
@@ -19,6 +21,10 @@ namespace ProjectManagement.Adminstrator.DependencyInjection
             services.AddAuthorizationCore();
             services.AddSingleton<ContextMenuService>();
             services.AddLocalization();
+            services.AddHttpContextAccessor();
+            services.AddScoped<LocalizedIdentityEmailSender>();
+            services.AddScoped<IEmailSender<ApplicationUser>>(sp => sp.GetRequiredService<LocalizedIdentityEmailSender>());
+            services.AddScoped<IAccountNotificationEmailSender>(sp => sp.GetRequiredService<LocalizedIdentityEmailSender>());
             return services;
         }
     }

@@ -1,41 +1,42 @@
-﻿@using ProjectManagement.Adminstrator.Components.TaskStatus.ActionTask
+@using ProjectManagement.Adminstrator.Components.TaskStatus.ActionTask
 @using ProjectManagement.Adminstrator.Components.TaskStatus.ActionType
 @using ProjectManagement.Adminstrator.Components.TaskStatus.Fall
 @using ProjectManagement.Adminstrator.Components.TaskStatus.Location
 @inherits AppComponentBase
 
-<div class="mb-1 border-b border-gray-300 dark:border-gray-700">
-    <nav aria-label="Tabs">
-        <ul class="@CssClasses.Tabs.UL" role="tablist">
-            @for (int i = 1; i <= 7; i++)
+<div class="space-y-4">
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Task Status</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Manage lookup lists for actions, locations, falls, and action types.</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2" role="tablist" aria-label="Task Status Tabs">
+            @for (int i = 1; i <= 4; i++)
             {
                 int u = i;
-                <li>
-                    <button class="@GetTabClass(u)" @onclick="() => page = u">
-                        @GetTabLabel(i)
-                    </button>
-                </li>
+                <button class="@GetTabClass(u)" @onclick="() => page = u">@GetTabLabel(i)</button>
             }
-        </ul>
-    </nav>
-</div>
+        </div>
+    </div>
 
-<div class="bg-white dark:bg-gray-900 shadow rounded-md w-full">
-    @switch (page)
-    {
-        case 1:
-            <ActionIndexUI />
-            break;
-        case 2:
-            <LocationIndexUI />
-            break;
-        case 3:
-            <FallIndexUI />
-            break;
-        case 4:
-            <ActionTypeIndexUI />
-            break;
-    }
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        @switch (page)
+        {
+            case 1:
+                <ActionIndexUI />
+                break;
+            case 2:
+                <LocationIndexUI />
+                break;
+            case 3:
+                <FallIndexUI />
+                break;
+            case 4:
+                <ActionTypeIndexUI />
+                break;
+        }
+    </div>
 </div>
 
 @code {
@@ -44,8 +45,8 @@
     private string GetTabClass(int tabIndex)
     {
         return page == tabIndex
-            ? "px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded shadow"
-            : "px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded";
+            ? "inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+            : "inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
     }
 
     private string GetTabLabel(int index) => index switch
@@ -54,6 +55,6 @@
         2 => "Location",
         3 => "Fall",
         4 => "Action Type",
-        _ => ""
+        _ => string.Empty
     };
 }

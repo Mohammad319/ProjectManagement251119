@@ -1,7 +1,6 @@
 ﻿@inject ITaskDefinitionService TaskService
 @inject  ITaskResourceService TaskResourceService
 @inherits AppComponentBase
-@using CC = ProjectManagement.Adminstrator.Constants.CssClassesV3
 @using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using Microsoft.Extensions.Localization
 @using TaskResourceBlueprints.Dto.ProjectTask
@@ -29,7 +28,7 @@
     {
         <!-- بطاقة: الإعدادات الأساسية -->
         <div class="@CssClasses.Components.Card">
-            <h5 class="@CC.Text.H5">Settings</h5>
+            <h5 class="font-medium text-gray-800 dark:text-gray-100">Settings</h5>
 
             <div class="@CsS.Grid.Col.MD6">
                 <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
@@ -104,7 +103,7 @@
         {
             <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top2">
                 <div class="@CsS.Layout.FlexJustifyBetween">
-                    <h5 class="@CC.Text.H5">Roles</h5>
+                    <h5 class="font-medium text-gray-800 dark:text-gray-100">Roles</h5>
                     <button type="button"
                             class="@CssClasses.Btn.Outline.Primary @CssClasses.Btn.Size.Small"
                             @onclick="AddRole">
@@ -173,7 +172,7 @@
 
         <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top2">
             <div class="@CsS.Layout.FlexJustifyBetween">
-                <h5 class="@CC.Text.H5">@CalcResource.Formulas</h5>
+                <h5 class="font-medium text-gray-800 dark:text-gray-100">@CalcResource.Formulas</h5>
                 <button class="@CsS.Btn.Outline.Primary"
                         type="button"
                         @onclick="@(() => TaskResource!.Formulas.Add(string.Empty))">

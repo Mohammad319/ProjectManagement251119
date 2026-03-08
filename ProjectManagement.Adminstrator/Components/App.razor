@@ -1,55 +1,38 @@
-﻿@inject NavigationManager Nav
+﻿@using System.Globalization
+@inject NavigationManager Nav
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@CultureInfo.CurrentUICulture.Name">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    @* <base href="/" /> *@
     <base href="@Nav.BaseUri" />
+
+    <script src="js/theme-init.js"></script>
+
     <ResourcePreloader />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["ProjectManagement.Adminstrator.styles.css"]" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/tailwind.css" />
+    <link rel="stylesheet" href="_content/BlazorMHD.UI/css/mhd.css" />
+    <link rel="stylesheet" href="_content/ContextMenuMHD/css/contextMenuMHD.css" />
+    <link rel="stylesheet" href="_content/ContextMenuMHD/css/tailwind-contextmenu.css" />
     <ImportMap />
     <HeadOutlet />
 
-    <link rel="shortcut icon" href="Icons/favicon.ico" type="image/x-icon">
-    <link href="css/app.css" rel="stylesheet" />
-    <link href="_content/ContextMenuMHD/css/contextMenuMHD.css" rel="stylesheet" />
-    <link href="_content/ContextMenuMHD/css/tailwind-contextmenu.css" rel="stylesheet" />
-    <link href="_content/BlazorMHD/css/blazormhd.css" rel="stylesheet" />
-
-    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-          darkMode: 'class',
-          theme: {
-            extend: {},
-          },
-          content: ["./**/*.razor", "./**/*.html"],
-        }
-    </script>
-    <style>
-        .spinner {
-            border: 16px solid silver;
-            border-top: 16px solid #337AB7;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            animation: spin 700ms linear infinite;
-            top: 50%;
-            left: 50%;
-            position: absolute;}
-    </style>
+    <link rel="shortcut icon" href="Icons/favicon.ico" type="image/x-icon" />
 </head>
 
-<body class="bg-white text-black dark:bg-gray-900 dark:text-white">
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <Routes />
     <ReconnectModal />
+
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
+    <script src="_content/BlazorMHD.UI/js/BlazorMHDUI.js"></script>
     <script src="_content/ContextMenuMHD/js/contextMenuMHD.js"></script>
+
     <script>
         (function () {
             var culture = localStorage['BlazorCulture'];
@@ -57,22 +40,11 @@
                 document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
             }
         })();
+
         window.blazorCulture = {
             get: () => localStorage['BlazorCulture'],
             set: (value) => { localStorage['BlazorCulture'] = value; }
         };
-        window.toggleDarkClass = function () {
-            const html = document.documentElement;
-            const isDark = html.classList.toggle('dark');
-            html.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
-            const mode = isDark ? 'dark' : 'light';
-            localStorage.setItem('theme', mode);
-            return mode;
-        };
-        window.getCurrentTheme = function () {
-            return localStorage.getItem('theme') || 'light';
-        };
     </script>
 </body>
-
 </html>
