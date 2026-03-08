@@ -21,17 +21,17 @@
 
 @if (PostCompany is not null)
 {
-    <div class="@CssClasses.Modal.Body">
+    <div class="space-y-3 p-4 text-sm">
         <EditForm Model="@PostCompany" OnValidSubmit="HandleSubmitAsync" id="organisationForm">
             <DataAnnotationsValidator />
 
             <div class="flex justify-between">
-                <ul class="@CssClasses.Tabs.UL" role="tablist">
+                <ul class="mb-2 flex flex-wrap gap-1 border-b border-slate-200 pb-2 dark:border-slate-700" role="tablist">
                     @foreach (var tab in Tabs)
                     {
                         <li class="mr-2" role="presentation">
                             <button type="button"
-                                    class="@(Part == tab.Id ? CssClasses.Tabs.Active : CssClasses.Tabs.Inactive)"
+                                    class="@(Part == tab.Id ? "rounded-md px-3 py-1.5 text-sm font-medium transition bg-sky-600 text-white dark:bg-sky-500" : "rounded-md px-3 py-1.5 text-sm font-medium transition bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700")"
                                     @onclick="() => Part = tab.Id">
                                 @tab.Label
                             </button>
@@ -42,30 +42,30 @@
 
             @if (Part == 1)
             {
-                <div class="@CssClasses.Grid.Col.MD4">
-                    <div class="@CssClasses.Grid.Span.MD2">
-                        <label class="@CssClasses.Form.Label">@CalcResource.name</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Name" />
+                <div class="col-span-12 md:col-span-4">
+                    <div class="col-span-12 md:col-span-2">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Name" />
                         <ValidationMessage For="@(() => PostCompany.Name)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceIdentity.IDNumber</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.IDNumber" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.IDNumber</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.IDNumber" />
                         <ValidationMessage For="@(() => PostCompany.IDNumber)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceIdentity.PersonOrganisationNr</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.PIDNumber" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.PersonOrganisationNr</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.PIDNumber" />
                         <ValidationMessage For="@(() => PostCompany.PIDNumber)" />
                     </div>
 
                     @if (CustomerGroups is not null)
                     {
                         <div>
-                            <label class="@CssClasses.Form.Label">@ResourceIdentity.PersonOrganisationType</label>
-                            <InputSelect class="@CssClasses.Input.Text" @bind-Value="PostCompany.OrganisationTypeID">
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.PersonOrganisationType</label>
+                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.OrganisationTypeID">
                                 <option value="0"></option>
                                 @foreach (var group in CustomerGroups)
                                 {
@@ -76,32 +76,32 @@
                     }
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Status" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.status</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Status" />
                         <ValidationMessage For="@(() => PostCompany.Status)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceIdentity.website</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.URL" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.website</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.URL" />
                         <ValidationMessage For="@(() => PostCompany.URL)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceIdentity.email</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Email" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Email" />
                         <ValidationMessage For="@(() => PostCompany.Email)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceIdentity.phone</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Phone" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.phone</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Phone" />
                         <ValidationMessage For="@(() => PostCompany.Phone)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceIdentity.mobile</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Mobile" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.mobile</label>
+                        <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Mobile" />
                         <ValidationMessage For="@(() => PostCompany.Mobile)" />
                     </div>
                 </div>
@@ -113,7 +113,7 @@
                             <div class="text-sm text-slate-600 dark:text-slate-300">@WebLoc[nameof(PMWebResource.OrganisationNotesHint)]</div>
                         </div>
                         <button type="button"
-                                class="@CssClasses.Btn.Solid.Primary"
+                                class="inline-flex items-center justify-center rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
                                 @onclick="AddNote">
                             @AppLoc[LocalizerConst.New, CalcResource.note]
                         </button>
@@ -130,11 +130,11 @@
                             var noteIndex = o;
                             <div class="mb-3 flex items-start gap-2">
                                 <div class="flex-1">
-                                    <label class="@CssClasses.Form.Label">@CalcResource.note @(noteIndex + 1)</label>
-                                    <InputText class="@CssClasses.Input.Text" @bind-Value="PostCompany.Notes[noteIndex]" />
+                                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note @(noteIndex + 1)</label>
+                                    <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Notes[noteIndex]" />
                                 </div>
                                 <button type="button"
-                                        class="@CssClasses.Btn.IconButton.Danger mt-6"
+                                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 mt-6"
                                         title="@WebLoc[nameof(PMWebResource.RemoveNote)]"
                                         @onclick="() => RemoveNote(noteIndex)">
                                     @((MarkupString)Icons.DeleteSVG)
@@ -146,22 +146,22 @@
             }
             else if (Part == 2)
             {
-                <div class="@CssClasses.Grid.Col.MD4">
+                <div class="col-span-12 md:col-span-4">
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.rating</label>
-                        <InputNumber class="@CssClasses.Input.Text" @bind-Value="PostCompany.Rating" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.rating</label>
+                        <InputNumber class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Rating" />
                         <ValidationMessage For="@(() => PostCompany.Rating)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceIdentity.numberIDCards</label>
-                        <InputNumber class="@CssClasses.Input.Text" @bind-Value="PostCompany.NumberOfWorkersCards" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.numberIDCards</label>
+                        <InputNumber class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.NumberOfWorkersCards" />
                         <ValidationMessage For="@(() => PostCompany.NumberOfWorkersCards)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.collectiveLabourAgreement</label>
-                        <InputSelect @bind-Value="PostCompany.SocialLaborAgreement" class="@CssClasses.Input.Text">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.collectiveLabourAgreement</label>
+                        <InputSelect @bind-Value="PostCompany.SocialLaborAgreement" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900">
                             <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
                             <option value="@YesNoUnkown.no">@ResourceApp.no</option>
                             <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
@@ -170,20 +170,20 @@
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.dateInvoiceControl</label>
-                        <InputDate class="@CssClasses.Input.Date" @bind-Value="PostCompany.InvoiceVerificationDate" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.dateInvoiceControl</label>
+                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.InvoiceVerificationDate" />
                         <ValidationMessage For="@(() => PostCompany.InvoiceVerificationDate)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.dateOfControl</label>
-                        <InputDate class="@CssClasses.Input.Date" @bind-Value="PostCompany.VerificationDate" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.dateOfControl</label>
+                        <InputDate class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.VerificationDate" />
                         <ValidationMessage For="@(() => PostCompany.VerificationDate)" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.qualitySystems</label>
-                        <InputSelect @bind-Value="PostCompany.QualitySystems" class="@CssClasses.Input.Text">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.qualitySystems</label>
+                        <InputSelect @bind-Value="PostCompany.QualitySystems" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900">
                             <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
                             <option value="@YesNoUnkown.no">@ResourceApp.no</option>
                             <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
@@ -192,8 +192,8 @@
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.environmentalSystems</label>
-                        <InputSelect @bind-Value="PostCompany.EnvironmentalSystems" class="@CssClasses.Input.Text">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.environmentalSystems</label>
+                        <InputSelect @bind-Value="PostCompany.EnvironmentalSystems" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900">
                             <option value="@YesNoUnkown.yes">@ResourceApp.yes</option>
                             <option value="@YesNoUnkown.no">@ResourceApp.no</option>
                             <option value="@YesNoUnkown.unkown">@ResourceApp.unkown</option>
@@ -204,15 +204,15 @@
             }
             else if (Part == 3)
             {
-                <div class="@CssClasses.Grid.Col.MD4 mb-1">
-                    <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="PostCompany.IsVisible" />
-                        <label class="@CssClasses.Form.CheckLabel">@ResourceApp.isVisible</label>
+                <div class="col-span-12 md:col-span-4 mb-1">
+                    <div class="flex items-center gap-2 py-1">
+                        <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="PostCompany.IsVisible" />
+                        <label class="text-sm text-slate-700 dark:text-slate-200">@ResourceApp.isVisible</label>
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.baseCategory</label>
-                        <select class="@CssClasses.Input.Text" @onchange="CategoryChange">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.baseCategory</label>
+                        <select class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @onchange="CategoryChange">
                             <option value="0"></option>
                             @if (Categories is not null)
                             {
@@ -227,8 +227,8 @@
                     @if (CategorySelected is not null)
                     {
                         <div>
-                            <label class="@CssClasses.Form.Label">@ResourceLoc.category</label>
-                            <InputSelect class="@CssClasses.Input.Text" @bind-Value="PostCompany.CategoryId">
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.category</label>
+                            <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.CategoryId">
                                 <option value="0"></option>
                                 @foreach (var category in (Categories?.Where(x => x.ParentCategoryId == CategorySelected.Id) ?? Enumerable.Empty<ListOrganisationCategoryDTO>()))
                                 {
@@ -253,11 +253,11 @@
         }
     </div>
 
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="organisationForm" disabled="@IsLoading">
+    <div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+        <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="organisationForm" disabled="@IsLoading">
             @ResourceApp.save
         </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">
+        <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync(false)">
             @ResourceApp.cancel
         </button>
     </div>

@@ -20,7 +20,7 @@
         </select>
     </div>
     <div>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="GoBackAsync">@((MarkupString)Icons.Back)</button>
+        <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="GoBackAsync">@((MarkupString)Icons.Back)</button>
     </div>
 </div>
 
@@ -28,14 +28,14 @@
 {
     <EditForm Model="@ApplicationValues" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
-        <div class="@CssClasses.Grid.Col.MD6">
+        <div class="col-span-12 md:col-span-6">
             <div>
                 <label class="form-labe">@CalcResource.name:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@ApplicationValues.Name" />
+                <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@ApplicationValues.Name" />
             </div>
             <div>
                 <label class="form-labe">@CalcResource.responsible:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@ApplicationValues.Responsible" />
+                <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@ApplicationValues.Responsible" />
             </div>
         </div>
 
@@ -47,27 +47,27 @@
                     {
                         @if (attr.AttributeType == AttributeType.Text)
                         {
-                            <input type="text" minlength="@attr.ValdTextVM.Min" maxlength="@attr.ValdTextVM.Max" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            <input type="text" minlength="@attr.ValdTextVM.Min" maxlength="@attr.ValdTextVM.Max" @bind="@attr.Value" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                         }
                         else if (attr.AttributeType == AttributeType.Char)
                         {
-                            <input maxlength="1" type="text" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            <input maxlength="1" type="text" @bind="@attr.Value" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                         }
                         else if (attr.AttributeType == AttributeType.TextArea)
                         {
-                            <textarea minlength="@attr.ValdTextVM.Min" maxlength="@attr.ValdTextVM.Max" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style"></textarea>
+                            <textarea minlength="@attr.ValdTextVM.Min" maxlength="@attr.ValdTextVM.Max" @bind="@attr.Value" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style"></textarea>
                         }
                         else if (attr.AttributeType == AttributeType.DateTime || attr.AttributeType == AttributeType.Date || attr.AttributeType == AttributeType.Time)
                         {
-                            <input type="@ValidDateVM.GetHTMLFormat(attr.AttributeType)" @bind="@attr.Value" class="@CssClasses.Input.Text" style="@attr.Style" />
+                            <input type="@ValidDateVM.GetHTMLFormat(attr.AttributeType)" @bind="@attr.Value" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                         }
                         else if (attr.AttributeType == AttributeType.Bool)
                         {
-                            <input class="@CssClasses.Input.Check" type="checkbox" @bind="@attr.ValueBool" style="@attr.Style" />
+                            <input class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" @bind="@attr.ValueBool" style="@attr.Style" />
                         }
                         else if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
                         {
-                            <input type="number" class="@CssClasses.Input.Text" min="@attr.ValdNumberVM.Min" max="@attr.ValdNumberVM.Max" @bind="@attr.Value" style="@attr.Style" />
+                            <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" min="@attr.ValdNumberVM.Min" max="@attr.ValdNumberVM.Max" @bind="@attr.Value" style="@attr.Style" />
                         }
                         else if (attr.AttributeType == AttributeType.Select)
                         {
@@ -82,7 +82,7 @@
             </div>
         }
 
-        <button type="submit" class="@CssClasses.Btn.Outline.Success mt-1">@ResourceApp.save</button>
+        <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30 mt-1">@ResourceApp.save</button>
     </EditForm>
 }
 @code {

@@ -1,41 +1,41 @@
 @inherits AppComponentBase
 
-<div class="@CssClasses.Modal.Body">
-    <div class="@CssClasses.Grid.Col.MD4">
+<div class="space-y-3 p-4 text-sm">
+    <div class="col-span-12 md:col-span-4">
         <div>
-            <label class="@CssClasses.Form.Label">@AppLoc[nameof(ResourceApp.StartFromRow)]</label>
-            <input type="number" min="1" step="1" class="@CssClasses.Input.Text"
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@AppLoc[nameof(ResourceApp.StartFromRow)]</label>
+            <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900"
                    placeholder="@AppLoc[nameof(ResourceApp.StartFromRow)]" @bind="RowStart" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.accountGroups)]</label>
-            <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="GroupCol" />
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.accountGroups)]</label>
+            <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="GroupCol" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.name)]</label>
-            <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="NameCol" />
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</label>
+            <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="NameCol" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.code)]</label>
-            <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="CodeCol" />
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.code)]</label>
+            <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="CodeCol" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.comment)]</label>
-            <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="Comment1Col" />
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.comment)]</label>
+            <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="Comment1Col" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcLoc[nameof(CalcResource.comment)] 2</label>
-            <input type="number" min="1" step="1" class="@CssClasses.Input.Text" @bind="Comment2Col" />
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.comment)] 2</label>
+            <input type="number" min="1" step="1" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="Comment2Col" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@FormatLoc[nameof(PMAppFormatResource.separator)]</label>
-            <input type="text" class="@CssClasses.Input.Text"
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@FormatLoc[nameof(PMAppFormatResource.separator)]</label>
+            <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900"
                    placeholder="," @bind="Separator" />
         </div>
     </div>
@@ -43,19 +43,19 @@
     <div class="mt-5 flex flex-wrap items-center gap-2">
         <InputFile OnChange="OnFileSelection" disabled="@IsBusy" />
 
-        <button class="@CssClasses.Btn.Solid.Primary"
+        <button class="inline-flex items-center justify-center rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
                 @onclick="ImportByFormatAsync"
                 disabled="@(!CanImport)">
             @AppLoc[nameof(ResourceApp.import)]
         </button>
 
-        <button class="@CssClasses.Btn.Solid.Success"
+        <button class="inline-flex items-center justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400"
                 @onclick="Save"
                 disabled="@(CanSave == false)">
             @AppLoc[nameof(ResourceApp.save)]
         </button>
 
-        <button class="@CssClasses.Btn.Outline.Secondary"
+        <button class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                 @onclick="CloseModal"
                 disabled="@IsBusy">
             @AppLoc[nameof(ResourceApp.cancel)]
@@ -75,22 +75,22 @@
         </div>
     }
 
-    <table class="@CssClasses.Table.Tab mt-4">
-        <thead class="@CssClasses.Table.Thead">
+    <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700 mt-4">
+        <thead class="bg-slate-50 dark:bg-slate-800/80">
             <tr>
-                <th class="@CssClasses.Table.TH" style="width:52px;"></th>
-                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.accountGroups)]</th>
-                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.name)]</th>
-                <th class="@CssClasses.Table.TH" style="width:140px;">@CalcLoc[nameof(CalcResource.code)]</th>
-                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.comment)]</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:52px;"></th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcLoc[nameof(CalcResource.accountGroups)]</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:140px;">@CalcLoc[nameof(CalcResource.code)]</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcLoc[nameof(CalcResource.comment)]</th>
             </tr>
         </thead>
 
-        <tbody class="@CssClasses.Table.TBody">
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
             @if (Groups.Count == 0)
             {
-                <tr class="@CssClasses.Table.Tr">
-                    <td class="@CssClasses.Table.Td" colspan="5">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                    <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200" colspan="5">
                         <div class="p-4 text-sm text-slate-400">
                             @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
                         </div>
@@ -101,36 +101,36 @@
             {
                 @foreach (var group in Groups)
                 {
-                    <tr class="@CssClasses.Table.Tr">
-                        <td class="@CssClasses.Table.Td">
-                            <button class="@CssClasses.Btn.IconButton.Danger"
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
+                            <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                                     title="@AppLoc[nameof(ResourceApp.delete)]"
                                     @onclick="() => RemoveGroup(group)">
                                 @((MarkupString)Icons.DeleteSVG)
                             </button>
                         </td>
 
-                        <td class="@CssClasses.Table.Td font-semibold">@group.Name</td>
-                        <td class="@CssClasses.Table.Td"></td>
-                        <td class="@CssClasses.Table.Td"></td>
-                        <td class="@CssClasses.Table.Td"></td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200 font-semibold">@group.Name</td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"></td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"></td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"></td>
                     </tr>
 
                     @foreach (var account in group.Accounts)
                     {
-                        <tr class="@CssClasses.Table.Tr">
-                            <td class="@CssClasses.Table.Td">
-                                <button class="@CssClasses.Btn.IconButton.Danger"
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                            <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
+                                <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                                         title="@AppLoc[nameof(ResourceApp.delete)]"
                                         @onclick="() => RemoveAccount(group, account)">
                                     @((MarkupString)Icons.DeleteSVG)
                                 </button>
                             </td>
 
-                            <td class="@CssClasses.Table.Td"></td>
-                            <td class="@CssClasses.Table.Td">@account.Name</td>
-                            <td class="@CssClasses.Table.Td">@account.Account</td>
-                            <td class="@CssClasses.Table.Td">
+                            <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"></td>
+                            <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@account.Name</td>
+                            <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@account.Account</td>
+                            <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
                                 @if (account.Data?.Comments is { Count: > 0 })
                                 {
                                     @foreach (var c in account.Data.Comments)

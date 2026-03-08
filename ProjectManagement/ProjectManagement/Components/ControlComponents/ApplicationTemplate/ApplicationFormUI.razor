@@ -10,16 +10,16 @@
     <EditForm id="appForm" Model="@ApplicationUpdate" OnValidSubmit="HandleSubmitAsync">
         <DataAnnotationsValidator />
 
-        <div class="@CssClasses.Grid.Col.MD4">
+        <div class="col-span-12 md:col-span-4">
             <div>
-                <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="ApplicationUpdate.Name" />
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
+                <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="ApplicationUpdate.Name" />
                 <ValidationMessage For="() => ApplicationUpdate.Name" />
             </div>
 
             <div>
-                <label class="@CssClasses.Form.Label">@ResourceApp.department:</label>
-                <InputSelect class="@CssClasses.Input.Select" @bind-Value="ApplicationUpdate.DepartmentId">
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.department:</label>
+                <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="ApplicationUpdate.DepartmentId">
                     @foreach (var item in Departments)
                     {
                         <option value="@item.Id">@item.Name</option>
@@ -28,58 +28,58 @@
                 <ValidationMessage For="() => ApplicationUpdate.DepartmentId" />
             </div>
 
-            <div class="@CssClasses.Form.CheckWrapperM">
-                <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="ApplicationUpdate.IsVisible" />
-                <label class="@CssClasses.Form.CheckLabel">@ResourceApp.isVisible</label>
+            <div class="flex items-center gap-2 py-1">
+                <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="ApplicationUpdate.IsVisible" />
+                <label class="text-sm text-slate-700 dark:text-slate-200">@ResourceApp.isVisible</label>
             </div>
 
             <div>
-                <button class="@CssClasses.Btn.Outline.Success mt-3" type="button" @onclick="OpenNewRow">
+                <button class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30 mt-3" type="button" @onclick="OpenNewRow">
                     @AppLoc[LocalizerConst.New, ResourceLoc.row]
                 </button>
             </div>
         </div>
     </EditForm>
 
-    <table class="@CssClasses.Table.Tab mt-2">
-        <thead class="@CssClasses.Table.Thead">
+    <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700 mt-2">
+        <thead class="bg-slate-50 dark:bg-slate-800/80">
             <tr>
-                <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.lastUpdate</th>
-                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.isVisible</th>
-                <th class="@CssClasses.Table.TH">@ResourceLoc.description</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">@ResourceApp.lastUpdate</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">@ResourceApp.isVisible</th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.description</th>
             </tr>
         </thead>
-        <tbody class="@CssClasses.Table.TBody">
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
             @if (ApplicationUpdate.Data.Rows.Count == 0)
             {
-                <tr class="@CssClasses.Table.Tr">
-                    <td class="@CssClasses.Table.Td" colspan="4">@ResourceApp.notFoundData</td>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                    <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200" colspan="4">@ResourceApp.notFoundData</td>
                 </tr>
             }
             else
             {
                 @foreach (var row in ApplicationUpdate.Data.Rows)
                 {
-                    <tr class="@CssClasses.Table.Tab">
-                        <td class="@CssClasses.Table.Td">
-                            <button type="button" @onclick="() => Remove(row)" class="@CssClasses.Btn.IconButton.Danger">@((MarkupString)Icons.DeleteSVG)</button>
-                            <button type="button" @onclick="() => RowForm = row" class="@CssClasses.Btn.Link">@row.Name</button>
+                    <tr class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
+                            <button type="button" @onclick="() => Remove(row)" class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50">@((MarkupString)Icons.DeleteSVG)</button>
+                            <button type="button" @onclick="() => RowForm = row" class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200">@row.Name</button>
                         </td>
-                        <td class="@CssClasses.Table.Td"></td>
-                        <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@row.IsVisible" /></td>
-                        <td class="@CssClasses.Table.Td">@row.Description</td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"></td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"><input type="checkbox" disabled checked="@row.IsVisible" /></td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@row.Description</td>
                     </tr>
                 }
             }
         </tbody>
     </table>
 
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" form="appForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+    <div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+        <button type="submit" form="appForm" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30" disabled="@IsLoading">
             @ResourceApp.save
         </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="CancelAsync" disabled="@IsLoading">@ResourceApp.cancel</button>
+        <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="CancelAsync" disabled="@IsLoading">@ResourceApp.cancel</button>
     </div>
 }
 else

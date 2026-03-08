@@ -12,13 +12,13 @@
         <div class="mb-4 flex flex-wrap items-center gap-2">
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
                 <button @onclick="() => ModalForm(new ListOrganisationCategoryDTO())"
-                        class="@CssClasses.Btn.IconButton.Success"
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
                         title="@WebLoc[nameof(PMWebResource.NewCategory)]">
                     @((MarkupString)Icons.Plus)
                 </button>
 
                 <button @onclick="OpenTypePage"
-                        class="@CssClasses.Btn.Outline.Secondary"
+                        class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                         title="@WebLoc[nameof(PMWebResource.OpenOrganisationTypes)]">
                     @FormatLoc[nameof(PMAppFormatResource.categoryType)]
                 </button>

@@ -29,14 +29,14 @@ else
 
         <div class="flex items-center gap-2">
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
-                <button class="@CssClasses.Btn.IconButton.Success"
+                <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
                         @onclick="() => UpdateForm(new ShortListOrganisationDTO())"
                         title="@WebLoc[nameof(PMWebResource.NewOrganisation)]">
                     @((MarkupString)Icons.Plus)
                 </button>
             </AuthorizeView>
 
-            <button class="@CssClasses.Btn.IconButton.Secondary"
+            <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     @onclick="ReverseElements"
                     title="@AppLoc[nameof(ResourceApp.filter)]">
                 @((MarkupString)Icons.GetVisibleIcon(IsVisible))
@@ -52,32 +52,32 @@ else
     }
     else
     {
-        <table class="@CssClasses.Table.Tab">
-            <thead class="@CssClasses.Table.Thead">
+        <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
+            <thead class="bg-slate-50 dark:bg-slate-800/80">
                 <tr>
-                    <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                    <th class="@CssClasses.Table.TH" style="width:150px;">@CalcResource.status</th>
-                    <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.category</th>
-                    <th class="@CssClasses.Table.TH" style="width:150px;">@ResourceLoc.baseCategory</th>
+                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
+                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@CalcResource.status</th>
+                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.category</th>
+                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.baseCategory</th>
                 </tr>
             </thead>
 
-            <tbody class="@CssClasses.Table.TBody">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                 @foreach (var organistion in Organistion)
                 {
-                    <tr class="@CssClasses.Table.Tr">
-                        <td class="@CssClasses.Table.Td"
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"
                             @oncontextmenu:preventDefault
                             @oncontextmenu="() => Context(organistion)">
-                            <button class="@CssClasses.Btn.Link"
+                            <button class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200"
                                     @onclick="() => OrganisationDetails(organistion)">
                                 @organistion.Name
                             </button>
                         </td>
 
-                        <td class="@CssClasses.Table.Td">@organistion.Type</td>
-                        <td class="@CssClasses.Table.Td">@organistion.SubCategory</td>
-                        <td class="@CssClasses.Table.Td">@organistion.Category</td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
+                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
                     </tr>
                 }
             </tbody>

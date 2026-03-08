@@ -7,7 +7,7 @@
 @inherits AppComponentBase
 @inject ICommandDispatcher MicroBus
 @inject IStorageViewService StorageViewService
-<div class="@CssClasses.Layout.FlexItemsCenter pb-1">
+<div class="flex items-center gap-2 pb-1">
     <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             @onchange="GetAuthorityStorage">
         <option value="@(AuthorityStorage._private)" selected>@ResourceApp._private</option>
@@ -31,22 +31,22 @@
 
     @if (BtnImportIsVisible)
     {
-        <button class="@CssClasses.Btn.IconButton.Primary"
+        <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-sky-300 bg-sky-50 text-sky-600 transition hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50"
                 @onclick="GetAsync">
             @((MarkupString)Icons.ImportFromCloud)
         </button>
     }
 </div>
 
-<table class="@CssClasses.Table.Tab">
+<table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
     <HeaderStorageUI></HeaderStorageUI>
-    <tbody class="@CssClasses.Table.TBody">
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
         @if (Post.Type == CalculationItemType.task && Tasks != null)
         {
             foreach (var storage in Tasks)
             {
                 <TaskStorage Task="storage.StorageValue" WithContent="true">
-                    <span role="button" @onclick="() => Remove(storage.Id, storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
+                    <span role="button" @onclick="() => Remove(storage.Id, storage.StorageValue.Name)" class="text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200">@((MarkupString)Icons.Delete)</span>
                 </TaskStorage>
             }
         }
@@ -56,7 +56,7 @@
             foreach (var storage in Resources)
             {
                 <ResourcesStorage Resource="storage.StorageValue">
-                    <span role="button" @onclick="() => Remove(storage.Id, storage.StorageValue.Name)" class="@CssClasses.Text.Danger">@((MarkupString)Icons.Delete)</span>
+                    <span role="button" @onclick="() => Remove(storage.Id, storage.StorageValue.Name)" class="text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200">@((MarkupString)Icons.Delete)</span>
                 </ResourcesStorage>
             }
         }

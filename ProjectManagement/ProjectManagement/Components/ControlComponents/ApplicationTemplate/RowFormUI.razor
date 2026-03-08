@@ -47,46 +47,46 @@
             {
                 <EditForm id="rowForm" Model="@RowUpdate" OnValidSubmit="async () => await HandleSubmitAsync()">
                     <DataAnnotationsValidator />
-                    <div class="@CssClasses.Grid.Col.MD3">
+                    <div class="col-span-12 md:col-span-3">
                         <div>
-                            <label class="@CssClasses.Form.Label">@CalcResource.name:</label>
-                            <InputText class="@CssClasses.Input.Text" @bind-Value="@RowUpdate.Name" />
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
+                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@RowUpdate.Name" />
                             <ValidationMessage For=@(() => RowUpdate.Name) />
                         </div>
                         <div>
-                            <label class="@CssClasses.Form.Label">@ResourceLoc.description:</label>
-                            <InputText class="@CssClasses.Input.Text" @bind-Value="@RowUpdate.Description" />
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.description:</label>
+                            <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@RowUpdate.Description" />
                             <ValidationMessage For=@(() => RowUpdate.Description) />
                         </div>
-                        <div class="@CssClasses.Form.CheckWrapperM">
-                            <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="RowUpdate.IsVisible" />
-                                <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
+                        <div class="flex items-center gap-2 py-1">
+                            <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="RowUpdate.IsVisible" />
+                                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.isVisible</label>
                                 <ValidationMessage For=@(() => RowUpdate.IsVisible) />
                         </div>
                         <div>
-                            <button type="submit" form="rowForm" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success">@ResourceApp.save</button>
-                            <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
+                            <button type="submit" form="rowForm" disabled="@IsLoading" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30">@ResourceApp.save</button>
+                            <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async ()=> await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
                         </div>
                     </div>
                 </EditForm>
             }
             @if (PartPage == 1)
             {
-                <div class="@CssClasses.Layout.FlexItemsCenter">
+                <div class="flex items-center gap-2">
                     <div>
-                        <input type="color" class="@CssClasses.Input.Color" @bind="@Style.Color" @bind:after="updateStyle" />
+                        <input type="color" class="h-10 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800" @bind="@Style.Color" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingTop</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@Style.PaddingTop" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.paddingTop</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.PaddingTop" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.FontSize</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@Style.FontSize" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.FontSize</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.FontSize" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.alignItems </label>
-                        <select @bind="@Style.TextAlign" class="@CssClasses.Input.Select" @bind:after="updateStyle">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.alignItems </label>
+                        <select @bind="@Style.TextAlign" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind:after="updateStyle">
                             <option value=""></option>
                             <option value="center">@PMAppFormatResource.center </option>
                             <option value="end">@PMAppFormatResource.right </option>
@@ -94,8 +94,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.fontWeight </label>
-                        <select @bind="@Style.FontWeight" class="@CssClasses.Input.Select" @bind:after="updateStyle">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.fontWeight </label>
+                        <select @bind="@Style.FontWeight" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind:after="updateStyle">
                             <option value=""></option>
                             <option value="bold">@PMAppFormatResource.bold </option>
                             <option value="normal">@PMAppFormatResource.normal </option>
@@ -106,48 +106,48 @@
             }
             else if (PartPage == 2)
             {
-                <div class="@CssClasses.Layout.FlexItemsCenter">
+                <div class="flex items-center gap-2">
                     <div>
-                        <input type="color" class="@CssClasses.Input.Color"
+                        <input type="color" class="h-10 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800"
                         @bind="@Style.BackgroundColor" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.width</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="Style.Width" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.width</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="Style.Width" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.height</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@Style.Height" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.height</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.Height" @bind:after="updateStyle" />
                     </div>
                 </div>
             }
             else if (PartPage == 3)
             {
-                <div class="@CssClasses.Layout.FlexItemsCenter">
+                <div class="flex items-center gap-2">
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.height:</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@StyleRow.Height" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.height:</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@StyleRow.Height" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.color:</label>
                         <input type="color" class="form-control form-control-color" @bind="StyleRow.BackgroundColor" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.marginTop:</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="StyleRow.MarginTop" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.marginTop:</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="StyleRow.MarginTop" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.marginBottom:</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="StyleRow.MarginBottom" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.marginBottom:</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="StyleRow.MarginBottom" @bind:after="updateStyle" />
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingLeft:</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@StyleRow.PaddingLeft" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.paddingLeft:</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@StyleRow.PaddingLeft" @bind:after="updateStyle" />
                     </div>
 
                     <div>
-                        <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingTop:</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@StyleRow.PaddingTop" @bind:after="updateStyle" />
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.paddingTop:</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@StyleRow.PaddingTop" @bind:after="updateStyle" />
                     </div>
                 </div>
 
@@ -155,30 +155,30 @@
             else if (PartPage == 4)
             {
                 <div>
-                    <button class="@CssClasses.Btn.Solid.Primary" @onclick="()=> AttributeForm=new AttributeModel()">
+                    <button class="inline-flex items-center justify-center rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400" @onclick="()=> AttributeForm=new AttributeModel()">
                         @AppLoc[LocalizerConst.New, nameof(ResourceApp.attribute)]
                     </button>
                 </div>
                 <div>
-                    <table class="@CssClasses.Table.Tab mt-1">
-                        <thead class="@CssClasses.Table.Thead">
+                    <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700 mt-1">
+                        <thead class="bg-slate-50 dark:bg-slate-800/80">
                             <tr>
-                                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.attributeType</th>
-                                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.order </th>
-                                <th class="@CssClasses.Table.TH" style="width:100px;">@ResourceApp.required</th>
-                                <th class="@CssClasses.Table.TH"></th>
+                                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">@ResourceApp.attributeType</th>
+                                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">@ResourceApp.order </th>
+                                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:100px;">@ResourceApp.required</th>
+                                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200"></th>
                             </tr>
                         </thead>
-                        <tbody class="@CssClasses.Table.TBody">
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                             @if (RowUpdate.Attributes != null)
                                 foreach (var field in RowUpdate.Attributes)
                                 {
-                                    <tr class="@CssClasses.Table.Tr">
-                                        <td scope="row" class="@CssClasses.Table.Td"><button @onclick="() => AttributeForm = field" class="@CssClasses.Btn.Link">@field.AttributeType</button> </td>
-                                        <td scope="row" class="@CssClasses.Table.Td">@field.Order</td>
-                                        <td class ="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@field.Required" /></td>
-                                        <td class="@CssClasses.Table.Td">
-                                            <button @onclick="()=>Remove(field)" class="@CssClasses.Btn.Outline.Danger">@((MarkupString)Icons.DeleteSVG)</button>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                        <td scope="row" class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"><button @onclick="() => AttributeForm = field" class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200">@field.AttributeType</button> </td>
+                                        <td scope="row" class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@field.Order</td>
+                                        <td class ="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"><input type="checkbox" disabled checked="@field.Required" /></td>
+                                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">
+                                            <button @onclick="()=>Remove(field)" class="inline-flex items-center justify-center rounded-md border border-red-400 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30">@((MarkupString)Icons.DeleteSVG)</button>
                                         </td>
                                     </tr>
                                 }
@@ -192,8 +192,8 @@
             <div style="padding-top:10px;">
                 @if (Part == 1 || Part == 2)
                 {
-                    <button class="@CssClasses.Btn.Outline.Primary" @onclick="updateStyle">Preview Style</button>
-                    <button class="@CssClasses.Btn.Outline.Secondary" @onclick="() => Part = 0">@((MarkupString)Icons.Back)</button>
+                    <button class="inline-flex items-center justify-center rounded-md border border-sky-400 px-3 py-1.5 text-sm font-medium text-sky-600 transition hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-900/30" @onclick="updateStyle">Preview Style</button>
+                    <button class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="() => Part = 0">@((MarkupString)Icons.Back)</button>
                 }
                 <div style="display:flex;@StyleRowStr">
                     <label style="@StyleStr z-index:100;">@RowUpdate.Name</label>
@@ -201,7 +201,7 @@
                         {
                             if (attr.AttributeType == AttributeType.Bool)
                             {
-                                <input class="@CssClasses.Input.Check" type="checkbox" style="@attr.Style" />
+                                <input class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
                             {
@@ -221,35 +221,35 @@
                         {
                             @if (attr.AttributeType == AttributeType.Text)
                             {
-                                <input type="text" class="@CssClasses.Input.Text" style="@attr.Style" />
+                                <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.Char)
                             {
-                                <input maxlength="1" type="text" class="@CssClasses.Input.Text" style="@attr.Style" />
+                                <input maxlength="1" type="text" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.TextArea)
                             {
-                                <textarea class="@CssClasses.Input.Text" style="@attr.Style"></textarea>
+                                <textarea class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style"></textarea>
                             }
                             else if (attr.AttributeType == AttributeType.DateTime)
                             {
-                                <input type="datetime-local" class="@CssClasses.Input.Text" style="@attr.Style" />
+                                <input type="datetime-local" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.Date)
                             {
-                                <input type="date" class="@CssClasses.Input.Text" style="@attr.Style" />
+                                <input type="date" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.Time)
                             {
-                                <input type="time" class="@CssClasses.Input.Text" style="@attr.Style" />
+                                <input type="time" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.Bool)
                             {
-                                <input class="@CssClasses.Input.Check" type="checkbox" style="@attr.Style" />
+                                <input class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
                             {
-                                <input type="number" class="@CssClasses.Input.Text" style="@attr.Style" />
+                                <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" style="@attr.Style" />
                             }
                             else if (attr.AttributeType == AttributeType.Select)
                             {

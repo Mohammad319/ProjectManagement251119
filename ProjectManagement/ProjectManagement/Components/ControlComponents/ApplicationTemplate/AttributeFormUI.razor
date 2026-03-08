@@ -41,11 +41,11 @@
 
         @if (PartPage == 0)
         {
-    <div class="@CssClasses.Layout.FlexItemsCenter">
+    <div class="flex items-center gap-2">
 
             <div>
-                <label class="@CssClasses.Form.Label">@ResourceApp.attributeType: </label>
-                <InputSelect @bind-Value="@AttributeUpdate.AttributeType" class="@CssClasses.Input.Select">
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.attributeType: </label>
+                <InputSelect @bind-Value="@AttributeUpdate.AttributeType" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900">
                     @foreach (var level in Enum.GetValues(typeof(AttributeType)))
                     {
                         <option value="@level">@level</option>
@@ -55,20 +55,20 @@
             </div>
             
         <div>
-            <label class="@CssClasses.Form.Label">@ResourceApp.order</label>
-            <InputNumber @bind-Value="@AttributeUpdate.Order" class="@CssClasses.Input.Text"></InputNumber>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.order</label>
+            <InputNumber @bind-Value="@AttributeUpdate.Order" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900"></InputNumber>
         </div>
-                <div class="@CssClasses.Form.CheckWrapperM">
-                    <InputCheckbox class="@CssClasses.Input.Check" type="checkbox" @bind-Value="@AttributeUpdate.Required" />
-                    <label class="@CssClasses.Form.CheckLabel">@ResourceApp.required</label>
+                <div class="flex items-center gap-2 py-1">
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" @bind-Value="@AttributeUpdate.Required" />
+                    <label class="text-sm text-slate-700 dark:text-slate-200">@ResourceApp.required</label>
                 </div>
                    </div>
-        <div class="@CssClasses.Layout.FlexItemsCenter">
+        <div class="flex items-center gap-2">
             @if (AttributeUpdate.AttributeType == AttributeType.Select)
                 {
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.newItem</label>
-                        <input type="text" class="@CssClasses.Input.Text" @bind-value="@SelectV">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.newItem</label>
+                        <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-value="@SelectV">
                     </div>
 
                     <div>
@@ -91,62 +91,62 @@
                 }
                 else if (AttributeUpdate.AttributeType == AttributeType.Text || AttributeUpdate.AttributeType == AttributeType.TextArea)
                 {
-                <div class="@CssClasses.Layout.FlexItemsCenter">
+                <div class="flex items-center gap-2">
                     <div >
-                        <label class="@CssClasses.Form.Label">@ResourceApp.minValue</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidTextVM.Min">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.minValue</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidTextVM.Min">
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.maxValue</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidTextVM.Max">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.maxValue</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidTextVM.Max">
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
-                        <input type="text" class="@CssClasses.Input.Text" @bind="@ValidTextVM.Default">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.defaultValue</label>
+                        <input type="text" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidTextVM.Default">
                     </div>
                 </div>
                 }
                 else if (AttributeUpdate.AttributeType == AttributeType.Int || AttributeUpdate.AttributeType == AttributeType.Double)
                 {
-                <div class="@CssClasses.Layout.FlexItemsCenter">
+                <div class="flex items-center gap-2">
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.minValue</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidNumberVM.Min">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.minValue</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidNumberVM.Min">
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.maxValue</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidNumberVM.Max">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.maxValue</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidNumberVM.Max">
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
-                        <input type="number" class="@CssClasses.Input.Text" @bind="@ValidNumberVM.Default">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.defaultValue</label>
+                        <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidNumberVM.Default">
                     </div>
                 </div>
                 }
                 else if (AttributeUpdate.AttributeType == AttributeType.Bool)
                 {
                     <div>
-                    <div class="@CssClasses.Form.Equals">
-                            <input class="@CssClasses.Input.Check" type="checkbox" @bind="@ValidBoolVM.Default" />
-                            <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
+                    <div class="text-sm font-medium text-slate-500 dark:text-slate-300">
+                            <input class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" @bind="@ValidBoolVM.Default" />
+                            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.defaultValue</label>
                         </div>
                     </div>
                 }
                 else if (AttributeUpdate.AttributeType == AttributeType.DateTime || AttributeUpdate.AttributeType == AttributeType.Date
                 || AttributeUpdate.AttributeType == AttributeType.Time)
                 {
-                <div class="@CssClasses.Layout.FlexItemsCenter">
+                <div class="flex items-center gap-2">
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.minValue</label>
-                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="@CssClasses.Input.Text" @bind="@ValidDateVM.Min">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.minValue</label>
+                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidDateVM.Min">
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.maxValue</label>
-                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="@CssClasses.Input.Text" @bind="@ValidDateVM.Max">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.maxValue</label>
+                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidDateVM.Max">
                     </div>
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.defaultValue</label>
-                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="@CssClasses.Input.Text" @bind="@ValidDateVM.Default">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.defaultValue</label>
+                        <input type="@ValidDateVM.GetHTMLFormat(AttributeUpdate.AttributeType)" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@ValidDateVM.Default">
                     </div>
                 </div>
                 }
@@ -155,17 +155,17 @@
         }
         @if (PartPage == 1)
         {
-        <div class="@CssClasses.Layout.FlexItemsCenter">
+        <div class="flex items-center gap-2">
                     <div>
-            <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
-            <input type="color"  class="@CssClasses.Input.Color" @bind="@Style.Color"
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.color:</label>
+            <input type="color"  class="h-10 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800" @bind="@Style.Color"
              @bind:after="Refresh"/>
         </div>
             @if (AttributeUpdate.AttributeType != AttributeType.Bool)
             {
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMAppFormatResource.fontWeight: </label>
-                    <select @bind="@Style.FontWeight" class="@CssClasses.Input.Text" @bind:after="Refresh">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.fontWeight: </label>
+                    <select @bind="@Style.FontWeight" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind:after="Refresh">
                         <option value=""></option>
                         <option value="bold">@PMAppFormatResource.bold </option>
                         <option value="normal">@PMAppFormatResource.normal </option>
@@ -174,8 +174,8 @@
                     <ValidationMessage For=@(() => Style.FontWeight) />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMAppFormatResource.alignItems: </label>
-                <select @bind="@Style.TextAlign" class="@CssClasses.Input.Text" @bind:after="Refresh">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.alignItems: </label>
+                <select @bind="@Style.TextAlign" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind:after="Refresh">
                         <option value=""></option>
                         <option value="center">@PMAppFormatResource.center </option>
                         <option value="right">@PMAppFormatResource.right </option>
@@ -184,37 +184,37 @@
                     <ValidationMessage For=@(() => Style.TextAlign) />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@PMAppFormatResource.FontSize:</label>
-                    <input type="number" class="@CssClasses.Input.Text" @bind="@Style.FontSize" @bind:after="Refresh" />
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.FontSize:</label>
+                    <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.FontSize" @bind:after="Refresh" />
                     <ValidationMessage For=@(() => Style.FontSize) />
                 </div>
             }
             <div>
-                <label class="@CssClasses.Form.Label">@PMAppFormatResource.paddingTop:</label>
-                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.PaddingTop" @bind:after="Refresh" />
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.paddingTop:</label>
+                <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.PaddingTop" @bind:after="Refresh" />
                 <ValidationMessage For=@(() => Style.PaddingTop) />
             </div>   </div>
         }
         else if (PartPage == 3)
         {
-                        <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <div class="flex items-center gap-2">
             <div>
-                <label class="@CssClasses.Form.Label">@PMAppFormatResource.marginLeft:</label>
-                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.MarginLeft" @bind:after="Refresh" />
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.marginLeft:</label>
+                <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.MarginLeft" @bind:after="Refresh" />
                 <ValidationMessage For=@(() => Style.MarginLeft) />
             </div>
         <div>
-                <label class="@CssClasses.Form.Label">@ResourceLoc.color:</label>
-                <input type="color" class="@CssClasses.Input.Color" @bind:after="Refresh" @bind="@Style.BackgroundColor" />
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.color:</label>
+                <input type="color" class="h-10 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800" @bind:after="Refresh" @bind="@Style.BackgroundColor" />
         </div>
         <div>
-                <label class="@CssClasses.Form.Label">@PMAppFormatResource.width:</label>
-                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.Width" @bind:after="Refresh" />
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMAppFormatResource.width:</label>
+                <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.Width" @bind:after="Refresh" />
             <ValidationMessage For=@(() => Style.Width) />
         </div>
         <div>
-                <label class="@CssClasses.Form.Label">@ResourceApp.height:</label>
-                <input type="number" class="@CssClasses.Input.Text" @bind="@Style.Height" @bind:after="Refresh" />
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.height:</label>
+                <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind="@Style.Height" @bind:after="Refresh" />
 
             <ValidationMessage For=@(() => Style.Height) />
         </div>
@@ -224,7 +224,7 @@
 
  
     <div class="mt-4 flex items-center gap-2">
-        <button type="submit" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success">@ResourceApp.save</button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="CancelAsync">@ResourceApp.cancel</button>
+        <button type="submit" disabled="@IsLoading" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30">@ResourceApp.save</button>
+        <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="CancelAsync">@ResourceApp.cancel</button>
     </div>
 </EditForm>

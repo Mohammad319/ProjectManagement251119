@@ -6,12 +6,12 @@
     <div class="flex items-center justify-between">
         <div class="inline-flex items-center gap-1 rounded-full bg-slate-100/80 px-1.5 py-1 shadow-sm dark:bg-slate-800/80">
             <button @onclick="CreateNewAsync"
-                    class="@CssClasses.Btn.IconButton.Success"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
                     title="@AppLoc[nameof(ResourceApp.newItem)]">
                 @((MarkupString)Icons.Plus2)
             </button>
             <button @onclick="ToggleVisibleAsync"
-                    class="@CssClasses.Btn.IconButton.Secondary"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     title="@AppLoc[nameof(ResourceApp.isVisible)]">
                 @((MarkupString)Icons.GetVisibleIcon(IsVisible))
             </button>
@@ -30,20 +30,20 @@
     {
         <MhdTable Items="VisibleItems.ToList()" ShowFilter="false">
             <HeaderTemplate>
-                <th style="width:200px;" class="@CssClasses.Table.TH"></th>
-                <th class="@CssClasses.Table.TH">@CalcLoc[nameof(CalcResource.name)]</th>
+                <th style="width:200px;" class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200"></th>
+                <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</th>
             </HeaderTemplate>
             <ChildContent>
                 <MhdTableColumn>
                     <Template Context="status">
-                        <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <div class="flex items-center gap-2">
                             <button @onclick="() => UpdateForm(status)"
-                                    class="@CssClasses.Btn.IconButton.Warning"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-amber-300 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50"
                                     title="@AppLoc[nameof(ResourceApp.update)]">
                                 @Icons.Edit
                             </button>
                             <button @onclick="() => Remove(status)"
-                                    class="@CssClasses.Btn.IconButton.Danger"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-300 bg-red-50 text-red-600 transition hover:bg-red-100 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                                     title="@AppLoc[nameof(ResourceApp.delete)]">
                                 @((MarkupString)Icons.DeleteSVG)
                             </button>
