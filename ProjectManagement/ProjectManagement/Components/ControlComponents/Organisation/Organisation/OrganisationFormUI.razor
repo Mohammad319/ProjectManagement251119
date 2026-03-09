@@ -22,8 +22,7 @@
 @if (PostCompany is not null)
 {
     <div class="space-y-3 p-4 text-sm">
-        <EditForm Model="@PostCompany" OnValidSubmit="HandleSubmitAsync" id="organisationForm">
-            <DataAnnotationsValidator />
+        <EditForm Model="@PostCompany" OnSubmit="HandleSubmitAsync" id="organisationForm">
 
             <div class="flex justify-between">
                 <ul class="mb-2 flex flex-wrap gap-1 border-b border-slate-200 pb-2 dark:border-slate-700" role="tablist">
@@ -46,7 +45,10 @@
                     <div class="md:col-span-2">
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
                         <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Name" />
-                        <ValidationMessage For="@(() => PostCompany.Name)" />
+                        @if (!string.IsNullOrWhiteSpace(NameValidationError))
+                        {
+                            <div class="mt-1 text-sm text-red-600 dark:text-red-400">@NameValidationError</div>
+                        }
                     </div>
 
                     <div>
