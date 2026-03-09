@@ -48,13 +48,19 @@ else
     }
     else
     {
-        <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
+        <table class="w-full table-fixed divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
+            <colgroup>
+                <col class="w-auto" />
+                <col class="w-36" />
+                <col class="w-36" />
+                <col class="w-36" />
+            </colgroup>
             <thead class="bg-slate-50 dark:bg-slate-800/80">
                 <tr>
-                    <th class="px-1 py-1 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
-                    <th class="px-1 py-1 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@CalcResource.status</th>
-                    <th class="px-1 py-1 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.category</th>
-                    <th class="px-1  text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.baseCategory</th>
+                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
+                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.status</th>
+                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.category</th>
+                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.baseCategory</th>
                 </tr>
             </thead>
 
@@ -62,7 +68,7 @@ else
                 @foreach (var organistion in Organistion)
                 {
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                        <td class="px-1 py-1 text-sm text-slate-700 dark:text-slate-200"
+                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200"
                             @oncontextmenu:preventDefault
                             @oncontextmenu="() => Context(organistion)">
                             <button class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200"
@@ -71,9 +77,9 @@ else
                             </button>
                         </td>
 
-                        <td class="px-1 py-1 text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
-                        <td class="px-1 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
-                        <td class="px-1 py-1 text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
+                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
+                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
+                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
                     </tr>
                 }
             </tbody>
