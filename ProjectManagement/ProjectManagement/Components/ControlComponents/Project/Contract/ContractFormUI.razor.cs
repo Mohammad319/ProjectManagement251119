@@ -13,14 +13,24 @@ namespace ProjectManagement.Components.ControlComponents.Project.Contract
 
         private PostTaskStatusDTO UpdateObj { get; set; } = new();
         private bool IsLoading;
+        private int? LastContractId;
+        private ContractEntity? LastContractReference;
 
         protected override void OnParametersSet()
         {
+            var currentId = Contract?.Id;
+            var sameReference = ReferenceEquals(LastContractReference, Contract);
+            if (sameReference && LastContractId == currentId)
+                return;
+
             UpdateObj = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Contract, UpdateObj);
 
             if (string.IsNullOrWhiteSpace(UpdateObj.Color))
                 UpdateObj.Color = "#00ff00";
+
+            LastContractId = currentId;
+            LastContractReference = Contract;
         }
 
         private async Task HandleSubmitAsync()

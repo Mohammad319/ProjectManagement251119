@@ -13,14 +13,24 @@ namespace ProjectManagement.Components.ControlComponents.Project.ProcurementMeth
 
         private PostTaskStatusDTO ProcurementUpdate { get; set; } = new();
         private bool IsLoading;
+        private int? LastProcurementId;
+        private ProcurementMethodEntity? LastProcurementReference;
 
         protected override void OnParametersSet()
         {
+            var currentId = Procurement?.Id;
+            var sameReference = ReferenceEquals(LastProcurementReference, Procurement);
+            if (sameReference && LastProcurementId == currentId)
+                return;
+
             ProcurementUpdate = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Procurement, ProcurementUpdate);
 
             if (string.IsNullOrWhiteSpace(ProcurementUpdate.Color))
                 ProcurementUpdate.Color = "#00ff00";
+
+            LastProcurementId = currentId;
+            LastProcurementReference = Procurement;
         }
 
         private async Task HandleSubmitAsync()

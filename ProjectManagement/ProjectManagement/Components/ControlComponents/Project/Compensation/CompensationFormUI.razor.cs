@@ -12,14 +12,24 @@ namespace ProjectManagement.Components.ControlComponents.Project.Compensation
 
         private PostTaskStatusDTO CompensationUpdate { get; set; } = new();
         private bool IsLoading;
+        private int? LastCompensationId;
+        private CompensationEntity? LastCompensationReference;
 
         protected override void OnParametersSet()
         {
+            var currentId = Compensation?.Id;
+            var sameReference = ReferenceEquals(LastCompensationReference, Compensation);
+            if (sameReference && LastCompensationId == currentId)
+                return;
+
             CompensationUpdate = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Compensation, CompensationUpdate);
 
             if (string.IsNullOrWhiteSpace(CompensationUpdate.Color))
                 CompensationUpdate.Color = "#00ff00";
+
+            LastCompensationId = currentId;
+            LastCompensationReference = Compensation;
         }
 
         private async Task HandleSubmitAsync()

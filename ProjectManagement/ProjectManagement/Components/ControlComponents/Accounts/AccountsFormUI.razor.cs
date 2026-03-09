@@ -7,9 +7,6 @@ namespace ProjectManagement.Components.ControlComponents.Accounts;
 
 public partial class AccountsFormUI
 {
-    /// <summary>
-    /// 0 = Create, >0 = Update
-    /// </summary>
     [Parameter] public int Id { get; set; }
 
     [Parameter, EditorRequired]
@@ -20,12 +17,15 @@ public partial class AccountsFormUI
 
     private PostAccountDTO EditModel { get; set; } = new();
     private bool IsLoading;
+    private int LastId = -1;
+    private PostAccountDTO? LastModelReference;
 
-    /// <summary>
-    /// ✅ أفضل من OnInitializedAsync عند فتح المودال عدة مرات
-    /// </summary>
     protected override void OnParametersSet()
     {
+        var sameReference = ReferenceEquals(LastModelReference, Model);
+        if (sameReference && LastId == Id)
+            return;
+
         EditModel = new PostAccountDTO
         {
             Name = Model?.Name ?? string.Empty,
@@ -34,6 +34,9 @@ public partial class AccountsFormUI
             IsVisible = Model?.IsVisible ?? true,
             Data = Model?.Data ?? new AccountData()
         };
+
+        LastId = Id;
+        LastModelReference = Model;
     }
 
     private void CloseModal() => DialogService.Close();

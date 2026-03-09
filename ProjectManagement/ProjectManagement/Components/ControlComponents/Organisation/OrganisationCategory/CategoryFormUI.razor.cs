@@ -12,12 +12,22 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private PostOrganisationCategoryDTO PostOffer { get; set; } = new();
         private bool IsLoading { get; set; }
+        private int? LastCategoryId;
+        private ListOrganisationCategoryDTO? LastCategoryReference;
 
         protected override void OnParametersSet()
         {
+            var currentId = OrganisationCategory?.Id;
+            var sameReference = ReferenceEquals(LastCategoryReference, OrganisationCategory);
+            if (sameReference && LastCategoryId == currentId)
+                return;
+
             PostOffer = new PostOrganisationCategoryDTO();
             OrganisationCategory.CopyPropertiesTo(PostOffer);
             PostOffer.CategoryId = OrganisationCategory.ParentCategoryId;
+
+            LastCategoryId = currentId;
+            LastCategoryReference = OrganisationCategory;
         }
 
         private async Task Cancel()

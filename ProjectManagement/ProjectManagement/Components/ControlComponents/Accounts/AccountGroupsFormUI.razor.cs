@@ -7,36 +7,30 @@ namespace ProjectManagement.Components.ControlComponents.Accounts;
 
 public partial class AccountGroupsFormUI
 {
-    /// <summary>
-    /// 0 = Create, >0 = Update
-    /// </summary>
     [Parameter] public int Id { get; set; }
-
-    /// <summary>
-    /// Model used by the form. For Update: fill it before opening modal.
-    /// For Create: pass new PostAccountGroupDTO().
-    /// </summary>
     [Parameter, EditorRequired] public required PostAccountGroupDTO Model { get; set; }
-
     [Parameter] public EventCallback<bool> OnSaved { get; set; }
 
     [Inject] private ILogger<AccountGroupsFormUI> Logger { get; set; } = default!;
 
-    // (Optional) If you prefer injecting AppLoc in code-behind instead of razor:
-    // [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
-
-    // Bind this in Razor: Model="@EditModel"
     private PostAccountGroupDTO EditModel { get; set; } = new();
-
     private bool IsLoading { get; set; }
+    private int LastId = -1;
+    private PostAccountGroupDTO? LastModelReference;
 
     protected override void OnParametersSet()
     {
-        // Defensive copy: prevents editing the same DTO instance passed from parent.
+        var sameReference = ReferenceEquals(LastModelReference, Model);
+        if (sameReference && LastId == Id)
+            return;
+
         EditModel = new PostAccountGroupDTO
         {
             Name = Model?.Name ?? string.Empty
         };
+
+        LastId = Id;
+        LastModelReference = Model;
     }
 
     private void CloseModal() => DialogService.Close();
