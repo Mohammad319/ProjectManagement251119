@@ -11,8 +11,9 @@
 
 @if (Form is not null)
 {
-    <TemplateForm TempForm="Form" Callback="CallBack"></TemplateForm>
-
+    <TemplateForm TempForm="Form"
+                  DepartmentId="SelectedDepartmentId"
+                  Callback="CallBack"></TemplateForm>
 }
 else
 {
