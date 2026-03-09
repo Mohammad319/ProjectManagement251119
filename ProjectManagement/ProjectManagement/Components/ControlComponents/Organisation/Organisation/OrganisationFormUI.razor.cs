@@ -4,6 +4,7 @@ using Application.Feature.Organisation.OrganisationCategory.Queries;
 using Application.Feature.Organisation.OrganisationType.Queries;
 using Domain.DTO.Category;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Identity;
 using ProjectManagement.Shared;
@@ -29,6 +30,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         [Parameter] public int CategoryID { get; set; }
 
         private bool IsLoading;
+        private string? NameValidationError;
         private PostOrganisationDTO PostCompany { get; set; } = new();
         private List<ListOrganisationCategoryDTO> Categories { get; set; } = [];
         private ListOrganisationCategoryDTO? CategorySelected { get; set; }
@@ -117,9 +119,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             PostCompany.CategoryId = 0;
         }
 
-        private async Task HandleSubmitAsync()
+        private async Task HandleSubmitAsync(EditContext editContext)
         {
             if (IsLoading) return;
+
+            ValidateNameOnly();
+            if (!string.IsNullOrWhiteSpace(NameValidationError))
+                return;
 
             IsLoading = true;
             try
@@ -138,6 +144,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             {
                 IsLoading = false;
             }
+        }
+
+        private void ValidateNameOnly()
+        {
+            NameValidationError = string.IsNullOrWhiteSpace(PostCompany.Name)
+                ? Resource.ResLocalize.FieldIsRequred
+                : null;
         }
     }
 }
