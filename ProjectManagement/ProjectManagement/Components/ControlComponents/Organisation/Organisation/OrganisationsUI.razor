@@ -22,10 +22,6 @@
 else
 {
     <div class="mb-1 flex flex-wrap items-center justify-between gap-1">
-        <div>
-            <div class="text-sm font-medium text-slate-900 dark:text-slate-100">@Category.Name</div>
-            <div class="text-sm text-slate-600 dark:text-slate-300">@WebLoc[nameof(PMWebResource.OrganisationsInCategoryDescription)]</div>
-        </div>
 
         <div class="flex items-center gap-1">
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">

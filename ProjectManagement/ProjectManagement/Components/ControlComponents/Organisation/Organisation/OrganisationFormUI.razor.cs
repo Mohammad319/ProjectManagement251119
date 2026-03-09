@@ -12,6 +12,7 @@ using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.DTO.App.List;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.Organisation;
+using ProjectManagement.Shared.Resource;
 
 namespace ProjectManagement.Components.ControlComponents.Organisation.Organisation
 {
@@ -149,7 +150,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private void ValidateNameOnly()
         {
             NameValidationError = string.IsNullOrWhiteSpace(PostCompany.Name)
-                ? Resource.ResLocalize.FieldIsRequred
+                ? ResLocalize.FieldIsRequred
                 : null;
         }
     }

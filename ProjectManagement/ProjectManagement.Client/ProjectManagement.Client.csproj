@@ -10,16 +10,7 @@
     <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
 
   </PropertyGroup>
-	<ItemGroup>
-		<Compile Remove="**\node_modules\**" />
-		<Content Remove="**\node_modules\**" />
-		<EmbeddedResource Remove="**\node_modules\**" />
-		<None Remove="**\node_modules\**" />
-	</ItemGroup>
 
-	<PropertyGroup>
-		<DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**</DefaultItemExcludes>
-	</PropertyGroup>
 
 
 	<ItemGroup>

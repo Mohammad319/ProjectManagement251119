@@ -1,159 +1,99 @@
-@using Application.Feature.Calculation.TemplateTable.Commands
-@using ProjectManagement.Client.Constant
+﻿@using Application.Feature.Calculation.TemplateTable.Commands
+@using ProjectManagement.Client.Constant;
 @using ProjectManagement.Client.Pages.Calculation.Template
+@using ProjectManagement.Client.Shared.MVVM.Calculation;
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using System.Security.Claims;
 @using ProjectManagement.Shared.DTO.Calculation.Template
-@inherits AppComponentBase
-
-@if (TemplateUpdate is not null)
+@using ProjectManagement.Shared.DTO.Identity
+@inject ICommandDispatcher MicroBus
+@inject ContextMenuService ContextService
+@inject MhdServices MHD
+@inject IStringLocalizer<ResourceApp> AppLoc
+<style>
+    input, td, th {
+        min-width: 40px;
+        max-width: 250px;
+    }
+</style>
+@if (TemplateUpdate != null)
 {
-    <section class="space-y-4">
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@ResourceLoc.templates</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">@CalcResource.name</p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="submit"
-                            form="netTable"
-                            class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                            disabled="@btnSubmitDisabled">
-                        @ResourceApp.save
-                    </button>
-
-                    <button type="button"
-                            @onclick="BackAsync"
-                            class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-                            disabled="@btnSubmitDisabled">
-                        @((MarkupString)Icons.Back)
-                    </button>
-                </div>
+    <div>
+        <button type="button" @onclick="HandleSubmitAsync" class="@CssClasses.Btn.Outline.Success" form="netTable" disabled="@btnSubmitDisabled">
+            @ResourceApp.save
+        </button>
+        <button type="button" @onclick="async () => await Callback.InvokeAsync(false)" class="@CssClasses.Btn.Outline.Secondary">
+            @((MarkupString)Icons.Back)
+        </button>
+    </div>
+    <EditForm Model="@TemplateUpdate" id="netTable">
+        <DataAnnotationsValidator />
+        <div class="@CssClasses.Layout.FlexItemsCenter pb-1">
+            <div>
+                <label>@CalcResource.name</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Name" />
+            </div>
+            <div>
+                <label>@ResourceApp.date</label>
+                <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="@CssClasses.Input.Text">
+                    <option value="dd.MM.yyyy">dd.MM.yyyy</option>
+                    <option value="dd/MM/yyyy">dd/MM/yyyy</option>
+                    <option value="dd-MM-yyyy">dd-MM-yyyy</option>
+                    <option value="dd-MM-yyyy">dd MM yyyy</option>
+                    <option value="dd.MM.yyyy">yyyy.MM.dd</option>
+                    <option value="dd/MM/yyyy">yyyy/MM/dd</option>
+                    <option value="dd-MM-yyyy">yyyy-MM-dd</option>
+                    <option value="dd-MM-yyyy">yyyy MM dd</option>
+                </InputSelect>
+            </div>
+            <div>
+                <label>NumberFormat</label>
+                <InputSelect @bind-Value="TemplateUpdate.MathRound" class="@CssClasses.Input.Text">
+                    <option value="0">0</option>
+                    <option value="1">0.0</option>
+                    <option value="2">0.00</option>
+                    <option value="3">0.000</option>
+                    <option value="4">0.0000</option>
+                    <option value="4">0.00000</option>
+                </InputSelect>
+            </div>
+            <div>
+                <label>@CalcResource.Currency</label>
+                <InputText class="@CssClasses.Input.Text" @bind-Value="TemplateUpdate.Currency" />
             </div>
         </div>
 
-        <EditForm Model="@TemplateUpdate" id="netTable" OnValidSubmit="HandleSubmitAsync">
-            <DataAnnotationsValidator />
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
-                        <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Name" />
-                        <ValidationMessage For="() => TemplateUpdate.Name" class="mt-1 block text-xs text-rose-600" />
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.date</label>
-                        <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
-                            @foreach (var dateFormat in DateFormats)
-                            {
-                                <option value="@dateFormat">@dateFormat</option>
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Number format</label>
-                        <InputSelect @bind-Value="TemplateUpdate.MathRound" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
-                            @foreach (var numberFormat in NumberFormats)
-                            {
-                                <option value="@numberFormat.Value">@numberFormat.Label</option>
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.Currency</label>
-                        <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Currency" />
-                        <ValidationMessage For="() => TemplateUpdate.Currency" class="mt-1 block text-xs text-rose-600" />
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <NelCalculationTemplate2 Temp="TemplateUpdate"></NelCalculationTemplate2>
-                <SummarySheetTemplate Temp="TemplateUpdate"></SummarySheetTemplate>
-            </div>
-        </EditForm>
-    </section>
+        <NelCalculationTemplate2 Temp="TemplateUpdate"></NelCalculationTemplate2>
+        <SummarySheetTemplate Temp="TemplateUpdate"></SummarySheetTemplate>
+    </EditForm>
 }
-
 @code {
-    private static readonly string[] DateFormats =
-    [
-        "dd.MM.yyyy",
-        "dd/MM/yyyy",
-        "dd-MM-yyyy",
-        "yyyy.MM.dd",
-        "yyyy/MM/dd",
-        "yyyy-MM-dd"
-    ];
-
-    private static readonly (int Value, string Label)[] NumberFormats =
-    [
-        (0, "0"),
-        (1, "0.0"),
-        (2, "0.00"),
-        (3, "0.000"),
-        (4, "0.0000"),
-        (5, "0.00000")
-    ];
-
-    private TemplateListPostDTO TemplateUpdate = new();
-
-    [Parameter] public TemplateModelDTO TempForm { get; set; } = new();
-    [Parameter] public int? DepartmentId { get; set; }
+    TemplateListPostDTO TemplateUpdate = new();
+    [Parameter] public TemplateModelDTO? TempForm { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
-    private bool btnSubmitDisabled;
-
-    protected override void OnParametersSet()
+    bool btnSubmitDisabled = false;
+    protected override void OnInitialized()
     {
-        TemplateUpdate = new TemplateListPostDTO();
         TempForm.CopyPropertiesTo(TemplateUpdate);
-
-        TemplateUpdate.Name ??= string.Empty;
-        TemplateUpdate.Currency ??= "€";
-
-        if (string.IsNullOrWhiteSpace(TemplateUpdate.DateFormat))
-            TemplateUpdate.DateFormat = DateFormats[0];
     }
-
-    private async Task HandleSubmitAsync()
+    async Task HandleSubmitAsync()
     {
-        if (btnSubmitDisabled)
-            return;
-
+        bool refresh = false;
         btnSubmitDisabled = true;
-        var refresh = false;
-
         try
         {
             if (TempForm.Id > 0)
             {
-                refresh = await Dispatcher.Send(new UpdateTemplateCommand(TemplateUpdate, TempForm.Id, DepartmentId));
-                MHD.Notifications(ToastType.Update, refresh);
+                refresh = await MicroBus.Send(new UpdateTemplateCommand(TemplateUpdate, TempForm.Id, null));
             }
-            else
-            {
-                var created = await Dispatcher.Send(new CreateTemplateCommand(TemplateUpdate, DepartmentId));
-                refresh = created is not null && created.Id > 0;
-                MHD.Notifications(ToastType.Add, refresh);
-            }
+            else if (await MicroBus.Send(new CreateTemplateCommand(TemplateUpdate, null)) != null)
+                refresh = true;
         }
-        catch
+        catch (Exception ex)
         {
-            MHD.Notifications(TempForm.Id > 0 ? ToastType.Update : ToastType.Add, false);
+            Console.WriteLine(ex.Message);
         }
-        finally
-        {
-            btnSubmitDisabled = false;
-        }
-
         await Callback.InvokeAsync(refresh);
     }
-
-    private Task BackAsync() => Callback.InvokeAsync(false);
 }
