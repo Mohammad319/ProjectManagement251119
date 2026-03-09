@@ -50,12 +50,15 @@
                 @if (string.IsNullOrEmpty(UserForm?.Id))
                 {
                     <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="password">Password</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="password">Password (optional)</label>
                         <InputText id="password" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.Password" />
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="confirmPassword">Confirm password</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="confirmPassword">Confirm password (optional)</label>
                         <InputText id="confirmPassword" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.ConfirmPassword" />
+                    </div>
+                    <div class="space-y-1 lg:col-span-2">
+                        <p class="text-xs text-slate-600 dark:text-slate-300">If password is left empty, the system generates a temporary password and sends it by email.</p>
                     </div>
                 }
 
@@ -210,17 +213,18 @@
             bool result;
             if (string.IsNullOrEmpty(UserForm?.Id))
             {
-                if (string.IsNullOrWhiteSpace(Form.Password))
-                {
-                    FormError = "Password is required for new users.";
-                    return;
-                }
+                var enteredPassword = Form.Password?.Trim() ?? string.Empty;
+                var enteredConfirmPassword = Form.ConfirmPassword?.Trim() ?? string.Empty;
+                var anyPasswordValueProvided = !string.IsNullOrWhiteSpace(enteredPassword) || !string.IsNullOrWhiteSpace(enteredConfirmPassword);
 
-                if (!string.Equals(Form.Password, Form.ConfirmPassword, StringComparison.Ordinal))
+                if (anyPasswordValueProvided && !string.Equals(enteredPassword, enteredConfirmPassword, StringComparison.Ordinal))
                 {
                     FormError = "Password and confirmation password do not match.";
                     return;
                 }
+
+                Form.Password = enteredPassword;
+                Form.ConfirmPassword = enteredConfirmPassword;
 
                 result = await UsersService.RegisterAsync(Form, TenantId);
                 MHD.Notifications(ToastType.Add, result);

@@ -65,14 +65,29 @@ namespace ProjectManagement.Adminstrator.Services.Users
         private static bool IsValidEmail(string? email)
             => !string.IsNullOrWhiteSpace(email) && EmailValidator.IsValid(email.Trim());
 
-        private async Task<bool> EnsureEmailIsAvailableAsync(string? email, string? currentUserId = null)
+        private async Task<bool> EnsureEmailIsAvailableAsync(string? email, int? tenantId, string? currentUserId = null)
         {
             var normalizedEmail = email?.Trim();
             if (!IsValidEmail(normalizedEmail))
                 return false;
 
-            var existingUser = await _userManager.FindByEmailAsync(normalizedEmail!);
-            return existingUser == null || string.Equals(existingUser.Id, currentUserId, StringComparison.Ordinal);
+            using var appContext = ContextFactory.CreateDbContext();
+            var targetNormalizedEmail = normalizedEmail!.ToUpperInvariant();
+
+            var usersInScope = appContext.Users
+                .AsNoTracking()
+                .Where(x => x.NormalizedEmail == targetNormalizedEmail);
+
+            usersInScope = tenantId.HasValue
+                ? usersInScope.Where(x => x.TenantId == tenantId)
+                : usersInScope.Where(x => !x.TenantId.HasValue);
+
+            if (!string.IsNullOrWhiteSpace(currentUserId))
+            {
+                usersInScope = usersInScope.Where(x => x.Id != currentUserId);
+            }
+
+            return !await usersInScope.AnyAsync();
         }
 
         private async Task<bool> TenantExistsAsync(int tenantId)
@@ -605,7 +620,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             if (!await CanManageUserScopeAsync(tentnid, writeOperation: true))
                 return false;
 
-            if (user == null || string.IsNullOrWhiteSpace(user.Id) || !await EnsureEmailIsAvailableAsync(user.Email, user.Id))
+            if (user == null || string.IsNullOrWhiteSpace(user.Id) || !await EnsureEmailIsAvailableAsync(user.Email, tentnid, user.Id))
                 return false;
 
             var oldUser = await _userManager.FindByIdAsync(user.Id);
@@ -825,7 +840,7 @@ namespace ProjectManagement.Adminstrator.Services.Users
             if (!await CanManageUserScopeAsync(tenantId, writeOperation: true))
                 return false;
 
-            if (request == null || !await EnsureEmailIsAvailableAsync(request.Email))
+            if (request == null || !await EnsureEmailIsAvailableAsync(request.Email, tenantId))
                 return false;
 
             if (tenantId.HasValue && !await TenantExistsAsync(tenantId.Value))
