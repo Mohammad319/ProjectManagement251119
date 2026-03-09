@@ -20,6 +20,8 @@ public partial class ResourceTypeFormUI : IDisposable
     private ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
     private EditContext? editContext;
     private ValidationMessageStore? messageStore;
+    private ResourceTypeModel? loadedResourceType;
+    private int loadedResourceTypeId = -1;
 
     protected override void OnInitialized()
     {
@@ -30,9 +32,19 @@ public partial class ResourceTypeFormUI : IDisposable
 
     protected override async Task OnParametersSetAsync()
     {
-        PropertyCopier.CopyPropertiesTo(ResourceType, ResourceTypeUpdate);
-
         AccountGroups ??= await Dispatcher.Send(new GetAccountGroupsAsListQuery());
+
+        var shouldSyncFromParameters =
+            loadedResourceType is null ||
+            !ReferenceEquals(ResourceType, loadedResourceType) ||
+            ResourceType.Id != loadedResourceTypeId;
+
+        if (shouldSyncFromParameters)
+        {
+            PropertyCopier.CopyPropertiesTo(ResourceType, ResourceTypeUpdate);
+            loadedResourceType = ResourceType;
+            loadedResourceTypeId = ResourceType.Id;
+        }
 
         if (ResourceType.Id > 0)
         {
