@@ -15,13 +15,13 @@ public partial class AccountGroupsFormUI
 
     private PostAccountGroupDTO EditModel { get; set; } = new();
     private bool IsLoading { get; set; }
-    private int? LastModelId;
-    private bool IsInitialized;
+    private int LastId = -1;
+    private PostAccountGroupDTO? LastModelReference;
 
     protected override void OnParametersSet()
     {
-        var currentId = Id > 0 ? Id : Model?.Name?.GetHashCode();
-        if (IsInitialized && LastModelId == currentId)
+        var sameReference = ReferenceEquals(LastModelReference, Model);
+        if (sameReference && LastId == Id)
             return;
 
         EditModel = new PostAccountGroupDTO
@@ -29,8 +29,8 @@ public partial class AccountGroupsFormUI
             Name = Model?.Name ?? string.Empty
         };
 
-        LastModelId = currentId;
-        IsInitialized = true;
+        LastId = Id;
+        LastModelReference = Model;
     }
 
     private void CloseModal() => DialogService.Close();

@@ -14,12 +14,13 @@ namespace ProjectManagement.Components.ControlComponents.Project.Contract
         private PostTaskStatusDTO UpdateObj { get; set; } = new();
         private bool IsLoading;
         private int? LastContractId;
-        private bool IsInitialized;
+        private ContractEntity? LastContractReference;
 
         protected override void OnParametersSet()
         {
             var currentId = Contract?.Id;
-            if (IsInitialized && LastContractId == currentId)
+            var sameReference = ReferenceEquals(LastContractReference, Contract);
+            if (sameReference && LastContractId == currentId)
                 return;
 
             UpdateObj = new PostTaskStatusDTO();
@@ -29,7 +30,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.Contract
                 UpdateObj.Color = "#00ff00";
 
             LastContractId = currentId;
-            IsInitialized = true;
+            LastContractReference = Contract;
         }
 
         private async Task HandleSubmitAsync()

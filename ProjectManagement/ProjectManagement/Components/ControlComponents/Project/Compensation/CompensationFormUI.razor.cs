@@ -13,12 +13,13 @@ namespace ProjectManagement.Components.ControlComponents.Project.Compensation
         private PostTaskStatusDTO CompensationUpdate { get; set; } = new();
         private bool IsLoading;
         private int? LastCompensationId;
-        private bool IsInitialized;
+        private CompensationEntity? LastCompensationReference;
 
         protected override void OnParametersSet()
         {
             var currentId = Compensation?.Id;
-            if (IsInitialized && LastCompensationId == currentId)
+            var sameReference = ReferenceEquals(LastCompensationReference, Compensation);
+            if (sameReference && LastCompensationId == currentId)
                 return;
 
             CompensationUpdate = new PostTaskStatusDTO();
@@ -28,7 +29,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.Compensation
                 CompensationUpdate.Color = "#00ff00";
 
             LastCompensationId = currentId;
-            IsInitialized = true;
+            LastCompensationReference = Compensation;
         }
 
         private async Task HandleSubmitAsync()

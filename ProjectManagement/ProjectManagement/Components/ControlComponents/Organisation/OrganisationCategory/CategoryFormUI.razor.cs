@@ -13,12 +13,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private PostOrganisationCategoryDTO PostOffer { get; set; } = new();
         private bool IsLoading { get; set; }
         private int? LastCategoryId;
-        private bool IsInitialized;
+        private ListOrganisationCategoryDTO? LastCategoryReference;
 
         protected override void OnParametersSet()
         {
             var currentId = OrganisationCategory?.Id;
-            if (IsInitialized && LastCategoryId == currentId)
+            var sameReference = ReferenceEquals(LastCategoryReference, OrganisationCategory);
+            if (sameReference && LastCategoryId == currentId)
                 return;
 
             PostOffer = new PostOrganisationCategoryDTO();
@@ -26,7 +27,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
             PostOffer.CategoryId = OrganisationCategory.ParentCategoryId;
 
             LastCategoryId = currentId;
-            IsInitialized = true;
+            LastCategoryReference = OrganisationCategory;
         }
 
         private async Task Cancel()

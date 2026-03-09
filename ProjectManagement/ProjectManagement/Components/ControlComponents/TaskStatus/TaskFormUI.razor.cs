@@ -13,19 +13,20 @@ public partial class TaskFormUI
     private PostTaskStatusDTO PostStatus { get; set; } = new();
     private bool IsLoading;
     private int? LastStatusId;
-    private bool IsInitialized;
+    private TaskStatusEntity? LastStatusReference;
 
     protected override void OnParametersSet()
     {
         var currentId = Status?.Id;
-        if (IsInitialized && LastStatusId == currentId)
+        var sameReference = ReferenceEquals(LastStatusReference, Status);
+        if (sameReference && LastStatusId == currentId)
             return;
 
         PostStatus = new PostTaskStatusDTO();
         PropertyCopier.CopyPropertiesTo(Status, PostStatus);
 
         LastStatusId = currentId;
-        IsInitialized = true;
+        LastStatusReference = Status;
     }
 
     private void CloseModal() => MHD.Modal.Close();

@@ -12,12 +12,13 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         private ListOrganisationTypeDTO EditModel = new();
         private int? LastCustomerGroupId;
-        private bool IsInitialized;
+        private ListOrganisationTypeDTO? LastCustomerGroupReference;
 
         protected override void OnParametersSet()
         {
             var currentId = CustomerGroup?.Id;
-            if (IsInitialized && LastCustomerGroupId == currentId)
+            var sameReference = ReferenceEquals(LastCustomerGroupReference, CustomerGroup);
+            if (sameReference && LastCustomerGroupId == currentId)
                 return;
 
             EditModel = new ListOrganisationTypeDTO();
@@ -25,7 +26,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 PropertyCopier.CopyPropertiesTo(CustomerGroup, EditModel);
 
             LastCustomerGroupId = currentId;
-            IsInitialized = true;
+            LastCustomerGroupReference = CustomerGroup;
         }
 
         private async Task SubmitAsync()

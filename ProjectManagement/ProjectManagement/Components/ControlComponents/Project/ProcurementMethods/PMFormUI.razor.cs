@@ -14,12 +14,13 @@ namespace ProjectManagement.Components.ControlComponents.Project.ProcurementMeth
         private PostTaskStatusDTO ProcurementUpdate { get; set; } = new();
         private bool IsLoading;
         private int? LastProcurementId;
-        private bool IsInitialized;
+        private ProcurementMethodEntity? LastProcurementReference;
 
         protected override void OnParametersSet()
         {
             var currentId = Procurement?.Id;
-            if (IsInitialized && LastProcurementId == currentId)
+            var sameReference = ReferenceEquals(LastProcurementReference, Procurement);
+            if (sameReference && LastProcurementId == currentId)
                 return;
 
             ProcurementUpdate = new PostTaskStatusDTO();
@@ -29,7 +30,7 @@ namespace ProjectManagement.Components.ControlComponents.Project.ProcurementMeth
                 ProcurementUpdate.Color = "#00ff00";
 
             LastProcurementId = currentId;
-            IsInitialized = true;
+            LastProcurementReference = Procurement;
         }
 
         private async Task HandleSubmitAsync()
