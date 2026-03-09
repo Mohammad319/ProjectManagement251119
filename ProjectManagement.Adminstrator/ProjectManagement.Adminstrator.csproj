@@ -29,9 +29,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AuthPermissions\AuthPermissions.csproj" />
+    <ProjectReference Include="..\BlazorMHD.UI\BlazorMHD.UI.csproj" />
     <ProjectReference Include="..\TaskResourceBlueprints\TaskResourceBlueprints.csproj" />
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
-    <ProjectReference Include="D:\Library\3\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
   </ItemGroup>
 
 </Project>
