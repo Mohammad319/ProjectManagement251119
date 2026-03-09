@@ -13,14 +13,23 @@ namespace ProjectManagement.Components.ControlComponents.Project.Contract
 
         private PostTaskStatusDTO UpdateObj { get; set; } = new();
         private bool IsLoading;
+        private int? LastContractId;
+        private bool IsInitialized;
 
         protected override void OnParametersSet()
         {
+            var currentId = Contract?.Id;
+            if (IsInitialized && LastContractId == currentId)
+                return;
+
             UpdateObj = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Contract, UpdateObj);
 
             if (string.IsNullOrWhiteSpace(UpdateObj.Color))
                 UpdateObj.Color = "#00ff00";
+
+            LastContractId = currentId;
+            IsInitialized = true;
         }
 
         private async Task HandleSubmitAsync()

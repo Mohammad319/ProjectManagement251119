@@ -12,11 +12,20 @@ public partial class ResourceFormUI
 
     private PostTaskStatusDTO PostStatus { get; set; } = new();
     private bool IsLoading;
+    private int? LastStatusId;
+    private bool IsInitialized;
 
     protected override void OnParametersSet()
     {
+        var currentId = ResStatus?.Id;
+        if (IsInitialized && LastStatusId == currentId)
+            return;
+
         PostStatus = new PostTaskStatusDTO();
         PropertyCopier.CopyPropertiesTo(ResStatus, PostStatus);
+
+        LastStatusId = currentId;
+        IsInitialized = true;
     }
 
     private void CloseModal() => MHD.Modal.Close();

@@ -7,9 +7,6 @@ namespace ProjectManagement.Components.ControlComponents.Accounts;
 
 public partial class AccountsFormUI
 {
-    /// <summary>
-    /// 0 = Create, >0 = Update
-    /// </summary>
     [Parameter] public int Id { get; set; }
 
     [Parameter, EditorRequired]
@@ -20,12 +17,15 @@ public partial class AccountsFormUI
 
     private PostAccountDTO EditModel { get; set; } = new();
     private bool IsLoading;
+    private int? LastModelId;
+    private bool IsInitialized;
 
-    /// <summary>
-    /// ✅ أفضل من OnInitializedAsync عند فتح المودال عدة مرات
-    /// </summary>
     protected override void OnParametersSet()
     {
+        var currentId = Id > 0 ? Id : Model?.Name?.GetHashCode();
+        if (IsInitialized && LastModelId == currentId)
+            return;
+
         EditModel = new PostAccountDTO
         {
             Name = Model?.Name ?? string.Empty,
@@ -34,6 +34,9 @@ public partial class AccountsFormUI
             IsVisible = Model?.IsVisible ?? true,
             Data = Model?.Data ?? new AccountData()
         };
+
+        LastModelId = currentId;
+        IsInitialized = true;
     }
 
     private void CloseModal() => DialogService.Close();

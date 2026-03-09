@@ -11,12 +11,21 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         [Parameter] public EventCallback<ListOrganisationTypeDTO> OnValidSubmit { get; set; }
 
         private ListOrganisationTypeDTO EditModel = new();
+        private int? LastCustomerGroupId;
+        private bool IsInitialized;
 
         protected override void OnParametersSet()
         {
+            var currentId = CustomerGroup?.Id;
+            if (IsInitialized && LastCustomerGroupId == currentId)
+                return;
+
             EditModel = new ListOrganisationTypeDTO();
             if (CustomerGroup is not null)
                 PropertyCopier.CopyPropertiesTo(CustomerGroup, EditModel);
+
+            LastCustomerGroupId = currentId;
+            IsInitialized = true;
         }
 
         private async Task SubmitAsync()

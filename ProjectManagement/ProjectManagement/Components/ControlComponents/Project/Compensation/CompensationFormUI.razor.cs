@@ -12,14 +12,23 @@ namespace ProjectManagement.Components.ControlComponents.Project.Compensation
 
         private PostTaskStatusDTO CompensationUpdate { get; set; } = new();
         private bool IsLoading;
+        private int? LastCompensationId;
+        private bool IsInitialized;
 
         protected override void OnParametersSet()
         {
+            var currentId = Compensation?.Id;
+            if (IsInitialized && LastCompensationId == currentId)
+                return;
+
             CompensationUpdate = new PostTaskStatusDTO();
             PropertyCopier.CopyPropertiesTo(Compensation, CompensationUpdate);
 
             if (string.IsNullOrWhiteSpace(CompensationUpdate.Color))
                 CompensationUpdate.Color = "#00ff00";
+
+            LastCompensationId = currentId;
+            IsInitialized = true;
         }
 
         private async Task HandleSubmitAsync()
