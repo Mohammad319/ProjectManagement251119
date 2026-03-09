@@ -8,21 +8,20 @@
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-    <HorizontalSplitter Class="h-[78vh] bg-transparent"
-                        InitialLeftWidth="280"
-                        MinLeftWidth="220"
-                        MinRightWidth="420"
-                        SplitterThickness="6"
-                        LiveResize="true"
-                        StorageKey="folders-layout-horizontal-splitter">
+<HorizontalSplitter Class="h-[80vh] border border-zinc-200 dark:border-zinc-800 rounded-2xl"
+                    InitialLeftWidth="150"
+                    MinLeftWidth="25"
+                    MinRightWidth="260"
+                    SplitterThickness="6"
+                    LiveResize="true"
+                    StorageKey="folders-layout-horizontal-splitter">
 
         <LeftContent>
             @if (SideBarVisible)
             {
                 <div class="flex h-full flex-col border-r border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/60">
-                    <div class="border-b border-slate-200 px-3 py-3 dark:border-slate-800 sm:px-4">
-                        <div class="flex items-start justify-between gap-3">
+                    <div class="border-b border-slate-200 px-1 py-1 dark:border-slate-800">
+                    @*     <div class="flex items-start justify-between gap-1">
     
                             <button type="button"
                                     class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
@@ -31,20 +30,20 @@
                                     aria-label="Hide sidebar">
                                 @((MarkupString)Icons.ChevronLeft)
                             </button>
-                        </div>
+                        </div> *@
 
                         <AuthorizeView Roles="@PMRolesConst.Tenant.SuperManger">
-                            <div class="mt-3 flex flex-wrap gap-2">
+                            <div class="mt-0 flex flex-wrap gap-2">
                                 <button type="button"
-                                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                                         @onclick="ModalSeachForm"
                                         title="Search projects">
                                     <span aria-hidden="true">@((MarkupString)Icons.Search)</span>
                                 </button>
 
                                 <button type="button"
-                                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                                        @onclick="GetDepartmentAsync"
+                                    class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    @onclick="GetDepartmentAsync"
                                         title="Departments">
                                     <span aria-hidden="true">@((MarkupString)Icons.Department)</span>
                                 </button>
@@ -52,15 +51,15 @@
                                 @if (!Folder.State.OtherDepartment)
                                 {
                                     <button type="button"
-                                            class="inline-flex items-center justify-center rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
-                                            @onclick="() => ModalForm(new() { IsVisible = UoWService.Folder.IsVisible })"
+                                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        @onclick="() => ModalForm(new() { IsVisible = UoWService.Folder.IsVisible })"
                                             title="New folder">
                                         <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
                                     </button>
 
                                     <button type="button"
-                                            class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                                            @onclick="UoWService.Folder.LoadHiddenVisibleFoldersAsync"
+                                        class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                                        @onclick="UoWService.Folder.LoadHiddenVisibleFoldersAsync"
                                             title="Visibility filter">
                                         <span aria-hidden="true">@((MarkupString)(Icons.GetVisibleIcon(UoWService.Folder.IsVisible)))</span>
                                     </button>
@@ -78,8 +77,8 @@
 
                     @if (Folder.State.Departments != null && (Folder.State.OtherDepartment || Admin))
                     {
-                        <div class="border-b border-slate-200 px-3 py-3 dark:border-slate-800 sm:px-4">
-                            <select class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                        <div class="border-b border-slate-200 px-1.5 py-1 dark:border-slate-800">
+                            <select class="w-full rounded-xl border border-slate-300 bg-white px-1.5 py-1 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                     @onchange="async e => await UoWService.Folder.LoadFoldersByDepartmentAsync(e.Value?.ToString() ?? string.Empty)">
                                 <option value="0"></option>
                                 @foreach (var department in Folder.State.Departments)
@@ -90,14 +89,14 @@
                         </div>
                     }
 
-                    <div class="min-h-0 flex-1 overflow-auto px-2 py-2 sm:px-3 sm:py-3">
+                    <div class="min-h-0 flex-1 overflow-auto px-1 py-1.5">
                         @if (UoWService.Folder.State.FoldersList != null && UoWService.Folder.State.FoldersList.Any())
                         {
                             <FoldersTree></FoldersTree>
                         }
                         else
                         {
-                            <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                            <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-1 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                                 No folders available.
                             </div>
                         }
@@ -122,19 +121,18 @@
             <div class="h-full overflow-auto bg-white dark:bg-slate-900">
                 @if (Folder.State.Calculation != null)
                 {
-                    <div class="p-3 sm:p-4 lg:p-5">
                         <ProjectManagement.Client.Pages.Calculation.CalculationPageUI @key="Folder.State.Calculation.Id" />
-                    </div>
+                  
                 }
                 else if (Folder.State.ProjectSelected != null)
                 {
-                    <div class="p-3 sm:p-4 lg:p-5">
+                    <div>
                         <ProjectManagement.Client.Pages.Project.ProjectPages.ProjectsCalculationList @key="Folder.State.ProjectSelected.Id" />
                     </div>
                 }
                 else if (Folder.State.FolderSelected != null)
                 {
-                    <div class="p-3 sm:p-4 lg:p-5">
+                    <div>
                         <ProjectsUI @key="Folder.State.FolderSelected.Id" />
                     </div>
                 }
@@ -153,4 +151,4 @@
             </div>
         </RightContent>
     </HorizontalSplitter>
-</div>
+

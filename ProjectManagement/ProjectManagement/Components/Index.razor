@@ -2,7 +2,28 @@
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Pages.Folder
 @attribute [Authorize]
+<style>
+    .flex-container {
+        display: flex;
+        height: calc(100vh - 37px);
+        overflow: auto;
+    }
 
+    /*     .b {
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: 3px;
+            background-color: lightgray;
+            cursor: ew-resize;
+            transition: background-color 1s,width 2s;
+        }
+
+            .b:hover {
+                background-color: darkgray;
+            } */
+
+
+</style>
 <div class="flex-container">
     <FolderIndex @rendermode="new InteractiveWebAssemblyRenderMode(prerender: false)" />
 </div>

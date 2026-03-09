@@ -1,15 +1,15 @@
 ﻿@inherits AppComponentBase
 
-<div class="flex h-full gap-4">
+<div class="flex h-full gap-1">
     <aside class="w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <div class="flex h-full flex-col">
-            <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-3 dark:border-slate-700">
+            <div class="flex items-center justify-between gap-1 border-b border-slate-200 px-3 py-3 dark:border-slate-700">
                 <div>
                     <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@CalcResource.accountGroups</div>
                     <div class="text-xs text-slate-500 dark:text-slate-400">@AppLoc[nameof(ResourceApp.selectAccountGroupHint)]</div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1">
                     <button type="button"
                             class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
                             @onclick="CreateForm"
@@ -28,22 +28,22 @@
                 </div>
             </div>
 
-            <nav class="flex-1 space-y-1 overflow-y-auto px-2 py-2">
+            <nav class="flex-1 space-y-1 overflow-y-auto px-1 py-1">
                 @if (Groups is { Count: > 0 })
                 {
                     @foreach (var item in Groups)
                     {
                         var isSelected = GroupSelected.HasValue && GroupSelected.Value == item.Id;
                         var finalClass = isSelected
-                            ? "group flex w-full items-center justify-between rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition"
-                            : "group flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 active:bg-slate-200 dark:text-slate-100 dark:hover:bg-slate-800 dark:active:bg-slate-700";
+                        ? "group flex w-full items-center justify-between rounded-xl bg-blue-600 px-1.5 py-1 text-sm font-medium text-white shadow-sm transition"
+                            : "group flex w-full items-center justify-between rounded-xl px-1.5 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-100 active:bg-slate-200 dark:text-slate-100 dark:hover:bg-slate-800 dark:active:bg-slate-700";
 
                         <button class="@finalClass"
                                 @onclick="() => ChangeAccountGroupSelectedAsync(item)"
                                 @oncontextmenu="() => GroupContextM(item)"
                                 @oncontextmenu:preventDefault
                                 aria-current="@(isSelected ? "page" : null)">
-                            <span class="flex items-center gap-2 truncate">
+                            <span class="flex items-center gap-1 truncate">
                                 <span class="h-2 w-2 rounded-full @(isSelected ? "bg-white" : "bg-slate-300 dark:bg-slate-600")"></span>
                                 <span class="truncate">@item.Name</span>
                             </span>
@@ -56,8 +56,8 @@
                 }
                 else
                 {
-                    <div class="px-3 py-6 text-center">
-                        <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div class="px-1 py-2 text-center">
+                        <div class="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
                             @((MarkupString)Icons.Folder)
                         </div>
 
@@ -70,7 +70,7 @@
                         </div>
 
                         <button type="button"
-                                class="mt-4 inline-flex items-center justify-center rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+                                class="mt-1 inline-flex items-center justify-center rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
                                 @onclick="CreateForm">
                             @AppLoc[nameof(ResourceApp.newItem)]
                         </button>
@@ -87,9 +87,9 @@
         }
         else
         {
-            <div class="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/50 px-6 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+            <div class="flex h-full items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/50 px-1 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
                 <div class="text-center">
-                    <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div class="mx-auto mb-1 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
                         @((MarkupString)Icons.Mouse)
                     </div>
                     <div class="font-medium text-slate-700 dark:text-slate-100">

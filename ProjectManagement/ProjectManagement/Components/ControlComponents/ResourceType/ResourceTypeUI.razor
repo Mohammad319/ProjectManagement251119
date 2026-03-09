@@ -8,8 +8,8 @@
 }
 else
 {
-    <div class="space-y-5">
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+    <div class="space-y-1">
+        <div class="rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-3">
@@ -44,7 +44,7 @@ else
         else if (VisibleItems.Any())
         {
             <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                <div class="border-b border-slate-200 px-4 py-2 dark:border-slate-800">
                     <div class="grid grid-cols-1 gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:[grid-template-columns:220px_minmax(0,1fr)_200px]">
                         <div>
                             @AppLoc[nameof(ResourceApp.update)]
@@ -61,7 +61,7 @@ else
                 <div class="divide-y divide-slate-200 dark:divide-slate-800">
                     @foreach (var item in VisibleItems)
                     {
-                        <div class="px-4 py-4 transition hover:bg-slate-50/80 dark:hover:bg-slate-900/60">
+                        <div class="px-1 py-1 transition hover:bg-slate-50/80 dark:hover:bg-slate-900/60">
                             <div class="grid grid-cols-1 gap-4 md:[grid-template-columns:220px_minmax(0,1fr)_200px]">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button @onclick="() => UpdateForm(item)"

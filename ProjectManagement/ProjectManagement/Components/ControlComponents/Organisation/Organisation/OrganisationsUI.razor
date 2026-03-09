@@ -15,19 +15,19 @@
 
 @if (Category is null)
 {
-    <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+    <div class="rounded-xl border border-dashed border-slate-300 px-2 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
         @WebLoc[nameof(PMWebResource.SelectOrganisationCategoryHint)]
     </div>
 }
 else
 {
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div class="mb-1 flex flex-wrap items-center justify-between gap-1">
         <div>
             <div class="text-sm font-medium text-slate-900 dark:text-slate-100">@Category.Name</div>
             <div class="text-sm text-slate-600 dark:text-slate-300">@WebLoc[nameof(PMWebResource.OrganisationsInCategoryDescription)]</div>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
             <AuthorizeView Roles="@PMRolesConst.Tenant.AdminSuperManger">
                 <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50"
                         @onclick="() => UpdateForm(new ShortListOrganisationDTO())"
@@ -46,7 +46,7 @@ else
 
     @if (Organistion.Count == 0)
     {
-        <div class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
+        <div class="rounded-xl border border-dashed border-slate-300 px-1 py-6 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
             @WebLoc[nameof(PMWebResource.NoOrganisationsFound)]
         </div>
     }
@@ -55,10 +55,10 @@ else
         <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
             <thead class="bg-slate-50 dark:bg-slate-800/80">
                 <tr>
-                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
-                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@CalcResource.status</th>
-                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.category</th>
-                    <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.baseCategory</th>
+                    <th class="px-1 py-1 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
+                    <th class="px-1 py-1 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@CalcResource.status</th>
+                    <th class="px-1 py-1 text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.category</th>
+                    <th class="px-1  text-right text-sm font-semibold text-slate-600 dark:text-slate-200" style="width:150px;">@ResourceLoc.baseCategory</th>
                 </tr>
             </thead>
 
@@ -66,7 +66,7 @@ else
                 @foreach (var organistion in Organistion)
                 {
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200"
+                        <td class="px-1 py-1 text-sm text-slate-700 dark:text-slate-200"
                             @oncontextmenu:preventDefault
                             @oncontextmenu="() => Context(organistion)">
                             <button class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200"
@@ -75,9 +75,9 @@ else
                             </button>
                         </td>
 
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
-                        <td class="px-3 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
+                        <td class="px-1 py-1 text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
+                        <td class="px-1 py-2 text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
+                        <td class="px-1 py-1 text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
                     </tr>
                 }
             </tbody>

@@ -13,17 +13,16 @@
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<div class="space-y-4">
+<div class="space-y-1">
     @if (!Folder.State.OtherDepartment)
     {
-        <section class="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:px-5 sm:py-5">
+        <section class="rounded-2xl border border-slate-200 bg-white px-1 py-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div class="min-w-0">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Folder</div>
+                <div>
                     <h2 class="mt-1 truncate text-xl font-semibold text-slate-900 dark:text-slate-100">
                         @(Folder.State.FolderSelected?.Name ?? ResourceLoc.details)
                     </h2>
-                    <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
                         Open a project to view calculations, details, and offers for the selected folder.
                     </p>
                 </div>
