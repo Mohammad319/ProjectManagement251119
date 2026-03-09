@@ -109,11 +109,17 @@
     private readonly PostResourceSortDTO EditModel = new();
     private List<ListAccountGroupIncludeAccountDTO>? AccountGroups;
     private ListAccountGroupIncludeAccountDTO? AccountGroupSelected;
+    private ResourceSortModel? PreviousResourceSort;
 
     protected override async Task OnParametersSetAsync()
     {
-        PropertyCopier.CopyPropertiesTo(ResourceSort, EditModel);
         AccountGroups ??= await Dispatcher.Send(new GetAccountGroupsAsListQuery());
+
+        if (!ReferenceEquals(PreviousResourceSort, ResourceSort))
+        {
+            PropertyCopier.CopyPropertiesTo(ResourceSort, EditModel);
+            PreviousResourceSort = ResourceSort;
+        }
 
         if (ResourceSort.Id > 0)
             AccountGroupSelected = AccountGroups?.FirstOrDefault(x => x.Accounts?.Any(a => a.Id == EditModel.AccountId) == true);
