@@ -13,12 +13,21 @@ public partial class StatusFormUI
     private PostTaskStatusDTO StatusUpdate { get; set; } = new();
     private bool IsLoading;
 
+    private bool IsInitialized;
+    private int? LastStatusId;
+
     protected override void OnParametersSet()
     {
+        var currentId = Status?.Id;
+        if (IsInitialized && LastStatusId == currentId)
+            return;
+
         StatusUpdate = new PostTaskStatusDTO();
         PropertyCopier.CopyPropertiesTo(Status, StatusUpdate);
-    }
 
+        LastStatusId = currentId;
+        IsInitialized = true;
+    }
     private void CloseModal() => MHD.Modal.Close();
 
     private async Task HandleSubmitAsync()

@@ -116,7 +116,7 @@ else
     private int? SelectedDepartmentId;
     private int? CurrentDepartmentId;
 
-    private bool CanCreateTemplate => !CanChooseDepartment || SelectedDepartmentId.HasValue;
+    private bool CanCreateTemplate => true|| !CanChooseDepartment || SelectedDepartmentId.HasValue;
 
     protected override async Task OnInitializedAsync()
     {
