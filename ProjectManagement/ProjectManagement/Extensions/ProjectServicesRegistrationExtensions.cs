@@ -28,8 +28,9 @@ public static class ProjectServicesRegistrationExtensions
         services.AddHttpClient();
         services.AddApiVersioning();
 
-        // Register client repositories for interactive components rendered on the server.
+        // Register client-side services for interactive components rendered on the server.
         services.AddProjectRepositories();
+        services.AddApplicationServices();
 
         services.AddProjectWebUiServices();
 
