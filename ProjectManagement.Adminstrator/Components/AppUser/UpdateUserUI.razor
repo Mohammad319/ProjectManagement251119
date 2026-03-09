@@ -50,11 +50,11 @@
                 @if (string.IsNullOrEmpty(UserForm?.Id))
                 {
                     <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="password">Password</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="password">Password (optional)</label>
                         <InputText id="password" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.Password" />
                     </div>
                     <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="confirmPassword">Confirm password</label>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="confirmPassword">Confirm password (optional)</label>
                         <InputText id="confirmPassword" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.ConfirmPassword" />
                     </div>
                 }
@@ -210,13 +210,9 @@
             bool result;
             if (string.IsNullOrEmpty(UserForm?.Id))
             {
-                if (string.IsNullOrWhiteSpace(Form.Password))
-                {
-                    FormError = "Password is required for new users.";
-                    return;
-                }
+                var hasPassword = !string.IsNullOrWhiteSpace(Form.Password);
 
-                if (!string.Equals(Form.Password, Form.ConfirmPassword, StringComparison.Ordinal))
+                if (hasPassword && !string.Equals(Form.Password, Form.ConfirmPassword, StringComparison.Ordinal))
                 {
                     FormError = "Password and confirmation password do not match.";
                     return;
