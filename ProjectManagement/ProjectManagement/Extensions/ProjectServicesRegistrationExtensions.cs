@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Persistence.Factory;
 using Persistence.Interceptors;
+using ProjectManagement.Client.DependencyInjection;
 using ProjectManagement.BlazorServer;
 using ProjectManagement.Services;
 using ProjectManagement.SignalR;
@@ -26,6 +27,10 @@ public static class ProjectServicesRegistrationExtensions
         services.AddRazorPages();
         services.AddHttpClient();
         services.AddApiVersioning();
+
+        // Register client repositories for interactive components rendered on the server.
+        services.AddProjectRepositories();
+
         services.AddProjectWebUiServices();
 
         services.AddScoped<TenantContext>();
