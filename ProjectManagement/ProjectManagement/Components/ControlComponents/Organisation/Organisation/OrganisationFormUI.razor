@@ -42,8 +42,8 @@
 
             @if (Part == 1)
             {
-                <div class="col-span-12 md:col-span-4">
-                    <div class="col-span-12 md:col-span-2">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="md:col-span-2">
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
                         <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Name" />
                         <ValidationMessage For="@(() => PostCompany.Name)" />
@@ -146,7 +146,7 @@
             }
             else if (Part == 2)
             {
-                <div class="col-span-12 md:col-span-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.rating</label>
                         <InputNumber class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="PostCompany.Rating" />
@@ -204,8 +204,8 @@
             }
             else if (Part == 3)
             {
-                <div class="col-span-12 md:col-span-4 mb-1">
-                    <div class="flex items-center gap-2 py-1">
+                <div class="mb-1 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="flex items-center gap-2 py-1 md:col-span-2">
                         <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" @bind-Value="PostCompany.IsVisible" />
                         <label class="text-sm text-slate-700 dark:text-slate-200">@ResourceApp.isVisible</label>
                     </div>
