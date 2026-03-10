@@ -10,14 +10,13 @@
 @using ProjectManagement.Adminstrator.Helper
 @inherits AppComponentBase
 @inject IResourceBlueprintsService ResourceService
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @inject IResourceCategoryService ResourceFolderService
 
 <ResourcesBrowser EnableFolderContext="true">
     <RowActions Context="r">
-        <button class="@CsS.Btn.Outline.Primary" title="Property" @onclick="() => Property(r)">Property</button>
-        <button class="@CsS.Btn.Outline.Warning" title="Update" @onclick="() => UpdateForm(r)">@Icons.Edit</button>
-        <button class="@CsS.Btn.Outline.Secondary" title="Remove" @onclick="() => Remove(r)">@Icons.Delete</button>
+        <button class="inline-flex items-center rounded-md border border-blue-600 px-3 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950/40" title="Property" @onclick="() => Property(r)">Property</button>
+        <button class="inline-flex items-center rounded-md border border-amber-600 px-3 py-1.5 text-sm font-medium text-amber-600 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-amber-400 dark:text-amber-300 dark:hover:bg-amber-950/40" title="Update" @onclick="() => UpdateForm(r)">@Icons.Edit</button>
+        <button class="inline-flex items-center rounded-md border border-slate-500 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-400 dark:text-slate-200 dark:hover:bg-slate-800" title="Remove" @onclick="() => Remove(r)">@Icons.Delete</button>
     </RowActions>
 </ResourcesBrowser>
 @code {
