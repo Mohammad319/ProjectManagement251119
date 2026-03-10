@@ -7,6 +7,8 @@ using ProjectManagement.Services;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Hub;
 using ProjectManagement.Shared.Enums;
+using System.Globalization;
+using System.Security.Claims;
 
 namespace ProjectManagement.SignalR
 {
@@ -54,15 +56,20 @@ namespace ProjectManagement.SignalR
         public override Task OnConnectedAsync()
         {
             var isAuth = Context.User?.Identity?.IsAuthenticated == true;
-            var tenant = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value;
-            Console.WriteLine($"[Hub] Connected. IsAuth={isAuth}, TenantClaim={tenant ?? "null"}");
+            var tenantClaim = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value;
+            var tenantId = ResolveTenantId(Context.User);
+            Console.WriteLine($"[Hub] Connected. IsAuth={isAuth}, TenantClaim={tenantClaim ?? "null"}, ResolvedTenant={tenantId}");
             return base.OnConnectedAsync();
         }
 
         [HubMethodName("AddToGroup")]
         public async Task AddToGroup(int id, CancellationToken ct = default)
         {
-            if (id <= 0 || currentTenant.TenantId <= 0)
+            if (id <= 0)
+                return;
+
+            var tenantId = ResolveTenantId(Context.User);
+            if (tenantId <= 0)
                 return;
 
             await using var db = await dbFactory.CreateDbContextAsync(ct);
@@ -73,10 +80,27 @@ namespace ProjectManagement.SignalR
             if (!calculationExists)
                 return;
 
-            await Groups.AddToGroupAsync(
-                Context.ConnectionId,
-                NotificationGroupNames.ForCalculation(currentTenant.TenantId, id),
-                ct);
+            var tenantScopedGroup = NotificationGroupNames.ForCalculation(tenantId, id);
+            var legacyGroup = id.ToString(CultureInfo.InvariantCulture);
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, tenantScopedGroup, ct);
+
+            // Backward compatibility: some notification senders may still publish to raw calculation id.
+            if (!string.Equals(tenantScopedGroup, legacyGroup, StringComparison.Ordinal))
+                await Groups.AddToGroupAsync(Context.ConnectionId, legacyGroup, ct);
+        }
+
+        private int ResolveTenantId(ClaimsPrincipal? user)
+        {
+            if (currentTenant.TenantId > 0)
+                return currentTenant.TenantId;
+
+            var tenantClaim = user?.FindFirst(PMClaimsConst.Tenant)?.Value;
+            if (!int.TryParse(tenantClaim, out var tenantId) || tenantId <= 0)
+                return 0;
+
+            currentTenant.TenantId = tenantId;
+            return tenantId;
         }
     }
 }
