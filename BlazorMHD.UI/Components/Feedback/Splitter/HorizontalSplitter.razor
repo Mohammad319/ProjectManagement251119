@@ -5,6 +5,7 @@
 @using System.Globalization
 @using Microsoft.JSInterop
 @inject IJSRuntime JS
+@implements IDisposable
 
 <div @ref="_containerRef"
      class="w-full h-full overflow-hidden select-none @Class"
@@ -78,6 +79,37 @@
     {
         // تعيين القيمة الابتدائية (سيتم تعديلها من localStorage لاحقاً إن وُجدت)
         LeftWidth = Math.Max(InitialLeftWidth, MinLeftWidth);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrWhiteSpace(StorageKey))
+        {
+            try
+            {
+                var stored = await JS.InvokeAsync<string>("localStorage.getItem", StorageKey);
+
+                if (!string.IsNullOrWhiteSpace(stored) &&
+                    double.TryParse(stored, NumberStyles.Any, CultureInfo.InvariantCulture, out var saved))
+                {
+                    var containerWidth = await JS.InvokeAsync<double>("resizableDiv.getWidth", _containerRef);
+                    var maxLeftByContainer = Math.Max(
+                        MinLeftWidth,
+                        containerWidth - SplitterThickness - MinRightWidth
+                    );
+
+                    var effectiveMaxLeft = MaxLeftWidth.HasValue
+                        ? Math.Min(MaxLeftWidth.Value, maxLeftByContainer)
+                        : maxLeftByContainer;
+
+                    LeftWidth = Math.Clamp(saved, MinLeftWidth, effectiveMaxLeft);
+                    StateHasChanged();
+                }
+            }
+            catch
+            {
+            }
+        }
     }
 
     // ===== Resize Logic =====
