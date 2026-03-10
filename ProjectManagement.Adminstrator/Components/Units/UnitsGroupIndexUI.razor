@@ -3,36 +3,38 @@
 @using ProjectManagement.Adminstrator.Constants
 @inject ITaskUnitGroupService UnitGroupsService
 @inherits AppComponentBase
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
-<button @onclick="() => UpdateForm()"
-        class="@CsS.Btn.Outline.Success">
-    @((MarkupString)Icons.Plus)
-</button>
+<div class="mb-3 flex items-center gap-2">
+    <button @onclick="() => UpdateForm()"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-300 text-green-700 transition hover:bg-green-100 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30">
+        @((MarkupString)Icons.Plus)
+    </button>
 
-<button @onclick="() => IsVisible = !IsVisible"
-        class="@CsS.Btn.Outline.Secondary"
-        title="@ResourceApp.hiddenItems / @ResourceApp.visibleItems"
-        aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
-    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-</button>
+    <button @onclick="() => IsVisible = !IsVisible"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+            title="@ResourceApp.hiddenItems / @ResourceApp.visibleItems"
+            aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
+        @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+    </button>
+</div>
+
 <MhdTable TItem="TaskUnitGroup" Items="FallsList">
     <HeaderTemplate>
-        <th style="width:200px;" class="@CssClasses.Table.TH">
+        <th style="width:200px;" class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-start text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
 
         </th>
-        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+        <th class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-start text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">@CalcResource.name</th>
     </HeaderTemplate>
     <ChildContent>
         <MhdTableColumn>
             <Template Context="status">
-                <div class="@CssClasses.Layout.FlexItemsCenter">
-                    <button @onclick="() => UpdateForm(status)" class="@CsS.Btn.Outline.Warning"
+                <div class="flex items-center gap-2">
+                    <button @onclick="() => UpdateForm(status)" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-300 text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30"
                             title="@ResourceApp.update" aria-label="@ResourceApp.update">
                         @Icons.Edit
                     </button>
 
-                    <button @onclick="() => Remove(status)" class="@CsS.Btn.Outline.Danger" title="@ResourceApp.delete"
+                    <button @onclick="() => Remove(status)" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-300 text-red-700 transition hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30" title="@ResourceApp.delete"
                             aria-label="@ResourceApp.delete">
                         @Icons.Delete
                     </button>
