@@ -1,40 +1,35 @@
-@* Components/VerticalSplitter.razor *@
+﻿@* Components/VerticalSplitter.razor *@
 @using BlazorMHD.UI.Shared
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using System.Globalization
 @using Microsoft.JSInterop
 @inject IJSRuntime JS
-@implements IDisposable
 
 <div @ref="_containerRef"
      class="w-full h-full overflow-hidden select-none @Class"
      style="--top-h:@($"{TopHeight}px"); --splitter-h:@($"{SplitterThickness}px");">
     <div class="w-full h-full flex flex-col">
+        <!-- أعلى -->
         <div class="overflow-auto min-h-[1px]" style="height:var(--top-h);">
             @TopContent
         </div>
 
+        <!-- الفاصل -->
         <div class="relative"
              @ref="_splitterRef"
              style="height:var(--splitter-h);"
              @onmousedown="StartResize"
-             @onkeydown="OnSplitterKeyDown"
-             role="separator"
-             aria-orientation="horizontal"
-             aria-valuemin="@MinTopHeight"
-             aria-valuemax="@GetEffectiveMaxTop()"
-             aria-valuenow="@TopHeight"
-             tabindex="0"
              title="@Localiztion.Instruction_DragUpDownToResize">
             <div class="absolute inset-0 cursor-row-resize
-                        bg-transparent hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                        bg-transparent hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 transition">
             </div>
             <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2
                         h-0.5 w-12 rounded bg-zinc-400 dark:bg-zinc-500 pointer-events-none">
             </div>
         </div>
 
+        <!-- أسفل -->
         <div class="flex-1 min-h-0 overflow-auto">
             @BottomContent
         </div>
@@ -42,40 +37,69 @@
 </div>
 
 @code {
+    // ===== Parameters =====
+
+    /// <summary>المحتوى العلوي.</summary>
     [Parameter] public RenderFragment? TopContent { get; set; }
+
+    /// <summary>المحتوى السفلي.</summary>
     [Parameter] public RenderFragment? BottomContent { get; set; }
 
+    /// <summary>ارتفاع الجزء العلوي عند أول تحميل (إن لم تكن هناك قيمة محفوظة).</summary>
     [Parameter] public double InitialTopHeight { get; set; } = 300;
-    [Parameter] public double MinTopHeight { get; set; } = 120;
-    [Parameter] public double MinBottomHeight { get; set; } = 180;
-    [Parameter] public double? MaxTopHeight { get; set; }
-    [Parameter] public int SplitterThickness { get; set; } = 6;
-    [Parameter] public bool LiveResize { get; set; } = true;
-    [Parameter] public string? Class { get; set; }
-    [Parameter] public string? StorageKey { get; set; }
-    [Parameter] public double KeyboardStep { get; set; } = 24;
 
+    /// <summary>أقل ارتفاع مسموح للجزء العلوي.</summary>
+    [Parameter] public double MinTopHeight { get; set; } = 120;
+
+    /// <summary>أقل ارتفاع مسموح للجزء السفلي.</summary>
+    [Parameter] public double MinBottomHeight { get; set; } = 180;
+
+    /// <summary>أقصى ارتفاع مسموح للجزء العلوي (اختياري، يمكن أن يكون null).</summary>
+    [Parameter] public double? MaxTopHeight { get; set; } = null;
+
+    /// <summary>سُمك الفاصل بين الأعلى والأسفل.</summary>
+    [Parameter] public int SplitterThickness { get; set; } = 6;
+
+    /// <summary>تحديث الارتفاع أثناء السحب مباشرة (بدلاً من التحديث عند النهاية فقط).</summary>
+    [Parameter] public bool LiveResize { get; set; } = true;
+
+    /// <summary>كلاسات إضافية للعنصر الخارجي.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>
+    /// مفتاح التخزين في localStorage.
+    /// إذا لم يُضبط، لن يتم تخزين أو استرجاع أي شيء.
+    /// </summary>
+    [Parameter] public string? StorageKey { get; set; }
+
+    // ===== State =====
     private double TopHeight;
     private ElementReference _containerRef;
     private ElementReference _splitterRef;
     private DotNetObjectReference<VerticalSplitter>? _objRef;
 
+    // ===== Lifecycle =====
+
     protected override void OnInitialized()
     {
+        // تعيين القيمة الابتدائية (سيتم تعديلها لاحقاً من localStorage إن وُجدت)
         TopHeight = Math.Max(InitialTopHeight, MinTopHeight);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        // عند أول رندر: نحاول استرجاع القيمة من localStorage إن كان هناك StorageKey
         if (firstRender && !string.IsNullOrWhiteSpace(StorageKey))
         {
             try
             {
+                // قراءة القيمة كنص
                 var stored = await JS.InvokeAsync<string>("localStorage.getItem", StorageKey);
 
                 if (!string.IsNullOrWhiteSpace(stored) &&
                     double.TryParse(stored, NumberStyles.Any, CultureInfo.InvariantCulture, out var saved))
                 {
+                    // حساب القيود الفعلية بناءً على ارتفاع الحاوية
                     var containerHeight = await JS.InvokeAsync<double>("resizableDiv.getHeight", _containerRef);
                     var maxTopByContainer = Math.Max(
                         MinTopHeight,
@@ -87,17 +111,22 @@
                         : maxTopByContainer;
 
                     TopHeight = Math.Clamp(saved, MinTopHeight, effectiveMaxTop);
+
                     StateHasChanged();
                 }
             }
             catch
             {
+                // في حال فشل localStorage أو JS نتجاهل الخطأ
             }
         }
     }
 
+    // ===== Resize Logic =====
+
     private async Task StartResize(MouseEventArgs e)
     {
+        // حساب أقصى ارتفاع مسموح للجزء العلوي بناءً على ارتفاع الحاوية والجزء السفلي
         var containerHeight = await JS.InvokeAsync<double>("resizableDiv.getHeight", _containerRef);
         var maxTopByContainer = Math.Max(
             MinTopHeight,
@@ -108,6 +137,7 @@
             ? Math.Min(MaxTopHeight.Value, maxTopByContainer)
             : maxTopByContainer;
 
+        // التأكد أن القيمة الحالية داخل الحدود
         TopHeight = Math.Clamp(TopHeight, MinTopHeight, effectiveMaxTop);
 
         _objRef ??= DotNetObjectReference.Create(this);
@@ -129,54 +159,30 @@
         );
     }
 
-    private async Task OnSplitterKeyDown(KeyboardEventArgs e)
-    {
-        var max = GetEffectiveMaxTop();
-
-        if (e.Key == "ArrowUp")
-        {
-            TopHeight = Math.Clamp(TopHeight - KeyboardStep, MinTopHeight, max);
-            await PersistHeightAsync();
-            StateHasChanged();
-        }
-        else if (e.Key == "ArrowDown")
-        {
-            TopHeight = Math.Clamp(TopHeight + KeyboardStep, MinTopHeight, max);
-            await PersistHeightAsync();
-            StateHasChanged();
-        }
-    }
-
-    private double GetEffectiveMaxTop()
-    {
-        var fallback = Math.Max(MinTopHeight, TopHeight + 5000);
-        return MaxTopHeight.HasValue ? Math.Min(MaxTopHeight.Value, fallback) : fallback;
-    }
-
     [JSInvokable]
     public async Task OnVerticalDragEnd(double finalTopHeight)
     {
+        // تثبيت القيمة النهائية
         TopHeight = finalTopHeight;
-        await PersistHeightAsync();
+
+        // حفظ القيمة في localStorage إذا تم تحديد StorageKey
+        if (!string.IsNullOrWhiteSpace(StorageKey))
+        {
+            try
+            {
+                await JS.InvokeVoidAsync(
+                    "localStorage.setItem",
+                    StorageKey,
+                    TopHeight.ToString(CultureInfo.InvariantCulture)
+                );
+            }
+            catch
+            {
+                // تجاهل أي خطأ في التخزين (مثلاً Private Mode)
+            }
+        }
+
         StateHasChanged();
-    }
-
-    private async Task PersistHeightAsync()
-    {
-        if (string.IsNullOrWhiteSpace(StorageKey))
-            return;
-
-        try
-        {
-            await JS.InvokeVoidAsync(
-                "localStorage.setItem",
-                StorageKey,
-                TopHeight.ToString(CultureInfo.InvariantCulture)
-            );
-        }
-        catch
-        {
-        }
     }
 
     public void Dispose() => _objRef?.Dispose();

@@ -19,5 +19,5 @@
     <Project Path="ProjectManagement.ServiceDefaults/ProjectManagement.ServiceDefaults.csproj" />
     <Project Path="ProjectManagement.Shared/ProjectManagement.Shared.csproj" />
   </Folder>
-  <Project Path="BlazorMHD.UI/BlazorMHD.UI.csproj" />
+  <Project Path="D:/Library/3/BlazorMHD/BlazorMHD.UI/BlazorMHD.UI.csproj" />
 </Solution>

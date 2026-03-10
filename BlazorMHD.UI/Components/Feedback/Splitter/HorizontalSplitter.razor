@@ -1,14 +1,13 @@
-@* Components/HorizontalSplitter.razor *@
+﻿@* Components/HorizontalSplitter.razor *@
 @using BlazorMHD.UI.Shared
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using System.Globalization
 @using Microsoft.JSInterop
 @inject IJSRuntime JS
-@implements IDisposable
 
 <div @ref="_containerRef"
-     class="w-full h-full overflow-hidden select-none @Class"
+     class="mhd-scope w-full h-full overflow-hidden select-none @Class"
      style="--left-w:@($"{LeftWidth}px"); --splitter-w:@($"{SplitterThickness}px");">
     <div class="h-full w-full flex items-stretch">
         <!-- يسار -->
@@ -79,37 +78,6 @@
     {
         // تعيين القيمة الابتدائية (سيتم تعديلها من localStorage لاحقاً إن وُجدت)
         LeftWidth = Math.Max(InitialLeftWidth, MinLeftWidth);
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !string.IsNullOrWhiteSpace(StorageKey))
-        {
-            try
-            {
-                var stored = await JS.InvokeAsync<string>("localStorage.getItem", StorageKey);
-
-                if (!string.IsNullOrWhiteSpace(stored) &&
-                    double.TryParse(stored, NumberStyles.Any, CultureInfo.InvariantCulture, out var saved))
-                {
-                    var containerWidth = await JS.InvokeAsync<double>("resizableDiv.getWidth", _containerRef);
-                    var maxLeftByContainer = Math.Max(
-                        MinLeftWidth,
-                        containerWidth - SplitterThickness - MinRightWidth
-                    );
-
-                    var effectiveMaxLeft = MaxLeftWidth.HasValue
-                        ? Math.Min(MaxLeftWidth.Value, maxLeftByContainer)
-                        : maxLeftByContainer;
-
-                    LeftWidth = Math.Clamp(saved, MinLeftWidth, effectiveMaxLeft);
-                    StateHasChanged();
-                }
-            }
-            catch
-            {
-            }
-        }
     }
 
     // ===== Resize Logic =====
