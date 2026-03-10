@@ -36,8 +36,12 @@ else
         <table class="min-w-full border-collapse text-xs">
             <thead class="bg-slate-50 dark:bg-slate-800/70">
                 <tr class="border-b border-slate-200 dark:border-slate-700">
-                    <th class="w-[140px] px-3 py-2 text-start text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300"></th>
-                    <th class="px-3 py-2 text-start text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300"></th>
+                    <th class="w-[160px] px-3 py-2 text-start text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                        Action
+                    </th>
+                    <th class="px-3 py-2 text-start text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                        Template
+                    </th>
                 </tr>
             </thead>
 
@@ -51,7 +55,7 @@ else
                         </button>
                     </td>
 
-                    <td scope="row" class="px-3 py-2 text-[11px] font-medium text-slate-800 dark:text-slate-100">
+                    <td class="px-3 py-2 text-[11px] font-medium text-slate-800 dark:text-slate-100">
                         <div class="flex items-center gap-2">
                             <span>@ResourceApp._default</span>
 
@@ -80,7 +84,7 @@ else
                                 </button>
                             </td>
 
-                            <td scope="row" class="px-3 py-2 text-[11px] font-medium text-slate-800 dark:text-slate-100">
+                            <td class="px-3 py-2 text-[11px] font-medium text-slate-800 dark:text-slate-100">
                                 <div class="flex items-center gap-2">
                                     <span>@item.Name</span>
 
@@ -108,23 +112,28 @@ else
         Refresh();
         Form = null;
     }
+
     RenderFragment RenderForm() => __builder =>
     {
         if (Form is null) return;
-        if (Tab == 1) __builder.AddContent(0, (RenderFragment)(b => b.AddContent(0, @<NelCalculationTemplate2 Temp="Form" />)));
-        else if (Tab == 3) __builder.AddContent(1, @<SummarySheetTemplate Temp="Form" />);
+        if (Tab == 1)
+            __builder.AddContent(0, (RenderFragment)(b => b.AddContent(0, @<NelCalculationTemplate2 Temp="Form" />)));
+        else if (Tab == 3)
+            __builder.AddContent(1, @<SummarySheetTemplate Temp="Form" />);
     };
+
     List<TemplateMVVM> List = [];
     bool btnSubmitDisabled = false;
     bool Loading = true;
+
     void Refresh() => Calc.NotifyGridRefresh(flatListDirty: true);
+
     protected async override Task OnInitializedAsync()
     {
         List = await Repo.Template.GetAsync() ?? [];
         if ((List == null || !List.Any()))
         {
-            MHD.MessageOk(ResourceApp.thereIsNoElements,
-            ResourceApp.thereIsNoElements);
+            MHD.MessageOk(ResourceApp.thereIsNoElements, ResourceApp.thereIsNoElements);
         }
         else if (Calc.TemplateId > 0)
         {
@@ -134,6 +143,7 @@ else
         }
         Loading = false;
     }
+
     async Task SetDefaultAsync(TemplateMVVM newTemplate)
     {
         var tempNew = await Repo.Template.SetDefaultAsync(Calc.Id, newTemplate.Id);
@@ -143,6 +153,7 @@ else
         Refresh();
         Modal.Close();
     }
+
     async Task HandleSubmitAsync()
     {
         btnSubmitDisabled = true;
@@ -150,12 +161,14 @@ else
         {
             if (Form is not null && Calc.TemplateId.HasValue && await Repo.Template.UpdateAsync(Form, Calc.TemplateId.Value))
                 Form.CopyPropertiesTo(Calc.Template);
+
             Refresh();
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
+
         dialogService.Close();
     }
 }

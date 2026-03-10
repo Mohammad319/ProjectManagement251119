@@ -41,266 +41,268 @@
         }
     </style>
 
-    <div class="flex flex-col gap-5 lg:flex-row lg:items-start">
-        <!-- Visible Columns -->
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:w-[400px] lg:flex-none">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            @ResourceApp.visibleItems
-                        </h3>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            @Temp.NetCalc.Columns.Count visible columns
-                        </p>
-                    </div>
+    <div class="overflow-x-auto">
+        <div class="flex min-w-[960px] items-start gap-5">
+            <!-- Visible Columns -->
+            <section class="w-[400px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                @ResourceApp.visibleItems
+                            </h3>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                @Temp.NetCalc.Columns.Count visible columns
+                            </p>
+                        </div>
 
-                    <div class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        Drag & reorder
+                        <div class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            Drag & reorder
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="max-h-[65vh] overflow-auto p-3">
-                <table class="net-template-table w-full min-w-[610px] table-fixed text-[12px]">
-                    <colgroup>
-                        <col />
-                        <col style="width:300px;" />
-                        <col style="width:250px;" />
-                    </colgroup>
+                <div class="max-h-[65vh] overflow-auto p-3">
+                    <table class="net-template-table min-w-[610px] table-fixed text-[12px]">
+                        <colgroup>
+                            <col />
+                            <col style="width:300px;" />
+                            <col style="width:250px;" />
+                        </colgroup>
 
-                    <thead class="sticky top-0 z-10">
-                        <tr class="bg-slate-100 text-[11px] font-semibold text-slate-800 dark:bg-slate-800 dark:text-slate-100">
-                            <th class="px-2 py-2 text-center">#</th>
-                            <th class="px-2 py-2 text-start">Name</th>
-                            <th class="px-2 py-2 text-center">Settings</th>
-                        </tr>
-                    </thead>
+                        <thead class="sticky top-0 z-10">
+                            <tr class="bg-slate-100 text-[11px] font-semibold text-slate-800 dark:bg-slate-800 dark:text-slate-100">
+                                <th class="px-2 py-2 text-center">#</th>
+                                <th class="px-2 py-2 text-start">Name</th>
+                                <th class="px-2 py-2 text-center">Settings</th>
+                            </tr>
+                        </thead>
 
-                    <DragReorderTBody TItem="NetColumnState"
-                                      Items="Temp.NetCalc.Columns"
-                                      RowClass="bg-white transition-colors hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/70">
-                        <RowTemplate Context="col">
-                            @{
-                                var row = Temp.NetCalc.Columns.IndexOf(col);
-                                var isFirst = row <= 0;
-                                var isLast = row >= Temp.NetCalc.Columns.Count - 1;
-                                var title = CalcLoc[NetColumnLoc.Key[col.Id]];
-                            }
+                        <DragReorderTBody TItem="NetColumnState"
+                                          Items="Temp.NetCalc.Columns"
+                                          RowClass="bg-white transition-colors hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/70">
+                            <RowTemplate Context="col">
+                                @{
+                                    var row = Temp.NetCalc.Columns.IndexOf(col);
+                                    var isFirst = row <= 0;
+                                    var isLast = row >= Temp.NetCalc.Columns.Count - 1;
+                                    var title = CalcLoc[NetColumnLoc.Key[col.Id]];
+                                }
 
-                            <td class="px-2 py-2 text-center align-middle">
-                                <div class="flex items-center justify-center gap-1">
-                                    <span class="dragHint text-slate-400 dark:text-slate-500">⋮⋮</span>
-                                    <span class="tabular-nums text-slate-700 dark:text-slate-200">@(row + 1)</span>
-                                </div>
-                            </td>
-
-                            <td class="px-2 py-2 align-middle">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex shrink-0 items-center gap-1">
-                                        <button type="button"
-                                                class="@IconButtonSecondaryClass"
-                                                disabled="@isFirst"
-                                                title="Move to top"
-                                                @onclick="() => MoveToTop(col)">
-                                            ⇈
-                                        </button>
-
-                                        <button type="button"
-                                                class="@IconButtonSecondaryClass"
-                                                disabled="@isFirst"
-                                                title="Move up"
-                                                @onclick="() => MoveUp(col)">
-                                            ▲
-                                        </button>
+                                <td class="px-2 py-2 text-center align-middle">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <span class="dragHint text-slate-400 dark:text-slate-500">⋮⋮</span>
+                                        <span class="tabular-nums text-slate-700 dark:text-slate-200">@(row + 1)</span>
                                     </div>
+                                </td>
 
-                                    <div class="min-w-0 flex-1">
-                                        <div class="truncate font-medium text-slate-800 dark:text-slate-100"
-                                             title="@title">
-                                            @title
+                                <td class="px-2 py-2 align-middle">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex shrink-0 items-center gap-1">
+                                            <button type="button"
+                                                    class="@IconButtonSecondaryClass"
+                                                    disabled="@isFirst"
+                                                    title="Move to top"
+                                                    @onclick="() => MoveToTop(col)">
+                                                ⇈
+                                            </button>
+
+                                            <button type="button"
+                                                    class="@IconButtonSecondaryClass"
+                                                    disabled="@isFirst"
+                                                    title="Move up"
+                                                    @onclick="() => MoveUp(col)">
+                                                ▲
+                                            </button>
                                         </div>
-                                        <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                                            @col.Id
+
+                                        <div class="min-w-0 flex-1">
+                                            <div class="truncate font-medium text-slate-800 dark:text-slate-100"
+                                                 title="@title">
+                                                @title
+                                            </div>
+                                            <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                                @col.Id
+                                            </div>
+                                        </div>
+
+                                        <div class="flex shrink-0 items-center gap-1">
+                                            <button type="button"
+                                                    class="@IconButtonSecondaryClass"
+                                                    disabled="@isLast"
+                                                    title="Move down"
+                                                    @onclick="() => MoveDown(col)">
+                                                ▼
+                                            </button>
+
+                                            <button type="button"
+                                                    class="@IconButtonSecondaryClass"
+                                                    disabled="@isLast"
+                                                    title="Move to bottom"
+                                                    @onclick="() => MoveToBottom(col)">
+                                                ⇊
+                                            </button>
                                         </div>
                                     </div>
+                                </td>
 
-                                    <div class="flex shrink-0 items-center gap-1">
+                                <td class="px-2 py-2 align-middle">
+                                    <div class="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                        <input class="w-[58px] rounded-lg border border-slate-300 bg-white px-2 py-1 text-center text-[11px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                                               type="number"
+                                               title="Width"
+                                               @bind="col.Width" />
+
                                         <button type="button"
-                                                class="@IconButtonSecondaryClass"
-                                                disabled="@isLast"
-                                                title="Move down"
-                                                @onclick="() => MoveDown(col)">
-                                            ▼
+                                                class="@(col.Frozen? IconButtonWarningActiveClass : IconButtonWarningClass)"
+                                                title="Freeze column"
+                                                @onclick="() => col.Frozen = !col.Frozen">
+                                            @(col.Frozen ? "📍" : "📌")
                                         </button>
 
-                                        <button type="button"
-                                                class="@IconButtonSecondaryClass"
-                                                disabled="@isLast"
-                                                title="Move to bottom"
-                                                @onclick="() => MoveToBottom(col)">
-                                            ⇊
-                                        </button>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <td class="px-2 py-2 align-middle">
-                                <div class="flex items-center justify-center gap-1.5 whitespace-nowrap">
-                                    <input class="w-[58px] rounded-lg border border-slate-300 bg-white px-2 py-1 text-center text-[11px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-                                           type="number"
-                                           title="Width"
-                                           @bind="col.Width" />
-
-                                    <button type="button"
-                                            class="@(col.Frozen? IconButtonWarningActiveClass : IconButtonWarningClass)"
-                                            title="Freeze column"
-                                            @onclick="() => col.Frozen = !col.Frozen">
-                                        @(col.Frozen ? "📍" : "📌")
-                                    </button>
-
-                                    <button type="button"
-                                            class="@IconButtonPrimaryClass"
-                                            title="Hide column"
-                                            @onclick="async () => await RemoveAsync(col)">
-                                        <span>@((MarkupString)Icons.ChevronRight)</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </RowTemplate>
-                    </DragReorderTBody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Hidden Columns -->
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:w-[260px] lg:flex-none">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    @ResourceApp.hiddenItems
-                </h3>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    @HiddenIds.Count() hidden columns
-                </p>
-            </div>
-
-            <div class="max-h-[65vh] overflow-auto p-3">
-                <table class="w-full text-[12px]">
-                    <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900">
-                        <tr class="text-[11px] text-slate-700 dark:text-slate-200">
-                            <th class="w-[56px] px-2 py-2 text-center"></th>
-                            <th class="px-2 py-2 text-start font-medium">Name</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @if (TableVisible)
-                        {
-                            @foreach (var id in HiddenIds)
-                            {
-                                <tr class="border-t border-slate-200 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/70">
-                                    <td class="px-2 py-2 text-center align-middle">
                                         <button type="button"
                                                 class="@IconButtonPrimaryClass"
-                                                title="Show column"
-                                                @onclick="async () => await AddAsync(id)">
-                                            <span>@((MarkupString)Icons.ChevronLeft)</span>
+                                                title="Hide column"
+                                                @onclick="async () => await RemoveAsync(col)">
+                                            <span>@((MarkupString)Icons.ChevronRight)</span>
                                         </button>
-                                    </td>
+                                    </div>
+                                </td>
+                            </RowTemplate>
+                        </DragReorderTBody>
+                    </table>
+                </div>
+            </section>
 
-                                    <td class="px-2 py-2 align-middle">
-                                        <div class="font-medium text-slate-800 dark:text-slate-100">
-                                            @CalcLoc[NetColumnLoc.Key[id]]
-                                        </div>
-                                        <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                                            @id
-                                        </div>
-                                    </td>
-                                </tr>
+            <!-- Hidden Columns -->
+            <section class="w-[260px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        @ResourceApp.hiddenItems
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        @HiddenIds.Count() hidden columns
+                    </p>
+                </div>
+
+                <div class="max-h-[65vh] overflow-auto p-3">
+                    <table class="w-full text-[12px]">
+                        <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900">
+                            <tr class="text-[11px] text-slate-700 dark:text-slate-200">
+                                <th class="w-[56px] px-2 py-2 text-center"></th>
+                                <th class="px-2 py-2 text-start font-medium">Name</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @if (TableVisible)
+                            {
+                                @foreach (var id in HiddenIds)
+                                {
+                                    <tr class="border-t border-slate-200 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/70">
+                                        <td class="px-2 py-2 text-center align-middle">
+                                            <button type="button"
+                                                    class="@IconButtonPrimaryClass"
+                                                    title="Show column"
+                                                    @onclick="async () => await AddAsync(id)">
+                                                <span>@((MarkupString)Icons.ChevronLeft)</span>
+                                            </button>
+                                        </td>
+
+                                        <td class="px-2 py-2 align-middle">
+                                            <div class="font-medium text-slate-800 dark:text-slate-100">
+                                                @CalcLoc[NetColumnLoc.Key[id]]
+                                            </div>
+                                            <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                                @id
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-        <!-- Settings -->
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:w-[260px] lg:flex-none">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Appearance
-                </h3>
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Table colors and border style
-                </p>
-            </div>
-
-            <div class="max-h-[65vh] space-y-3 overflow-auto p-3">
-                <div class="space-y-1">
-                    <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                        @AppFormatResource.borderType
-                    </label>
-                    <select @bind="Temp.NetCalc.Color.BorderStyle"
-                            class="@SelectInputClass">
-                        @foreach (var item in TemplateConst.BorderStyles)
-                        {
-                            <option value="@item">@item</option>
-                        }
-                    </select>
+            <!-- Settings -->
+            <section class="w-[260px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Appearance
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Table colors and border style
+                    </p>
                 </div>
 
-                <div class="grid gap-3">
-                    <div class="@ColorRowClass">
-                        <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
-                        <input type="color"
-                               class="@ColorInputClass"
-                               @bind="Temp.NetCalc.Color.Border" />
+                <div class="max-h-[65vh] space-y-3 overflow-auto p-3">
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                            @AppFormatResource.borderType
+                        </label>
+                        <select @bind="Temp.NetCalc.Color.BorderStyle"
+                                class="@SelectInputClass">
+                            @foreach (var item in TemplateConst.BorderStyles)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
                     </div>
 
-                    <div class="@ColorRowClass">
-                        <label class="@ColorLabelClass">@AppFormatResource.font</label>
-                        <input type="color"
-                               class="@ColorInputClass"
-                               @bind="Temp.NetCalc.Color.Text" />
-                    </div>
+                    <div class="grid gap-3">
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Border" />
+                        </div>
 
-                    <div class="@ColorRowClass">
-                        <label class="@ColorLabelClass">@ResourceApp.header</label>
-                        <input type="color"
-                               class="@ColorInputClass"
-                               @bind="Temp.NetCalc.Color.Header" />
-                    </div>
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@AppFormatResource.font</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Text" />
+                        </div>
 
-                    <div class="@ColorRowClass">
-                        <label class="@ColorLabelClass">@ResourceLoc.task</label>
-                        <input type="color"
-                               class="@ColorInputClass"
-                               @bind="Temp.NetCalc.Color.Task" />
-                    </div>
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceApp.header</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Header" />
+                        </div>
 
-                    <div class="@ColorRowClass">
-                        <label class="@ColorLabelClass">@ResourceLoc.SubTask</label>
-                        <input type="color"
-                               class="@ColorInputClass"
-                               @bind="Temp.NetCalc.Color.SubTask" />
-                    </div>
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceLoc.task</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Task" />
+                        </div>
 
-                    <div class="@ColorRowClass">
-                        <label class="@ColorLabelClass">@ResourceLoc.resource</label>
-                        <input type="color"
-                               class="@ColorInputClass"
-                               @bind="Temp.NetCalc.Color.Resource" />
-                    </div>
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceLoc.SubTask</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.SubTask" />
+                        </div>
 
-                    <div class="@ColorRowClass">
-                        <label class="@ColorLabelClass">@CalcResource.note</label>
-                        <input type="color"
-                               class="@ColorInputClass"
-                               @bind="Temp.NetCalc.Color.Note" />
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceLoc.resource</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Resource" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@CalcResource.note</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Note" />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
     </div>
 }
 

@@ -8,7 +8,7 @@
 
 @if (TemplateUpdate != null)
 {
-    <section class="mx-auto max-w-7xl space-y-5">
+    <section class="mx-auto max-w-[1600px] space-y-5">
         <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="min-w-0">
@@ -52,8 +52,8 @@
         <EditForm Model="@TemplateUpdate" id="netTable" OnValidSubmit="HandleSubmitAsync">
             <DataAnnotationsValidator />
 
-            <fieldset disabled="@btnSubmitDisabled" class="grid gap-5 xl:grid-cols-12">
-                <div class="xl:col-span-4">
+            <fieldset disabled="@btnSubmitDisabled" class="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+                <div class="min-w-0">
                     <div class="sticky top-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <div class="mb-4">
                             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -143,7 +143,7 @@
                     </div>
                 </div>
 
-                <div class="xl:col-span-8 space-y-5">
+                <div class="min-w-0 space-y-5">
                     <NelCalculationTemplate2 Temp="TemplateUpdate" />
                     <SummarySheetTemplate Temp="TemplateUpdate" />
                 </div>

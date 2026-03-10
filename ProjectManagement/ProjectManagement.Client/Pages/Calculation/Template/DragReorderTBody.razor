@@ -26,16 +26,9 @@
 </tbody>
 
 @code {
-    /// <summary>القائمة الأصلية (لا تمرر ToList)</summary>
     [Parameter] public IList<TItem>? Items { get; set; }
-
-    /// <summary>محتوى الصف (بدون tr) لأننا نحن نرسم tr</summary>
     [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
-
-    /// <summary>Class للـ tr</summary>
     [Parameter] public string RowClass { get; set; } = "";
-
-    /// <summary>محتوى بديل عند عدم توفر Items/RowTemplate</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
     private TItem? _draggedItem;
@@ -59,7 +52,6 @@
         var item = Items[fromIndex];
         Items.RemoveAt(fromIndex);
 
-        // إذا سحبنا من أعلى لأسفل يجب إنقاص index الهدف
         if (fromIndex < toIndex)
             toIndex--;
 

@@ -1,11 +1,20 @@
-﻿@import "tailwindcss" source(none);
+﻿@import "tailwindcss" source("..");
 
-/* dark mode based on .dark class */
+/* dark mode عبر class="dark" */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* current project */
-@source "..";
-
-/* sibling projects */
-@source "../../ProjectManagement";
+/* مشروع Client الخارجي */
 @source "../../ProjectManagement.Client";
+
+/* اختبار سريع للتأكد أن البناء يعمل */
+@source inline("text-red-500");
+
+/* safelist القديمة */
+@source inline("min-w-[150px]");
+@source inline("min-w-[280px]");
+@source inline("min-w-[350px]");
+@source inline("w-[110px]");
+@source inline("w-[130px]");
+@source inline("w-[160px]");
+@source inline("w-[200px]");
+@source inline("after:content-['*']");
