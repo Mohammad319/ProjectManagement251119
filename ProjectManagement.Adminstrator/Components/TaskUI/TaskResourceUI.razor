@@ -1,7 +1,6 @@
 ﻿@inject ITaskDefinitionService TaskService
 @inject  ITaskResourceService TaskResourceService
 @inherits AppComponentBase
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using Microsoft.Extensions.Localization
 @using TaskResourceBlueprints.Dto.ProjectTask
 @using TaskResourceBlueprints.Services.ProjectTask
@@ -11,10 +10,10 @@
 @using TaskResourceBlueprints.Services.Resource
 @inject IStringLocalizer<CalcResource> L
 
-<div class="@CsS.Modal.Body">
+<div class="space-y-4 p-2">
     @if (TaskResource is null)
     {
-        <div class="@CssClasses.Components.Card">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <div class="animate-pulse space-y-2">
                 <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
                 <div class="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -27,41 +26,41 @@
     else
     {
         <!-- بطاقة: الإعدادات الأساسية -->
-        <div class="@CssClasses.Components.Card">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <h5 class="font-medium text-gray-800 dark:text-gray-100">Settings</h5>
 
-            <div class="@CsS.Grid.Col.MD6">
-                <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
-                    <label for="cf1" class="@CssClasses.Form.Label">Menu Id</label>
-                    <input type="number" step="1" min="0" class="@CsS.Input.Number"
+            <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+                <div class="space-y-1 md:col-span-3">
+                    <label for="cf1" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Menu Id</label>
+                    <input type="number" step="1" min="0" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                            @bind-value="TaskResource.MenuId"
                            @bind-value:event="oninput"/>
                 </div>
-                <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
-                    <label for="cf1" class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
+                <div class="space-y-1 md:col-span-3">
+                    <label for="cf1" class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.changeFactor1</label>
                     <input id="cf1"
                            type="number"
                            step="0.01"
                            inputmode="decimal"
                            min="0"
-                           class="@CsS.Input.Number"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                            @bind-value="TaskResource.ChangeFactor1"
                            @bind-value:event="oninput" />
                 </div>
-                <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
-                    <label for="cf2" class="@CssClasses.Form.Label">@CalcResource.changeFactor2</label>
+                <div class="space-y-1 md:col-span-3">
+                    <label for="cf2" class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.changeFactor2</label>
                     <input id="cf2"
                            type="number"
                            step="0.01"
                            inputmode="decimal"
                            min="0"
-                           class="@CsS.Input.Number"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                            @bind-value="TaskResource.ChangeFactor2"
                            @bind-value:event="oninput" />
                 </div>
 
-                <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
-                    <label for="cap" class="@CssClasses.Form.Label">
+                <div class="space-y-1 md:col-span-3">
+                    <label for="cap" class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                         @if (TaskResource?.ResType == ResourceTypesEnum.Materials)
                         {
                             <span>@CalcResource.waste</span>
@@ -76,13 +75,13 @@
                            step="0.01"
                            inputmode="decimal"
                            min="0"
-                           class="@CsS.Input.Number"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                            @bind-value="TaskResource!.CapWaste"
                            @bind-value:event="oninput" />
                 </div>
 
-                <div class="@CssClasses.Form.Field @CsS.Grid.Span.MD3">
-                    <label for="baseCost" class="@CssClasses.Form.Label">
+                <div class="space-y-1 md:col-span-3">
+                    <label for="baseCost" class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                         @CalcResource.baseCost
                     </label>
                     <input id="baseCost"
@@ -90,7 +89,7 @@
                            step="0.01"
                            inputmode="decimal"
                            min="0"
-                           class="@CsS.Input.Number"
+                           class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                            @bind-value="TaskResource.BaseCost"
                            @bind-value:event="oninput" />
                 </div>
@@ -101,18 +100,18 @@
         @if (TaskResource?.ResType == ResourceTypesEnum.MachinesAndEquipments
             || TaskResource?.ResType == ResourceTypesEnum.Worker)
         {
-            <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top2">
-                <div class="@CsS.Layout.FlexJustifyBetween">
+            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 mt-4">
+                <div class="flex items-center justify-between gap-2">
                     <h5 class="font-medium text-gray-800 dark:text-gray-100">Roles</h5>
                     <button type="button"
-                            class="@CssClasses.Btn.Outline.Primary @CssClasses.Btn.Size.Small"
+                            class="inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
                             @onclick="AddRole">
                         + Role
                     </button>
                 </div>
 
                 <div class="mt-2">
-                    <div class="@CsS.Grid.Col.MD6 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-6 text-xs font-semibold text-gray-600 dark:text-gray-300">
                         <div></div>
                         <div>@AppControll.min</div>
                         <div>@AppControll.max</div>
@@ -124,11 +123,11 @@
                         @for (int i = 0; i < TaskResource.CapRole.Count; i++)
                         {
                             var role = TaskResource.CapRole[i];
-                            <div class="@CsS.Grid.Col.MD6 items-center">
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-6 items-center">
                                 <div class="flex items-center">
                                     <button type="button"
                                             title="@ResourceApp.delete"
-                                            class="@CssClasses.Btn.Outline.Danger h-6 w-6 p-0 flex items-center justify-center"
+                                            class="inline-flex h-6 w-6 items-center justify-center rounded-md border border-rose-200 bg-rose-50 p-0 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
                                             @onclick="@(() => TaskResource.CapRole.Remove(role))">
                                         ×
                                     </button>
@@ -137,7 +136,7 @@
                                 <input type="number"
                                        step="1"
                                        min="0"
-                                       class="@CsS.Input.Number"
+                                       class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                        @bind-value="role.Min"
                                        @bind-value:event="oninput"
                                        aria-label="Min" />
@@ -145,7 +144,7 @@
                                 <input type="number"
                                        step="1"
                                        min="0"
-                                       class="@CsS.Input.Number"
+                                       class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                        @bind-value="role.Max"
                                        @bind-value:event="oninput"
                                        aria-label="Max" />
@@ -153,7 +152,7 @@
                                 <input type="number"
                                        step="0.01"
                                        min="0"
-                                       class="@CsS.Input.Number"
+                                       class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                        @bind-value="role.Value"
                                        @bind-value:event="oninput"
                                        aria-label="Cap" />
@@ -162,7 +161,7 @@
                     }
                     else
                     {
-                        <div class="@CssClasses.Text.Secondary mt-2">
+                        <div class="mt-2 text-sm text-slate-500 dark:text-slate-400">
                             No Data
                         </div>
                     }
@@ -170,10 +169,10 @@
             </div>
         }
 
-        <div class="@CssClasses.Components.Card @CsS.Spacing.M.Top2">
-            <div class="@CsS.Layout.FlexJustifyBetween">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 mt-4">
+            <div class="flex items-center justify-between gap-2">
                 <h5 class="font-medium text-gray-800 dark:text-gray-100">@CalcResource.Formulas</h5>
-                <button class="@CsS.Btn.Outline.Primary"
+                <button class="inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
                         type="button"
                         @onclick="@(() => TaskResource!.Formulas.Add(string.Empty))">
                     + Add Formula
@@ -182,19 +181,19 @@
 
             @if (TaskResource!.Formulas is null || TaskResource.Formulas.Count == 0)
             {
-                <div class="@CssClasses.Text.Secondary mt-2">No Data</div>
+                <div class="mt-2 text-sm text-slate-500 dark:text-slate-400">No Data</div>
             }
             else
             {
                 @foreach (var eq in TaskResource.Formulas.Select((value, index) => new { value, index }))
                 {
-                    <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Top2">
-                        <input class="@CsS.Input.Text flex-1"
+                    <div class="mt-4 flex items-center gap-2">
+                        <input class="w-full flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                placeholder="Formula"
                                value="@TaskResource!.Formulas[eq.index]"
                                @oninput="e => TaskResource!.Formulas[eq.index] = e.Value?.ToString() ?? string.Empty" />
                         <button type="button"
-                                class="@CsS.Btn.Outline.Danger @CssClasses.Btn.Size.XSmall"
+                                class="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
                                 title="@ResourceApp.delete"
                                 @onclick="@(() => RemoveFormula(eq.index))">
                             @ResourceApp.delete
@@ -205,15 +204,15 @@
         </div>
     }
 
-    <div class="@CsS.Modal.Footer @CsS.Spacing.M.Top3">
-        <div class="@CsS.Layout.ButtonGroup">
+    <div class="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
+        <div class="flex flex-wrap items-center gap-3">
             <button type="button"
-                    class="@CsS.Btn.Outline.Success"
+                    class="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
                     @onclick="SaveAsync">
                 @ResourceApp.save
             </button>
             <button type="button"
-                    class="@CsS.Btn.Outline.Secondary"
+                    class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                     @onclick="MHD.Modal.Close">
                 @ResourceApp.cancel
             </button>
