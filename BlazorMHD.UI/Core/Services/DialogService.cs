@@ -10,6 +10,10 @@ public class DialogButtonModel
     public bool IsPrimary { get; set; }
     public MhdSize Size { get; set; } = MhdSize.Md;
     public EventCallback? OnClick { get; set; }
+
+    public string Type { get; set; } = "button";   // "button" | "submit"
+    public string? FormId { get; set; }            // used when Type == "submit"
+    public bool AutoClose { get; set; } = true;    // close dialog after click (for button type)
 }
 
 public enum DialogSize
@@ -76,17 +80,17 @@ public class DialogService
     public void ShowComponent<TComponent>(
         string title,
         Dictionary<string, object>? parameters = null,
-        DialogSize size = DialogSize.Large)
+        DialogSize size = DialogSize.Large, List<DialogButtonModel>? btns = null)
         where TComponent : IComponent
     {
-        ShowComponent<TComponent>(title, "", parameters, size);
+        ShowComponent<TComponent>(title, "", parameters, size,btns);
     }
 
     public void ShowComponent<TComponent>(
         string title,
         string icon,
         Dictionary<string, object>? parameters = null,
-        DialogSize size = DialogSize.Large)
+        DialogSize size = DialogSize.Large, List<DialogButtonModel>? btns = null)
         where TComponent : IComponent
     {
         RenderFragment content = builder =>
@@ -110,7 +114,8 @@ public class DialogService
             Title = title,
             Icon = icon,
             Content = content,
-            Size = size
+            Size = size,
+            Buttons = btns ?? []
         });
     }
 

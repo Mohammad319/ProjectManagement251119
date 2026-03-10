@@ -1,6 +1,13 @@
-﻿<button type="button"
+@using Microsoft.AspNetCore.Components.Web
+
+<button type="button"
         class="@BuildClass()"
-        @onclick="Toggle">
+        role="switch"
+        aria-checked="@Value"
+        aria-label="@EffectiveAriaLabel"
+        disabled="@Disabled"
+        @onclick="Toggle"
+        @onkeydown="OnKeyDown">
     <span class="@ThumbClass"></span>
 </button>
 
@@ -8,23 +15,40 @@
     [Parameter] public bool Value { get; set; }
     [Parameter] public EventCallback<bool> ValueChanged { get; set; }
     [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string? AriaLabel { get; set; }
+
+    private string EffectiveAriaLabel => string.IsNullOrWhiteSpace(AriaLabel) ? "Toggle" : AriaLabel!;
 
     private async Task Toggle()
     {
-        if (Disabled) return;
+        if (Disabled)
+            return;
+
         Value = !Value;
         await ValueChanged.InvokeAsync(Value);
     }
 
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (Disabled)
+            return;
+
+        if (e.Key is " " or "Enter")
+        {
+            await Toggle();
+        }
+    }
+
     private string BuildClass()
     {
-        var trackOn = "bg-blue-600";                     // كان bg-mhd-primary-600
-        var trackOff = "bg-slate-300 dark:bg-slate-700";  // كان bg-mhd-border
+        var trackOn = "bg-blue-600 dark:bg-blue-500";
+        var trackOff = "bg-slate-300 dark:bg-slate-700";
 
         var cls = new List<string>
         {
             "relative inline-flex items-center transition-colors duration-150",
-            "w-9 h-4 rounded-full",
+            "w-9 h-5 rounded-full",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-slate-900",
             Value ? trackOn : trackOff
         };
 
@@ -40,6 +64,6 @@
         string.Join(" ", new[]
         {
             "inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-150",
-            Value ? "translate-x-5" : "translate-x-0"
+            Value ? "translate-x-4" : "translate-x-0.5"
         });
 }

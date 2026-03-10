@@ -1,13 +1,16 @@
 @using Microsoft.AspNetCore.Components.Web
 
-<div class="inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 px-2 py-1 text-[0.75rem]">
-    <span class="text-slate-500 dark:text-slate-400">🔍</span>
-    <input @bind="Value"
-           @bind:event="oninput"
+<div class="inline-flex items-center gap-1 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 px-2 py-1 text-[0.75rem] focus-within:ring-1 focus-within:ring-blue-500"
+     dir="@Direction">
+    <span class="text-slate-500 dark:text-slate-400" aria-hidden="true">🔍</span>
+    <input value="@Value"
+           @oninput="OnInput"
            class="bg-transparent focus:outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-[0.75rem] w-full"
            placeholder="@Placeholder"
+           aria-label="@EffectiveAriaLabel"
+           disabled="@Disabled"
            @onkeydown="OnKeyDown"
-           @attributes="AdditionalAttributes" />
+           @attributes="FilteredAttributes" />
 </div>
 
 @code {
@@ -15,7 +18,27 @@
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
     [Parameter] public string Placeholder { get; set; } = "Search...";
     [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+    [Parameter] public string? AriaLabel { get; set; }
+    [Parameter] public string Direction { get; set; } = "auto";
+    [Parameter] public bool Disabled { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string EffectiveAriaLabel => !string.IsNullOrWhiteSpace(AriaLabel) ? AriaLabel! : "Search";
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        var next = e.Value?.ToString();
+        if (next == Value)
+            return;
+
+        Value = next;
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private IReadOnlyDictionary<string, object>? FilteredAttributes =>
+        AdditionalAttributes?
+            .Where(kv => !string.Equals(kv.Key, "class", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
 }

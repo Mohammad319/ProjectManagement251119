@@ -1,153 +1,141 @@
-@using System.Linq
-@using BlazorMHD.UI.Core.Services
 @using BlazorMHD.UI.Core.DesignSystem
-@using Microsoft.AspNetCore.Components
+@using BlazorMHD.UI.Core.Services
 @using Microsoft.AspNetCore.Components.Web
-@inject IDesignSystemService DesignSystemService
 @inject DialogService DialogService
+@inject IDesignSystemService Design
 @implements IDisposable
 
-@if (DialogService.Dialogs?.Any() == true)
+@if (_dialogs.Count > 0)
 {
-    var dialogs = DialogService.Dialogs;
+    @for (var i = 0; i < _dialogs.Count; i++)
+    {
+        var model = _dialogs[i];
+        var z = 1000 + i;
 
-    <div @onkeydown="OnKeyDown">
-        <div class="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-[2px] dialog-overlay-animate-in"
-             @onclick="OnOverlayClick">
-        </div>
+        <div class="fixed inset-0 z-50 bg-black/45 backdrop-blur-sm dialog-overlay-animate-in overflow-hidden overscroll-none p-3 sm:p-6"
+             style="z-index:@z;"
+             @onclick="() => OnOverlayClick(model)"
+             @onmousemove="OnMouseMove"
+             @onmouseup="OnMouseUp"
+             @onmouseleave="OnMouseUp">
 
-        @foreach (var item in dialogs.Select((m, i) => new { Model = m, Index = i }))
-        {
-            var model = item.Model;
-            var zIndex = 50 + item.Index * 10;
+            <div class="h-full w-full flex items-center justify-center">
+                <div class="@GetDialogClass(model) dialog-animate-in"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="@GetTitleId(model)"
+                     aria-describedby="@GetDescriptionId(model)"
+                     tabindex="0"
+                     style="@($"transform: translate({model.OffsetX}px, {model.OffsetY}px);")"
+                     @onclick:stopPropagation="true"
+                     @onkeydown="(e => OnDialogKeyDown(e, model))">
 
-            <div class="fixed inset-0 overflow-y-auto px-3 py-4 sm:px-6 sm:py-8"
-                 style="z-index:@zIndex;">
-                <div class="flex min-h-full items-start justify-center">
-                    <div class="relative dialog-animate-in"
-                         style="@GetDialogStyle(model)"
-                         @onmousemove="e => OnMouseMove(model, e)"
-                         @onmouseup="e => OnMouseUp(model, e)"
-                         @onmouseleave="e => OnMouseUp(model, e)">
-
-                        <div class="@($"{DialogStyles.GetPanelClasses(model)} flex flex-col overflow-hidden border border-slate-200/80 bg-white shadow-2xl ring-1 ring-black/5 dark:border-slate-700/80 dark:bg-slate-900 dark:ring-white/10")"
-                             style="@GetPanelStyle(model)"
-                             role="dialog"
-                             aria-modal="true"
-                             aria-label="@model.Title">
-
-                            <div class="flex items-start justify-between gap-4 border-b border-slate-200/80 bg-slate-50/90 px-4 py-3 backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900/90 sm:px-5"
-                                 @onmousedown="e => OnHeaderMouseDown(model, e)">
-                                <div class="min-w-0 select-none @(model.IsDraggable ? "cursor-move" : string.Empty)">
-                                    <div class="flex items-center gap-2">
-                                        <span class="inline-flex h-2.5 w-2.5 shrink-0 rounded-full shadow-sm @DialogStyles.GetHeaderAccent(model.State)"></span>
-                                        @if (!string.IsNullOrWhiteSpace(model.Icon))
-                                        {
-                                            <span class="text-slate-500 dark:text-slate-300">@((MarkupString)model.Icon)</span>
-                                        }
-                                        <span class="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
-                                            @model.Title
-                                        </span>
-                                    </div>
-
-                                    @if (!string.IsNullOrWhiteSpace(model.Description))
-                                    {
-                                        <p class="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
-                                            @model.Description
-                                        </p>
-                                    }
-                                </div>
-
-                                <button type="button"
-                                        class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                                        aria-label="Close"
-                                        @onclick="@(() => Close(model))">
-                                    ✕
-                                </button>
-                            </div>
-
-                            <div class="flex-1 overflow-auto px-4 py-4 sm:px-5 sm:py-5">
-                                @model.Content
-                            </div>
-
-                            @if (model.Buttons?.Any() == true)
+                    <div class="@GetHeaderClass(model)"
+                         @onmousedown="(e => OnHeaderMouseDown(model, e))">
+                        <div class="flex items-start gap-2 min-w-0">
+                            @if (!string.IsNullOrWhiteSpace(model.Icon))
                             {
-                                <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-900 sm:px-5">
-                                    @foreach (var btn in model.Buttons)
-                                    {
-                                        <button type="button"
-                                                class="@GetButtonClasses(btn)"
-                                                @onclick="() => OnButtonClick(btn, model)">
-                                            @btn.Text
-                                        </button>
-                                    }
-                                </div>
+                                <span class="text-sm mt-0.5" aria-hidden="true">@((MarkupString)model.Icon!)</span>
+                            }
+
+                            <div class="min-w-0">
+                                <h3 id="@GetTitleId(model)" class="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                    @model.Title
+                                </h3>
+
+                                @if (!string.IsNullOrWhiteSpace(model.Description))
+                                {
+                                    <p id="@GetDescriptionId(model)" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                        @model.Description
+                                    </p>
+                                }
+                            </div>
+                        </div>
+
+                        <button type="button"
+                                class="ml-2 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+                                aria-label="Close"
+                                @onclick="() => DialogService.Close(model)">
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- Scroll هنا داخل جسم النافذة فقط -->
+                    <div class="mhd-dialog-body flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 text-sm text-slate-700 dark:text-slate-200">
+                        @if (model.Content is not null)
+                        {
+                            @model.Content
+                        }
+                    </div>
+
+                    @if (model.Buttons?.Any() == true)
+                    {
+                        <div class="shrink-0 px-4 py-3 border-t border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700 flex items-center justify-end gap-2">
+                            @foreach (var btn in model.Buttons)
+                            {
+                                if (string.Equals(btn.Type, "submit", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <button type="submit"
+                                            form="@btn.FormId"
+                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)">
+                                        @btn.Text
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button"
+                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)"
+                                            @onclick="() => OnButtonClick(model, btn)">
+                                        @btn.Text
+                                    </button>
+                                }
                             }
                         </div>
-                    </div>
+                    }
                 </div>
             </div>
-        }
-    </div>
+        </div>
+    }
 }
 
 @code {
-    private string GetPanelStyle(DialogModel model)
-    {
-        if (model.Size == DialogSize.FullScreen)
-            return "width: 100vw; height: 100vh; max-width: 100vw; max-height: 100vh; border-radius: 0;";
+    private IReadOnlyList<DialogModel> _dialogs = Array.Empty<DialogModel>();
 
-        return model.Size switch
-        {
-            DialogSize.Small => "width: min(100%, 26rem); max-height: min(88vh, 52rem);",
-            DialogSize.Medium => "width: min(100%, 34rem); max-height: min(88vh, 56rem);",
-            DialogSize.Large => "width: min(100%, 48rem); max-height: min(88vh, 60rem);",
-            DialogSize.ExtraLarge => "width: min(96vw, 72rem); max-height: min(90vh, 64rem);",
-            _ => "width: min(100%, 34rem); max-height: min(88vh, 56rem);"
-        };
-    }
+    private bool _isDragging;
+    private DialogModel? _dragDialog;
+    private double _startMouseX;
+    private double _startMouseY;
+    private double _startOffsetX;
+    private double _startOffsetY;
 
     protected override void OnInitialized()
     {
-        DialogService.OnChange += StateHasChanged;
+        DialogService.OnChange += OnDialogChanged;
+        _dialogs = DialogService.Dialogs;
     }
 
-    public void Dispose()
+    private void OnDialogChanged()
     {
-        DialogService.OnChange -= StateHasChanged;
+        _dialogs = DialogService.Dialogs;
+        InvokeAsync(StateHasChanged);
     }
 
-    private void Close()
+    private async Task OnOverlayClick(DialogModel model)
     {
-        DialogService.Close();
-    }
-
-    private void Close(DialogModel model)
-    {
-        DialogService.Close(model);
-    }
-
-    private async Task OnButtonClick(DialogButtonModel button, DialogModel model)
-    {
-        if (button.OnClick is { HasDelegate: true })
+        if (model.CloseOnOverlayClick)
         {
-            await button.OnClick.Value.InvokeAsync();
+            DialogService.Close(model);
+            await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private async Task OnButtonClick(DialogModel model, DialogButtonModel btn)
+    {
+        if (btn.OnClick.HasValue)
+            await btn.OnClick.Value.InvokeAsync();
 
         DialogService.Close(model);
     }
-
-    private string GetButtonClasses(DialogButtonModel button)
-    {
-        return DesignSystemService.GetButtonClass(button.State, MhdVariant.Outline, MhdSize.Md);
-    }
-
-    private bool _isDragging;
-    private DialogModel? _draggingModel;
-    private double _dragStartMouseX;
-    private double _dragStartMouseY;
-    private double _startOffsetX;
-    private double _startOffsetY;
 
     private void OnHeaderMouseDown(DialogModel model, MouseEventArgs e)
     {
@@ -155,59 +143,104 @@
             return;
 
         _isDragging = true;
-        _draggingModel = model;
-        _dragStartMouseX = e.ClientX;
-        _dragStartMouseY = e.ClientY;
+        _dragDialog = model;
+
+        _startMouseX = e.ClientX;
+        _startMouseY = e.ClientY;
         _startOffsetX = model.OffsetX;
         _startOffsetY = model.OffsetY;
     }
 
-    private void OnMouseMove(DialogModel model, MouseEventArgs e)
+    private void OnMouseMove(MouseEventArgs e)
     {
-        if (!_isDragging || _draggingModel != model)
+        if (!_isDragging || _dragDialog is null)
             return;
 
-        var deltaX = e.ClientX - _dragStartMouseX;
-        var deltaY = e.ClientY - _dragStartMouseY;
+        var dx = e.ClientX - _startMouseX;
+        var dy = e.ClientY - _startMouseY;
 
-        model.OffsetX = _startOffsetX + deltaX;
-        model.OffsetY = _startOffsetY + deltaY;
+        _dragDialog.OffsetX = _startOffsetX + dx;
+        _dragDialog.OffsetY = _startOffsetY + dy;
 
         StateHasChanged();
     }
 
-    private void OnMouseUp(DialogModel model, MouseEventArgs e)
+    private void OnMouseUp(MouseEventArgs _)
     {
-        if (_draggingModel == model)
-        {
-            _isDragging = false;
-            _draggingModel = null;
-        }
+        _isDragging = false;
+        _dragDialog = null;
     }
 
-    private string GetDialogStyle(DialogModel model)
+    private Task OnDialogKeyDown(KeyboardEventArgs e, DialogModel model)
     {
-        return $"transform: translate({model.OffsetX}px, {model.OffsetY}px);";
+        if (e.Key == "Escape")
+        {
+            DialogService.Close(model);
+            return InvokeAsync(StateHasChanged);
+        }
+
+        var step = e.ShiftKey ? 24d : 12d;
+
+        switch (e.Key)
+        {
+            case "ArrowRight":
+                model.OffsetX += step;
+                break;
+            case "ArrowLeft":
+                model.OffsetX -= step;
+                break;
+            case "ArrowDown":
+                model.OffsetY += step;
+                break;
+            case "ArrowUp":
+                model.OffsetY -= step;
+                break;
+            default:
+                return Task.CompletedTask;
+        }
+
+        return InvokeAsync(StateHasChanged);
     }
 
-    private void OnOverlayClick(MouseEventArgs e)
+    private string GetDialogClass(DialogModel model)
     {
-        var top = DialogService.Dialogs.LastOrDefault();
-        if (top is not null && top.CloseOnOverlayClick)
+        var size = model.Size switch
         {
-            DialogService.Close(top);
-        }
+            DialogSize.Small => "w-[24rem] max-h-[calc(100dvh-2rem)]",
+            DialogSize.Medium => "w-[32rem] max-h-[calc(100dvh-2rem)]",
+            DialogSize.Large => "w-[42rem] max-h-[calc(100dvh-2rem)]",
+            DialogSize.ExtraLarge => "w-[64rem] max-h-[calc(100dvh-2rem)]",
+            DialogSize.FullScreen => "w-[95vw] h-[92dvh] max-h-[92dvh]",
+            _ => "w-[32rem] max-h-[calc(100dvh-2rem)]"
+        };
+
+        return string.Join(" ", new[]
+        {
+            "relative mx-auto my-2 flex flex-col min-h-0 max-w-[95vw] overflow-hidden",
+            "rounded-lg border border-slate-200 bg-white shadow-xl",
+            "dark:border-slate-700 dark:bg-slate-900",
+            size
+        });
     }
 
-    private void OnKeyDown(KeyboardEventArgs e)
+    private string GetHeaderClass(DialogModel model)
     {
-        if (e.Key == "Escape" || e.Key == "Esc")
+        var dragCursor = model.IsDraggable ? "cursor-move select-none" : "cursor-default";
+
+        return string.Join(" ", new[]
         {
-            var top = DialogService.Dialogs?.LastOrDefault();
-            if (top is not null)
-            {
-                DialogService.Close(top);
-            }
-        }
+            "shrink-0 px-4 py-3 border-b border-slate-200 bg-white",
+            "dark:border-slate-700 dark:bg-slate-800/95",
+            "flex items-start justify-between",
+            dragCursor
+        });
+    }
+
+    private string GetTitleId(DialogModel model) => $"mhd-dialog-title-{model.GetHashCode()}";
+    private string GetDescriptionId(DialogModel model) => $"mhd-dialog-desc-{model.GetHashCode()}";
+
+    public void Dispose()
+    {
+        DialogService.OnChange -= OnDialogChanged;
     }
 }

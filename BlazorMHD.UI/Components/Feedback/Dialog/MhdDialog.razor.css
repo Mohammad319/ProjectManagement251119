@@ -1,28 +1,28 @@
-﻿.dialog-animate-in {
-    animation: dialog-fade-in 0.1s ease-out;
-}
-.dialog-overlay-animate-in {
-    animation: overlay-fade-in 0.1s ease-out;
+/* Body scroll داخل الـ Dialog */
+/*.mhd-dialog-body {
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}*/
+
+/* Fallback إذا الثيم عندك data-theme بدل class="dark" */
+/*[data-theme="dark"] .mhd-dialog-header,
+html[data-theme="dark"] .mhd-dialog-header,
+:root[data-theme="dark"] .mhd-dialog-header {
+    background-color: rgb(30 41 59 / 0.95) !important;*/ /* قريب من slate-800 */
+    /*border-color: rgb(51 65 85) !important;*/ /* slate-700 */
+/*}*/
+
+/* اختيارية: مظهر شريط التمرير */
+/*.mhd-dialog-body::-webkit-scrollbar {
+    width: 10px;
 }
 
-@keyframes dialog-fade-in {
-    from {
-        opacity: 0;
-        filter: blur(2px);
-    }
-
-    to {
-        opacity: 1;
-        filter: blur(0);
-    }
+.mhd-dialog-body::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgb(148 163 184 / 0.55);
 }
 
-@keyframes overlay-fade-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
+[data-theme="dark"] .mhd-dialog-body::-webkit-scrollbar-thumb,
+.dark .mhd-dialog-body::-webkit-scrollbar-thumb {
+    background: rgb(100 116 139 / 0.65);
+}*/

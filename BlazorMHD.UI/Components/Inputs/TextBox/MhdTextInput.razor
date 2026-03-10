@@ -1,20 +1,24 @@
 @using Microsoft.AspNetCore.Components.Web
 
-<div class="flex flex-col gap-0.5">
+<div class="flex flex-col gap-0.5" dir="@Direction">
     @if (!string.IsNullOrEmpty(Label))
     {
-        <label class="text-[0.70rem] text-slate-500 dark:text-slate-400">
+        <label for="@_inputId" class="text-[0.70rem] text-slate-500 dark:text-slate-400">
             @Label
         </label>
     }
 
-    <input @bind="Value"
-           @bind:event="oninput"
+    <input id="@_inputId"
+           value="@Value"
+           @oninput="OnInput"
            type="@InputType"
            class="@BuildInputClass()"
            placeholder="@Placeholder"
+           aria-label="@EffectiveAriaLabel"
+           disabled="@Disabled"
+           readonly="@ReadOnly"
            @onkeydown="OnKeyDown"
-           @attributes="AdditionalAttributes" />
+           @attributes="FilteredAttributes" />
 
     @if (!string.IsNullOrEmpty(HelperText))
     {
@@ -37,11 +41,37 @@
     [Parameter] public bool ReadOnly { get; set; }
 
     [Parameter] public MhdSize Size { get; set; } = MhdSize.Sm;
+    [Parameter] public string Direction { get; set; } = "auto";
+    [Parameter] public string? AriaLabel { get; set; }
 
     [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
     public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private readonly string _inputId = $"mhd-text-{Guid.NewGuid():N}";
+
+    private string EffectiveAriaLabel =>
+        !string.IsNullOrWhiteSpace(AriaLabel)
+            ? AriaLabel!
+            : !string.IsNullOrWhiteSpace(Label)
+                ? Label!
+                : "Text input";
+
+    private IReadOnlyDictionary<string, object>? FilteredAttributes =>
+        AdditionalAttributes?
+            .Where(kv => !string.Equals(kv.Key, "class", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        var next = e.Value?.ToString();
+        if (next == Value)
+            return;
+
+        Value = next;
+        await ValueChanged.InvokeAsync(Value);
+    }
 
     private string BuildInputClass()
     {
@@ -59,7 +89,7 @@
             "bg-white dark:bg-slate-950",
             "text-slate-900 dark:text-slate-100",
             "border border-slate-200 dark:border-slate-700",
-            "focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-600",
             "placeholder:text-slate-400 dark:placeholder:text-slate-500",
             "rounded-md",
             sizeClass,

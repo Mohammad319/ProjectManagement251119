@@ -3,15 +3,9 @@
 @using BlazorMHD.UI.Components.Feedback.MessageBox
 @using BlazorMHD.UI.Components.Feedback.Toast
 
-<div class="mhd-scope relative" dir="auto">
-    @ChildContent
-
+<div class="mhd-scope" dir="auto">
     <MhdMessageBox />
     <MhdToastContainer />
     <MhdLoadingOverlay />
     <MhdDialog />
 </div>
-
-@code {
-    [Parameter] public RenderFragment? ChildContent { get; set; }
-}

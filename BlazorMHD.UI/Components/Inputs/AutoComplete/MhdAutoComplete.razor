@@ -1,35 +1,52 @@
 @using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
 @typeparam TItem
+@implements IDisposable
 
-<div class="relative text-[0.75rem]" @onclick:stopPropagation="true">
+<div class="relative text-[0.75rem]" @onclick:stopPropagation="true" dir="@EffectiveDirection">
     @if (!string.IsNullOrEmpty(Label))
     {
-        <label class="text-[0.70rem] text-slate-500 dark:text-slate-400 mb-0.5 block">
+        <label class="text-[0.70rem] text-slate-500 dark:text-slate-400 mb-0.5 block" for="@_inputId">
             @Label
         </label>
     }
 
-    <div class="inline-flex items-center w-full border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 px-2 py-0.5">
-        <input class="flex-1 bg-transparent focus:outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-[0.75rem]"
+    <div class="inline-flex items-center w-full border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-950 px-2 py-0.5 focus-within:ring-1 focus-within:ring-blue-500">
+        <input id="@_inputId"
+               class="flex-1 bg-transparent focus:outline-none text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 text-[0.75rem]"
                value="@_searchText"
                @oninput="OnInputChanged"
                placeholder="@Placeholder"
                @onkeydown="OnKeyDown"
-               @onblur="OnBlur" />
+               @onblur="OnBlur"
+               @onfocus="OnFocus"
+               role="combobox"
+               autocomplete="off"
+               aria-autocomplete="list"
+               aria-expanded="@_isOpen"
+               aria-controls="@_listboxId"
+               aria-activedescendant="@GetActiveDescendant()"
+               aria-label="@EffectiveAriaLabel" />
 
         @if (IsBusy)
         {
-            <span class="ml-1 text-[0.65rem] text-slate-400 dark:text-slate-500">…</span>
+            <span class="ml-1 text-[0.65rem] text-slate-400 dark:text-slate-500" aria-hidden="true">…</span>
         }
     </div>
 
     @if (_isOpen && _results.Any())
     {
-        <div class="absolute mt-1 left-0 right-0 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm max-h-48 overflow-auto text-[0.75rem] animate-slide-in"
-             style="z-index:9999;">
+        <div id="@_listboxId"
+             class="absolute mt-1 left-0 right-0 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md shadow-sm max-h-48 overflow-auto text-[0.75rem] animate-slide-in"
+             style="z-index:9999;"
+             role="listbox"
+             aria-label="@EffectiveAriaLabel">
             @foreach (var (item, index) in _results.Select((v, i) => (v, i)))
             {
-                <div class="@GetItemClass(index)"
+                <div id="@GetOptionId(index)"
+                     class="@GetItemClass(index)"
+                     role="option"
+                     aria-selected="@(index == _highlightIndex)"
                      @onmousedown="() => SelectItem(item)">
                     @if (ItemTemplate != null)
                     {
@@ -67,6 +84,8 @@
 
     [Parameter] public int MinSearchLength { get; set; } = 2;
     [Parameter] public int DebounceMilliseconds { get; set; } = 250;
+    [Parameter] public string? AriaLabel { get; set; }
+    [Parameter] public bool UseCurrentCultureDirection { get; set; } = true;
 
     private string _searchText = string.Empty;
     private bool _isOpen;
@@ -74,62 +93,80 @@
     private List<TItem> _results = new();
     private int _highlightIndex = -1;
 
-    private System.Timers.Timer? _debounceTimer;
+    private CancellationTokenSource? _debounceCts;
+    private CancellationTokenSource? _blurCts;
+    private int _searchVersion;
 
-    protected override void OnInitialized()
-    {
-        _debounceTimer = new System.Timers.Timer
-        {
-            AutoReset = false,
-            Interval = DebounceMilliseconds
-        };
-        _debounceTimer.Elapsed += async (_, _) =>
-        {
-            await InvokeAsync(SearchNow);
-        };
-    }
+    private readonly string _inputId = $"mhd-ac-input-{Guid.NewGuid():N}";
+    private readonly string _listboxId = $"mhd-ac-listbox-{Guid.NewGuid():N}";
 
-    private void RestartDebounce()
-    {
-        if (_debounceTimer == null) return;
-        _debounceTimer.Stop();
-        _debounceTimer.Interval = DebounceMilliseconds;
-        _debounceTimer.Start();
-    }
+    private string EffectiveAriaLabel =>
+        !string.IsNullOrWhiteSpace(AriaLabel)
+            ? AriaLabel!
+            : !string.IsNullOrWhiteSpace(Label)
+                ? Label!
+                : "Autocomplete";
 
-    private void OnInputChanged(ChangeEventArgs e)
+    private string EffectiveDirection =>
+        UseCurrentCultureDirection && CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+
+    private async Task OnInputChanged(ChangeEventArgs e)
     {
         _searchText = e.Value?.ToString() ?? string.Empty;
-        if (_searchText.Length >= MinSearchLength)
-        {
-            RestartDebounce();
-        }
-        else
+
+        if (_searchText.Length < MinSearchLength)
         {
             _results.Clear();
             _isOpen = false;
+            _highlightIndex = -1;
+            CancelDebounce();
+            return;
         }
+
+        await RestartDebounceAsync(_searchText);
     }
 
-    private async Task SearchNow()
+    private async Task RestartDebounceAsync(string query)
     {
-        if (SearchMethod == null || _searchText.Length < MinSearchLength)
-            return;
+        CancelDebounce();
 
-        IsBusy = true;
-        StateHasChanged();
+        var cts = new CancellationTokenSource();
+        _debounceCts = cts;
+        var currentVersion = ++_searchVersion;
 
         try
         {
-            var result = await SearchMethod(_searchText);
+            await Task.Delay(DebounceMilliseconds, cts.Token);
+            await SearchNowAsync(query, currentVersion, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task SearchNowAsync(string query, int version, CancellationToken token)
+    {
+        if (SearchMethod == null || query.Length < MinSearchLength)
+            return;
+
+        IsBusy = true;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            var result = await SearchMethod(query);
+
+            if (token.IsCancellationRequested || version != _searchVersion)
+                return;
+
             _results = result?.ToList() ?? new List<TItem>();
-            _isOpen = _results.Any();
-            _highlightIndex = _results.Any() ? 0 : -1;
+            _isOpen = _results.Count > 0;
+            _highlightIndex = _results.Count > 0 ? 0 : -1;
         }
         finally
         {
             IsBusy = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -139,8 +176,14 @@
         _searchText = GetItemText(item);
         _isOpen = false;
         _results.Clear();
+        _highlightIndex = -1;
         await SelectedItemChanged.InvokeAsync(SelectedItem);
-        StateHasChanged();
+    }
+
+    private void OnFocus(FocusEventArgs _)
+    {
+        if (_results.Any())
+            _isOpen = true;
     }
 
     private string GetItemText(TItem item)
@@ -154,8 +197,18 @@
     private string GetItemClass(int index)
     {
         var baseCls = "px-2 py-1 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800";
-        var active = index == _highlightIndex ? "bg-slate-50 dark:bg-slate-800" : "";
+        var active = index == _highlightIndex ? "bg-slate-50 dark:bg-slate-800" : string.Empty;
         return $"{baseCls} {active}";
+    }
+
+    private string GetOptionId(int index) => $"{_listboxId}-opt-{index}";
+
+    private string? GetActiveDescendant()
+    {
+        if (!_isOpen || _highlightIndex < 0 || _highlightIndex >= _results.Count)
+            return null;
+
+        return GetOptionId(_highlightIndex);
     }
 
     private async Task OnKeyDown(KeyboardEventArgs e)
@@ -163,57 +216,72 @@
         if (!_isOpen && (e.Key == "ArrowDown" || e.Key == "Enter"))
         {
             if (_searchText.Length >= MinSearchLength)
-            {
-                await SearchNow();
-            }
+                await RestartDebounceAsync(_searchText);
+
             return;
         }
 
         if (e.Key == "Escape")
         {
             _isOpen = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
+            return;
         }
-        else if (e.Key == "ArrowDown")
+
+        if (e.Key == "ArrowDown" && _results.Any())
         {
-            if (_results.Any())
-            {
-                _highlightIndex = Math.Min(_highlightIndex + 1, _results.Count - 1);
-                StateHasChanged();
-            }
+            _highlightIndex = Math.Min(_highlightIndex + 1, _results.Count - 1);
+            await InvokeAsync(StateHasChanged);
+            return;
         }
-        else if (e.Key == "ArrowUp")
+
+        if (e.Key == "ArrowUp" && _results.Any())
         {
-            if (_results.Any())
-            {
-                _highlightIndex = Math.Max(_highlightIndex - 1, 0);
-                StateHasChanged();
-            }
+            _highlightIndex = Math.Max(_highlightIndex - 1, 0);
+            await InvokeAsync(StateHasChanged);
+            return;
         }
-        else if (e.Key == "Enter")
+
+        if (e.Key == "Enter" && _isOpen && _highlightIndex >= 0 && _highlightIndex < _results.Count)
         {
-            if (_isOpen && _highlightIndex >= 0 && _highlightIndex < _results.Count)
-            {
-                await SelectItem(_results[_highlightIndex]);
-            }
+            await SelectItem(_results[_highlightIndex]);
         }
     }
 
-    private void OnBlur(FocusEventArgs e)
+    private void OnBlur(FocusEventArgs _)
     {
-        _ = Task.Delay(150).ContinueWith(_ =>
+        _blurCts?.Cancel();
+        _blurCts?.Dispose();
+
+        var cts = new CancellationTokenSource();
+        _blurCts = cts;
+
+        Task.Run(async () =>
         {
-            _isOpen = false;
-            InvokeAsync(StateHasChanged);
+            try
+            {
+                await Task.Delay(150, cts.Token);
+                _isOpen = false;
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (OperationCanceledException) { }
         });
+
+    }
+
+    private void CancelDebounce()
+    {
+        _debounceCts?.Cancel();
+        _debounceCts?.Dispose();
+        _debounceCts = null;
     }
 
     public void Dispose()
     {
-        if (_debounceTimer != null)
-        {
-            _debounceTimer.Stop();
-            _debounceTimer.Dispose();
-        }
+        CancelDebounce();
+
+        _blurCts?.Cancel();
+        _blurCts?.Dispose();
+        _blurCts = null;
     }
 }

@@ -1,33 +1,45 @@
+@using BlazorMHD.UI.Core.DesignSystem
 @using BlazorMHD.UI.Core.Services
-@inject ToastService Toasts
+@inject ToastService Toast
+@implements IDisposable
 
-<div class="fixed bottom-4 right-4 flex flex-col gap-2 pointer-events-none z-[9999]">
-    @foreach (var t in Toasts.GetToasts())
+<div class="fixed right-4 bottom-4 z-[9999] flex flex-col gap-2 w-[20rem] pointer-events-none"
+     aria-live="polite"
+     aria-atomic="false">
+
+    @foreach (var t in Toast.GetToasts())
     {
-        <div class="@GetToastClass(t)"
-             @onclick="() => Dismiss(t.Id)">
+        var totalMs = Math.Max(1, (t.ExpireAt - DateTimeOffset.UtcNow).TotalMilliseconds);
 
-            <div class="flex items-start gap-2.5">
-                <!-- النص -->
-                <div class="flex-1 min-w-0">
-                    <div class="font-semibold text-[0.8rem] text-slate-900 dark:text-slate-50 truncate">
-                        @t.Title
+        <div class="pointer-events-auto rounded-lg border shadow-lg overflow-hidden animate-slide-in @GetStateClass(t.State)"
+             role="status"
+             aria-label="Notification">
+
+            <div class="px-3 py-2">
+                <div class="flex items-start gap-2">
+                    <div class="text-sm leading-none mt-0.5" aria-hidden="true">@GetIcon(t.State)</div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-semibold truncate">@t.Title</div>
+                        @if (!string.IsNullOrWhiteSpace(t.Message))
+                        {
+                            <div class="text-[0.70rem] mt-0.5 opacity-90 break-words">@t.Message</div>
+                        }
                     </div>
-                    <div class="mt-0.5 text-[0.72rem] leading-snug text-slate-600 dark:text-slate-300">
-                        @t.Message
-                    </div>
+
+                    <button type="button"
+                            class="text-[0.75rem] opacity-70 hover:opacity-100 transition"
+                            aria-label="Close"
+                            @onclick="() => Toast.Dismiss(t.Id)">
+                        ✕
+                    </button>
                 </div>
-                <button type="button"
-                        class="mt-0.5 text-[0.7rem] text-slate-400 dark:text-slate-500
-                                   hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-                        @onclick:stopPropagation="true"
-                        @onclick="() => Dismiss(t.Id)">
-                    ✕
-                </button>
             </div>
 
-            <!-- شريط التقدم -->
-            <div class="@GetProgressBarClass(t)" style="@GetProgressStyle(t)"></div>
+            <div class="h-0.5 w-full bg-black/10 dark:bg-white/10">
+                <div class="h-full animate-toast-progress"
+                     style="animation-duration:@($"{totalMs:0}ms"); background: currentColor; opacity:.35;"></div>
+            </div>
         </div>
     }
 </div>
@@ -35,68 +47,49 @@
 @code {
     protected override void OnInitialized()
     {
-        Toasts.OnChange += OnToastsChange;
+        Toast.OnChange += OnChanged;
     }
 
-    private void OnToastsChange() => InvokeAsync(StateHasChanged);
-
-    private void Dismiss(Guid id) => Toasts.Dismiss(id);
-
-    // ------------------------------
-    // Progress Bar (Built from ExpireAt)
-    // ------------------------------
-    private string GetProgressStyle(ToastModel toast)
-    {
-        var remaining = toast.ExpireAt - DateTimeOffset.UtcNow;
-        var ms = Math.Max(100, (int)remaining.TotalMilliseconds);
-        return $"animation-duration:{ms}ms;";
-    }
-
-    private string GetProgressBarClass(ToastModel toast)
-    {
-        var color = toast.State switch
-        {
-            MhdState.Success => "bg-emerald-500",
-            MhdState.Danger => "bg-red-500",
-            MhdState.Warning => "bg-amber-500",
-            MhdState.Info => "bg-sky-500",
-            MhdState.Primary => "bg-blue-500",
-            _ => "bg-slate-500"
-        };
-
-        return $"absolute bottom-0 left-0 h-0.5 {color} animate-toast-progress";
-    }
-
-    // ------------------------------
-    // Toast container styling
-    // ------------------------------
-    private string GetToastClass(ToastModel toast)
-    {
-        var stateAccent = toast.State switch
-        {
-            MhdState.Success => "border-l-4 border-l-emerald-500  dark:border-l-emerald-400",
-            MhdState.Danger => "border-l-4 border-l-red-500      dark:border-l-red-400",
-            MhdState.Warning => "border-l-4 border-l-amber-500    dark:border-l-amber-400",
-            MhdState.Info => "border-l-4 border-l-sky-500      dark:border-l-sky-400",
-            MhdState.Primary => "border-l-4 border-l-blue-500     dark:border-l-blue-400",
-            _ => "border-l-4 border-l-slate-400    dark:border-l-slate-500"
-        };
-
-        return string.Join(" ", new[]
-        {
-            "relative pointer-events-auto select-none",
-            "w-72 md:w-80 px-4 py-3",
-            "rounded-xl shadow-lg text-[0.78rem]",
-            "bg-white/95 dark:bg-slate-900/95 backdrop-blur-md",
-            "border border-slate-200/80 dark:border-slate-700/80",
-            stateAccent,
-            "overflow-hidden",
-            "animate-slide-in"
-        });
-    }
+    private void OnChanged()
+        => InvokeAsync(StateHasChanged);
 
     public void Dispose()
     {
-        Toasts.OnChange -= OnToastsChange;
+        Toast.OnChange -= OnChanged;
     }
+
+    private static string GetIcon(MhdState state) => state switch
+    {
+        MhdState.Success => "✅",
+        MhdState.Danger => "⛔",
+        MhdState.Warning => "⚠️",
+        MhdState.Info => "ℹ️",
+        MhdState.Primary => "🔵",
+        MhdState.Secondary => "🟣",
+        _ => "💬"
+    };
+
+    private static string GetStateClass(MhdState state) => state switch
+    {
+        MhdState.Success =>
+            "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700",
+
+        MhdState.Danger =>
+            "bg-red-50 text-red-900 border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700",
+
+        MhdState.Warning =>
+            "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700",
+
+        MhdState.Info =>
+            "bg-sky-50 text-sky-900 border-sky-200 dark:bg-sky-900/30 dark:text-sky-100 dark:border-sky-700",
+
+        MhdState.Primary =>
+            "bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-700",
+
+        MhdState.Secondary =>
+            "bg-violet-50 text-violet-900 border-violet-200 dark:bg-violet-900/30 dark:text-violet-100 dark:border-violet-700",
+
+        _ =>
+            "bg-slate-50 text-slate-900 border-slate-200 dark:bg-slate-900/30 dark:text-slate-100 dark:border-slate-700"
+    };
 }
