@@ -17,17 +17,17 @@
         <div class="flex items-center gap-2">
 
             <!-- زر Edit عام -->
-            <button class="@CssClasses.Btn.IconButton.Primary" @onclick="ToggleEditMode">
+            <button class="@IconButtonPrimaryClass" @onclick="ToggleEditMode">
                 @((MarkupString)Icons.Edit)
             </button>
 
             <!-- زر الحفظ -->
-            <button class="@CssClasses.Btn.IconButton.Primary" @onclick="SaveAsync">
+            <button class="@IconButtonPrimaryClass" @onclick="SaveAsync">
                 @((MarkupString)Icons.SaveCloud)
             </button>
 
             <!-- إضافة مجموعة -->
-            <button class="@CssClasses.Btn.IconButton.Success" @onclick="AddGroup">
+            <button class="@IconButtonSuccessClass" @onclick="AddGroup">
                 @((MarkupString)Icons.Plus)
             </button>
         </div>
@@ -66,17 +66,17 @@
                         <tr class="group bg-gray-50 dark:bg-gray-800/60">
                             <td class="px-2 py-2 align-top">
                                 <div class="flex items-center gap-1 @(IsEditMode ? "" : "opacity-0 group-hover:opacity-100") transition">
-                                    <button class="@CssClasses.Btn.IconButton.Danger"
+                                    <button class="@IconButtonDangerClass"
                                             @onclick="() => DeleteGroup(group)">
                                         @((MarkupString)@Icons.DeleteSVG)
                                     </button>
 
-                                    <button class="@CssClasses.Btn.IconButton.Success"
+                                    <button class="@IconButtonSuccessClass"
                                             @onclick="() => AddItem(group)">
                                         @((MarkupString)Icons.Plus)
                                     </button>
 
-                                    <button class="@CssClasses.Btn.IconButton.Primary"
+                                    <button class="@IconButtonPrimaryClass"
                                             @onclick="() => ToggleGroupVisibility(group)">
                                         @((MarkupString)Icons.RightBottom(group.SubItemsVisible))
                                     </button>
@@ -87,7 +87,7 @@
                             <td class="px-2 py-2 align-top">
                                 @if (IsEditMode)
                                 {
-                                    <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500" @bind="group.Code" />
+                                    <input class="@TextInputClass px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500" @bind="group.Code" />
                                 }
                                 else
                                 {
@@ -102,7 +102,7 @@
                                     @if (IsEditMode)
                                     {
                                         <input
-                                            class="@CssClasses.Input.Text px-2 py-1 text-xs font-semibold focus:ring-1 focus:ring-blue-500"
+                                            class="@TextInputClass px-2 py-1 text-xs font-semibold focus:ring-1 focus:ring-blue-500"
                                             @bind="group.Name" />
                                     }
                                     else
@@ -117,7 +117,7 @@
                                 @if (IsEditMode)
                                 {
                                     <input
-                                        class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                        class="@TextInputClass px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
                                         @bind="group.Comment" />
                                 }
                                 else
@@ -141,7 +141,7 @@
                                     <!-- حذف العنصر -->
                                     <td class="px-1 py-0">
                                         <div class="@(IsEditMode ? "" : "opacity-0 group-hover:opacity-100") transition">
-                                            <button class="@CssClasses.Btn.IconButton.Danger"
+                                            <button class="@IconButtonDangerClass"
                                                     @onclick="(e) => DeleteItem(e, group, item)"
                                                     @onclick:stopPropagation="true">
                                                 @((MarkupString)@Icons.DeleteSVG)
@@ -153,7 +153,7 @@
                                     <td class="px-2 py-1">
                                         @if (isEditing)
                                         {
-                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                            <input class="@TextInputClass px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
                                                    @bind="item.Code" @onclick:stopPropagation="true" />
                                         }
                                         else
@@ -166,7 +166,7 @@
                                     <td class="px-2 py-1">
                                         @if (isEditing)
                                         {
-                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                            <input class="@TextInputClass px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
                                                    @bind="item.Name" @onclick:stopPropagation="true" />
                                         }
                                         else
@@ -179,7 +179,7 @@
                                     <td class="px-2 py-1">
                                         @if (isEditing)
                                         {
-                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                            <input class="@TextInputClass px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
                                                    @bind="item.Unit" @onclick:stopPropagation="true" />
                                         }
                                         else
@@ -193,7 +193,7 @@
                                         @if (isEditing)
                                         {
                                             <input type="number" step="0.01"
-                                                   class="@CssClasses.Input.Number px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
+                                                   class="@NumberInputClass px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
                                                    @bind="item.Quantity" @onclick:stopPropagation="true" />
                                         }
                                         else
@@ -207,7 +207,7 @@
                                         @if (isEditing)
                                         {
                                             <input type="number" step="0.01"
-                                                   class="@CssClasses.Input.Number px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
+                                                   class="@NumberInputClass px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
                                                    @bind="item.CostMarketPrices" @onclick:stopPropagation="true" />
                                         }
                                         else
@@ -226,7 +226,7 @@
                                         @if (isEditing)
                                         {
                                             <input type="number" step="0.01"
-                                                   class="@CssClasses.Input.Number px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
+                                                   class="@NumberInputClass px-2 py-1 text-xs text-right focus:ring-1 focus:ring-blue-500"
                                                    @bind="item.CostSubmittedPrices" @onclick:stopPropagation="true" />
                                         }
                                         else
@@ -251,7 +251,7 @@
                                     <td class="px-2 py-1">
                                         @if (isEditing)
                                         {
-                                            <input class="@CssClasses.Input.Text px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
+                                            <input class="@TextInputClass px-2 py-1 text-xs focus:ring-1 focus:ring-blue-500"
                                                    @bind="item.Comment" @onclick:stopPropagation="true" />
                                         }
                                         else
@@ -301,6 +301,33 @@
 </div>
 
 @code {
+    private const string IconButtonBaseClass =
+        "inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] " +
+        "transition-all duration-150 hover:scale-105 active:scale-95";
+
+    private const string IconButtonPrimaryClass =
+        IconButtonBaseClass + " border-blue-300 text-blue-600 " +
+        "hover:bg-blue-100 hover:ring-1 hover:ring-blue-300 " +
+        "dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40 dark:hover:ring-blue-500";
+
+    private const string IconButtonSuccessClass =
+        IconButtonBaseClass + " border-green-300 text-green-600 " +
+        "hover:bg-green-100 hover:ring-1 hover:ring-green-300 " +
+        "dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500";
+
+    private const string IconButtonDangerClass =
+        IconButtonBaseClass + " border-red-300 text-red-600 " +
+        "hover:bg-red-100 hover:ring-1 hover:ring-red-300 " +
+        "dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40 dark:hover:ring-red-500";
+
+    private const string TextInputClass =
+        "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 " +
+        "dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+
+    private const string NumberInputClass =
+        "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 " +
+        "dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+
     private readonly HashSet<HourlyPriceListItemDTO> editingItems = new();
     private bool IsEditMode;   // وضع التعديل العام
 
