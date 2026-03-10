@@ -11,13 +11,13 @@
 
 @if (Income is not null)
 {
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@Income" OnValidSubmit="HandleSubmitAsync">
-        <div class="@CssClasses.Grid.Col.MD3">
+    <EditForm id="myForm" class="space-y-4" Model="@Income" OnValidSubmit="HandleSubmitAsync">
+        <div class="grid gap-4 md:grid-cols-3">
             @if (Companies is not null)
             {
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
-                    <select class="@CssClasses.Input.Text" @onchange="OnChangeCompany">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.organisation</label>
+                    <select class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @onchange="OnChangeCompany">
                         <option value="" selected></option>
                         @foreach (var cat in Companies)
                         {
@@ -27,19 +27,19 @@
                 </div>
             }
 
-            <div class="@CssClasses.Grid.Span.MD2">
-                <label class="@CssClasses.Form.Label">@CalcResource.note</label>
-                <InputTextArea @bind-Value="Income.Note" class="@CssClasses.Input.Text" />
+            <div class="md:col-span-2">
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note</label>
+                <InputTextArea @bind-Value="Income.Note" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
                 <ValidationMessage For="@(() => Income.Note)" />
             </div>
         </div>
     </EditForm>
 
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@Loading">
+    <div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+        <button type="submit" class="inline-flex items-center rounded-md border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="myForm" disabled="@Loading">
             @ResourceApp.save
         </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="() => Callback.InvokeAsync(false)">
+        <button type="button" class="inline-flex items-center rounded-md border border-slate-400 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500/40 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="() => Callback.InvokeAsync(false)">
             @ResourceApp.cancel
         </button>
     </div>
