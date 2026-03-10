@@ -103,7 +103,7 @@
         {
             @if (Company.Contacts?.Any() == true)
             {
-                <table class="table">
+                <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
                     <thead>
                         <tr>
                             <th class="px-3 py-2 text-right text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
@@ -115,8 +115,8 @@
                     <tbody>
                         @foreach (var item in Company.Contacts)
                         {
-                            <tr>
-                                <th>
+                            <tr class="border-b border-slate-100 text-slate-700 dark:border-slate-800 dark:text-slate-200">
+                                <th class="px-3 py-2 text-right font-medium">
                                     @if (!string.IsNullOrEmpty(item.Note))
                                     {
                                         <span @onclick="() => item.CommentIsVisible = !item.CommentIsVisible">
@@ -125,15 +125,15 @@
                                     }
                                     @item.GetFullName()
                                 </th>
-                                <td>@item.Mobile / @item.Telefone</td>
-                                <td>@item.Status</td>
-                                <td>@item.Email</td>
+                                <td class="px-3 py-2 text-right">@item.Mobile / @item.Telefone</td>
+                                <td class="px-3 py-2 text-right">@item.Status</td>
+                                <td class="px-3 py-2 text-right">@item.Email</td>
                             </tr>
 
                             @if (item.CommentIsVisible)
                             {
-                                <tr>
-                                    <td colspan="5">@CalcResource.note: @item.Note</td>
+                                <tr class="bg-slate-50 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+                                    <td colspan="5" class="px-3 py-2 text-right">@CalcResource.note: @item.Note</td>
                                 </tr>
                             }
                         }
