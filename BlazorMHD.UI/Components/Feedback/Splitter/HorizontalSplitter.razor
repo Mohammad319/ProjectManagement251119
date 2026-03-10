@@ -5,7 +5,6 @@
 @using System.Globalization
 @using Microsoft.JSInterop
 @inject IJSRuntime JS
-@implements IDisposable
 
 <div @ref="_containerRef"
      class="w-full h-full overflow-hidden select-none @Class"
@@ -17,18 +16,12 @@
         </div>
 
         <!-- الفاصل -->
-        <div class="relative h-full shrink-0 cursor-col-resize touch-none"
+        <div class="relative"
              @ref="_splitterRef"
              style="width:var(--splitter-w);"
              @onmousedown="StartResize"
-             title="@Localiztion.Instruction_DragToResize"
-             role="separator"
-             aria-orientation="vertical"
-             aria-valuemin="@MinLeftWidth"
-             aria-valuemax="@GetEffectiveMaxLeft()"
-             aria-valuenow="@LeftWidth"
-             tabindex="0">
-            <div class="absolute inset-0
+             title="@Localiztion.Instruction_DragToResize">
+            <div class="absolute inset-0 cursor-col-resize
                         bg-transparent hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60 transition">
             </div>
             <div class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2
@@ -87,37 +80,6 @@
         LeftWidth = Math.Max(InitialLeftWidth, MinLeftWidth);
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !string.IsNullOrWhiteSpace(StorageKey))
-        {
-            try
-            {
-                var stored = await JS.InvokeAsync<string>("localStorage.getItem", StorageKey);
-
-                if (!string.IsNullOrWhiteSpace(stored) &&
-                    double.TryParse(stored, NumberStyles.Any, CultureInfo.InvariantCulture, out var saved))
-                {
-                    var containerWidth = await JS.InvokeAsync<double>("resizableDiv.getWidth", _containerRef);
-                    var maxLeftByContainer = Math.Max(
-                        MinLeftWidth,
-                        containerWidth - SplitterThickness - MinRightWidth
-                    );
-
-                    var effectiveMaxLeft = MaxLeftWidth.HasValue
-                        ? Math.Min(MaxLeftWidth.Value, maxLeftByContainer)
-                        : maxLeftByContainer;
-
-                    LeftWidth = Math.Clamp(saved, MinLeftWidth, effectiveMaxLeft);
-                    StateHasChanged();
-                }
-            }
-            catch
-            {
-            }
-        }
-    }
-
     // ===== Resize Logic =====
 
     private async Task StartResize(MouseEventArgs e)
@@ -152,12 +114,6 @@
                 live = LiveResize
             }
         );
-    }
-
-    private double GetEffectiveMaxLeft()
-    {
-        var fallback = Math.Max(MinLeftWidth, LeftWidth + 5000);
-        return MaxLeftWidth.HasValue ? Math.Min(MaxLeftWidth.Value, fallback) : fallback;
     }
 
     [JSInvokable]
