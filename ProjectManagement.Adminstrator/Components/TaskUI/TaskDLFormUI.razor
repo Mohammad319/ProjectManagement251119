@@ -6,181 +6,183 @@
 @using TaskResourceBlueprints.Services.ProjectTask
 @inject ITaskDefinitionService TaskService
 @inherits AppComponentBase
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
-<div class="@CsS.Modal.Body">
+<div class="space-y-4 p-2">
     <EditForm Model="UpdateForm" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
-        <ValidationSummary />
+        <ValidationSummary class="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300" />
 
-        <div class="@CsS.Grid.Col.MD4">
-            <div>
-                <label class="@CsS.Form.Label">Action</label>
-                <InputSelect @bind-Value="UpdateForm.ActionId" class="@CsS.Input.Select">
-                    <option value="">Select Action</option>
-                    @if (ActionsTasks != null)
-                    {
-                        foreach (var action in ActionsTasks)
-                        {
-                            <option value="@action.Id">@action.Name</option>
-                        }
-                    }
-                </InputSelect>
-            </div>
-
-            <div>
-                <label class="@CsS.Form.Label">Location</label>
-                <InputSelect @bind-Value="UpdateForm.LocationId" class="@CsS.Input.Select">
-                    <option value="">Select Location</option>
-                    @if (LocationsList != null)
-                    {
-                        foreach (var action in LocationsList)
-                        {
-                            <option value="@action.Id">@action.Name</option>
-                        }
-                    }
-                </InputSelect>
-            </div>
-
-            <div>
-                <label class="@CsS.Form.Label">Fall</label>
-                <InputSelect @bind-Value="UpdateForm.FallId" class="@CsS.Input.Select">
-                    <option value="">Select Fall</option>
-                    @if (FallsList != null)
-                    {
-                        foreach (var action in FallsList)
-                        {
-                            <option value="@action.Id">@action.Name</option>
-                        }
-                    }
-                </InputSelect>
-            </div>
-
-            <div>
-                <label class="@CsS.Form.Label">ActionType</label>
-                <InputSelect @bind-Value="UpdateForm.ActionTypeId" class="@CsS.Input.Select">
-                    <option value="">Select ActionType</option>
-                    @if (ActionTypesList != null)
-                    {
-                        foreach (var action in ActionTypesList)
-                        {
-                            <option value="@action.Id">@action.Name</option>
-                        }
-                    }
-                </InputSelect>
-            </div>
-
-            <div>
-                <label class="@CsS.Form.Label">@CalcResource.code</label>
-                <InputText @bind-Value="UpdateForm.Code" class="@CsS.Input.Text" />
-            </div>
-
-            <div>
-                <label class="@CsS.Form.Label">@CalcResource.name</label>
-                <InputText @bind-Value="UpdateForm.DisplayName" class="@CsS.Input.Text" />
-            </div>
-            <div>
-                <label class="@CsS.Form.Label">@CalcResource.responsible</label>
-                <InputText @bind-Value="UpdateForm.Responsible" class="@CsS.Input.Text" />
-            </div>
-            <div>
-                <label class="@CsS.Form.Label">Groups</label>
-                <select class="@CsS.Input.Select" @onchange="ChangeGroup">
-                    <option value="">Select Group</option>
-                    @if (Groups != null)
-                    {
-                        foreach (var action in Groups)
-                        {
-                            <option value="@action.Id" selected="@(UpdateForm.UnitGroupId == action.Id)">@action.DisplayName</option>
-                        }
-                    }
-                </select>
-            </div>
-
-            @if (SelectedGroup != null && UpdateForm.UnitGroupId.HasValue)
-            {
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="space-y-4 md:col-span-4">
                 <div>
-                    <label class="@CsS.Form.Label">Units</label>
-                    <InputSelect @bind-Value="UpdateForm.UnitCode" class="@CsS.Input.Select">
-                        <option value="">Select Unit</option>
-                        @foreach (var item in SelectedGroup.Keys)
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Action</label>
+                    <InputSelect @bind-Value="UpdateForm.ActionId" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="">Select Action</option>
+                        @if (ActionsTasks != null)
                         {
-                            <option value="@item">@item</option>
+                            foreach (var action in ActionsTasks)
+                            {
+                                <option value="@action.Id">@action.Name</option>
+                            }
                         }
                     </InputSelect>
                 </div>
-            }
-            <div>
-                <label class="@CsS.Form.Label">Status</label>
-                <InputSelect @bind-Value="UpdateForm.Status" class="@CsS.Input.Select">
-                    <option value="@TaskStatusEnum.ToPlan" selected="@(UpdateForm.Status == TaskStatusEnum.ToPlan)">@TaskStatusEnum.ToPlan</option>
-                    <option value="@TaskStatusEnum.ToDo" selected="@(UpdateForm.Status == TaskStatusEnum.ToDo)">@TaskStatusEnum.ToDo</option>
-                    <option value="@TaskStatusEnum.UnderWorking" selected="@(UpdateForm.Status == TaskStatusEnum.UnderWorking)">@TaskStatusEnum.UnderWorking</option>
-                    <option value="@TaskStatusEnum.Ready" selected="@(UpdateForm.Status == TaskStatusEnum.Ready)">@TaskStatusEnum.Ready</option>
 
-                </InputSelect>
-            </div>
-            <div>
-                <label class="@CsS.Form.Label">@CalcResource.quantity</label>
-                <InputNumber @bind-Value="UpdateForm.Quantity" class="@CsS.Input.Number" />
-            </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Location</label>
+                    <InputSelect @bind-Value="UpdateForm.LocationId" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="">Select Location</option>
+                        @if (LocationsList != null)
+                        {
+                            foreach (var action in LocationsList)
+                            {
+                                <option value="@action.Id">@action.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
 
-            <div>
-                <label class="@CsS.Form.Label">@CalcResource.changeFactor1</label>
-                <InputNumber @bind-Value="UpdateForm.ChangeFactor1" class="@CsS.Input.Number" />
-            </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Fall</label>
+                    <InputSelect @bind-Value="UpdateForm.FallId" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="">Select Fall</option>
+                        @if (FallsList != null)
+                        {
+                            foreach (var action in FallsList)
+                            {
+                                <option value="@action.Id">@action.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
 
-            <div>
-                <label class="@CsS.Form.Label">@CalcResource.changeFactor2</label>
-                <InputNumber @bind-Value="UpdateForm.ChangeFactor2" class="@CsS.Input.Number" />
-            </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">ActionType</label>
+                    <InputSelect @bind-Value="UpdateForm.ActionTypeId" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="">Select ActionType</option>
+                        @if (ActionTypesList != null)
+                        {
+                            foreach (var action in ActionTypesList)
+                            {
+                                <option value="@action.Id">@action.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
 
-            <div>
-                <label class="@CsS.Form.Label">Thickness</label>
-                <InputNumber @bind-Value="UpdateForm.Thickness" class="@CsS.Input.Number" />
-            </div>
-            <div>
-                <label class="@CsS.Form.Label">Width</label>
-                <InputNumber @bind-Value="UpdateForm.Width" class="@CsS.Input.Number" />
-            </div>
-            <div>
-                <label class="@CsS.Form.Label">Length</label>
-                <InputNumber @bind-Value="UpdateForm.Length" class="@CsS.Input.Number" />
-            </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.code</label>
+                    <InputText @bind-Value="UpdateForm.Code" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
 
-            <div class="@CsS.Form.CheckWrapper">
-                <InputCheckbox @bind-Value="UpdateForm.IsActive" class="@CsS.Input.Check" />
-                <label class="@CsS.Form.Label">@CalcResource.active</label>
-            </div>
-            <div class="@CsS.Form.CheckWrapper">
-                <InputCheckbox @bind-Value="UpdateForm.Uncontrollable" class="@CsS.Input.Check" />
-                <label class="@CsS.Form.Label">Hide the resource and show the total cost only (UE).</label>
-            </div>
-            <div class="@CsS.Grid.Span.MD3">
-                <label class="@CsS.Form.Label">@CalcResource.note</label>
-                <InputTextArea @bind-Value="UpdateForm.Note" class="@CsS.Input.Text" />
-            </div>
-            <div class="@CsS.Grid.Span.MD3">
-                <label class="@CsS.Form.Label">Admin @CalcResource.note</label>
-                <InputTextArea @bind-Value="UpdateForm.AdminNote" class="@CsS.Input.Text" />
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+                    <InputText @bind-Value="UpdateForm.DisplayName" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.responsible</label>
+                    <InputText @bind-Value="UpdateForm.Responsible" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Groups</label>
+                    <select class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @onchange="ChangeGroup">
+                        <option value="">Select Group</option>
+                        @if (Groups != null)
+                        {
+                            foreach (var action in Groups)
+                            {
+                                <option value="@action.Id" selected="@(UpdateForm.UnitGroupId == action.Id)">@action.DisplayName</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                @if (SelectedGroup != null && UpdateForm.UnitGroupId.HasValue)
+                {
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Units</label>
+                        <InputSelect @bind-Value="UpdateForm.UnitCode" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                            <option value="">Select Unit</option>
+                            @foreach (var item in SelectedGroup.Keys)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Status</label>
+                    <InputSelect @bind-Value="UpdateForm.Status" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="@TaskStatusEnum.ToPlan" selected="@(UpdateForm.Status == TaskStatusEnum.ToPlan)">@TaskStatusEnum.ToPlan</option>
+                        <option value="@TaskStatusEnum.ToDo" selected="@(UpdateForm.Status == TaskStatusEnum.ToDo)">@TaskStatusEnum.ToDo</option>
+                        <option value="@TaskStatusEnum.UnderWorking" selected="@(UpdateForm.Status == TaskStatusEnum.UnderWorking)">@TaskStatusEnum.UnderWorking</option>
+                        <option value="@TaskStatusEnum.Ready" selected="@(UpdateForm.Status == TaskStatusEnum.Ready)">@TaskStatusEnum.Ready</option>
+
+                    </InputSelect>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.quantity</label>
+                    <InputNumber @bind-Value="UpdateForm.Quantity" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.changeFactor1</label>
+                    <InputNumber @bind-Value="UpdateForm.ChangeFactor1" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.changeFactor2</label>
+                    <InputNumber @bind-Value="UpdateForm.ChangeFactor2" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Thickness</label>
+                    <InputNumber @bind-Value="UpdateForm.Thickness" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Width</label>
+                    <InputNumber @bind-Value="UpdateForm.Width" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Length</label>
+                    <InputNumber @bind-Value="UpdateForm.Length" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+
+                <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                    <InputCheckbox @bind-Value="UpdateForm.IsActive" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" />
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.active</label>
+                </div>
+                <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                    <InputCheckbox @bind-Value="UpdateForm.Uncontrollable" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" />
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Hide the resource and show the total cost only (UE).</label>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note</label>
+                    <InputTextArea @bind-Value="UpdateForm.Note" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">Admin @CalcResource.note</label>
+                    <InputTextArea @bind-Value="UpdateForm.AdminNote" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                </div>
             </div>
         </div>
-        <div class="@CssClasses.Layout.FlexWrap">
+
+        <div class="mt-4 flex flex-wrap gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-900">
             @if (Folders != null)
             {
                 foreach (var folder in Folders)
                 {
-                    <div class="@CsS.Layout.FlexItemsCenter">
-                        <input type="checkbox" @onchange="() => ToggleFolder(folder.Id)" class="@CsS.Input.Check" checked="@(UpdateForm.VisibleFolderIds.Any(x => x == folder.Id))" />
-                        <label class="@CsS.Form.Label">@folder.DisplayName</label>
+                    <div class="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-950">
+                        <input type="checkbox" @onchange="() => ToggleFolder(folder.Id)" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" checked="@(UpdateForm.VisibleFolderIds.Any(x => x == folder.Id))" />
+                        <label class="text-sm text-slate-700 dark:text-slate-200">@folder.DisplayName</label>
                     </div>
                 }
             }
         </div>
 
-        <div class="@CsS.Modal.Footer">
-            <button type="submit" class="@CsS.Btn.Outline.Success">@ResourceApp.save</button>
-            <button type="button" @onclick="Close" class="@CsS.Btn.Outline.Secondary">@ResourceApp.cancel</button>
+        <div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <button type="submit" class="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">@ResourceApp.save</button>
+            <button type="button" @onclick="Close" class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">@ResourceApp.cancel</button>
         </div>
     </EditForm>
 </div>
