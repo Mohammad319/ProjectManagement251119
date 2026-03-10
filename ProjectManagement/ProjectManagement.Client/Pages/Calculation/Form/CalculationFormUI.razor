@@ -16,7 +16,7 @@
 @if (CalculationUpdate != null)
 {
     <EditForm id="calcForm"
-              class="@CssClasses.Modal.Body"
+              class="@FormCss.Modal.Body"
               Model="@CalculationUpdate"
               OnValidSubmit="async () => await HandleSubmitAsync()">
 
@@ -32,53 +32,53 @@
         @* محتوى التاب 1 *@
         @if (Part == 1)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="@FormCss.Grid.Col.MD4">
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.code</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Code" />
+                    <label class="@FormCss.Form.Label">@CalcResource.code</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.Code" />
                     <ValidationMessage For=@(() => CalculationUpdate.Code) />
                 </div>
 
-                <div class="@CssClasses.Grid.Span.MD3">
-                    <label class="@CssClasses.Form.Label">@CalcResource.name</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Name" />
+                <div class="@FormCss.Grid.Span.MD3">
+                    <label class="@FormCss.Form.Label">@CalcResource.name</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.Name" />
                     <ValidationMessage For=@(() => CalculationUpdate.Name) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.tax</label>
-                    <InputNumber class="@CssClasses.Input.Number" @bind-Value="@CalculationUpdate.Tax" />
+                    <label class="@FormCss.Form.Label">@CalcResource.tax</label>
+                    <InputNumber class="@FormCss.Input.Number" @bind-Value="@CalculationUpdate.Tax" />
                     <ValidationMessage For=@(() => CalculationUpdate.Tax) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.timeMonth</label>
-                    <InputNumber class="@CssClasses.Input.Number" @bind-Value="@CalculationUpdate.TimeMonth" />
+                    <label class="@FormCss.Form.Label">@CalcResource.timeMonth</label>
+                    <InputNumber class="@FormCss.Input.Number" @bind-Value="@CalculationUpdate.TimeMonth" />
                     <ValidationMessage For=@(() => CalculationUpdate.TimeMonth) />
                 </div>
 
-                <div class="@($"{CssClasses.Layout.FlexItemsCenter} {CssClasses.Util.JustifyCenter}")">
+                <div class="@($"{FormCss.Layout.FlexItemsCenter} {FormCss.Util.JustifyCenter}")">
                     <div>
-                        <label class="@CssClasses.Form.Label">
+                        <label class="@FormCss.Form.Label">
                             @CalcResource.priority (@CalculationUpdate.Priority %)
                         </label>
                         <input type="range"
                                min="0" max="100" step="1"
-                               class="@CssClasses.Input.Range"
+                               class="@FormCss.Input.Range"
                                value="@CalculationUpdate.Priority"
                                @oninput="@((args) => CalculationUpdate.Priority = Convert.ToInt16(args.Value))" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceLoc.maps</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Maps" />
+                    <label class="@FormCss.Form.Label">@ResourceLoc.maps</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.Maps" />
                     <ValidationMessage For=@(() => CalculationUpdate.Maps) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                    <InputSelect @bind-Value="CalculationUpdate.StatusId" class="@CssClasses.Input.Select">
+                    <label class="@FormCss.Form.Label">@CalcResource.status</label>
+                    <InputSelect @bind-Value="CalculationUpdate.StatusId" class="@FormCss.Input.Select">
                         <option></option>
                         @if (Config?.Statuses != null)
                         {
@@ -92,8 +92,8 @@
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.projectType</label>
-                    <InputSelect @bind-Value="CalculationUpdate.TypeId" class="@CssClasses.Input.Select">
+                    <label class="@FormCss.Form.Label">@CalcResource.projectType</label>
+                    <InputSelect @bind-Value="CalculationUpdate.TypeId" class="@FormCss.Input.Select">
                         <option></option>
                         @if (Config?.Types != null)
                         {
@@ -109,10 +109,10 @@
         }
         else if (Part == 2)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="@FormCss.Grid.Col.MD4">
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.projectContract</label>
-                    <InputSelect @bind-Value="CalculationUpdate.ContractId" class="@CssClasses.Input.Select">
+                    <label class="@FormCss.Form.Label">@CalcResource.projectContract</label>
+                    <InputSelect @bind-Value="CalculationUpdate.ContractId" class="@FormCss.Input.Select">
                         <option></option>
                         @if (Config?.Contracts != null)
                         {
@@ -125,8 +125,8 @@
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.projectCompensation</label>
-                    <InputSelect @bind-Value="CalculationUpdate.CompensationId" class="@CssClasses.Input.Select">
+                    <label class="@FormCss.Form.Label">@CalcResource.projectCompensation</label>
+                    <InputSelect @bind-Value="CalculationUpdate.CompensationId" class="@FormCss.Input.Select">
                         <option></option>
                         @if (Config?.Compensations != null)
                         {
@@ -140,8 +140,8 @@
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.procurement</label>
-                    <InputSelect @bind-Value="CalculationUpdate.Procurement" class="@CssClasses.Input.Select">
+                    <label class="@FormCss.Form.Label">@CalcResource.procurement</label>
+                    <InputSelect @bind-Value="CalculationUpdate.Procurement" class="@FormCss.Input.Select">
                         <option value="@Procurement.A">@Procurement.A.ToString()</option>
                         <option value="@Procurement.B">@Procurement.B.ToString()</option>
                     </InputSelect>
@@ -149,8 +149,8 @@
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.procurementMethods</label>
-                    <InputSelect @bind-Value="CalculationUpdate.ProcurementMethodsId" class="@CssClasses.Input.Select">
+                    <label class="@FormCss.Form.Label">@CalcResource.procurementMethods</label>
+                    <InputSelect @bind-Value="CalculationUpdate.ProcurementMethodsId" class="@FormCss.Input.Select">
                         <option></option>
                         @if (Config?.Methods != null)
                         {
@@ -166,27 +166,27 @@
         }
         else if (Part == 3)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="@FormCss.Grid.Col.MD4">
                 @for (int i = 0; i < CalculationUpdate.Responsibles.Count; i++)
                 {
-                    <div class="@CssClasses.Grid.Col.MD6">
-                        <label class="@CssClasses.Form.Label">@CalcResource.responsible</label>
-                        <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Responsibles[i]" />
+                    <div class="@FormCss.Grid.Col.MD6">
+                        <label class="@FormCss.Form.Label">@CalcResource.responsible</label>
+                        <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.Responsibles[i]" />
                         <ValidationMessage For=@(() => CalculationUpdate.Responsibles[i]) />
                     </div>
                 }
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.inspector</label>
-                    <InputText class="@CssClasses.Input.Text"
+                    <label class="@FormCss.Form.Label">@CalcResource.inspector</label>
+                    <InputText class="@FormCss.Input.Text"
                                @bind-Value="@CalculationUpdate.Inspector"
                                placeholder="@(CalcResource.inspector)" />
                     <ValidationMessage For=@(() => CalculationUpdate.Inspector) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
-                    <InputText class="@CssClasses.Input.Text"
+                    <label class="@FormCss.Form.Label">@ResourceApp.organisation</label>
+                    <InputText class="@FormCss.Input.Text"
                                @bind-Value="@CalculationUpdate.Supervisor"
                                placeholder="@(ResourceApp.organisation)" />
                     <ValidationMessage For=@(() => CalculationUpdate.Supervisor) />
@@ -195,12 +195,12 @@
         }
         else if (Part == 4)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="@FormCss.Grid.Col.MD4">
                 @if (Config?.Organisation != null)
                 {
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
-                        <InputSelect @bind-Value="CalculationUpdate.OrganisationId" class="@CssClasses.Input.Select">
+                        <label class="@FormCss.Form.Label">@ResourceApp.organisation</label>
+                        <InputSelect @bind-Value="CalculationUpdate.OrganisationId" class="@FormCss.Input.Select">
                             <option></option>
                             @foreach (var status in Config.Organisation)
                             {
@@ -212,96 +212,96 @@
                 }
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.developer</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Developer" />
+                    <label class="@FormCss.Form.Label">@CalcResource.developer</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.Developer" />
                     <ValidationMessage For=@(() => CalculationUpdate.Developer) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceLoc.clientsProjectmanager</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.ClientsManager" />
+                    <label class="@FormCss.Form.Label">@ResourceLoc.clientsProjectmanager</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.ClientsManager" />
                     <ValidationMessage For=@(() => CalculationUpdate.ClientsManager) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceLoc.designer</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.Designer" />
+                    <label class="@FormCss.Form.Label">@ResourceLoc.designer</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.Designer" />
                     <ValidationMessage For=@(() => CalculationUpdate.Designer) />
                 </div>
 
-                <div class="@CssClasses.Grid.Span.MD2">
-                    <label class="@CssClasses.Form.Label">@CalcResource.theClientsContactPersonTender</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.ContactPerson" />
+                <div class="@FormCss.Grid.Span.MD2">
+                    <label class="@FormCss.Form.Label">@CalcResource.theClientsContactPersonTender</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.ContactPerson" />
                     <ValidationMessage For=@(() => CalculationUpdate.ContactPerson) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.overviewInfoProject</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@CalculationUpdate.OverviewInfo" />
+                    <label class="@FormCss.Form.Label">@CalcResource.overviewInfoProject</label>
+                    <InputText class="@FormCss.Input.Text" @bind-Value="@CalculationUpdate.OverviewInfo" />
                     <ValidationMessage For=@(() => CalculationUpdate.OverviewInfo) />
                 </div>
             </div>
         }
         else if (Part == 5)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="@FormCss.Grid.Col.MD4">
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.startDate</label>
-                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.StartDate" />
+                    <label class="@FormCss.Form.Label">@CalcResource.startDate</label>
+                    <InputDate class="@FormCss.Input.Date" @bind-Value="@CalculationUpdate.StartDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.StartDate) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.endDate</label>
-                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.EndDate" />
+                    <label class="@FormCss.Form.Label">@CalcResource.endDate</label>
+                    <InputDate class="@FormCss.Input.Date" @bind-Value="@CalculationUpdate.EndDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.EndDate) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.tenderDeadline</label>
-                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.TenderDeadline" />
+                    <label class="@FormCss.Form.Label">@CalcResource.tenderDeadline</label>
+                    <InputDate class="@FormCss.Input.Date" @bind-Value="@CalculationUpdate.TenderDeadline" />
                     <ValidationMessage For=@(() => CalculationUpdate.TenderDeadline) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.publicationDate</label>
-                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.PublicationDate" />
+                    <label class="@FormCss.Form.Label">@CalcResource.publicationDate</label>
+                    <InputDate class="@FormCss.Input.Date" @bind-Value="@CalculationUpdate.PublicationDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.PublicationDate) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.decisionDate</label>
-                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.DecisionDate" />
+                    <label class="@FormCss.Form.Label">@CalcResource.decisionDate</label>
+                    <InputDate class="@FormCss.Input.Date" @bind-Value="@CalculationUpdate.DecisionDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.DecisionDate) />
                 </div>
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.tenderQA</label>
-                    <InputDate class="@CssClasses.Input.Date" @bind-Value="@CalculationUpdate.TenderQA" />
+                    <label class="@FormCss.Form.Label">@CalcResource.tenderQA</label>
+                    <InputDate class="@FormCss.Input.Date" @bind-Value="@CalculationUpdate.TenderQA" />
                     <ValidationMessage For=@(() => CalculationUpdate.TenderQA) />
                 </div>
             </div>
         }
         else if (Part == 6)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="@FormCss.Grid.Col.MD4">
 
                 @if (Calculation.Id == 0 || CalculationUpdate.IsPrivate)
                 {
-                    <div class="@CssClasses.Form.CheckWrapper">
-                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@CalculationUpdate.IsPrivate" />
-                        <label class="@CssClasses.Form.CheckLabel">@ResourceApp._private</label>
+                    <div class="@FormCss.Form.CheckWrapper">
+                        <InputCheckbox class="@FormCss.Input.Check" @bind-Value="@CalculationUpdate.IsPrivate" />
+                        <label class="@FormCss.Form.CheckLabel">@ResourceApp._private</label>
                     </div>
                 }
 
-                <div class="@CssClasses.Form.CheckWrapper">
-                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@CalculationUpdate.IsVisible" />
-                    <label class="@CssClasses.Form.CheckLabel">@ResourceApp.visible</label>
+                <div class="@FormCss.Form.CheckWrapper">
+                    <InputCheckbox class="@FormCss.Input.Check" @bind-Value="@CalculationUpdate.IsVisible" />
+                    <label class="@FormCss.Form.CheckLabel">@ResourceApp.visible</label>
                 </div>
 
-                <div class="@CssClasses.Grid.Span.MD2">
+                <div class="@FormCss.Grid.Span.MD2">
                     <button type="button"
-                            class="@CssClasses.Btn.Solid.Primary"
+                            class="@FormCss.Btn.Solid.Primary"
                             @onclick="() => CalculationUpdate.Notes.Add(string.Empty)">
                         @ResourceLoc.description
                     </button>
@@ -354,16 +354,16 @@
         }
     </EditForm>
 
-    <div class="@CssClasses.Modal.Footer">
+    <div class="@FormCss.Modal.Footer">
         <button type="submit"
-                class="@CssClasses.Btn.Outline.Success"
+                class="@FormCss.Btn.Outline.Success"
                 form="calcForm"
                 disabled="@btnSubmitDisabled">
             @ResourceApp.save
         </button>
 
         <button type="button"
-                class="@CssClasses.Btn.Outline.Secondary"
+                class="@FormCss.Btn.Outline.Secondary"
                 @onclick="async () => await Callback.InvokeAsync(null)">
             @ResourceApp.cancel
         </button>

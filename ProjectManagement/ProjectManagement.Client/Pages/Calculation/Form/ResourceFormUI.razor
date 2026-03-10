@@ -31,20 +31,20 @@
 
     @* PANEL 1: الاسم + مجموعة الحساب + الحساب *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="@CssClasses.Layout.FlexWrap">
-            <div class="@CssClasses.Layout.FlexMinWidth350">
-                <label class="@CssClasses.Form.Label">@CalcResource.name </label>
-                <InputText @bind-Value="ResourceUpdate.Name" class="@CssClasses.Input.Text" />
+        <div class="@FormCss.Layout.FlexWrap">
+            <div class="@FormCss.Layout.FlexMinWidth350">
+                <label class="@FormCss.Form.Label">@CalcResource.name </label>
+                <InputText @bind-Value="ResourceUpdate.Name" class="@FormCss.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Name)" />
             </div>
 
             @if (!Refresh && Config.AccountGroups != null)
             {
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label">@CalcResource.accountGroups </label>
+                <div class="@FormCss.Layout.FlexWidth160">
+                    <label class="@FormCss.Form.Label">@CalcResource.accountGroups </label>
                     <select @onchange="ChangeGroupAccount"
                             value="@AccountGroupSelected?.Id"
-                            class="@CssClasses.Input.Select">
+                            class="@FormCss.Input.Select">
                         <option></option>
                         @foreach (var item in Config.AccountGroups)
                         {
@@ -58,10 +58,10 @@
 
                 @if (ResourceUpdate != null && AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
                 {
-                    <div class="@CssClasses.Layout.FlexWidth160">
-                        <label class="@CssClasses.Form.Label">@CalcResource.account </label>
+                    <div class="@FormCss.Layout.FlexWidth160">
+                        <label class="@FormCss.Form.Label">@CalcResource.account </label>
                         <InputSelect @bind-Value="ResourceUpdate.AccountId"
-                                     class="@CssClasses.Input.Select">
+                                     class="@FormCss.Input.Select">
                             <option></option>
                             @if (AccountGroupSelected.Accounts != null)
                                 foreach (var item in AccountGroupSelected.Accounts)
@@ -80,11 +80,11 @@
 
     @* PANEL 2: الكمية + الوحدة + التكاليف + عوامل التغيير + Waste/Cap + Active *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="@CssClasses.Layout.FlexWrap">
-            <div class="@(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? CssClasses.Layout.FlexWidth110 : CssClasses.Layout.FlexWidth200)">
-                <label class="@CssClasses.Form.Label">@CalcResource.quantity</label>
-                <div class="w-full @CssClasses.Layout.ButtonGroup">
-                    <InputSelect class="@CssClasses.Input.Select"
+        <div class="@FormCss.Layout.FlexWrap">
+            <div class="@(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? FormCss.Layout.FlexWidth110 : FormCss.Layout.FlexWidth200)">
+                <label class="@FormCss.Form.Label">@CalcResource.quantity</label>
+                <div class="w-full @FormCss.Layout.ButtonGroup">
+                    <InputSelect class="@FormCss.Input.Select"
                                  @bind-Value:get="ResourceUpdate.Data.QuantityParam"
                                  @bind-Value:set="(value) => ChangeQuantityParam(value)">
                         <option></option>
@@ -99,59 +99,59 @@
                     @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
                     {
                         <InputNumber @bind-Value="ResourceUpdate.Data.Quantity"
-                                     class="@CssClasses.Input.Text" />
+                                     class="@FormCss.Input.Text" />
                     }
                 </div>
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth110">
-                <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
-                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@CssClasses.Input.Text" />
+            <div class="@FormCss.Layout.FlexWidth110">
+                <label class="@FormCss.Form.Label">@CalcResource.unit</label>
+                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@FormCss.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth110">
-                <label class="@CssClasses.Form.Label">@CalcResource.cost </label>
+            <div class="@FormCss.Layout.FlexWidth110">
+                <label class="@FormCss.Form.Label">@CalcResource.cost </label>
                 @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                 {
-                    <input class="@CssClasses.Input.Text" type="number" disabled value="@Resource.Data.Cost" />
+                    <input class="@FormCss.Input.Text" type="number" disabled value="@Resource.Data.Cost" />
                 }
                 else
                 {
-                    <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="@CssClasses.Input.Text" />
+                    <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="@FormCss.Input.Text" />
                     <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
                 }
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth110">
-                <label class="@CssClasses.Form.Label">@CalcResource.baseCost </label>
+            <div class="@FormCss.Layout.FlexWidth110">
+                <label class="@FormCss.Form.Label">@CalcResource.baseCost </label>
                 @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                 {
                     <input type="number" disabled value="@Resource.Data.BaseCost" />
                 }
                 else
                 {
-                    <InputNumber @bind-Value="ResourceUpdate.Data.BaseCost" class="@CssClasses.Input.Text" />
+                    <InputNumber @bind-Value="ResourceUpdate.Data.BaseCost" class="@FormCss.Input.Text" />
                     <ValidationMessage For="@(() => ResourceUpdate.Data.BaseCost)" />
                 }
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth130">
-                <label class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="@CssClasses.Input.Text" />
+            <div class="@FormCss.Layout.FlexWidth130">
+                <label class="@FormCss.Form.Label">@CalcResource.changeFactor1</label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="@FormCss.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth130">
-                <label class="@CssClasses.Form.Label">@CalcResource.changeFactor2 </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="@CssClasses.Input.Text" />
+            <div class="@FormCss.Layout.FlexWidth130">
+                <label class="@FormCss.Form.Label">@CalcResource.changeFactor2 </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="@FormCss.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth130">
-                <div class="@CssClasses.Form.CheckWrapperM">
-                    <InputCheckbox @bind-Value="ResourceUpdate.IsActive" class="@CssClasses.Input.Check" />
-                    <label class="@CssClasses.Form.CheckLabel">@CalcResource.active </label>
+            <div class="@FormCss.Layout.FlexWidth130">
+                <div class="@FormCss.Form.CheckWrapperM">
+                    <InputCheckbox @bind-Value="ResourceUpdate.IsActive" class="@FormCss.Input.Check" />
+                    <label class="@FormCss.Form.CheckLabel">@CalcResource.active </label>
                 </div>
             </div>
 
@@ -159,15 +159,15 @@
               || ResourceUpdate.ResType == ResourceTypesEnum.Worker
               || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
             {
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <label class="@CssClasses.Form.Label" for="waste">
+                <div class="@FormCss.Layout.FlexWidth110">
+                    <label class="@FormCss.Form.Label" for="waste">
                         @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
                     </label>
                     <InputNumber id="waste"
                                  @bind-Value="ResourceUpdate.Data.CapWaste"
-                                 class="@CssClasses.Input.Number" />
+                                 class="@FormCss.Input.Number" />
                     <ValidationMessage For="@(() => ResourceUpdate.Data.CapWaste)"
-                                       class="@CssClasses.Text.Danger" />
+                                       class="@FormCss.Text.Danger" />
                 </div>
             }
         </div>
@@ -175,12 +175,12 @@
 
     @* PANEL 3: النوع / التصنيف / الحالة / CO2 / الفرصة *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="@CssClasses.Layout.FlexWrap">
+        <div class="@FormCss.Layout.FlexWrap">
             @if (Config.ResourceTypes != null)
             {
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label">@CalcResource.resourceType</label>
-                    <InputSelect class="@CssClasses.Input.Select"
+                <div class="@FormCss.Layout.FlexWidth160">
+                    <label class="@FormCss.Form.Label">@CalcResource.resourceType</label>
+                    <InputSelect class="@FormCss.Input.Select"
                                  @bind-Value:get="ResourceUpdate.ResourceTypeId"
                                  @bind-Value:set="async (value) => await ChangeResType(value)">
                         <option value=""></option>
@@ -197,9 +197,9 @@
 
             @if (ResTypeSelected != null && ResTypeSelected.ResourcesSort != null && ResTypeSelected.ResourcesSort.Any())
             {
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label">@CalcResource.resourceSort </label>
-                    <InputSelect class="@CssClasses.Input.Select"
+                <div class="@FormCss.Layout.FlexWidth160">
+                    <label class="@FormCss.Form.Label">@CalcResource.resourceSort </label>
+                    <InputSelect class="@FormCss.Input.Select"
                                  @bind-Value:get="ResourceUpdate.ResourceSortId"
                                  @bind-Value:set="async (value) => await ChangeResSort2(value)">
                         <option></option>
@@ -214,9 +214,9 @@
                 </div>
             }
 
-            <div class="@CssClasses.Layout.FlexWidth160">
-                <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="@CssClasses.Input.Select">
+            <div class="@FormCss.Layout.FlexWidth160">
+                <label class="@FormCss.Form.Label">@CalcResource.status</label>
+                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="@FormCss.Input.Select">
                     @if (Config.Statues != null)
                     {
                         <option value=""></option>
@@ -228,20 +228,20 @@
                 </InputSelect>
                 <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
             </div>
-            <div class="@CssClasses.Layout.FlexWidth110">
-                <label class="@CssClasses.Form.Label">@CalcResource.priceSub </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.PriceSub" class="@CssClasses.Input.Text" />
+            <div class="@FormCss.Layout.FlexWidth110">
+                <label class="@FormCss.Form.Label">@CalcResource.priceSub </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.PriceSub" class="@FormCss.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.PriceSub)" />
             </div>
-            <div class="@CssClasses.Layout.FlexWidth110">
-                <label class="@CssClasses.Form.Label">@CalcResource.co2 </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="@CssClasses.Input.Text" />
+            <div class="@FormCss.Layout.FlexWidth110">
+                <label class="@FormCss.Form.Label">@CalcResource.co2 </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="@FormCss.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.CO2)" />
             </div>
 
-            <div class="@CssClasses.Layout.FlexWidth160">
-                <label class="@CssClasses.Form.Label">@CalcResource.opportunity</label>
-                <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="@CssClasses.Input.Select">
+            <div class="@FormCss.Layout.FlexWidth160">
+                <label class="@FormCss.Form.Label">@CalcResource.opportunity</label>
+                <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="@FormCss.Input.Select">
                     <option></option>
                     @if (Calc.Opportunities != null)
                         foreach (var opportunity in Calc.Opportunities)
@@ -257,9 +257,9 @@
     </MhdCard>
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
         <div class="flex items-center justify-between mb-2">
-            <label class="@CssClasses.Form.Label">Parameters</label>
+            <label class="@FormCss.Form.Label">Parameters</label>
             <button type="button"
-                    class="@CssClasses.Btn.Outline.Primary"
+                    class="@FormCss.Btn.Outline.Primary"
                     @onclick="AddParameter">
                 @ResourceApp.newItem
             </button>
@@ -267,35 +267,35 @@
 
         @if (!ResourceUpdate.Data.Parameters.Any())
         {
-            <div class="@CssClasses.Text.Warning">@ResourceApp.thereIsNoElements</div>
+            <div class="@FormCss.Text.Warning">@ResourceApp.thereIsNoElements</div>
         }
         else
         {
             @for (int i = 0; i < ResourceUpdate.Data.Parameters.Count; i++)
             {
                 int idx = i;
-                <div class="@CssClasses.Layout.FlexWrap gap-2 mb-2 items-end">
+                <div class="@FormCss.Layout.FlexWrap gap-2 mb-2 items-end">
                     <div class="flex-1 min-w-[160px]">
-                        <label class="@CssClasses.Form.Label">@CalcResource.name</label>
-                        <InputText class="@CssClasses.Input.Text"
+                        <label class="@FormCss.Form.Label">@CalcResource.name</label>
+                        <InputText class="@FormCss.Input.Text"
                                    @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
                     </div>
 
                     <div class="w-[120px]">
-                        <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
-                        <InputText class="@CssClasses.Input.Text"
+                        <label class="@FormCss.Form.Label">@CalcResource.unit</label>
+                        <InputText class="@FormCss.Input.Text"
                                    @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
                     </div>
 
                     <div class="w-[120px]">
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.value</label>
-                        <InputNumber class="@CssClasses.Input.Text"
+                        <label class="@FormCss.Form.Label">@ResourceLoc.value</label>
+                        <InputNumber class="@FormCss.Input.Text"
                                      @bind-Value="ResourceUpdate.Data.Parameters[idx].Value" />
                     </div>
 
                     <div class="w-[52px]">
                         <button type="button"
-                                class="@CssClasses.Btn.Solid.Danger"
+                                class="@FormCss.Btn.Solid.Danger"
                                 @onclick="() => RemoveParameter(idx)">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
@@ -309,9 +309,9 @@
     {
          <MhdCard Elevated="true" Compact="true" Class="mb-2">
         <div class="flex items-center justify-between mb-2">
-            <label class="@CssClasses.Form.Label">Times</label>
+            <label class="@FormCss.Form.Label">Times</label>
             <button type="button"
-                    class="@CssClasses.Btn.Outline.Primary"
+                    class="@FormCss.Btn.Outline.Primary"
                     @onclick="AddTime">
                 @ResourceApp.newItem
             </button>
@@ -319,41 +319,41 @@
 
         @if (!ResourceUpdate.Data.Times.Any())
         {
-            <div class="@CssClasses.Text.Warning">@ResourceApp.thereIsNoElements</div>
+            <div class="@FormCss.Text.Warning">@ResourceApp.thereIsNoElements</div>
         }
         else
         {
             @for (int i = 0; i < ResourceUpdate.Data.Times.Count; i++)
             {
                 int idx = i;
-                <div class="@CssClasses.Layout.FlexWrap gap-2 mb-2 items-end">
+                <div class="@FormCss.Layout.FlexWrap gap-2 mb-2 items-end">
                     <div class="flex-1 min-w-[160px]">
-                        <label class="@CssClasses.Form.Label">@CalcResource.name</label>
-                        <InputText class="@CssClasses.Input.Text"
+                        <label class="@FormCss.Form.Label">@CalcResource.name</label>
+                        <InputText class="@FormCss.Input.Text"
                                    @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
                     </div>
 
                     <div class="w-[100px]">
-                        <label class="@CssClasses.Form.Label">@ResourceLoc.value</label>
-                        <InputNumber class="@CssClasses.Input.Text"
+                        <label class="@FormCss.Form.Label">@ResourceLoc.value</label>
+                        <InputNumber class="@FormCss.Input.Text"
                                      @bind-Value="ResourceUpdate.Data.Times[idx].Value" />
                     </div>
 
                     <div class="w-[100px]">
-                        <label class="@CssClasses.Form.Label">@CalcResource.quantity</label>
-                        <InputNumber class="@CssClasses.Input.Text"
+                        <label class="@FormCss.Form.Label">@CalcResource.quantity</label>
+                        <InputNumber class="@FormCss.Input.Text"
                                      @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
                     </div>
 
                     <div class="w-[100px]">
-                        <label class="@CssClasses.Form.Label">@CalcResource.cost</label>
-                        <InputNumber class="@CssClasses.Input.Text"
+                        <label class="@FormCss.Form.Label">@CalcResource.cost</label>
+                        <InputNumber class="@FormCss.Input.Text"
                                      @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
                     </div>
 
                     <div class="w-[52px]">
                         <button type="button"
-                                class="@CssClasses.Btn.Solid.Danger"
+                                class="@FormCss.Btn.Solid.Danger"
                                 @onclick="() => RemoveTime(idx)">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
@@ -367,16 +367,16 @@
 
     @* PANEL 4: الملاحظات *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="@CssClasses.Layout.FlexWrap">
+        <div class="@FormCss.Layout.FlexWrap">
             <div class="flex-grow">
-                <label class="@CssClasses.Form.Label">@CalcResource.note </label>
-                <InputTextArea @bind-Value="ResourceUpdate.Data.Note" class="@CssClasses.Input.Text" />
+                <label class="@FormCss.Form.Label">@CalcResource.note </label>
+                <InputTextArea @bind-Value="ResourceUpdate.Data.Note" class="@FormCss.Input.Text" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.Note)" />
             </div>
 
             <div class="w-[100px]">
                 <button type="button"
-                        class="@CssClasses.Btn.Solid.Primary mt-7"
+                        class="@FormCss.Btn.Solid.Primary mt-7"
                         @onclick="() => ResourceUpdate.Data.UpperNote.Add(string.Empty)">
                     @CalcResource.UpperNote
                 </button>
@@ -386,16 +386,16 @@
         @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
         {
             int d = i;
-            <div class="@CssClasses.Layout.FlexWrap mt-1">
+            <div class="@FormCss.Layout.FlexWrap mt-1">
                 <div class="flex-grow">
                     <textarea lang="3"
                               @bind="ResourceUpdate.Data.UpperNote[d]"
-                              class="@CssClasses.Input.Text w-full">
+                              class="@FormCss.Input.Text w-full">
                     </textarea>
                 </div>
                 <div class="w-[100px]">
                     <button type="button"
-                            class="@CssClasses.Btn.Solid.Danger"
+                            class="@FormCss.Btn.Solid.Danger"
                             @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
                         @((MarkupString)@Icons.DeleteSVG)
                     </button>
@@ -405,17 +405,17 @@
     </MhdCard>
 </EditForm>
 
-    <div class="@CssClasses.Modal.Footer">
+    <div class="@FormCss.Modal.Footer">
     @if (Resource?.Id == 0)
     {
         if (PostList.Count > 1)
         {
-            <button type="button" class="@CssClasses.Btn.Outline.Danger" @onclick="()=> PostList.Remove(ResourceUpdate)">@ResourceApp.delete</button>
+            <button type="button" class="@FormCss.Btn.Outline.Danger" @onclick="()=> PostList.Remove(ResourceUpdate)">@ResourceApp.delete</button>
         }
-        <button type="button" class="@CssClasses.Btn.Outline.Primary" @onclick="NewSP">@ResourceApp.newItem</button>
+        <button type="button" class="@FormCss.Btn.Outline.Primary" @onclick="NewSP">@ResourceApp.newItem</button>
     }
-    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="resForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">@ResourceApp.cancel</button>
+    <button type="submit" class="@FormCss.Btn.Outline.Success" form="resForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
+    <button type="button" class="@FormCss.Btn.Outline.Secondary" @onclick="Close">@ResourceApp.cancel</button>
     </div>
     @code{
     private void AddParameter()
