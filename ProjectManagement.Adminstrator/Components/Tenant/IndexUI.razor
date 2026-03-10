@@ -4,7 +4,6 @@
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 @if (DetailsPage != null)
 {
@@ -15,41 +14,45 @@ else
     <div class="mb-3">
         @if (CanManageTenants)
         {
-            <button class="@CsS.Btn.Outline.Success" @onclick="() => UpdateForm(new())">
+            <button class="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50" @onclick="() => UpdateForm(new())">
                 @ResourceApp.newItem
             </button>
         }
     </div>
 
-    <table class="@CsS.Table.Tab">
-        <thead class="@CsS.Table.Thead">
-            <tr>
-                <th class="@CsS.Table.TH">@CalcResource.name</th>
-                <th class="@CsS.Table.TH">@AppControll.Db</th>
-                <th class="@CsS.Table.TH">@AppControll.dateExpire</th>
-                <th class="@CsS.Table.TH">@AppControll.hasOwnDb</th>
-            </tr>
-        </thead>
-        <tbody class="@CsS.Table.TBody">
-            @if (Tenants != null)
-            {
-                foreach (var tenant in Tenants)
-                {
-                    <tr class="@CsS.Table.Tr"
-                        @onclick="() => DetailsPage = tenant"
-                        @oncontextmenu:preventDefault
-                        @oncontextmenu="() => Context(tenant)">
-                        <td class="@CsS.Table.Td">@tenant.Name</td>
-                        <td class="@CsS.Table.Td">@tenant.DB @tenant.DatabaseInfoName</td>
-                        <td class="@CsS.Table.Td">
-                            @(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : string.Empty)
-                        </td>
-                        <td class="@CsS.Table.Td">
-                            <input type="checkbox" class="@CsS.Input.Check" checked="@tenant.HasOwnDb" disabled />
-                        </td>
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
+                <thead class="bg-slate-50 dark:bg-slate-900/60">
+                    <tr>
+                        <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                        <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@AppControll.Db</th>
+                        <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@AppControll.dateExpire</th>
+                        <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@AppControll.hasOwnDb</th>
                     </tr>
-                }
-            }
-        </tbody>
-    </table>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white dark:divide-slate-800 dark:bg-slate-950">
+                    @if (Tenants != null)
+                    {
+                        foreach (var tenant in Tenants)
+                        {
+                            <tr class="cursor-pointer transition hover:bg-slate-50 dark:hover:bg-slate-900/40"
+                                @onclick="() => DetailsPage = tenant"
+                                @oncontextmenu:preventDefault
+                                @oncontextmenu="() => Context(tenant)">
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.Name</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.DB @tenant.DatabaseInfoName</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">
+                                    @(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : string.Empty)
+                                </td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">
+                                    <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" checked="@tenant.HasOwnDb" disabled />
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }
