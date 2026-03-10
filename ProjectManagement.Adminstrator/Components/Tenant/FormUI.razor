@@ -9,20 +9,20 @@
 @inherits AppComponentBase
 @inject IUsersService sersService
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
-<div class="@CsS.Modal.Body">
+<div class="space-y-4">
     @if (Put != null)
     {
-        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm" class="">
+        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm">
             <DataAnnotationsValidator />
-            <ValidationSummary class="@CsS.Text.Danger" />
-            <div class="@CsS.Grid.Col.MD4">
+            <ValidationSummary class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300" />
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 @if (Id == 0)
                 {
-                    <div>
-                        <label class="@CsS.Form.Label">@AppControll.Db</label>
-                        <InputSelect @bind-Value="Put.TenantDBId" class="@CsS.Input.Select">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.Db</label>
+                        <InputSelect @bind-Value="Put.TenantDBId" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                             @if (Databases != null)
                             {
                                 foreach (var status in Databases)
@@ -34,102 +34,101 @@
                     </div>
                 }
 
-                <div>
-                    <label class="@CsS.Form.Label">@CalcResource.name:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Name" />
-                    <ValidationMessage For="@(() => Put.Name)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Name" />
+                    <ValidationMessage For="@(() => Put.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
-                <div>
-                    <label class="@CsS.Form.Label">url:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Website" />
-                    <ValidationMessage For="@(() => Put.Website)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">url:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Website" />
+                    <ValidationMessage For="@(() => Put.Website)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
-                <div>
-                    <label class="@CsS.Form.Label">@AppControll.expire:</label>
-                    <InputDate class="@CsS.Input.Date" @bind-Value="@Put.DateExpire" />
-                    <ValidationMessage For="@(() => Put.DateExpire)" class="@CsS.Text.Danger" />
-                </div>
-
-                <div>
-                    <label class="@CsS.Form.Label">@AppControll.maxUsers:</label>
-                    <InputNumber class="@CsS.Input.Number" @bind-Value="@Put.MaxUsers" />
-                    <ValidationMessage For="@(() => Put.MaxUsers)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.expire:</label>
+                    <InputDate class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.DateExpire" />
+                    <ValidationMessage For="@(() => Put.DateExpire)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@AppControll.maxCalculations:</label>
-                    <InputNumber class="@CsS.Input.Number" @bind-Value="@Put.MaxCalculations" />
-                    <ValidationMessage For="@(() => Put.MaxCalculations)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.maxUsers:</label>
+                    <InputNumber class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.MaxUsers" />
+                    <ValidationMessage For="@(() => Put.MaxUsers)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.phone:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Phone" />
-                    <ValidationMessage For="@(() => Put.Phone)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.maxCalculations:</label>
+                    <InputNumber class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.MaxCalculations" />
+                    <ValidationMessage For="@(() => Put.MaxCalculations)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.mobile:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Mobile" />
-                    <ValidationMessage For="@(() => Put.Mobile)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.phone:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Phone" />
+                    <ValidationMessage For="@(() => Put.Phone)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.fax:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Fax" />
-                    <ValidationMessage For="@(() => Put.Fax)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.mobile:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Mobile" />
+                    <ValidationMessage For="@(() => Put.Mobile)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.email:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Email" />
-                    <ValidationMessage For="@(() => Put.Email)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.fax:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Fax" />
+                    <ValidationMessage For="@(() => Put.Fax)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.country:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Country" />
-                    <ValidationMessage For="@(() => Put.Country)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Email" />
+                    <ValidationMessage For="@(() => Put.Email)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.city:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.City" />
-                    <ValidationMessage For="@(() => Put.City)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.country:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Country" />
+                    <ValidationMessage For="@(() => Put.Country)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.zipCode:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.PostCode" />
-                    <ValidationMessage For="@(() => Put.PostCode)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.city:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.City" />
+                    <ValidationMessage For="@(() => Put.City)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@AppControll.street:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.Street" />
-                    <ValidationMessage For="@(() => Put.Street)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.zipCode:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.PostCode" />
+                    <ValidationMessage For="@(() => Put.PostCode)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <div>
-                    <label class="@CsS.Form.Label">@ResourceIdentity.build:</label>
-                    <InputText class="@CsS.Input.Text" @bind-Value="@Put.BuildNumber" />
-                    <ValidationMessage For="@(() => Put.BuildNumber)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.street:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Street" />
+                    <ValidationMessage For="@(() => Put.Street)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
 
-                <!-- Note يمتد 4 أعمدة -->
-                <div class="@CsS.Grid.Span.MD4">
-                    <label class="@CsS.Form.Label">@CalcResource.note:</label>
-                    <InputTextArea class="@CsS.Input.Text" @bind-Value="@Put.Note" />
-                    <ValidationMessage For="@(() => Put.Note)" class="@CsS.Text.Danger" />
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.build:</label>
+                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.BuildNumber" />
+                    <ValidationMessage For="@(() => Put.BuildNumber)" class="text-sm text-rose-600 dark:text-rose-400" />
+                </div>
+
+                <div class="space-y-1 md:col-span-2 xl:col-span-4">
+                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note:</label>
+                    <InputTextArea class="min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Note" />
+                    <ValidationMessage For="@(() => Put.Note)" class="text-sm text-rose-600 dark:text-rose-400" />
                 </div>
             </div>
         </EditForm>
 
-        <div class="@CsS.Modal.Footer">
-            <button type="submit" form="tenantForm" class="@CsS.Btn.Outline.Success" disabled="@IsLoading">
+        <div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <button type="submit" form="tenantForm" class="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50" disabled="@IsLoading">
                 @ResourceApp.save
             </button>
-            <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">
+            <button type="button" class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync(false)">
                 @ResourceApp.cancel
             </button>
         </div>

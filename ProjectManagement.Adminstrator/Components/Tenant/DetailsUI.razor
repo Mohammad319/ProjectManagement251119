@@ -8,61 +8,60 @@
 @inherits AppComponentBase
 @inject IUsersService UsersService
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
-<h3 class="CsS.Spacing.M.Bottom2">
-    <button class="@CsS.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync()">
+<h3 class="mb-2">
+    <button class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync()">
         @ResourceApp.back
     </button>
 </h3>
 
 @if (TenantPut is TenantEntity tenant)
 {
-    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 @CsS.Spacing.M.Bottom3">
-        <table class="@CsS.Table.Tab">
-            <tbody class="@CsS.Table.TBody">
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@CalcResource.name</td>
-                    <td class="@CsS.Table.Td">@tenant.Name</td>
+    <div class="mb-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.Name</td>
                 </tr>
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@AppControll.Db</td>
-                    <td class="@CsS.Table.Td">@tenant.TenantDB?.Name</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@AppControll.Db</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.TenantDB?.Name</td>
                 </tr>
                 @if (tenant.DateExpire.HasValue)
                 {
-                    <tr class="@CsS.Table.Tr">
-                        <td class="@CsS.Table.Td">@AppControll.expire</td>
-                        <td class="@CsS.Table.Td">@tenant.DateExpire.Value.ToString("dd.MM.yyyy")</td>
+                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                        <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@AppControll.expire</td>
+                        <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.DateExpire.Value.ToString("dd.MM.yyyy")</td>
                     </tr>
                 }
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@AppControll.maxUsers</td>
-                    <td class="@CsS.Table.Td">@tenant.MaxUsers</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@AppControll.maxUsers</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.MaxUsers</td>
                 </tr>
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@AppControll.maxCalculations</td>
-                    <td class="@CsS.Table.Td">@tenant.MaxCalculations</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@AppControll.maxCalculations</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.MaxCalculations</td>
                 </tr>
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@ResourceIdentity.email</td>
-                    <td class="@CsS.Table.Td">@tenant.Email</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.Email</td>
                 </tr>
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@ResourceIdentity.fax</td>
-                    <td class="@CsS.Table.Td">@tenant.Fax</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.fax</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.Fax</td>
                 </tr>
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@ResourceIdentity.phone</td>
-                    <td class="@CsS.Table.Td">@tenant.Phone</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.phone</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.Phone</td>
                 </tr>
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@ResourceIdentity.mobile</td>
-                    <td class="@CsS.Table.Td">@tenant.Mobile @tenant.BuildNumber</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.mobile</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.Mobile @tenant.BuildNumber</td>
                 </tr>
-                <tr class="@CsS.Table.Tr">
-                    <td class="@CsS.Table.Td">@ResourceIdentity.country</td>
-                    <td class="@CsS.Table.Td">@tenant.Country</td>
+                <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-900/40">
+                    <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.country</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@tenant.Country</td>
                 </tr>
             </tbody>
         </table>
@@ -70,62 +69,64 @@
 
     @if (CanManageTenantUsers)
     {
-        <button class="@CsS.Btn.Outline.Success mb-3" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
+        <button class="mb-3 inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">
             New User
         </button>
     }
 
     @if (Users == null || !Users.Any())
     {
-        <button class="@CsS.Btn.Outline.Secondary" @onclick="async () => await GetUsersAsync()">
+        <button class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await GetUsersAsync()">
             @ResourceIdentity.users
         </button>
     }
     else
     {
         <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <table class="@CsS.Table.Tab">
-                <thead class="@CsS.Table.Thead">
-                    <tr>
-                        <th class="@CsS.Table.TH">@ResourceIdentity.email</th>
-                        <th class="@CsS.Table.TH">@CalcResource.code</th>
-                        <th class="@CsS.Table.TH">@CalcResource.name</th>
-                        <th class="@CsS.Table.TH">@ResourceIdentity.lockoutEnd</th>
-                        <th class="@CsS.Table.TH">@ResourceIdentity.lockoutStart</th>
-                        <th class="@CsS.Table.TH">@ResourceApp.department</th>
-                    </tr>
-                </thead>
-                <tbody class="@CsS.Table.TBody">
-                    @foreach (var user in Users)
-                    {
-                        <tr class="@CsS.Table.Tr"
-                            @oncontextmenu:preventDefault
-                            @oncontextmenu="() => Context(user)">
-                            <td class="@CsS.Table.Td">@user.Email</td>
-                            <td class="@CsS.Table.Td">@user.UserName</td>
-                            <td class="@CsS.Table.Td">@user.Firstname @user.Lastname</td>
-                            <td class="@CsS.Table.Td">
-                                <input type="checkbox" class="@CsS.Input.Check" disabled value="@user.LockoutEnabled" />
-                                @(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : string.Empty)
-                            </td>
-                            <td class="@CsS.Table.Td">
-                                @(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)
-                            </td>
-                            <td class="@CsS.Table.Td">@user.DepartmentId</td>
-                            <td class="@CsS.Table.Td">
-                                @if (CanManageTenantUsers)
-                                {
-                                    <button class="@CsS.Btn.Outline.Primary"
-                                            @onclick="() => AddBasicCompanyInfoAsync(user)"
-                                            disabled="@IsAddingCompanyInfoFor(user)">
-                                        @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
-                                    </button>
-                                }
-                            </td>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
+                    <thead class="bg-slate-50 dark:bg-slate-900/60">
+                        <tr>
+                            <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@ResourceIdentity.email</th>
+                            <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@CalcResource.code</th>
+                            <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                            <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@ResourceIdentity.lockoutEnd</th>
+                            <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@ResourceIdentity.lockoutStart</th>
+                            <th class="px-4 py-3 text-start font-semibold text-slate-700 dark:text-slate-200">@ResourceApp.department</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var user in Users)
+                        {
+                            <tr class="transition hover:bg-slate-50 dark:hover:bg-slate-900/40"
+                                @oncontextmenu:preventDefault
+                                @oncontextmenu="() => Context(user)">
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@user.Email</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@user.UserName</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@user.Firstname @user.Lastname</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">
+                                    <input type="checkbox" class="mr-2 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" disabled value="@user.LockoutEnabled" />
+                                    @(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : string.Empty)
+                                </td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">
+                                    @(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)
+                                </td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">@user.DepartmentId</td>
+                                <td class="px-4 py-3 text-slate-700 dark:text-slate-200">
+                                    @if (CanManageTenantUsers)
+                                    {
+                                        <button class="inline-flex items-center rounded-lg border border-sky-300 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50"
+                                                @onclick="() => AddBasicCompanyInfoAsync(user)"
+                                                disabled="@IsAddingCompanyInfoFor(user)">
+                                            @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
 }
