@@ -1,20 +1,27 @@
 ﻿@using ProjectManagement.Shared.DTO.Folder
 @inherits AppComponentBase
 
-    <div class="@CssClasses.Modal.Body">
-        @if (FolderD != null)
-        {
-        <dl class="@CssClasses.Grid.Col.MD3">
-            <dt>@CalcResource.name</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@FolderD.Name</dd>
-            <dt>@ResourceApp.department</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@FolderD.Department</dd>
-            <dt>@ResourceApp.isVisible</dt>
-            <dd class="@CssClasses.Grid.Span.MD2"><input type="checkbox" selected="@FolderD.IsVisible" disabled /></dd>
-        </dl>
-        }
+<div class="p-4 text-slate-800 dark:text-slate-100">
+    @if (FolderD != null)
+    {
+        <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+            <dt class="font-medium text-slate-500 dark:text-slate-400">@CalcResource.name</dt>
+            <dd class="sm:col-span-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/40">@FolderD.Name</dd>
 
-    </div>
+            <dt class="font-medium text-slate-500 dark:text-slate-400">@ResourceApp.department</dt>
+            <dd class="sm:col-span-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/40">@FolderD.Department</dd>
+
+            <dt class="font-medium text-slate-500 dark:text-slate-400">@ResourceApp.isVisible</dt>
+            <dd class="sm:col-span-2 flex items-center">
+                <input type="checkbox"
+                       checked="@FolderD.IsVisible"
+                       disabled
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 dark:border-slate-600 dark:bg-slate-900" />
+            </dd>
+        </dl>
+    }
+</div>
+
 @code {
     [Parameter] public Guid Id { get; set; }
     DetailsFolderDTO? FolderD;
