@@ -1,23 +1,23 @@
 ﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
 @inherits AppComponentBase
-<table class="@CssClasses.Table.Tab">
-    <thead class="@CssClasses.Table.Thead">
+<table class="w-full border-collapse text-slate-900 dark:text-slate-100">
+    <thead class="bg-slate-100 dark:bg-slate-800">
         <tr>
-            <th class="@CssClasses.Table.TH"></th>
-            <th class="@CssClasses.Table.TH">@CalcResource.cost</th>
-            <th class="@CssClasses.Table.TH">@CalcResource.baseCost</th>
-            <th class="@CssClasses.Table.TH">@ResourceApp.date</th>
-            <th class="@CssClasses.Table.TH">@CalcResource.note</th>
+            <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start"></th>
+            <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">@CalcResource.cost</th>
+            <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">@CalcResource.baseCost</th>
+            <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">@ResourceApp.date</th>
+            <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">@CalcResource.note</th>
         </tr>
     </thead>
-    <tbody class="@CssClasses.Table.TBody">
+    <tbody>
         @foreach (var offer in Resource?.Offers ?? [])
         {
-            <tr class="@CssClasses.Table.Tr">
-                <td class="@CssClasses.Table.Td">@offer.BaseCost</td>
-                <td class="@CssClasses.Table.Td">@offer.Cost</td>
-                <td class="@CssClasses.Table.Td">@offer.Date</td>
-                <td class="@CssClasses.Table.Td">@offer.Comment</td>
+            <tr class="border-b border-slate-200 dark:border-slate-700">
+                <td class="border border-slate-300 dark:border-slate-700 px-2 py-1">@offer.BaseCost</td>
+                <td class="border border-slate-300 dark:border-slate-700 px-2 py-1">@offer.Cost</td>
+                <td class="border border-slate-300 dark:border-slate-700 px-2 py-1">@offer.Date</td>
+                <td class="border border-slate-300 dark:border-slate-700 px-2 py-1">@offer.Comment</td>
             </tr>
         }
     </tbody>

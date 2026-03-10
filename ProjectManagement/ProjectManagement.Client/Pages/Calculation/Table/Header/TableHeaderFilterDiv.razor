@@ -28,6 +28,17 @@
         font-size: 12px;
     }
 
+    .dark .modalFilter {
+        border-color: #334155;
+        background-color: #0f172a;
+        color: #e2e8f0;
+    }
+
+        .dark .modalFilter .chip {
+            background-color: #334155;
+            color: #e2e8f0;
+        }
+
         .modalFilter > div:first-child {
             display: flex;
             align-items: center;
@@ -90,7 +101,7 @@
         <div>
             @if (FilterAttrStr == "resourceTypeSystem" || FilterAttrStr == "resourceType" || FilterAttrStr == "status")
             {
-                <select class="@CssClasses.Input.Text" @onchange="EnterResource">
+                <select class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @onchange="EnterResource">
                     <option></option>
                     @if (FilterAttrStr == "status")
                     {
@@ -131,7 +142,7 @@
             }
             else
             {
-                <input class="@CssClasses.Input.Text"
+                <input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                        style="width:70%;z-index:1000;font-size:12px;height:26px;"
                        max="8"
                        type="text"
@@ -147,7 +158,7 @@
         </div>
 
         <div>
-            <select class="@CssClasses.Input.Text"
+            <select class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                     style="font-size:12px;height:26px;"
                     @onchange="FilterTypesFilter">
                 @foreach (FilterType level in FilterTypesList1)

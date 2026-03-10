@@ -16,7 +16,7 @@
 
 <div id="tit" class="flex flex-wrap items-center gap-2 px-2">
 
-    <span class="@CssClasses.Btn.Span"
+    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
           @onclick="OpenTaskForm"
           title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">
         @Icons.Plus2
@@ -27,12 +27,12 @@
             @if (Calc.Tap1)
             {
                 <span title="@ResourceApp.importFromFile"
-                      class="@CssClasses.Btn.Span"
+                      class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="() => Modal.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge)">
                     @((MarkupString)Icons.ImportFromFile)
                 </span>
 
-                <span class="@CssClasses.Btn.Span"
+                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       title="@ResourceLoc.template"
                       @onclick="() => Modal.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(
                       ResourceLoc.templates,
@@ -46,7 +46,7 @@
             </span>
 
             <span title="@ResourceApp.reOrder"
-                  class="@CssClasses.Btn.Span"
+                  class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                   @onclick="() => Modal.ShowComponent<DragDropTaskUI>(ResourceApp.reOrder, Icons.ReorderRows, null, DialogSize.ExtraLarge)">
                 @((MarkupString)Icons.ReorderRows)
             </span>
@@ -54,7 +54,7 @@
 
             @if (SelectedData.SelectedItems.Count != 0)
             {
-                <span class="@CssClasses.Btn.Span"
+                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="UnSelectedAll"
                       title="@ResourceLoc.unselectAll">
                     @((MarkupString)Icons.NotSelected)
@@ -65,7 +65,7 @@
                         && (!(TemporaryData.CopyTypeo == CopyType.Move && TemporaryData.OldCalcID == Calc.Id)
                         || TemporaryData.CopyTypeo == CopyType.Copy))
             {
-                <span class="@CssClasses.Btn.Span"
+                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="async () => await PasteItem(0)"
                       title="@ResourceApp.paste">
                     @((MarkupString)Icons.Paste)
@@ -89,7 +89,7 @@
     </AuthorizeView>
 
     <div class="relative">
-        <span class="@CssClasses.Btn.Span" @onclick="ToggleFilterDropdown">
+        <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800" @onclick="ToggleFilterDropdown">
             🧾 @ResourceApp.DisplayOptions
         </span>
 
@@ -139,11 +139,11 @@
         }
     </div>
 
-    <span class="@CssClasses.Btn.Span" @onclick="ItemsOnlyOH">
+    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800" @onclick="ItemsOnlyOH">
         @(Calc.OHFactors ? "OH" : CalcResource.netCal)
     </span>
 
-    <span class="@CssClasses.Btn.Span"
+    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
           title="CalcResource.quantity"
           @onclick="() => Modal.ShowComponent<QuantityListUI>(CalcResource.quantity, Icons.ResetQuantity, null, size: DialogSize.Medium)">
         @((MarkupString)Icons.ResetQuantity)
@@ -172,7 +172,7 @@
     </TopContent>
 
     <BottomContent>
-        <div class="@CssClasses.Spacing.P.X1">
+        <div class="px-1">
              <GetFromStorage ParentID="Calc.Id" CalcType="CalculationItemType.task" /> 
         </div>
     </BottomContent>
