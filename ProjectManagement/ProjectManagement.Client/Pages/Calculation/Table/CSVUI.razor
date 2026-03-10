@@ -7,61 +7,61 @@
 @using System.IO
 @inherits AppComponentBase
 
-<div class="@CssClasses.Modal.Body" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
-    <div class="@CssClasses.Grid.Col.MD4">
+<div class="p-4" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         @if (SheetIsVisible)
         {
             <div>
                 <label for="floatingInputGrid">Sheet Nr:</label>
-                <input type="number" class="@CssClasses.Input.Number" @bind="SheetNr">
+                <input type="number" class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind="SheetNr">
             </div>   
         }
         <div>
             <label for="floatingInputGrid">@ResourceApp.StartFromRow:</label>
-            <input type="number" class="@CssClasses.Input.Number" placeholder="@ResourceApp.StartFromRow" @bind="RowStart" />
+            <input type="number" class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" placeholder="@ResourceApp.StartFromRow" @bind="RowStart" />
         </div>
         <div>
-            <div class="@CssClasses.Layout.FlexItemsCenter @CssClasses.Spacing.M.All5">
+            <div class="flex items-center m-5">
                 <InputFile type="file"  OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)"></InputFile>
                 @if (workbook != null)
                 {
-                    <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="Import" disabled="@wait">@ResourceApp.import</button>
+                    <button class="mx-1 rounded bg-blue-600 px-3 py-1 text-white transition hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed" @onclick="Import" disabled="@wait">@ResourceApp.import</button>
                 }
                 @if (Sections != null && Sections.Any())
                 {
-                    <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="Save" disabled="@wait">@ResourceApp.save</button>
+                    <button class="mx-1 rounded bg-blue-600 px-3 py-1 text-white transition hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed" @onclick="Save" disabled="@wait">@ResourceApp.save</button>
                 }
             </div>
         </div>
     </div>
     <div>
-        <table class="@CssClasses.Table.Tab">
-            <thead class="@CssClasses.Table.Thead">
+        <table class="w-full border-collapse">
+            <thead class="bg-slate-100 dark:bg-slate-800">
                 <tr>
-                    <th class="@CssClasses.Table.TH" width="80"></th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="CodeIndex" />
+                    <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start" width="80"></th>
+                    <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">
+                        <input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" style="width:45px;" @bind="CodeIndex" />
                         <span>@CalcResource.code</span>
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="NameIndex" />
+                    <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">
+                        <input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" style="width:45px;" @bind="NameIndex" />
                         @CalcResource.name
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:60px;" @bind="UnitIndex" />
+                    <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">
+                        <input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" style="width:60px;" @bind="UnitIndex" />
                         @CalcResource.unit
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="QuantityIndex" />
+                    <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">
+                        <input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" style="width:45px;" @bind="QuantityIndex" />
                         @CalcResource.quantity
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="PriceIndex" />
+                    <th class="border border-slate-300 dark:border-slate-700 px-2 py-1 text-start">
+                        <input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" style="width:45px;" @bind="PriceIndex" />
                         @CalcResource.price
                     </th>
                 </tr>
             </thead>
-            <tbody class="@CssClasses.Table.TBody">
+            <tbody>
                 @if (Sections != null && Sections.Any())
                 {
                     @foreach (var Task in Sections)
@@ -77,8 +77,8 @@
 @code {
     RenderFragment TaskRow(TaskPostDTO Task, int left = 0) => __builder =>
     {
-        <tr class="@(left == 0 ? "task" : "subTask") @CssClasses.Table.Tr">
-            <td class="@CssClasses.Table.Td">
+        <tr class="@(left == 0 ? "task" : "subTask") border-b border-slate-200 dark:border-slate-700">
+            <td class="border border-slate-300 dark:border-slate-700 px-2 py-1">
                 <span style="margin-left:@(left + "px")" @onclick="() => Sections!.Remove(Task)" role="button">@((MarkupString)Icons.Delete)</span>
                 @if (Task.Tasks.Any())
                 {
@@ -87,11 +87,11 @@
                     </span>
                     }
             </td>
-            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number" type="text" @bind="@Task.Metadata.Code" /></td>
-            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number"  type="text" @bind="@Task.Name" /></td>
-            <td class="@CssClasses.Table.Td"><input  class="@CssClasses.Table.Td" type="text" @bind="@Task.Unit" /></td>
-            <td class="@CssClasses.Table.Td"><input  class="@CssClasses.Input.Number" type="number" @bind="@Task.Metadata.Quantity" /></td>
-            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number"  type="number" @bind="@Task.Metadata.PriceSubDB" /></td>
+            <td class="border border-slate-300 dark:border-slate-700 px-2 py-1"><input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="@Task.Metadata.Code" /></td>
+            <td class="border border-slate-300 dark:border-slate-700 px-2 py-1"><input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"  type="text" @bind="@Task.Name" /></td>
+            <td class="border border-slate-300 dark:border-slate-700 px-2 py-1"><input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="text" @bind="@Task.Unit" /></td>
+            <td class="border border-slate-300 dark:border-slate-700 px-2 py-1"><input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" @bind="@Task.Metadata.Quantity" /></td>
+            <td class="border border-slate-300 dark:border-slate-700 px-2 py-1"><input class="w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" @bind="@Task.Metadata.PriceSubDB" /></td>
         </tr>
         if (Task.Colspan)
         {
