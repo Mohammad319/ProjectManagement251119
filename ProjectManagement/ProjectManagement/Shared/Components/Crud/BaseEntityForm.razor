@@ -1,5 +1,4 @@
-﻿@using ProjectManagement.Shared.Constant
-@using Microsoft.AspNetCore.Components.Forms;
+﻿@using Microsoft.AspNetCore.Components.Forms;
 @inject MhdServices MHD
 
 <EditForm id="@FormId" class="@BodyCss" Model="@Model" OnValidSubmit="HandleSubmitAsync">
@@ -36,11 +35,11 @@
 
     // ستايل (اختياري)
     [Parameter] public string FormId { get; set; } = "baseEntityForm";
-    [Parameter] public string BodyCss { get; set; } = CssClasses.Modal.Body;
-    [Parameter] public string FooterCss { get; set; } = CssClasses.Modal.Footer;
+    [Parameter] public string BodyCss { get; set; } = "space-y-4 p-4 text-sm";
+    [Parameter] public string FooterCss { get; set; } = "mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700";
     [Parameter] public string FieldsWrapperCss { get; set; } = "flex flex-wrap items-center gap-4";
-    [Parameter] public string SaveButtonCss { get; set; } = CssClasses.Btn.Outline.Success;
-    [Parameter] public string CancelButtonCss { get; set; } = CssClasses.Btn.Outline.Secondary;
+    [Parameter] public string SaveButtonCss { get; set; } = "inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30";
+    [Parameter] public string CancelButtonCss { get; set; } = "inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800";
 
     // إلغاء (اختياري) - الافتراضي: إغلاق المودال
     [Parameter] public Func<Task>? OnCancel { get; set; }
