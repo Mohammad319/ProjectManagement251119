@@ -110,14 +110,14 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 md:grid-cols-2">
                 <label class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
-                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.PhoneNumberConfirmed" id="phoneConfirmed" />
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.PhoneNumberConfirmed" id="phoneConfirmed" />
                     <span>@ResourceIdentity.phoneNumberConfirmed</span>
                 </label>
 
                 <label class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
-                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.LockoutEnabled" id="lockoutEnabled" />
+                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.LockoutEnabled" id="lockoutEnabled" />
                     <span>@ResourceIdentity.logout</span>
                 </label>
             </div>

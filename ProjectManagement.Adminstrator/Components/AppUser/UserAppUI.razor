@@ -59,7 +59,7 @@
                                 <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">@(user.LockoutStart?.ToString("dd.MM.yyyy") ?? "—")</td>
                                 <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
                                     <div class="flex items-center gap-2">
-                                        <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium @(user.LockoutEnabled ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300")">
+                                        <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium @(user.LockoutEnabled ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:ring-amber-900/80" : "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:ring-emerald-900/80")">
                                             @(user.LockoutEnabled ? ResourceIdentity.logout : CalcResource.active)
                                         </span>
                                         <span>@(user.LockoutEnd?.ToString("dd.MM.yyyy") ?? "—")</span>
