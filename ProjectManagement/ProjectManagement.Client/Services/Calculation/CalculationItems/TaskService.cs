@@ -4,6 +4,7 @@ using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
+using ProjectManagement.Shared.DTO.Hub;
 using ProjectManagement.Shared.DTO.Project;
 
 namespace ProjectManagement.Client.Services.Calculation.CalculationItems
@@ -102,6 +103,23 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 if (tasks is null)
                     return;
                 calc.AddTasks(tasks);
+            }
+            else if (ot == OperationType.AddUpdateRange)
+            {
+                var tasks = obj.FromJsonWeb<List<TaskListMVVM>>();
+                if (tasks is null)
+                    return;
+
+                calc.AddTasks(tasks);
+            }
+            else if (ot == OperationType.Add)
+            {
+                var hubData = obj.FromJsonWeb<HubDataDto>();
+                var task = hubData?.GetData<TaskListMVVM>() ?? obj.FromJsonWeb<TaskListMVVM>();
+                if (task is null)
+                    return;
+
+                calc.AddTasks([task]);
             }
             else if (ot == OperationType.MoveRange)
             {
