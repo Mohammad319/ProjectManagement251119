@@ -1,7 +1,6 @@
 ﻿@using System
 @using System.Collections.Generic
 @using System.Linq
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using Microsoft.AspNetCore.Components
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
@@ -41,22 +40,22 @@ else
     {
         <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
             <!-- Header: logic + actions -->
-            <div class="@CsS.Layout.FlexJustifyBetween @CsS.Spacing.M.Bottom1">
+            <div class="flex items-center gap-1 justify-between mb-1">
                 <div class="text-sm">
                     <b>Logic:</b>
                     C↔R=@c.OptionResourceLogic,
                     C↔N=@c.OptionNumericLogic,
                     N↔R=@c.NumericResourceLogic
                 </div>
-                <div class="@CsS.Layout.FlexWrap">
+                <div class="flex flex-wrap gap-2">
                     @if (c.Assignments.Count > 0)
                     {
-                        <button class="@CsS.Btn.Outline.Primary" @onclick="() => ToggleResourceAssignments(c.Id)">
+                        <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="() => ToggleResourceAssignments(c.Id)">
                             Resource Assignments
                         </button>
                     }
-                    <button class="@CsS.Btn.Outline.Primary" @onclick="() => OnEdit.InvokeAsync(c.Id)">Edit</button>
-                    <button class="@CsS.Btn.Outline.Danger" @onclick="() => OnDelete.InvokeAsync(c.Id)">Delete</button>
+                    <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="() => OnEdit.InvokeAsync(c.Id)">Edit</button>
+                    <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="() => OnDelete.InvokeAsync(c.Id)">Delete</button>
                 </div>
             </div>
 
@@ -73,7 +72,7 @@ else
                     {
                         @foreach (var set in GroupBySetKey(c.OptionRules, r => r.GroupKey))
                         {
-                            <div class="@CsS.Spacing.M.Bottom1">
+                            <div class="mb-1">
                                 <div class="text-[11px] text-gray-600 dark:text-gray-300">
                                     SetKey=@set.Key (OR)
                                 </div>
@@ -101,7 +100,7 @@ else
                     {
                         @foreach (var set in GroupBySetKey(c.ResourceRules, r => r.GroupKey))
                         {
-                            <div class="@CsS.Spacing.M.Bottom1">
+                            <div class="mb-1">
                                 <div class="text-[11px] text-gray-600 dark:text-gray-300">
                                     SetKey=@set.Key (OR)
                                 </div>
@@ -129,7 +128,7 @@ else
                     {
                         @foreach (var set in GroupBySetKey(c.NumericRules, r => r.GroupKey))
                         {
-                            <div class="@CsS.Spacing.M.Bottom1">
+                            <div class="mb-1">
                                 <div class="text-[11px] text-gray-600 dark:text-gray-300">
                                     SetKey=@set.Key (OR)
                                 </div>

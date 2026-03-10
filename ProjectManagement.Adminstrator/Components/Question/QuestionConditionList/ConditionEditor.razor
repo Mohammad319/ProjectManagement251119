@@ -1,5 +1,4 @@
-﻿@using CsS = ProjectManagement.Shared.Constant.CssClasses
-@using Microsoft.AspNetCore.Components
+﻿@using Microsoft.AspNetCore.Components
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
 @using TaskResourceBlueprints.Services.QuestionConditions
@@ -20,32 +19,32 @@
     [Parameter] public Func<int, NumericBindVM, Task> OnDeleteNumeric { get; set; } = (_, _) => Task.CompletedTask;
 }
 
-<div class="@CsS.Grid.Col.MD3 @CsS.Spacing.M.Bottom1">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-1">
     <div>
-        <label class="@CsS.Form.Label">Choice ↔ Resource</label>
+        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Choice ↔ Resource</label>
         <InputSelect TValue="ConditionLogic"
                      @bind-Value="Condition.OptionResourceLogic"
-                     class="@CsS.Input.Select">
+                     class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
             <option value="And">AND</option>
             <option value="Or">OR</option>
         </InputSelect>
     </div>
 
     <div>
-        <label class="@CsS.Form.Label">Choice ↔ Numeric</label>
+        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Choice ↔ Numeric</label>
         <InputSelect TValue="ConditionLogic"
                      @bind-Value="Condition.OptionNumericLogic"
-                     class="@CsS.Input.Select">
+                     class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
             <option value="And">AND</option>
             <option value="Or">OR</option>
         </InputSelect>
     </div>
 
     <div>
-        <label class="@CsS.Form.Label">Numeric ↔ @ResourceLoc.resource</label>
+        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Numeric ↔ @ResourceLoc.resource</label>
         <InputSelect TValue="ConditionLogic"
                      @bind-Value="Condition.NumericResourceLogic"
-                     class="@CsS.Input.Select">
+                     class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
             <option value="And">AND</option>
             <option value="Or">OR</option>
         </InputSelect>

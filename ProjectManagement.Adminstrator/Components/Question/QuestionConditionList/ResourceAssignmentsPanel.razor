@@ -11,7 +11,6 @@
 @using ProjectManagement.Shared.Base.AppTenant
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.Enums
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 @code {
     [Parameter] public ConditionDefinition Condition { get; set; } = null!;
@@ -179,7 +178,7 @@
 }
 
 <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-    <div class="@CsS.Layout.FlexItemsCenter">
+    <div class="flex items-center gap-1">
         <h5 class="font-medium text-gray-800 dark:text-gray-100">Resource Assignments</h5>
     </div>
 
@@ -198,24 +197,24 @@
         @foreach (var a in Condition.Assignments)
         {
             <div class="mt-2 mb-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
-                <div class="@CsS.Grid.Col.MD12">
-                    <div class="@CsS.Grid.Span.MD3">
-                        <label class="@CsS.Form.Label">Resource</label>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                    <div class="md:col-span-3">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Resource</label>
                         <ResourceAutocomplete MinChars="2" PageSize="20"
                                               Value="a.ResourceId"
                                               ValueChanged="@(v => a.ResourceId = v ?? 0)"
                                               InitialName="@(a.Resource?.Name)" />
                     </div>
                     <div>
-                        <label class="@CsS.Form.Label">Factor1</label>
-                        <input type="number" class="@CsS.Input.Number" @bind="a.ChangeFactor1" />
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Factor1</label>
+                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.ChangeFactor1" />
                     </div>
                     <div>
-                        <label class="@CsS.Form.Label">Factor2</label>
-                        <input type="number" class="@CsS.Input.Number" @bind="a.ChangeFactor2" />
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Factor2</label>
+                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.ChangeFactor2" />
                     </div>
                     <div>
-                        <label class="@CsS.Form.Label">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">
                             @if (a.Resource?.ResType == ResourceTypesEnum.Materials)
                             {
                                 <span>@CalcResource.waste</span>
@@ -225,29 +224,29 @@
                                 <span>Cap</span>
                             }
                         </label>
-                        <input type="number" class="@CsS.Input.Number" @bind="a.CapWaste" />
+                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.CapWaste" />
                     </div>
                     <div>
-                        <label class="@CsS.Grid.Span.MD2 @CsS.Form.Label">@CalcResource.baseCost</label>
-                        <input type="number" class="@CsS.Input.Number" @bind="a.BaseCost" />
+                        <label class="md:col-span-2 block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.baseCost</label>
+                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.BaseCost" />
                     </div>
                     <div>
-                        <label class="@CsS.Grid.Span.MD2 @CsS.Form.Label">MenuId</label>
-                        <input type="number" class="@CsS.Input.Number" @bind="a.MenuId" />
+                        <label class="md:col-span-2 block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">MenuId</label>
+                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.MenuId" />
                     </div>
                     <div>
-                        <label class="@CsS.Form.Label">Active</label>
-                        <input type="checkbox" class="@CsS.Input.Switch" @bind="a.IsActive" />
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Active</label>
+                        <input type="checkbox" class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" @bind="a.IsActive" />
                     </div>
 
-                    <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
+                    <div class="md:col-span-2 place-self-end">
                         @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
                              a.Resource?.ResType == ResourceTypesEnum.Worker)
                         {
-                            <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole(a))">Add Role</button>
+                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="@(() => AddRole(a))">Add Role</button>
                         }
-                        <button class="@CsS.Btn.Outline.Primary" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">+</button>
-                        <button class="@CsS.Btn.Outline.Danger" @onclick="() => RemoveAssignment(a)">x</button>
+                        <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">+</button>
+                        <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="() => RemoveAssignment(a)">x</button>
                     </div>
                 </div>
 
@@ -255,7 +254,7 @@
                      a.Resource?.ResType == ResourceTypesEnum.Worker)
                 {
                     <div class="mt-2 rounded-lg border border-gray-100 bg-white/70 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                        <div class="@CsS.Layout.Inline">
+                        <div class="inline-flex gap-2">
                             <div></div>
                             <div>@AppControll.min</div>
                             <div>@AppControll.max</div>
@@ -270,18 +269,18 @@
                                 var index = i;
                                 var role = a.CapacityRoles[index];
 
-                                <div class="@CsS.Layout.Inline">
+                                <div class="inline-flex gap-2">
                                     <div class="flex items-center">
                                         <button type="button" title="Remove"
-                                                class="@CsS.Btn.Outline.Danger h-6 w-6 p-0 flex items-center justify-center"
+                                                class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white h-6 w-6 p-0 flex items-center justify-center"
                                                 @onclick="() => a.CapacityRoles.Remove(role)">
                                             x
                                         </button>
                                     </div>
 
-                                    <input type="number" class="@CsS.Input.Number" @bind="role.Min" />
-                                    <input type="number" class="@CsS.Input.Number" @bind="role.Max" />
-                                    <input type="number" class="@CsS.Input.Number" @bind="role.Value" />
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="role.Min" />
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="role.Max" />
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="role.Value" />
 
                                     <div class="text-xs text-gray-500 dark:text-gray-400">@(index + 1)</div>
                                 </div>
@@ -293,13 +292,13 @@
                 @if (a.Expressions is not null && a.Expressions.Count > 0)
                 {
                     <div class="mt-2 font-medium text-gray-800 dark:text-gray-100">Formulas</div>
-                    <div class="@CsS.Grid.Col.MD4 @CsS.Spacing.M.Bottom2">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
                         @for (int i = 0; i < a.Expressions.Count; i++)
                         {
                             var index = i;
-                            <div class="@CsS.Layout.FlexItemsCenter">
-                                <button class="@CsS.Btn.Outline.Danger" @onclick="() => a.Expressions.RemoveAt(index)">x</button>
-                                <input type="text" class="@CsS.Input.Text" @bind="a.Expressions[index]" />
+                            <div class="flex items-center gap-1">
+                                <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="() => a.Expressions.RemoveAt(index)">x</button>
+                                <input type="text" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.Expressions[index]" />
                             </div>
                         }
                     </div>
@@ -310,9 +309,9 @@
                         <div class="text-gray-800 dark:text-gray-100">Bindings Equation</div>
                         @if (CanAddBindingsFor(a))
                         {
-                            <div class="@CsS.Layout.FlexWrap">
-                                <button class="@CsS.Btn.Outline.Primary" @onclick="() => AddOptionBindingUI(a.Id)">Add Choice Binding</button>
-                                <button class="@CsS.Btn.Outline.Primary" @onclick="() => AddNumericBindingUI(a.Id)">Add Numeric Binding</button>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="() => AddOptionBindingUI(a.Id)">Add Choice Binding</button>
+                                <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="() => AddNumericBindingUI(a.Id)">Add Numeric Binding</button>
                             </div>
                         }
                         else
@@ -323,13 +322,13 @@
 
                     @if (OptBindsByRA.TryGetValue(a.Id, out var obList) && obList.Count > 0)
                     {
-                        <div class="@CsS.Spacing.M.Top1">
+                        <div class="mt-1">
                             @foreach (var b in obList)
                             {
                                 <section class="mb-1 rounded-lg border border-gray-100 bg-white/70 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                                    <div class="@CsS.Layout.FlexJustifyBetween">
-                                        <div class="@CsS.Layout.Inline">
-                                            <select class="@CsS.Input.Select"
+                                    <div class="flex items-center gap-1 justify-between">
+                                        <div class="inline-flex gap-2">
+                                            <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                                                     value="@b.ChoiceGroupId"
                                                     aria-label="Choice group"
                                                     @onchange="e => OnOptionGroupChanged(b, e)">
@@ -340,7 +339,7 @@
                                                 }
                                             </select>
 
-                                            <select class="@CsS.Input.Select" @bind="b.ChoiceOptionId" aria-label="Choice option">
+                                            <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="b.ChoiceOptionId" aria-label="Choice option">
                                                 <option value="0">-- select --</option>
                                                 @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
                                                 {
@@ -349,19 +348,19 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <button class="@CsS.Btn.Outline.Primary" title="Save binding" @onclick="async () => await OnSaveOption(a.Id, b)">Save</button>
-                                            <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddOptionEq(b)">Add Equation</button>
-                                            <button class="@CsS.Btn.Outline.Danger" title="Delete binding" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">Delete</button>
+                                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" title="Save binding" @onclick="async () => await OnSaveOption(a.Id, b)">Save</button>
+                                            <button class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white" title="Add equation line" @onclick="() => AddOptionEq(b)">Add Equation</button>
+                                            <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="Delete binding" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">Delete</button>
                                         </div>
                                     </div>
 
                                     @if (b.LastError is not null)
                                     {
-                                        <div class="@CsS.Text.Error">⚠ @b.LastError</div>
+                                        <div class="mt-1 text-xs text-rose-600">⚠ @b.LastError</div>
                                     }
                                     @if (b.SavedOk)
                                     {
-                                        <div class="@CsS.Text.Success">✓ Saved</div>
+                                        <div class="text-green-600 dark:text-green-400">✓ Saved</div>
                                     }
 
                                     @if (b.Formulas.Count == 0)
@@ -370,13 +369,13 @@
                                     }
                                     else
                                     {
-                                        <div class="@CsS.Grid.Col.MD3">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                                             @for (int i = 0; i < b.Formulas.Count; i++)
                                             {
                                                 var idx = i;
-                                                <div class="@CsS.Layout.FlexItemsCenter">
-                                                    <input class="@CsS.Input.Text" placeholder="expr…" aria-label="Equation" @bind="b.Formulas[idx]" />
-                                                    <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
+                                                <div class="flex items-center gap-1">
+                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" placeholder="expr…" aria-label="Equation" @bind="b.Formulas[idx]" />
+                                                    <button class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white p-2"
                                                             title="Remove this equation"
                                                             @onclick="() => RemoveOptionEq(b, idx)">✕</button>
                                                 </div>
@@ -390,7 +389,7 @@
 
                     @if (NumBindsByRA.TryGetValue(a.Id, out var nbList) && nbList.Count > 0)
                     {
-                        <div class="@CsS.Spacing.M.Top4">
+                        <div class="mt-4">
                             <div class="mb-2 flex items-center gap-1 font-semibold text-sm">
                                 <div class="text-[12px] uppercase text-gray-600 dark:text-gray-300">Numeric Bindings</div>
                                 <span class="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-black dark:bg-gray-700 dark:text-white">@nbList.Count</span>
@@ -399,10 +398,10 @@
                             @foreach (var b in nbList)
                             {
                                 <section class="mb-3 rounded-lg border border-gray-100 bg-white/70 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                                    <div class="@CsS.Layout.FlexJustifyBetween">
-                                        <div class="@CsS.Layout.Inline">
+                                    <div class="flex items-center gap-1 justify-between">
+                                        <div class="inline-flex gap-2">
                                             <div>
-                                                <select class="@CsS.Input.Select" @bind="b.NumericId" aria-label="Numeric group">
+                                                <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="b.NumericId" aria-label="Numeric group">
                                                     <option value="0">-- select --</option>
                                                     @foreach (var ng in TaskNumericGroups)
                                                     {
@@ -411,16 +410,16 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <input type="number" class="@CsS.Input.Number" @bind="b.InputMinValue" placeholder="Min" />
+                                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="b.InputMinValue" placeholder="Min" />
                                             </div>
                                             <div>
-                                                <input type="number" class="@CsS.Input.Number" @bind="b.InputMaxValue" placeholder="Max" />
+                                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="b.InputMaxValue" placeholder="Max" />
                                             </div>
                                         </div>
                                         <div>
-                                            <button class="@CsS.Btn.Outline.Primary" title="Save numeric binding" @onclick="async () => await OnSaveNumeric(a.Id, b)">Save</button>
-                                            <button class="@CsS.Btn.Outline.Success" title="Add equation line" @onclick="() => AddNumericEq(b)">Add Equation</button>
-                                            <button class="@CsS.Btn.Outline.Danger" title="Delete numeric binding" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">Delete</button>
+                                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" title="Save numeric binding" @onclick="async () => await OnSaveNumeric(a.Id, b)">Save</button>
+                                            <button class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white" title="Add equation line" @onclick="() => AddNumericEq(b)">Add Equation</button>
+                                            <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="Delete numeric binding" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">Delete</button>
                                         </div>
                                     </div>
 
@@ -430,13 +429,13 @@
                                     }
                                     else
                                     {
-                                        <div class="@CsS.Grid.Col.MD3">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                                             @for (int i = 0; i < b.Formulas.Count; i++)
                                             {
                                                 var idx = i;
-                                                <div class="@CsS.Layout.Inline">
-                                                    <input class="@CsS.Input.Text" placeholder="expr…" aria-label="Equation" @bind="b.Formulas[idx]" />
-                                                    <button class="@CsS.Btn.Outline.Secondary @CsS.Spacing.P.All2"
+                                                <div class="inline-flex gap-2">
+                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" placeholder="expr…" aria-label="Equation" @bind="b.Formulas[idx]" />
+                                                    <button class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white p-2"
                                                             title="Remove this equation"
                                                             @onclick="() => RemoveNumericEq(b, idx)">✕</button>
                                                 </div>
@@ -446,11 +445,11 @@
 
                                     @if (b.LastError is not null)
                                     {
-                                        <div class="@CsS.Text.Error">⚠ @b.LastError</div>
+                                        <div class="mt-1 text-xs text-rose-600">⚠ @b.LastError</div>
                                     }
                                     @if (b.SavedOk)
                                     {
-                                        <div class="@CsS.Text.Success">✓ Saved</div>
+                                        <div class="text-green-600 dark:text-green-400">✓ Saved</div>
                                     }
                                 </section>
                             }
