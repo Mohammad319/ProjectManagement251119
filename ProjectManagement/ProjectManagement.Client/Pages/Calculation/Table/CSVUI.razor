@@ -7,61 +7,61 @@
 @using System.IO
 @inherits AppComponentBase
 
-<div class="@CssClasses.Modal.Body" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
-    <div class="@CssClasses.Grid.Col.MD4">
+<div class="space-y-0 " style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
         @if (SheetIsVisible)
         {
             <div>
                 <label for="floatingInputGrid">Sheet Nr:</label>
-                <input type="number" class="@CssClasses.Input.Number" @bind="SheetNr">
+                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="SheetNr">
             </div>   
         }
         <div>
             <label for="floatingInputGrid">@ResourceApp.StartFromRow:</label>
-            <input type="number" class="@CssClasses.Input.Number" placeholder="@ResourceApp.StartFromRow" @bind="RowStart" />
+            <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" placeholder="@ResourceApp.StartFromRow" @bind="RowStart" />
         </div>
         <div>
-            <div class="@CssClasses.Layout.FlexItemsCenter @CssClasses.Spacing.M.All5">
+            <div class="flex items-center gap-1 m-5">
                 <InputFile type="file"  OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)"></InputFile>
                 @if (workbook != null)
                 {
-                    <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="Import" disabled="@wait">@ResourceApp.import</button>
+                    <button class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 mx-1" @onclick="Import" disabled="@wait">@ResourceApp.import</button>
                 }
                 @if (Sections != null && Sections.Any())
                 {
-                    <button class="@CssClasses.Btn.Solid.Primary mx-1" @onclick="Save" disabled="@wait">@ResourceApp.save</button>
+                    <button class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 mx-1" @onclick="Save" disabled="@wait">@ResourceApp.save</button>
                 }
             </div>
         </div>
     </div>
     <div>
-        <table class="@CssClasses.Table.Tab">
-            <thead class="@CssClasses.Table.Thead">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+            <thead class="bg-gray-100 dark:bg-gray-700">
                 <tr>
-                    <th class="@CssClasses.Table.TH" width="80"></th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="CodeIndex" />
+                    <th class="p-1 text-left text-sm font-semibold" width="80"></th>
+                    <th class="p-1 text-left text-sm font-semibold">
+                        <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="number" style="width:45px;" @bind="CodeIndex" />
                         <span>@CalcResource.code</span>
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="NameIndex" />
+                    <th class="p-1 text-left text-sm font-semibold">
+                        <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="number" style="width:45px;" @bind="NameIndex" />
                         @CalcResource.name
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:60px;" @bind="UnitIndex" />
+                    <th class="p-1 text-left text-sm font-semibold">
+                        <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="number" style="width:60px;" @bind="UnitIndex" />
                         @CalcResource.unit
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="QuantityIndex" />
+                    <th class="p-1 text-left text-sm font-semibold">
+                        <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="number" style="width:45px;" @bind="QuantityIndex" />
                         @CalcResource.quantity
                     </th>
-                    <th class="@CssClasses.Table.TH">
-                        <input class="@CssClasses.Input.Number" type="number" style="width:45px;" @bind="PriceIndex" />
+                    <th class="p-1 text-left text-sm font-semibold">
+                        <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="number" style="width:45px;" @bind="PriceIndex" />
                         @CalcResource.price
                     </th>
                 </tr>
             </thead>
-            <tbody class="@CssClasses.Table.TBody">
+            <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
                 @if (Sections != null && Sections.Any())
                 {
                     @foreach (var Task in Sections)
@@ -77,8 +77,8 @@
 @code {
     RenderFragment TaskRow(TaskPostDTO Task, int left = 0) => __builder =>
     {
-        <tr class="@(left == 0 ? "task" : "subTask") @CssClasses.Table.Tr">
-            <td class="@CssClasses.Table.Td">
+        <tr class="@((left == 0 ? "task" : "subTask") + " p-2 hover:bg-gray-100 dark:hover:bg-gray-800")">
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">
                 <span style="margin-left:@(left + "px")" @onclick="() => Sections!.Remove(Task)" role="button">@((MarkupString)Icons.Delete)</span>
                 @if (Task.Tasks.Any())
                 {
@@ -87,11 +87,11 @@
                     </span>
                     }
             </td>
-            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number" type="text" @bind="@Task.Metadata.Code" /></td>
-            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number"  type="text" @bind="@Task.Name" /></td>
-            <td class="@CssClasses.Table.Td"><input  class="@CssClasses.Table.Td" type="text" @bind="@Task.Unit" /></td>
-            <td class="@CssClasses.Table.Td"><input  class="@CssClasses.Input.Number" type="number" @bind="@Task.Metadata.Quantity" /></td>
-            <td class="@CssClasses.Table.Td"><input class="@CssClasses.Input.Number"  type="number" @bind="@Task.Metadata.PriceSubDB" /></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="text" @bind="@Task.Metadata.Code" /></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"  type="text" @bind="@Task.Name" /></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input  class="p-1 text-sm text-gray-800 dark:text-gray-300" type="text" @bind="@Task.Unit" /></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input  class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="number" @bind="@Task.Metadata.Quantity" /></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"  type="number" @bind="@Task.Metadata.PriceSubDB" /></td>
         </tr>
         if (Task.Colspan)
         {

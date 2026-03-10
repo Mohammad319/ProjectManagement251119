@@ -11,13 +11,13 @@
 
 @if (Income is not null)
 {
-    <EditForm id="myForm" class="@CssClasses.Modal.Body" Model="@Income" OnValidSubmit="HandleSubmitAsync">
-        <div class="@CssClasses.Grid.Col.MD3">
+    <EditForm id="myForm" class="space-y-0 " Model="@Income" OnValidSubmit="HandleSubmitAsync">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             @if (Companies is not null)
             {
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
-                    <select class="@CssClasses.Input.Text" @onchange="OnChangeCompany">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
+                    <select class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @onchange="OnChangeCompany">
                         <option value="" selected></option>
                         @foreach (var cat in Companies)
                         {
@@ -27,19 +27,19 @@
                 </div>
             }
 
-            <div class="@CssClasses.Grid.Span.MD2">
-                <label class="@CssClasses.Form.Label">@CalcResource.note</label>
-                <InputTextArea @bind-Value="Income.Note" class="@CssClasses.Input.Text" />
+            <div class="md:col-span-2">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.note</label>
+                <InputTextArea @bind-Value="Income.Note" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => Income.Note)" />
             </div>
         </div>
     </EditForm>
 
-    <div class="@CssClasses.Modal.Footer">
-        <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myForm" disabled="@Loading">
+    <div class="mt-1 flex justify-end gap-1">
+        <button type="submit" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white " form="myForm" disabled="@Loading">
             @ResourceApp.save
         </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="() => Callback.InvokeAsync(false)">
+        <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white " @onclick="() => Callback.InvokeAsync(false)">
             @ResourceApp.cancel
         </button>
     </div>

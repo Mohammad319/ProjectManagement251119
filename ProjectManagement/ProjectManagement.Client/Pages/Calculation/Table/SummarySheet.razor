@@ -146,7 +146,7 @@
                                                             class="inline-flex items-center justify-center rounded p-0.5 transition"
                                                             title="@ResourceApp._lock"
                                                             @onclick="() => { EarningOnChange = true; factors.IsLocked = !factors.IsLocked; }">
-                                                        <span class="text-[10px] @CssClasses.Btn.Span" style="color:@(Template?.SummarySheet?.Color?.Text);">
+                                                        <span class="text-[10px] @("text-sm md:text-base text-gray-600 dark:text-gray-300 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer")" style="color:@(Template?.SummarySheet?.Color?.Text);">
                                                             @((MarkupString)Icons.IsLocked(factors.IsLocked))
                                                         </span>
                                                     </button>

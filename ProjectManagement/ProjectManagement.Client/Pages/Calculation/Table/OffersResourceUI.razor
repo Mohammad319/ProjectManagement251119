@@ -1,23 +1,23 @@
 ﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
 @inherits AppComponentBase
-<table class="@CssClasses.Table.Tab">
-    <thead class="@CssClasses.Table.Thead">
+<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+    <thead class="bg-gray-100 dark:bg-gray-700">
         <tr>
-            <th class="@CssClasses.Table.TH"></th>
-            <th class="@CssClasses.Table.TH">@CalcResource.cost</th>
-            <th class="@CssClasses.Table.TH">@CalcResource.baseCost</th>
-            <th class="@CssClasses.Table.TH">@ResourceApp.date</th>
-            <th class="@CssClasses.Table.TH">@CalcResource.note</th>
+            <th class="p-1 text-left text-sm font-semibold"></th>
+            <th class="p-1 text-left text-sm font-semibold">@CalcResource.cost</th>
+            <th class="p-1 text-left text-sm font-semibold">@CalcResource.baseCost</th>
+            <th class="p-1 text-left text-sm font-semibold">@ResourceApp.date</th>
+            <th class="p-1 text-left text-sm font-semibold">@CalcResource.note</th>
         </tr>
     </thead>
-    <tbody class="@CssClasses.Table.TBody">
+    <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
         @foreach (var offer in Resource?.Offers ?? [])
         {
-            <tr class="@CssClasses.Table.Tr">
-                <td class="@CssClasses.Table.Td">@offer.BaseCost</td>
-                <td class="@CssClasses.Table.Td">@offer.Cost</td>
-                <td class="@CssClasses.Table.Td">@offer.Date</td>
-                <td class="@CssClasses.Table.Td">@offer.Comment</td>
+            <tr class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
+                <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@offer.BaseCost</td>
+                <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@offer.Cost</td>
+                <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@offer.Date</td>
+                <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@offer.Comment</td>
             </tr>
         }
     </tbody>

@@ -5,33 +5,33 @@
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 
-<div class="@CssClasses.Modal.Body">
+<div class="space-y-0 ">
     @if (Form != null)
     {
         <ShareCalculationFormUI ListShareCalc="Form" CalculationId="ListCalculation.Id" Callback="FormCallBack"></ShareCalculationFormUI>
     }
     else
     {
-        <div class="@CssClasses.Layout.Container">
-            <div class="@($"{CssClasses.Layout.FlexWrap} {CssClasses.Spacing.M.Top1}")">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap gap-2 mt-1">
                 @if (Departments != null)
                 {
                     @if (page == 0)
                     {
                         foreach (var item in Departments)
                         {
-                            <div class="@CssClasses.Spacing.M.Bottom1">
-                                <div class="@CssClasses.Layout.FlexItemsCenter">
+                            <div class="mb-1">
+                                <div class="flex items-center gap-1">
                                     <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                                        <div class="@CssClasses.Layout.FlexItemsCenter">
-                                            <button class="@CssClasses.Btn.Outline.Primary"
+                                        <div class="flex items-center gap-1">
+                                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white "
                                                     @onclick="async () => await GetUsersAsync(item)">
                                                 @ResourceIdentity.addUser
                                             </button>
 
-                                            <div class="@CssClasses.Spacing.M.Left1">
+                                            <div class="ml-1">
                                                 <button disabled="@(list.Any(x => x.DepartmentId == item.Id))"
-                                                        class="@CssClasses.Btn.Outline.Primary"
+                                                        class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white "
                                                         @onclick=" ()=> Form = new ListShareCalcDTO(){DepartmentId = item.Id, Department = item.Name}">
                                                     @((MarkupString)Icons.Plus)
                                                 </button>
@@ -39,7 +39,7 @@
                                         </div>
                                     </AuthorizeView>
 
-                                    <span class="@CssClasses.Spacing.M.Left1 @CssClasses.Text.Secondary">
+                                    <span class="ml-1 text-gray-600 dark:text-gray-300">
                                         @item.Name
                                     </span>
                                 </div>
@@ -49,19 +49,19 @@
 
                     @if (Users != null && page == 1)
                     {
-                        <div class="@CssClasses.Spacing.M.Bottom1">
-                            <button class="@CssClasses.Btn.Solid.Warning" @onclick="() => page = 0">
+                        <div class="mb-1">
+                            <button class="px-2 py-1 bg-yellow-400 text-black rounded hover:bg-yellow-500 dark:bg-yellow-500 dark:text-black" @onclick="() => page = 0">
                                 @ResourceApp.department
                             </button>
                         </div>
 
                         @foreach (var user in Users)
                         {
-                            <div class="@CssClasses.Spacing.M.Bottom1">
-                                <div class="@CssClasses.Layout.FlexItemsCenter">
+                            <div class="mb-1">
+                                <div class="flex items-center gap-1">
                                     <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                                         <button disabled="@(list.Any(x => x.UserId == user.Id))"
-                                                class="@CssClasses.Btn.Solid.Primary"
+                                                class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500"
                                                 @onclick=" ()=> Form = new ListShareCalcDTO(){
                                                 DepartmentId = DepartmentSelected?.Id ?? 0,
                                                                             Department = DepartmentSelected?.Name ?? string.Empty,
@@ -72,7 +72,7 @@
                                                                   </button>
                                                               </AuthorizeView>
 
-                                <span class="@CssClasses.Spacing.M.Left1 @CssClasses.Text.Secondary">
+                                <span class="ml-1 text-gray-600 dark:text-gray-300">
                                     @user.Name
                                 </span>
                             </div>
@@ -84,29 +84,29 @@
     </div>
 
 
-        <table class="@CssClasses.Table.Tab">
-            <thead class ="@CssClasses.Table.Thead">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+            <thead class ="@("bg-gray-100 dark:bg-gray-700")">
                 <tr>
                     <th></th>
-                    <th class="@CssClasses.Table.TH">@ResourceApp.department</th>
-                    <th class="@CssClasses.Table.TH">@ResourceIdentity.User</th>
-                    <th class="@CssClasses.Table.TH">@CalcResource.netCal</th>
-                    <th class="@CssClasses.Table.TH">@CalcResource.overheadCosts</th>
-                    <th class="@CssClasses.Table.TH">@ResourceLoc.summarySheet</th>
-                    <th class="@CssClasses.Table.TH">@ResourceLoc.opportunitiesRisks</th>
-                    <th class="@CssClasses.Table.TH">@ResourceLoc.offer</th>
-                    <th class="@CssClasses.Table.TH">@ResourceLoc.selfInspection</th>
+                    <th class="p-1 text-left text-sm font-semibold">@ResourceApp.department</th>
+                    <th class="p-1 text-left text-sm font-semibold">@ResourceIdentity.User</th>
+                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.netCal</th>
+                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.overheadCosts</th>
+                    <th class="p-1 text-left text-sm font-semibold">@ResourceLoc.summarySheet</th>
+                    <th class="p-1 text-left text-sm font-semibold">@ResourceLoc.opportunitiesRisks</th>
+                    <th class="p-1 text-left text-sm font-semibold">@ResourceLoc.offer</th>
+                    <th class="p-1 text-left text-sm font-semibold">@ResourceLoc.selfInspection</th>
                 </tr>
             </thead>
-            <tbody class="@CssClasses.Table.TBody">
+            <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
                 @if (list != null)
                     foreach (var project in Enumerable.Reverse(list))
                     {
                         <tr>
                             <td>
                                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                                    <button class="@CssClasses.Btn.Solid.Primary" @onclick="()=>Form = project">@Icons.Edit</button>
-                                    <button class="@CssClasses.Btn.Solid.Danger" @onclick="()=> Remove(project)">@((MarkupString)@Icons.DeleteSVG)</button>
+                                    <button class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500" @onclick="()=>Form = project">@Icons.Edit</button>
+                                    <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500" @onclick="()=> Remove(project)">@((MarkupString)@Icons.DeleteSVG)</button>
 
                                 </AuthorizeView>
                             </td>

@@ -11,36 +11,36 @@
 @inject FolderState Container
 @inject CalculationService CalcService
 
-<div class="@CssClasses.Layout.WideContainer">
-    <div class="@CssClasses.Grid.Col.MD4">
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+<div class="container mx-auto px-4 max-w-7xl">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
+            <div class="w-full h-full">
                 <ChartComponent ChartJsConfig="NetCostTotalyPieCfg" />
             </div>
         </div>
 
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
+            <div class="w-full h-full">
                 <ChartComponent ChartJsConfig="NetCostTotalyOHPieCfg" />
             </div>
         </div>
 
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
+            <div class="w-full h-full">
                 <ChartComponent ChartJsConfig="EVCfg" />
             </div>
         </div>
 
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
+            <div class="w-full h-full">
                 <ChartComponent ChartJsConfig="SumPieCfg" />
             </div>
         </div>
     </div>
 
-    <div class="@CssClasses.Spacing.M.Top1">
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+    <div class="mt-1">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-3">
+            <div class="w-full h-full">
                 <ChartComponent ChartJsConfig="BarCfg" />
             </div>
         </div>

@@ -3,60 +3,60 @@
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 
-<EditForm class="@CssClasses.Modal.Body" Model="@Post" OnValidSubmit="async () => await HandleSubmitAsync()" id="custForm">
+<EditForm class="space-y-0 " Model="@Post" OnValidSubmit="async () => await HandleSubmitAsync()" id="custForm">
     <DataAnnotationsValidator />
-    <div class="@CssClasses.Grid.Col.MD4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
 
         <div>
-            <label class="@CssClasses.Form.Label">@ResourceLoc.opportunitiesRisks:</label>
-            <InputText class="@CssClasses.Input.Text" @bind-Value="@Post.OpportunitiesRisks" />
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.opportunitiesRisks:</label>
+            <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@Post.OpportunitiesRisks" />
             <ValidationMessage For="@(() => Post.OpportunitiesRisks)" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.risk:</label>
-            <InputText class="@CssClasses.Input.Text" @bind-Value="@Post.OpportunityType" />
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.risk:</label>
+            <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@Post.OpportunityType" />
             <ValidationMessage For="@(() => Post.OpportunityType)" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@ResourceLoc.probabilityWorth:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.ProbabilityWorth" />
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.probabilityWorth:</label>
+            <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@Post.Metadata.ProbabilityWorth" />
             <ValidationMessage For="@(() => Post.Metadata.ProbabilityWorth)" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@ResourceLoc.probability:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.ProbabilityPercent" />
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.probability:</label>
+            <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@Post.Metadata.ProbabilityPercent" />
             <ValidationMessage For="@(() => Post.Metadata.ProbabilityPercent)" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@ResourceLoc.probabilityBest:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.ProbabilityBest" />
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.probabilityBest:</label>
+            <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@Post.Metadata.ProbabilityBest" />
             <ValidationMessage For="@(() => Post.Metadata.ProbabilityBest)" />
         </div>
 
         <div>
-            <label class="@CssClasses.Form.Label">@ResourceLoc.value:</label>
-            <InputNumber class="@CssClasses.Input.Number" @bind-Value="@Post.Metadata.Value" />
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.value:</label>
+            <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@Post.Metadata.Value" />
             <ValidationMessage For="@(() => Post.Metadata.Value)" />
         </div>
 
-        <div class="@CssClasses.Grid.Span.MD2">
-            <label class="@CssClasses.Form.Label">@CalcResource.note:</label>
-            <InputTextArea class="@CssClasses.Input.Text" @bind-Value="@Post.Metadata.Comment" />
+        <div class="md:col-span-2">
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.note:</label>
+            <InputTextArea class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@Post.Metadata.Comment" />
             <ValidationMessage For="@(() => Post.Metadata.Comment)" />
         </div>
 
     </div>
 
     </EditForm>
-<div class="@CssClasses.Modal.Footer">
-        <button type="submit" form="custForm" class="@CssClasses.Btn.Outline.Success" disabled="@IsLoading">
+<div class="mt-1 flex justify-end gap-1">
+        <button type="submit" form="custForm" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white " disabled="@IsLoading">
             @ResourceApp.save
         </button>
-        <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick=" Modal.Close">@ResourceApp.cancel</button>
+        <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white " data-dismiss="modal" @onclick=" Modal.Close">@ResourceApp.cancel</button>
     </div>
 
 
