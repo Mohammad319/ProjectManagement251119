@@ -98,7 +98,7 @@
                                 <!-- Left buttons (fixed) -->
                                 <div class="flex items-center gap-1 shrink-0">
                                     <button type="button"
-                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-gray-300 text-gray-600 hover:bg-gray-100 hover:ring-1 hover:ring-gray-300 dark:border-gray-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:ring-gray-500 !px-1 !py-0.5 text-[11px]"
                                             disabled="@isFirst"
                                             title="Move to top"
                                             @onclick="() => MoveToTop(col)">
@@ -106,7 +106,7 @@
                                     </button>
 
                                     <button type="button"
-                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-gray-300 text-gray-600 hover:bg-gray-100 hover:ring-1 hover:ring-gray-300 dark:border-gray-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:ring-gray-500 !px-1 !py-0.5 text-[11px]"
                                             disabled="@isFirst"
                                             title="Move up"
                                             @onclick="() => MoveUp(col)">
@@ -124,7 +124,7 @@
                                 <!-- Right buttons (fixed) -->
                                 <div class="flex items-center gap-1 shrink-0">
                                     <button type="button"
-                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-gray-300 text-gray-600 hover:bg-gray-100 hover:ring-1 hover:ring-gray-300 dark:border-gray-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:ring-gray-500 !px-1 !py-0.5 text-[11px]"
                                             disabled="@isLast"
                                             title="Move down"
                                             @onclick="() => MoveDown(col)">
@@ -132,7 +132,7 @@
                                     </button>
 
                                     <button type="button"
-                                            class="@CssClasses.Btn.IconButton.Secondary !px-1 !py-0.5 text-[11px]"
+                                            class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-gray-300 text-gray-600 hover:bg-gray-100 hover:ring-1 hover:ring-gray-300 dark:border-gray-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:ring-gray-500 !px-1 !py-0.5 text-[11px]"
                                             disabled="@isLast"
                                             title="Move to bottom"
                                             @onclick="() => MoveToBottom(col)">
@@ -153,7 +153,7 @@
 
                                 <!-- Freeze -->
                                 <button type="button"
-                                        class="@CssClasses.Btn.IconButton.Danger !px-2 !py-1 text-[11px]"
+                                        class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-red-300 text-red-600 hover:bg-red-100 hover:ring-1 hover:ring-red-300 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40 dark:hover:ring-red-500 !px-2 !py-1 text-[11px]"
                                         title="Freeze column"
                                         @onclick="() => col.Frozen = !col.Frozen">
                                     @(col.Frozen ? "📍" : "📌")
@@ -161,7 +161,7 @@
 
                                 <!-- Hide -->
                                 <button type="button"
-                                        class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
+                                        class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-blue-300 text-blue-600 hover:bg-blue-100 hover:ring-1 hover:ring-blue-300 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40 dark:hover:ring-blue-500 !px-2 !py-1 text-[11px]"
                                         title="Hide column"
                                         @onclick="async () => await RemoveAsync(col)">
                                     <span>@((MarkupString)Icons.ChevronRight)</span>
@@ -202,7 +202,7 @@
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                                 <td class="text-center align-middle">
                                     <button type="button"
-                                            class="@CssClasses.Btn.IconButton.Primary !px-2 !py-1 text-[11px]"
+                                            class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-blue-300 text-blue-600 hover:bg-blue-100 hover:ring-1 hover:ring-blue-300 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40 dark:hover:ring-blue-500 !px-2 !py-1 text-[11px]"
                                             title="Show column"
                                             @onclick="async () => await AddAsync(id)">
                                         <span>@((MarkupString)Icons.ChevronLeft)</span>
@@ -230,7 +230,7 @@
                         <td class="py-1 pr-2 align-middle">@AppFormatResource.borderType</td>
                         <td class="py-1 align-middle">
                             <select @bind="Temp.NetCalc.Color.BorderStyle"
-                                    class="@CssClasses.Input.Select w-full text-[11px]">
+                                    class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600 w-full text-[11px]">
                                 @foreach (var item in TemplateConst.BorderStyles)
                                 {
                                     <option value="@item">@item</option>
