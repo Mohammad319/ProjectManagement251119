@@ -54,16 +54,23 @@ namespace ProjectManagement.SignalR
         public override Task OnConnectedAsync()
         {
             var isAuth = Context.User?.Identity?.IsAuthenticated == true;
-            var tenant = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value;
-            Console.WriteLine($"[Hub] Connected. IsAuth={isAuth}, TenantClaim={tenant ?? "null"}");
+            var tenant = GetTenantId();
+            Console.WriteLine($"[Hub] Connected. IsAuth={isAuth}, TenantClaim={tenant?.ToString() ?? "null"}");
             return base.OnConnectedAsync();
         }
 
         [HubMethodName("AddToGroup")]
         public async Task AddToGroup(int id, CancellationToken ct = default)
         {
-            if (id <= 0 || currentTenant.TenantId <= 0)
+            if (id <= 0)
                 return;
+
+            var tenantId = GetTenantId();
+            if (tenantId is null or <= 0)
+                return;
+
+            if (currentTenant is TenantContext mutableTenant && mutableTenant.TenantId <= 0)
+                mutableTenant.TenantId = tenantId.Value;
 
             await using var db = await dbFactory.CreateDbContextAsync(ct);
             var calculationExists = await db.Calculations
@@ -75,8 +82,19 @@ namespace ProjectManagement.SignalR
 
             await Groups.AddToGroupAsync(
                 Context.ConnectionId,
-                NotificationGroupNames.ForCalculation(currentTenant.TenantId, id),
+                NotificationGroupNames.ForCalculation(tenantId.Value, id),
                 ct);
+        }
+
+        private int? GetTenantId()
+        {
+            if (currentTenant.TenantId > 0)
+                return currentTenant.TenantId;
+
+            var claim = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value;
+            return int.TryParse(claim, out var tenantId) && tenantId > 0
+                ? tenantId
+                : null;
         }
     }
 }
