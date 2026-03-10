@@ -45,7 +45,7 @@ namespace ProjectManagement.Client.Pages.Calculation
         }
 
         private async Task AddToGroup()
-            => await hubConnection?.InvokeAsync("AddToGroup", Calc.Id)!;
+            => await hubConnection?.SendAsync("AddToGroup", Calc.Id)!;
 
         void OnHubEvent(ObjectTypHub typ, OperationType ot, object obj)
         {

@@ -34,21 +34,15 @@ public sealed class TenantContextHubFilter : IHubFilter
         if (tenant.TenantId > 0) return;
         if (user?.Identity?.IsAuthenticated != true) return;
 
-        tenant.TenantId = GetIntClaim(user, PMClaimsConst.Tenant, "TenantID");
+        tenant.TenantId = GetIntClaim(user, PMClaimsConst.Tenant);
         tenant.UserId = GetNullableIntClaim(user, PMClaimsConst.UserId);
         tenant.DepartmentId = GetNullableIntClaim(user, PMClaimsConst.DepartmentId);
     }
 
-    private static int GetIntClaim(ClaimsPrincipal user, params string[] claimTypes)
+    private static int GetIntClaim(ClaimsPrincipal user, string claimType)
     {
-        for (var i = 0; i < claimTypes.Length; i++)
-        {
-            var value = user.FindFirst(claimTypes[i])?.Value;
-            if (int.TryParse(value, out var parsed) && parsed > 0)
-                return parsed;
-        }
-
-        return 0;
+        var value = user.FindFirst(claimType)?.Value;
+        return (int.TryParse(value, out var parsed) && parsed > 0) ? parsed : 0;
     }
 
     private static int? GetNullableIntClaim(ClaimsPrincipal user, string claimType)
