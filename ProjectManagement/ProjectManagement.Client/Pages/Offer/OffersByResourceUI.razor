@@ -30,12 +30,12 @@
 
         <!-- أزرار الأكشن العامة -->
         <div class="flex items-center gap-1">
-            <span role="button" class="@CssClasses.Btn.Span"
+            <span role="button" class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     @onclick="ReCalcBaseCost">
                 @((MarkupString)Icons.ResetQuantity)
             </span>
 
-            <span role="button" class="@CssClasses.Btn.Span"
+            <span role="button" class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                     @onclick="OfferFilterUI">
                 @((MarkupString)Icons.Search)
             </span>
@@ -93,13 +93,13 @@
 
                                                         <!-- زر إضافة عرض -->
                                                         <button @onclick="() => EditOffer(new ListOfferMVVM() { Cost = res.Cost, BaseCost = res.BaseCost ?? 0 }, res)"
-                                                                class="@CssClasses.Btn.IconButton.Success">
+                                                                class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">
                                                             @((MarkupString)Icons.Plus)
                                                         </button>
 
                                                         <!-- زر طي/توسيع عروض هذا المورد -->
                                                         <button @onclick="() => ToggleCollSpan(res.Id)"
-                                                                class="@CssClasses.Btn.IconButton.Secondary"
+                                                                class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-500 text-white hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500"
                                                                 title="@ResourceLoc.details">
                                                             @((MarkupString)Icons.TopBottom(!CollSpanIds.Contains(res.Id)))
                                                         </button>
@@ -142,12 +142,12 @@
                                                         <div class="flex items-center gap-2">
                                                             <!-- أزرار Edit/Delete تظهر فقط عند hover -->
                                                             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                                                                <button class="@CssClasses.Btn.IconButton.Danger"
+                                                                <button class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400"
                                                                         @onclick="() => Delete(cat)">
                                                                     @((MarkupString)@Icons.DeleteSVG)
                                                                 </button>
 
-                                                                <button class="@CssClasses.Btn.IconButton.Primary"
+                                                                <button class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                                                                         @onclick="() => EditOffer(cat, res)">
                                                                     @Icons.Edit
                                                                 </button>

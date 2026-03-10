@@ -3,21 +3,21 @@
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 
-<div class="@($"{CssClasses.Modal.Body} space-y-3")">
+<div class="p-4 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 space-y-3">
 
     <!-- نموذج الفلترة -->
     <EditForm id="filterForm" Model="@Filter">
-        <div class="@CssClasses.Grid.Col.MD4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
             @* Folder *@
             @if (FoldersList != null && FoldersList.Count > 0)
             {
-                <div class="@CssClasses.Grid.Span.MD2">
-                    <div class="@CssClasses.Form.Field">
-                        <label class="@CssClasses.Form.Label">
+                <div class="md:col-span-2">
+                    <div class="flex flex-col gap-1">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                             @ResourceLoc.folder
                         </label>
 
-                        <InputSelect class="@CssClasses.Input.Select"
+                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                      @bind-Value:get="Filter.FolderID"
                                      @bind-Value:set="(value) => FolderChanged(value)">
                             <option value=""></option>
@@ -33,13 +33,13 @@
             @* Project *@
             @if (Projects != null && Projects.Count > 0)
             {
-                <div class="@CssClasses.Grid.Span.MD2">
-                    <div class="@CssClasses.Form.Field">
-                        <label class="@CssClasses.Form.Label">
+                <div class="md:col-span-2">
+                    <div class="flex flex-col gap-1">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                             @CalcResource.project
                         </label>
 
-                        <InputSelect class="@CssClasses.Input.Select"
+                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                      @bind-Value:get="Filter.ProjectID"
                                      @bind-Value:set="(value) => ProjectChanged(value)">
                             <option value=""></option>
@@ -55,13 +55,13 @@
             @* Calculation *@
             @if (Calcs != null && Calcs.Count > 0)
             {
-                <div class="@CssClasses.Grid.Span.MD2">
-                    <div class="@CssClasses.Form.Field">
-                        <label class="@CssClasses.Form.Label">
+                <div class="md:col-span-2">
+                    <div class="flex flex-col gap-1">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                             @CalcResource.calculation
                         </label>
 
-                        <InputSelect class="@CssClasses.Input.Select"
+                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                      @bind-Value:get="Filter.CalculationID"
                                      @bind-Value:set="(value) => CalcChanged(value)">
                             <option value="0"></option>
@@ -75,13 +75,13 @@
             }
 
             @* Resource Type Enum *@
-            <div class="@CssClasses.Grid.Span.MD2">
-                <div class="@CssClasses.Form.Field">
-                    <label class="@CssClasses.Form.Label">
+            <div class="md:col-span-2">
+                <div class="flex flex-col gap-1">
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                         @CalcResource.resourceType
                     </label>
 
-                    <InputSelect class="@CssClasses.Input.Select"
+                    <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                  @bind-Value="Filter.ResType">
                         <option></option>
                         @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
@@ -95,13 +95,13 @@
             @* Resource Type from DB *@
             @if (ResourceTypes != null)
             {
-                <div class="@CssClasses.Grid.Span.MD2">
-                    <div class="@CssClasses.Form.Field">
-                        <label class="@CssClasses.Form.Label">
+                <div class="md:col-span-2">
+                    <div class="flex flex-col gap-1">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                             @CalcResource.resourceType
                         </label>
 
-                        <InputSelect class="@CssClasses.Input.Select"
+                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                      @bind-Value:get="Filter.ResourceTypeId"
                                      @bind-Value:set="(value) => ChangeResType(value)">
                             <option></option>
@@ -117,15 +117,15 @@
             @* Organisation (datalist) *@
             @if (Organisations != null)
             {
-                <div class="@CssClasses.Grid.Span.MD2">
-                    <div class="@CssClasses.Form.Field">
-                        <label class="@CssClasses.Form.Label">
+                <div class="md:col-span-2">
+                    <div class="flex flex-col gap-1">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
                             @ResourceApp.organisation
                         </label>
 
                         <input list="orgList"
                                id="orgInput"
-                               class="@CssClasses.Input.Text"
+                               class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                @oninput="OnInputOrgChanged" />
 
                         <datalist id="orgList">
@@ -140,10 +140,10 @@
             }
 
             @* زر الفلترة *@
-            <div class="@CssClasses.Grid.Span.MD2 flex items-end">
+            <div class="md:col-span-2 flex items-end">
                 <button type="submit"
                         form="filterForm"
-                        class="@($"{CssClasses.Btn.Solid.Primary} inline-flex items-center gap-1 text-sm")"
+                        class="inline-flex items-center justify-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                         @onclick="GetOffersAsync">
                     @((MarkupString)Icons.Search)
                     <span>@ResourceApp.filter</span>
@@ -163,26 +163,26 @@
     else
     {
         <div class="max-h-[55vh] overflow-y-auto overflow-x-auto rounded-lg">
-            <table class="@CssClasses.Table.Tab text-xs sm:text-sm">
-                <thead class="@($"{CssClasses.Table.Thead} sticky top-0 z-10")">
+            <table class="min-w-full text-xs leading-tight text-xs sm:text-sm">
+                <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10">
                     <tr>
-                        <th class="@CssClasses.Table.TH">@ResourceApp.organisation</th>
-                        <th class="@CssClasses.Table.TH">@ResourceLoc.resource</th>
-                        <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.cost</th>
-                        <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.baseCost</th>
-                        <th class="@($"{CssClasses.Table.TH} text-center")">@ResourceApp.date</th>
+                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@ResourceApp.organisation</th>
+                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@ResourceLoc.resource</th>
+                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.cost</th>
+                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.baseCost</th>
+                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-center">@ResourceApp.date</th>
                     </tr>
                 </thead>
-                <tbody class="@CssClasses.Table.TBody">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @for (var index = 0; index < Offers.Count; index++)
                     {
                         var cat = Offers[index];
                         var isSelected = SelectedOfferIndex == index;
                         var isExpanded = ExpandedOfferIndex == index;
 
-                        <tr class="@($"{CssClasses.Table.Tr} {(isSelected ? "bg-blue-50 dark:bg-blue-950/40" : "")}")">
+                        <tr class="transition-colors @(isSelected ? "bg-blue-50 dark:bg-blue-950/40" : "")">
 
-                            <td class="@CssClasses.Table.Td">
+                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200">
                                 <span class="block text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 truncate max-w-xs sm:max-w-sm">
                                     @(string.IsNullOrEmpty(cat.Organisation)
                                           ? ""
@@ -190,7 +190,7 @@
                                 </span>
                             </td>
 
-                            <td class="@CssClasses.Table.Td">
+                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200">
                                 <span class="block text-[11px] sm:text-xs text-slate-700 dark:text-slate-200 truncate max-w-lg">
                                     @cat.CalcName (@cat.CalcCode)
                                     &nbsp;&gt;&nbsp;
@@ -200,15 +200,15 @@
                                 </span>
                             </td>
 
-                            <td class="@($"{CssClasses.Table.Td} text-right align-middle")">
+                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
                                 <span class="tabular-nums">@cat.Cost</span>
                             </td>
 
-                            <td class="@($"{CssClasses.Table.Td} text-right align-middle")">
+                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
                                 <span class="tabular-nums">@cat.BaseCost</span>
                             </td>
 
-                            <td class="@($"{CssClasses.Table.Td} text-center align-middle text-[11px] text-slate-600 dark:text-slate-300")">
+                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-center text-[11px] text-slate-600 dark:text-slate-300">
                                 @cat.Date
                             </td>
                         </tr>
