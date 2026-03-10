@@ -1,6 +1,6 @@
 ﻿@inject AppState AppState
 
-<EditForm id="resForm" Model="StorageApp" class="@($"{CssClasses.Modal.Body} bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100")" OnValidSubmit="HandleSubmitAsync">
+<EditForm id="resForm" Model="StorageApp" class="space-y-0 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100" OnValidSubmit="HandleSubmitAsync">
     <DataAnnotationsValidator />
     <ValidationSummary class="text-red-600 dark:text-red-400" />
 
@@ -12,8 +12,8 @@
             <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 <InputCheckbox @bind-Value="StorageApp.Name"
                                id="metric-name"
-                               class="@($"{CssClasses.Input.Switch} dark:accent-indigo-400")" />
-                <label for="metric-name" class="@($"{CssClasses.Form.CheckLabel} text-gray-800 dark:text-gray-200")">
+                               class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400 dark:accent-indigo-400" />
+                <label for="metric-name" class="select-none dark:text-white text-gray-800 dark:text-gray-200">
                     @CalcResource.name
                 </label>
             </div>
@@ -22,8 +22,8 @@
             <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 <InputCheckbox @bind-Value="StorageApp.Cost"
                                id="metric-cost"
-                               class="@($"{CssClasses.Input.Switch} dark:accent-indigo-400")" />
-                <label for="metric-cost" class="@($"{CssClasses.Form.CheckLabel} text-gray-800 dark:text-gray-200")">
+                               class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400 dark:accent-indigo-400" />
+                <label for="metric-cost" class="select-none dark:text-white text-gray-800 dark:text-gray-200">
                     @CalcResource.cost
                 </label>
             </div>
@@ -32,10 +32,10 @@
     </fieldset>
 
     <div class="mt-4 flex gap-2 justify-end">
-        <button type="submit" class="@($"{CssClasses.Btn.Outline.Primary} border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-800")">
+        <button type="submit" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white border-gray-300 text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-800">
             Save
         </button>
-        <button type="button" class="@($"{CssClasses.Btn.Outline.Secondary} border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800")"
+        <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                 @onclick="async () => await OnChanged.InvokeAsync(false)">
             Close
         </button>

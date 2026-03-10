@@ -1,12 +1,12 @@
 ﻿@using ProjectManagement.Client.Pages.Project.Storage.Row
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @inherits AppComponentBase
-    <EditForm id="filterForm" Model="@Filter" class="@CssClasses.Grid.Col.MD4">
+    <EditForm id="filterForm" Model="@Filter" class="grid grid-cols-1 md:grid-cols-4 gap-2">
             @if (FoldersList != null && FoldersList.Count> 0)
             {
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceLoc.folder</label>
-                <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.FolderID" @bind-Value:set="(value) => FolderChanged(value)">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.folder</label>
+                <InputSelect class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value:get="Filter.FolderID" @bind-Value:set="(value) => FolderChanged(value)">
                         <option></option>
                         @foreach (var status in FoldersList)
                         {
@@ -17,8 +17,8 @@
                 @if (Projects != null && Projects.Count > 0)
                 {
                 <div>
-                        <label class="@CssClasses.Form.Label">@CalcResource.project</label>
-                    <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.ProjectID" @bind-Value:set="(value) => ProjectChanged(value)">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.project</label>
+                    <InputSelect class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value:get="Filter.ProjectID" @bind-Value:set="(value) => ProjectChanged(value)">
                             <option></option>
                             @foreach (var status in Projects)
                             {
@@ -29,8 +29,8 @@
                     @if (Calcs != null && Calcs.Count > 0)
                     {
                         <div>
-                            <label class="@CssClasses.Form.Label">@CalcResource.calculation</label>
-                        <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.CalculationID" @bind-Value:set="(value) => CalcChanged(value)">
+                            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.calculation</label>
+                        <InputSelect class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value:get="Filter.CalculationID" @bind-Value:set="(value) => CalcChanged(value)">
                                 <option value="0"></option>
                                 @foreach (var status in Calcs)
                                 {
@@ -42,24 +42,24 @@
                 }
             }
             <div>
-                <label class="@CssClasses.Form.Label">@CalcResource.code </label>
-                <InputText @bind-Value="Filter.Code" class="@CssClasses.Input.Text" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.code </label>
+                <InputText @bind-Value="Filter.Code" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
             </div>
             <div>
-                <label class="@CssClasses.Form.Label">@CalcResource.name </label>
-                <InputText @bind-Value="Filter.Name" class="@CssClasses.Input.Text" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name </label>
+                <InputText @bind-Value="Filter.Name" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
             </div>
         <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.unit </label>
-            <InputText @bind-Value="Filter.Unit" class="@CssClasses.Input.Text" />
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.unit </label>
+            <InputText @bind-Value="Filter.Unit" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
         </div>
         @if (Post.Type == CalculationItemType.task)
             {
                 @if (TGSStatuses != null)
                 {
                     <div>
-                        <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                        <InputSelect @bind-Value="Filter.Status" class="@CssClasses.Input.Text">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.status</label>
+                        <InputSelect @bind-Value="Filter.Status" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                             <option value="0"></option>
                             @foreach (var status in TGSStatuses)
                             {
@@ -72,8 +72,8 @@
             else
             {
             <div>
-                <label class="@CssClasses.Form.Label">@CalcResource.accountGroups</label>
-                <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="AccountGroupSelected.Id" @bind-Value:set="(value) => ChangeGroupAccount(value)">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.accountGroups</label>
+                <InputSelect class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value:get="AccountGroupSelected.Id" @bind-Value:set="(value) => ChangeGroupAccount(value)">
                     <option></option>
                     @if (Config.AccountGroups != null) foreach (var status in Config.AccountGroups)
                     {
@@ -84,8 +84,8 @@
                 @if (Accounts != null && Accounts.Count > 0)
                 {
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.account</label>
-                    <InputSelect class="@CssClasses.Input.Text" @bind-Value:get="Filter.Account" @bind-Value:set="(value) => Filter.Account = value">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.account</label>
+                    <InputSelect class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value:get="Filter.Account" @bind-Value:set="(value) => Filter.Account = value">
                         <option></option>
                         @foreach (var status in Accounts)
                         {
@@ -97,8 +97,8 @@
                 @if (Config.Statues != null)
                 {
                     <div>
-                        <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                        <InputSelect @bind-Value="Filter.Status" class="@CssClasses.Input.Text">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.status</label>
+                        <InputSelect @bind-Value="Filter.Status" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                             <option value=""></option>
                         @foreach (var status in Config.Statues)
                             {
@@ -108,8 +108,8 @@
                     </div>
                 }
                 <div>
-                <label class="@CssClasses.Form.Label">@CalcResource.resourceType: </label>
-                    <InputSelect @bind-Value="@Filter.ResType" class="@CssClasses.Input.Text">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.resourceType: </label>
+                    <InputSelect @bind-Value="@Filter.ResType" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                     @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
                     {
                         <option value="@level">@ResourceLocalize.GetResourceType(level)</option>
@@ -119,8 +119,8 @@
             @if (Config.ResourceTypes != null)
                 {
                     <div>
-                        <label class="@CssClasses.Form.Label">@CalcResource.resourceType</label>
-                        <InputSelect class="@CssClasses.Input.Text"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.resourceType</label>
+                        <InputSelect class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                      @bind-Value:get="Filter.ResourceTypeId" @bind-Value:set="(value) =>ChangeResType(value)">
                             <option value=""></option>
                         @foreach (var item in Config.ResourceTypes)
@@ -132,9 +132,9 @@
                 }
             }
         </EditForm>
-    <table class="@CssClasses.Table.Tab">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
             <HeaderStorageUI></HeaderStorageUI>
-        <tbody class="@CssClasses.Table.TBody">
+        <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
                 @if (List != null)
                 {
                     @if (Post.Type == CalculationItemType.task){

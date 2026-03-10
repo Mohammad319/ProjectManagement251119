@@ -14,7 +14,7 @@
 }
 else if (ProjectUpdate is not null)
 {
-    <EditForm id="projectForm" class="@CssClasses.Modal.Body" Model="@ProjectUpdate"
+    <EditForm id="projectForm" class="space-y-0" Model="@ProjectUpdate"
               OnValidSubmit="HandleSubmitAsync">
 
         <DataAnnotationsValidator />
@@ -29,20 +29,20 @@ else if (ProjectUpdate is not null)
         <!-- محتوى كل تبويب -->
         @if (Part == 1)
         {
-            <div class="@CssClasses.Grid.Col.MD3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.code</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Code" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.code</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.Code" />
                     <ValidationMessage For=@(() => ProjectUpdate.Code) />
                 </div>
-                <div class="@CssClasses.Grid.Span.MD2">
-                    <label class="@CssClasses.Form.Label">@CalcResource.name</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Name" />
+                <div class="md:col-span-2">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.Name" />
                     <ValidationMessage For=@(() => ProjectUpdate.Name) />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.projectType</label>
-                    <InputSelect @bind-Value="ProjectUpdate.TypeId" class="@CssClasses.Input.Text">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.projectType</label>
+                    <InputSelect @bind-Value="ProjectUpdate.TypeId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option></option>
                         @if (Config?.Types != null)
                         {
@@ -58,10 +58,10 @@ else if (ProjectUpdate is not null)
         }
         else if (Part == 2)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.projectContract</label>
-                    <InputSelect @bind-Value="ProjectUpdate.ContractId" class="@CssClasses.Input.Text">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.projectContract</label>
+                    <InputSelect @bind-Value="ProjectUpdate.ContractId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option></option>
                         @if (Config?.Contracts != null)
                         {
@@ -73,8 +73,8 @@ else if (ProjectUpdate is not null)
                     </InputSelect>
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.projectCompensation</label>
-                    <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="@CssClasses.Input.Text">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.projectCompensation</label>
+                    <InputSelect @bind-Value="ProjectUpdate.CompensationId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option></option>
                         @if (Config?.Compensations != null)
                         {
@@ -87,15 +87,15 @@ else if (ProjectUpdate is not null)
                     <ValidationMessage For=@(() => ProjectUpdate.CompensationId) />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.procurement</label>
-                    <InputSelect @bind-Value="ProjectUpdate.Procurement" class="@CssClasses.Input.Text">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.procurement</label>
+                    <InputSelect @bind-Value="ProjectUpdate.Procurement" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option value="@Procurement.A">@Procurement.A</option>
                         <option value="@Procurement.B">@Procurement.B</option>
                     </InputSelect>
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.procurementMethods</label>
-                    <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="@CssClasses.Input.Text">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.procurementMethods</label>
+                    <InputSelect @bind-Value="ProjectUpdate.ProcurementMethodsId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option></option>
                         @if (Config?.Methods != null)
                         {
@@ -110,34 +110,34 @@ else if (ProjectUpdate is not null)
         }
         else if (Part == 3)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
                 @for (int i = 0; i < ProjectUpdate.Responsibles.Count; i++)
                 {
                     <div>
                         <label>@CalcResource.responsible</label>
-                        <InputText class="@CssClasses.Input.Text"
+                        <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                    @bind-Value="@ProjectUpdate.Responsibles[i]" />
                     </div>
                 }
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.inspector</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Inspector" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.inspector</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.Inspector" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Supervisor" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.Supervisor" />
                 </div>
             </div>
         }
         else if (Part == 4)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
                 @if (Config?.Organisation != null)
                 {
                     <div>
-                        <label class="@CssClasses.Form.Label">@ResourceApp.organisation</label>
-                        <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="@CssClasses.Input.Text">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
+                        <InputSelect @bind-Value="ProjectUpdate.OrganisationId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                             <option></option>
                             @foreach (var t in Config.Organisation)
                             {
@@ -148,54 +148,54 @@ else if (ProjectUpdate is not null)
                 }
 
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.developer</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Developer" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.developer</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.Developer" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceLoc.clientsProjectmanager</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.ClientsManager" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.clientsProjectmanager</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.ClientsManager" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@ResourceLoc.designer</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.Designer" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.designer</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.Designer" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.overviewInfoProject</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.OverviewInfoProject" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.overviewInfoProject</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.OverviewInfoProject" />
                 </div>
             </div>
         }
         else if (Part == 5)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.startDate</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.StartDate" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.startDate</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.StartDate" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.endDate</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.EndDate" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.endDate</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.EndDate" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.tenderDeadline</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.TenderDeadline" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.tenderDeadline</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.TenderDeadline" />
                 </div>
                 <div>
-                    <label class="@CssClasses.Form.Label">@CalcResource.tenderQA</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@ProjectUpdate.TenderQA" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.tenderQA</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@ProjectUpdate.TenderQA" />
                 </div>
             </div>
         }
         else if (Part == 6)
         {
-            <div class="@CssClasses.Grid.Col.MD4">
-                <div class="@CssClasses.Form.CheckWrapper">
-                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@ProjectUpdate.IsVisible" />
-                    <label class="@CssClasses.Form.CheckLabel">@ResourceApp.visible</label>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <div class="flex items-center mt-auto gap-2">
+                    <InputCheckbox class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" @bind-Value="@ProjectUpdate.IsVisible" />
+                    <label class="select-none dark:text-white">@ResourceApp.visible</label>
                 </div>
 
-                <div class="@CssClasses.Grid.Span.MD3">
-                    <button type="button" class="@CssClasses.Btn.Outline.Success"
+                <div class="md:col-span-3">
+                    <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white"
                             @onclick="()=>ProjectUpdate.Notes.Add(string.Empty)">
                         @AppLoc[LocalizerConst.New, ResourceLoc.description]
                     </button>
@@ -231,15 +231,15 @@ else if (ProjectUpdate is not null)
         }
         else if (Part == 7)
         {
-            <div class="@CssClasses.Grid.Span.MD4">
+            <div class="md:col-span-4">
                 <ContactsUI Contacts="ProjectUpdate.Contacts" />
             </div>
         }
     </EditForm>
 
-    <div class="@CssClasses.Modal.Footer">
+    <div class="mt-1 flex justify-end gap-1">
         <button type="submit"
-                class="@CssClasses.Btn.Outline.Success"
+                class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white"
                 style="margin-right:5px;"
                 form="projectForm"
                 disabled="@IsLoading">
@@ -247,7 +247,7 @@ else if (ProjectUpdate is not null)
         </button>
 
         <button type="button"
-                class="@CssClasses.Btn.Outline.Secondary"
+                class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white"
                 @onclick="CancelAsync">
             @ResourceApp.cancel
         </button>

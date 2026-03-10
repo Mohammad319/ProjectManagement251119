@@ -3,7 +3,6 @@
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
 @using ProjectManagement.Shared.DTO.ResourceType
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 @if (Rows is null || !Rows.Any())
 {
@@ -107,7 +106,7 @@ else
                             @if (AddBtnIsVisible)
                             {
                                 <button @onclick="() => current.IsAdded = !current.IsAdded"
-                                        class="@((current.IsAdded ? CsS.Btn.IconButton.Danger : CsS.Btn.Outline.Success) + CsS.Btn.Size.XSmall)">
+                                        class="@((current.IsAdded ? "inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-red-300 text-red-600 hover:bg-red-100 hover:ring-1 hover:ring-red-300 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40 dark:hover:ring-red-500" : "px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white") + " px-0.5 py-0 text-sm")">
                                     @((MarkupString)Icons.AddDelete(current.IsAdded))
                                 </button>
                             }
@@ -136,9 +135,9 @@ else
 
                         <!-- Resource + Dropdown حسب MenuId -->
                         <td class="px-1 py-0.5 text-[11px] text-gray-800 dark:text-gray-300">
-                            <div class="@CsS.Layout.Inline">
+                            <div class="inline-flex gap-2">
                                 <!-- زر التعديل -->
-                                <span class="@($"{CssClasses.Btn.Link} text-[10px] leading-none px-0.5")"
+                                <span class="text-[18px] text-neutral-800 underline hover:text-neutral-900 transition dark:text-neutral-300 dark:hover:text-neutral-100 text-[10px] leading-none px-0.5"
                                       @onclick="async () => await OnEdit.InvokeAsync(current)">
                                     ✎
                                 </span>
