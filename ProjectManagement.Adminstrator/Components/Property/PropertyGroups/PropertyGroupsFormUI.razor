@@ -2,28 +2,27 @@
 @using TaskResourceBlueprints.Entities.Resources
 @inherits AppComponentBase
 @inject IResourceAttributeSetService GroupPropertiesService
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using TaskResourceBlueprints.Services.ResourceProperties
 
-<EditForm id="myForm" class="@CsS.Modal.Body" Model="@Model"
+<EditForm id="myForm" class="space-y-4 px-1 py-1" Model="@Model"
           OnValidSubmit="async () => await HandleSubmitAsync()">
     <DataAnnotationsValidator />
 
     <div>
-        <div class="">
-            <label class="@CsS.Form.Label" for="name-input">@CalcResource.name:</label>
-            <InputText id="name-input" class="@CsS.Input.Text"
+        <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200" for="name-input">@CalcResource.name:</label>
+            <InputText id="name-input" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                        @bind-Value="Model.DisplayName"
                        aria-invalid="@(EditContext?.GetValidationMessages(() => Model.DisplayName).Any() == true)" />
 
-            <ValidationMessage For="() => Model.DisplayName" class="@CsS.Text.Danger" />
+            <ValidationMessage For="() => Model.DisplayName" class="mt-1 text-sm text-rose-600 dark:text-rose-400" />
         </div>
     </div>
 </EditForm>
 
-<div class="@CsS.Modal.Footer">
+<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
     <button type="submit"
-            class="@CsS.Btn.Outline.Success"
+            class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
             form="myForm"
             disabled="@IsLoading"
             aria-busy="@IsLoading">
@@ -31,7 +30,7 @@
     </button>
 
     <button type="button"
-            class="@CsS.Btn.Outline.Secondary"
+            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             @onclick="async () => await Callback.InvokeAsync(false)">
         @ResourceApp.cancel
     </button>
