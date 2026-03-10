@@ -91,14 +91,14 @@
                                     }
 
                                     <button type="button"
-                                            class="@CssClasses.Btn.IconButton.Primary"
+                                            class="inline-flex items-center justify-center w-7 h-7 rounded-md border border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:focus:ring-blue-400/40"
                                             title="@ResourceApp.edit"
                                             @onclick="() => UpdateForm(status)">
                                         @((MarkupString)Icons.Edit)
                                     </button>
 
                                     <button type="button"
-                                            class="@CssClasses.Btn.IconButton.Danger"
+                                            class="inline-flex items-center justify-center w-7 h-7 rounded-md border border-rose-300 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20 focus:outline-none focus:ring-2 focus:ring-rose-500/40 dark:focus:ring-rose-400/40"
                                             title="@ResourceApp.delete"
                                             @onclick="() => Remove(status)">
                                         @((MarkupString)Icons.Delete)
@@ -141,9 +141,9 @@
 
                         @if (status.ShowComment)
                         {
-                            <tr class="commment @CssClasses.Table.Tr">
+                            <tr class="commment border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
                                 <td></td>
-                                <td colspan="7" class="@CssClasses.Table.Td">
+                                <td colspan="7" class="px-2 py-2 text-start align-middle text-slate-700 dark:text-slate-200">
                                     <label>@status.Metadata.Comment</label>
                                 </td>
                             </tr>
