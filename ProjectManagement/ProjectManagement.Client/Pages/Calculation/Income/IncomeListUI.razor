@@ -1,44 +1,54 @@
-﻿﻿@using ProjectManagement.Client.Shared.MVVM.Calculation;
+@using ProjectManagement.Client.Shared.MVVM.Calculation;
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @inherits AppComponentBase
-<div class="@CssClasses.Modal.Body">
+<div class="p-4 text-gray-800 dark:text-gray-100">
 
-        @if (Incomes != null)
-        {
-        <table class="@CssClasses.Table.Tab">
-            <thead class="@CssClasses.Table.Thead">
+    @if (Incomes != null)
+    {
+        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900/40">
+            <table class="min-w-full border-collapse text-xs text-left">
+                <thead class="bg-gray-100 dark:bg-gray-800/80">
                     <tr>
-                        <th class="@CssClasses.Table.TH" width="120">
-                            <button type="button" class="@CssClasses.Btn.Outline.Success" @onclick="()=>Incomes.Add(new IncomeListDTO())"> @((MarkupString)Icons.Plus)</button>
+                        <th class="px-3 py-2" width="120">
+                            <button type="button"
+                                    class="inline-flex items-center rounded border border-green-600 px-2 py-1 text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-300 dark:hover:bg-green-900/30"
+                                    @onclick="()=>Incomes.Add(new IncomeListDTO())">
+                                @((MarkupString)Icons.Plus)
+                            </button>
                         </th>
-                    <th class="@CssClasses.Table.TH">@ResourceLoc.year</th>
-                        <th class="@CssClasses.Table.TH">Q1</th>
-                        <th class="@CssClasses.Table.TH">Q2</th>
-                        <th class="@CssClasses.Table.TH">Q3</th>
-                        <th class="@CssClasses.Table.TH">Q4</th>
+                        <th class="px-3 py-2">@ResourceLoc.year</th>
+                        <th class="px-3 py-2">Q1</th>
+                        <th class="px-3 py-2">Q2</th>
+                        <th class="px-3 py-2">Q3</th>
+                        <th class="px-3 py-2">Q4</th>
                     </tr>
                 </thead>
-            <tbody class="@CssClasses.Table.TBody">
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     @foreach (var Income in Incomes)
                     {
-                    <tr class="@CssClasses.Table.Tr">
-                        <td class="@CssClasses.Table.Td">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/70">
+                            <td class="px-3 py-2">
                                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                                    <button type="button" class="@CssClasses.Btn.Outline.Danger" @onclick="()=> Remove(Income)">@((MarkupString)Icons.DeleteSVG)</button>
+                                    <button type="button"
+                                            class="inline-flex items-center rounded border border-red-600 px-2 py-1 text-red-700 hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30"
+                                            @onclick="()=> Remove(Income)">
+                                        @((MarkupString)Icons.DeleteSVG)
+                                    </button>
                                 </AuthorizeView>
                             </td>
-                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Year" class="@CssClasses.Input.Text" /></td>
-                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q1" class="@CssClasses.Input.Text" /></td>
-                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q2" class="@CssClasses.Input.Text" /></td>
-                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q3" class="@CssClasses.Input.Text" /></td>
-                        <td class="@CssClasses.Table.Td"><input type="number" @bind="Income.Q4" class="@CssClasses.Input.Text" /></td>
+                            <td class="px-3 py-2"><input type="number" @bind="Income.Year" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
+                            <td class="px-3 py-2"><input type="number" @bind="Income.Q1" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
+                            <td class="px-3 py-2"><input type="number" @bind="Income.Q2" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
+                            <td class="px-3 py-2"><input type="number" @bind="Income.Q3" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
+                            <td class="px-3 py-2"><input type="number" @bind="Income.Q4" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" /></td>
                         </tr>
                     }
                 </tbody>
             </table>
-        }
-    
+        </div>
+    }
+
 </div>
 @code {
     [Parameter] public List<IncomeBase>? Incomes { get; set; }
@@ -53,7 +63,7 @@
     }
     bool ConfirmRemoveAsync(IncomeBase st)
     {
-            Incomes?.Remove(st);
-            return true;
+        Incomes?.Remove(st);
+        return true;
     }
 }
