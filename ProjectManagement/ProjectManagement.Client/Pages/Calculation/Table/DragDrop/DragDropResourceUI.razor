@@ -17,22 +17,22 @@
              draggable="true">
 
             <!-- Account -->
-            <div class="@CssClasses.Layout.FlexWidth160 text-xs md:text-sm truncate">
+            <div class="flex w-[160px] text-xs md:text-sm truncate">
                 @resource.Account
             </div>
 
             <!-- Account Code -->
-            <div class="@CssClasses.Layout.FlexWidth160 text-xs md:text-sm truncate">
+            <div class="flex w-[160px] text-xs md:text-sm truncate">
                 @resource.AccountCode
             </div>
 
             <!-- Name -->
-            <div class="@CssClasses.Layout.FlexMinWidth350 text-xs md:text-sm truncate">
+            <div class="flex min-w-[350px] text-xs md:text-sm truncate">
                 @resource.Name
             </div>
 
             <!-- Resource Name -->
-            <div class="@CssClasses.Layout.FlexWidth160 text-xs md:text-sm truncate">
+            <div class="flex w-[160px] text-xs md:text-sm truncate">
                 @resource.ResName
             </div>
         </div>
@@ -53,7 +53,7 @@ else
     private string GetResourceItemClasses(ResourceListMVVM resource)
     {
         var baseClasses =
-            $"{CssClasses.Layout.FlexWrap} items-center rounded-md border " +
+            $"flex flex-wrap items-center rounded-md border " +
             "bg-white dark:bg-slate-900 " +
             "border-slate-200 dark:border-slate-700 " +
             "px-2 py-1.5 mb-1.5 cursor-move text-slate-900 dark:text-slate-100 " +
