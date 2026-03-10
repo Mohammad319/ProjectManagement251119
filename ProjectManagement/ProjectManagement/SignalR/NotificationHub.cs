@@ -1,6 +1,8 @@
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Persistence.Factory;
 using ProjectManagement.Services;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Hub;
@@ -47,7 +49,7 @@ namespace ProjectManagement.SignalR
     }
 
     [Authorize]
-    public class NotificationHub(ITenantContext currentTenant) : Hub
+    public class NotificationHub(ITenantContext currentTenant, IDbContextFactoryTenant dbFactory) : Hub
     {
         public override Task OnConnectedAsync()
         {
@@ -60,22 +62,20 @@ namespace ProjectManagement.SignalR
         [HubMethodName("AddToGroup")]
         public async Task AddToGroup(int id, CancellationToken ct = default)
         {
-            var tenantId = currentTenant.TenantId;
-            if (tenantId <= 0)
-            {
-                var tenantClaim = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value
-                                 ?? Context.User?.FindFirst("TenantID")?.Value;
+            if (id <= 0 || currentTenant.TenantId <= 0)
+                return;
 
-                if (int.TryParse(tenantClaim, out var parsedTenantId) && parsedTenantId > 0)
-                    tenantId = parsedTenantId;
-            }
+            await using var db = await dbFactory.CreateDbContextAsync(ct);
+            var calculationExists = await db.Calculations
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == id, ct);
 
-            if (id <= 0 || tenantId <= 0)
+            if (!calculationExists)
                 return;
 
             await Groups.AddToGroupAsync(
                 Context.ConnectionId,
-                NotificationGroupNames.ForCalculation(tenantId, id),
+                NotificationGroupNames.ForCalculation(currentTenant.TenantId, id),
                 ct);
         }
     }
