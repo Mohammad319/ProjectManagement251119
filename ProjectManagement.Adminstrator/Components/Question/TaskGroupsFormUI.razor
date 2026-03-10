@@ -8,7 +8,6 @@
 @using ProjectManagement.Shared.Base.ProjectAppStorage
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using TaskResourceBlueprints.Services.Resource
 @inject TaskResourceBlueprints.Services.TaskGroups.ITaskGroupsQueryService TaskGroupsQuery
 @inject IResourceCategoryService ResourceCategoryService
@@ -210,23 +209,23 @@ else
         <ValidationSummary />
 
             <!-- Header: Task name + actions -->
-            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom1">
-                <div class="@CsS.Layout.FlexMinWidth280">
-                    <label class="@CsS.Form.Label">@CalcResource.name</label>
-                    <input class="@CsS.Input.Text" value="@Task?.Name" readonly />
+            <div class="flex items-center gap-1 mb-1">
+                <div class="flex-1 min-w-[280px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" value="@Task?.Name" readonly />
                 </div>
 
-                <div class="@CsS.Layout.FlexWrap @CsS.Util.PlaceSelfEnd">
-                    <button type="submit" class="@CsS.Btn.Outline.Primary">@ResourceApp.save</button>
-                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="Close">@ResourceApp.cancel</button>
+                <div class="flex flex-wrap gap-2 place-self-end">
+                    <button type="submit" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">@ResourceApp.save</button>
+                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="Close">@ResourceApp.cancel</button>
                 </div>
             </div>
 
             <!-- Choice Groups -->
             <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-                <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
+                <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
                     <h4 class="font-semibold">Choice Groups</h4>
-                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddChoiceGroup">Add Group</button>
+                    <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddChoiceGroup">Add Group</button>
                 </div>
 
                 @if (Task?.QuestionGroups is { Count: > 0 } questionGroups)
@@ -234,67 +233,67 @@ else
                     @foreach (var g in questionGroups.OrderBy(x => x.SortOrder))
                     {
                         <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
-                            <div class="@CsS.Grid.Col.MD12">
-                                <div class="@CsS.Grid.Span.MD3">
-                                    <label class="@CsS.Form.Label">@CalcResource.name</label>
-                                    <input class="@CsS.Input.Text" @bind="g.DisplayName" />
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                                <div class="md:col-span-3">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD2">
-                                    <label class="@CsS.Form.Label">Order</label>
-                                    <input type="number" class="@CsS.Input.Number" @bind="g.SortOrder" />
+                                <div class="md:col-span-2">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Order</label>
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD3">
-                                    <label class="@CsS.Form.Label">Section Key</label>
-                                    <input class="@CsS.Input.Text" @bind="g.SectionKey" placeholder="(optional)" />
+                                <div class="md:col-span-3">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Section Key</label>
+                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="(optional)" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD2">
-                                    <label class="@CsS.Form.Label">Selection</label>
-                                    <select class="@CsS.Input.Select" @bind="g.SelectionMode">
+                                <div class="md:col-span-2">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Selection</label>
+                                    <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="g.SelectionMode">
                                         <option value="@SelectionMode.Multiple">Multiple</option>
                                         <option value="@SelectionMode.Single">Single</option>
                                     </select>
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
-                                    <div class="@CsS.Layout.Inline">
-                                        <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveChoiceGroup(g))">x</button>
-                                        <button type="button" class="@CsS.Btn.Outline.Primary" @onclick="(() => AddChoiceOption(g))">Add Option</button>
+                                <div class="md:col-span-2 place-self-end">
+                                    <div class="inline-flex gap-2">
+                                        <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveChoiceGroup(g))">x</button>
+                                        <button type="button" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="(() => AddChoiceOption(g))">Add Option</button>
                                     </div>
                                 </div>
                             </div>
 
                             @if (g.Options?.Count > 0)
                             {
-                                <div class="@CsS.Spacing.M.Top2">
+                                <div class="mt-2">
                                     @foreach (var o in g.Options)
                                     {
                                         <div class="rounded-lg border border-gray-100 bg-white/70 p-2 mb-2 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                                            <div class="@CsS.Grid.Col.MD12">
-                                                <div class="@CsS.Grid.Span.MD4">
-                                                    <label class="@CsS.Form.Label">Option Label</label>
-                                                    <input class="@CsS.Input.Text" @bind="o.DisplayName" />
+                                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                                                <div class="md:col-span-4">
+                                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Option Label</label>
+                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="o.DisplayName" />
                                                 </div>
 
-                                                <div class="@CsS.Grid.Span.MD6">
+                                                <div class="md:col-span-6">
                                                     <label class="mb-1 text-xs text-gray-700 dark:text-gray-200">
                                                         Reveal Section Keys (comma-separated)
                                                     </label>
-                                                    <input class="@CsS.Input.Text"
+                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                                            value="@GetRevealKeys(o)"
                                                            @onchange="e => SetRevealKeys(o, e.Value?.ToString())"
                                                            placeholder="e.g. details, advanced, extras" />
                                                 </div>
 
-                                                <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
-                                                    <div class="@CsS.Layout.Inline">
-                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveChoiceOptionUp(g, o))">Set Default</button>
+                                                <div class="md:col-span-2 place-self-end">
+                                                    <div class="inline-flex gap-2">
+                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">Set Default</button>
 
-                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
-                                                        <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveChoiceOptionDown(g, o))">↓</button>
-                                                        <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveChoiceOption(g, o))">x</button>
+                                                        <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
+                                                        <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionDown(g, o))">↓</button>
+                                                        <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveChoiceOption(g, o))">x</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -313,9 +312,9 @@ else
 
             <!-- Numeric Groups -->
             <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-                <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
+                <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
                     <h4 class="font-semibold">Numeric Groups</h4>
-                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddNumericGroup">Add Group</button>
+                    <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddNumericGroup">Add Group</button>
                 </div>
 
                 @if (Task?.NumericQuestions?.Count > 0)
@@ -324,34 +323,34 @@ else
                     {
                         <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
                             <!-- NOTE: this row is 8 columns; keep spans sum = 8 -->
-                            <div class="@CsS.Grid.Col.MD8">
-                                <div class="@CsS.Grid.Span.MD2">
-                                    <label class="@CsS.Form.Label">Name</label>
-                                    <input class="@CsS.Input.Text" @bind="g.DisplayName" />
+                            <div class="grid grid-cols-1 md:grid-cols-8 gap-2">
+                                <div class="md:col-span-2">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Name</label>
+                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD1">
-                                    <label class="@CsS.Form.Label">Order</label>
-                                    <input type="number" class="@CsS.Input.Number" @bind="g.SortOrder" />
+                                <div class="md:col-span-1">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Order</label>
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD2">
-                                    <label class="@CsS.Form.Label">Section Key</label>
-                                    <input class="@CsS.Input.Text" @bind="g.SectionKey" placeholder="(optional)" />
+                                <div class="md:col-span-2">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Section Key</label>
+                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="(optional)" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD1">
-                                    <label class="@CsS.Form.Label">Min</label>
-                                    <input type="number" class="@CsS.Input.Number" @bind="g.MinInputValue" />
+                                <div class="md:col-span-1">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Min</label>
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.MinInputValue" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD1">
-                                    <label class="@CsS.Form.Label">Max</label>
-                                    <input type="number" class="@CsS.Input.Number" @bind="g.MaxInputValue" />
+                                <div class="md:col-span-1">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Max</label>
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.MaxInputValue" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD1 @CsS.Util.PlaceSelfEnd">
-                                    <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveNumericGroup(g))">x</button>
+                                <div class="md:col-span-1 place-self-end">
+                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveNumericGroup(g))">x</button>
                                 </div>
                             </div>
                         </div>
@@ -365,9 +364,9 @@ else
 
             <!-- Resource Choice Groups -->
             <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-                <div class="@CsS.Layout.FlexItemsCenter md:flex-nowrap flex-wrap">
+                <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
                     <h4 class="font-semibold">Resource Choice Groups</h4>
-                    <button type="button" class="@CsS.Btn.Outline.Success @CsS.Spacing.M.LeftAuto" @onclick="AddResourceGroup">Add Group</button>
+                    <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddResourceGroup">Add Group</button>
                 </div>
 
                 @if (Task?.ResourceSelectors?.Count > 0)
@@ -375,28 +374,28 @@ else
                     @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
                     {
                         <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
-                            <div class="@CsS.Grid.Col.MD12">
-                                <div class="@CsS.Grid.Span.MD4">
-                                    <label class="@CsS.Form.Label">Name</label>
-                                    <input class="@CsS.Input.Text" @bind="g.DisplayName" />
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                                <div class="md:col-span-4">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Name</label>
+                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD2">
-                                    <label class="@CsS.Form.Label">Order</label>
-                                    <input type="number" class="@CsS.Input.Number" @bind="g.SortOrder" />
+                                <div class="md:col-span-2">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Order</label>
+                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD4">
-                                    <label class="@CsS.Form.Label">Section Key</label>
-                                    <input class="@CsS.Input.Text" @bind="g.SectionKey" placeholder="(optional)" />
+                                <div class="md:col-span-4">
+                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Section Key</label>
+                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="(optional)" />
                                 </div>
 
-                                <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
-                                    <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveResourceGroup(g))">x</button>
+                                <div class="md:col-span-2 place-self-end">
+                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveResourceGroup(g))">x</button>
                                 </div>
                             </div>
 
-                            <div class="@CsS.Spacing.M.Top2">
+                            <div class="mt-2">
                                 <FolderResourcesAddUI TaskId="Task.Id"
                                                       ResIds="(g.Items ?? []).Select(x => x.ResourceId).ToList()"
                                                       OnSave="(e)=>AddDelete(g,e)" />
@@ -405,9 +404,9 @@ else
                                 {
                                     foreach (var it in g.Items)
                                     {
-                                        <div class="@CsS.Grid.Col.MD12 @CsS.Spacing.M.Bottom2">
-                                            <div class="@CsS.Grid.Span.MD10">
-                                                <label class="@CsS.Form.Label">Resource</label>
+                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
+                                            <div class="md:col-span-10">
+                                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Resource</label>
                                                 <ResourceAutocomplete MinChars="2" PageSize="20"
                                                                       InitialName="@it.Resource?.Name"
                                                                       Value="it.ResourceId"
@@ -416,11 +415,11 @@ else
                                                                       />
                                             </div>
 
-                                            <div class="@CsS.Grid.Span.MD2 @CsS.Util.PlaceSelfEnd">
-                                                <div class="@CsS.Layout.Inline">
-                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
-                                                    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
-                                                    <button type="button" class="@CsS.Btn.Outline.Danger" @onclick="(() => RemoveResourceItem(g, it))">x</button>
+                                            <div class="md:col-span-2 place-self-end">
+                                                <div class="inline-flex gap-2">
+                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
+                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
+                                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveResourceItem(g, it))">x</button>
                                                 </div>
                                             </div>
                                         </div>
