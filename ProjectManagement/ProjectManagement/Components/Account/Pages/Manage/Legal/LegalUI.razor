@@ -6,19 +6,19 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<ResourceApp> L
 
 <div class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800 mb-3" role="group" aria-label="Legal tabs">
-    <button class="btn @(activeTab == "impressum" ? "btn-primary" : "btn-outline-primary")"
+    <button class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors @(activeTab == "impressum" ? "bg-blue-600 text-white dark:bg-blue-500" : "text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-700")"
             @onclick="@(() => SelectTab("impressum"))">
         Impressum
     </button>
-    <button class="btn @(activeTab == "privacy" ? "btn-primary" : "btn-outline-primary")"
+    <button class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors @(activeTab == "privacy" ? "bg-blue-600 text-white dark:bg-blue-500" : "text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-700")"
             @onclick="@(() => SelectTab("privacy"))">
         @PMAppFormatResource.TabPrivacy
     </button>
-    <button class="btn @(activeTab == "terms" ? "btn-primary" : "btn-outline-primary")"
+    <button class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors @(activeTab == "terms" ? "bg-blue-600 text-white dark:bg-blue-500" : "text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-700")"
             @onclick="@(() => SelectTab("terms"))">
         @PMAppFormatResource.TabTerms
     </button>
-    <button class="btn @(activeTab == "licenses" ? "btn-primary" : "btn-outline-primary")"
+    <button class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors @(activeTab == "licenses" ? "bg-blue-600 text-white dark:bg-blue-500" : "text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-slate-700")"
             @onclick="@(() => SelectTab("licenses"))">
         @PMAppFormatResource.TabLicenses
     </button>
