@@ -7,109 +7,108 @@
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @using ProjectManagement.Shared.Enums
 @inject IResourceBlueprintsService ResourceService
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @inherits AppComponentBase
 
-<div class="@CsS.Modal.Body">
+<div class="space-y-3">
     <EditForm Model="@model" OnValidSubmit="HandleValidSubmit" class="">
         <DataAnnotationsValidator />
-        <ValidationSummary class="@CsS.Text.Error" />
+        <ValidationSummary class="text-sm text-red-600 dark:text-red-400" />
 
         <!-- الحقول الأساسية -->
-        <div class="@CsS.Grid.Col.MD4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
             <div>
-                <label class="@CsS.Form.Label" for="name">@CalcResource.name</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="name">@CalcResource.name</label>
                 <InputText id="name"
                            @bind-Value="model.Name"
-                           class="@CsS.Input.Text"
+                           class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                            aria-invalid="@(EditContext?.GetValidationMessages(() => model.Name).Any() == true)" />
-                <ValidationMessage For="@(() => model.Name)" class="@CsS.Text.Danger" />
+                <ValidationMessage For="@(() => model.Name)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             <div>
-                <label class="@CsS.Form.Label" for="unit">@CalcResource.unit</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="unit">@CalcResource.unit</label>
                 <InputText id="unit"
                            @bind-Value="model.Data.Unit"
-                           class="@CsS.Input.Text" />
-                <ValidationMessage For="@(() => model.Data.Unit)" class="@CsS.Text.Danger" />
+                           class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.Unit)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             <div>
-                <label class="@CsS.Form.Label" for="cost">@CalcResource.cost</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="cost">@CalcResource.cost</label>
                 <InputNumber id="cost"
                              @bind-Value="model.Data.Cost"
-                             class="@CsS.Input.Number" />
-                <ValidationMessage For="@(() => model.Data.Cost)" class="@CsS.Text.Danger" />
+                             class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.Cost)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             <div>
-                <label class="@CsS.Form.Label" for="cf1">@CalcResource.changeFactor1</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="cf1">@CalcResource.changeFactor1</label>
                 <InputNumber id="cf1"
                              @bind-Value="model.Data.ChangeFactor1"
-                             class="@CsS.Input.Number" />
-                <ValidationMessage For="@(() => model.Data.ChangeFactor1)" class="@CsS.Text.Danger" />
+                             class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.ChangeFactor1)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             <div>
-                <label class="@CsS.Form.Label" for="cf2">@CalcResource.changeFactor2</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="cf2">@CalcResource.changeFactor2</label>
                 <InputNumber id="cf2"
                              @bind-Value="model.Data.ChangeFactor2"
-                             class="@CsS.Input.Number" />
-                <ValidationMessage For="@(() => model.Data.ChangeFactor2)" class="@CsS.Text.Danger" />
+                             class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.ChangeFactor2)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             <div>
-                <label class="@CsS.Form.Label" for="co2">@CalcResource.co2</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="co2">@CalcResource.co2</label>
                 <InputNumber id="co2"
                              @bind-Value="model.Data.CO2"
-                             class="@CsS.Input.Number" />
-                <ValidationMessage For="@(() => model.Data.CO2)" class="@CsS.Text.Danger" />
+                             class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.CO2)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             <div>
-                <label class="@CsS.Form.Label" for="baseCost">@CalcResource.baseCost</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="baseCost">@CalcResource.baseCost</label>
                 <InputNumber id="baseCost"
                              @bind-Value="model.Data.BaseCost"
-                             class="@CsS.Input.Number" />
-                <ValidationMessage For="@(() => model.Data.BaseCost)" class="@CsS.Text.Danger" />
+                             class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.BaseCost)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             <div>
-                <label class="@CsS.Form.Label" for="resType">@CalcResource.resourceType</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="resType">@CalcResource.resourceType</label>
                 <InputSelect id="resType"
                              @bind-Value="model.ResType"
-                             class="@CsS.Input.Select">
+                             class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
                     @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
                     {
                         <option value="@level">@ResourceLocalize.GetResourceType(level)</option>
                     }
                 </InputSelect>
-                <ValidationMessage For="@(() => model.ResType)" class="@CsS.Text.Danger" />
+                <ValidationMessage For="@(() => model.ResType)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
 
             @if (model.ResType == ResourceTypesEnum.Materials || model.ResType == ResourceTypesEnum.Worker || model.ResType == ResourceTypesEnum.MachinesAndEquipments)
             {
                 <div>
-                    <label class="@CsS.Form.Label" for="waste">@(model.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="waste">@(model.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
                     <InputNumber id="waste"
                                  @bind-Value="model.Data.CapWaste"
-                                 class="@CsS.Input.Number" />
-                    <ValidationMessage For="@(() => model.Data.CapWaste)" class="@CsS.Text.Danger" />
+                                 class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                    <ValidationMessage For="@(() => model.Data.CapWaste)" class="text-xs text-red-600 dark:text-red-400" />
                 </div>
             }
 
             <div>
-                <label class="@CsS.Form.Label" for="qty">@CalcResource.quantity</label>
-                <InputNumber id="qty" @bind-Value="model.Data.Quantity" class="@CsS.Input.Number" />
-                <ValidationMessage For="@(() => model.Data.Quantity)" class="@CsS.Text.Danger" />
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="qty">@CalcResource.quantity</label>
+                <InputNumber id="qty" @bind-Value="model.Data.Quantity" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.Quantity)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
             <div>
-                <button type="button" class="@CsS.Btn.Outline.Primary" @onclick="@(() => AddRole())">Add Role</button>
+                <button type="button" class="rounded border border-blue-600 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-900/30" @onclick="@(() => AddRole())">Add Role</button>
             </div>
             @if (model.CostRoles != null && model.CostRoles.Any())
             {
-                <div class="@CsS.Grid.Span.MD6">
-                    <div class="@CsS.Layout.Inline">
+                <div class="md:col-span-4">
+                    <div class="inline-grid grid-cols-[minmax(0,1fr)_80px_80px_80px_28px] items-center gap-2">
                         <div></div>
                         <div>@AppControll.min</div>
                         <div>@AppControll.max</div>
@@ -123,17 +122,17 @@
                         {
                             int d = i;
                             var role = model.CostRoles[d];
-                            <div class="@CsS.Layout.Inline">
+                            <div class="inline-grid grid-cols-[minmax(0,1fr)_80px_80px_80px_28px] items-center gap-2">
                                 <div class="flex items-center ">
                                     <button type="button" title="Remove"
-                                            class="@CsS.Btn.Outline.Danger h-6 w-6 p-0 flex items-center justify-center"
+                                            class="flex h-6 w-6 items-center justify-center rounded border border-red-600 p-0 text-red-700 hover:bg-red-50 dark:border-red-500 dark:text-red-300 dark:hover:bg-red-900/30"
                                             @onclick="() => model.CostRoles.Remove(role)">
                                         x
                                     </button>
                                 </div>
-                                <input type="number" class="@CsS.Input.Number" @bind="role.Min" />
-                                <input type="number" class="@CsS.Input.Number" @bind="role.Max" />
-                                <input type="number" class="@CsS.Input.Number" @bind="role.Value" />
+                                <input type="number" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind="role.Min" />
+                                <input type="number" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind="role.Max" />
+                                <input type="number" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind="role.Value" />
                                 <div class="text-xs text-gray-500 dark:text-gray-400">@(d + 1)</div>
                             </div>
                         }
@@ -141,28 +140,28 @@
 
                 </div>
             }
-            <div class="@CsS.Grid.Span.MD6">
-                <label class="@CsS.Form.Label" for="note">Note</label>
+            <div class="md:col-span-4">
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="note">Note</label>
                 <InputTextArea id="note"
                            @bind-Value="model.Data.Note"
-                           class="@CsS.Input.Text" />
-                <ValidationMessage For="@(() => model.Data.Note)" class="@CsS.Text.Danger" />
+                           class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.Data.Note)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
-            <div class="@CsS.Grid.Span.MD6">
-                <label class="@CsS.Form.Label" for="note">Admin Note</label>
+            <div class="md:col-span-4">
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300" for="note">Admin Note</label>
                 <InputTextArea id="note"
                                @bind-Value="model.AdminNote"
-                               class="@CsS.Input.Text" />
-                <ValidationMessage For="@(() => model.AdminNote)" class="@CsS.Text.Danger" />
+                               class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <ValidationMessage For="@(() => model.AdminNote)" class="text-xs text-red-600 dark:text-red-400" />
             </div>
         </div>
 
 
-        <div class="@CsS.Modal.Footer @CsS.Spacing.M.Top3">
-            <button type="submit" class="@CsS.Btn.Outline.Success">
+        <div class="mt-3 flex items-center justify-end gap-2">
+            <button type="submit" class="rounded border border-emerald-600 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30">
                 @ResourceApp.save
             </button>
-            <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="GoBack">
+            <button type="button" class="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800" @onclick="GoBack">
                 @ResourceApp.cancel
             </button>
         </div>

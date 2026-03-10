@@ -7,16 +7,15 @@
 @using ProjectManagement.Adminstrator.Components.Folder
 @using ProjectManagement.Adminstrator.Helper
 @inherits AppComponentBase
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using ProjectManagement.Shared.Enums
 @inject IResourceCategoryService ResourceFolderService
 
-<div class="@CsS.Layout.FlexWrap">
+<div class="flex flex-wrap gap-3">
     <div class="w-[200px] rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
         @if (EnableFolderContext)
         {
-            <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Bottom2">
-                <button class="@CsS.Btn.Outline.Primary" @onclick="() => AddFolder(null)">
+            <div class="mb-2 flex items-center">
+                <button class="rounded border border-blue-600 px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-900/30" @onclick="() => AddFolder(null)">
                     @((MarkupString)Icons.Plus)
                 </button>
             </div>
@@ -32,7 +31,7 @@
                 : EventCallback<ResourceCategory>.Empty)
     </div>
 
-    <div class="@CsS.Layout.FlexMinWidth350 @CsS.Spacing.M.All2">
+    <div class="m-2 min-w-[350px] flex-1">
         @if (!selectedFolderIds.Any())
                 {
         <p class="text-xs text-gray-500 dark:text-gray-400">Select one or more folders to see resources.</p>
@@ -43,48 +42,48 @@
         }
         else
         {
-            <table class="@CsS.Table.Tab">
-                <thead class="@CsS.Table.Thead">
+            <table class="min-w-full border-collapse overflow-hidden rounded border border-gray-200 text-sm dark:border-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-800/70">
                     <tr>
-                        <th class="@CsS.Table.TH">@CalcResource.name</th>
-                        <th class="@CsS.Table.TH">@CalcResource.active</th>
-                        <th class="@CsS.Table.TH">@CalcResource.resourceType</th>
-                        <th class="@CsS.Table.TH">@CalcResource.unit</th>
-                        <th class="@CsS.Table.TH">@CalcResource.quantity</th>
-                        <th class="@CsS.Table.TH">@CalcResource.changeFactor1 / 2</th>
-                        <th class="@CsS.Table.TH">@CalcResource.cap / @CalcResource.waste</th>
-                        <th class="@CsS.Table.TH">@CalcResource.cap</th>
-                        <th class="@CsS.Table.TH">@CalcResource.cost</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.name</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.active</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.resourceType</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.unit</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.quantity</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.changeFactor1 / 2</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.cap / @CalcResource.waste</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.cap</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.cost</th>
                     </tr>
                 </thead>
-                <tbody class="@CsS.Table.TBody">
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     @foreach (var r in resourcesToShow)
                     {
-                        <tr class="@CsS.Table.Tr">
-                            <td class="@CsS.Table.Td">
-                                <div class="@CssClasses.Layout.FlexItemsCenter">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">
+                                <div class="flex items-center gap-2">
 
                                 @if (RowActions is not null)
                                 {
                                         @if (r.ResType == ResourceTypesEnum.MachinesAndEquipments || r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.Managers)
                                         {
-                                            <button type="button" class="@CsS.Btn.Outline.Info" @onclick="() => CalcModeal(r)">Calc</button>
+                                            <button type="button" class="rounded border border-cyan-600 px-2 py-1 text-xs text-cyan-700 hover:bg-cyan-50 dark:border-cyan-500 dark:text-cyan-300 dark:hover:bg-cyan-900/30" @onclick="() => CalcModeal(r)">Calc</button>
                                         }
                                         @RowActions(r)
                                 }
                                 @r.Name
                                     </div>
                             </td>
-                            <td class="@CsS.Table.Td">
-                                <input type="checkbox" class="@CsS.Input.Check" checked="@r.IsActive" disabled />
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" checked="@r.IsActive" disabled />
                             </td>
-                            <td class="@CsS.Table.Td">@r.ResType</td>
-                            <td class="@CsS.Table.Td">@r.Data.Unit</td>
-                            <td class="@CsS.Table.Td">@r.Data.Quantity</td>
-                            <td class="@CsS.Table.Td">@r.Data.ChangeFactor1 / @r.Data.ChangeFactor2</td>
-                            <td class="@CsS.Table.Td">@r.Data.CapWaste</td>
-                            <td class="@CsS.Table.Td">@r.Data.Cost</td>
-                            <td class="@CsS.Table.Td">@r.Data.BaseCost</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.ResType</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.Unit</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.Quantity</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.ChangeFactor1 / @r.Data.ChangeFactor2</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.CapWaste</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.Cost</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.BaseCost</td>
                         </tr>
                     }
                 </tbody>

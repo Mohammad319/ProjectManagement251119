@@ -4,29 +4,28 @@
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Infrastructure
 @inject IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 
 @* ========== UI ========== *@
-<div class="@CsS.Modal.Body">
+<div class="space-y-3">
     @if (isLoading)
     {
         <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">جاري التحميل…</div>
     }
     else if (!string.IsNullOrWhiteSpace(loadError))
     {
-        <div class="@CsS.Background.Secondary">@loadError</div>
+        <div class="rounded border border-amber-200 bg-amber-50 p-2 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">@loadError</div>
     }
     else
     {
         @foreach (var set in propertySets)
         {
             <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-                <div class="@CsS.Layout.FlexJustifyBetween @CsS.Layout.FlexItemsCenter @CsS.Spacing.P.All2">
+                <div class="flex items-center justify-between p-2">
                     <h3 class="text-[12px]">@set.DisplayName (@set.Attributes.Count)</h3>
-                    <div class="@CsS.Layout.Inline">
-                        <button class="@CsS.Btn.Outline.Secondary" @onclick="() => LinkAllInSetAsync(set)">تحديد الكل</button>
-                        <button class="@CsS.Btn.Outline.Secondary" @onclick="() => UnlinkAllInSetAsync(set)">إلغاء الكل</button>
+                    <div class="inline-flex items-center gap-2">
+                        <button class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800" @onclick="() => LinkAllInSetAsync(set)">تحديد الكل</button>
+                        <button class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800" @onclick="() => UnlinkAllInSetAsync(set)">إلغاء الكل</button>
                     </div>
                 </div>
 
@@ -36,24 +35,24 @@
                         var bind = GetBind(p.Id);
                         var isLinked = bind is not null;
 
-                        <div class="@CsS.Layout.FlexItemsCenter @CsS.Layout.FlexJustifyBetween @CsS.Spacing.P.All2 hover:bg-gray-100 dark:hover:bg-gray-800/40">
-                            <div class="@CsS.Layout.FlexItemsCenter">
-                                <input class="@CsS.Input.Check"
+                        <div class="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-800/40">
+                            <div class="flex items-center">
+                                <input class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
                                        type="checkbox"
                                        checked="@isLinked"
                                        @onchange="async e => await ToggleBindAsync(p, ((ChangeEventArgs)e).Value is bool b && b)" />
 
-                                <div class="@CsS.Layout.FlexItemsCenter @CsS.Spacing.M.Left2">
+                                <div class="ms-2 flex items-center">
                                     <span class="text-sm">(@("p" + p.Id)) @p.DisplayName</span>
                                 </div>
                             </div>
 
-                            <div class="@CsS.Layout.Inline">
+                            <div class="inline-flex items-center gap-2">
                                 @if (isLinked)
                                 {
                                     @if (p.DataType == DataType.Text)
                                     {
-                                        <input class="@CsS.Input.Text"
+                                        <input class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                                                placeholder="قيمة نصية"
                                                value="@bind!.TextValue"
                                                @onchange="async e => await SaveTextAsync(p, e.Value?.ToString())" />
@@ -66,7 +65,7 @@
                                             if (p.MaxNumericValue.HasValue) numAttrs["max"] = p.MaxNumericValue.Value.ToString(CultureInfo.InvariantCulture);
                                             var shown = bind!.NumericValue?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
 
-                                        <div class="@CsS.Layout.FlexItemsCenter flex-nowrap">
+                                        <div class="flex flex-nowrap items-center">
 
                                             @if (p.StepValue.HasValue || p.MaxNumericValue.HasValue)
                                             {
@@ -74,7 +73,7 @@
                                                     @FormatRange(p.StepValue, p.MaxNumericValue)
                                                 </span>
                                             }
-                                            <input class="@CsS.Input.Number"
+                                            <input class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                                                    type="number" step="any"
                                                    placeholder="قيمة رقمية"
                                                    value="@shown"
