@@ -100,7 +100,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                 {
                     [nameof(CategoryFormUI.OrganisationCategory)] = model,
                     [nameof(CategoryFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallbackAsync)
-                });
+                }, BlazorMHD.UI.Core.Services.DialogSize.Large);
 
         private void Remove(ListOrganisationCategoryDTO category)
         {

@@ -20,7 +20,6 @@
         #netTable td,
         #netTable th {
             border-right: 1px @Temp.NetCalc.Color.Border @Temp.NetCalc.Color.Text;
-            padding: 4px 6px;
         }
 
         #netTable tr {
@@ -47,23 +46,28 @@
           class="pr-2 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 
         <!-- Visible Columns -->
-        <div class="flex-[5] min-w-[330px] max-w-none max-h-[60vh] overflow-y-auto overflow-x-auto
+        <div class="flex-[6] min-w-[400px] max-w-none max-h-[60vh] overflow-y-auto overflow-x-auto
                 bg-white dark:bg-slate-900/60
                 border border-slate-200 dark:border-slate-700
                 rounded-lg shadow-sm p-2">
 
-            <table class="w-full text-xs table-fixed">
+            <table class="w-full table-fixed text-xs">
+                <colgroup>
+                    <col style="width:35px;" />
+                    <col style="width:250px;" />
+                    <col style="width:200px;" />
+                </colgroup>
                 <thead>
                     <tr>
-                        <td colspan="5"
+                        <td colspan="3"
                             class="bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-800 dark:text-slate-100">
                             @ResourceApp.visibleItems
                         </td>
                     </tr>
                     <tr class="bg-slate-50 dark:bg-slate-900/60 text-[11px] text-slate-700 dark:text-slate-200">
-                        <td class="w-[55px] text-center">#</td>
-                        <th class="w-[300px] text-start font-medium">Name</th>
-                        <td class="w-[200px] text-center">Settings</td>
+                        <td class="text-center">#</td>
+                        <th class="text-start font-medium">Name</th>
+                        <td class="text-center">Settings</td>
                     </tr>
                 </thead>
 
@@ -88,7 +92,7 @@
                         </td>
 
                         <!-- Name (fixed 300px + truncate + fixed buttons) -->
-                        <td class="align-middle w-[300px] max-w-[300px]">
+                        <td class="align-middle">
                             <div class="flex items-center gap-2">
 
                                 <!-- Left buttons (fixed) -->
@@ -142,7 +146,7 @@
                             <div class="flex items-center justify-center gap-1 whitespace-nowrap">
 
                                 <!-- Width -->
-                                <input class="@CssClasses.Input.Number w-[70px] text-center"
+                                <input class="border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white w-[50px] text-center"
                                        type="number"
                                        title="Width"
                                        @bind="col.Width" />
@@ -171,7 +175,7 @@
             </table>
         </div>
         <!-- Hidden Columns -->
-        <div class="flex-[4] min-w-[280px] max-w-none max-h-[60vh] overflow-auto
+        <div class="flex-[4] min-w-[200px] max-w-none max-h-[60vh] overflow-auto
                 bg-white dark:bg-slate-900/60
                 border border-slate-200 dark:border-slate-700
                 rounded-lg shadow-sm p-2">
