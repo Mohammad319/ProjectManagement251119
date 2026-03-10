@@ -1,7 +1,6 @@
 ﻿@using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
 
 <div class="flex flex-wrap items-end gap-1 md:gap-1.5 text-[11px]"
      @key="@($"{Task.Id}:{Task.NewUnitCode ?? "-"}")">
@@ -67,7 +66,7 @@
     <!-- Apply button -->
     @if (ShouldShowApply(Task))
     {
-        <button class="@CsS.Btn.Outline.Primary @CsS.Btn.Size.Small @CsS.Spacing.M.Top2 text-[11px] h-[26px] px-2"
+        <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white px-1 py-0.5 text-sm mt-2 text-[11px] h-[26px] px-2"
                 @onclick="() => OnApply.InvokeAsync()">
             @ResourceApp.Button_Apply
         </button>

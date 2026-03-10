@@ -13,7 +13,7 @@
                 <div>
                     <h2 class="text-xl font-semibold text-blue-700">
                         @task.Name
-                        <button @onclick="() => CalcFunk(task)" class="@CssClasses.Btn.Outline.Primary">Applay</button>
+                        <button @onclick="() => CalcFunk(task)" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">Applay</button>
                         <span role="button" @onclick="() => AddRemoveTask(task)" class="@(TaskResSelecteds.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
                             @((MarkupString)(TaskResSelecteds.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus2))
                         </span>
@@ -55,7 +55,7 @@
                                                         else
                                                         {
                                                             <div class="px-1">
-                                                                <select class="@CssClasses.Input.Text" @onchange="(e) => OnSingleSelectionChanged(e.Value?.ToString(), condition)">
+                                                                <select class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @onchange="(e) => OnSingleSelectionChanged(e.Value?.ToString(), condition)">
                                                                     <option></option>
 
                                                                     @foreach (var item in condition.Items)

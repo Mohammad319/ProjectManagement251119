@@ -1,18 +1,18 @@
 ﻿@using ProjectManagement.Shared.DTO.Project
 @inherits AppComponentBase
 
-    <div class="@CssClasses.Modal.Body">
+    <div class="space-y-0">
         @if (ProjectDetails != null)
         {
-        <dl class="@CssClasses.Grid.Col.MD3">
+        <dl class="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <dt>@CalcResource.name</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Name</dd>
+            <dd class="md:col-span-2">@ProjectDetails.Name</dd>
                 <dt>@ResourceLoc.folder</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Folder</dd>
+            <dd class="md:col-span-2">@ProjectDetails.Folder</dd>
                 <dt>@CalcResource.status</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Status</dd>
+            <dd class="md:col-span-2">@ProjectDetails.Status</dd>
                 <dt>@ResourceApp.isVisible</dt>
-            <dd class="@CssClasses.Grid.Span.MD2"><input type="checkbox" selected="@ProjectDetails.IsVisible" disabled /></dd>
+            <dd class="md:col-span-2"><input type="checkbox" selected="@ProjectDetails.IsVisible" disabled /></dd>
             </dl>
         }
     </div>

@@ -8,13 +8,13 @@
 @inherits AppComponentBase
 @using ProjectManagement.Shared.Enums
 
-<div class="@($"{CssClasses.Modal.Body} flex flex-col gap-4")">
+<div class="space-y-0 flex flex-col gap-4">
     <EditForm id="myForm" Model="@projectFilter" OnValidSubmit="async () => await HandleSubmitAsync()" class="rounded-xl border border-slate-200 bg-slate-50 p-4">
         <DataAnnotationsValidator />
 
         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h5 class="m-0 text-lg font-bold">Projects Search</h5>
-            <button class="@($"{CssClasses.Btn.Solid.Primary} inline-flex items-center gap-2")" type="button" disabled="@IsLoading" @onclick="() => DetailsDiv = !DetailsDiv">
+            <button class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 inline-flex items-center gap-2" type="button" disabled="@IsLoading" @onclick="() => DetailsDiv = !DetailsDiv">
                 <span class="oi @(DetailsDiv ? "oi-arrow-top" : "oi-arrow-bottom")"></span>
                 <span>@(DetailsDiv ? "Hide details" : "Show details")</span>
             </button>
@@ -22,16 +22,16 @@
 
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div class="min-w-0 md:col-span-2 xl:col-span-4">
-                <label class="@CssClasses.Form.Label">@CalcResource.name</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@projectFilter.Name" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.Name" />
                 <ValidationMessage For="(() => projectFilter.Name)" />
             </div>
 
             @if (DetailsDiv)
             {
                 <div class="min-w-0">
-                    <label class="@CssClasses.Form.Label">@CalcResource.name</label>
-                    <InputSelect @bind-Value="projectFilter.NameOperator" class="@CssClasses.Input.Text">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                    <InputSelect @bind-Value="projectFilter.NameOperator" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option value="%var%" selected>%Var%</option>
                         <option value="==">==</option>
                         <option value="!=">!=</option>
@@ -42,38 +42,38 @@
                 </div>
 
                 <div class="min-w-0">
-                    <label class="@CssClasses.Form.Label">@CalcResource.startDate 1</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.StartDate1"></InputDate>
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.startDate 1</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.StartDate1"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.StartDate1)" />
                 </div>
 
                 <div class="min-w-0">
-                    <label class="@CssClasses.Form.Label">@CalcResource.startDate 2</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.StartDate2"></InputDate>
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.startDate 2</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.StartDate2"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.StartDate2)" />
                 </div>
 
                 <div class="min-w-0">
-                    <label class="@CssClasses.Form.Label">@CalcResource.endDate 1</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.EndDate1"></InputDate>
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.endDate 1</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.EndDate1"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.EndDate1)" />
                 </div>
 
                 <div class="min-w-0">
-                    <label class="@CssClasses.Form.Label">@CalcResource.endDate 2</label>
-                    <InputDate class="@CssClasses.Input.Text" @bind-Value="@projectFilter.EndDate2"></InputDate>
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.endDate 2</label>
+                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.EndDate2"></InputDate>
                     <ValidationMessage For="@(() => projectFilter.EndDate2)" />
                 </div>
 
                 <div class="min-w-0">
-                    <label class="@CssClasses.Form.Label">@CalcResource.code</label>
-                    <InputText class="@CssClasses.Input.Text" @bind-Value="@projectFilter.Code" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.code</label>
+                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.Code" />
                     <ValidationMessage For="@(() => projectFilter.Code)" />
                 </div>
 
                 <div class="min-w-0">
-                    <label class="@CssClasses.Form.Label">@ResourceIdentity.customer</label>
-                    <InputSelect @bind-Value="projectFilter.CustomerId" class="@CssClasses.Input.Text">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceIdentity.customer</label>
+                    <InputSelect @bind-Value="projectFilter.CustomerId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option></option>
                         @if (Customers != null)
                         {
@@ -86,36 +86,36 @@
                     <ValidationMessage For="@(() => projectFilter.CustomerId)" />
                 </div>
 
-                <div class="@($"{CssClasses.Form.CheckWrapperM} flex items-center gap-2 pt-7")">
-                    <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="@projectFilter.IsVisible" />
-                    <label class="@CssClasses.Form.Label">@ResourceApp.isVisible</label>
+                <div class="flex items-center gap-2 mt-1 md:mt-6 flex items-center gap-2 pt-7">
+                    <InputCheckbox class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" @bind-Value="@projectFilter.IsVisible" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceApp.isVisible</label>
                 </div>
             }
         </div>
 
         <div class="mt-4 flex flex-wrap gap-2">
-            <button type="submit" form="myForm" class="@CssClasses.Btn.Solid.Primary" disabled="@IsLoading"><span>@((MarkupString)Icons.Search)</span> Search</button>
-            <button class="@CssClasses.Btn.Solid.Danger" type="button" disabled="@IsLoading" @onclick="async () => await CallBack.InvokeAsync()">@ResourceApp.cancel</button>
+            <button type="submit" form="myForm" class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500" disabled="@IsLoading"><span>@((MarkupString)Icons.Search)</span> Search</button>
+            <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500" type="button" disabled="@IsLoading" @onclick="async () => await CallBack.InvokeAsync()">@ResourceApp.cancel</button>
         </div>
     </EditForm>
 
     <div class="overflow-auto rounded-xl border border-slate-200 bg-white">
-        <table class="@CssClasses.Table.Tab">
-            <thead class="@CssClasses.Table.Thead">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+            <thead class="bg-gray-100 dark:bg-gray-700">
                 <tr>
-                    <th class="@CssClasses.Table.TH">@CalcResource.name</th>
-                    <th class="@CssClasses.Table.TH">@CalcResource.code</th>
-                    <th class="@CssClasses.Table.TH">@CalcResource.startDate</th>
-                    <th class="@CssClasses.Table.TH">@CalcResource.endDate</th>
+                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.name</th>
+                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.code</th>
+                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.startDate</th>
+                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.endDate</th>
                 </tr>
             </thead>
-            <tbody class="@CssClasses.Table.TBody">
+            <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
                 @if (projects != null)
                     foreach (var project in projects)
                     {
                         <tr>
                             <td scope="row">
-                                <button class="@CssClasses.Btn.Link" @onclick="async ()=> await ProjectSelected(project)" disabled="@IsLoading">@project.Name</button>
+                                <button class="text-[18px] text-neutral-800 underline hover:text-neutral-900 transition dark:text-neutral-300 dark:hover:text-neutral-100" @onclick="async ()=> await ProjectSelected(project)" disabled="@IsLoading">@project.Name</button>
                             </td>
                             <td>@project.Code</td>
                             <td>@project.StartDate.ToString(ConstValues.DateFormat)</td>

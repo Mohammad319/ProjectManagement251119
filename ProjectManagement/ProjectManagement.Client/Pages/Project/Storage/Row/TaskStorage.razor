@@ -11,9 +11,9 @@
 
     RenderFragment TaskRow(TaskPostDTO task, bool IsParent = true, string color = UiStyles.ClassTask, int left = 0) => __builder =>
     {
-        <tr class="@CssClasses.Table.Tr @color">
-            <td class="@CssClasses.Table.Td">
-                <div class="@CssClasses.Layout.ButtonGroup" role="group" aria-label="Basic example">
+        <tr class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 @color">
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">
+                <div class="inline-flex" role="group" aria-label="Basic example">
                     <span role="button" style="margin-left:@(left + "px")"
                           @onclick="() => task.Colspan = !task.Colspan">
                     @((MarkupString)Icons.TopBottom(task.Colspan))</span>
@@ -23,16 +23,16 @@
                     }
                 </div>
             </td>
-            <td class="@CssClasses.Table.Td">@task.Metadata.Code</td>
-            <td class="@CssClasses.Table.Td"><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
-            <td class="@CssClasses.Table.Td">@task.Name</td>
-            <td class="@CssClasses.Table.Td">@task.Metadata.Quantity</td>
-            <td class="@CssClasses.Table.Td"></td>
-            <td class="@CssClasses.Table.Td">@task.Metadata.Unit</td>
-            <td class="@CssClasses.Table.Td">@task.Metadata.ChangeFactor1 / @task.Metadata.ChangeFactor2</td>
-            <td class="@CssClasses.Table.Td">@task.Metadata.Cap</td>
-            <td class="@CssClasses.Table.Td"></td>
-            <td class="@CssClasses.Table.Td">@task.Metadata.Note</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Code</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Name</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Quantity</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Unit</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.ChangeFactor1 / @task.Metadata.ChangeFactor2</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Cap</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"></td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Note</td>
         </tr>
         if (task.Colspan)
         {
