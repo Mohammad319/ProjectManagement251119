@@ -8,26 +8,33 @@
 @using ProjectManagement.Adminstrator.Constants
 @inherits AppComponentBase
 @inject IResourceAttributeSetService GroupPropertiesService
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
-<button @onclick="UpdateForm" class="@CsS.Btn.Outline.Success" title="إضافة">
+<button @onclick="UpdateForm"
+        class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+        title="إضافة">
     @((MarkupString)Icons.Plus)
 </button>
 <MhdTable TItem="ResourceAttributeSet" Items="ActionsTasks">
     <HeaderTemplate>
-        <th style="width:200px;" class="@CssClasses.Table.TH"></th>
-        <th class="@CssClasses.Table.TH">@CalcResource.name</th>
+        <th style="width:200px;" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"></th>
+        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
     </HeaderTemplate>
     <ChildContent>
         <MhdTableColumn>
             <Template Context="status">
-                <div class="@CssClasses.Layout.FlexItemsCenter">
-                    <button @onclick="() => Properties(status)" class="@CsS.Btn.Outline.Primary" title="Property" aria-label="Property">
+                <div class="flex items-center gap-2">
+                    <button @onclick="() => Properties(status)"
+                            class="inline-flex items-center rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                            title="Property" aria-label="Property">
                         Property
                     </button>
-                    <button @onclick="() => UpdateForm(status)" class="@CsS.Btn.Outline.Warning" title="@ResourceApp.update" aria-label="@ResourceApp.update">
+                    <button @onclick="() => UpdateForm(status)"
+                            class="inline-flex items-center rounded-xl bg-amber-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                            title="@ResourceApp.update" aria-label="@ResourceApp.update">
                         @Icons.Edit
                     </button>
-                    <button @onclick="() => Remove(status)" class="@CsS.Btn.Outline.Danger" title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
+                    <button @onclick="() => Remove(status)"
+                            class="inline-flex items-center rounded-xl bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/40"
+                            title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
                         @Icons.Delete
                     </button>
                 </div>
