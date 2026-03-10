@@ -27,12 +27,17 @@ namespace ProjectManagement.Client.Pages.Calculation
         protected override async Task OnInitializedAsync()
         {
             hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri("/notification"))
+                .WithUrl(Navigation.ToAbsoluteUri("/notification"), options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        return await Task.FromResult<string?>(null);
+                    };
+                })
                 .WithAutomaticReconnect([TimeSpan.Zero, TimeSpan.Zero, TimeSpan.FromSeconds(10)])
                 .Build();
 
             hubConnection.On<ObjectTypHub, OperationType, object>("calc", OnHubEvent);
-            hubConnection.Reconnected += async _ => await AddToGroup();
 
             await hubConnection.StartAsync();
             await AddToGroup();
@@ -40,12 +45,7 @@ namespace ProjectManagement.Client.Pages.Calculation
         }
 
         private async Task AddToGroup()
-        {
-            if (hubConnection is null || hubConnection.State != HubConnectionState.Connected || Calc.Id <= 0)
-                return;
-
-            await hubConnection.SendAsync("AddToGroup", Calc.Id);
-        }
+            => await hubConnection?.SendAsync("AddToGroup", Calc.Id)!;
 
         void OnHubEvent(ObjectTypHub typ, OperationType ot, object obj)
         {
