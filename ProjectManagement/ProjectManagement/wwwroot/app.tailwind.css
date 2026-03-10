@@ -1,6 +1,11 @@
-﻿@tailwind base;
-@tailwind components;
-@tailwind utilities;
+﻿@import "tailwindcss" source(none);
 
+/* dark mode based on .dark class */
+@custom-variant dark (&:where(.dark, .dark *));
 
-@import "./css/custom.css";
+/* current project */
+@source "..";
+
+/* sibling projects */
+@source "../../ProjectManagement";
+@source "../../ProjectManagement.Client";
