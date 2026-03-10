@@ -62,17 +62,7 @@ namespace ProjectManagement.SignalR
         [HubMethodName("AddToGroup")]
         public async Task AddToGroup(int id, CancellationToken ct = default)
         {
-            var tenantId = currentTenant.TenantId;
-            if (tenantId <= 0)
-            {
-                var tenantClaim = Context.User?.FindFirst(PMClaimsConst.Tenant)?.Value
-                                 ?? Context.User?.FindFirst("TenantID")?.Value;
-
-                if (int.TryParse(tenantClaim, out var parsedTenantId) && parsedTenantId > 0)
-                    tenantId = parsedTenantId;
-            }
-
-            if (id <= 0 || tenantId <= 0)
+            if (id <= 0 || currentTenant.TenantId <= 0)
                 return;
 
             await using var db = await dbFactory.CreateDbContextAsync(ct);
@@ -85,7 +75,7 @@ namespace ProjectManagement.SignalR
 
             await Groups.AddToGroupAsync(
                 Context.ConnectionId,
-                NotificationGroupNames.ForCalculation(tenantId, id),
+                NotificationGroupNames.ForCalculation(currentTenant.TenantId, id),
                 ct);
         }
     }
