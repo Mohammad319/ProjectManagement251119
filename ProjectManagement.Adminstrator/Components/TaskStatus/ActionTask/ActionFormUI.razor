@@ -1,58 +1,47 @@
-﻿
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Lookups
 @using TaskResourceBlueprints.Services
+@using TaskResourceBlueprints.Services.Common
 @inherits AppComponentBase
 @inject IEntityService<ActionEntity> service
-@using CsS = ProjectManagement.Shared.Constant.CssClasses
-@using TaskResourceBlueprints.Services.Common
 
-<EditForm id="myForm"
-          Model="@Model"
-          OnValidSubmit="async () => await HandleSubmitAsync()"
-          class="@($"{CsS.Modal.Body}")">
+<EditForm id="actionForm" Model="@Model" OnValidSubmit="HandleSubmitAsync" class="space-y-6 px-1 py-1">
+    <DataAnnotationsValidator />
 
-    <!-- ثلاثة حقول في السطر -->
-    <div class="@CsS.Grid.Col.MD3">
-        <!-- Name -->
-        <div>
-            <label class="@CsS.Form.Label">@CalcResource.name:</label>
-            <InputText class="@CsS.Input.Text" @bind-Value="@Model.Name" />
-            <ValidationMessage For="@(() => Model.Name)" class="@CsS.Text.Danger" />
+    <div class="grid gap-4 md:grid-cols-3">
+        <div class="space-y-2 md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+            <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                       @bind-Value="@Model.Name" />
+            <ValidationMessage For="@(() => Model.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
-
-        <!-- Order -->
-        <div>
-            <label class="@CsS.Form.Label">@ResourceApp.order:</label>
-            <InputNumber class="@CsS.Input.Number" @bind-Value="@Model.SortOrder" />
-            <ValidationMessage For="@(() => Model.SortOrder)" class="@CsS.Text.Danger" />
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.order</label>
+            <InputNumber class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                         @bind-Value="@Model.SortOrder" />
+            <ValidationMessage For="@(() => Model.SortOrder)" class="text-sm text-rose-600 dark:text-rose-400" />
         </div>
-
-        <!-- Visible (صف أفقي) -->
-        <div class="@CsS.Layout.FlexItemsCenter">
-            <InputCheckbox class="@CsS.Input.Check" @bind-Value="@Model.IsVisible" />
-            <label class="@CsS.Form.Label">@ResourceApp.visible</label>
+        <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900 md:col-span-3">
+            <InputCheckbox id="actionVisible" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" @bind-Value="@Model.IsVisible" />
+            <label class="text-sm font-medium text-slate-700 dark:text-slate-200" for="actionVisible">@ResourceApp.visible</label>
         </div>
     </div>
 </EditForm>
-
-<div class="@CsS.Modal.Footer">
-    <button type="submit" form="myForm" class="@CsS.Btn.Outline.Success" disabled="@IsLoading">
+<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <button type="submit" form="actionForm" class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" disabled="@IsLoading">
         @ResourceApp.save
     </button>
-    <button type="button" class="@CsS.Btn.Outline.Secondary" @onclick="async () => await Callback.InvokeAsync(false)">
+    <button type="button" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync(false)">
         @ResourceApp.cancel
     </button>
 </div>
 
 @code {
-    [Parameter] public ActionEntity Model { get; set; } = new ActionEntity() { Name = "name"};
+    [Parameter] public ActionEntity Model { get; set; } = new ActionEntity() { Name = "name" };
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
     bool IsLoading = false;
-    protected override void OnInitialized()
-    {
-    }
+
     private async Task HandleSubmitAsync()
     {
         IsLoading = true;
