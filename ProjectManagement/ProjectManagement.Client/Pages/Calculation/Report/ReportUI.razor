@@ -4,12 +4,12 @@
 @attribute [Authorize(Roles = PMRolesConst.Tenant.Users)]
 
 <div class="tableFixHead" style="height:calc(100vh - 106px)">
-    <div class="@CssClasses.Layout.FlexItemsCenter">
+    <div class="d-flex align-items-center gap-2">
         <div>
             <input type="number" style="width:75px" value="100" maxlength="6" @onchange="(e)=> scaleX = double.TryParse(e.Value?.ToString(), out var parsed) ? parsed : scaleX" />%
         </div>
         <div>
-            <button class="@CssClasses.Btn.Solid.Primary" id="print" onclick="window.print()">@ResourceApp.print</button>
+            <button class="btn btn-primary" id="print" onclick="window.print()">@ResourceApp.print</button>
         </div>
         <div>
         </div>
