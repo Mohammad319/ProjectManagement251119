@@ -93,7 +93,7 @@
     </div>
 </EditForm>
 
-<div class="@CssClasses.Modal.Footer">
-    <button type="submit" form="myFormOffer" disabled="@IsLoading" class="@CssClasses.Btn.Outline.Success mx-sm-2" style="margin-right:5px;">@ResourceApp.save</button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick=" Modal.Close">@ResourceApp.cancel</button>
+<div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-700 pt-3">
+    <button type="submit" form="myFormOffer" disabled="@IsLoading" class="inline-flex items-center justify-center rounded-md border border-emerald-600 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-900/30 disabled:cursor-not-allowed disabled:opacity-60 mx-sm-2" style="margin-right:5px;">@ResourceApp.save</button>
+    <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick=" Modal.Close">@ResourceApp.cancel</button>
 </div>

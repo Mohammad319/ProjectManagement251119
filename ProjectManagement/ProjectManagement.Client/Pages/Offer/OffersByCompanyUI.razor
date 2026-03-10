@@ -21,26 +21,26 @@
 
         <ChildContent>
             <div class="@($"overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 {(Calc.Tap6 ? "" : "pointer-events-none opacity-60")}")">
-                <table class="@($"{CssClasses.Table.Tab} text-xs")">
-                    <thead class="@($"{CssClasses.Table.Thead} sticky top-0 z-10")">
+                <table class="min-w-full text-xs leading-tight text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10">
                         <tr>
-                            <th class="@($"{CssClasses.Table.TH} pl-20")">@ResourceLoc.resource</th>
-                            <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.quantity</th>
-                            <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.cost</th>
-                            <th class="@($"{CssClasses.Table.TH} text-right")">@CalcResource.baseCost</th>
-                            <th class="@($"{CssClasses.Table.TH} text-center")">@ResourceApp.date</th>
-                            <th class="@CssClasses.Table.TH">@CalcResource.note</th>
+                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left pl-20">@ResourceLoc.resource</th>
+                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.quantity</th>
+                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.cost</th>
+                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.baseCost</th>
+                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-center">@ResourceApp.date</th>
+                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@CalcResource.note</th>
                         </tr>
                     </thead>
 
-                    <tbody class="@CssClasses.Table.TBody">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                         @if (CompaniesList.Any())
                         {
                             @foreach (var com in CompaniesList.OrderByDescending(x => x.Name))
                             {
                                 <!-- صف عنوان الشركة -->
-                                <tr class="@($"{CssClasses.Table.Tr} bg-slate-50/80 dark:bg-slate-900/70 border-l-4 border-indigo-400 dark:border-indigo-500")">
-                                    <td colspan="6" class="@($"{CssClasses.Table.Td} pl-20 py-1.5")">
+                                <tr class="transition-colors bg-slate-50/80 dark:bg-slate-900/70 border-l-4 border-indigo-400 dark:border-indigo-500">
+                                    <td colspan="6" class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 pl-20 py-1.5">
                                         <div class="flex items-center justify-between gap-2">
 
                                             <div class="flex items-center gap-2">
@@ -79,19 +79,19 @@
                                     @foreach (var cat in com.Offers)
                                     {
                                         <tr role="button"
-                                            class="@($"{CssClasses.Table.Tr} group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800")">
+                                            class="transition-colors group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
 
                                             <!-- العمود الأول: الأزرار + اسم الـ Resource -->
-                                            <td class="@CssClasses.Table.Td">
-                                                <div class="@CssClasses.Layout.FlexItemsCenter">
+                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200">
+                                                <div class="flex items-center gap-2">
                                                     <!-- أزرار Edit/Delete تظهر فقط عند hover -->
                                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                                                        <button class="@CssClasses.Btn.IconButton.Danger"
+                                                        <button class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400"
                                                                 @onclick="() => Delete(cat.Item1)">
                                                             @((MarkupString)@Icons.DeleteSVG)
                                                         </button>
 
-                                                        <button class="@CssClasses.Btn.IconButton.Primary"
+                                                        <button class="inline-flex h-6 w-6 items-center justify-center rounded-md bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                                                                 @onclick="() => EditOffer(cat.Item1, cat.Item2)">
                                                             @Icons.Edit
                                                         </button>
@@ -105,27 +105,27 @@
                                             </td>
 
                                             <!-- الكمية (من الشركة) -->
-                                            <td class="@($"{CssClasses.Table.Td} text-right")">
+                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
                                                 @Format(com.Quantity)
                                             </td>
 
                                             <!-- التكلفة -->
-                                            <td class="@($"{CssClasses.Table.Td} text-right")">
+                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
                                                 @Format(cat.Item1.Cost)
                                             </td>
 
                                             <!-- Base Cost -->
-                                            <td class="@($"{CssClasses.Table.Td} text-right")">
+                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
                                                 @Format(cat.Item1.BaseCost)
                                             </td>
 
                                             <!-- التاريخ -->
-                                            <td class="@($"{CssClasses.Table.Td} text-center text-[11px] text-slate-600 dark:text-slate-300")">
+                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-center text-[11px] text-slate-600 dark:text-slate-300">
                                                 @cat.Item1.Date.ToString(ConstValues.DateFormat)
                                             </td>
 
                                             <!-- الملاحظة -->
-                                            <td class="@($"{CssClasses.Table.Td} text-[11px] text-slate-500 dark:text-slate-400")">
+                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-[11px] text-slate-500 dark:text-slate-400">
                                                 @if (string.IsNullOrWhiteSpace(cat.Item1.Comment))
                                                 {
                                                     <span class="text-slate-400 dark:text-slate-500 italic">
