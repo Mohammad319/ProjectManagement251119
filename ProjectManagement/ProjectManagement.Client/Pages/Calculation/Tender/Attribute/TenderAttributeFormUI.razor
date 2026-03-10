@@ -7,34 +7,34 @@
 @using ProjectManagement.Shared.Base.Calculation;
 @using System.Text.Json;
 @inherits AppComponentBase
-<EditForm id="myFormAttr" class="@CssClasses.Modal.Body" Model="@Post" OnValidSubmit="async()=> await HandleSubmitAsync()">
-        <div class="@CssClasses.Grid.Col.MD4">
-        <div class="@CssClasses.Grid.Span.MD2">
-        <label class="@CssClasses.Form.Label">@CalcResource.name </label>
-        <InputText @bind-Value="Post.Name" class="@CssClasses.Input.Text" />
+<EditForm id="myFormAttr" class="space-y-4" Model="@Post" OnValidSubmit="async()=> await HandleSubmitAsync()">
+        <div class="grid gap-4 md:grid-cols-4">
+        <div class="md:col-span-2">
+        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name </label>
+        <InputText @bind-Value="Post.Name" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
         <ValidationMessage For=@(() => Post.Name) />
     </div>
-        <div class="@CssClasses.Grid.Span.MD2">
-        <label class="@CssClasses.Form.Label">@CalcResource.note </label>
-        <InputTextArea @bind-Value="Post.Note" class="@CssClasses.Input.Text" />
+        <div class="md:col-span-2">
+        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note </label>
+        <InputTextArea @bind-Value="Post.Note" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
         <ValidationMessage For=@(() => Post.Note) />
     </div>
     @if (TenderAttribute.Id == 0) for (int i = 0; i < TendersValues.Count; i++)
         {
             var buttonNumber = i;
             <div>
-                <label class="@CssClasses.Form.Label">@Tenders[i].Company </label>
-                <input type="number" class="@CssClasses.Input.Text" @onchange="(e)=> OnChange(e,TendersValues.ElementAt(buttonNumber).Key)" />
+                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@Tenders[i].Company </label>
+                <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @onchange="(e)=> OnChange(e,TendersValues.ElementAt(buttonNumber).Key)" />
             </div>
         }
     </div>
 </EditForm>
 
-<div class="@CssClasses.Modal.Footer">
-    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="myFormAttr" disabled="@IsLoading">
+<div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+    <button type="submit" class="inline-flex items-center rounded-md border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="myFormAttr" disabled="@IsLoading">
         @ResourceApp.save
     </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+    <button type="button" class="inline-flex items-center rounded-md border border-slate-400 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500/40 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
 </div>
 @code {
     void OnChange(ChangeEventArgs ev,int i)
