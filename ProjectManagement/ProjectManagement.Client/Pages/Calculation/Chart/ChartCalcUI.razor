@@ -11,36 +11,36 @@
 @inject FolderState Container
 @inject CalculationService CalcService
 
-<div class="@CssClasses.Layout.WideContainer">
-    <div class="@CssClasses.Grid.Col.MD4">
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+<div class="w-full space-y-1">
+    <div class="grid grid-cols-1 gap-1 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="relative min-h-[220px]">
                 <ChartComponent ChartJsConfig="NetCostTotalyPieCfg" />
             </div>
         </div>
 
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+        <div class="rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="relative min-h-[220px]">
                 <ChartComponent ChartJsConfig="NetCostTotalyOHPieCfg" />
             </div>
         </div>
 
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+        <div class="rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="relative min-h-[220px]">
                 <ChartComponent ChartJsConfig="EVCfg" />
             </div>
         </div>
 
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+        <div class="rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="relative min-h-[220px]">
                 <ChartComponent ChartJsConfig="SumPieCfg" />
             </div>
         </div>
     </div>
 
-    <div class="@CssClasses.Spacing.M.Top1">
-        <div class="@CssClasses.Components.Card">
-            <div class="@CssClasses.Components.ChartWrap">
+    <div class="mt-1">
+        <div class="rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="relative min-h-[320px]">
                 <ChartComponent ChartJsConfig="BarCfg" />
             </div>
         </div>
