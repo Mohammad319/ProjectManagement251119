@@ -7,7 +7,6 @@ using ProjectManagement.Services;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Hub;
 using ProjectManagement.Shared.Enums;
-using System.Globalization;
 
 namespace ProjectManagement.SignalR
 {
@@ -74,14 +73,10 @@ namespace ProjectManagement.SignalR
             if (!calculationExists)
                 return;
 
-            var tenantScopedGroup = NotificationGroupNames.ForCalculation(currentTenant.TenantId, id);
-            var legacyGroup = id.ToString(CultureInfo.InvariantCulture);
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, tenantScopedGroup, ct);
-
-            // Backward compatibility: some notification senders may still publish to raw calculation id.
-            if (!string.Equals(tenantScopedGroup, legacyGroup, StringComparison.Ordinal))
-                await Groups.AddToGroupAsync(Context.ConnectionId, legacyGroup, ct);
+            await Groups.AddToGroupAsync(
+                Context.ConnectionId,
+                NotificationGroupNames.ForCalculation(currentTenant.TenantId, id),
+                ct);
         }
     }
 }

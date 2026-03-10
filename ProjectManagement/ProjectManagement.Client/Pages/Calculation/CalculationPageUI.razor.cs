@@ -20,9 +20,6 @@ namespace ProjectManagement.Client.Pages.Calculation
 
         public async ValueTask DisposeAsync()
         {
-            _hubFlushCts?.Cancel();
-            _hubFlushCts?.Dispose();
-
             if (hubConnection is not null)
                 await hubConnection.DisposeAsync();
         }
@@ -41,10 +38,6 @@ namespace ProjectManagement.Client.Pages.Calculation
                 .Build();
 
             hubConnection.On<ObjectTypHub, OperationType, object>("calc", OnHubEvent);
-            hubConnection.Reconnected += async _ =>
-            {
-                await AddToGroup();
-            };
 
             await hubConnection.StartAsync();
             await AddToGroup();
