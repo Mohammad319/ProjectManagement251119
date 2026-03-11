@@ -64,6 +64,7 @@ public sealed class TenantAuditSaveChangesInterceptor : SaveChangesInterceptor
 
         foreach (var property in entry.Properties)
         {
+
             var isPrimaryKey = property.Metadata.IsPrimaryKey();
             var isIdentifyingForeignKey = property.Metadata.IsForeignKey() && property.Metadata.IsKey();
 
@@ -72,6 +73,7 @@ public sealed class TenantAuditSaveChangesInterceptor : SaveChangesInterceptor
 
             property.CurrentValue = property.OriginalValue;
             property.IsModified = false;
+
         }
     }
 
