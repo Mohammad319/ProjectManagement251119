@@ -13,7 +13,11 @@
     <link rel="stylesheet" href="_content/BlazorMHD.UI/css/animations.css" />
 
     <link href="_content/ContextMenuMHD/css/tailwind-contextmenu.css" rel="stylesheet" />
-    <link href="css/app.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="@Assets["css/app.css"]" />
+
+    @* Temporary Tailwind CDN fallback while local build pipeline is unstable. *@
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <ImportMap />
     <HeadOutlet />
 </head>
