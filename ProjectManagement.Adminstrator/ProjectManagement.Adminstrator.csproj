@@ -12,6 +12,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="**\node_modules\**" />
+    <Content Remove="**\node_modules\**" />
+    <EmbeddedResource Remove="**\node_modules\**" />
+    <None Remove="**\node_modules\**" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
     <PackageReference Include="ContextMenuMHD" Version="1.4.5" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.2" />
@@ -33,5 +44,17 @@
     <ProjectReference Include="..\Persistence\Persistence.csproj" />
     <ProjectReference Include="D:\Library\3\BlazorMHD\BlazorMHD.UI\BlazorMHD.UI.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="**\package.json" CopyToPublishDirectory="Never" />
+    <Content Update="**\package-lock.json" CopyToPublishDirectory="Never" />
+    <Content Update="**\tailwind.config.js" CopyToPublishDirectory="Never" />
+    <Content Update="**\postcss.config.js" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <Target Name="BuildTailwindCss" BeforeTargets="Build;Publish" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
+    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')" />
+    <Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
 
 </Project>
