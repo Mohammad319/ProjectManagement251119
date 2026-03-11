@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "tw:build": "npx @tailwindcss/cli -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --minify",
-    "tw:watch": "npx @tailwindcss/cli -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --watch"
+    "tw:build": "tailwindcss -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --minify",
+    "tw:watch": "tailwindcss -i ./wwwroot/app.tailwind.css -o ./wwwroot/css/app.css --watch"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.2.1",
