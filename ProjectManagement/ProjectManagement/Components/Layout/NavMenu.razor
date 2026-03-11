@@ -28,40 +28,40 @@
         </button>
 
         <div class="@($"w-full md:flex md:items-center md:w-auto {(isNavOpen ? "" : "hidden")}")" id="navbarMenu">
-            <ul class="flex flex-col mt-0.5 md:flex-row md:space-x-3 md:mt-0 w-full md:justify-end">
-                <li class="text-right md:text-left flex-grow">
+            <ul class="mt-0.5 flex w-full flex-col gap-1 md:mt-0 md:w-auto md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-2">
+                <li class="text-right md:text-left md:flex-none">
                     <button class="btn nav-link" @onclick="ChangeLanguage" title="@PMWebResource.ToggleLanguage" aria-label="@PMWebResource.ToggleLanguage">
                         @((MarkupString)(IsEnglishCulture ? Icons.EN : Icons.SE))
                     </button>
                 </li>
 
-                <li class="text-right md:text-left flex-grow">
+                <li class="text-right md:text-left md:flex-none">
                     <button class="btn nav-link" @onclick="ToggleTheme" title="@PMWebResource.ToggleTheme" aria-label="@PMWebResource.ToggleTheme">
                         <span>@((MarkupString)(IsDark ? Icons.Sun : Icons.DarkMode))</span>
                     </button>
                 </li>
 
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                    <li class="text-right md:text-left flex-grow">
+                    <li class="text-right md:text-left md:flex-none">
                         <button class="btn nav-link" @onclick='@(() => OpenDialog("org"))' title="@PMWebResource.AdminSettings" aria-label="@PMWebResource.AdminSettings">
                             @((MarkupString)Icons.Company)
                         </button>
                     </li>
                 </AuthorizeView>
 
-                <li class="text-right md:text-left flex-grow">
+                <li class="text-right md:text-left md:flex-none">
                     <button class="btn nav-link" @onclick='@(() => OpenDialog("control"))' title="@PMWebResource.Settings" aria-label="@PMWebResource.Settings">
                         <span aria-hidden="true">@((MarkupString)Icons.Settings)</span>
                     </button>
                 </li>
 
-                <li class="text-right md:text-left flex-grow">
+                <li class="text-right md:text-left md:flex-none">
                     <button class="btn nav-link" @onclick="PersonalSettingFun" title="@PMResourceIdentity.Menu_Profile" aria-label="@PMResourceIdentity.Menu_Profile">
                         <span aria-hidden="true">@((MarkupString)Icons.Person)</span>
                     </button>
                 </li>
 
-                <li class="text-right md:text-left flex-grow">
+                <li class="text-right md:text-left md:flex-none">
                     <form action="/Account/Logout" method="post" class="inline">
                         <AntiforgeryToken />
                         <input type="hidden" name="ReturnUrl" value="@currentUrl" />

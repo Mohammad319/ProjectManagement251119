@@ -15,79 +15,87 @@
 
 <PageTitle>@PMResourceIdentity.login</PageTitle>
 
-<main class="w-full mx-auto p-6">
-    @* أزلنا max-w-md من الـ main *@
+<main class="min-h-[calc(100vh-3.5rem)] w-full">
     <StatusMessage Message="@errorMessage" />
 
-    <!-- Logo كبير ومتمركز، لا يقيّده عرض الفورم -->
-    <div class="flex justify-center mb-4">
-        <img src="Icons/BigLogo.png" alt="Logo"
-             class="w-full max-w-[600px] dark:opacity-90" /> @* كبّر كما تشاء *@
-    </div>
-
-    <!-- نقيّد عرض الفورم هنا فقط -->
-    <div class="mx-auto w-full max-w-md">
-        <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-6">
-
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
-
-            <!-- Email -->
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    @ResourceIdentity.email:
-                </label>
-                <InputText id="email" type="email" @bind-Value="Input.Email" placeholder="@ResourceIdentity.email"
-                           autocomplete="username"
-                           class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm
-                          focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
-                          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
-                <ValidationMessage For="@(() => Input.Email)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+    <div class="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-6xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+        <div class="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(380px,1fr)]">
+            <div class="hidden lg:flex lg:justify-center">
+                <img src="Icons/BigLogo.png" alt="Logo"
+                     class="w-full max-w-[650px] object-contain dark:opacity-90" />
             </div>
 
-            <!-- Password -->
-            <div>
-                <label for="floatingPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    @PMResourceIdentity.password
-                </label>
-                <InputText id="floatingPassword" type="password" @bind-Value="Input.Password"
-                           placeholder="@PMResourceIdentity.password" autocomplete="current-password"
-                           class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm
+            <div class="mx-auto w-full max-w-md rounded-2xl border border-slate-200/80 bg-white/95 p-6 shadow-2xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:p-8">
+                <div class="mb-5 text-center lg:hidden">
+                    <img src="Icons/Logo.png" alt="Logo" class="mx-auto h-14 w-auto" />
+                </div>
+
+                <h1 class="mb-1 text-center text-2xl font-semibold text-slate-900 dark:text-slate-100">@PMResourceIdentity.login</h1>
+                <p class="mb-6 text-center text-sm text-slate-500 dark:text-slate-400">@PMWebResource.SettingsDescription</p>
+
+                <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-6">
+
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            @ResourceIdentity.email:
+                        </label>
+                        <InputText id="email" type="email" @bind-Value="Input.Email" placeholder="@ResourceIdentity.email"
+                                   autocomplete="username"
+                                   class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm
                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
                           dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
-                <ValidationMessage For="@(() => Input.Password)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
-            </div>
+                        <ValidationMessage For="@(() => Input.Email)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+                    </div>
 
-            <!-- Remember Me -->
-            <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
-                <InputCheckbox @bind-Value="Input.RememberMe"
-                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500
+                    <!-- Password -->
+                    <div>
+                        <label for="floatingPassword" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            @PMResourceIdentity.password
+                        </label>
+                        <InputText id="floatingPassword" type="password" @bind-Value="Input.Password"
+                                   placeholder="@PMResourceIdentity.password" autocomplete="current-password"
+                                   class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm
+                          focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
+                          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
+                        <ValidationMessage For="@(() => Input.Password)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
+                        <InputCheckbox @bind-Value="Input.RememberMe"
+                                       class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500
                               dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400" />
-                <span>@PMResourceIdentity.rememberMe</span>
-            </div>
+                        <span>@PMResourceIdentity.rememberMe</span>
+                    </div>
 
-            <!-- Login Button -->
-            <div>
-                <button type="submit"
-                        class="w-full rounded-lg bg-blue-600 px-4 py-3 text-lg font-medium text-white shadow-sm
+                    <!-- Login Button -->
+                    <div>
+                        <button type="submit"
+                                class="w-full rounded-lg bg-blue-600 px-4 py-3 text-lg font-medium text-white shadow-sm
                        transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                        dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                    @PMResourceIdentity.login
-                </button>
-            </div>
+                            @PMResourceIdentity.login
+                        </button>
+                    </div>
 
-            <!-- Error & Forgot Password -->
-            <div class="mt-4 text-center">
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <p class="text-red-500 text-sm">@errorMessage</p>
-                }
-                <NavLink href="Account/ForgotPassword" class="inline-block mt-2 text-blue-600 hover:underline dark:text-blue-400">
-                    @PMResourceIdentity.passwordForget
-                </NavLink>
-            </div>
+                    <!-- Error & Forgot Password -->
+                    <div class="mt-4 text-center">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <p class="text-sm text-red-500">@errorMessage</p>
+                        }
+                        <NavLink href="Account/ForgotPassword" class="inline-block mt-2 text-blue-600 hover:underline dark:text-blue-400">
+                            @PMResourceIdentity.passwordForget
+                        </NavLink>
+                    </div>
 
-        </EditForm>
+                </EditForm>
+            </div>
+        </div>
     </div>
 </main>
 
@@ -164,6 +172,5 @@
 
     }
 }
-
 
 
