@@ -9,6 +9,7 @@
 */
 @source "../../ProjectManagement.Client/**/*.{razor,cs,html}";
 @source "../**/*.{razor,cs,html}";
+@source "../../../ProjectManagement.Shared/**/*.{cs,razor,html}";
 
 /* Dynamic/safelisted utilities used in interpolated class strings */
 @source inline("text-primary text-success text-danger");
