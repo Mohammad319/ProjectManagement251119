@@ -29,29 +29,29 @@
     <DataAnnotationsValidator />
 
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="@CssClasses.Layout.FlexWrap">
-            <div class="@CssClasses.Layout.FlexWidth200">
-                <label class="@CssClasses.Form.Label">@CalcResource.code</label>
-                <InputText @bind-Value="TaskUpdate.Metadata.Code" class="@CssClasses.Input.Text" />
+        <div class="flex flex-wrap gap-2">
+            <div class="w-[200px]">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.code</label>
+                <InputText @bind-Value="TaskUpdate.Metadata.Code" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => TaskUpdate.Metadata.Code)" />
             </div>
-            <div class="@CssClasses.Layout.FlexMinWidth350">
-                <label class="@CssClasses.Form.Label">@CalcResource.name </label>
-                <InputText @bind-Value="TaskUpdate.Name" class="@CssClasses.Input.Text" />
+            <div class="flex-1 min-w-[350px]">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name </label>
+                <InputText @bind-Value="TaskUpdate.Name" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => TaskUpdate.Name)" />
             </div>
         </div>
     </MhdCard>
 
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="@CssClasses.Layout.FlexWrap">
+        <div class="flex flex-wrap gap-2">
             @if (!TaskUpdate.OnlyCodeText)
             {
-                    <div class="@(TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ ? CssClasses.Layout.FlexWidth110 : CssClasses.Layout.FlexWidth200)">
+                    <div class="@(TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ ? "w-[110px]" : "w-[200px]")">
 
-                    <label class="@CssClasses.Form.Label">@CalcResource.quantity</label>
-                    <div class="w-full @CssClasses.Layout.ButtonGroup">
-                        <InputSelect class="@CssClasses.Input.Select"
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.quantity</label>
+                    <div class="w-full inline-flex">
+                        <InputSelect class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                                      @bind-Value:get="TaskUpdate.Metadata.QuantityParam"
                                      @bind-Value:set="(value) => ChangeQuantityParam(value)">
                             <option></option>
@@ -65,73 +65,73 @@
 
                         @if (TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ)
                         {
-                            <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="@CssClasses.Input.Text" />
+                            <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                         }
                     </div>
                 </div>
 
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <label class="@CssClasses.Form.Label">@CalcResource.unit</label>
-                    <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@CssClasses.Input.Text" />
+                <div class="w-[110px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.unit</label>
+                    <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Unit)" />
                 </div>
 
                 @if (Task.Tasks == null || Task.Tasks.Count == 0)
                 {
-                    <div class="@CssClasses.Layout.FlexWidth110">
-                        <label class="@CssClasses.Form.Label">@CalcResource.cap </label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.Ca‌​p" class="@CssClasses.Input.Text" />
+                    <div class="w-[110px]">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.cap </label>
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.Ca‌​p" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.Cap)" />
                     </div>
                 }
 
                 @if (TaskUpdate.ParentTaskId.HasValue)
                 {
-                    <div class="@CssClasses.Layout.FlexWidth130">
-                        <label class="@CssClasses.Form.Label">@CalcResource.changeFactor1</label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@CssClasses.Input.Text" />
+                    <div class="w-[130px]">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor1</label>
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor1)" />
                     </div>
-                    <div class="@CssClasses.Layout.FlexWidth130">
-                        <label class="@CssClasses.Form.Label">@CalcResource.changeFactor2 </label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@CssClasses.Input.Text" />
+                    <div class="w-[130px]">
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor2 </label>
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
                     </div>
                 }
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <label class="@CssClasses.Form.Label">ActuallyQuantity </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@CssClasses.Input.Text" />
+                <div class="w-[110px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">ActuallyQuantity </label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.ActuallyQuantity)" />
                 </div>
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <label class="@CssClasses.Form.Label">WorkedQ </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@CssClasses.Input.Text" />
+                <div class="w-[110px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">WorkedQ </label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.WorkedQ)" />
                 </div>
 
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <label class="@CssClasses.Form.Label">@CalcResource.priceSub </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@CssClasses.Input.Text" />
+                <div class="w-[110px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.priceSub </label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceSubDB)" />
                 </div>
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <label class="@CssClasses.Form.Label">@CalcResource.minPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="@CssClasses.Input.Text" />
+                <div class="w-[110px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.minPrice </label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.MinPrice)" />
                 </div>
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <label class="@CssClasses.Form.Label">@CalcResource.ceilingPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@CssClasses.Input.Text" />
+                <div class="w-[110px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.ceilingPrice </label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.CeilingPrice)" />
                 </div>
             }
 
             @if (Task.Resources == null || Task.Resources.Count == 0 || Task.Type == TaskType.CodeName)
             {
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText" class="@CssClasses.Input.Check" />
-                        <label class="@CssClasses.Form.Label">Only Code Text</label>
+                <div class="w-[160px]">
+                    <div class="flex items-center gap-2 mt-1 md:mt-6">
+                        <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText" class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" />
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Only Code Text</label>
                     </div>
                 </div>
             }
@@ -141,10 +141,10 @@
     @if (!TaskUpdate.OnlyCodeText)
     {
         <MhdCard Elevated="true" Compact="true" Class="mb-2">
-            <div class="@CssClasses.Layout.FlexWrap">
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                    <InputSelect @bind-Value="TaskUpdate.StatusId" class="@CssClasses.Input.Select">
+            <div class="flex flex-wrap gap-2">
+                <div class="w-[160px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.status</label>
+                    <InputSelect @bind-Value="TaskUpdate.StatusId" class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
                         <option></option>
                         @if (Statuses != null)
                             foreach (var status in Statuses)
@@ -155,9 +155,9 @@
                     <ValidationMessage For="@(() => TaskUpdate.StatusId)" />
                 </div>
 
-                <div class="@CssClasses.Layout.FlexWidth160">
-                    <label class="@CssClasses.Form.Label">@CalcResource.opportunity</label>
-                    <InputSelect @bind-Value="TaskUpdate.OpportunityId" class="@CssClasses.Input.Select">
+                <div class="w-[160px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.opportunity</label>
+                    <InputSelect @bind-Value="TaskUpdate.OpportunityId" class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
                         <option></option>
                         @if (Calc.Opportunities != null)
                             foreach (var opportunity in Calc.Opportunities)
@@ -168,25 +168,25 @@
                     <ValidationMessage For="@(() => TaskUpdate.OpportunityId)" />
                 </div>
 
-                <div class="@CssClasses.Layout.FlexWidth200">
-                    <label class="@CssClasses.Form.Label">@CalcResource.responsible</label>
-                    <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@CssClasses.Input.Text" />
+                <div class="w-[200px]">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.responsible</label>
+                    <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Responsible)" />
                 </div>
 
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox class="@CssClasses.Input.Check" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
-                        <label class="@CssClasses.Form.Label">
+                <div class="w-[110px]">
+                    <div class="flex items-center gap-2 mt-1 md:mt-6">
+                        <InputCheckbox class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">
                             @ResourceLoc.inprecent
                         </label>
                     </div>
                 </div>
 
-                <div class="@CssClasses.Layout.FlexWidth110">
-                    <div class="@CssClasses.Form.CheckWrapperM">
-                        <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@CssClasses.Input.Check" />
-                        <label class="@CssClasses.Form.Label">@CalcResource.active</label>
+                <div class="w-[110px]">
+                    <div class="flex items-center gap-2 mt-1 md:mt-6">
+                        <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" />
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.active</label>
                     </div>
                 </div>
             </div>
@@ -194,15 +194,15 @@
     }
 
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="@CssClasses.Layout.FlexWrap">
+        <div class="flex flex-wrap gap-2">
             <div class="flex-grow">
-                <label class="@CssClasses.Form.Label">@CalcResource.note </label>
-                <InputTextArea @bind-Value="TaskUpdate.Metadata.Note" class="@CssClasses.Input.Text" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.note </label>
+                <InputTextArea @bind-Value="TaskUpdate.Metadata.Note" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => TaskUpdate.Metadata.Note)" />
             </div>
             <div class="w-[100px]">
                 <button type="button"
-                        class="@CssClasses.Btn.Solid.Primary mt-7"
+                        class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 mt-7"
                         @onclick="() => TaskUpdate.Metadata.UpperNote.Add(string.Empty)">
                     @CalcResource.UpperNote
                 </button>
@@ -212,13 +212,13 @@
         @for (int i = 0; i < TaskUpdate.Metadata.UpperNote.Count; i++)
         {
             int d = i;
-            <div class="@CssClasses.Layout.FlexWrap mt-1">
+            <div class="flex flex-wrap gap-2 mt-1">
                 <div class="flex-grow">
-                    <textarea lang="3" @bind="TaskUpdate.Metadata.UpperNote[d]" class="@CssClasses.Input.Text"></textarea>
+                    <textarea lang="3" @bind="TaskUpdate.Metadata.UpperNote[d]" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"></textarea>
                 </div>
                 <div class="w-[100px]">
                     <button type="button"
-                            class="@CssClasses.Btn.Solid.Danger"
+                            class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500"
                             @onclick="() => TaskUpdate.Metadata.UpperNote.RemoveAt(d)">
                         @((MarkupString)@Icons.DeleteSVG)
                     </button>
@@ -229,19 +229,19 @@
 </EditForm>
 
 
-<div class="@CssClasses.Modal.Footer">
+<div class="mt-1 flex justify-end gap-1">
     @if (Task.Id == 0)
     {
         if (PostList.Count > 1)
         {
-            <button type="button" class="@CssClasses.Btn.Outline.Danger" @onclick="() => PostList.Remove(TaskUpdate)">@ResourceApp.delete</button>
+            <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white " @onclick="() => PostList.Remove(TaskUpdate)">@ResourceApp.delete</button>
         }
-        <button type="button" class="@CssClasses.Btn.Outline.Primary" @onclick="NewSP">@ResourceApp.newItem</button>
+        <button type="button" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white " @onclick="NewSP">@ResourceApp.newItem</button>
     }
-    <button type="submit" class="@CssClasses.Btn.Outline.Success" form="taskForm" disabled="@btnSubmitDisabled">
+    <button type="submit" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white " form="taskForm" disabled="@btnSubmitDisabled">
         @ResourceApp.save
     </button>
-    <button type="button" class="@CssClasses.Btn.Outline.Secondary" @onclick="Close">@ResourceApp.cancel</button>
+    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white " @onclick="Close">@ResourceApp.cancel</button>
 </div>
 
 

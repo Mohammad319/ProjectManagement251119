@@ -1,9 +1,8 @@
 ﻿@using Microsoft.Extensions.Localization
 @using ProjectManagement.Adminstrator.Constants
-@using ProjectManagement.Shared.Constant
 @inject IStringLocalizer<ResourceApp> appLocalizer
     <div>
-        <select class="@CssClasses.Input.Select" @bind="Culture">
+        <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="Culture">
 @*             @foreach (var culture in cultures)
             {
                 <option value="@culture">@culture.DisplayName</option>

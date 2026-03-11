@@ -2,10 +2,9 @@
 @using ProjectManagement.Adminstrator.Constants
 .AppControll
 @using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll
-@using ProjectManagement.Shared.Constant
 @inject Microsoft.Extensions.Localization.IStringLocalizer<AppControll> L
 
-<div class="@CssClasses.Layout.ButtonGroup mb-3" role="group" aria-label="Legal tabs">
+<div class="inline-flex mb-3" role="group" aria-label="Legal tabs">
     <button class="btn @(activeTab == "impressum" ? "btn-primary" : "btn-outline-primary")"
             @onclick="@(() => SelectTab("impressum"))">
         Impressum

@@ -2,18 +2,18 @@
 @using ProjectManagement.Shared.DTO.Project
 @inherits AppComponentBase
 
-    <div class="@CssClasses.Modal.Body">
+    <div class="space-y-0 ">
         @if (ProjectDetails != null)
         {
-        <dl class="@CssClasses.Grid.Col.MD3">
+        <dl class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <dt>@CalcResource.name</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Name</dd>
+            <dd class="md:col-span-2">@ProjectDetails.Name</dd>
                 <dt>@CalcResource.procurement</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Procurement</dd>
+            <dd class="md:col-span-2">@ProjectDetails.Procurement</dd>
                 <dt>@CalcResource.procurementMethods</dt>
-            <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.ProcurementMethods</dd>
+            <dd class="md:col-span-2">@ProjectDetails.ProcurementMethods</dd>
                 <dt>@CalcResource.projectContract</dt>
-                <dd class="@CssClasses.Grid.Span.MD2">@ProjectDetails.Contract</dd>
+                <dd class="md:col-span-2">@ProjectDetails.Contract</dd>
             </dl>
         }
     </div>
