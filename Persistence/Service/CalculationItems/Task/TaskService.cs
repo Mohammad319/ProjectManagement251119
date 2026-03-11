@@ -238,7 +238,6 @@ namespace Persistence.Service.CalculationItems.Task
                     }
 
                     var tasks = await RecursiveTasksCte.Query(context, item.Id, sourceCalcId)
-                        .AsNoTracking()
                         .ToListAsync(ct);
 
                     if (tasks == null || tasks.Count == 0)
@@ -520,7 +519,6 @@ namespace Persistence.Service.CalculationItems.Task
                 return [];
 
             return await RecursiveTasksCte.Query(context, rootTaskId, calcId)
-                .AsNoTracking()
                 .ToListAsync(ct);
         }
 
@@ -570,7 +568,6 @@ namespace Persistence.Service.CalculationItems.Task
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var tasks = await RecursiveTasksCte.Query(context, rootTaskId, sourceCalcId)
-                .AsNoTracking()
                 .ToListAsync(ct);
 
             if (tasks == null || tasks.Count == 0)

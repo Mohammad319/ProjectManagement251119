@@ -13,7 +13,8 @@ namespace Persistence.Service.Sql;
 /// Security: TenantId (and optionally CalculationId) is embedded in the CTE.
 ///
 /// Notes:
-/// - We set MAXRECURSION to a high value to avoid hitting SQL Server's default (100) for deep WBS trees.
+/// - Keep the SQL fully composable because callers add LINQ operators (e.g., AsNoTracking)
+///   on top of this query.
 /// </summary>
 internal static class RecursiveTasksCte
 {
@@ -52,7 +53,7 @@ WITH cte AS (
     WHERE t.TenantId = {tenantId}
       AND t.CalculationId = {calcId}
 )
-SELECT * FROM cte OPTION (MAXRECURSION 32767)");
+SELECT * FROM cte");
         }
 
         return db.Tasks.FromSqlInterpolated($@"
@@ -69,6 +70,6 @@ WITH cte AS (
     INNER JOIN cte c ON t.ParentTaskId = c.Id
     WHERE t.TenantId = {tenantId}
 )
-SELECT * FROM cte OPTION (MAXRECURSION 32767)");
+SELECT * FROM cte");
     }
 }
