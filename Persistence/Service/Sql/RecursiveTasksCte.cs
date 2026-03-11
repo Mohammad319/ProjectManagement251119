@@ -37,7 +37,8 @@ internal static class RecursiveTasksCte
         if (calculationId.HasValue)
         {
             var calcId = calculationId.Value;
-            return db.Tasks.FromSqlInterpolated($@"
+            return RelationalQueryableExtensions
+                .FromSqlInterpolated<TaskEntity>(db.Tasks, $@"
 WITH cte AS (
     SELECT *
     FROM Tasks
@@ -53,10 +54,12 @@ WITH cte AS (
     WHERE t.TenantId = {tenantId}
       AND t.CalculationId = {calcId}
 )
-SELECT * FROM cte");
+SELECT * FROM cte")
+                .IgnoreQueryFilters();
         }
 
-        return db.Tasks.FromSqlInterpolated($@"
+        return RelationalQueryableExtensions
+            .FromSqlInterpolated<TaskEntity>(db.Tasks, $@"
 WITH cte AS (
     SELECT *
     FROM Tasks
@@ -70,6 +73,7 @@ WITH cte AS (
     INNER JOIN cte c ON t.ParentTaskId = c.Id
     WHERE t.TenantId = {tenantId}
 )
-SELECT * FROM cte");
+SELECT * FROM cte")
+            .IgnoreQueryFilters();
     }
 }
