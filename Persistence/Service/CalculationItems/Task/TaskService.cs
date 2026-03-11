@@ -3,6 +3,7 @@ using Application.Feature.Calculation.Task;
 using Application.Interfaces;
 using Application.Mapping.CalcItems;
 using Domain.Entities.Calculation;
+using Persistence.Context;
 using Persistence.Factory;
 using Persistence.Service.Sql;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -238,7 +239,6 @@ namespace Persistence.Service.CalculationItems.Task
                     }
 
                     var tasks = await RecursiveTasksCte.Query(context, item.Id, sourceCalcId)
-                        .AsNoTracking()
                         .ToListAsync(ct);
 
                     if (tasks == null || tasks.Count == 0)
@@ -347,7 +347,7 @@ namespace Persistence.Service.CalculationItems.Task
 
 
         // -----------------------------------------------------
-        // Delete tasks (with children via stored procedure)
+        // Delete tasks (new safe path without FromSql composition)
         // -----------------------------------------------------
         public async Task<bool> DeleteAsync(
             IEnumerable<int> taskIds,
@@ -359,27 +359,72 @@ namespace Persistence.Service.CalculationItems.Task
             if (taskIds is null)
                 return false;
 
-            var deletedTaskIds = new List<int>();
+            var rootIds = taskIds
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
 
-            foreach (var id in taskIds)
-            {
-                var tasksToDelete = await GetTaskWithChildrenAsync(id, ct);
-                if (tasksToDelete is not null && tasksToDelete.Count != 0)
-                {
-                    deletedTaskIds.Add(id);
-                    context.Tasks.RemoveRange(tasksToDelete);
-                }
-            }
+            if (rootIds.Count == 0)
+                return true;
 
+            var existingRootIds = await context.Tasks
+                .Where(t => rootIds.Contains(t.Id) && t.CalculationId == calcId)
+                .Select(t => t.Id)
+                .ToListAsync(ct);
+
+            if (existingRootIds.Count == 0)
+                return true;
+
+            var allTaskIdsToDelete = await GetTaskSubtreeIdsForDeleteAsync(
+                context,
+                calcId,
+                existingRootIds,
+                ct);
+
+            var tasksToDelete = await context.Tasks
+                .Where(t => t.CalculationId == calcId && allTaskIdsToDelete.Contains(t.Id))
+                .ToListAsync(ct);
+
+            if (tasksToDelete.Count == 0)
+                return true;
+
+            context.Tasks.RemoveRange(tasksToDelete);
             await context.SaveChangesAsync(ct);
 
             await notification.SendNotificationAsync(
                 calcId.ToString(),
                 ObjectTypHub.task,
                 OperationType.RemoveRange,
-                deletedTaskIds);
+                existingRootIds);
 
             return true;
+        }
+
+
+        private static async Task<HashSet<int>> GetTaskSubtreeIdsForDeleteAsync(
+            ShardingSingleDbContext context,
+            int calcId,
+            IReadOnlyCollection<int> rootIds,
+            CancellationToken ct)
+        {
+            var allTaskIds = new HashSet<int>(rootIds);
+            var frontier = rootIds.ToList();
+
+            while (frontier.Count > 0)
+            {
+                var children = await context.Tasks
+                    .Where(t => t.CalculationId == calcId
+                        && t.ParentTaskId.HasValue
+                        && frontier.Contains(t.ParentTaskId.Value))
+                    .Select(t => t.Id)
+                    .ToListAsync(ct);
+
+                frontier = children
+                    .Where(id => allTaskIds.Add(id))
+                    .ToList();
+            }
+
+            return allTaskIds;
         }
 
         // -----------------------------------------------------
@@ -501,29 +546,6 @@ namespace Persistence.Service.CalculationItems.Task
             return true;
         }
 
-// -----------------------------------------------------
-        // Helper: get task + all children via composable CTE
-        // -----------------------------------------------------
-        private async Task<List<TaskEntity>> GetTaskWithChildrenAsync(
-            int rootTaskId,
-            CancellationToken ct)
-        {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-
-            var calcId = await context.Tasks
-                .AsNoTracking()
-                .Where(t => t.Id == rootTaskId)
-                .Select(t => t.CalculationId)
-                .FirstOrDefaultAsync(ct);
-
-            if (calcId <= 0)
-                return [];
-
-            return await RecursiveTasksCte.Query(context, rootTaskId, calcId)
-                .AsNoTracking()
-                .ToListAsync(ct);
-        }
-
         // -----------------------------------------------------
         // Helper: get max SortOrder in calc / under parent
         // -----------------------------------------------------
@@ -570,7 +592,6 @@ namespace Persistence.Service.CalculationItems.Task
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var tasks = await RecursiveTasksCte.Query(context, rootTaskId, sourceCalcId)
-                .AsNoTracking()
                 .ToListAsync(ct);
 
             if (tasks == null || tasks.Count == 0)
