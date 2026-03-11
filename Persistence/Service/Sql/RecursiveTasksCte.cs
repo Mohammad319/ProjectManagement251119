@@ -38,7 +38,6 @@ internal static class RecursiveTasksCte
         {
             var calcId = calculationId.Value;
             return db.Tasks
-                .IgnoreQueryFilters()
                 .FromSqlInterpolated($@"
 WITH cte AS (
     SELECT *
@@ -55,11 +54,11 @@ WITH cte AS (
     WHERE t.TenantId = {tenantId}
       AND t.CalculationId = {calcId}
 )
-SELECT * FROM cte");
+SELECT * FROM cte")
+                .IgnoreQueryFilters();
         }
 
         return db.Tasks
-            .IgnoreQueryFilters()
             .FromSqlInterpolated($@"
 WITH cte AS (
     SELECT *
@@ -74,6 +73,7 @@ WITH cte AS (
     INNER JOIN cte c ON t.ParentTaskId = c.Id
     WHERE t.TenantId = {tenantId}
 )
-SELECT * FROM cte");
+SELECT * FROM cte")
+            .IgnoreQueryFilters();
     }
 }
