@@ -5,12 +5,6 @@
     /// </summary>
     public static class CssClasses
     {
-        public static class Components
-        {
-            public const string Card = "bg-white dark:bg-gray-800 rounded-lg shadow p-3";
-            public const string ChartWrap = "w-full h-full";
-        }
-
         public static class Btn
         {
             public static class Solid
@@ -27,38 +21,6 @@
                 "p-1 rounded-md " +
                 "hover:bg-gray-100 dark:hover:bg-gray-700 " +
                 "transition cursor-pointer";
-
-            public static class IconButton
-            {
-                public const string Base =
-                    "inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] " +
-                    "transition-all duration-150 hover:scale-105 active:scale-95";
-
-                public const string Primary =
-                    Base + " border-blue-300 text-blue-600 " +
-                    "hover:bg-blue-100 hover:ring-1 hover:ring-blue-300 " +
-                    "dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/40 dark:hover:ring-blue-500";
-
-                public const string Danger =
-                    Base + " border-red-300 text-red-600 " +
-                    "hover:bg-red-100 hover:ring-1 hover:ring-red-300 " +
-                    "dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40 dark:hover:ring-red-500";
-
-                public const string Success =
-                    Base + " border-green-300 text-green-600 " +
-                    "hover:bg-green-100 hover:ring-1 hover:ring-green-300 " +
-                    "dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500";
-
-                public const string Secondary =
-                    Base + " border-gray-300 text-gray-600 " +
-                    "hover:bg-gray-100 hover:ring-1 hover:ring-gray-300 " +
-                    "dark:border-gray-500 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:ring-gray-500";
-
-                public const string Warning =
-                    Base + " border-yellow-300 text-yellow-600 " +
-                    "hover:bg-yellow-100 hover:ring-1 hover:ring-yellow-300 " +
-                    "dark:border-yellow-500 dark:text-yellow-300 dark:hover:bg-yellow-800 dark:hover:ring-yellow-500";
-            }
 
             public static class Outline
             {
@@ -95,11 +57,6 @@
 
             public const string Link = "text-[18px] text-neutral-800 underline hover:text-neutral-900 transition dark:text-neutral-300 dark:hover:text-neutral-100 ";
 
-            public static class Size
-            {
-                public const string Small = "px-1 py-0.5 text-sm";
-                public const string XSmall = "px-0.5 py-0 text-sm";
-            }
         }
 
         public static class Grid
@@ -186,25 +143,8 @@
                 public const string Left2 = "ml-2";
             }
 
-            public static class P
-            {
-                public const string All2 = "p-2";
-                public const string X1 = "px-1";
-                public const string Top3 = "pt-3";
-                public const string Top0_5 = "pt-0.5";
-            }
         }
 
-        public static class Util
-        {
-            public const string ItemsCenter = "items-center";
-            public const string JustifyStart = "justify-start";
-            public const string JustifyEnd = "flex justify-end";
-            public const string JustifyBetween = "justify-between";
-            public const string JustifyCenter = "justify-center";
-            public const string TextRight = "text-right";
-            public const string PlaceSelfEnd = "place-self-end";
-        }
 
         public static class Layout
         {
@@ -244,28 +184,10 @@
             public const string Warning = "text-yellow-600 dark:text-yellow-400";
         }
 
-        public static class Background
-        {
-            public const string Base = "inline-flex items-center px-2 py-0.5 text-xs font-medium rounded";
-            public const string Primary = Base + " bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
-            public const string White = "bg-white text-black dark:bg-gray-800 dark:text-white";
-            public const string Info = "bg-cyan-600 text-white dark:bg-cyan-700 dark:text-white";
-            public const string Secondary = "bg-gray-600 text-white dark:bg-gray-700 dark:text-white";
-            public const string Light = "bg-gray-100 text-black dark:bg-gray-700 dark:text-white";
-            public const string Success = "bg-green-100 text-white dark:bg-green-700 dark:text-white";
-            public const string Danger = "bg-red-100 text-white dark:bg-red-700 dark:text-white";
-        }
+        
 
         public const string ActiveClasses = $"{Text.Primary} border-b-2 border-blue-600 dark:border-blue-400 bg-white dark:bg-gray-800";
         public const string InactiveClasses = $"{Text.Secondary} hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700";
 
-        public static class Tabs
-        {
-            private const string Base = "inline-block px-4 py-2 text-sm font-medium transition-all rounded-t-md ";
-            public const string Active = Base + "text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-white dark:bg-gray-800";
-            public const string Inactive = Base + "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700";
-
-            public const string UL = "flex mb-1";
-        }
     }
 }
