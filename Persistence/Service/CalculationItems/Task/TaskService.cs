@@ -546,6 +546,7 @@ namespace Persistence.Service.CalculationItems.Task
             return true;
         }
 
+
         // -----------------------------------------------------
         // Helper: get max SortOrder in calc / under parent
         // -----------------------------------------------------
