@@ -1,20 +1,21 @@
-﻿@import "tailwindcss" source("..");
+﻿@import "tailwindcss" source("../..");
 
 /* dark mode عبر class="dark" */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* مشروع Client الخارجي */
-@source "../../ProjectManagement.Client";
+/*
+  Tailwind v4 source detection in Razor/C# projects can miss dynamically composed classes.
+  Keep explicit sources and safelisted utilities for classes that are built in strings.
+*/
+@source "../../ProjectManagement.Client/**/*.{razor,cs,html}";
+@source "../**/*.{razor,cs,html}";
 
-/* اختبار سريع للتأكد أن البناء يعمل */
-@source inline("text-red-500");
-
-/* safelist القديمة */
-@source inline("min-w-[150px]");
-@source inline("min-w-[280px]");
-@source inline("min-w-[350px]");
-@source inline("w-[110px]");
-@source inline("w-[130px]");
-@source inline("w-[160px]");
-@source inline("w-[200px]");
+/* Dynamic/safelisted utilities used in interpolated class strings */
+@source inline("text-primary text-success text-danger");
+@source inline("sm:w-[110px] sm:w-[130px] sm:w-[160px] sm:w-[200px]");
+@source inline("min-w-[150px] min-w-[280px] min-w-[350px]");
+@source inline("w-[110px] w-[130px] w-[160px] w-[200px]");
+@source inline("dark:bg-gray-800/80 dark:bg-slate-900/95 dark:bg-yellow-500 dark:bg-rose-500");
+@source inline("hover:bg-blue-600 hover:bg-green-600 hover:bg-indigo-50 hover:bg-rose-50 hover:bg-rose-700 hover:bg-slate-600 hover:bg-yellow-500");
+@source inline("focus:ring-blue-500/40 focus:ring-cyan-500/40 focus:ring-indigo-500/40 focus:ring-rose-500/40 focus:ring-slate-500/40");
 @source inline("after:content-['*']");
