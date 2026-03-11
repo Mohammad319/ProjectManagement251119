@@ -39,9 +39,24 @@ public sealed class TenantAuditSaveChangesInterceptor : SaveChangesInterceptor
 
         foreach (var entry in entries)
         {
+            ApplyKeyProtection(entry);
             ApplyTenant(entry, db);
             ApplyAudit(entry, now, userId);
             ApplySoftDelete(entry, now, userId);
+        }
+    }
+
+    private static void ApplyKeyProtection(EntityEntry entry)
+    {
+        if (entry.State is not (EntityState.Modified or EntityState.Deleted))
+            return;
+
+        foreach (var property in entry.Properties)
+        {
+            if (!property.Metadata.IsPrimaryKey())
+                continue;
+
+            property.IsModified = false;
         }
     }
 
