@@ -37,7 +37,9 @@ internal static class RecursiveTasksCte
         if (calculationId.HasValue)
         {
             var calcId = calculationId.Value;
-            return db.Tasks.FromSqlInterpolated($@"
+            return db.Tasks
+                .IgnoreQueryFilters()
+                .FromSqlInterpolated($@"
 WITH cte AS (
     SELECT *
     FROM Tasks
@@ -56,7 +58,9 @@ WITH cte AS (
 SELECT * FROM cte");
         }
 
-        return db.Tasks.FromSqlInterpolated($@"
+        return db.Tasks
+            .IgnoreQueryFilters()
+            .FromSqlInterpolated($@"
 WITH cte AS (
     SELECT *
     FROM Tasks
