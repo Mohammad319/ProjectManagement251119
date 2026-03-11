@@ -4,67 +4,67 @@
 @using ProjectManagement.Shared.Base.Organisation
 @inherits AppComponentBase
 
-    <EditForm id="UnderContactForm" class="@CssClasses.Modal.Body" Model="@underContact" OnValidSubmit=" ()=> SubmitAsync()">
+<EditForm id="UnderContactForm" class="space-y-3" Model="@underContact" OnValidSubmit=" ()=> SubmitAsync()">
+    <div>
+        <DataAnnotationsValidator />
+    </div>
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-            <DataAnnotationsValidator />
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.firstname</label>
+            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.FirstName" />
+            <ValidationMessage For=@(() => underContact.FirstName) />
         </div>
-    <div class="@CssClasses.Grid.Col.MD4">
         <div>
-                <label class="@CssClasses.Form.Label">@ResourceIdentity.firstname</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.FirstName" />
-                <ValidationMessage For=@(() => underContact.FirstName) />
-            </div>
-            <div>
-                <label class="@CssClasses.Form.Label">@ResourceIdentity.lastname</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.LastName" />
-                <ValidationMessage For=@(() => underContact.LastName) />
-            </div>
-            <div>
-                <label class="@CssClasses.Form.Label">@ResourceIdentity.mobile</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Mobile" />
-                <ValidationMessage For=@(() => underContact.Mobile) />
-            </div>
-            <div>
-                <label class="@CssClasses.Form.Label">@ResourceIdentity.phone</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Telefone" />
-                                <ValidationMessage For=@(() => underContact.Telefone) />
-            </div>
-            <div>
-                <label class="@CssClasses.Form.Label">@ResourceIdentity.email</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Email" />
-                <ValidationMessage For=@(() => underContact.Email) />
-            </div>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.lastname</label>
+            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.LastName" />
+            <ValidationMessage For=@(() => underContact.LastName) />
+        </div>
+        <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.mobile</label>
+            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Mobile" />
+            <ValidationMessage For=@(() => underContact.Mobile) />
+        </div>
+        <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.phone</label>
+            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Telefone" />
+            <ValidationMessage For=@(() => underContact.Telefone) />
+        </div>
+        <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email</label>
+            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Email" />
+            <ValidationMessage For=@(() => underContact.Email) />
+        </div>
 
-            <div>
-                <label class="@CssClasses.Form.Label">@ResourceApp.department</label>
-                <InputText class="@CssClasses.Input.Text" @bind-Value="@underContact.Department" />
-                <ValidationMessage For=@(() => underContact.Department) />
-            </div>
+        <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.department</label>
+            <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Department" />
+            <ValidationMessage For=@(() => underContact.Department) />
+        </div>
 
-            <div>
-            <label class="@CssClasses.Form.Label">@CalcResource.status</label>
-                <InputSelect @bind-Value="@underContact.Status" class="@CssClasses.Input.Text">
-                    @foreach (var level in Enum.GetValues(typeof(UnderContactStatus)))
-                    {
-                        <option value="@level">@level.ToString()</option>
-                    }
-                </InputSelect>
-                <ValidationMessage For=@(() => underContact.Status) />
-            </div>
-        <div class="@CssClasses.Grid.Span.MD3">
-                <label class="@CssClasses.Form.Label">@CalcResource.note</label>
-                <InputTextArea rows="2" class="@CssClasses.Input.Text" @bind-Value="@underContact.Note" />
-                <ValidationMessage For=@(() => underContact.Note) />
-            </div>
-        <div class="@CssClasses.Grid.Span.MD4">
-            <button type="submit" class="@CssClasses.Btn.Outline.Success" form="UnderContactForm">
+        <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.status</label>
+            <InputSelect @bind-Value="@underContact.Status" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                @foreach (var level in Enum.GetValues(typeof(UnderContactStatus)))
+                {
+                    <option value="@level">@level.ToString()</option>
+                }
+            </InputSelect>
+            <ValidationMessage For=@(() => underContact.Status) />
+        </div>
+        <div class="md:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note</label>
+            <InputTextArea rows="2" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Note" />
+            <ValidationMessage For=@(() => underContact.Note) />
+        </div>
+        <div class="md:col-span-2 flex items-center gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+            <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-600 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="UnderContactForm">
                 @ResourceApp.save
             </button>
-            <button type="button" class="@CssClasses.Btn.Outline.Secondary" data-dismiss="modal" @onclick="async () => await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
+            <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" data-dismiss="modal" @onclick="async () => await Callback.InvokeAsync(null)">@ResourceApp.cancel</button>
         </div>
-        </div>
+    </div>
 
-    </EditForm>
+</EditForm>
 
 @code {
     [Parameter] public UnderContactOrganisationBase underContact { get; set; } = new();
