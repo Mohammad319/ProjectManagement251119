@@ -233,8 +233,7 @@ namespace Persistence.Service.CalculationItems.Task
                         TaskExtention.SetNetCalcId(task);
                         task.SetParentTask(parentTaskId);
 
-                        // الكيان محمّل ومتعقّب من نفس الـ DbContext،
-                        // لذلك لا نستخدم Update() حتى لا يتم تعليم الجراف كاملًا Modified.
+                        context.Tasks.Update(task);
                         movedEntities.Add(task);
                         continue;
                     }

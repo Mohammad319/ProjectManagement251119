@@ -57,6 +57,14 @@ public sealed class TenantAuditSaveChangesInterceptor : SaveChangesInterceptor
         }
     }
 
+    private static void ApplyImmutableKeyProtection(EntityEntry entry)
+    {
+        if (entry.State != EntityState.Modified)
+            return;
+
+        foreach (var property in entry.Properties)
+        {
+
             var isPrimaryKey = property.Metadata.IsPrimaryKey();
             var isIdentifyingForeignKey = property.Metadata.IsForeignKey() && property.Metadata.IsKey();
 
