@@ -31,20 +31,20 @@
 
     @* PANEL 1: الاسم + مجموعة الحساب + الحساب *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
+        <div class="flex flex-wrap gap-2">
             <div class="flex-1 min-w-[350px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.name </label>
-                <InputText @bind-Value="ResourceUpdate.Name" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name </label>
+                <InputText @bind-Value="ResourceUpdate.Name" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => ResourceUpdate.Name)" />
             </div>
 
             @if (!Refresh && Config.AccountGroups != null)
             {
                 <div class="w-full sm:w-[160px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.accountGroups </label>
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.accountGroups </label>
                     <select @onchange="ChangeGroupAccount"
                             value="@AccountGroupSelected?.Id"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                            class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                         <option></option>
                         @foreach (var item in Config.AccountGroups)
                         {
@@ -59,9 +59,9 @@
                 @if (ResourceUpdate != null && AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
                 {
                     <div class="w-full sm:w-[160px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.account </label>
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.account </label>
                         <InputSelect @bind-Value="ResourceUpdate.AccountId"
-                                     class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                                     class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                             <option></option>
                             @if (AccountGroupSelected.Accounts != null)
                                 foreach (var item in AccountGroupSelected.Accounts)
@@ -80,11 +80,11 @@
 
     @* PANEL 2: الكمية + الوحدة + التكاليف + عوامل التغيير + Waste/Cap + Active *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
+        <div class="flex flex-wrap gap-2">
             <div class="@(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? "w-full sm:w-[110px]" : "w-full sm:w-[200px]")">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.quantity</label>
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.quantity</label>
                 <div class="w-full flex gap-2 items-center">
-                    <InputSelect class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    <InputSelect class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                                  @bind-Value:get="ResourceUpdate.Data.QuantityParam"
                                  @bind-Value:set="(value) => ChangeQuantityParam(value)">
                         <option></option>
@@ -99,59 +99,59 @@
                     @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
                     {
                         <InputNumber @bind-Value="ResourceUpdate.Data.Quantity"
-                                     class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                                     class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     }
                 </div>
             </div>
 
             <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.unit</label>
-                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.unit</label>
+                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
             </div>
 
             <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.cost </label>
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.cost </label>
                 @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                 {
-                    <input class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" type="number" disabled value="@Resource.Data.Cost" />
+                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" type="number" disabled value="@Resource.Data.Cost" />
                 }
                 else
                 {
-                    <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                    <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
                 }
             </div>
 
             <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.baseCost </label>
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.baseCost </label>
                 @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                 {
                     <input type="number" disabled value="@Resource.Data.BaseCost" />
                 }
                 else
                 {
-                    <InputNumber @bind-Value="ResourceUpdate.Data.BaseCost" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                    <InputNumber @bind-Value="ResourceUpdate.Data.BaseCost" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => ResourceUpdate.Data.BaseCost)" />
                 }
             </div>
 
             <div class="w-full sm:w-[130px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.changeFactor1</label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor1</label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
             </div>
 
             <div class="w-full sm:w-[130px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.changeFactor2 </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor2 </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
             </div>
 
             <div class="w-full sm:w-[130px]">
                 <div class="mt-6 flex items-center gap-2">
                     <InputCheckbox @bind-Value="ResourceUpdate.IsActive" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" />
-                    <label class="text-sm text-gray-700 dark:text-gray-200">@CalcResource.active </label>
+                    <label class="text-sm text-gray-700 dark:text-gray-300">@CalcResource.active </label>
                 </div>
             </div>
 
@@ -160,12 +160,12 @@
               || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
             {
                 <div class="w-full sm:w-[110px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200" for="waste">
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300" for="waste">
                         @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
                     </label>
                     <InputNumber id="waste"
                                  @bind-Value="ResourceUpdate.Data.CapWaste"
-                                 class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                                 class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                     <ValidationMessage For="@(() => ResourceUpdate.Data.CapWaste)"
                                        class="text-sm text-red-600 dark:text-red-400" />
                 </div>
@@ -175,12 +175,12 @@
 
     @* PANEL 3: النوع / التصنيف / الحالة / CO2 / الفرصة *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
+        <div class="flex flex-wrap gap-2">
             @if (Config.ResourceTypes != null)
             {
                 <div class="w-full sm:w-[160px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.resourceType</label>
-                    <InputSelect class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.resourceType</label>
+                    <InputSelect class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                                  @bind-Value:get="ResourceUpdate.ResourceTypeId"
                                  @bind-Value:set="async (value) => await ChangeResType(value)">
                         <option value=""></option>
@@ -198,8 +198,8 @@
             @if (ResTypeSelected != null && ResTypeSelected.ResourcesSort != null && ResTypeSelected.ResourcesSort.Any())
             {
                 <div class="w-full sm:w-[160px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.resourceSort </label>
-                    <InputSelect class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.resourceSort </label>
+                    <InputSelect class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                                  @bind-Value:get="ResourceUpdate.ResourceSortId"
                                  @bind-Value:set="async (value) => await ChangeResSort2(value)">
                         <option></option>
@@ -215,8 +215,8 @@
             }
 
             <div class="w-full sm:w-[160px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.status</label>
-                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.status</label>
+                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                     @if (Config.Statues != null)
                     {
                         <option value=""></option>
@@ -229,19 +229,19 @@
                 <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
             </div>
             <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.priceSub </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.PriceSub" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.priceSub </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.PriceSub" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.PriceSub)" />
             </div>
             <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.co2 </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.co2 </label>
+                <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.CO2)" />
             </div>
 
             <div class="w-full sm:w-[160px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.opportunity</label>
-                <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.opportunity</label>
+                <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                     <option></option>
                     @if (Calc.Opportunities != null)
                         foreach (var opportunity in Calc.Opportunities)
@@ -257,9 +257,9 @@
     </MhdCard>
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
         <div class="flex items-center justify-between mb-2">
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Parameters</label>
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Parameters</label>
             <button type="button"
-                    class="inline-flex items-center justify-center rounded-md border border-blue-600 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
+                    class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
                     @onclick="AddParameter">
                 @ResourceApp.newItem
             </button>
@@ -276,26 +276,26 @@
                 int idx = i;
                 <div class="mb-2 flex flex-wrap items-end gap-2">
                     <div class="flex-1 min-w-[160px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.name</label>
-                        <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                        <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                    @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
                     </div>
 
                     <div class="w-[120px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.unit</label>
-                        <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.unit</label>
+                        <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                    @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
                     </div>
 
                     <div class="w-[120px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceLoc.value</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.value</label>
+                        <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                      @bind-Value="ResourceUpdate.Data.Parameters[idx].Value" />
                     </div>
 
                     <div class="w-[52px]">
                         <button type="button"
-                                class="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                                class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500"
                                 @onclick="() => RemoveParameter(idx)">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
@@ -309,9 +309,9 @@
     {
          <MhdCard Elevated="true" Compact="true" Class="mb-2">
         <div class="flex items-center justify-between mb-2">
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Times</label>
+            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Times</label>
             <button type="button"
-                    class="inline-flex items-center justify-center rounded-md border border-blue-600 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
+                    class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
                     @onclick="AddTime">
                 @ResourceApp.newItem
             </button>
@@ -328,32 +328,32 @@
                 int idx = i;
                 <div class="mb-2 flex flex-wrap items-end gap-2">
                     <div class="flex-1 min-w-[160px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.name</label>
-                        <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                        <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                    @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
                     </div>
 
                     <div class="w-[100px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceLoc.value</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceLoc.value</label>
+                        <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                      @bind-Value="ResourceUpdate.Data.Times[idx].Value" />
                     </div>
 
                     <div class="w-[100px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.quantity</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.quantity</label>
+                        <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                      @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
                     </div>
 
                     <div class="w-[100px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.cost</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.cost</label>
+                        <InputNumber class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
                                      @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
                     </div>
 
                     <div class="w-[52px]">
                         <button type="button"
-                                class="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                                class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500"
                                 @onclick="() => RemoveTime(idx)">
                             @((MarkupString)Icons.DeleteSVG)
                         </button>
@@ -367,16 +367,16 @@
 
     @* PANEL 4: الملاحظات *@
     <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
+        <div class="flex flex-wrap gap-2">
             <div class="flex-grow">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.note </label>
-                <InputTextArea @bind-Value="ResourceUpdate.Data.Note" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.note </label>
+                <InputTextArea @bind-Value="ResourceUpdate.Data.Note" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
                 <ValidationMessage For="@(() => ResourceUpdate.Data.Note)" />
             </div>
 
             <div class="w-[100px]">
                 <button type="button"
-                        class="inline-flex items-center justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 mt-7"
+                        class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 mt-7"
                         @onclick="() => ResourceUpdate.Data.UpperNote.Add(string.Empty)">
                     @CalcResource.UpperNote
                 </button>
@@ -386,16 +386,16 @@
         @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
         {
             int d = i;
-            <div class="flex flex-wrap gap-3 items-end mt-1">
+            <div class="flex flex-wrap gap-2 mt-1">
                 <div class="flex-grow">
                     <textarea lang="3"
                               @bind="ResourceUpdate.Data.UpperNote[d]"
-                              class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                              class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                     </textarea>
                 </div>
                 <div class="w-[100px]">
                     <button type="button"
-                            class="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                            class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500"
                             @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
                         @((MarkupString)@Icons.DeleteSVG)
                     </button>
@@ -410,12 +410,12 @@
     {
         if (PostList.Count > 1)
         {
-            <button type="button" class="inline-flex items-center justify-center rounded-md border border-red-600 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300 dark:hover:bg-red-500 dark:hover:text-white" @onclick="()=> PostList.Remove(ResourceUpdate)">@ResourceApp.delete</button>
+            <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="()=> PostList.Remove(ResourceUpdate)">@ResourceApp.delete</button>
         }
-        <button type="button" class="inline-flex items-center justify-center rounded-md border border-blue-600 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white" @onclick="NewSP">@ResourceApp.newItem</button>
+        <button type="button" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="NewSP">@ResourceApp.newItem</button>
     }
-    <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-600 px-3 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white" form="resForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
-    <button type="button" class="inline-flex items-center justify-center rounded-md border border-gray-400 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-500 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="Close">@ResourceApp.cancel</button>
+    <button type="submit" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white" form="resForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
+    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="Close">@ResourceApp.cancel</button>
     </div>
     @code{
     private void AddParameter()
