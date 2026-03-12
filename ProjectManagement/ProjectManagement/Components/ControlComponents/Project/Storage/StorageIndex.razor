@@ -67,7 +67,16 @@
     private bool BtnImportIsVisible = true;
     private List<StorageDTO<TaskPostDTO>>? Tasks;
     private List<StorageDTO<ResourcePostDTO>>? Resources;
-    private GetFilterDTO Post = new();
+    private GetFilterDTO Post = new()
+    {
+        AuthoritySelected = AuthorityStorage._private,
+        Type = CalculationItemType.task
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAsync();
+    }
 
     private void Remove(int id, string name) => MHD.DeleteMessage(name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(id)));
 
