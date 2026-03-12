@@ -10,414 +10,515 @@
 @using ProjectManagement.Shared.Enums
 
 @inherits AppComponentBase
-<EditForm id="resForm" Model="ResourceUpdate" OnValidSubmit="async()=> await HandleSubmitAsync()">
+
+<div class="flex max-h-[85vh] min-h-0 flex-col overflow-hidden rounded-2xl bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
 
     @if (Resource?.Id == 0 && PostList.Count > 1)
     {
-        <div>
-            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+        <div class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+            <div class="flex flex-wrap gap-2">
                 @for (int i = 0; i < PostList.Count; i++)
                 {
                     int x = i;
-                    <li class="nav-item" role="presentation">
-                        <button @onclick="()=> ChangePos(x)" class="nav-link active" type="button" role="tab">@(i + 1)</button>
-                    </li>
-                }
-            </ul>
-        </div>
-    }
-
-    @* <DataAnnotationsValidator /> *@
-
-    @* PANEL 1: الاسم + مجموعة الحساب + الحساب *@
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div class="flex-1 min-w-[350px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.name </label>
-                <InputText @bind-Value="ResourceUpdate.Name" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                <ValidationMessage For="@(() => ResourceUpdate.Name)" />
-            </div>
-
-            @if (!Refresh && Config.AccountGroups != null)
-            {
-                <div class="w-full sm:w-[160px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.accountGroups </label>
-                    <select @onchange="ChangeGroupAccount"
-                            value="@AccountGroupSelected?.Id"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                        <option></option>
-                        @foreach (var item in Config.AccountGroups)
-                        {
-                            <option selected="@(AccountGroupSelected != null && item.Id == AccountGroupSelected.Id)"
-                                    value="@item.Id">
-                                @item.Name
-                            </option>
-                        }
-                    </select>
-                </div>
-
-                @if (ResourceUpdate != null && AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
-                {
-                    <div class="w-full sm:w-[160px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.account </label>
-                        <InputSelect @bind-Value="ResourceUpdate.AccountId"
-                                     class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                            <option></option>
-                            @if (AccountGroupSelected.Accounts != null)
-                                foreach (var item in AccountGroupSelected.Accounts)
-                                {
-                                    <option selected="@(item.Id == ResourceUpdate.AccountId)"
-                                            value="@item.Id">
-                                        @($"{item.Account} ({item.Name})")
-                                    </option>
-                                }
-                        </InputSelect>
-                    </div>
-                }
-            }
-        </div>
-    </MhdCard>
-
-    @* PANEL 2: الكمية + الوحدة + التكاليف + عوامل التغيير + Waste/Cap + Active *@
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div class="@(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? "w-full sm:w-[110px]" : "w-full sm:w-[200px]")">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.quantity</label>
-                <div class="w-full flex gap-2 items-center">
-                    <InputSelect class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                 @bind-Value:get="ResourceUpdate.Data.QuantityParam"
-                                 @bind-Value:set="(value) => ChangeQuantityParam(value)">
-                        <option></option>
-                        <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
-                        @if (Calc.QuanityList != null)
-                            foreach (var status in Calc.QuanityList)
-                            {
-                                <option value="@status.Name">@status.Name (@status.Quantity)</option>
-                            }
-                    </InputSelect>
-
-                    @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
-                    {
-                        <InputNumber @bind-Value="ResourceUpdate.Data.Quantity"
-                                     class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                    }
-                </div>
-            </div>
-
-            <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.unit</label>
-                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
-            </div>
-
-            <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.cost </label>
-                @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
-                {
-                    <input class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" type="number" disabled value="@Resource.Data.Cost" />
-                }
-                else
-                {
-                    <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                    <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
-                }
-            </div>
-
-            <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.baseCost </label>
-                @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
-                {
-                    <input type="number" disabled value="@Resource.Data.BaseCost" />
-                }
-                else
-                {
-                    <InputNumber @bind-Value="ResourceUpdate.Data.BaseCost" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                    <ValidationMessage For="@(() => ResourceUpdate.Data.BaseCost)" />
-                }
-            </div>
-
-            <div class="w-full sm:w-[130px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.changeFactor1</label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
-            </div>
-
-            <div class="w-full sm:w-[130px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.changeFactor2 </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
-            </div>
-
-            <div class="w-full sm:w-[130px]">
-                <div class="mt-6 flex items-center gap-2">
-                    <InputCheckbox @bind-Value="ResourceUpdate.IsActive" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" />
-                    <label class="text-sm text-gray-700 dark:text-gray-200">@CalcResource.active </label>
-                </div>
-            </div>
-
-            @if (ResourceUpdate.ResType == ResourceTypesEnum.Materials
-              || ResourceUpdate.ResType == ResourceTypesEnum.Worker
-              || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
-            {
-                <div class="w-full sm:w-[110px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200" for="waste">
-                        @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
-                    </label>
-                    <InputNumber id="waste"
-                                 @bind-Value="ResourceUpdate.Data.CapWaste"
-                                 class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                    <ValidationMessage For="@(() => ResourceUpdate.Data.CapWaste)"
-                                       class="text-sm text-red-600 dark:text-red-400" />
-                </div>
-            }
-        </div>
-    </MhdCard>
-
-    @* PANEL 3: النوع / التصنيف / الحالة / CO2 / الفرصة *@
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
-            @if (Config.ResourceTypes != null)
-            {
-                <div class="w-full sm:w-[160px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.resourceType</label>
-                    <InputSelect class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                 @bind-Value:get="ResourceUpdate.ResourceTypeId"
-                                 @bind-Value:set="async (value) => await ChangeResType(value)">
-                        <option value=""></option>
-                        @foreach (var item in Config.ResourceTypes)
-                        {
-                            <option value="@item.Id"
-                                    selected="@(ResourceUpdate.ResourceTypeId == item.Id)">
-                                @item.Name
-                            </option>
-                        }
-                    </InputSelect>
-                </div>
-            }
-
-            @if (ResTypeSelected != null && ResTypeSelected.ResourcesSort != null && ResTypeSelected.ResourcesSort.Any())
-            {
-                <div class="w-full sm:w-[160px]">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.resourceSort </label>
-                    <InputSelect class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                 @bind-Value:get="ResourceUpdate.ResourceSortId"
-                                 @bind-Value:set="async (value) => await ChangeResSort2(value)">
-                        <option></option>
-                        @foreach (var item in ResTypeSelected.ResourcesSort)
-                        {
-                            <option value="@item.Id"
-                                    selected="@(ResourceUpdate.ResourceSortId.HasValue && ResourceUpdate.ResourceSortId == item.Id)">
-                                @item.Name
-                            </option>
-                        }
-                    </InputSelect>
-                </div>
-            }
-
-            <div class="w-full sm:w-[160px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.status</label>
-                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                    @if (Config.Statues != null)
-                    {
-                        <option value=""></option>
-                        @foreach (var status in Config.Statues)
-                        {
-                            <option value="@status.Id">@status.Name</option>
-                        }
-                    }
-                </InputSelect>
-                <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
-            </div>
-            <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.priceSub </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.PriceSub" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.PriceSub)" />
-            </div>
-            <div class="w-full sm:w-[110px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.co2 </label>
-                <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.CO2)" />
-            </div>
-
-            <div class="w-full sm:w-[160px]">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.opportunity</label>
-                <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                    <option></option>
-                    @if (Calc.Opportunities != null)
-                        foreach (var opportunity in Calc.Opportunities)
-                        {
-                            <option value="@opportunity.Id">
-                                @opportunity.OpportunitiesRisks @opportunity.OpportunityType
-                            </option>
-                        }
-                </InputSelect>
-                <ValidationMessage For="@(() => ResourceUpdate.OpportunityId)" />
-            </div>
-        </div>
-    </MhdCard>
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex items-center justify-between mb-2">
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Parameters</label>
-            <button type="button"
-                    class="inline-flex items-center justify-center rounded-md border border-blue-600 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
-                    @onclick="AddParameter">
-                @ResourceApp.newItem
-            </button>
-        </div>
-
-        @if (!ResourceUpdate.Data.Parameters.Any())
-        {
-            <div class="text-sm text-amber-600 dark:text-amber-400">@ResourceApp.thereIsNoElements</div>
-        }
-        else
-        {
-            @for (int i = 0; i < ResourceUpdate.Data.Parameters.Count; i++)
-            {
-                int idx = i;
-                <div class="mb-2 flex flex-wrap items-end gap-2">
-                    <div class="flex-1 min-w-[160px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.name</label>
-                        <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
-                    </div>
-
-                    <div class="w-[120px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.unit</label>
-                        <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
-                    </div>
-
-                    <div class="w-[120px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceLoc.value</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                     @bind-Value="ResourceUpdate.Data.Parameters[idx].Value" />
-                    </div>
-
-                    <div class="w-[52px]">
-                        <button type="button"
-                                class="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-                                @onclick="() => RemoveParameter(idx)">
-                            @((MarkupString)Icons.DeleteSVG)
-                        </button>
-                    </div>
-                </div>
-            }
-        }
-    </MhdCard>
-    @if (Resource?.ResType == ResourceTypesEnum.Worker ||
-        Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments)
-    {
-         <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex items-center justify-between mb-2">
-            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Times</label>
-            <button type="button"
-                    class="inline-flex items-center justify-center rounded-md border border-blue-600 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
-                    @onclick="AddTime">
-                @ResourceApp.newItem
-            </button>
-        </div>
-
-        @if (!ResourceUpdate.Data.Times.Any())
-        {
-            <div class="text-sm text-amber-600 dark:text-amber-400">@ResourceApp.thereIsNoElements</div>
-        }
-        else
-        {
-            @for (int i = 0; i < ResourceUpdate.Data.Times.Count; i++)
-            {
-                int idx = i;
-                <div class="mb-2 flex flex-wrap items-end gap-2">
-                    <div class="flex-1 min-w-[160px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.name</label>
-                        <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                   @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
-                    </div>
-
-                    <div class="w-[100px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceLoc.value</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                     @bind-Value="ResourceUpdate.Data.Times[idx].Value" />
-                    </div>
-
-                    <div class="w-[100px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.quantity</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                     @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
-                    </div>
-
-                    <div class="w-[100px]">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.cost</label>
-                        <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                     @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
-                    </div>
-
-                    <div class="w-[52px]">
-                        <button type="button"
-                                class="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-                                @onclick="() => RemoveTime(idx)">
-                            @((MarkupString)Icons.DeleteSVG)
-                        </button>
-                    </div>
-                </div>
-            }
-        }
-    </MhdCard>
-   
-    }
-
-    @* PANEL 4: الملاحظات *@
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="flex flex-wrap gap-3 items-end">
-            <div class="flex-grow">
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.note </label>
-                <InputTextArea @bind-Value="ResourceUpdate.Data.Note" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.Note)" />
-            </div>
-
-            <div class="w-[100px]">
-                <button type="button"
-                        class="inline-flex items-center justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 mt-7"
-                        @onclick="() => ResourceUpdate.Data.UpperNote.Add(string.Empty)">
-                    @CalcResource.UpperNote
-                </button>
-            </div>
-        </div>
-
-        @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
-        {
-            int d = i;
-            <div class="flex flex-wrap gap-3 items-end mt-1">
-                <div class="flex-grow">
-                    <textarea lang="3"
-                              @bind="ResourceUpdate.Data.UpperNote[d]"
-                              class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
-                    </textarea>
-                </div>
-                <div class="w-[100px]">
                     <button type="button"
-                            class="inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-                            @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
-                        @((MarkupString)@Icons.DeleteSVG)
+                            @onclick="() => ChangePos(x)"
+                            class="@GetStepButtonClass(i)">
+                        @(i + 1)
                     </button>
-                </div>
+                }
             </div>
-        }
-    </MhdCard>
-</EditForm>
-
-    <div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
-    @if (Resource?.Id == 0)
-    {
-        if (PostList.Count > 1)
-        {
-            <button type="button" class="inline-flex items-center justify-center rounded-md border border-red-600 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300 dark:hover:bg-red-500 dark:hover:text-white" @onclick="()=> PostList.Remove(ResourceUpdate)">@ResourceApp.delete</button>
-        }
-        <button type="button" class="inline-flex items-center justify-center rounded-md border border-blue-600 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white" @onclick="NewSP">@ResourceApp.newItem</button>
+        </div>
     }
-    <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-600 px-3 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white" form="resForm" disabled="@btnSubmitDisabled">@ResourceApp.save</button>
-    <button type="button" class="inline-flex items-center justify-center rounded-md border border-gray-400 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-500 dark:text-gray-200 dark:hover:bg-gray-700" @onclick="Close">@ResourceApp.cancel</button>
+
+    <EditForm id="resForm"
+              Model="ResourceUpdate"
+              OnValidSubmit="HandleSubmitAsync"
+              class="flex min-h-0 flex-1 flex-col overflow-hidden">
+
+        <DataAnnotationsValidator />
+
+        <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+
+            <!-- PANEL 1 -->
+            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+                <div class="@PanelBodyClass">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.name</label>
+                            <InputText @bind-Value="ResourceUpdate.Name" class="@InputClass" />
+                            <ValidationMessage For="@(() => ResourceUpdate.Name)" />
+                        </div>
+
+                        @if (!Refresh && Config.AccountGroups != null)
+                        {
+                            <div class="min-w-0">
+                                <label class="@LabelClass">@CalcResource.accountGroups</label>
+                                <select @onchange="ChangeGroupAccount"
+                                        value="@AccountGroupSelected?.Id"
+                                        class="@InputClass">
+                                    <option></option>
+                                    @foreach (var item in Config.AccountGroups)
+                                    {
+                                        <option selected="@(AccountGroupSelected != null && item.Id == AccountGroupSelected.Id)"
+                                                value="@item.Id">
+                                            @item.Name
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+
+                            @if (ResourceUpdate != null && AccountGroupSelected != null && AccountGroupSelected.Accounts != null)
+                            {
+                                <div class="min-w-0">
+                                    <label class="@LabelClass">@CalcResource.account</label>
+                                    <InputSelect @bind-Value="ResourceUpdate.AccountId" class="@InputClass">
+                                        <option></option>
+                                        @foreach (var item in AccountGroupSelected.Accounts)
+                                        {
+                                            <option selected="@(item.Id == ResourceUpdate.AccountId)"
+                                                    value="@item.Id">
+                                                @($"{item.Account} ({item.Name})")
+                                            </option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </MhdCard>
+
+            <!-- PANEL 2 -->
+            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+                <div class="@PanelBodyClass">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.quantity</label>
+
+                            <div class="grid gap-2 @(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? "grid-cols-1 lg:grid-cols-[minmax(0,1fr)_120px]" : "grid-cols-1")">
+                                <InputSelect class="@InputClass"
+                                             @bind-Value:get="ResourceUpdate.Data.QuantityParam"
+                                             @bind-Value:set="(value) => ChangeQuantityParam(value)">
+                                    <option></option>
+                                    <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
+                                    @if (Calc.QuanityList != null)
+                                    {
+                                        foreach (var status in Calc.QuanityList)
+                                        {
+                                            <option value="@status.Name">@status.Name (@status.Quantity)</option>
+                                        }
+                                    }
+                                </InputSelect>
+
+                                @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
+                                {
+                                    <InputNumber @bind-Value="ResourceUpdate.Data.Quantity" class="@InputClass" />
+                                }
+                            </div>
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.unit</label>
+                            <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@InputClass" />
+                            <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.cost</label>
+                            @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
+                            {
+                                <input class="@DisabledInputClass" type="number" disabled value="@Resource.Data.Cost" />
+                            }
+                            else
+                            {
+                                <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="@InputClass" />
+                                <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.baseCost</label>
+                            @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
+                            {
+                                <input type="number" disabled value="@Resource.Data.BaseCost" class="@DisabledInputClass" />
+                            }
+                            else
+                            {
+                                <InputNumber @bind-Value="ResourceUpdate.Data.BaseCost" class="@InputClass" />
+                                <ValidationMessage For="@(() => ResourceUpdate.Data.BaseCost)" />
+                            }
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.changeFactor1</label>
+                            <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="@InputClass" />
+                            <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.changeFactor2</label>
+                            <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="@InputClass" />
+                            <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
+                        </div>
+
+                        @if (ResourceUpdate.ResType == ResourceTypesEnum.Materials
+                                                                          || ResourceUpdate.ResType == ResourceTypesEnum.Worker
+                                                                          || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
+                        {
+                            <div class="min-w-0">
+                                <label class="@LabelClass" for="waste">
+                                    @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
+                                </label>
+                                <InputNumber id="waste"
+                                             @bind-Value="ResourceUpdate.Data.CapWaste"
+                                             class="@InputClass" />
+                                <ValidationMessage For="@(() => ResourceUpdate.Data.CapWaste)" />
+                            </div>
+                        }
+
+                        <div class="min-w-0 flex items-end">
+                            <label class="inline-flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                <InputCheckbox @bind-Value="ResourceUpdate.IsActive"
+                                               class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-400" />
+                                <span>@CalcResource.active</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </MhdCard>
+
+            <!-- PANEL 3 -->
+            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+                <div class="@PanelBodyClass">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+
+                        @if (Config.ResourceTypes != null)
+                        {
+                            <div class="min-w-0">
+                                <label class="@LabelClass">@CalcResource.resourceType</label>
+                                <InputSelect class="@InputClass"
+                                             @bind-Value:get="ResourceUpdate.ResourceTypeId"
+                                             @bind-Value:set="async (value) => await ChangeResType(value)">
+                                    <option value=""></option>
+                                    @foreach (var item in Config.ResourceTypes)
+                                    {
+                                        <option value="@item.Id"
+                                                selected="@(ResourceUpdate.ResourceTypeId == item.Id)">
+                                            @item.Name
+                                        </option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        }
+
+                        @if (ResTypeSelected != null && ResTypeSelected.ResourcesSort != null && ResTypeSelected.ResourcesSort.Any())
+                        {
+                            <div class="min-w-0">
+                                <label class="@LabelClass">@CalcResource.resourceSort</label>
+                                <InputSelect class="@InputClass"
+                                             @bind-Value:get="ResourceUpdate.ResourceSortId"
+                                             @bind-Value:set="async (value) => await ChangeResSort2(value)">
+                                    <option></option>
+                                    @foreach (var item in ResTypeSelected.ResourcesSort)
+                                    {
+                                        <option value="@item.Id"
+                                                selected="@(ResourceUpdate.ResourceSortId.HasValue && ResourceUpdate.ResourceSortId == item.Id)">
+                                            @item.Name
+                                        </option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        }
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.status</label>
+                            <InputSelect @bind-Value="ResourceUpdate.StatusId" class="@InputClass">
+                                @if (Config.Statues != null)
+                                {
+                                    <option value=""></option>
+                                    @foreach (var status in Config.Statues)
+                                    {
+                                        <option value="@status.Id">@status.Name</option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.priceSub</label>
+                            <InputNumber @bind-Value="ResourceUpdate.Data.PriceSub" class="@InputClass" />
+                            <ValidationMessage For="@(() => ResourceUpdate.Data.PriceSub)" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.co2</label>
+                            <InputNumber @bind-Value="ResourceUpdate.Data.CO2" class="@InputClass" />
+                            <ValidationMessage For="@(() => ResourceUpdate.Data.CO2)" />
+                        </div>
+
+                        <div class="min-w-0">
+                            <label class="@LabelClass">@CalcResource.opportunity</label>
+                            <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="@InputClass">
+                                <option></option>
+                                @if (Calc.Opportunities != null)
+                                {
+                                    foreach (var opportunity in Calc.Opportunities)
+                                    {
+                                        <option value="@opportunity.Id">
+                                            @opportunity.OpportunitiesRisks @opportunity.OpportunityType
+                                        </option>
+                                    }
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => ResourceUpdate.OpportunityId)" />
+                        </div>
+                    </div>
+                </div>
+            </MhdCard>
+
+            <!-- PARAMETERS -->
+            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+                <div class="@PanelBodyClass">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Parameters</label>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">@ResourceUpdate.Data.Parameters.Count item(s)</p>
+                        </div>
+
+                        <button type="button"
+                                class="@OutlineBlueButtonClass"
+                                @onclick="AddParameter">
+                            @ResourceApp.newItem
+                        </button>
+                    </div>
+
+                    @if (!ResourceUpdate.Data.Parameters.Any())
+                    {
+                        <div class="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-700 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                            @ResourceApp.thereIsNoElements
+                        </div>
+                    }
+                    else
+                    {
+                        @for (int i = 0; i < ResourceUpdate.Data.Parameters.Count; i++)
+                        {
+                            int idx = i;
+                            <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-10">
+                                    <div class="min-w-0 xl:col-span-4">
+                                        <label class="@LabelClass">@CalcResource.name</label>
+                                        <InputText class="@InputClass"
+                                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
+                                    </div>
+
+                                    <div class="min-w-0 xl:col-span-2">
+                                        <label class="@LabelClass">@CalcResource.unit</label>
+                                        <InputText class="@InputClass"
+                                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
+                                    </div>
+
+                                    <div class="min-w-0 xl:col-span-3">
+                                        <label class="@LabelClass">@ResourceLoc.value</label>
+                                        <InputNumber class="@InputClass"
+                                                     @bind-Value="ResourceUpdate.Data.Parameters[idx].Value" />
+                                    </div>
+
+                                    <div class="min-w-0 xl:col-span-1 flex items-end">
+                                        <button type="button"
+                                                class="@DeleteIconButtonClass"
+                                                @onclick="() => RemoveParameter(idx)">
+                                            @((MarkupString)Icons.DeleteSVG)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </MhdCard>
+
+            @if (Resource?.ResType == ResourceTypesEnum.Worker ||
+                            Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments)
+            {
+                <!-- TIMES -->
+                <MhdCard Elevated="true" Compact="true" Class="mb-3">
+                    <div class="@PanelBodyClass">
+                        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Times</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">@ResourceUpdate.Data.Times.Count item(s)</p>
+                            </div>
+
+                            <button type="button"
+                                    class="@OutlineBlueButtonClass"
+                                    @onclick="AddTime">
+                                @ResourceApp.newItem
+                            </button>
+                        </div>
+
+                        @if (!ResourceUpdate.Data.Times.Any())
+                        {
+                            <div class="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-700 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                                @ResourceApp.thereIsNoElements
+                            </div>
+                        }
+                        else
+                        {
+                            @for (int i = 0; i < ResourceUpdate.Data.Times.Count; i++)
+                            {
+                                int idx = i;
+                                <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
+                                        <div class="min-w-0 xl:col-span-4">
+                                            <label class="@LabelClass">@CalcResource.name</label>
+                                            <InputText class="@InputClass"
+                                                       @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
+                                        </div>
+
+                                        <div class="min-w-0 xl:col-span-2">
+                                            <label class="@LabelClass">@ResourceLoc.value</label>
+                                            <InputNumber class="@InputClass"
+                                                         @bind-Value="ResourceUpdate.Data.Times[idx].Value" />
+                                        </div>
+
+                                        <div class="min-w-0 xl:col-span-2">
+                                            <label class="@LabelClass">@CalcResource.quantity</label>
+                                            <InputNumber class="@InputClass"
+                                                         @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
+                                        </div>
+
+                                        <div class="min-w-0 xl:col-span-3">
+                                            <label class="@LabelClass">@CalcResource.cost</label>
+                                            <InputNumber class="@InputClass"
+                                                         @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
+                                        </div>
+
+                                        <div class="min-w-0 xl:col-span-1 flex items-end">
+                                            <button type="button"
+                                                    class="@DeleteIconButtonClass"
+                                                    @onclick="() => RemoveTime(idx)">
+                                                @((MarkupString)Icons.DeleteSVG)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </MhdCard>
+            }
+
+            <!-- NOTES -->
+            <MhdCard Elevated="true" Compact="true" Class="mb-2">
+                <div class="@PanelBodyClass">
+                    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.note</label>
+
+                        <button type="button"
+                                class="@PrimaryBlueButtonClass"
+                                @onclick="() => ResourceUpdate.Data.UpperNote.Add(string.Empty)">
+                            @CalcResource.UpperNote
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <InputTextArea @bind-Value="ResourceUpdate.Data.Note"
+                                       class="@TextAreaClass" />
+                        <ValidationMessage For="@(() => ResourceUpdate.Data.Note)" />
+                    </div>
+
+                    @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
+                    {
+                        int d = i;
+                        <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                <div class="flex-1">
+                                    <label class="@LabelClass">@CalcResource.UpperNote</label>
+                                    <textarea @bind="ResourceUpdate.Data.UpperNote[d]"
+                                              class="@TextAreaClass"
+                                              rows="3"></textarea>
+                                </div>
+
+                                <div class="sm:w-auto">
+                                    <button type="button"
+                                            class="@DeleteButtonClass"
+                                            @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
+                                        @((MarkupString)Icons.DeleteSVG)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </MhdCard>
+
+        </div>
+    </EditForm>
+
+    <div class="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            @if (Resource?.Id == 0)
+            {
+                if (PostList.Count > 1)
+                {
+                    <button type="button"
+                            class="@OutlineRedButtonClass"
+                            @onclick="() => PostList.Remove(ResourceUpdate)">
+                        @ResourceApp.delete
+                    </button>
+                }
+
+                <button type="button"
+                        class="@OutlineBlueButtonClass"
+                        @onclick="NewSP">
+                    @ResourceApp.newItem
+                </button>
+            }
+
+            <button type="submit"
+                    class="@OutlineGreenButtonClass"
+                    form="resForm"
+                    disabled="@btnSubmitDisabled">
+                @ResourceApp.save
+            </button>
+
+            <button type="button"
+                    class="@OutlineGrayButtonClass"
+                    @onclick="Close">
+                @ResourceApp.cancel
+            </button>
+        </div>
     </div>
-    @code{
+</div>
+
+@code {
+    private string PanelBodyClass => "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900";
+    private string LabelClass => "mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200";
+    private string InputClass => "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
+    private string DisabledInputClass => "w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 shadow-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400";
+    private string TextAreaClass => "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
+    private string PrimaryBlueButtonClass => "inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600";
+    private string OutlineBlueButtonClass => "inline-flex items-center justify-center rounded-xl border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white";
+    private string OutlineRedButtonClass => "inline-flex items-center justify-center rounded-xl border border-red-600 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300 dark:hover:bg-red-500 dark:hover:text-white";
+    private string OutlineGreenButtonClass => "inline-flex items-center justify-center rounded-xl border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white";
+    private string OutlineGrayButtonClass => "inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800";
+    private string DeleteButtonClass => "inline-flex items-center justify-center rounded-xl bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600";
+    private string DeleteIconButtonClass => "inline-flex h-[42px] w-full items-center justify-center rounded-xl bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600";
+
+    private string GetStepButtonClass(int index)
+    {
+        var isActive = PostList != null
+            && index >= 0
+            && index < PostList.Count
+            && object.ReferenceEquals(PostList[index], ResourceUpdate);
+
+        return isActive
+            ? "inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl bg-blue-600 px-3 text-sm font-semibold text-white shadow-sm transition dark:bg-blue-500"
+            : "inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700";
+    }
+
     private void AddParameter()
     {
         ResourceUpdate.Data.Parameters.Add(new ResourceParameter
@@ -450,5 +551,4 @@
         if (index < 0 || index >= ResourceUpdate.Data.Times.Count) return;
         ResourceUpdate.Data.Times.RemoveAt(index);
     }
-
-    }
+}

@@ -1,101 +1,188 @@
-﻿@using ProjectManagement.Client.Shared.MVVM.Calculation;
+﻿@using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.ResourceFiles
-@using ProjectManagement.Shared.DTO.Project;
-@using ProjectManagement.Client.Shared.Model.Project.Calculation;
-@using ProjectManagement.Client.Shared.ViewModel;
+@using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Client.Shared.Model.Project.Calculation
+@using ProjectManagement.Client.Shared.ViewModel
 @inherits AppComponentBase
-<div class="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-md">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex flex-wrap gap-4">
-            @foreach (AuthorityStorage gender in Enum.GetValues(typeof(AuthorityStorage)))
-            {
-                if (gender != AuthorityStorage.program && gender != AuthorityStorage.ImportFromOtherCalc)
-                {
-                    <div class="flex items-center gap-2">
-                        <input type="radio"
-                               name="authorityStorage"
-                               checked="@(StorageLevelValue == gender)"
-                               @onchange="(e) => GetStorage(e, gender)"
-                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-gray-700 dark:border-gray-600" />
-                        <label class="text-gray-900 dark:text-gray-200 text-sm">
-                            @AppLoc[gender.ToString()]
-                        </label>
-                    </div>
-                }
-            }
-        </div>
 
-        <!-- Storage Sort Radio Buttons -->
-        <div class="flex flex-wrap gap-4">
-            @foreach (StorageSort gender in Enum.GetValues(typeof(StorageSort)))
-            {
-                <div class="flex items-center gap-2">
-                    <input type="radio"
-                           name="storageSort"
-                           checked="@(StorageSort == gender)"
-                           @onchange="(e) => GetStorageSort(e, gender)"
-                           class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 dark:bg-gray-700 dark:border-gray-600" />
-                    <label class="text-gray-900 dark:text-gray-200 text-sm">
-                        @ResourceLocalize.GetStorageSort(gender)
-                    </label>
-                </div>
-            }
-        </div>
+<div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+        <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">
+            Speicheroptionen
+        </h3>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Wähle die Berechtigungsstufe und die Sortierung.
+        </p>
+    </div>
+
+    <div class="space-y-6 p-5">
+        <!-- Speicherstufe -->
+        <section class="space-y-3">
+            <div>
+                <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    Speicherstufe
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Lege fest, auf welcher Ebene gespeichert werden soll.
+                </p>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach (AuthorityStorage storage in Enum.GetValues<AuthorityStorage>())
+                {
+                    if (storage != AuthorityStorage.program && storage != AuthorityStorage.ImportFromOtherCalc)
+                    {
+                        var isSelected = StorageLevelValue == storage;
+
+                        <button type="button"
+                                @onclick="() => SelectStorage(storage)"
+                                class="@GetStorageButtonClass(isSelected)">
+                            <div class="flex items-center gap-3">
+                                <div class="@GetDotOuterClass(isSelected, false)">
+                                    <div class="@GetDotInnerClass(isSelected, false)"></div>
+                                </div>
+
+                                <span class="font-medium text-slate-700 dark:text-slate-200">
+                                    @AppLoc[storage.ToString()]
+                                </span>
+                            </div>
+                        </button>
+                    }
+                }
+            </div>
+        </section>
+
+        <!-- Sortierung -->
+        <section class="space-y-3">
+            <div>
+                <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    Sortierung
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Wähle, wie die Speicherung kategorisiert werden soll.
+                </p>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach (StorageSort sort in Enum.GetValues<StorageSort>())
+                {
+                    var isSelected = StorageSortValue == sort;
+
+                    <button type="button"
+                            @onclick="() => SelectStorageSort(sort)"
+                            class="@GetSortButtonClass(isSelected)">
+                        <div class="flex items-center gap-3">
+                            <div class="@GetDotOuterClass(isSelected, true)">
+                                <div class="@GetDotInnerClass(isSelected, true)"></div>
+                            </div>
+
+                            <span class="font-medium text-slate-700 dark:text-slate-200">
+                                @ResourceLocalize.GetStorageSort(sort)
+                            </span>
+                        </div>
+                    </button>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
+        <button type="button"
+                class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                @onclick="Close">
+            @ResourceApp.cancel
+        </button>
+
+        <button type="button"
+                class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                @onclick="SaveAPI">
+            @ResourceApp.save
+        </button>
     </div>
 </div>
 
-<div class="mt-1 flex justify-end gap-1">
-    <button class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white" @onclick="SaveAPI">
-        @ResourceApp.save
-    </button>
-    <button class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="Close">
-        @ResourceApp.cancel
-    </button>
-</div>
-
 @code {
-    AuthorityStorage StorageLevelValue = AuthorityStorage._private;
-    StorageSort StorageSort = StorageSort.Construction;
+    private AuthorityStorage StorageLevelValue = AuthorityStorage._private;
+    private StorageSort StorageSortValue = StorageSort.Construction;
+
     [Parameter] public object Parent { get; set; } = default!;
-    CalculationItemType StorageType;
-    string Name = string.Empty;
-    int Id;
+
+    private CalculationItemType StorageType;
+    private string Name = string.Empty;
+    private int Id;
+
     private void GetParentType()
     {
-        if (Parent.GetType() == typeof(TaskListMVVM))
+        if (Parent is TaskListMVVM taskListMVVM)
         {
             StorageType = CalculationItemType.task;
-            TaskListMVVM taskListMVVM = (TaskListMVVM)Parent;
             Id = taskListMVVM.Id;
             Name = taskListMVVM.Name;
         }
-        else
+        else if (Parent is ResourceListMVVM resource)
         {
             StorageType = CalculationItemType.resource;
-            ResourceListMVVM re = (ResourceListMVVM)Parent;
-            Id = re.Id;
-            Name = re.Name;
+            Id = resource.Id;
+            Name = resource.Name;
         }
     }
+
     protected override void OnInitialized()
     {
         GetParentType();
     }
 
-    async Task SaveAPI()
+    private async Task SaveAPI()
     {
-        if (await Repo.Storage.SaveAsync(Id, StorageType, StorageLevelValue, StorageSort))
+        if (await Repo.Storage.SaveAsync(Id, StorageType, StorageLevelValue, StorageSortValue))
             Close();
     }
 
-    void GetStorage(ChangeEventArgs e, AuthorityStorage l)
+    private void SelectStorage(AuthorityStorage value)
     {
-        StorageLevelValue = l;
-    }
-    void GetStorageSort(ChangeEventArgs e, StorageSort l)
-    {
-        StorageSort = l;
+        StorageLevelValue = value;
     }
 
-    void Close() => Modal.Close();
+    private void SelectStorageSort(StorageSort value)
+    {
+        StorageSortValue = value;
+    }
+
+    private string GetStorageButtonClass(bool isSelected)
+    {
+        var baseClass = "w-full rounded-xl border px-4 py-3 text-left transition min-h-[56px] ";
+        return isSelected
+            ? baseClass + "border-blue-600 bg-blue-50 ring-2 ring-blue-200 dark:border-blue-400 dark:bg-blue-500/10 dark:ring-blue-500/20"
+            : baseClass + "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/60 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500 dark:hover:bg-slate-800";
+    }
+
+    private string GetSortButtonClass(bool isSelected)
+    {
+        var baseClass = "w-full rounded-xl border px-4 py-3 text-left transition min-h-[56px] ";
+        return isSelected
+            ? baseClass + "border-emerald-600 bg-emerald-50 ring-2 ring-emerald-200 dark:border-emerald-400 dark:bg-emerald-500/10 dark:ring-emerald-500/20"
+            : baseClass + "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/60 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-emerald-500 dark:hover:bg-slate-800";
+    }
+
+    private string GetDotOuterClass(bool isSelected, bool isGreen)
+    {
+        var selectedClass = isGreen
+            ? "border-emerald-600 dark:border-emerald-400"
+            : "border-blue-600 dark:border-blue-400";
+
+        var normalClass = "border-slate-400 dark:border-slate-500";
+
+        return $"flex h-4 w-4 items-center justify-center rounded-full border {(isSelected ? selectedClass : normalClass)}";
+    }
+
+    private string GetDotInnerClass(bool isSelected, bool isGreen)
+    {
+        var colorClass = isGreen
+            ? "bg-emerald-600 dark:bg-emerald-400"
+            : "bg-blue-600 dark:bg-blue-400";
+
+        return $"h-2 w-2 rounded-full {colorClass} {(isSelected ? "opacity-100" : "opacity-0")}";
+    }
+
+    private void Close() => Modal.Close();
 }

@@ -1,164 +1,321 @@
 ﻿@using ProjectManagement.Client.Services.Folder
-@using ProjectManagement.Client.Shared.MVVM.Folder;
+@using ProjectManagement.Client.Shared.MVVM.Folder
 @using ProjectManagement.Client.Shared.Repositories.Organisation
 @using ProjectManagement.Shared.DTO.App.List
 @using ProjectManagement.Shared.DTO.Organisation
-@using ProjectManagement.Shared.DTO.Project;
+@using ProjectManagement.Shared.DTO.Project
 @using ProjectManagement.Client.Shared.Model.Project
-@inherits AppComponentBase
 @using ProjectManagement.Shared.Enums
+@inherits AppComponentBase
 
-<div class="space-y-0 flex flex-col gap-4">
-    <EditForm id="myForm" Model="@projectFilter" OnValidSubmit="async () => await HandleSubmitAsync()" class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+<div class="space-y-4">
+
+    <!-- Search / Filter -->
+    <EditForm id="myForm"
+              Model="@projectFilter"
+              OnValidSubmit="HandleSubmitAsync"
+              class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+
         <DataAnnotationsValidator />
 
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h5 class="m-0 text-lg font-bold">Projects Search</h5>
-            <button class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500 inline-flex items-center gap-2" type="button" disabled="@IsLoading" @onclick="() => DetailsDiv = !DetailsDiv">
-                <span class="oi @(DetailsDiv ? "oi-arrow-top" : "oi-arrow-bottom")"></span>
-                <span>@(DetailsDiv ? "Hide details" : "Show details")</span>
-            </button>
-        </div>
+        <!-- Top bar -->
+        <div class="border-b border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-700 dark:bg-slate-800/70">
+            <div class="flex items-end gap-3 flex-nowrap">
+                <div class="min-w-0 flex-1">
+                    <InputText @bind-Value="@projectFilter.Name"
+                               placeholder="Project name..."
+                               class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+                    <ValidationMessage For="(() => projectFilter.Name)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+                </div>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <div class="min-w-0 md:col-span-2 xl:col-span-4">
-                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
-                <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.Name" />
-                <ValidationMessage For="(() => projectFilter.Name)" />
+                <button type="submit"
+                        form="myForm"
+                        disabled="@IsLoading"
+                        class="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-600">
+                    <span>@((MarkupString)Icons.Search)</span>
+                    <span>Search</span>
+                </button>
+
+                <button type="button"
+                        disabled="@IsLoading"
+                        @onclick="ToggleDetails"
+                        class="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+                    <span class="oi @(DetailsDiv ? "oi-chevron-top" : "oi-chevron-bottom")"></span>
+                    <span>@(DetailsDiv ? "Hide details" : "Show details")</span>
+                </button>
+
             </div>
+        </div>
 
-            @if (DetailsDiv)
-            {
-                <div class="min-w-0">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
-                    <InputSelect @bind-Value="projectFilter.NameOperator" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                        <option value="%var%" selected>%Var%</option>
-                        <option value="==">==</option>
-                        <option value="!=">!=</option>
-                        <option value="%var">%Var</option>
-                        <option value="var%">Var%</option>
-                    </InputSelect>
-                    <ValidationMessage For="(() => projectFilter.NameOperator)" />
+        <!-- Advanced filters -->
+        @if (DetailsDiv)
+        {
+            <div class="border-t border-slate-200 bg-slate-50/70 px-4 py-4 dark:border-slate-700 dark:bg-slate-800/40">
+                <div class="mb-3">
+                    <h6 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Advanced Filters
+                    </h6>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Refine your project search with additional conditions.
+                    </p>
                 </div>
 
-                <div class="min-w-0">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.startDate 1</label>
-                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.StartDate1"></InputDate>
-                    <ValidationMessage For="@(() => projectFilter.StartDate1)" />
-                </div>
+                <div class="grid grid-cols-3 gap-3">
 
-                <div class="min-w-0">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.startDate 2</label>
-                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.StartDate2"></InputDate>
-                    <ValidationMessage For="@(() => projectFilter.StartDate2)" />
-                </div>
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @CalcResource.name
+                        </label>
+                        <InputSelect @bind-Value="projectFilter.NameOperator"
+                                     class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
+                            <option value="%var%">%Var%</option>
+                            <option value="==">==</option>
+                            <option value="!=">!=</option>
+                            <option value="%var">%Var</option>
+                            <option value="var%">Var%</option>
+                        </InputSelect>
+                        <ValidationMessage For="(() => projectFilter.NameOperator)" />
+                    </div>
 
-                <div class="min-w-0">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.endDate 1</label>
-                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.EndDate1"></InputDate>
-                    <ValidationMessage For="@(() => projectFilter.EndDate1)" />
-                </div>
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @CalcResource.startDate 1
+                        </label>
+                        <InputDate @bind-Value="@projectFilter.StartDate1"
+                                   class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+                        <ValidationMessage For="@(() => projectFilter.StartDate1)" />
+                    </div>
 
-                <div class="min-w-0">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.endDate 2</label>
-                    <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.EndDate2"></InputDate>
-                    <ValidationMessage For="@(() => projectFilter.EndDate2)" />
-                </div>
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @CalcResource.startDate 2
+                        </label>
+                        <InputDate @bind-Value="@projectFilter.StartDate2"
+                                   class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+                        <ValidationMessage For="@(() => projectFilter.StartDate2)" />
+                    </div>
 
-                <div class="min-w-0">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.code</label>
-                    <InputText class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="@projectFilter.Code" />
-                    <ValidationMessage For="@(() => projectFilter.Code)" />
-                </div>
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @CalcResource.endDate 1
+                        </label>
+                        <InputDate @bind-Value="@projectFilter.EndDate1"
+                                   class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+                        <ValidationMessage For="@(() => projectFilter.EndDate1)" />
+                    </div>
 
-                <div class="min-w-0">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceIdentity.customer</label>
-                    <InputSelect @bind-Value="projectFilter.CustomerId" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                        <option></option>
-                        @if (Customers != null)
-                        {
-                            foreach (var customer in Customers)
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @CalcResource.endDate 2
+                        </label>
+                        <InputDate @bind-Value="@projectFilter.EndDate2"
+                                   class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+                        <ValidationMessage For="@(() => projectFilter.EndDate2)" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @CalcResource.code
+                        </label>
+                        <InputText @bind-Value="@projectFilter.Code"
+                                   placeholder="Code..."
+                                   class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
+                        <ValidationMessage For="@(() => projectFilter.Code)" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @ResourceIdentity.customer
+                        </label>
+                        <InputSelect @bind-Value="projectFilter.CustomerId"
+                                     class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
+                            <option value=""></option>
+                            @if (Customers != null)
                             {
-                                <option value="@customer.Id">@customer.Name</option>
+                                @foreach (var customer in Customers)
+                                {
+                                    <option value="@customer.Id">@customer.Name</option>
+                                }
                             }
-                        }
-                    </InputSelect>
-                    <ValidationMessage For="@(() => projectFilter.CustomerId)" />
-                </div>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => projectFilter.CustomerId)" />
+                    </div>
 
-                <div class="flex items-center gap-2 mt-1 md:mt-6 flex items-center gap-2 pt-7">
-                    <InputCheckbox class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" @bind-Value="@projectFilter.IsVisible" />
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceApp.isVisible</label>
-                </div>
-            }
-        </div>
+                    <div class="min-w-0 flex items-end">
+                        <label class="inline-flex h-10 w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            <InputCheckbox @bind-Value="@projectFilter.IsVisible"
+                                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-400" />
+                            <span>@ResourceApp.isVisible</span>
+                        </label>
+                    </div>
 
-        <div class="mt-4 flex flex-wrap gap-2">
-            <button type="submit" form="myForm" class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500" disabled="@IsLoading"><span>@((MarkupString)Icons.Search)</span> Search</button>
-            <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500" type="button" disabled="@IsLoading" @onclick="async () => await CallBack.InvokeAsync()">@ResourceApp.cancel</button>
-        </div>
+                </div>
+            </div>
+        }
     </EditForm>
 
-    <div class="overflow-auto rounded-xl border border-slate-200 bg-white">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-            <thead class="bg-gray-100 dark:bg-gray-700">
-                <tr>
-                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.name</th>
-                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.code</th>
-                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.startDate</th>
-                    <th class="p-1 text-left text-sm font-semibold">@CalcResource.endDate</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
-                @if (projects != null)
-                    foreach (var project in projects)
-                    {
+    <!-- Results -->
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <div class="flex flex-col gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/70">
+            <div>
+                <h6 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Search Results
+                </h6>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    @(projects?.Count ?? 0) project(s)
+                </p>
+            </div>
+
+            <div class="inline-flex w-fit items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                @(IsLoading ? "Loading..." : "Ready")
+            </div>
+        </div>
+
+        @if (IsLoading)
+        {
+            <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                Loading...
+            </div>
+        }
+        else if (projects == null || !projects.Any())
+        {
+            <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                No projects found.
+            </div>
+        }
+        else
+        {
+            <!-- Mobile cards -->
+            <div class="grid gap-3 p-4 lg:hidden">
+                @foreach (var project in projects)
+                {
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <button class="text-left text-sm font-semibold text-blue-700 underline decoration-transparent underline-offset-4 transition hover:decoration-current dark:text-blue-400"
+                                        @onclick="async () => await ProjectSelected(project)"
+                                        disabled="@IsLoading">
+                                    @project.Name
+                                </button>
+
+                                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                    @project.Code
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                    @CalcResource.startDate
+                                </div>
+                                <div class="mt-1 text-slate-700 dark:text-slate-300">
+                                    @project.StartDate.ToString(ConstValues.DateFormat)
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                    @CalcResource.endDate
+                                </div>
+                                <div class="mt-1 text-slate-700 dark:text-slate-300">
+                                    @project.EndDate.ToString(ConstValues.DateFormat)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Desktop table -->
+            <div class="hidden overflow-x-auto lg:block">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead class="bg-slate-100 dark:bg-slate-800">
                         <tr>
-                            <td scope="row">
-                                <button class="text-[18px] text-neutral-800 underline hover:text-neutral-900 transition dark:text-neutral-300 dark:hover:text-neutral-100" @onclick="async ()=> await ProjectSelected(project)" disabled="@IsLoading">@project.Name</button>
-                            </td>
-                            <td>@project.Code</td>
-                            <td>@project.StartDate.ToString(ConstValues.DateFormat)</td>
-                            <td>@project.EndDate.ToString(ConstValues.DateFormat)</td>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                @CalcResource.name
+                            </th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                @CalcResource.code
+                            </th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                @CalcResource.startDate
+                            </th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                @CalcResource.endDate
+                            </th>
                         </tr>
-                    }
-            </tbody>
-        </table>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @foreach (var project in projects)
+                        {
+                            <tr class="transition hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                                <td class="px-4 py-3 align-middle">
+                                    <button class="text-left text-sm font-medium text-blue-700 underline decoration-transparent underline-offset-4 transition hover:decoration-current dark:text-blue-400"
+                                            @onclick="async () => await ProjectSelected(project)"
+                                            disabled="@IsLoading">
+                                        @project.Name
+                                    </button>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                                    @project.Code
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                                    @project.StartDate.ToString(ConstValues.DateFormat)
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">
+                                    @project.EndDate.ToString(ConstValues.DateFormat)
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 </div>
 
 @code {
-    ProjectFilter projectFilter = new ProjectFilter();
+    ProjectFilter projectFilter = new();
     List<ListDTO>? Customers;
     List<SearchProjectsMVVM>? projects;
     bool DetailsDiv = false;
     bool IsLoading = true;
+
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public EventCallback CallBack { get; set; }
-    async Task HandleSubmitAsync()
+
+    void ToggleDetails()
     {
-        projects = await Repo.Project.FilterAsync(projectFilter);
-        IsLoading = false;
+        DetailsDiv = !DetailsDiv;
     }
 
+    async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        projects = await Repo.Project.FilterAsync(projectFilter);
+
+        IsLoading = false;
+    }
 
     async Task ProjectSelected(SearchProjectsMVVM pro)
     {
         ListProjectMVVM o = new();
-        FolderMVVM? folder = new();
-        folder = UoWService?.Folder?.State?.FoldersList?.FirstOrDefault(x => x.Id == pro.FolderId);
+        FolderMVVM? folder = UoWService?.Folder?.State?.FoldersList?.FirstOrDefault(x => x.Id == pro.FolderId);
+
         if (folder == null || pro == null)
-        {
             return;
-        }
+
         PropertyCopier.CopyPropertiesTo(pro, o);
         await Folder.NewFolder(folder);
         await Folder.NewProject(o);
-
-        //UoWService.Folder.FoldersRefresh();
         Modal.Close();
     }
-    protected async override Task OnInitializedAsync()
+
+    protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
         Customers = await Repo.Org.GetVisibleOrIdAsync();

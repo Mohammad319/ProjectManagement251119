@@ -36,8 +36,7 @@ namespace ProjectManagement.Client.Pages.Folder
                     }));
                 builder.CloseComponent();
             },
-            // لو ما تحتاج أزرار تحت، خليه فاضي أو لا تضيف Buttons
-            Buttons = []
+            Buttons = [], Size = DialogSize.ExtraLarge, IsDraggable = true, CloseOnOverlayClick = true
         });
 
         void ModalForm(FolderModel model) =>

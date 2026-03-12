@@ -3,22 +3,30 @@
 @inherits AppComponentBase
 
 @inject ProjectManagement.Client.Shared.Repositories.Folder.IFolderRepository _folderRepo
-<EditForm id="myForm" class="space-y-4 p-4 text-slate-800 dark:text-slate-100" Model="@PostFolder" OnValidSubmit="async()=> await HandleSubmitAsync()">
+
+<EditForm id="myForm"
+          class="space-y-4 p-4 text-slate-800 dark:text-slate-100"
+          Model="@PostFolder"
+          OnValidSubmit="async()=> await HandleSubmitAsync()">
     <DataAnnotationsValidator />
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div class="flex flex-col gap-1">
-            <label for="folderName" class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
+    <div class="grid grid-cols-[minmax(0,1fr)_auto_140px] items-end gap-4">
+        <div class="flex min-w-0 flex-col gap-1">
+            <label for="folderName" class="text-sm font-medium text-slate-700 dark:text-slate-200">
+                @CalcResource.name:
+            </label>
             <InputText id="folderName"
                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                        @bind-Value="PostFolder.Name" />
             <ValidationMessage For="@(() => PostFolder.Name)" />
         </div>
 
-        <div class="flex items-center gap-2 self-end rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/50">
+        <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 whitespace-nowrap dark:border-slate-700 dark:bg-slate-800/50">
             <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900"
                            @bind-Value="@PostFolder.IsVisible" />
-            <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.isVisible</label>
+            <label class="text-sm font-medium text-slate-700 dark:text-slate-200">
+                @ResourceApp.isVisible
+            </label>
         </div>
 
         <div class="flex flex-col gap-1">
@@ -38,6 +46,7 @@
             disabled="@btnSubmitDisabled">
         @ResourceApp.save
     </button>
+
     <button type="button"
             class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
             @onclick="Modal.Close">
@@ -61,6 +70,7 @@
     private async Task HandleSubmitAsync()
     {
         btnSubmitDisabled = true;
+
         if (FolderForm.Id != Guid.Empty)
         {
             if (await _folderRepo.UpdateAsync(FolderForm.Id, PostFolder))
@@ -71,7 +81,10 @@
                 await OnClickCallback.InvokeAsync(FolderForm);
                 MHD.Notifications(ToastType.Update, true);
             }
-            else MHD.Notifications(ToastType.Update);
+            else
+            {
+                MHD.Notifications(ToastType.Update);
+            }
         }
         else
         {
@@ -83,8 +96,10 @@
                 FolderForm.IsVisible = PostFolder.IsVisible;
                 await OnClickCallback.InvokeAsync(FolderForm);
             }
+
             MHD.Notifications(ToastType.Add, FolderForm.Id != Guid.Empty);
         }
+
         await OnClickCallback.InvokeAsync(null);
     }
 }
