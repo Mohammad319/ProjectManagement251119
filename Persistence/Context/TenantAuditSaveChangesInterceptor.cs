@@ -34,14 +34,44 @@ public sealed class TenantAuditSaveChangesInterceptor : SaveChangesInterceptor
         var now = DateTime.UtcNow;
         var userId = (db.CurrentUserId is > 0) ? db.CurrentUserId : null;
 
-        var entries = context.ChangeTracker.Entries()
-            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted);
-
-        foreach (var entry in entries)
+        var tracker = context.ChangeTracker;
+        var originalAutoDetectChanges = tracker.AutoDetectChangesEnabled;
+        tracker.AutoDetectChangesEnabled = false;
+        try
         {
-            ApplyTenant(entry, db);
-            ApplyAudit(entry, now, userId);
-            ApplySoftDelete(entry, now, userId);
+            var entries = tracker.Entries()
+                .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                .ToList();
+
+            foreach (var entry in entries)
+            {
+                ApplyTenant(entry, db);
+                ApplyAudit(entry, now, userId);
+                ApplySoftDelete(entry, now, userId);
+                ApplyImmutableKeyProtection(entry);
+            }
+        }
+        finally
+        {
+            tracker.AutoDetectChangesEnabled = originalAutoDetectChanges;
+        }
+    }
+
+    private static void ApplyImmutableKeyProtection(EntityEntry entry)
+    {
+        if (entry.State != EntityState.Modified)
+            return;
+
+        foreach (var property in entry.Properties)
+        {
+            var isPrimaryKey = property.Metadata.IsPrimaryKey();
+            var isIdentifyingForeignKey = property.Metadata.IsForeignKey() && property.Metadata.IsKey();
+
+            if (!isPrimaryKey && !isIdentifyingForeignKey)
+                continue;
+
+            property.CurrentValue = property.OriginalValue;
+            property.IsModified = false;
         }
     }
 
