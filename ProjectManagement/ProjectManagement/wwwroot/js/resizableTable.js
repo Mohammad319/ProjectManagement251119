@@ -1,106 +1,59 @@
-﻿window.nelCalcDotNetRef = window.nelCalcDotNetRef || null;
+﻿window.nelCalcDotNetRef = null;
 
 window.initializeResizableColumns = function (dotNetRef) {
-    if (dotNetRef) {
-        window.nelCalcDotNetRef = dotNetRef;
-    }
+    window.nelCalcDotNetRef = dotNetRef;
 
-    const table = document.getElementById("resizeMe");
+    const table = document.getElementById('resizeMe');
     if (!table) return;
 
     createResizableTable(table);
 };
 
-const MIN_COLUMN_WIDTH = 30;
-let lefts = [];
-
 const createResizableTable = (table) => {
-    const cols = table.querySelectorAll("th");
-
-    cols.forEach((col) => {
-        if (!col.style.position) {
-            col.style.position = "relative";
-        }
-
-        const allResizers = Array.from(col.children).filter((el) =>
-            el.classList && el.classList.contains("resizer")
-        );
-
-        let resizer = allResizers[0];
-        for (let i = 1; i < allResizers.length; i++) {
-            allResizers[i].remove();
-        }
-
-        if (!resizer) {
-            resizer = document.createElement("div");
-            resizer.classList.add("resizer");
-            col.appendChild(resizer);
-        }
-
+    const cols = table.querySelectorAll('th');
+    cols.forEach(col => {
+        const resizer = document.createElement('div');
+        resizer.classList.add('resizer');
         resizer.style.height = `${table.offsetHeight}px`;
-
-        if (resizer.dataset.bound !== "1") {
-            createResizableColumn(col, resizer);
-            resizer.dataset.bound = "1";
-        }
+        col.appendChild(resizer);
+        createResizableColumn(col, resizer);
     });
 };
 
 const createResizableColumn = function (col, resizer) {
     let x = 0;
     let w = 0;
-    let elementID = "";
+    let elementID;
+
+    const mouseDownHandler = function (e) {
+        elementID = col.id.replace('h', '');
+        ResetNeetCalcTable(parseInt(elementID) + 1);
+        x = e.clientX;
+        w = parseInt(window.getComputedStyle(col).width, 10);
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseup', mouseUpHandler, { once: true });
+        resizer.classList.add('resizing');
+    };
 
     const mouseMoveHandler = function (e) {
-        const nextWidth = Math.max(MIN_COLUMN_WIDTH, w + e.clientX - x);
-        col.style.width = `${nextWidth}px`;
+        col.style.width = `${w + e.clientX - x}px`;
     };
 
     const mouseUpHandler = () => {
-        resizer.classList.remove("resizing");
-
-        const parsedWidth = parseInt(window.getComputedStyle(col).width, 10);
-        const newWidth = Number.isFinite(parsedWidth)
-            ? Math.max(MIN_COLUMN_WIDTH, parsedWidth)
-            : w;
-
+        resizer.classList.remove('resizing');
+        const newWidth = parseInt(window.getComputedStyle(col).width, 10);
         SaveTemplateJs(`${elementID}||${newWidth}`);
         SetNewNTHChild(+elementID + 1, newWidth - w);
-
-        document.removeEventListener("mousemove", mouseMoveHandler);
+        document.removeEventListener('mousemove', mouseMoveHandler);
     };
 
-    const mouseDownHandler = function (e) {
-        if (e.button !== 0) return;
-
-        elementID = (col.id || "").replace("h", "");
-        if (!elementID) return;
-
-        lefts = [];
-        ResetNeetCalcTable(parseInt(elementID, 10) + 1);
-
-        x = e.clientX;
-
-        const parsedWidth = parseInt(window.getComputedStyle(col).width, 10);
-        w = Number.isFinite(parsedWidth)
-            ? Math.max(MIN_COLUMN_WIDTH, parsedWidth)
-            : MIN_COLUMN_WIDTH;
-
-        document.addEventListener("mousemove", mouseMoveHandler);
-        document.addEventListener("mouseup", mouseUpHandler, { once: true });
-
-        resizer.classList.add("resizing");
-        e.preventDefault();
-        e.stopPropagation();
-    };
-
-    resizer.addEventListener("mousedown", mouseDownHandler);
+    resizer.addEventListener('mousedown', mouseDownHandler);
 };
 
-const ResetNeetCalcTable = (index) => {
-    const table = document.getElementById("resizeMe");
-    if (!table) return;
+var lefts = [];
 
+const ResetNeetCalcTable = (index) => {
+    const table = document.getElementById('resizeMe');
     const headers = table.querySelectorAll("th");
 
     for (let i = index; i < headers.length; i++) {
@@ -108,16 +61,14 @@ const ResetNeetCalcTable = (index) => {
         lefts.push(prevLeft);
         headers[i - 1].style.left = "auto";
 
-        table.querySelectorAll(`td:nth-child(${i})`).forEach((td) => {
+        table.querySelectorAll(`td:nth-child(${i})`).forEach(td => {
             td.style.left = "auto";
         });
     }
 };
 
 const SetNewNTHChild = (index, plusLeft) => {
-    const table = document.getElementById("resizeMe");
-    if (!table) return;
-
+    const table = document.getElementById('resizeMe');
     const headers = table.querySelectorAll("th");
     for (let i = index; i < headers.length; i++) {
         let left = lefts[i - index] || 0;
@@ -125,21 +76,19 @@ const SetNewNTHChild = (index, plusLeft) => {
             left += plusLeft;
             headers[i - 1].style.left = `${left}px`;
 
-            table.querySelectorAll(`td:nth-child(${i})`).forEach((td) => {
+            table.querySelectorAll(`td:nth-child(${i})`).forEach(td => {
                 td.style.left = `${left}px`;
             });
         }
     }
-
     lefts = [];
 };
 
 function SaveTemplateJs(event) {
     if (!window.nelCalcDotNetRef) {
+        console.warn("nelCalcDotNetRef is not set");
         return;
     }
 
-    window.nelCalcDotNetRef
-        .invokeMethodAsync("SaveTemplateBlazor", event)
-        .catch(() => { });
+    window.nelCalcDotNetRef.invokeMethodAsync('SaveTemplateBlazor', event);
 }
