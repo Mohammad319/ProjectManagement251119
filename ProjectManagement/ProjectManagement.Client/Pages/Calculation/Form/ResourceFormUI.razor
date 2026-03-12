@@ -11,7 +11,7 @@
 
 @inherits AppComponentBase
 
-<div class="flex max-h-[85vh] min-h-0 flex-col overflow-hidden rounded-2xl bg-white text-slate-900 shadow-sm ring-1 ring-slate-100 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800">
+<div class="flex max-h-[85vh] min-h-0 flex-col overflow-hidden rounded bg-white text-slate-900 border border-gray-200 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800">
 
     @if (Resource?.Id == 0 && PostList.Count > 1)
     {
@@ -37,10 +37,10 @@
 
         <DataAnnotationsValidator />
 
-        <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div class="min-h-0 flex-1 overflow-y-auto px-2 py-2">
 
             <!-- PANEL 1 -->
-            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+            <MhdCard Elevated="true" Compact="true" Class="mb-2">
                 <div class="@PanelBodyClass">
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                         <div class="min-w-0">
@@ -89,7 +89,7 @@
             </MhdCard>
 
             <!-- PANEL 2 -->
-            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+            <MhdCard Elevated="true" Compact="true" Class="mb-2">
                 <div class="@PanelBodyClass">
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
 
@@ -189,7 +189,7 @@
             </MhdCard>
 
             <!-- PANEL 3 -->
-            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+            <MhdCard Elevated="true" Compact="true" Class="mb-2">
                 <div class="@PanelBodyClass">
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
 
@@ -279,7 +279,7 @@
             </MhdCard>
 
             <!-- PARAMETERS -->
-            <MhdCard Elevated="true" Compact="true" Class="mb-3">
+            <MhdCard Elevated="true" Compact="true" Class="mb-2">
                 <div class="@PanelBodyClass">
                     <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <div>
@@ -344,7 +344,7 @@
                             Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments)
             {
                 <!-- TIMES -->
-                <MhdCard Elevated="true" Compact="true" Class="mb-3">
+                <MhdCard Elevated="true" Compact="true" Class="mb-2">
                     <div class="@PanelBodyClass">
                         <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                             <div>
@@ -460,7 +460,7 @@
         </div>
     </EditForm>
 
-    <div class="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-6px_16px_-12px_rgba(15,23,42,0.35)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+    <div class="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 py-2 dark:border-slate-700 dark:bg-slate-900/95">
         <div class="flex flex-wrap items-center justify-end gap-2">
             @if (Resource?.Id == 0)
             {
@@ -497,18 +497,18 @@
 </div>
 
 @code {
-    private string PanelBodyClass => "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm ring-1 ring-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-800";
-    private string LabelClass => "mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200";
-    private string InputClass => "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
-    private string DisabledInputClass => "w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 shadow-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400";
-    private string TextAreaClass => "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20";
-    private string PrimaryBlueButtonClass => "inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600";
-    private string OutlineBlueButtonClass => "inline-flex items-center justify-center rounded-xl border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white";
-    private string OutlineRedButtonClass => "inline-flex items-center justify-center rounded-xl border border-red-600 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300 dark:hover:bg-red-500 dark:hover:text-white";
-    private string OutlineGreenButtonClass => "inline-flex items-center justify-center rounded-xl border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white";
-    private string OutlineGrayButtonClass => "inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800";
-    private string DeleteButtonClass => "inline-flex items-center justify-center rounded-xl bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600";
-    private string DeleteIconButtonClass => "inline-flex h-[42px] w-full items-center justify-center rounded-xl bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600";
+    private string PanelBodyClass => "rounded border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900";
+    private string LabelClass => "block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300";
+    private string InputClass => "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+    private string DisabledInputClass => "w-full border border-gray-200 rounded px-1 py-0.5 bg-gray-100 text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300";
+    private string TextAreaClass => "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+    private string PrimaryBlueButtonClass => "inline-flex items-center justify-center rounded bg-blue-600 px-2 py-1 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500";
+    private string OutlineBlueButtonClass => "inline-flex items-center justify-center rounded border border-blue-600 px-2 py-1 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300";
+    private string OutlineRedButtonClass => "inline-flex items-center justify-center rounded border border-red-600 px-2 py-1 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300";
+    private string OutlineGreenButtonClass => "inline-flex items-center justify-center rounded border border-emerald-600 px-2 py-1 text-sm font-medium text-emerald-600 transition hover:bg-emerald-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-400 dark:text-emerald-300";
+    private string OutlineGrayButtonClass => "inline-flex items-center justify-center rounded border border-slate-300 px-2 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200";
+    private string DeleteButtonClass => "inline-flex items-center justify-center rounded bg-red-600 px-2 py-1 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500";
+    private string DeleteIconButtonClass => "inline-flex h-[30px] w-full items-center justify-center rounded bg-red-600 px-2 py-1 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500";
 
     private string GetStepButtonClass(int index)
     {
