@@ -47,6 +47,7 @@ namespace Persistence.Service.CalculationItems.Storage
                     return false;
 
                 var tasks = await RecursiveTasksCte.Query(context, id, calcId)
+                    .AsNoTracking()
                     .ToListAsync(ct);
 
                 if (tasks.Count == 0)
