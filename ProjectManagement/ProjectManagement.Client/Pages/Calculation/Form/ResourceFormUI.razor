@@ -11,7 +11,6 @@
 
 @inherits AppComponentBase
 
-<div class="flex max-h-[85vh] min-h-0 flex-col overflow-hidden rounded bg-white text-slate-900 border border-gray-200 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800">
 
     @if (Resource?.Id == 0 && PostList.Count > 1)
     {
@@ -32,17 +31,14 @@
 
     <EditForm id="resForm"
               Model="ResourceUpdate"
-              OnValidSubmit="HandleSubmitAsync"
-              class="flex min-h-0 flex-1 flex-col overflow-hidden">
+              OnValidSubmit="HandleSubmitAsync">
 
         <DataAnnotationsValidator />
 
-        <div class="min-h-0 flex-1 overflow-y-auto px-2 py-2">
 
             <!-- PANEL 1 -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                <div class="@PanelBodyClass">
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid grid-cols-3 gap-2 md:grid-cols-2 xl:grid-cols-3">
                         <div class="min-w-0">
                             <label class="@LabelClass">@CalcResource.name</label>
                             <InputText @bind-Value="ResourceUpdate.Name" class="@InputClass" />
@@ -85,13 +81,11 @@
                             }
                         }
                     </div>
-                </div>
             </MhdCard>
 
             <!-- PANEL 2 -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                <div class="@PanelBodyClass">
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid grid-cols-2 gap-2 md:grid-cols-2 xl:grid-cols-3">
 
                         <div class="min-w-0">
                             <label class="@LabelClass">@CalcResource.quantity</label>
@@ -185,13 +179,11 @@
                             </label>
                         </div>
                     </div>
-                </div>
             </MhdCard>
 
             <!-- PANEL 3 -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                <div class="@PanelBodyClass">
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid grid-cols-3 gap-2 md:grid-cols-2 xl:grid-cols-3">
 
                         @if (Config.ResourceTypes != null)
                         {
@@ -275,13 +267,11 @@
                             <ValidationMessage For="@(() => ResourceUpdate.OpportunityId)" />
                         </div>
                     </div>
-                </div>
             </MhdCard>
 
             <!-- PARAMETERS -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                <div class="@PanelBodyClass">
-                    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                         <div>
                             <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Parameters</label>
                             <p class="text-xs text-slate-500 dark:text-slate-400">@ResourceUpdate.Data.Parameters.Count item(s)</p>
@@ -306,7 +296,7 @@
                         @for (int i = 0; i < ResourceUpdate.Data.Parameters.Count; i++)
                         {
                             int idx = i;
-                            <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+                            <div class="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
                                 <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-10">
                                     <div class="min-w-0 xl:col-span-4">
                                         <label class="@LabelClass">@CalcResource.name</label>
@@ -337,7 +327,6 @@
                             </div>
                         }
                     }
-                </div>
             </MhdCard>
 
             @if (Resource?.ResType == ResourceTypesEnum.Worker ||
@@ -345,8 +334,7 @@
             {
                 <!-- TIMES -->
                 <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                    <div class="@PanelBodyClass">
-                        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Times</label>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">@ResourceUpdate.Data.Times.Count item(s)</p>
@@ -371,7 +359,7 @@
                             @for (int i = 0; i < ResourceUpdate.Data.Times.Count; i++)
                             {
                                 int idx = i;
-                                <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+                                <div class="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800/60">
                                     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
                                         <div class="min-w-0 xl:col-span-4">
                                             <label class="@LabelClass">@CalcResource.name</label>
@@ -408,13 +396,11 @@
                                 </div>
                             }
                         }
-                    </div>
                 </MhdCard>
             }
 
             <!-- NOTES -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                <div class="@PanelBodyClass">
                     <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.note</label>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Capture notes and upper notes for the selected resource.</p>
@@ -454,10 +440,8 @@
                             </div>
                         </div>
                     }
-                </div>
             </MhdCard>
 
-        </div>
     </EditForm>
 
     <div class="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 py-2 dark:border-slate-700 dark:bg-slate-900/95">
@@ -494,7 +478,6 @@
             </button>
         </div>
     </div>
-</div>
 
 @code {
     private string PanelBodyClass => "rounded border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900";

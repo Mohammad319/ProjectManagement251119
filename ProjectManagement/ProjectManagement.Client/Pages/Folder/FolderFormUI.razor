@@ -10,15 +10,7 @@
           OnValidSubmit="async()=> await HandleSubmitAsync()">
     <DataAnnotationsValidator />
 
-    <MhdCard Elevated="true" Compact="true" Class="mb-1">
-        <div class="rounded border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/70">
-            <h6 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@ResourceLoc.folder</h6>
-            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">@CalcResource.name, @ResourceApp.isVisible, Color</p>
-        </div>
-    </MhdCard>
-
-    <MhdCard Elevated="true" Compact="true" Class="mb-1">
-    <div class="grid grid-cols-1 items-end gap-3 lg:grid-cols-[minmax(0,1fr)_auto_140px]">
+    <div class="grid grid-cols-3 items-end gap-3 lg:grid-cols-[minmax(0,1fr)_auto_140px]">
         <div class="flex min-w-0 flex-col gap-1">
             <label for="folderName" class="text-sm font-medium text-slate-700 dark:text-slate-200">
                 @CalcResource.name:
@@ -40,16 +32,12 @@
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Color</label>
             <div class="flex items-center gap-2">
-                <InputText type="color"
-                           class="h-9 w-full cursor-pointer rounded border border-slate-300 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
+                <InputText type="color" class="block h-11 w-full rounded-xl border border-slate-300 bg-white p-1 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 dark:border-slate-700 dark:bg-slate-900"
                            @bind-value="PostFolder.Color" />
-                <span class="h-8 w-8 rounded-md border border-slate-300 shadow-sm dark:border-slate-600"
-                      style="background-color:@PostFolder.Color"></span>
             </div>
             <ValidationMessage For="@(() => PostFolder.Color)" />
         </div>
     </div>
-    </MhdCard>
 </EditForm>
 
 <div class="flex items-center justify-end gap-2 border-t border-slate-200 px-3 py-2 dark:border-slate-700">
