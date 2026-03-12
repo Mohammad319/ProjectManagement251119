@@ -154,7 +154,13 @@ else
     async Task GetAsync()
     {
         if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc)
-            if (ImportOtherCalc is not null) await ImportOtherCalc.GetObjectTypeAsync(1);
-        else if (UserStorage is not null) await UserStorage.GetAsync(Post);
+        {
+            if (ImportOtherCalc is not null)
+                await ImportOtherCalc.GetObjectTypeAsync(1);
+        }
+        else if (UserStorage is not null)
+        {
+            await UserStorage.GetAsync(Post);
+        }
     }
 }
