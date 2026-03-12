@@ -8,7 +8,7 @@
     <ProjectManagement.Client.Pages.Project.Storage.App.TaskList
     RefreshBack="StateHasChanged">
     <Content>
-            <select style="max-width:300px" class="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-[2px] text-[12px]
+            <select style="max-width:300px" class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 text-sm
                    bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
                     value="@((int)Post.AuthoritySelected)"
                     @onchange="GetAuthorityStorage">
@@ -25,7 +25,7 @@ else
 {
     <div class="grid grid-cols-1 md:grid-cols-4 gap-1 mb-1 items-center">
         <!-- اختيار نوع Authority -->
-        <select class="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-[2px] text-[12px]
+        <select class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 text-sm
                        bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
                 @onchange="(e) => GetAuthorityStorage(e)">
             @foreach (var level in Enum.GetValues<AuthorityStorage>())
@@ -37,7 +37,7 @@ else
         <!-- اختيار نوع التخزين إن لم يكن ImportFromOtherCalc أو program -->
         @if (Post.AuthoritySelected != AuthorityStorage.ImportFromOtherCalc)
         {
-            <select class="w-full border border-slate-300 dark:border-slate-600 rounded px-2 py-[2px] text-[12px]
+            <select class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 text-sm
                                    bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
                     @onchange="(e) => GetStorageSort(e)">
                 @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
@@ -51,14 +51,14 @@ else
         <div class="flex flex-wrap gap-1">
             @if (BtnMore)
             {
-                <button class="px-2 py-[2px] text-[12px] rounded border border-amber-500 text-amber-600
+                <button class="px-3 py-1.5 text-sm rounded-md border border-amber-500 text-amber-600
                                        hover:bg-amber-500 hover:text-white dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-400"
                         @onclick="GetAsync">
                     @ResourceApp.import
                 </button>
             }
 
-            <button class="px-2 py-[2px] text-[12px] rounded border border-amber-500 text-amber-600
+            <button class="px-3 py-1.5 text-sm rounded-md border border-amber-500 text-amber-600
                            hover:bg-amber-500 hover:text-white dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-400"
                     @onclick="GetAsync">
                 @ResourceApp.import
@@ -66,7 +66,7 @@ else
 
             @if (SaveBtnVisivble())
             {
-                <button class="px-2 py-[2px] text-[12px] rounded border border-green-500 text-green-600
+                <button class="px-3 py-1.5 text-sm rounded-md border border-green-500 text-green-600
                                        hover:bg-green-500 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400"
                         @onclick="SaveAsync">
                     @ResourceApp.save
