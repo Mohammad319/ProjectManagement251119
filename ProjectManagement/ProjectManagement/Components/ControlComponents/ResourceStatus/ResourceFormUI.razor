@@ -1,28 +1,30 @@
 @inherits AppComponentBase
 
 <EditForm id="resourceStatusForm"
-          class="space-y-3 p-4 text-sm"
+          class="space-y-3 p-3 text-sm"
           Model="@PostStatus"
           OnValidSubmit="HandleSubmitAsync">
     <DataAnnotationsValidator />
 
-    <div class="flex flex-wrap items-center gap-4">
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         <div class="flex flex-col">
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</label>
             <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@PostStatus.Name" />
             <ValidationMessage For="@(() => PostStatus.Name)" />
         </div>
 
-        <div class="flex items-center gap-2 py-1">
-            <InputCheckbox id="resourceStatusVisible"
-                           class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800"
-                           @bind-Value="@PostStatus.IsVisible" />
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="resourceStatusVisible">@AppLoc[nameof(ResourceApp.isVisible)]</label>
-        </div>
-
         <div class="flex flex-col">
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@Loc[nameof(ResourceLoc.color)]</label>
             <InputText type="color" class="h-10 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800" @bind-Value="PostStatus.Color" />
+        </div>
+
+        <div class="flex items-end">
+            <label class="flex h-10 w-full items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
+                <InputCheckbox id="resourceStatusVisible"
+                               class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800"
+                               @bind-Value="@PostStatus.IsVisible" />
+                <span>@AppLoc[nameof(ResourceApp.isVisible)]</span>
+            </label>
         </div>
     </div>
 </EditForm>
