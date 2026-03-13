@@ -2,4 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-/* dark mode عبر class="dark" يتم ضبطه في tailwind.config.js */
+@layer components {
+    .pm-page {
+        @apply space-y-3 p-3 md:p-4 text-slate-800 dark:text-slate-100;
+    }
+
+    .pm-card {
+        @apply rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900;
+    }
+
+    .pm-card-soft {
+        @apply rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60;
+    }
+
+    .pm-toolbar {
+        @apply flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:flex-row md:items-center md:justify-between;
+    }
+
+    .pm-title {
+        @apply text-base font-semibold text-slate-900 dark:text-slate-100;
+    }
+
+    .pm-subtitle {
+        @apply text-xs text-slate-500 dark:text-slate-400;
+    }
+
+    .pm-grid-2 {
+        @apply grid gap-3 md:grid-cols-2;
+    }
+
+    .pm-grid-3 {
+        @apply grid gap-3 md:grid-cols-2 xl:grid-cols-3;
+    }
+
+    .pm-field {
+        @apply flex flex-col gap-1;
+    }
+
+    .pm-label {
+        @apply text-xs font-medium text-slate-700 dark:text-slate-200;
+    }
+
+    .pm-input {
+        @apply h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
+    }
+
+    .pm-select {
+        @apply h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
+    }
+
+    .pm-textarea {
+        @apply min-h-[88px] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
+    }
+
+    .pm-check-row {
+        @apply flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/60;
+    }
+
+    .pm-btn {
+        @apply inline-flex h-9 items-center justify-center rounded-lg border px-3 text-sm font-medium transition;
+    }
+
+    .pm-btn-neutral {
+        @apply border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+    }
+
+    .pm-btn-primary {
+        @apply border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50;
+    }
+
+    .pm-btn-success {
+        @apply border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50;
+    }
+
+    .pm-btn-danger {
+        @apply border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300 dark:hover:bg-rose-950/50;
+    }
+
+    .pm-icon-btn {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+    }
+
+    .pm-table-wrap {
+        @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900;
+    }
+
+    .pm-table {
+        @apply min-w-full divide-y divide-slate-200 dark:divide-slate-700;
+    }
+
+    .pm-thead {
+        @apply bg-slate-50/80 dark:bg-slate-800/60;
+    }
+
+    .pm-th {
+        @apply px-2.5 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300;
+    }
+
+    .pm-td {
+        @apply px-2.5 py-1.5 text-sm text-slate-700 dark:text-slate-200;
+    }
+
+    .pm-tr {
+        @apply transition hover:bg-slate-50 dark:hover:bg-slate-800/60;
+    }
+
+    .pm-empty {
+        @apply rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400;
+    }
+
+    .pm-dialog {
+        @apply pointer-events-auto flex h-[88vh] w-[88vw] max-w-[1400px] flex-col overflow-hidden rounded-xl bg-white text-slate-900 shadow-2xl ring-1 ring-black/5 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10;
+    }
+
+    .pm-dialog-header {
+        @apply flex items-start justify-between gap-3 border-b border-slate-200 px-3 py-2 dark:border-slate-700;
+    }
+
+    .pm-nav-btn {
+        @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+    }
+}

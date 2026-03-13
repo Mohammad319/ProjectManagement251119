@@ -5,6 +5,7 @@ Admin@at.com
 Company 1
 Admin
 U1@co1.se
+u1@co1.se
 u2@co1.se
 
 D1
