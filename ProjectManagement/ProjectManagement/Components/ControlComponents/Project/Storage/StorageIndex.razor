@@ -7,35 +7,37 @@
 @inherits AppComponentBase
 @inject ICommandDispatcher MicroBus
 @inject IStorageViewService StorageViewService
-<div class="flex items-center gap-2 pb-1">
-    <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            @onchange="GetAuthorityStorage">
-        <option value="@(AuthorityStorage._private)" selected>@ResourceApp._private</option>
-        <option value="@(AuthorityStorage.department)">@ResourceApp.department</option>
-        <option value="@(AuthorityStorage._public)">@ResourceApp._public</option>
-    </select>
+<div class="space-y-2 pb-1">
+    <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+        <select class="form-select h-9 w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                @onchange="GetAuthorityStorage">
+            <option value="@(AuthorityStorage._private)" selected>@ResourceApp._private</option>
+            <option value="@(AuthorityStorage.department)">@ResourceApp.department</option>
+            <option value="@(AuthorityStorage._public)">@ResourceApp._public</option>
+        </select>
 
-    <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            @onchange="GetStorageSort">
-        @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
+        <select class="form-select h-9 w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                @onchange="GetStorageSort">
+            @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
+            {
+                <option value="@level">@ResourceLocalize.GetStorageSort(level)</option>
+            }
+        </select>
+
+        <select class="form-select h-9 w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                @onchange="StorageTypeSet">
+            <option value="@(CalculationItemType.task)">@ResourceLoc.task</option>
+            <option value="@(CalculationItemType.resource)">@ResourceLoc.resource</option>
+        </select>
+
+        @if (BtnImportIsVisible)
         {
-            <option value="@level">@ResourceLocalize.GetStorageSort(level)</option>
+            <button class="inline-flex h-9 w-full items-center justify-center rounded-lg border border-sky-300 bg-sky-50 text-sky-600 transition hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50 md:w-9"
+                    @onclick="GetAsync">
+                @((MarkupString)Icons.ImportFromCloud)
+            </button>
         }
-    </select>
-
-    <select class="form-select w-auto min-w-[140px] px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            @onchange="StorageTypeSet">
-        <option value="@(CalculationItemType.task)">@ResourceLoc.task</option>
-        <option value="@(CalculationItemType.resource)">@ResourceLoc.resource</option>
-    </select>
-
-    @if (BtnImportIsVisible)
-    {
-        <button class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-sky-300 bg-sky-50 text-sky-600 transition hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-900/30 dark:text-sky-300 dark:hover:bg-sky-900/50"
-                @onclick="GetAsync">
-            @((MarkupString)Icons.ImportFromCloud)
-        </button>
-    }
+    </div>
 </div>
 
 <table class="min-w-full divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">

@@ -1,16 +1,16 @@
 ﻿@inherits AppComponentBase
 
-<div class="w-full min-w-0 space-y-3 text-slate-800 dark:text-slate-100">
+<div class="w-full min-w-0 space-y-2 text-slate-800 dark:text-slate-100">
     <EditForm id="accountForm"
               Model="@EditModel"
               OnValidSubmit="HandleSubmitAsync"
-              class="w-full min-w-0 space-y-3">
+              class="w-full min-w-0 space-y-2">
 
         <DataAnnotationsValidator />
 
-        <ValidationSummary class="rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300" />
+        <ValidationSummary class="rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300" />
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_230px]">
+        <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
             <!-- Name -->
             <div class="min-w-0">
                 <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">
@@ -34,7 +34,7 @@
             </div>
 
             <!-- Visible -->
-            <div class="lg:col-span-2">
+            <div class="md:col-span-2 xl:col-span-3">
                 <div class="flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2
                     dark:border-slate-700 dark:bg-slate-800/60">
                     <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500
@@ -47,12 +47,12 @@
             </div>
 
             <!-- Comments -->
-            <div class="lg:col-span-2 min-w-0">
+            <div class="md:col-span-2 xl:col-span-3 min-w-0">
                 <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">
                     @CalcLoc[nameof(CalcResource.comment)]
                 </label>
 
-                <div class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800/60">
+                <div class="space-y-1.5 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/60">
                     @if (EditModel.Data?.Comments is { Count: > 0 })
                     {
                         @for (int i = 0; i < EditModel.Data.Comments.Count; i++)
@@ -96,7 +96,7 @@
         </div>
     </EditForm>
 
-    <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+    <div class="flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-200 pt-2.5 dark:border-slate-700">
         <button type="submit"
                 form="accountForm"
                 class="inline-flex h-9 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-4
