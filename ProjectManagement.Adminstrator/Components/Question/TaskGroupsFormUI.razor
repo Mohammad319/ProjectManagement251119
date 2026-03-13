@@ -215,7 +215,7 @@ else
                     <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" value="@Task?.Name" readonly />
                 </div>
 
-                <div class="flex flex-wrap gap-2 place-self-end">
+                <div class="flex flex-wrap gap-1.5 place-self-end">
                     <button type="submit" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">@ResourceApp.save</button>
                     <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="Close">@ResourceApp.cancel</button>
                 </div>
@@ -230,10 +230,11 @@ else
 
                 @if (Task?.QuestionGroups is { Count: > 0 } questionGroups)
                 {
+                    <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
                     @foreach (var g in questionGroups.OrderBy(x => x.SortOrder))
                     {
-                        <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                        <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
                                 <div class="md:col-span-3">
                                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
                                     <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
@@ -258,7 +259,7 @@ else
                                 </div>
 
                                 <div class="md:col-span-2 place-self-end">
-                                    <div class="inline-flex gap-2">
+                                    <div class="inline-flex gap-1.5">
                                         <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveChoiceGroup(g))">x</button>
                                         <button type="button" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="(() => AddChoiceOption(g))">Add Option</button>
                                     </div>
@@ -267,11 +268,11 @@ else
 
                             @if (g.Options?.Count > 0)
                             {
-                                <div class="mt-2">
+                                <div class="mt-1.5">
                                     @foreach (var o in g.Options)
                                     {
-                                        <div class="rounded-lg border border-gray-100 bg-white/70 p-2 mb-2 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                                        <div class="rounded-lg border border-gray-100 bg-white/70 p-1.5 mb-1.5 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
+                                            <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
                                                 <div class="md:col-span-4">
                                                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Option Label</label>
                                                     <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="o.DisplayName" />
@@ -288,7 +289,7 @@ else
                                                 </div>
 
                                                 <div class="md:col-span-2 place-self-end">
-                                                    <div class="inline-flex gap-2">
+                                                    <div class="inline-flex gap-1.5">
                                                     <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">Set Default</button>
 
                                                         <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
@@ -303,6 +304,7 @@ else
                             }
                         </div>
                     }
+                    </div>
                 }
                 else
                 {
@@ -319,11 +321,12 @@ else
 
                 @if (Task?.NumericQuestions?.Count > 0)
                 {
+                    <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
                     @foreach (var g in Task.NumericQuestions!.OrderBy(x => x.SortOrder))
                     {
-                        <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
+                        <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
                             <!-- NOTE: this row is 8 columns; keep spans sum = 8 -->
-                            <div class="grid grid-cols-1 md:grid-cols-8 gap-2">
+                            <div class="grid grid-cols-1 md:grid-cols-8 gap-1.5">
                                 <div class="md:col-span-2">
                                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Name</label>
                                     <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
@@ -355,6 +358,7 @@ else
                             </div>
                         </div>
                     }
+                    </div>
                 }
                 else
                 {
@@ -371,10 +375,11 @@ else
 
                 @if (Task?.ResourceSelectors?.Count > 0)
                 {
+                    <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
                     @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
                     {
-                        <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+                        <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
                                 <div class="md:col-span-4">
                                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Name</label>
                                     <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
@@ -395,7 +400,7 @@ else
                                 </div>
                             </div>
 
-                            <div class="mt-2">
+                            <div class="mt-1.5">
                                 <FolderResourcesAddUI TaskId="Task.Id"
                                                       ResIds="(g.Items ?? []).Select(x => x.ResourceId).ToList()"
                                                       OnSave="(e)=>AddDelete(g,e)" />
@@ -404,7 +409,7 @@ else
                                 {
                                     foreach (var it in g.Items)
                                     {
-                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
+                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5 mb-1.5">
                                             <div class="md:col-span-10">
                                                 <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Resource</label>
                                                 <ResourceAutocomplete MinChars="2" PageSize="20"
@@ -416,7 +421,7 @@ else
                                             </div>
 
                                             <div class="md:col-span-2 place-self-end">
-                                                <div class="inline-flex gap-2">
+                                                <div class="inline-flex gap-1.5">
                                                     <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
                                                     <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
                                                     <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveResourceItem(g, it))">x</button>
@@ -428,6 +433,7 @@ else
                             </div>
                         </div>
                     }
+                    </div>
                 }
                 else
                 {
