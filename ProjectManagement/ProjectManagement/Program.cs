@@ -1,4 +1,5 @@
-﻿using ProjectManagement.Configuration;
+﻿using AuthPermissions;
+using ProjectManagement.Configuration;
 using ProjectManagement.Extensions;
 using ProjectManagement.SignalR;
 using Serilog;
@@ -20,6 +21,10 @@ var conn = AppConnectionStringsReader.Read(builder.Configuration);
 builder.Services.AddProjectManagementApp(builder, conn);
 
 var app = builder.Build();
+
+// Ensure AuthPermissions schema/roles are initialized before hosted services start querying tenants.
+await app.InitializeAuthPermissionsAsync();
+
 // Pipeline
 app.UseProjectManagementPipeline();
 
