@@ -59,7 +59,16 @@ public partial class ResourceTypeUI
 
     private async Task ConfirmRemoveAsync(ResourceTypeModel resourceType)
     {
-        var result = await Dispatcher.Send(new DeleteResourceTypeCommand(resourceType.Id));
+        bool result;
+
+        try
+        {
+            result = await Dispatcher.Send(new DeleteResourceTypeCommand(resourceType.Id));
+        }
+        catch
+        {
+            result = false;
+        }
 
         if (result)
         {
