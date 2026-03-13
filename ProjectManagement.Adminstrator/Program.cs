@@ -20,8 +20,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var taskResourceBlueprintsDb =
-    builder.Configuration.GetConnectionString("TaskResourceBlueprintsConnection")
-    ?? builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb")
+    builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb")
     ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsConnection' (or 'TaskResourceBlueprintsDb') not found.");
 
 builder.Services.AddTaskResourceBlueprints();
@@ -38,7 +37,7 @@ builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddApplicationServices();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+var connectionString = builder.Configuration.GetConnectionString("PMPConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddCustomAuthentication(connectionString);
