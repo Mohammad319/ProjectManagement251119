@@ -7,34 +7,34 @@
 @inject IStringLocalizer<ResourceApp> AppLoc
 
 <EditForm id="compensationForm"
-          class="space-y-3 p-4 text-sm"
+          class="space-y-2 p-3 text-sm"
           Model="@CompensationUpdate"
           OnValidSubmit="HandleSubmitAsync">
     <DataAnnotationsValidator />
 
-    <div class="flex flex-wrap items-center gap-4">
-        <div class="flex flex-col">
+    <div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3 lg:items-end">
+        <div class="flex min-w-0 flex-col">
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
-            <InputText class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@CompensationUpdate.Name" />
+            <InputText class="h-9 w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-800 shadow-sm focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-sky-500 dark:focus:ring-sky-900" @bind-Value="@CompensationUpdate.Name" />
             <ValidationMessage For="@(() => CompensationUpdate.Name)" />
         </div>
 
-        <div class="flex items-center gap-2 py-1">
+        <div class="flex h-9 items-center gap-2 rounded-md border border-slate-200 px-2.5 dark:border-slate-700">
             <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" type="checkbox" @bind-Value="@CompensationUpdate.IsVisible" />
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">
                 @ResourceApp.visible
             </label>
         </div>
 
-        <div class="flex flex-col">
+        <div class="flex min-w-0 flex-col">
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.color:</label>
-            <InputText type="color" class="h-10 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800" @bind-Value="@CompensationUpdate.Color" />
+            <InputText type="color" class="h-9 w-full rounded-md border border-slate-300 bg-white p-1 dark:border-slate-600 dark:bg-slate-800" @bind-Value="@CompensationUpdate.Color" />
             <ValidationMessage For="@(() => CompensationUpdate.Color)" />
         </div>
     </div>
 </EditForm>
 
-<div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+<div class="mt-2 flex items-center justify-end gap-1.5 border-t border-slate-200 pt-2 dark:border-slate-700">
     <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-400 px-3 py-1.5 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="compensationForm" disabled="@IsLoading">
         @ResourceApp.save
     </button>
