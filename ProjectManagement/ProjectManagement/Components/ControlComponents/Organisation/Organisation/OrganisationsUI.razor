@@ -48,41 +48,72 @@ else
     }
     else
     {
-        <table class="w-full table-fixed divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
-            <colgroup>
-                <col class="w-auto" />
-                <col class="w-36" />
-                <col class="w-36" />
-                <col class="w-36" />
-            </colgroup>
-            <thead class="bg-slate-50 dark:bg-slate-800/80">
-                <tr>
-                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
-                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.status</th>
-                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.category</th>
-                    <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.baseCategory</th>
-                </tr>
-            </thead>
-
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                @foreach (var organistion in Organistion)
-                {
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200"
-                            @oncontextmenu:preventDefault
-                            @oncontextmenu="() => Context(organistion)">
-                            <button class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200"
-                                    @onclick="() => OrganisationDetails(organistion)">
-                                @organistion.Name
-                            </button>
-                        </td>
-
-                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
-                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
-                        <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
+        <div class="hidden xl:block">
+            <table class="w-full table-fixed divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 text-sm dark:divide-slate-700 dark:border-slate-700">
+                <colgroup>
+                    <col class="w-auto" />
+                    <col class="w-36" />
+                    <col class="w-36" />
+                    <col class="w-36" />
+                </colgroup>
+                <thead class="bg-slate-50 dark:bg-slate-800/80">
+                    <tr>
+                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.name</th>
+                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@CalcResource.status</th>
+                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.category</th>
+                        <th class="px-1 py-1 text-start text-sm font-semibold text-slate-600 dark:text-slate-200">@ResourceLoc.baseCategory</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    @foreach (var organistion in Organistion)
+                    {
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                            <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200"
+                                @oncontextmenu:preventDefault
+                                @oncontextmenu="() => Context(organistion)">
+                                <button class="text-sky-600 hover:text-sky-700 underline-offset-2 hover:underline dark:text-sky-300 dark:hover:text-sky-200"
+                                        @onclick="() => OrganisationDetails(organistion)">
+                                    @organistion.Name
+                                </button>
+                            </td>
+
+                            <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Type</td>
+                            <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.SubCategory</td>
+                            <td class="px-1 py-1 text-start text-sm text-slate-700 dark:text-slate-200">@organistion.Category</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3 xl:hidden">
+            @foreach (var organistion in Organistion)
+            {
+                <div class="h-full rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                     @oncontextmenu:preventDefault
+                     @oncontextmenu="() => Context(organistion)">
+                    <button class="line-clamp-2 text-left text-sm font-semibold text-sky-600 transition hover:text-sky-700 dark:text-sky-300 dark:hover:text-sky-200"
+                            @onclick="() => OrganisationDetails(organistion)">
+                        @organistion.Name
+                    </button>
+
+                    <dl class="mt-2 space-y-1.5 text-sm">
+                        <div class="flex items-center justify-between gap-2">
+                            <dt class="text-slate-500 dark:text-slate-400">@CalcResource.status</dt>
+                            <dd class="text-slate-700 dark:text-slate-200">@organistion.Type</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                            <dt class="text-slate-500 dark:text-slate-400">@ResourceLoc.category</dt>
+                            <dd class="text-slate-700 dark:text-slate-200">@organistion.SubCategory</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-2">
+                            <dt class="text-slate-500 dark:text-slate-400">@ResourceLoc.baseCategory</dt>
+                            <dd class="text-slate-700 dark:text-slate-200">@organistion.Category</dd>
+                        </div>
+                    </dl>
+                </div>
+            }
+        </div>
     }
 }
