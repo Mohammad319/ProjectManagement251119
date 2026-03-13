@@ -23,32 +23,34 @@
 }
 else
 {
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-1 mb-1 items-center">
-        <!-- اختيار نوع Authority -->
-        <select class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 text-sm
-                       bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
-                @onchange="(e) => GetAuthorityStorage(e)">
-            @foreach (var level in Enum.GetValues<AuthorityStorage>())
-            {
-                <option value="@((int)level)">@AppLoc[level.ToString()]</option>
-            }
-        </select>
-
-        <!-- اختيار نوع التخزين إن لم يكن ImportFromOtherCalc أو program -->
-        @if (Post.AuthoritySelected != AuthorityStorage.ImportFromOtherCalc)
-        {
-            <select class="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 text-sm
-                                   bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
-                    @onchange="(e) => GetStorageSort(e)">
-                @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
+    <div class="mb-1 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+        <div class="flex flex-col gap-1 md:flex-row md:items-center md:gap-2 md:flex-1">
+            <!-- اختيار نوع Authority -->
+            <select class="w-full md:max-w-xs border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 text-sm
+                           bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                    @onchange="(e) => GetAuthorityStorage(e)">
+                @foreach (var level in Enum.GetValues<AuthorityStorage>())
                 {
-                    <option value="@level">@ResourceLocalize.GetStorageSort(level)</option>
+                    <option value="@((int)level)">@AppLoc[level.ToString()]</option>
                 }
             </select>
-        }
+
+            <!-- اختيار نوع التخزين إن لم يكن ImportFromOtherCalc أو program -->
+            @if (Post.AuthoritySelected != AuthorityStorage.ImportFromOtherCalc)
+            {
+                <select class="w-full md:max-w-xs border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 text-sm
+                                       bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                        @onchange="(e) => GetStorageSort(e)">
+                    @foreach (StorageSort level in Enum.GetValues(typeof(StorageSort)))
+                    {
+                        <option value="@level">@ResourceLocalize.GetStorageSort(level)</option>
+                    }
+                </select>
+            }
+        </div>
 
         <!-- الأزرار -->
-        <div class="flex flex-wrap gap-1">
+        <div class="flex flex-wrap gap-1 md:justify-end">
             @if (BtnMore)
             {
                 <button class="px-3 py-1.5 text-sm rounded-md border border-amber-500 text-amber-600
