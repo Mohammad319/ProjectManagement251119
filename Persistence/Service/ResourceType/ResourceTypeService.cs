@@ -52,8 +52,16 @@ namespace Persistence.Service.ResourceType
             if (isInUse) return false;
 
             context.ResourceTypes.Remove(entity);
-            await context.SaveChangesAsync(ct);
-            return true;
+
+            try
+            {
+                await context.SaveChangesAsync(ct);
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
         }
 
         public async Task<int> CreateSortAsync(int resourceTypeId, PostResourceSortDTO dto, CancellationToken ct = default)
@@ -105,8 +113,16 @@ namespace Persistence.Service.ResourceType
                 return false;
 
             context.ResourceSorts.Remove(entity);
-            await context.SaveChangesAsync(ct);
-            return true;
+
+            try
+            {
+                await context.SaveChangesAsync(ct);
+                return true;
+            }
+            catch (DbUpdateException)
+            {
+                return false;
+            }
         }
 
         public async Task<List<ResourceTypeModel>> GetTypesAsync(bool isVisible, CancellationToken ct = default)
