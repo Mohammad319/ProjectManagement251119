@@ -54,7 +54,16 @@ public partial class ResourceSortUI
 
     private async Task ConfirmRemoveAsync(ResourceSortModel resourceType)
     {
-        var result = await Dispatcher.Send(new DeleteResourceSortCommand(resourceType.Id));
+        bool result;
+
+        try
+        {
+            result = await Dispatcher.Send(new DeleteResourceSortCommand(resourceType.Id));
+        }
+        catch
+        {
+            result = false;
+        }
 
         if (result)
         {
