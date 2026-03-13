@@ -61,22 +61,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.SupportedUICultures = [.. supportedCultures.Select(c => new CultureInfo(c))];
 });
 
-try
-{
-    Log.Logger = new LoggerConfiguration()
-        .ReadFrom.Configuration(builder.Configuration)
-        .CreateLogger();
-}
-catch (Exception ex)
-{
-    Log.Logger = new LoggerConfiguration()
-        .MinimumLevel.Information()
-        .WriteTo.Console()
-        .CreateLogger();
-
-    Log.Warning(ex, "Failed to initialize configured Serilog sinks. Falling back to console logging only.");
-}
-
+Log.Logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
 builder.Host.UseSerilog();
 
 var app = builder.Build();
