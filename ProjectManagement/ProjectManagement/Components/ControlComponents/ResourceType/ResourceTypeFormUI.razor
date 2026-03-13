@@ -1,11 +1,11 @@
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 
-<EditForm id="resourceTypeForm" EditContext="editContext" OnValidSubmit="HandleSubmitAsync" class="space-y-6 px-1 py-1">
+<EditForm id="resourceTypeForm" EditContext="editContext" OnValidSubmit="HandleSubmitAsync" class="space-y-4 px-1 py-1">
     <DataAnnotationsValidator />
 
-    <div class="grid gap-4 md:grid-cols-4">
-        <div class="space-y-2 md:col-span-2">
+    <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div class="space-y-2">
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcLoc[nameof(CalcResource.name)]</label>
             <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@ResourceTypeUpdate.Name" />
             <ValidationMessage For="@(() => ResourceTypeUpdate.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
@@ -102,14 +102,14 @@
             </div>
         }
 
-        <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900 md:col-span-4">
+        <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900 lg:col-span-3">
             <InputCheckbox id="resourceTypeVisible" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" @bind-Value="@ResourceTypeUpdate.IsVisible" />
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200" for="resourceTypeVisible">@AppLoc[nameof(ResourceApp.isVisible)]</label>
         </div>
     </div>
 </EditForm>
 
-<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+<div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
     <button type="submit" form="resourceTypeForm" class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" disabled="@IsLoading">
         @AppLoc[nameof(ResourceApp.save)]
     </button>
