@@ -32,15 +32,19 @@ public class ClientLogsController : ControllerBase
         var userId = User?.FindFirst("UserId")?.Value ?? e.UserId;
         var tenantId = User?.FindFirst("TenantID")?.Value ?? e.TenantId;
 
-        Log.ForContext("App", "ProjectManagement.Client")
-           .ForContext("Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"))
-           .ForContext("ClientTraceId", e.TraceId)
-           .ForContext("ServerTraceId", serverTraceId)
-           .ForContext("ClientUrl", e.Url)
-           .ForContext("ClientTimeUtc", e.ClientTimeUtc?.UtcDateTime)
-           .ForContext("ClientUserId", userId)
-           .ForContext("ClientTenantId", tenantId)
-           .Write(level, "{ClientMessage} {ClientException}", e.Message, e.Exception);
+        var logger = Log.ForContext("App", "ProjectManagement.Client")
+            .ForContext("Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"))
+            .ForContext("ClientTraceId", e.TraceId)
+            .ForContext("ServerTraceId", serverTraceId)
+            .ForContext("ClientUrl", e.Url)
+            .ForContext("ClientTimeUtc", e.ClientTimeUtc?.UtcDateTime)
+            .ForContext("ClientUserId", userId)
+            .ForContext("ClientTenantId", tenantId);
+
+        if (string.IsNullOrWhiteSpace(e.Exception))
+            logger.Write(level, "{ClientMessage}", e.Message);
+        else
+            logger.Write(level, "{ClientMessage} {ClientException}", e.Message, e.Exception);
 
         return Ok();
     }
