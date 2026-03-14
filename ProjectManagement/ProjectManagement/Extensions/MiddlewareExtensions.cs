@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Middleware;
 using ProjectManagement.Services;
@@ -12,6 +13,9 @@ public static class MiddlewareExtensions
         var isDev = app.Environment.IsDevelopment();
 
         app.UseResponseCompression();
+
+        // Respect X-Forwarded-* headers when running behind reverse proxies (IIS/Nginx).
+        app.UseForwardedHeaders();
 
         // Static file caching (important for Blazor WASM startup):
         // - /_framework assets are fingerprinted -> cache aggressively

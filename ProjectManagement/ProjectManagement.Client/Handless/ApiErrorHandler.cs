@@ -50,7 +50,8 @@ namespace ProjectManagement.Client.Handless
             if (response.StatusCode == HttpStatusCode.Forbidden)
             {
                 ShowOnce("صلاحيات", "ليس لديك صلاحية لتنفيذ هذه العملية.");
-                _ = clientLogger.ErrorAsync("Forbidden (403) from API", traceId: null, ex: null);
+                var endpoint = request.RequestUri?.ToString() ?? "(unknown-endpoint)";
+                _ = clientLogger.ErrorAsync($"Forbidden (403) from API {endpoint}", traceId: null, ex: null);
                 return response;
             }
 
