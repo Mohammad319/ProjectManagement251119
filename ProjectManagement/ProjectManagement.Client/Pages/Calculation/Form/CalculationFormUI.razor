@@ -16,12 +16,12 @@
 @if (CalculationUpdate != null)
 {
     <EditForm id="calcForm"
-              class="space-y-4 p-4"
+              class="space-y-0"
               Model="@CalculationUpdate"
               OnValidSubmit="async () => await HandleSubmitAsync()">
 
         <DataAnnotationsValidator />
-        <ValidationSummary class="text-red-600 mb-2" />
+        <ValidationSummary class="mb-2 text-red-600" />
 
         <!-- التابات مع الأيقونات -->
         <MhdTabs Items="Tabs"
@@ -32,34 +32,34 @@
         @* محتوى التاب 1 *@
         @if (Part == 1)
         {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="mt-2 grid grid-cols-2 gap-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.code</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.Code" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.code</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Code" />
                     <ValidationMessage For=@(() => CalculationUpdate.Code) />
                 </div>
 
-                <div class="md:col-span-3">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.name</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.Name" />
+                <div>
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Name" />
                     <ValidationMessage For=@(() => CalculationUpdate.Name) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.tax</label>
-                    <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.Tax" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tax</label>
+                    <InputNumber class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Tax" />
                     <ValidationMessage For=@(() => CalculationUpdate.Tax) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.timeMonth</label>
-                    <InputNumber class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.TimeMonth" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.timeMonth</label>
+                    <InputNumber class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.TimeMonth" />
                     <ValidationMessage For=@(() => CalculationUpdate.TimeMonth) />
                 </div>
 
-                <div class="flex items-center justify-center">
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <div class="col-span-2 flex items-center">
+                    <div class="w-full">
+                        <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">
                             @CalcResource.priority (@CalculationUpdate.Priority %)
                         </label>
                         <input type="range"
@@ -71,14 +71,14 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceLoc.maps</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.Maps" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.maps</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Maps" />
                     <ValidationMessage For=@(() => CalculationUpdate.Maps) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.status</label>
-                    <InputSelect @bind-Value="CalculationUpdate.StatusId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.status</label>
+                    <InputSelect @bind-Value="CalculationUpdate.StatusId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                         <option></option>
                         @if (Config?.Statuses != null)
                         {
@@ -92,8 +92,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.projectType</label>
-                    <InputSelect @bind-Value="CalculationUpdate.TypeId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectType</label>
+                    <InputSelect @bind-Value="CalculationUpdate.TypeId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                         <option></option>
                         @if (Config?.Types != null)
                         {
@@ -109,10 +109,10 @@
         }
         else if (Part == 2)
         {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="mt-2 grid grid-cols-2 gap-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.projectContract</label>
-                    <InputSelect @bind-Value="CalculationUpdate.ContractId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectContract</label>
+                    <InputSelect @bind-Value="CalculationUpdate.ContractId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                         <option></option>
                         @if (Config?.Contracts != null)
                         {
@@ -125,8 +125,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.projectCompensation</label>
-                    <InputSelect @bind-Value="CalculationUpdate.CompensationId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectCompensation</label>
+                    <InputSelect @bind-Value="CalculationUpdate.CompensationId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                         <option></option>
                         @if (Config?.Compensations != null)
                         {
@@ -140,8 +140,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.procurement</label>
-                    <InputSelect @bind-Value="CalculationUpdate.Procurement" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.procurement</label>
+                    <InputSelect @bind-Value="CalculationUpdate.Procurement" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                         <option value="@Procurement.A">@Procurement.A.ToString()</option>
                         <option value="@Procurement.B">@Procurement.B.ToString()</option>
                     </InputSelect>
@@ -149,8 +149,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.procurementMethods</label>
-                    <InputSelect @bind-Value="CalculationUpdate.ProcurementMethodsId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.procurementMethods</label>
+                    <InputSelect @bind-Value="CalculationUpdate.ProcurementMethodsId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                         <option></option>
                         @if (Config?.Methods != null)
                         {
@@ -166,27 +166,27 @@
         }
         else if (Part == 3)
         {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="mt-2 grid grid-cols-2 gap-3">
                 @for (int i = 0; i < CalculationUpdate.Responsibles.Count; i++)
                 {
-                    <div class="md:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.responsible</label>
-                        <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.Responsibles[i]" />
+                    <div>
+                        <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.responsible</label>
+                        <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Responsibles[i]" />
                         <ValidationMessage For=@(() => CalculationUpdate.Responsibles[i]) />
                     </div>
                 }
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.inspector</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.inspector</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                @bind-Value="@CalculationUpdate.Inspector"
                                placeholder="@(CalcResource.inspector)" />
                     <ValidationMessage For=@(() => CalculationUpdate.Inspector) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceApp.organisation</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                @bind-Value="@CalculationUpdate.Supervisor"
                                placeholder="@(ResourceApp.organisation)" />
                     <ValidationMessage For=@(() => CalculationUpdate.Supervisor) />
@@ -195,12 +195,12 @@
         }
         else if (Part == 4)
         {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="mt-2 grid grid-cols-2 gap-3">
                 @if (Config?.Organisation != null)
                 {
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceApp.organisation</label>
-                        <InputSelect @bind-Value="CalculationUpdate.OrganisationId" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100">
+                        <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceApp.organisation</label>
+                        <InputSelect @bind-Value="CalculationUpdate.OrganisationId" class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
                             <option></option>
                             @foreach (var status in Config.Organisation)
                             {
@@ -212,96 +212,96 @@
                 }
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.developer</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.Developer" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.developer</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Developer" />
                     <ValidationMessage For=@(() => CalculationUpdate.Developer) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceLoc.clientsProjectmanager</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.ClientsManager" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.clientsProjectmanager</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.ClientsManager" />
                     <ValidationMessage For=@(() => CalculationUpdate.ClientsManager) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceLoc.designer</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.Designer" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.designer</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Designer" />
                     <ValidationMessage For=@(() => CalculationUpdate.Designer) />
                 </div>
 
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.theClientsContactPersonTender</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.ContactPerson" />
+                <div>
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.theClientsContactPersonTender</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.ContactPerson" />
                     <ValidationMessage For=@(() => CalculationUpdate.ContactPerson) />
                 </div>
 
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.overviewInfoProject</label>
-                    <InputText class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.OverviewInfo" />
+                <div class="col-span-2">
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.overviewInfoProject</label>
+                    <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.OverviewInfo" />
                     <ValidationMessage For=@(() => CalculationUpdate.OverviewInfo) />
                 </div>
             </div>
         }
         else if (Part == 5)
         {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="mt-2 grid grid-cols-2 gap-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.startDate</label>
-                    <InputDate class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.StartDate" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.startDate</label>
+                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.StartDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.StartDate) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.endDate</label>
-                    <InputDate class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.EndDate" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.endDate</label>
+                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.EndDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.EndDate) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.tenderDeadline</label>
-                    <InputDate class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.TenderDeadline" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderDeadline</label>
+                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.TenderDeadline" />
                     <ValidationMessage For=@(() => CalculationUpdate.TenderDeadline) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.publicationDate</label>
-                    <InputDate class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.PublicationDate" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.publicationDate</label>
+                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.PublicationDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.PublicationDate) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.decisionDate</label>
-                    <InputDate class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.DecisionDate" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.decisionDate</label>
+                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.DecisionDate" />
                     <ValidationMessage For=@(() => CalculationUpdate.DecisionDate) />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">@CalcResource.tenderQA</label>
-                    <InputDate class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" @bind-Value="@CalculationUpdate.TenderQA" />
+                    <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderQA</label>
+                    <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.TenderQA" />
                     <ValidationMessage For=@(() => CalculationUpdate.TenderQA) />
                 </div>
             </div>
         }
         else if (Part == 6)
         {
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div class="mt-2 grid grid-cols-2 gap-3">
 
                 @if (Calculation.Id == 0 || CalculationUpdate.IsPrivate)
                 {
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 self-end">
                         <InputCheckbox class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" @bind-Value="@CalculationUpdate.IsPrivate" />
-                        <label class="text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceApp._private</label>
+                        <label class="select-none text-sm dark:text-white">@ResourceApp._private</label>
                     </div>
                 }
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 self-end">
                     <InputCheckbox class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" @bind-Value="@CalculationUpdate.IsVisible" />
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200">@ResourceApp.visible</label>
+                    <label class="select-none text-sm dark:text-white">@ResourceApp.visible</label>
                 </div>
 
-                <div class="md:col-span-2">
+                <div class="col-span-2">
                     <button type="button"
-                            class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                            class="rounded border border-green-600 px-2 py-1 text-green-600 transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white"
                             @onclick="() => CalculationUpdate.Notes.Add(string.Empty)">
                         @ResourceLoc.description
                     </button>
@@ -313,62 +313,55 @@
                     {
                         var index = i;
 
-                        <div class="grid grid-cols-12 gap-2 items-start">
+                        <div class="col-span-2 flex items-start gap-2">
                             <!-- Delete Button -->
                             <button type="button"
-                                    class="col-span-1 mt-2
-                                       inline-flex items-center justify-center rounded-md
-                                       px-2 py-1 border border-red-500 text-red-500 text-sm
-                                       hover:bg-red-500 hover:text-white transition"
+                                    class="mt-2 inline-flex items-center justify-center rounded-md border border-red-500 px-2 py-1 text-sm text-red-500 transition hover:bg-red-500 hover:text-white"
                                     @onclick="() => CalculationUpdate.Notes.RemoveAt(index)">
                                 @((MarkupString)Icons.DeleteSVG)
                             </button>
 
                             <!-- Note TextArea -->
-                            <div class="col-span-11">
-                                <textarea class="w-full rounded border border-gray-300 px-2 py-2 text-sm
-                                             min-h-28 resize-y
-                                             focus:outline-none focus:ring-2 focus:ring-blue-500
-                                             dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                          @bind="CalculationUpdate.Notes[index]">
+                            <div class="min-w-0 flex-1">
+                                <textarea class="min-h-28 w-full resize-y rounded border border-gray-300 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                              @bind="CalculationUpdate.Notes[index]">
                             </textarea>
+                                </div>
                             </div>
-                        </div>
+                        }
+
                     }
-
-                }
-            </div>
-        }
+                </div>
+            }
         else if (Part == 7)
-        {
-            <div>
-                <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI
-                    Incomes="CalculationUpdate.Income" />
-            </div>
-        }
-        else if (Part == 8)
-        {
-            <div>
-                <ContactsUI Contacts="CalculationUpdate.Contacts" />
-            </div>
-        }
-    </EditForm>
+            {
+                <div>
+                    <ProjectManagement.Client.Pages.Calculation.Income.IncomeListUI Incomes="CalculationUpdate.Income" />
+                </div>
+            }
+            else if (Part == 8)
+            {
+                <div>
+                    <ContactsUI Contacts="CalculationUpdate.Contacts" />
+                </div>
+            }
+        </EditForm>
 
-    <div class="mt-4 flex items-center justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
-        <button type="submit"
-                class="inline-flex items-center rounded-md border border-green-600 px-4 py-2 text-sm font-medium text-green-700 transition hover:bg-green-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500 dark:text-green-400"
-                form="calcForm"
-                disabled="@btnSubmitDisabled">
-            @ResourceApp.save
-        </button>
+        <div class="mt-1 flex justify-end gap-1">
+            <button type="submit"
+                    class="rounded border border-green-600 px-2 py-1 text-green-600 transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white"
+                    form="calcForm"
+                    disabled="@btnSubmitDisabled">
+                @ResourceApp.save
+            </button>
 
-        <button type="button"
-                class="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                @onclick="async () => await Callback.InvokeAsync(null)">
-            @ResourceApp.cancel
-        </button>
-    </div>
-}
+            <button type="button"
+                    class="rounded border border-gray-500 px-2 py-1 text-gray-500 transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white"
+                    @onclick="async () => await Callback.InvokeAsync(null)">
+                @ResourceApp.cancel
+            </button>
+        </div>
+    }
 
 @code {
     bool btnSubmitDisabled = false;

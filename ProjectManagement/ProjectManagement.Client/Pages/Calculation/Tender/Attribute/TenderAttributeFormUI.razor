@@ -7,37 +7,57 @@
 @using ProjectManagement.Shared.Base.Calculation;
 @using System.Text.Json;
 @inherits AppComponentBase
-<EditForm id="myFormAttr" class="space-y-4" Model="@Post" OnValidSubmit="async()=> await HandleSubmitAsync()">
-        <div class="grid gap-4 md:grid-cols-4">
-        <div class="md:col-span-2">
-        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name </label>
-        <InputText @bind-Value="Post.Name" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-        <ValidationMessage For=@(() => Post.Name) />
-    </div>
-        <div class="md:col-span-2">
-        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note </label>
-        <InputTextArea @bind-Value="Post.Note" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
-        <ValidationMessage For=@(() => Post.Note) />
-    </div>
-    @if (TenderAttribute.Id == 0) for (int i = 0; i < TendersValues.Count; i++)
+
+<EditForm id="myFormAttr" class="space-y-3 p-3 text-slate-800 dark:text-slate-100" Model="@Post" OnValidSubmit="async () => await HandleSubmitAsync()">
+    <div class="grid grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+            <InputText @bind-Value="Post.Name"
+                       class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            <ValidationMessage For="@(() => Post.Name)" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note</label>
+            <InputTextArea @bind-Value="Post.Note"
+                           class="min-h-[2.5rem] w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" />
+            <ValidationMessage For="@(() => Post.Note)" />
+        </div>
+
+        @if (TenderAttribute.Id == 0)
         {
-            var buttonNumber = i;
-            <div>
-                <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@Tenders[i].Company </label>
-                <input type="number" class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @onchange="(e)=> OnChange(e,TendersValues.ElementAt(buttonNumber).Key)" />
-            </div>
+            for (int i = 0; i < TendersValues.Count; i++)
+            {
+                var buttonNumber = i;
+                <div class="flex flex-col gap-1.5">
+                    <label class="truncate text-sm font-medium text-slate-700 dark:text-slate-200">@Tenders[i].Company</label>
+                    <input type="number"
+                           min="0"
+                           step="0.01"
+                           class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                           @onchange="(e) => OnChange(e, TendersValues.ElementAt(buttonNumber).Key)" />
+                </div>
+            }
         }
     </div>
 </EditForm>
 
-<div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
-    <button type="submit" class="inline-flex items-center rounded-md border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="myFormAttr" disabled="@IsLoading">
+<div class="mt-3 flex items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+    <button type="submit"
+            class="inline-flex h-10 items-center rounded-lg border border-emerald-600 px-4 text-sm font-medium text-emerald-700 hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
+            form="myFormAttr"
+            disabled="@IsLoading">
         @ResourceApp.save
     </button>
-    <button type="button" class="inline-flex items-center rounded-md border border-slate-400 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500/40 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-800" @onclick="async ()=> await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
+    <button type="button"
+            class="inline-flex h-10 items-center rounded-lg border border-slate-400 px-4 text-sm font-medium text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500/40 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-800"
+            @onclick="async () => await Callback.InvokeAsync(false)">
+        @ResourceApp.cancel
+    </button>
 </div>
+
 @code {
-    void OnChange(ChangeEventArgs ev,int i)
+    void OnChange(ChangeEventArgs ev, int i)
     {
         if (string.IsNullOrEmpty(ev.Value?.ToString()))
         {
@@ -50,27 +70,33 @@
             TendersValues[i] = t;
         }
     }
+
     [Parameter] public EventCallback<bool> Callback { get; set; }
     bool IsLoading = false;
     [Parameter] public List<TenderListDTO> Tenders { get; set; } = new();
     [Parameter] public int CalcId { get; set; }
-
     [Parameter] public TenderAttributeListDTO TenderAttribute { get; set; } = new();
+
     TenderAttributeListPostDTO Post = new();
     Dictionary<int, double> TendersValues = new Dictionary<int, double>();
+
     protected override void OnInitialized()
     {
-        if (TenderAttribute.Id ==0)
+        if (TenderAttribute.Id == 0)
+        {
             foreach (var item in Tenders)
             {
-                TendersValues.Add(item.Id,0);
+                TendersValues.Add(item.Id, 0);
             }
+        }
+
         Post = new TenderAttributeListPostDTO()
         {
-                Name = TenderAttribute.Name,
-                Note = TenderAttribute.Note,
+            Name = TenderAttribute.Name,
+            Note = TenderAttribute.Note,
         };
     }
+
     async Task HandleSubmitAsync()
     {
         IsLoading = true;
@@ -86,14 +112,15 @@
             {
                 isSuccess = await Repo.Tender.UpdateAsync(TenderAttribute.Id, CalcId, Post);
             }
-             MHD.Notifications(TenderAttribute.Id == 0 ? ToastType.Add : ToastType.Update, isSuccess);
+
+            MHD.Notifications(TenderAttribute.Id == 0 ? ToastType.Add : ToastType.Update, isSuccess);
             await Callback.InvokeAsync(isSuccess);
         }
         catch
         {
-             MHD.Notifications(TenderAttribute.Id == 0 ? ToastType.Add : ToastType.Update, false);
-           // Console.WriteLine(ex.Message);
+            MHD.Notifications(TenderAttribute.Id == 0 ? ToastType.Add : ToastType.Update, false);
         }
+
         await Callback.InvokeAsync(false);
         IsLoading = false;
     }

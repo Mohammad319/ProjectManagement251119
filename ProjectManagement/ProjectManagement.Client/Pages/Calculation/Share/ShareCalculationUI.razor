@@ -5,125 +5,140 @@
 @inherits AppComponentBase
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 
-<div class="space-y-0">
+<div class="space-y-3">
     @if (Form != null)
     {
         <ShareCalculationFormUI ListShareCalc="Form" CalculationId="ListCalculation.Id" Callback="FormCallBack"></ShareCalculationFormUI>
     }
     else
     {
-        <div class="container mx-auto px-4">
-            <div class="flex flex-wrap gap-2 mt-1">
-                @if (Departments != null)
+        <div class="rounded border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900">
+            @if (Departments != null)
+            {
+                @if (page == 0)
                 {
-                    @if (page == 0)
-                    {
-                        foreach (var item in Departments)
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach (var item in Departments)
                         {
-                            <div class="mb-1">
-                                <div class="flex items-center gap-1">
-                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                                        <div class="flex items-center gap-1">
-                                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
-                                                    @onclick="async () => await GetUsersAsync(item)">
-                                                @ResourceIdentity.addUser
-                                            </button>
+                            <div class="flex items-center justify-between gap-2 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 dark:border-gray-700 dark:bg-gray-800/60">
+                                <div class="min-w-0 truncate text-sm text-gray-700 dark:text-gray-300">@item.Name</div>
 
-                                            <div class="ml-1">
-                                                <button disabled="@(list.Any(x => x.DepartmentId == item.Id))"
-                                                        class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
-                                                        @onclick=" ()=> Form = new ListShareCalcDTO(){DepartmentId = item.Id, Department = item.Name}">
-                                                    @((MarkupString)Icons.Plus)
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </AuthorizeView>
+                                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                    <div class="flex items-center gap-1">
+                                        <button type="button"
+                                                class="inline-flex h-8 items-center justify-center rounded border border-blue-600 px-2 text-sm font-normal text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
+                                                @onclick="async () => await GetUsersAsync(item)">
+                                            @ResourceIdentity.addUser
+                                        </button>
 
-                                    <span class="ml-1 text-gray-600 dark:text-gray-300">
-                                        @item.Name
-                                    </span>
-                                </div>
+                                        <button type="button"
+                                                disabled="@(list.Any(x => x.DepartmentId == item.Id))"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded border border-blue-600 text-blue-600 transition hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
+                                                @onclick="() => Form = new ListShareCalcDTO() { DepartmentId = item.Id, Department = item.Name }">
+                                            @((MarkupString)Icons.Plus)
+                                        </button>
+                                    </div>
+                                </AuthorizeView>
                             </div>
                         }
-                    }
+                    </div>
+                }
 
-                    @if (Users != null && page == 1)
-                    {
-                        <div class="mb-1">
-                            <button class="px-2 py-1 bg-yellow-400 text-black rounded hover:bg-yellow-500 dark:bg-yellow-500 dark:text-black" @onclick="() => page = 0">
-                                @ResourceApp.department
-                            </button>
+                @if (Users != null && page == 1)
+                {
+                    <div class="mb-2 flex items-center justify-between gap-2">
+                        <div class="text-sm font-medium text-gray-800 dark:text-gray-100">
+                            @(DepartmentSelected?.Name ?? ResourceApp.department)
                         </div>
 
+                        <button type="button"
+                                class="inline-flex h-8 items-center justify-center rounded border border-amber-500 px-3 text-sm font-normal text-amber-700 transition hover:bg-amber-500 hover:text-white dark:border-amber-400 dark:text-amber-300 dark:hover:bg-amber-400 dark:hover:text-black"
+                                @onclick="() => page = 0">
+                            @ResourceApp.department
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
                         @foreach (var user in Users)
                         {
-                            <div class="mb-1">
-                                <div class="flex items-center gap-1">
-                                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                                        <button disabled="@(list.Any(x => x.UserId == user.Id))"
-                                                class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500"
-                                                @onclick=" ()=> Form = new ListShareCalcDTO(){
-                                                DepartmentId = DepartmentSelected?.Id ?? 0,
-                                                                            Department = DepartmentSelected?.Name ?? string.Empty,
-                                                                            UserId = user.Id,
-                                                                            User = user.Name
-                                                                        }">
-                                                                      @((MarkupString)Icons.Plus)
-                                                                  </button>
-                                                              </AuthorizeView>
+                            <div class="flex items-center justify-between gap-2 rounded border border-gray-200 bg-gray-50 px-2 py-1.5 dark:border-gray-700 dark:bg-gray-800/60">
+                                <div class="min-w-0 truncate text-sm text-gray-700 dark:text-gray-300">@user.Name</div>
 
-                                <span class="ml-1 text-gray-600 dark:text-gray-300">
-                                    @user.Name
-                                </span>
+                                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                                    <button type="button"
+                                            disabled="@(list.Any(x => x.UserId == user.Id))"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded border border-blue-600 text-blue-600 transition hover:bg-blue-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
+                                            @onclick="() => Form = new ListShareCalcDTO()
+                                                                                    {
+                                                                                        DepartmentId = DepartmentSelected?.Id ?? 0,
+                                                                                            Department = DepartmentSelected?.Name ?? string.Empty,
+                                                                                            UserId = user.Id,
+                                                                                            User = user.Name
+                                                                                        }">
+                                        @((MarkupString)Icons.Plus)
+                                    </button>
+                                </AuthorizeView>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 }
             }
         </div>
-    </div>
+    }
 
-
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-            <thead class ="bg-gray-100 dark:bg-gray-700">
+    <div class="overflow-x-auto rounded border border-gray-200 dark:border-gray-700">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-100 dark:bg-gray-800">
                 <tr>
-                    <th></th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@ResourceApp.department</th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@ResourceIdentity.User</th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@CalcResource.netCal</th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@CalcResource.overheadCosts</th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@ResourceLoc.summarySheet</th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@ResourceLoc.opportunitiesRisks</th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@ResourceLoc.offer</th>
-                    <th class="p-1 text-left text-sm font-semibold text-gray-800 dark:text-gray-200">@ResourceLoc.selfInspection</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200"></th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@ResourceApp.department</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@ResourceIdentity.User</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@CalcResource.netCal</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@CalcResource.overheadCosts</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@ResourceLoc.summarySheet</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@ResourceLoc.opportunitiesRisks</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@ResourceLoc.offer</th>
+                    <th class="p-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200">@ResourceLoc.selfInspection</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                 @if (list != null)
+                {
                     foreach (var project in Enumerable.Reverse(list))
                     {
-                        <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/80">
                             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">
                                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                                    <button class="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-500" @onclick="()=>Form = project">@Icons.Edit</button>
-                                    <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 dark:bg-red-500" @onclick="()=> Remove(project)">@((MarkupString)@Icons.DeleteSVG)</button>
-
+                                    <div class="flex items-center gap-1">
+                                        <button type="button"
+                                                class="inline-flex h-7 items-center justify-center rounded border border-blue-600 px-2 text-sm text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
+                                                @onclick="() => Form = project">
+                                            @Icons.Edit
+                                        </button>
+                                        <button type="button"
+                                                class="inline-flex h-7 items-center justify-center rounded border border-red-600 px-2 text-sm text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white"
+                                                @onclick="() => Remove(project)">
+                                            @((MarkupString)Icons.DeleteSVG)
+                                        </button>
+                                    </div>
                                 </AuthorizeView>
                             </td>
                             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@project.Department</td>
                             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@project.User</td>
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" checked="@project.Tap1" disabled /></td>
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" checked="@project.Tap2" disabled /></td>
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" checked="@project.Tap3" disabled /></td>
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" checked="@project.Tap4" disabled /></td>
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" checked="@project.Tap5" disabled /></td>
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" checked="@project.Tap6" disabled /></td>
+                            <td class="p-1 text-center text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700" checked="@project.Tap1" disabled /></td>
+                            <td class="p-1 text-center text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700" checked="@project.Tap2" disabled /></td>
+                            <td class="p-1 text-center text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700" checked="@project.Tap3" disabled /></td>
+                            <td class="p-1 text-center text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700" checked="@project.Tap4" disabled /></td>
+                            <td class="p-1 text-center text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700" checked="@project.Tap5" disabled /></td>
+                            <td class="p-1 text-center text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700" checked="@project.Tap6" disabled /></td>
                         </tr>
                     }
+                }
             </tbody>
         </table>
-    }
+    </div>
 </div>
+
 @code {
     List<ListShareCalcDTO> list = [];
     ListShareCalcDTO? Form;
@@ -142,12 +157,14 @@
         if (claim == null) return 0;
         return Convert.ToInt32(claim.Value);
     }
+
     void FormCallBack(ListShareCalcDTO? obj)
     {
         if (obj != null)
         {
             list?.Add(obj);
         }
+
         Form = null;
     }
 
@@ -157,6 +174,7 @@
         Users = await Repo.Departments.GetUsersAsListAsync(department.Id) ?? [];
         page = 1;
     }
+
     protected async override Task OnInitializedAsync()
     {
         Departments = await Repo.Departments.GetDepartmentsAsListAsync() ?? [];
@@ -164,9 +182,10 @@
         Departments.RemoveAll(x => x.Id == UserDepartment);
         list = await Repo.ShareCalc.GetAsync(ListCalculation.Id) ?? [];
     }
+
     void Remove(ListShareCalcDTO project)
     {
-         MHD.DeleteMessage(project.Department + project.User, EventCallback.Factory.Create(this,() => ConfirmRemoveAsync(project)));
+        MHD.DeleteMessage(project.Department + project.User, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(project)));
     }
 
     async Task ConfirmRemoveAsync(ListShareCalcDTO project)
@@ -176,8 +195,8 @@
         {
             list.Remove(project);
         }
-         MHD.Notifications( ToastType.Delete, result);
 
+        MHD.Notifications(ToastType.Delete, result);
         StateHasChanged();
     }
 }

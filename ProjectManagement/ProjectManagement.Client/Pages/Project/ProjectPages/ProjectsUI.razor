@@ -13,41 +13,31 @@
 @implements IDisposable
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<div class="space-y-1">
+<div class="ml-1">
     @if (!Folder.State.OtherDepartment)
     {
-        <section class="rounded-2xl border border-slate-200 bg-white px-1 py-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                    <h2 class="mt-1 truncate text-xl font-semibold text-slate-900 dark:text-slate-100">
-                        @(Folder.State.FolderSelected?.Name ?? ResourceLoc.details)
-                    </h2>
-                    <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                        Open a project to view calculations, details, and offers for the selected folder.
-                    </p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                        <button type="button"
-                                class="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
-                                @onclick="() => UpdateForm(new ListProjectMVVM())">
-                            <span aria-hidden="true">@((MarkupString)Icons.Plus2)</span>
-                            <span>@ResourceApp.newItem</span>
-                        </button>
-                    </AuthorizeView>
-
-                    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
-                        <button type="button"
-                                class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                                @onclick="async () => { IaVisible = !IaVisible; await GetAsync(); }">
-                            <span aria-hidden="true">@((MarkupString)Icons.GetVisibleIcon(IaVisible))</span>
-                            <span>@ResourceApp.isVisible</span>
-                        </button>
-                    </AuthorizeView>
+        <!-- الهيدر: مسار المجلد + زر إضافة -->
+        <div class="flex justify-between items-center w-full p-1">
+            <div>
+                <div class="flex items-center space-x-2 text-gray-700 dark:text-gray-300 font-medium">
+                    <span>📁 @Folder.State.FolderSelected?.Name</span>
                 </div>
             </div>
-        </section>
+            <div>
+                <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
+                    <button type="button"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            @onclick="async () => { IaVisible = !IaVisible; await GetAsync(); }">
+                        <span aria-hidden="true">@((MarkupString)Icons.GetVisibleIcon(IaVisible))</span>
+                    </button>
+                    <button class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-green-300 text-green-600 hover:bg-green-100 hover:ring-1 hover:ring-green-300 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500"
+                            disabled="@Folder.State.OtherDepartment"
+                            @onclick="() => UpdateForm(new ListProjectMVVM())">
+                        @((MarkupString)Icons.Plus2)
+                    </button>
+                </AuthorizeView>
+            </div>
+        </div>
     }
 
     @if (Folder.State.FolderSelected?.Projects is not null && Folder.State.FolderSelected.Projects.Any())

@@ -24,7 +24,7 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 
         private List<ProjectTab> Tabs => new()
         {
-            new(1, CalcResource.calculation),
+            new(1, CalcResource.project),
             new(2, CalcResource.procurement),
             new(3, ResourceApp.organisation),
             new(4, ResourceIdentity.customerGroup),
