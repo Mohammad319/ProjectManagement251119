@@ -221,8 +221,7 @@ namespace ProjectManagement.Client.Services.MHDBlazor
 
             if (type == ToastType.Delete)
             {
-                if (type == ToastType.Add)
-                    ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], MhdState.Success, time);
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time);
 
             }
             else if (type == ToastType.Add)
@@ -237,7 +236,7 @@ namespace ProjectManagement.Client.Services.MHDBlazor
             }
             else if (type == ToastType.Info)
             {
-                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time);
+                ToasterService.Show(itemName, _appLocalizer[ResourceApp.completedSuccessfully], state, time);
 
             }
         }

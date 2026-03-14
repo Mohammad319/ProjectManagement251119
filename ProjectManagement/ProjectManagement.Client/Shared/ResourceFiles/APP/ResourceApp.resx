@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AnUnexpectedErrorHasOccurred" xml:space="preserve">
-    <value>An unexpected error has occurred. Please try again later.</value>
+    <value>An unexpected error occurred. Please try again later.</value>
   </data>
   <data name="attribute" xml:space="preserve">
     <value>Attribute</value>
@@ -130,7 +130,7 @@
     <value>Cancel</value>
   </data>
   <data name="completedSuccessfully" xml:space="preserve">
-    <value>The operation completed successfully!</value>
+    <value>Operation completed successfully.</value>
   </data>
   <data name="copy" xml:space="preserve">
     <value>Copy</value>
@@ -151,7 +151,7 @@
     <value>Delete</value>
   </data>
   <data name="deleteConfirmMsg" xml:space="preserve">
-    <value>Do you want to Delete this?</value>
+    <value>Are you sure you want to delete this item?</value>
   </data>
   <data name="department" xml:space="preserve">
     <value>Department</value>
@@ -178,7 +178,7 @@
     <value>Filter</value>
   </data>
   <data name="HasBeedUpdated" xml:space="preserve">
-    <value>The item has been Updated</value>
+    <value>Item updated successfully.</value>
   </data>
   <data name="hasBeenAddedSuccessfully {0}" xml:space="preserve">
     <value>{0} has been added successfully</value>
@@ -211,7 +211,7 @@
     <value>Is Visible?</value>
   </data>
   <data name="ItemIsCurrentlyInUseCannotBeDeleted." xml:space="preserve">
-    <value>The item is currently in use and cannot be deleted.</value>
+    <value>This item is currently in use and cannot be deleted.</value>
   </data>
   <data name="language" xml:space="preserve">
     <value>Language</value>
@@ -280,7 +280,7 @@
     <value>Text</value>
   </data>
   <data name="HasBeenRemoved" xml:space="preserve">
-    <value>The item has been removed</value>
+    <value>Item deleted successfully.</value>
   </data>
   <data name="ThereAreNoItemsToDisplay" xml:space="preserve">
     <value>There Are No Items To Display</value>
@@ -325,10 +325,13 @@
     <value>Public</value>
   </data>
   <data name="HasBeenAdded" xml:space="preserve">
-    <value>The item has been added</value>
+    <value>Item added successfully.</value>
   </data>
   <data name="deleteConfirmMsg {0}" xml:space="preserve">
-    <value>Do you want to Delete {0}?</value>
+    <value>Are you sure you want to delete "{0}"?</value>
+  </data>
+  <data name="ok" xml:space="preserve">
+    <value>OK</value>
   </data>
   <data name="Assessment" xml:space="preserve">
     <value>Assessment</value>

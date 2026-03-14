@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AnUnexpectedErrorHasOccurred" xml:space="preserve">
-    <value>Ett oväntat fel har uppstått. Försök igen senare.</value>
+    <value>Ett oväntat fel uppstod. Försök igen senare.</value>
   </data>
   <data name="attribute" xml:space="preserve">
     <value>Attribut</value>
@@ -130,7 +130,7 @@
     <value>Avbryt</value>
   </data>
   <data name="completedSuccessfully" xml:space="preserve">
-    <value>Operationen slutfördes framgångsrikt!</value>
+    <value>Åtgärden slutfördes.</value>
   </data>
   <data name="copy" xml:space="preserve">
     <value>Kopiera</value>
@@ -151,7 +151,7 @@
     <value>Ta bort</value>
   </data>
   <data name="deleteConfirmMsg" xml:space="preserve">
-    <value>Vill du radera detta?</value>
+    <value>Är du säker på att du vill ta bort det här objektet?</value>
   </data>
   <data name="department" xml:space="preserve">
     <value>Avdelning</value>
@@ -178,7 +178,7 @@
     <value>Filtrera</value>
   </data>
   <data name="HasBeedUpdated" xml:space="preserve">
-    <value>Artikeln har uppdaterats</value>
+    <value>Objektet har uppdaterats.</value>
   </data>
   <data name="hasBeenAddedSuccessfully {0}" xml:space="preserve">
     <value>{0} har lagts till</value>
@@ -211,7 +211,7 @@
     <value>Visa?</value>
   </data>
   <data name="ItemIsCurrentlyInUseCannotBeDeleted." xml:space="preserve">
-    <value>Objektet används för närvarande och kan inte raderas.</value>
+    <value>Objektet används för närvarande och kan inte tas bort.</value>
   </data>
   <data name="language" xml:space="preserve">
     <value>Språk</value>
@@ -280,7 +280,7 @@
     <value>Text</value>
   </data>
   <data name="HasBeenRemoved" xml:space="preserve">
-    <value>Artikeln har tagits bort</value>
+    <value>Objektet har tagits bort.</value>
   </data>
   <data name="ThereAreNoItemsToDisplay" xml:space="preserve">
     <value>Det finns inga objekt att visa.</value>
@@ -325,10 +325,13 @@
     <value>Offentlig</value>
   </data>
   <data name="HasBeenAdded" xml:space="preserve">
-    <value>Artikeln har lagts till</value>
+    <value>Objektet har lagts till.</value>
   </data>
   <data name="deleteConfirmMsg {0}" xml:space="preserve">
-    <value>Vill du ta bort {0}?</value>
+    <value>Är du säker på att du vill ta bort "{0}"?</value>
+  </data>
+  <data name="ok" xml:space="preserve">
+    <value>OK</value>
   </data>
   <data name="Assessment" xml:space="preserve">
     <value>Värdering</value>
