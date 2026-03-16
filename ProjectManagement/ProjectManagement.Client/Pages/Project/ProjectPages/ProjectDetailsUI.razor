@@ -1,28 +1,420 @@
-﻿@using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Client.Constant
+@using ProjectManagement.Shared.Base.Organisation
+@using ProjectManagement.Shared.DTO.App
+@using ProjectManagement.Shared.DTO.Project
 @inherits AppComponentBase
 
-    <div class="space-y-0">
-        @if (ProjectDetails != null)
-        {
-        <dl class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <dt>@CalcResource.name</dt>
-            <dd class="md:col-span-2">@ProjectDetails.Name</dd>
-                <dt>@ResourceLoc.folder</dt>
-            <dd class="md:col-span-2">@ProjectDetails.Folder</dd>
-                <dt>@CalcResource.status</dt>
-            <dd class="md:col-span-2">@ProjectDetails.Status</dd>
-                <dt>@ResourceApp.isVisible</dt>
-            <dd class="md:col-span-2"><input type="checkbox" selected="@ProjectDetails.IsVisible" disabled /></dd>
-            </dl>
-        }
-    </div>
+<div class="space-y-4 p-1">
+    @if (IsLoading)
+    {
+        <div class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="bg-gradient-to-br from-slate-950 via-slate-800 to-sky-900 px-5 py-6">
+                <div class="animate-pulse space-y-3">
+                    <div class="h-3 w-24 rounded-full bg-white/20"></div>
+                    <div class="h-7 w-2/3 rounded-full bg-white/20"></div>
+                    <div class="h-4 w-1/2 rounded-full bg-white/10"></div>
+                </div>
+            </div>
+            <div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
+                @for (var i = 0; i < 4; i++)
+                {
+                    <div class="animate-pulse rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/50">
+                        <div class="h-3 w-20 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="mt-3 h-5 w-28 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (ProjectDetails is null)
+    {
+        <div class="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-950/60">
+            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceLoc.details</div>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Project details are not available.</p>
+        </div>
+    }
+    else
+    {
+        var overviewItems = BuildOverviewItems(ProjectDetails);
+        var timelineItems = BuildTimelineItems(ProjectDetails);
+        var teamItems = BuildTeamItems(ProjectDetails);
+        var responsibles = GetNonEmpty(ProjectDetails.Responsibles);
+        var notes = GetNonEmpty(ProjectDetails.Notes);
+        var addresses = GetMeaningfulAddresses(ProjectDetails.Address);
+        var contacts = GetMeaningfulContacts(ProjectDetails.Contacts);
+
+        <section class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="bg-gradient-to-br from-slate-950 via-slate-800 to-sky-900 px-5 py-6 text-white">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-200/85">@CalcResource.project</div>
+                        <h2 class="mt-2 text-2xl font-semibold leading-tight text-white">@ProjectDetails.Name</h2>
+
+                        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-200">
+                            <span class="rounded-full bg-white/10 px-3 py-1">
+                                @ResourceLoc.folder:
+                                <span class="font-semibold text-white">@OrFallback(ProjectDetails.Folder)</span>
+                            </span>
+
+                            @if (HasText(ProjectDetails.Organisation))
+                            {
+                                <span class="rounded-full bg-white/10 px-3 py-1">
+                                    @ResourceApp.organisation:
+                                    <span class="font-semibold text-white">@ProjectDetails.Organisation</span>
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-2">
+                        @if (HasText(ProjectDetails.Code))
+                        {
+                            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                                @CalcResource.code: @ProjectDetails.Code
+                            </span>
+                        }
+
+                        @if (HasText(ProjectDetails.Type))
+                        {
+                            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                                @ProjectDetails.Type
+                            </span>
+                        }
+
+                        @if (HasText(ProjectDetails.Status))
+                        {
+                            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                                @CalcResource.status: @ProjectDetails.Status
+                            </span>
+                        }
+
+                        <span class="rounded-full border px-3 py-1 text-xs font-semibold @(ProjectDetails.IsVisible ? "border-emerald-300/40 bg-emerald-400/15 text-emerald-100" : "border-amber-300/40 bg-amber-400/15 text-amber-100")">
+                            @(ProjectDetails.IsVisible ? ResourceApp.visible : ResourceApp._private)
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-slate-100/80">
+                    <span class="rounded-full bg-white/10 px-3 py-1">@contacts.Count @ResourceIdentity.contact</span>
+                    <span class="rounded-full bg-white/10 px-3 py-1">@notes.Count @CalcResource.note</span>
+                    <span class="rounded-full bg-white/10 px-3 py-1">@responsibles.Count @CalcResource.responsible</span>
+                </div>
+            </div>
+
+            <div class="grid gap-3 border-t border-slate-200 bg-slate-50/80 p-4 md:grid-cols-2 xl:grid-cols-4 dark:border-slate-700 dark:bg-slate-950/50">
+                @foreach (var item in timelineItems)
+                {
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                        <div class="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+            <div class="space-y-4">
+                <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceLoc.Information</div>
+                    <div class="mt-4 grid gap-3 md:grid-cols-2">
+                        @foreach (var item in overviewItems)
+                        {
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                                <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                @if (HasText(ProjectDetails.OverviewInfoProject))
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceLoc.description</div>
+                        <p class="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-200">@ProjectDetails.OverviewInfoProject</p>
+                    </section>
+                }
+
+                @if (notes.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.note</div>
+                            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@notes.Count</span>
+                        </div>
+
+                        <div class="mt-4 space-y-3">
+                            @for (var index = 0; index < notes.Count; index++)
+                            {
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@CalcResource.note @(index + 1)</div>
+                                    <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">@notes[index]</p>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+
+            <div class="space-y-4">
+                @if (teamItems.Count > 0 || responsibles.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Project team</div>
+
+                        @if (teamItems.Count > 0)
+                        {
+                            <div class="mt-4 grid gap-3">
+                                @foreach (var item in teamItems)
+                                {
+                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                                        <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (responsibles.Count > 0)
+                        {
+                            <div class="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@CalcResource.responsible</div>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    @foreach (var person in responsibles)
+                                    {
+                                        <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">@person</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </section>
+                }
+
+                @if (addresses.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Addresses</div>
+                            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@addresses.Count</span>
+                        </div>
+
+                        <div class="mt-4 grid gap-3">
+                            @for (var index = 0; index < addresses.Count; index++)
+                            {
+                                var address = addresses[index];
+                                var lines = GetAddressLines(address);
+
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Address @(index + 1)</div>
+                                    <div class="mt-2 space-y-1 text-sm text-slate-700 dark:text-slate-200">
+                                        @foreach (var line in lines)
+                                        {
+                                            <div>@line</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (contacts.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceIdentity.contact</div>
+                            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@contacts.Count</span>
+                        </div>
+
+                        <div class="mt-4 grid gap-3">
+                            @foreach (var contact in contacts)
+                            {
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                    <div class="flex flex-wrap items-start justify-between gap-3">
+                                        <div>
+                                            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@GetContactName(contact)</div>
+
+                                            @if (HasText(contact.Department))
+                                            {
+                                                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@ResourceIdentity.department: @contact.Department</div>
+                                            }
+                                        </div>
+
+                                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@contact.Status</span>
+                                    </div>
+
+                                    <div class="mt-3 grid gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                        @if (HasText(contact.Email))
+                                        {
+                                            <div>@ResourceIdentity.email: @contact.Email</div>
+                                        }
+
+                                        @if (HasText(contact.Mobile))
+                                        {
+                                            <div>@ResourceIdentity.mobile: @contact.Mobile</div>
+                                        }
+
+                                        @if (HasText(contact.Telefone))
+                                        {
+                                            <div>@ResourceIdentity.telefon: @contact.Telefone</div>
+                                        }
+                                    </div>
+
+                                    @if (HasText(contact.Note))
+                                    {
+                                        <div class="mt-3 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                                            <span class="font-semibold">@CalcResource.note:</span>
+                                            <span class="whitespace-pre-wrap">@contact.Note</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+        </div>
+    }
+</div>
 
 @code {
-    ProjectDetailsDTO? ProjectDetails;
-    [Parameter]public Guid ProjectId { get; set; }
+    private sealed record DisplayField(string Label, string Value);
 
-    protected async override Task OnInitializedAsync()
+    private Guid _loadedProjectId;
+    private bool IsLoading = true;
+    private ProjectDetailsDTO? ProjectDetails;
+
+    [Parameter]
+    public Guid ProjectId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
     {
+        if (ProjectId == Guid.Empty)
+        {
+            _loadedProjectId = Guid.Empty;
+            ProjectDetails = null;
+            IsLoading = false;
+            return;
+        }
+
+        if (_loadedProjectId == ProjectId && ProjectDetails is not null)
+            return;
+
+        IsLoading = true;
         ProjectDetails = await Repo.Project.DetailsAsync(ProjectId);
+        _loadedProjectId = ProjectId;
+        IsLoading = false;
     }
+
+    private static List<DisplayField> BuildOverviewItems(ProjectDetailsDTO details)
+    {
+        var items = new List<DisplayField>();
+
+        AddIfHasText(items, CalcResource.code, details.Code);
+        AddIfHasText(items, CalcResource.projectType, details.Type);
+        AddIfHasText(items, ResourceApp.organisation, details.Organisation);
+        AddIfHasText(items, CalcResource.projectContract, details.Contract);
+        AddIfHasText(items, CalcResource.projectCompensation, details.Compensation);
+        AddIfHasText(items, CalcResource.procurementMethods, details.ProcurementMethods);
+        AddIfHasText(items, CalcResource.status, details.Status);
+        items.Add(new(CalcResource.procurement, details.Procurement.ToString()));
+        items.Add(new(ResourceApp.created, FormatDateTime(details.Created)));
+
+        if (details.LastModified.HasValue)
+            items.Add(new(ResourceApp.lastUpdate, FormatDateTime(details.LastModified)));
+
+        return items;
+    }
+
+    private static List<DisplayField> BuildTimelineItems(ProjectDetailsDTO details) =>
+    [
+        new(CalcResource.startDate, FormatDate(details.StartDate)),
+        new(CalcResource.endDate, FormatDate(details.EndDate)),
+        new(CalcResource.tenderDeadline, FormatDate(details.TenderDeadline)),
+        new(CalcResource.tenderQA, FormatDate(details.TenderQA))
+    ];
+
+    private static List<DisplayField> BuildTeamItems(ProjectDetailsDTO details)
+    {
+        var items = new List<DisplayField>();
+
+        AddIfHasText(items, CalcResource.developer, details.Developer);
+        AddIfHasText(items, ResourceLoc.clientsProjectmanager, details.ClientsManager);
+        AddIfHasText(items, "Project manager", details.ProjectManager);
+        AddIfHasText(items, ResourceLoc.designer, details.Designer);
+        AddIfHasText(items, CalcResource.supervisor, details.Supervisor);
+        AddIfHasText(items, CalcResource.inspector, details.Inspector);
+        AddIfHasText(items, CalcResource.theClientsContactPersonTender, details.ClientsContactPersonTender);
+
+        return items;
+    }
+
+    private static void AddIfHasText(ICollection<DisplayField> items, string label, string? value)
+    {
+        if (HasText(value))
+            items.Add(new(label, value!.Trim()));
+    }
+
+    private static List<string> GetNonEmpty(IEnumerable<string>? items) =>
+        items?
+            .Where(HasText)
+            .Select(x => x.Trim())
+            .ToList() ?? [];
+
+    private static List<AddressDTO> GetMeaningfulAddresses(IEnumerable<AddressDTO>? addresses) =>
+        addresses?
+            .Where(address => GetAddressLines(address).Count > 0)
+            .ToList() ?? [];
+
+    private static List<UnderContactOrganisationBase> GetMeaningfulContacts(IEnumerable<UnderContactOrganisationBase>? contacts) =>
+        contacts?
+            .Where(contact =>
+                HasText(contact.FirstName) ||
+                HasText(contact.LastName) ||
+                HasText(contact.Email) ||
+                HasText(contact.Mobile) ||
+                HasText(contact.Telefone) ||
+                HasText(contact.Department) ||
+                HasText(contact.Note))
+            .ToList() ?? [];
+
+    private static List<string> GetAddressLines(AddressDTO address)
+    {
+        var lines = new List<string>();
+        var streetLine = JoinNonEmpty(" ", address.Street, address.Nr);
+        var cityLine = JoinNonEmpty(" ", address.ZIPCode, address.City);
+        var regionLine = JoinNonEmpty(", ", address.Region, address.Country);
+
+        if (HasText(streetLine))
+            lines.Add(streetLine);
+
+        if (HasText(cityLine))
+            lines.Add(cityLine);
+
+        if (HasText(regionLine))
+            lines.Add(regionLine);
+
+        return lines;
+    }
+
+    private static string GetContactName(UnderContactOrganisationBase contact)
+    {
+        var fullName = JoinNonEmpty(" ", contact.FirstName, contact.LastName);
+        return HasText(fullName) ? fullName : ResourceIdentity.contact;
+    }
+
+    private static string JoinNonEmpty(string separator, params string?[] values) =>
+        string.Join(separator, values.Where(HasText).Select(x => x!.Trim()));
+
+    private static string OrFallback(string? value) =>
+        HasText(value) ? value!.Trim() : "-";
+
+    private static string FormatDate(DateTime value) =>
+        value.ToString(ConstValues.DateFormat);
+
+    private static string FormatDateTime(DateTime? value) =>
+        value.HasValue ? value.Value.ToString($"{ConstValues.DateFormat} HH:mm") : "-";
+
+    private static bool HasText(string? value) =>
+        !string.IsNullOrWhiteSpace(value);
 }

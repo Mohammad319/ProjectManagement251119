@@ -4,6 +4,7 @@ using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.Models.Account;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Identity
@@ -18,7 +19,32 @@ namespace ProjectManagement.Client.Shared.Repositories.Identity
         //----------- Users
         public async Task<List<ListDTO>> GetUsersAsListAsync(int DepartmentId)
         {
-            return await _httpRepository.GetAsync<List<ListDTO>>(DepartmentURLBase + URLConst.Department.GetUsers + $"/{DepartmentId}");
+            var users = await _httpRepository.GetAsync<List<UserAuthModel>>(DepartmentURLBase + URLConst.Department.GetUsers + $"/{DepartmentId}")
+                ?? [];
+
+            return [.. users
+                .Where(x => x.UserId is > 0)
+                .Select(x => new ListDTO
+                {
+                    Id = x.UserId!.Value,
+                    Name = BuildDisplayName(x)
+                })
+                .OrderBy(x => x.Name)];
+        }
+
+        private static string BuildDisplayName(UserAuthModel user)
+        {
+            var fullName = user.FullName.Trim();
+            if (!string.IsNullOrWhiteSpace(fullName))
+                return fullName;
+
+            if (!string.IsNullOrWhiteSpace(user.Email))
+                return user.Email;
+
+            if (!string.IsNullOrWhiteSpace(user.Username))
+                return user.Username;
+
+            return user.Id;
         }
     }
 }

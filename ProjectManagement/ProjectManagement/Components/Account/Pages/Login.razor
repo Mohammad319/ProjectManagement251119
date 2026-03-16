@@ -137,22 +137,29 @@
 
         if (result.Succeeded)
         {
-            Logger.LogInformation("User logged in.");
+            var user = await UserManager.FindByEmailAsync(Input.Email);
+            Logger.LogInformation(
+                "Login succeeded for {Email}. UserId={UserId} RemoteIp={RemoteIp}",
+                Input.Email,
+                user?.Id ?? "(unknown)",
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "(unknown)");
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
         {
+            Logger.LogInformation("Login requires two-factor authentication for {Email}.", Input.Email);
             RedirectManager.RedirectTo(
                 "Account/LoginWith2fa",
                 new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
         }
         else if (result.IsLockedOut)
         {
-            Logger.LogWarning("User account locked out.");
+            Logger.LogWarning("Login rejected because the account is locked out for {Email}.", Input.Email);
             RedirectManager.RedirectTo("Account/Lockout");
         }
         else
         {
+            Logger.LogWarning("Invalid login attempt for {Email}.", Input.Email);
             errorMessage = PMResourceIdentity.Error_InvalidLoginAttempt;
         }
     }

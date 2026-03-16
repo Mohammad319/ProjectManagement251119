@@ -1,18 +1,36 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@using ProjectManagement.Shared.Helper
 
 @code {
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var isAuthenticated = authState.User.Identity?.IsAuthenticated == true;
+        var currentLocalUrl = GetCurrentLocalUrl();
 
         if (isAuthenticated)
         {
+            if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
+            {
+                NavigationManager.NavigateTo(
+                    AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl),
+                    forceLoad: true);
+                return;
+            }
+
             NavigationManager.NavigateTo("/Account/AccessDenied", forceLoad: true);
             return;
         }
 
-        NavigationManager.NavigateTo($"Account/Login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}", forceLoad: true);
+        NavigationManager.NavigateTo(
+            AuthRecoveryPathHelper.BuildLoginUrl(currentLocalUrl),
+            forceLoad: true);
+    }
+
+    private string GetCurrentLocalUrl()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        return AuthRecoveryPathHelper.NormalizeLocalUrl($"{uri.PathAndQuery}{uri.Fragment}");
     }
 }

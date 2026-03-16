@@ -284,8 +284,9 @@
             ResourceLoc.details,
             new Dictionary<string, object>
             {
-                [nameof(CalculationDetailsUI.Id)] = model.Id
-            });
+                [nameof(CalculationDetailsUI.Id)] = model.Id,
+                [nameof(CalculationDetailsUI.ProjectId)] = Folder.State.ProjectSelected?.Id ?? Guid.Empty
+            }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
     }
 
     void TenderPage(ListCalculationMVVM model)

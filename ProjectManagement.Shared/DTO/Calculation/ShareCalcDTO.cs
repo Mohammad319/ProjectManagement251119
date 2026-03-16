@@ -1,11 +1,9 @@
-﻿using System;
-
 namespace ProjectManagement.Shared.DTO.Calculation
 {
     public class PostShareCalcDTO
     {
         public int DepartmentId { get; set; }
-        public Guid? UserId { get; set; }
+        public int? UserId { get; set; }
         public int CalculationId { get; set; }
         public bool Tap1 { get; set; }
         public bool Tap2 { get; set; }

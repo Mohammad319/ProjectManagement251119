@@ -8,7 +8,7 @@ using ProjectManagement.Shared.Enums;
 
 namespace ProjectManagement.Server.Controllers.v1.Calculation
 {
-    [ApiVersion("1.0"), Authorize(Roles = PMRolesConst.Tenant.Super_Manger)]
+    [ApiVersion("1.0"), Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
     public class ShareCalcController : BaseApiController
     {
         [HttpGet("{calcId}")]

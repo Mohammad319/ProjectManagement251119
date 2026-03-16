@@ -1,29 +1,789 @@
-﻿@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Client.Constant
+@using ProjectManagement.Shared.Base.Calculation
+@using ProjectManagement.Shared.Base.Organisation
+@using ProjectManagement.Shared.DTO.App
+@using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Project
 @inherits AppComponentBase
 
-    <div class="space-y-0 ">
-        @if (ProjectDetails != null)
+<div class="space-y-4 p-1">
+    @if (IsLoading)
+    {
+        <div class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="bg-gradient-to-br from-slate-950 via-slate-800 to-sky-900 px-5 py-6">
+                <div class="animate-pulse space-y-3">
+                    <div class="h-3 w-28 rounded-full bg-white/20"></div>
+                    <div class="h-7 w-2/3 rounded-full bg-white/20"></div>
+                    <div class="h-4 w-1/2 rounded-full bg-white/10"></div>
+                </div>
+            </div>
+
+            <div class="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
+                @for (var i = 0; i < 4; i++)
+                {
+                    <div class="animate-pulse rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/50">
+                        <div class="h-3 w-20 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="mt-3 h-5 w-28 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else if (CalculationInfo is null)
+    {
+        <div class="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-950/60">
+            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceLoc.details</div>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Calculation details are not available.</p>
+        </div>
+    }
+    else
+    {
+        var projectOverviewItems = BuildProjectOverviewItems(ProjectInfo);
+        var calculationOverviewItems = BuildCalculationOverviewItems(CalculationInfo);
+        var projectTimelineItems = BuildProjectTimelineItems(ProjectInfo);
+        var calculationTimelineItems = BuildCalculationTimelineItems(CalculationInfo);
+        var projectTeamItems = BuildProjectTeamItems(ProjectInfo);
+        var calculationTeamItems = BuildCalculationTeamItems(CalculationInfo);
+        var addressSections = BuildAddressSections(ProjectInfo, CalculationInfo);
+        var contactSections = BuildContactSections(ProjectInfo, CalculationInfo);
+        var noteSections = BuildNoteSections(ProjectInfo, CalculationInfo);
+        var projectResponsibles = GetNonEmpty(ProjectInfo?.Responsibles);
+        var calculationResponsibles = GetNonEmpty(CalculationInfo.Responsibles);
+        var incomeItems = GetMeaningfulIncome(CalculationInfo.Income);
+        var totalContacts = contactSections.Sum(x => x.Items.Count);
+        var totalNotes = noteSections.Sum(x => x.Items.Count);
+        var totalResponsibles = projectResponsibles.Count + calculationResponsibles.Count;
+        var totalIncome = incomeItems.Sum(GetIncomeTotal);
+
+        <section class="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="bg-gradient-to-br from-slate-950 via-slate-800 to-sky-900 px-5 py-6 text-white">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-200/85">
+                            @(ProjectInfo is not null ? CalcResource.project : CalcResource.calculation)
+                        </div>
+                        <h2 class="mt-2 text-2xl font-semibold leading-tight text-white">
+                            @(ProjectInfo?.Name ?? CalculationInfo.Name)
+                        </h2>
+
+                        <div class="mt-2 text-sm text-slate-200">
+                            <span class="font-semibold text-white">@CalcResource.calculation:</span>
+                            <span>@CalculationInfo.Name</span>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-200">
+                            @if (ProjectInfo is not null && HasText(ProjectInfo.Folder))
+                            {
+                                <span class="rounded-full bg-white/10 px-3 py-1">
+                                    @ResourceLoc.folder:
+                                    <span class="font-semibold text-white">@ProjectInfo.Folder</span>
+                                </span>
+                            }
+
+                            @if (ProjectInfo is not null && HasText(ProjectInfo.Organisation))
+                            {
+                                <span class="rounded-full bg-white/10 px-3 py-1">
+                                    @ResourceApp.organisation:
+                                    <span class="font-semibold text-white">@ProjectInfo.Organisation</span>
+                                </span>
+                            }
+
+                            @if (ProjectInfo is not null && HasText(ProjectInfo.Status))
+                            {
+                                <span class="rounded-full bg-white/10 px-3 py-1">
+                                    @CalcResource.status:
+                                    <span class="font-semibold text-white">@ProjectInfo.Status</span>
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-2">
+                        @if (ProjectInfo is not null && HasText(ProjectInfo.Code))
+                        {
+                            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                                @CalcResource.project: @ProjectInfo.Code
+                            </span>
+                        }
+
+                        @if (HasText(CalculationInfo.Code))
+                        {
+                            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                                @CalcResource.calculation: @CalculationInfo.Code
+                            </span>
+                        }
+
+                        @if (HasText(CalculationInfo.Type))
+                        {
+                            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                                @CalculationInfo.Type
+                            </span>
+                        }
+
+                        @if (HasText(CalculationInfo.ProcurementMethods))
+                        {
+                            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100">
+                                @CalculationInfo.ProcurementMethods
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-slate-100/80">
+                    <span class="rounded-full bg-white/10 px-3 py-1">@totalContacts @ResourceIdentity.contact</span>
+                    <span class="rounded-full bg-white/10 px-3 py-1">@totalNotes @CalcResource.note</span>
+                    <span class="rounded-full bg-white/10 px-3 py-1">@totalResponsibles @CalcResource.responsible</span>
+                    <span class="rounded-full bg-white/10 px-3 py-1">@incomeItems.Count @ResourceLoc.income</span>
+                </div>
+            </div>
+        </section>
+
+        @if (projectTimelineItems.Count > 0)
         {
-        <dl class="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <dt>@CalcResource.name</dt>
-            <dd class="md:col-span-2">@ProjectDetails.Name</dd>
-                <dt>@CalcResource.procurement</dt>
-            <dd class="md:col-span-2">@ProjectDetails.Procurement</dd>
-                <dt>@CalcResource.procurementMethods</dt>
-            <dd class="md:col-span-2">@ProjectDetails.ProcurementMethods</dd>
-                <dt>@CalcResource.projectContract</dt>
-                <dd class="md:col-span-2">@ProjectDetails.Contract</dd>
-            </dl>
+            <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Project timeline</div>
+                <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    @foreach (var item in projectTimelineItems)
+                    {
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/50">
+                            <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                            <div class="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                        </div>
+                    }
+                </div>
+            </section>
         }
-    </div>
+
+        <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Calculation timeline</div>
+
+                @if (incomeItems.Count > 0)
+                {
+                    <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
+                        @ResourceLoc.income total: @FormatNumber(totalIncome)
+                    </span>
+                }
+            </div>
+
+            <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                @foreach (var item in calculationTimelineItems)
+                {
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/50">
+                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                        <div class="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+            <div class="space-y-4">
+                @if (projectOverviewItems.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.project</div>
+                        <div class="mt-4 grid gap-3 md:grid-cols-2">
+                            @foreach (var item in projectOverviewItems)
+                            {
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                    <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                                    <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.calculation</div>
+                    <div class="mt-4 grid gap-3 md:grid-cols-2">
+                        @foreach (var item in calculationOverviewItems)
+                        {
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                                <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    @if (item.Label == ResourceLoc.maps && IsAbsoluteUrl(item.Value))
+                                    {
+                                        <a href="@item.Value"
+                                           target="_blank"
+                                           rel="noreferrer"
+                                           class="break-all text-sky-700 hover:text-sky-800 hover:underline dark:text-sky-300 dark:hover:text-sky-200">
+                                            @item.Value
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        @item.Value
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                @if (ProjectInfo is not null && HasText(ProjectInfo.OverviewInfoProject))
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.project</div>
+                        <p class="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-200">@ProjectInfo.OverviewInfoProject</p>
+                    </section>
+                }
+
+                @if (HasText(CalculationInfo.OverviewInfo))
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.overviewInfoProject</div>
+                        <p class="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700 dark:text-slate-200">@CalculationInfo.OverviewInfo</p>
+                    </section>
+                }
+
+                @if (incomeItems.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceLoc.income</div>
+                            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                @FormatNumber(totalIncome)
+                            </span>
+                        </div>
+
+                        <div class="mt-4 grid gap-3 md:grid-cols-2">
+                            @foreach (var income in incomeItems.OrderBy(x => x.Year))
+                            {
+                                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@ResourceLoc.year @income.Year</div>
+                                        <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
+                                            @FormatNumber(GetIncomeTotal(income))
+                                        </span>
+                                    </div>
+
+                                    <div class="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                        <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q1</div>
+                                            <div class="mt-1 font-semibold">@FormatNumber(income.Q1)</div>
+                                        </div>
+                                        <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q2</div>
+                                            <div class="mt-1 font-semibold">@FormatNumber(income.Q2)</div>
+                                        </div>
+                                        <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q3</div>
+                                            <div class="mt-1 font-semibold">@FormatNumber(income.Q3)</div>
+                                        </div>
+                                        <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q4</div>
+                                            <div class="mt-1 font-semibold">@FormatNumber(income.Q4)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+
+            <div class="space-y-4">
+                @if (projectTeamItems.Count > 0 || calculationTeamItems.Count > 0 || projectResponsibles.Count > 0 || calculationResponsibles.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">People and ownership</div>
+
+                        @if (projectTeamItems.Count > 0 || projectResponsibles.Count > 0)
+                        {
+                            <div class="mt-4">
+                                <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@CalcResource.project</div>
+
+                                @if (projectTeamItems.Count > 0)
+                                {
+                                    <div class="mt-3 grid gap-3">
+                                        @foreach (var item in projectTeamItems)
+                                        {
+                                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                                                <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                @if (projectResponsibles.Count > 0)
+                                {
+                                    <div class="mt-4">
+                                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@CalcResource.responsible</div>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            @foreach (var person in projectResponsibles)
+                                            {
+                                                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-200">@person</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (calculationTeamItems.Count > 0 || calculationResponsibles.Count > 0)
+                        {
+                            <div class="@(projectTeamItems.Count > 0 || projectResponsibles.Count > 0 ? "mt-5 border-t border-slate-200 pt-5 dark:border-slate-700" : "mt-4")">
+                                <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@CalcResource.calculation</div>
+
+                                @if (calculationTeamItems.Count > 0)
+                                {
+                                    <div class="mt-3 grid gap-3">
+                                        @foreach (var item in calculationTeamItems)
+                                        {
+                                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@item.Label</div>
+                                                <div class="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-100">@item.Value</div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                @if (calculationResponsibles.Count > 0)
+                                {
+                                    <div class="mt-4">
+                                        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@CalcResource.responsible</div>
+                                        <div class="mt-3 flex flex-wrap gap-2">
+                                            @foreach (var person in calculationResponsibles)
+                                            {
+                                                <span class="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">@person</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </section>
+                }
+
+                @if (addressSections.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Addresses</div>
+
+                        <div class="mt-4 space-y-4">
+                            @foreach (var group in addressSections)
+                            {
+                                <div>
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@group.Label</div>
+                                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@group.Items.Count</span>
+                                    </div>
+
+                                    <div class="mt-3 grid gap-3">
+                                        @for (var index = 0; index < group.Items.Count; index++)
+                                        {
+                                            var address = group.Items[index];
+                                            var lines = GetAddressLines(address);
+
+                                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Address @(index + 1)</div>
+                                                <div class="mt-2 space-y-1 text-sm text-slate-700 dark:text-slate-200">
+                                                    @foreach (var line in lines)
+                                                    {
+                                                        <div>@line</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (contactSections.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceIdentity.contact</div>
+
+                        <div class="mt-4 space-y-4">
+                            @foreach (var group in contactSections)
+                            {
+                                <div>
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@group.Label</div>
+                                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@group.Items.Count</span>
+                                    </div>
+
+                                    <div class="mt-3 grid gap-3">
+                                        @foreach (var contact in group.Items)
+                                        {
+                                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                                    <div>
+                                                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@GetContactName(contact)</div>
+
+                                                        @if (HasText(contact.Department))
+                                                        {
+                                                            <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@ResourceIdentity.department: @contact.Department</div>
+                                                        }
+                                                    </div>
+
+                                                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@contact.Status</span>
+                                                </div>
+
+                                                <div class="mt-3 grid gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                                    @if (HasText(contact.Email))
+                                                    {
+                                                        <div>@ResourceIdentity.email: @contact.Email</div>
+                                                    }
+
+                                                    @if (HasText(contact.Mobile))
+                                                    {
+                                                        <div>@ResourceIdentity.mobile: @contact.Mobile</div>
+                                                    }
+
+                                                    @if (HasText(contact.Telefone))
+                                                    {
+                                                        <div>@ResourceIdentity.telefon: @contact.Telefone</div>
+                                                    }
+                                                </div>
+
+                                                @if (HasText(contact.Note))
+                                                {
+                                                    <div class="mt-3 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-sm text-slate-600 dark:border-slate-600 dark:text-slate-300">
+                                                        <span class="font-semibold">@CalcResource.note:</span>
+                                                        <span class="whitespace-pre-wrap">@contact.Note</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+
+                @if (noteSections.Count > 0)
+                {
+                    <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@CalcResource.note</div>
+
+                        <div class="mt-4 space-y-4">
+                            @foreach (var group in noteSections)
+                            {
+                                <div>
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">@group.Label</div>
+                                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">@group.Items.Count</span>
+                                    </div>
+
+                                    <div class="mt-3 space-y-3">
+                                        @for (var index = 0; index < group.Items.Count; index++)
+                                        {
+                                            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
+                                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@CalcResource.note @(index + 1)</div>
+                                                <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700 dark:text-slate-200">@group.Items[index]</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+        </div>
+    }
+</div>
 
 @code {
-    CalculationDetailsDTO? ProjectDetails;
-    [Parameter] public int Id { get; set; }
+    private sealed record DisplayField(string Label, string Value);
+    private sealed record AddressSection(string Label, List<AddressDTO> Items);
+    private sealed record ContactSection(string Label, List<UnderContactOrganisationBase> Items);
+    private sealed record TextSection(string Label, List<string> Items);
 
-    protected async override Task OnInitializedAsync()
+    private int _loadedCalculationId;
+    private Guid _loadedProjectId;
+    private bool IsLoading = true;
+    private CalculationDetailsDTO? CalculationInfo;
+    private ProjectDetailsDTO? ProjectInfo;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [Parameter]
+    public Guid ProjectId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
     {
-        ProjectDetails = await Repo.Calculation.DetailsAsync(Id);
+        if (Id <= 0)
+        {
+            ResetState();
+            return;
+        }
+
+        var effectiveProjectId = ResolveProjectId();
+        if (_loadedCalculationId == Id && _loadedProjectId == effectiveProjectId && CalculationInfo is not null)
+            return;
+
+        IsLoading = true;
+
+        var calculationTask = Repo.Calculation.DetailsAsync(Id);
+        var projectTask = LoadProjectAsync(effectiveProjectId);
+
+        await Task.WhenAll(calculationTask, projectTask);
+
+        CalculationInfo = await calculationTask;
+        ProjectInfo = await projectTask;
+        _loadedCalculationId = Id;
+        _loadedProjectId = effectiveProjectId;
+        IsLoading = false;
     }
+
+    private void ResetState()
+    {
+        _loadedCalculationId = 0;
+        _loadedProjectId = Guid.Empty;
+        CalculationInfo = null;
+        ProjectInfo = null;
+        IsLoading = false;
+    }
+
+    private Guid ResolveProjectId() =>
+        ProjectId != Guid.Empty
+            ? ProjectId
+            : Folder?.State?.ProjectSelected?.Id ?? Guid.Empty;
+
+    private async Task<ProjectDetailsDTO?> LoadProjectAsync(Guid projectId)
+    {
+        if (projectId == Guid.Empty)
+            return null;
+
+        return await Repo.Project.DetailsAsync(projectId);
+    }
+
+    private static List<DisplayField> BuildProjectOverviewItems(ProjectDetailsDTO? details)
+    {
+        if (details is null)
+            return [];
+
+        var items = new List<DisplayField>();
+
+        AddIfHasText(items, CalcResource.code, details.Code);
+        AddIfHasText(items, ResourceLoc.folder, details.Folder);
+        AddIfHasText(items, ResourceApp.organisation, details.Organisation);
+        AddIfHasText(items, CalcResource.projectType, details.Type);
+        AddIfHasText(items, CalcResource.projectContract, details.Contract);
+        AddIfHasText(items, CalcResource.projectCompensation, details.Compensation);
+        AddIfHasText(items, CalcResource.procurementMethods, details.ProcurementMethods);
+        AddIfHasText(items, CalcResource.status, details.Status);
+        items.Add(new(CalcResource.procurement, details.Procurement.ToString()));
+
+        return items;
+    }
+
+    private static List<DisplayField> BuildCalculationOverviewItems(CalculationDetailsDTO details)
+    {
+        var items = new List<DisplayField>();
+
+        AddIfHasText(items, CalcResource.code, details.Code);
+        AddIfHasText(items, CalcResource.projectType, details.Type);
+        AddIfHasText(items, CalcResource.projectContract, details.Contract);
+        AddIfHasText(items, CalcResource.projectCompensation, details.Compensation);
+        AddIfHasText(items, CalcResource.procurementMethods, details.ProcurementMethods);
+        AddIfHasText(items, CalcResource.theClientsContactPersonTender, details.ContactPerson);
+        AddIfHasText(items, ResourceLoc.maps, details.Maps);
+        items.Add(new(CalcResource.procurement, details.Procurement.ToString()));
+        items.Add(new(CalcResource.tax, FormatPercent(details.Tax)));
+        items.Add(new(CalcResource.timeMonth, FormatNumber(details.TimeMonth)));
+        items.Add(new(CalcResource.priority, FormatPercent(details.Priority)));
+        items.Add(new("Display order", details.Order.ToString()));
+
+        return items;
+    }
+
+    private static List<DisplayField> BuildProjectTimelineItems(ProjectDetailsDTO? details)
+    {
+        if (details is null)
+            return [];
+
+        return
+        [
+            new(CalcResource.startDate, FormatDate(details.StartDate)),
+            new(CalcResource.endDate, FormatDate(details.EndDate)),
+            new(CalcResource.tenderDeadline, FormatDate(details.TenderDeadline)),
+            new(CalcResource.tenderQA, FormatDate(details.TenderQA))
+        ];
+    }
+
+    private static List<DisplayField> BuildCalculationTimelineItems(CalculationDetailsDTO details) =>
+    [
+        new(CalcResource.startDate, FormatDate(details.StartDate)),
+        new(CalcResource.endDate, FormatDate(details.EndDate)),
+        new(CalcResource.tenderDeadline, FormatDate(details.TenderDeadline)),
+        new(CalcResource.tenderQA, FormatDate(details.TenderQA)),
+        new(CalcResource.publicationDate, FormatDate(details.PublicationDate)),
+        new(CalcResource.decisionDate, FormatDate(details.DecisionDate))
+    ];
+
+    private static List<DisplayField> BuildProjectTeamItems(ProjectDetailsDTO? details)
+    {
+        if (details is null)
+            return [];
+
+        var items = new List<DisplayField>();
+
+        AddIfHasText(items, CalcResource.developer, details.Developer);
+        AddIfHasText(items, ResourceLoc.clientsProjectmanager, details.ClientsManager);
+        AddIfHasText(items, "Project manager", details.ProjectManager);
+        AddIfHasText(items, ResourceLoc.designer, details.Designer);
+        AddIfHasText(items, CalcResource.supervisor, details.Supervisor);
+        AddIfHasText(items, CalcResource.inspector, details.Inspector);
+        AddIfHasText(items, CalcResource.theClientsContactPersonTender, details.ClientsContactPersonTender);
+
+        return items;
+    }
+
+    private static List<DisplayField> BuildCalculationTeamItems(CalculationDetailsDTO details)
+    {
+        var items = new List<DisplayField>();
+
+        AddIfHasText(items, CalcResource.developer, details.Developer);
+        AddIfHasText(items, ResourceLoc.clientsProjectmanager, details.ClientsManager);
+        AddIfHasText(items, ResourceLoc.designer, details.Designer);
+        AddIfHasText(items, CalcResource.supervisor, details.Supervisor);
+        AddIfHasText(items, CalcResource.inspector, details.Inspector);
+        AddIfHasText(items, CalcResource.theClientsContactPersonTender, details.ContactPerson);
+
+        return items;
+    }
+
+    private static List<AddressSection> BuildAddressSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
+    {
+        var sections = new List<AddressSection>();
+        var projectAddresses = GetMeaningfulAddresses(project?.Address);
+        var calculationAddresses = GetMeaningfulAddresses(calculation.Address);
+
+        if (projectAddresses.Count > 0)
+            sections.Add(new("Project addresses", projectAddresses));
+
+        if (calculationAddresses.Count > 0)
+            sections.Add(new("Calculation addresses", calculationAddresses));
+
+        return sections;
+    }
+
+    private static List<ContactSection> BuildContactSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
+    {
+        var sections = new List<ContactSection>();
+        var projectContacts = GetMeaningfulContacts(project?.Contacts);
+        var calculationContacts = GetMeaningfulContacts(calculation.Contacts);
+
+        if (projectContacts.Count > 0)
+            sections.Add(new("Project contacts", projectContacts));
+
+        if (calculationContacts.Count > 0)
+            sections.Add(new("Calculation contacts", calculationContacts));
+
+        return sections;
+    }
+
+    private static List<TextSection> BuildNoteSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
+    {
+        var sections = new List<TextSection>();
+        var projectNotes = GetNonEmpty(project?.Notes);
+        var calculationNotes = GetNonEmpty(calculation.Notes);
+
+        if (projectNotes.Count > 0)
+            sections.Add(new("Project notes", projectNotes));
+
+        if (calculationNotes.Count > 0)
+            sections.Add(new("Calculation notes", calculationNotes));
+
+        return sections;
+    }
+
+    private static void AddIfHasText(ICollection<DisplayField> items, string label, string? value)
+    {
+        if (HasText(value))
+            items.Add(new(label, value!.Trim()));
+    }
+
+    private static List<string> GetNonEmpty(IEnumerable<string>? items) =>
+        items?
+            .Where(HasText)
+            .Select(x => x.Trim())
+            .ToList() ?? [];
+
+    private static List<AddressDTO> GetMeaningfulAddresses(IEnumerable<AddressDTO>? addresses) =>
+        addresses?
+            .Where(address => GetAddressLines(address).Count > 0)
+            .ToList() ?? [];
+
+    private static List<UnderContactOrganisationBase> GetMeaningfulContacts(IEnumerable<UnderContactOrganisationBase>? contacts) =>
+        contacts?
+            .Where(contact =>
+                HasText(contact.FirstName) ||
+                HasText(contact.LastName) ||
+                HasText(contact.Email) ||
+                HasText(contact.Mobile) ||
+                HasText(contact.Telefone) ||
+                HasText(contact.Department) ||
+                HasText(contact.Note))
+            .ToList() ?? [];
+
+    private static List<IncomeBase> GetMeaningfulIncome(IEnumerable<IncomeBase>? incomes) =>
+        incomes?
+            .Where(income =>
+                income.Year != 0 ||
+                income.Q1 != 0 ||
+                income.Q2 != 0 ||
+                income.Q3 != 0 ||
+                income.Q4 != 0)
+            .ToList() ?? [];
+
+    private static List<string> GetAddressLines(AddressDTO address)
+    {
+        var lines = new List<string>();
+        var streetLine = JoinNonEmpty(" ", address.Street, address.Nr);
+        var cityLine = JoinNonEmpty(" ", address.ZIPCode, address.City);
+        var regionLine = JoinNonEmpty(", ", address.Region, address.Country);
+
+        if (HasText(streetLine))
+            lines.Add(streetLine);
+
+        if (HasText(cityLine))
+            lines.Add(cityLine);
+
+        if (HasText(regionLine))
+            lines.Add(regionLine);
+
+        return lines;
+    }
+
+    private static string GetContactName(UnderContactOrganisationBase contact)
+    {
+        var fullName = JoinNonEmpty(" ", contact.FirstName, contact.LastName);
+        return HasText(fullName) ? fullName : ResourceIdentity.contact;
+    }
+
+    private static string JoinNonEmpty(string separator, params string?[] values) =>
+        string.Join(separator, values.Where(HasText).Select(x => x!.Trim()));
+
+    private static string FormatDate(DateTime value) =>
+        value.ToString(ConstValues.DateFormat);
+
+    private static string FormatDate(DateTime? value) =>
+        value.HasValue ? value.Value.ToString(ConstValues.DateFormat) : "-";
+
+    private static string FormatNumber(double value) =>
+        value.ToString("0.##");
+
+    private static string FormatPercent(double value) =>
+        $"{FormatNumber(value)}%";
+
+    private static double GetIncomeTotal(IncomeBase income) =>
+        income.Q1 + income.Q2 + income.Q3 + income.Q4;
+
+    private static bool IsAbsoluteUrl(string? value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out _);
+
+    private static bool HasText(string? value) =>
+        !string.IsNullOrWhiteSpace(value);
 }

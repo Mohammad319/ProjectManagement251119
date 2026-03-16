@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Components.Account;
 using ProjectManagement.Identity;
+using ProjectManagement.Shared.Constant;
+using System.Security.Claims;
 
 namespace ProjectManagement.Extensions;
 
@@ -27,7 +29,7 @@ public static class AuthRegistration
 
         services.ConfigureApplicationCookie(options =>
         {
-            options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
             options.SlidingExpiration = true;
             options.LoginPath = "/Account/Login";
             options.LogoutPath = "/Account/Logout";
@@ -37,8 +39,8 @@ public static class AuthRegistration
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             options.Events = new CookieAuthenticationEvents
             {
-                OnRedirectToLogin = ctx => HandleApiRedirectAsync(ctx, StatusCodes.Status401Unauthorized),
-                OnRedirectToAccessDenied = ctx => HandleApiRedirectAsync(ctx, StatusCodes.Status403Forbidden)
+                OnRedirectToLogin = ctx => HandleApiRedirectAsync(ctx, StatusCodes.Status401Unauthorized, "login"),
+                OnRedirectToAccessDenied = ctx => HandleApiRedirectAsync(ctx, StatusCodes.Status403Forbidden, "access-denied")
             };
         });
 
@@ -61,8 +63,13 @@ public static class AuthRegistration
         return services;
     }
 
-    private static Task HandleApiRedirectAsync(RedirectContext<CookieAuthenticationOptions> context, int statusCode)
+    private static Task HandleApiRedirectAsync(
+        RedirectContext<CookieAuthenticationOptions> context,
+        int statusCode,
+        string reason)
     {
+        LogRedirect(context, statusCode, reason);
+
         if (IsApiRequest(context.Request))
         {
             context.Response.StatusCode = statusCode;
@@ -88,5 +95,32 @@ public static class AuthRegistration
 
         return acceptsJson ||
                string.Equals(request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void LogRedirect(
+        RedirectContext<CookieAuthenticationOptions> context,
+        int statusCode,
+        string reason)
+    {
+        var isAuthenticated = context.HttpContext.User.Identity?.IsAuthenticated == true;
+        if (!isAuthenticated && !IsApiRequest(context.Request))
+            return;
+
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("ProjectManagement.Auth");
+
+        var user = context.HttpContext.User;
+        var userId = user.FindFirstValue(PMClaimsConst.UserId)
+                     ?? user.FindFirstValue(ClaimTypes.NameIdentifier)
+                     ?? "(anonymous)";
+
+        logger.LogWarning(
+            "Auth redirect triggered. Reason={Reason} StatusCode={StatusCode} Path={Path} UserId={UserId} Authenticated={Authenticated}",
+            reason,
+            statusCode,
+            context.Request.Path,
+            userId,
+            isAuthenticated);
     }
 }

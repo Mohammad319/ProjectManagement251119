@@ -1,146 +1,170 @@
+using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Repositories;
+using ProjectManagement.Shared.Helper;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace ProjectManagement.Client.Handless
+namespace ProjectManagement.Client.Handless;
+
+public class ApiErrorHandler(
+    IErrorDialog ui,
+    IClientLogger clientLogger,
+    NavigationManager navigationManager) : DelegatingHandler
 {
-    public class ApiErrorHandler(IErrorDialog ui, IClientLogger clientLogger) : DelegatingHandler
+    private DateTime _lastDialogUtc = DateTime.MinValue;
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
-        private DateTime _lastDialogUtc = DateTime.MinValue;
+        if (request.RequestUri?.ToString().Contains("api/client-logs", StringComparison.OrdinalIgnoreCase) == true)
+            return await base.SendAsync(request, ct);
 
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        HttpResponseMessage response;
+
+        try
         {
-            if (request.RequestUri?.ToString().Contains("api/client-logs", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                return await base.SendAsync(request, ct); // لا Dialog ولا parsing
-            }
+            response = await base.SendAsync(request, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            ShowOnce("تعذر الاتصال", "لا يمكن الاتصال بالخادم. تحقق من الشبكة ثم حاول مرة أخرى.");
+            _ = clientLogger.ErrorAsync("Network error while calling API", traceId: null, ex: ex);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            ShowOnce("خطأ", "حدث خطأ غير متوقع.");
+            _ = clientLogger.ErrorAsync("Unexpected client error while calling API", traceId: null, ex: ex);
+            throw;
+        }
 
-            HttpResponseMessage response;
+        if (response.IsSuccessStatusCode)
+            return response;
 
-            try
-            {
-                response = await base.SendAsync(request, ct);
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (HttpRequestException ex)
-            {
-                ShowOnce("تعذر الاتصال", "لا يمكن الاتصال بالسيرفر. تحقق من الإنترنت ثم حاول مرة أخرى.");
-                _ = clientLogger.ErrorAsync("Network error while calling API", traceId: null, ex: ex);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                ShowOnce("خطأ", "حدث خطأ غير متوقع.");
-                _ = clientLogger.ErrorAsync("Unexpected client error while calling API", traceId: null, ex: ex);
-                throw;
-            }
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+            return response;
 
-            if (response.IsSuccessStatusCode)
-                return response;
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            var currentLocalUrl = GetCurrentLocalUrl();
 
-            // ✅ تجاهل 401 هنا (يتولاه UnauthorizedRedirectHandler)
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
-                return response;
-
-            if (response.StatusCode == HttpStatusCode.Forbidden)
+            if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
             {
-                ShowOnce("صلاحيات", "ليس لديك صلاحية لتنفيذ هذه العملية.");
-                var endpoint = request.RequestUri?.ToString() ?? "(unknown-endpoint)";
-                _ = clientLogger.ErrorAsync($"Forbidden (403) from API {endpoint}", traceId: null, ex: null);
+                ShowOnce("الصلاحيات", "سنعيد التحقق من الجلسة والصلاحيات تلقائيًا.");
+                _ = clientLogger.ErrorAsync($"Forbidden (403) recovered via refresh for {request.RequestUri}", traceId: null, ex: null);
+                navigationManager.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
                 return response;
             }
 
-            var contentType = response.Content?.Headers?.ContentType?.MediaType ?? "";
-            var body = await SafeReadAsync(response, ct);
+            ShowOnce("الصلاحيات", "ليس لديك صلاحية لتنفيذ هذه العملية.");
+            var endpoint = request.RequestUri?.ToString() ?? "(unknown-endpoint)";
+            _ = clientLogger.ErrorAsync($"Forbidden (403) from API {endpoint}", traceId: null, ex: null);
+            return response;
+        }
 
-            // ProblemDetails
-            if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase))
-            {
-                var pd = TryParseProblemDetails(body);
+        var contentType = response.Content?.Headers?.ContentType?.MediaType ?? "";
+        var body = await SafeReadAsync(response, ct);
 
-                var title = pd?.Title ?? "فشل الطلب";
-                var detail = pd?.Detail ?? "تعذر إتمام الطلب.";
-                var traceId = pd?.TraceId;
+        if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase))
+        {
+            var pd = TryParseProblemDetails(body);
+            var title = pd?.Title ?? "فشل الطلب";
+            var detail = pd?.Detail ?? "تعذر إتمام الطلب.";
+            var traceId = pd?.TraceId;
 
-                ShowOnce(title, detail, traceId);
-
-                // ✅ body نص، نحوله إلى Exception حتى يوافق توقيع IClientLogger
-                _ = clientLogger.ErrorAsync($"API ProblemDetails: {title}", traceId, new Exception(body));
-
-                return response;
-            }
-
-            // HTML
-            if (LooksLikeHtml(body))
-            {
-                ShowOnce("خطأ في السيرفر", "حدث خطأ في السيرفر. حاول لاحقًا.");
-                _ = clientLogger.ErrorAsync("API returned HTML error page", traceId: null, new Exception(body));
-                return response;
-            }
-
-            // نص عادي
-            var msg = string.IsNullOrWhiteSpace(body) ? "تعذر إتمام الطلب." : Trim(body, 300);
-            ShowOnce("فشل الطلب", msg);
-            _ = clientLogger.ErrorAsync("API returned non-success response", traceId: null, new Exception(body));
+            ShowOnce(title, detail, traceId);
+            _ = clientLogger.ErrorAsync($"API ProblemDetails: {title}", traceId, new Exception(body));
 
             return response;
         }
 
-        private void ShowOnce(string title, string message, string? traceId = null)
+        if (LooksLikeHtml(body))
         {
-            var now = DateTime.UtcNow;
-            if ((now - _lastDialogUtc).TotalSeconds < 2) return;
-
-            _lastDialogUtc = now;
-            ui.Show(title, message, traceId);
+            ShowOnce("خطأ في الخادم", "حدث خطأ في الخادم. حاول لاحقًا.");
+            _ = clientLogger.ErrorAsync("API returned HTML error page", traceId: null, new Exception(body));
+            return response;
         }
 
-        private static async Task<string> SafeReadAsync(HttpResponseMessage resp, CancellationToken ct)
+        var message = string.IsNullOrWhiteSpace(body) ? "تعذر إتمام الطلب." : Trim(body, 300);
+        ShowOnce("فشل الطلب", message);
+        _ = clientLogger.ErrorAsync("API returned non-success response", traceId: null, new Exception(body));
+
+        return response;
+    }
+
+    private void ShowOnce(string title, string message, string? traceId = null)
+    {
+        var now = DateTime.UtcNow;
+        if ((now - _lastDialogUtc).TotalSeconds < 2)
+            return;
+
+        _lastDialogUtc = now;
+        ui.Show(title, message, traceId);
+    }
+
+    private static async Task<string> SafeReadAsync(HttpResponseMessage response, CancellationToken ct)
+    {
+        try
         {
-            try { return resp.Content is null ? "" : await resp.Content.ReadAsStringAsync(ct); }
-            catch { return ""; }
+            return response.Content is null ? string.Empty : await response.Content.ReadAsStringAsync(ct);
         }
-
-        private static bool LooksLikeHtml(string? s)
+        catch
         {
-            if (string.IsNullOrWhiteSpace(s)) return false;
-            var t = s.TrimStart();
-            return t.StartsWith("<!DOCTYPE", StringComparison.OrdinalIgnoreCase)
-                || t.StartsWith("<html", StringComparison.OrdinalIgnoreCase)
-                || t.Contains("<body", StringComparison.OrdinalIgnoreCase);
+            return string.Empty;
         }
+    }
 
-        private static string Trim(string s, int max) => s.Length <= max ? s : s[..max];
+    private static bool LooksLikeHtml(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return false;
 
-        private static ApiProblemDetails? TryParseProblemDetails(string json)
+        var trimmed = body.TrimStart();
+        return trimmed.StartsWith("<!DOCTYPE", StringComparison.OrdinalIgnoreCase)
+            || trimmed.StartsWith("<html", StringComparison.OrdinalIgnoreCase)
+            || trimmed.Contains("<body", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string Trim(string value, int max)
+        => value.Length <= max ? value : value[..max];
+
+    private static ApiProblemDetails? TryParseProblemDetails(string json)
+    {
+        try
         {
-            try
+            return JsonSerializer.Deserialize<ApiProblemDetails>(json, new JsonSerializerOptions
             {
-                return JsonSerializer.Deserialize<ApiProblemDetails>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-            }
-            catch
-            {
-                return null;
-            }
+                PropertyNameCaseInsensitive = true
+            });
         }
-
-        private sealed class ApiProblemDetails
+        catch
         {
-            public string? Title { get; set; }
-            public string? Detail { get; set; }
-            [JsonExtensionData]
-            public Dictionary<string, JsonElement>? Extensions { get; set; }
-
-            public string? TraceId =>
-                Extensions != null && Extensions.TryGetValue("traceId", out var v) ? v.GetString() ?? v.ToString() : null;
+            return null;
         }
+    }
+
+    private string GetCurrentLocalUrl()
+    {
+        var uri = new Uri(navigationManager.Uri);
+        return AuthRecoveryPathHelper.NormalizeLocalUrl($"{uri.PathAndQuery}{uri.Fragment}");
+    }
+
+    private sealed class ApiProblemDetails
+    {
+        public string? Title { get; set; }
+        public string? Detail { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? Extensions { get; set; }
+
+        public string? TraceId =>
+            Extensions != null && Extensions.TryGetValue("traceId", out var value)
+                ? value.GetString() ?? value.ToString()
+                : null;
     }
 }

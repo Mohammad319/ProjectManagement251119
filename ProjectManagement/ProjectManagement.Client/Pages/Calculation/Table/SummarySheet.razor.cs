@@ -13,6 +13,10 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
     {
         bool DiscrptionShow;
         CalculationMVVM Calculation => Calc;
+        private decimal TaxMultiplier => 1m + ((decimal)Calculation.Tax / 100m);
+        private static decimal ParseDecimal(ChangeEventArgs e) =>
+            decimal.TryParse(e.Value?.ToString(), out var value) ? value : 0m;
+
         void SomeHasChanged()
         {
             EarningOnChange = true;
@@ -21,7 +25,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
 
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * TaxMultiplier;
         }
         [Parameter] public bool IsReport { get; set; }
         bool ShowAllSort = true;
@@ -31,12 +35,12 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             await ExtraFactorsSaveAsync();
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * TaxMultiplier;
         }
         void TenderExcelTaxChanged(ChangeEventArgs e)
         {
-            Calculation.TenderExcelTax = decimal.Parse(e.Value?.ToString() ?? "0");
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
+            Calculation.TenderExcelTax = ParseDecimal(e);
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * TaxMultiplier;
             ProfitDecisionFun();
             Calculation.CalcEarningsForUnlockedRes();
             EarningOnChange = true;
@@ -44,8 +48,10 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         }
         void TenderInclTaxChanged(ChangeEventArgs e)
         {
-            Calculation.TenderInclTax = decimal.Parse(e.Value?.ToString() ?? "0");
-            Calculation.TenderExcelTax = Calculation.TenderInclTax / (1m + ((decimal)Calculation.Tax / 100m));
+            Calculation.TenderInclTax = ParseDecimal(e);
+            Calculation.TenderExcelTax = TaxMultiplier == 0
+                ? 0
+                : Calculation.TenderInclTax / TaxMultiplier;
             ProfitDecisionFun();
             Calculation.CalcEarningsForUnlockedRes();
             EarningOnChange = true;
@@ -70,7 +76,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
                 Folder.State.Calculation.OnChangeInCalculation += ChangeCalcultionItems;
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
             ProfitDecisionFun();
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * TaxMultiplier;
         }
         void ChangeProfit(decimal e)
         {
@@ -78,14 +84,16 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
             Calculation.ProfitDecision = e;
             Calculation.CalcEarningsForUnlockedRes();
             Calculation.TenderExcelTax = Calculation.Factors.Sum(x => x.PriceOG);
-            Calculation.TenderInclTax = Calculation.TenderExcelTax * (1m + ((decimal)Calculation.Tax / 100m));
+            Calculation.TenderInclTax = Calculation.TenderExcelTax * TaxMultiplier;
             StateHasChanged();
         }
         //ProfitDecision = ((TenderExcelTax/ TotalSum) – 1) * 100
         //Calculation.TenderExcelTax = ((Calculation.ProfitDecision / 100) + 1) * Calculation.Sum;
         void ProfitDecisionFun()
         {
-            Calculation.ProfitDecision = ((Calculation.TenderExcelTax / Calculation.Sum) - 1m) * 100m;
+            Calculation.ProfitDecision = Calculation.Sum == 0
+                ? 0
+                : ((Calculation.TenderExcelTax / Calculation.Sum) - 1m) * 100m;
         }
         public void Dispose()
         {
