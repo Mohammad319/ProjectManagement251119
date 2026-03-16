@@ -30,10 +30,12 @@
     void Click() =>
         TableRenderHelpers.HandleItemSelected(Resource.Id, Resource.Quantity, CalculationItemType.resource);
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        // تعيين مرة واحدة
-        Resource.OfferClick = async () => await UoWService.Resource.HandleOfferAsync(Resource);
+        // مع Virtualize قد يتم إعادة استخدام نفس component لصفوف مختلفة،
+        // لذلك نعيد ربط الإجراء مع المورد الحالي في كل تحديث للـ Parameters.
+        var currentResource = Resource;
+        currentResource.OfferClick = () => UoWService.Resource.HandleOfferAsync(currentResource);
     }
 
     async Task Context()

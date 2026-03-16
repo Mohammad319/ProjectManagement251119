@@ -207,7 +207,10 @@ namespace ProjectManagement.Client.Helper
             __b.AddAttribute(seq++, "style", "position:static");
 
             if (onDetailsClick != null)
+            {
                 __b.AddAttribute(seq++, "onclick", onDetailsClick);
+                __b.AddEventStopPropagationAttribute(seq++, "onclick", true);
+            }
 
             __b.AddMarkupContent(seq++,
                 $"<span class='inline-block w-5 text-center [&>svg]:w-3 [&>svg]:h-3'>" +
