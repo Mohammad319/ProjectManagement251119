@@ -15,6 +15,7 @@ namespace Persistence.Service.CalculationItems.Calculation
     {
         public async Task<IReadOnlyList<ListCalculationDTO>> GetAllAsync(
             Guid projectId,
+            bool isVisible,
             int userId,
             int? departmentId,
             CancellationToken ct = default)
@@ -25,6 +26,7 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .AsNoTracking()
                 .Where(x => !x.IsDeleted &&
                     x.ProjectId == projectId &&
+                    x.IsVisible == isVisible &&
                     (!x.IsPrivate || x.CreatedBy == userId))
                 .OrderBy(x => x.SortOrder)
                 .Select(ListCalculationProjection)

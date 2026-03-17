@@ -47,7 +47,8 @@ namespace ProjectManagement.Client.Pages.Folder
                 {
                     [nameof(FolderFormUI.FolderForm)] = model,
                     [nameof(FolderFormUI.OnClickCallback)] = EventCallback.Factory.Create(this, (FolderModel f) => Folder.AddOrUpdateFolder(f))
-                });
+                },
+                DialogSize.Large);
 
         public void Dispose()
         {

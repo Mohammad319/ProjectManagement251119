@@ -23,13 +23,15 @@ namespace Persistence.Service.Offer
 
             if (!resourceExists)
                 return 0;
+            if(dto.OrganisationId.HasValue && dto.OrganisationId > 0)
+            {
+                var organisationExists = await context.Organisation
+                    .AsNoTracking()
+                    .AnyAsync(x => x.Id == dto.OrganisationId, ct);
+                if (!organisationExists)
+                    return 0;
+            }
 
-            var organisationExists = await context.Organisation
-                .AsNoTracking()
-                .AnyAsync(x => x.Id == dto.OrganisationId, ct);
-
-            if (!organisationExists)
-                return 0;
 
             var entity = new OfferEntity(
                 resourceId: dto.ResourceId,

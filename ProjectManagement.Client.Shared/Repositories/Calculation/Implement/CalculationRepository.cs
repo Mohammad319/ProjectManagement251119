@@ -33,8 +33,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         {
             return await _httpRepository.GetAsync<int>(CalcURLBase + URLConst.Calculation.Copy + $"/{ProjectId}/{calcId}");
         }
-        public async Task<List<ListCalculationMVVM>> GetAsync(Guid guid)
-            => [.. (await _httpRepository.GetAsync<List<ListCalculationMVVM>>(CalcURLBase + guid)).OrderByDescending(x => x.Order)];
+        public async Task<List<ListCalculationMVVM>> GetAsync(Guid guid, bool isVisible = true)
+            => [.. (await _httpRepository.GetAsync<List<ListCalculationMVVM>>(CalcURLBase + guid + $"?isVisible={isVisible}")).OrderByDescending(x => x.Order)];
 
         public async Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(int calcid)
         {

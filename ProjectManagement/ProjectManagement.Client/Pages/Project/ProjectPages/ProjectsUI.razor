@@ -23,14 +23,14 @@
                     <span>📁 @Folder.State.FolderSelected?.Name</span>
                 </div>
             </div>
-            <div>
+            <div class="flex items-center gap-1">
                 <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                     <button type="button"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                             @onclick="async () => { IaVisible = !IaVisible; await GetAsync(); }">
                         <span aria-hidden="true">@((MarkupString)Icons.GetVisibleIcon(IaVisible))</span>
                     </button>
-                    <button class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-green-300 text-green-600 hover:bg-green-100 hover:ring-1 hover:ring-green-300 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500"
+                    <button class="inline-flex items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
                             disabled="@Folder.State.OtherDepartment"
                             @onclick="() => UpdateForm(new ListProjectMVVM())">
                         @((MarkupString)Icons.Plus2)

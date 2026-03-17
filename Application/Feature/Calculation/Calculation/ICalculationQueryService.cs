@@ -7,6 +7,7 @@ namespace Application.Feature.Calculation.Calculation
     {
         Task<IReadOnlyList<ListCalculationDTO>> GetAllAsync(
             Guid projectId,
+            bool isVisible,
             int userId,
             int? departmentId,
             CancellationToken cancellationToken = default);
