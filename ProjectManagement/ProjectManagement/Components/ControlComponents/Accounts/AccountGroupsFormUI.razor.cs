@@ -7,6 +7,7 @@ namespace ProjectManagement.Components.ControlComponents.Accounts;
 
 public partial class AccountGroupsFormUI
 {
+    public const string DialogFormId = "accountGroupForm";
     [Parameter] public int Id { get; set; }
     [Parameter, EditorRequired] public required PostAccountGroupDTO Model { get; set; }
     [Parameter] public EventCallback<bool> OnSaved { get; set; }

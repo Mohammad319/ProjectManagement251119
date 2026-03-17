@@ -9,6 +9,7 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 {
     public partial class ProjectForm : AppComponentBase
     {
+        public const string DialogFormId = "projectForm";
         int Part = 1;
 
         [Parameter] public EventCallback<Tuple<bool, ListProjectMVVM>> Callback { get; set; }
@@ -108,6 +109,9 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 
         private async Task HandleSubmitAsync()
         {
+            if (IsLoading)
+                return;
+
             IsLoading = true;
 
             PostProjectDTO entity = new();
@@ -150,9 +154,5 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
             };
         }
 
-        private async Task CancelAsync()
-        {
-            await Callback.InvokeAsync(Tuple.Create(false, Project));
-        }
     }
 }

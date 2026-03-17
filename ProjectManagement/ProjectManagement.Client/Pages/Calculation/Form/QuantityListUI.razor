@@ -7,60 +7,62 @@
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 @inherits AppComponentBase
 
-<div class="space-y-2">
+<EditForm id="@DialogFormId"
+          Model="@Calc"
+          OnValidSubmit="async () => await UpdateAsync()">
+    <div class="space-y-2">
 
-    <!-- Toolbar أعلى الجدول -->
-    <div class="flex items-center justify-between mb-1">
+        <!-- Toolbar أعلى الجدول -->
+        <div class="mb-1 flex items-center justify-between">
 
-        <div class="flex items-center gap-2">
-            <!-- زر إضافة عنصر -->
-            <button class="inline-flex items-center justify-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:focus:ring-offset-gray-900"
-                    @onclick="NewItem">
-                @((MarkupString)Icons.Plus)
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- زر إضافة عنصر -->
+                <button type="button"
+                        class="inline-flex items-center justify-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 dark:bg-emerald-500 dark:hover:bg-emerald-600 dark:focus:ring-offset-gray-900"
+                        @onclick="NewItem">
+                    @((MarkupString)Icons.Plus)
+                </button>
+            </div>
+        </div>
 
-            <!-- زر حفظ -->
-            <button class="inline-flex items-center justify-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-gray-900"
-                    @onclick="UpdateAsync">
-                @((MarkupString)Icons.SaveCloud)
-            </button>
+        <!-- الجدول -->
+        <div class="overflow-x-auto rounded border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+            <table class="min-w-full divide-y divide-gray-200 text-xs dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-800/80">
+                    <tr>
+                        <th class="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">@CalcResource.name</th>
+                        <th class="px-3 py-2 text-right font-semibold text-gray-700 dark:text-gray-200"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
+                    @if (Calc.QuanityList != null)
+                    {
+                        @foreach (var item in Calc.QuanityList)
+                        {
+                            <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                <td class="px-3 py-2 text-gray-700 dark:text-gray-200">
+                                    <input type="text"
+                                           class="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                                           @bind="item.Name" />
+                                </td>
+                                <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-200">
+                                    <input type="number"
+                                           class="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-right text-xs text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                                           @bind="item.Quantity" />
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <!-- الجدول -->
-    <div class="overflow-x-auto rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <table class="min-w-full divide-y divide-gray-200 text-xs dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-800/80">
-                <tr>
-                    <th class="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">@CalcResource.name</th>
-                    <th class="px-3 py-2 text-right font-semibold text-gray-700 dark:text-gray-200"></th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
-                @if (Calc.QuanityList != null)
-                {
-                    @foreach (var item in Calc.QuanityList)
-                    {
-                        <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">
-                                <input type="text"
-                                       class="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                       @bind="item.Name" />
-                            </td>
-                            <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-200">
-                                <input type="number"
-                                       class="w-full rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-right text-xs text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                                       @bind="item.Quantity" />
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
+</EditForm>
 
 @code {
+    public const string DialogFormId = "quantityForm";
+    private bool btnSubmitDisabled;
+
     void NewItem()
     {
         Calc.QuanityList ??= new List<QuanityListDTO>();
@@ -69,7 +71,19 @@
 
     async Task UpdateAsync()
     {
-        await Repo.Calculation.UpdateAsync(Calc.QuanityList, Calc.Id);
-        Modal.Close();
+        if (btnSubmitDisabled)
+            return;
+
+        btnSubmitDisabled = true;
+
+        try
+        {
+            await Repo.Calculation.UpdateAsync(Calc.QuanityList, Calc.Id);
+            Modal.Close();
+        }
+        finally
+        {
+            btnSubmitDisabled = false;
+        }
     }
 }

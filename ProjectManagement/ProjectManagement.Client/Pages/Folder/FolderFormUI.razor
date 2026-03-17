@@ -3,7 +3,7 @@
 @inherits AppComponentBase
 
 @inject ProjectManagement.Client.Shared.Repositories.Folder.IFolderRepository _folderRepo
-<EditForm id="myForm"
+<EditForm id="@DialogFormId"
           class="w-full max-w-3xl space-y-4 p-3 text-slate-800 dark:text-slate-100"
           Model="@PostFolder"
           OnValidSubmit="async()=> await HandleSubmitAsync()">
@@ -45,22 +45,9 @@
         </div>
     </div>
 </EditForm>
-<div class="flex flex-nowrap items-center justify-end gap-2.5 border-t border-slate-200 px-3 py-2.5 dark:border-slate-700">
-    <button type="submit"
-            class="inline-flex h-10 items-center justify-center rounded-lg border border-emerald-600 px-5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-slate-900"
-            form="myForm"
-            disabled="@btnSubmitDisabled">
-        @ResourceApp.save
-    </button>
-
-    <button type="button"
-            class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-            @onclick="Modal.Close">
-        @ResourceApp.cancel
-    </button>
-</div>
 
 @code {
+    public const string DialogFormId = "folderForm";
     [Parameter] public EventCallback<FolderModel> OnClickCallback { get; set; }
     bool btnSubmitDisabled;
     [Parameter] public FolderModel FolderForm { get; set; } = default!;
@@ -75,7 +62,11 @@
 
     private async Task HandleSubmitAsync()
     {
+        if (btnSubmitDisabled)
+            return;
+
         btnSubmitDisabled = true;
+        var shouldReenable = true;
 
         if (FolderForm.Id != Guid.Empty)
         {
@@ -86,6 +77,7 @@
                 FolderForm.IsVisible = PostFolder.IsVisible;
                 await OnClickCallback.InvokeAsync(FolderForm);
                 MHD.Notifications(ToastType.Update, true);
+                shouldReenable = false;
             }
             else
             {
@@ -101,11 +93,12 @@
                 FolderForm.Name = PostFolder.Name;
                 FolderForm.IsVisible = PostFolder.IsVisible;
                 await OnClickCallback.InvokeAsync(FolderForm);
+                shouldReenable = false;
             }
 
             MHD.Notifications(ToastType.Add, FolderForm.Id != Guid.Empty);
         }
-
-        await OnClickCallback.InvokeAsync(null);
+        if (shouldReenable)
+            btnSubmitDisabled = false;
     }
 }

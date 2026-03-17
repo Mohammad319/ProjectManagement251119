@@ -126,7 +126,9 @@ namespace ProjectManagement.Client.Services.Calculation
                 () => dialogService.ShowComponent<QuantityListUI>(
                     CalcResource.quantity,
                     Icons.ResetQuantity,
-                    null)
+                    null,
+                    DialogSize.Medium,
+                    DialogButtonsHelper.CreateSaveCancelButtons(QuantityListUI.DialogFormId))
             ));
 
             return list;
@@ -296,7 +298,9 @@ namespace ProjectManagement.Client.Services.Calculation
                 : AppLoc[LocalizerConst.Update, model.Name];
 
             dialogService.ShowComponent<TaskFormUI>(title, Icons.NewTask,
-                new Dictionary<string, object> { [nameof(TaskFormUI.Task)] = model }, DialogSize.ExtraLarge);
+                new Dictionary<string, object> { [nameof(TaskFormUI.Task)] = model },
+                DialogSize.ExtraLarge,
+                DialogButtonsHelper.CreateSaveCancelButtons(TaskFormUI.DialogFormId));
         }
 
         private void OpenResourceForm(ResourceListMVVM model)
@@ -309,7 +313,9 @@ namespace ProjectManagement.Client.Services.Calculation
                 new Dictionary<string, object>
                 {
                     [nameof(ResourceFormUI.Resource)] = model
-                }, DialogSize.ExtraLarge);
+                },
+                DialogSize.ExtraLarge,
+                DialogButtonsHelper.CreateSaveCancelButtons(ResourceFormUI.DialogFormId));
         }
 
         private void OpenSaveToStorage(object obj) =>

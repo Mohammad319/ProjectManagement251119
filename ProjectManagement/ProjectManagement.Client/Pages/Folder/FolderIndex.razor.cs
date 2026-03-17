@@ -1,6 +1,7 @@
 ﻿using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Pages.Project.ProjectPages;
 using ProjectManagement.Client.Shared.Model.Project;
 using ProjectManagement.Client.Shared.ResourceFiles;
@@ -48,7 +49,8 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(FolderFormUI.FolderForm)] = model,
                     [nameof(FolderFormUI.OnClickCallback)] = EventCallback.Factory.Create(this, (FolderModel f) => Folder.AddOrUpdateFolder(f))
                 },
-                DialogSize.Large);
+                DialogSize.Large,
+                DialogButtonsHelper.CreateSaveCancelButtons(FolderFormUI.DialogFormId));
 
         public void Dispose()
         {

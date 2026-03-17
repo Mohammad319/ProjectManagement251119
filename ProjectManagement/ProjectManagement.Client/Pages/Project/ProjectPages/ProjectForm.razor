@@ -14,7 +14,7 @@
 }
 else if (ProjectUpdate is not null)
 {
-    <EditForm id="projectForm" class="space-y-0" Model="@ProjectUpdate"
+    <EditForm id="@DialogFormId" class="space-y-0" Model="@ProjectUpdate"
               OnValidSubmit="HandleSubmitAsync">
 
         <DataAnnotationsValidator />
@@ -229,19 +229,4 @@ else if (ProjectUpdate is not null)
             }
         </EditForm>
 
-        <div class="mt-1 flex justify-end gap-1">
-            <button type="submit"
-                    class="rounded border border-green-600 px-2 py-1 text-green-600 transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white"
-                    style="margin-right:5px;"
-                    form="projectForm"
-                    disabled="@IsLoading">
-                @ResourceApp.save
-            </button>
-
-            <button type="button"
-                    class="rounded border border-gray-500 px-2 py-1 text-gray-500 transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white"
-                    @onclick="CancelAsync">
-                @ResourceApp.cancel
-            </button>
-        </div>
     }

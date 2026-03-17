@@ -198,7 +198,9 @@
                 [nameof(ProjectForm.Project)] = model,
                 [nameof(ProjectForm.FolderId)] = Folder.State.FolderSelected!.Id,
                 [nameof(ProjectForm.Callback)] = EventCallback.Factory.Create<Tuple<bool, ListProjectMVVM>>(this, AddProjectAsync)
-            }, BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            },
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(ProjectForm.DialogFormId));
     }
 
     async Task SetProject(ListProjectMVVM pro)

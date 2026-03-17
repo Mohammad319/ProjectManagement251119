@@ -1,7 +1,7 @@
 ﻿@inherits AppComponentBase
 
 <div class="w-full min-w-0 space-y-2 text-slate-800 dark:text-slate-100">
-    <EditForm id="accountForm"
+    <EditForm id="@DialogFormId"
               Model="@EditModel"
               OnValidSubmit="HandleSubmitAsync"
               class="w-full min-w-0 space-y-2">
@@ -96,25 +96,4 @@
         </div>
     </EditForm>
 
-    <div class="flex flex-wrap items-center justify-end gap-1.5 border-t border-slate-200 pt-2.5 dark:border-slate-700">
-        <button type="submit"
-                form="accountForm"
-                class="inline-flex h-9 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-4
-            text-sm font-medium text-emerald-700 transition hover:bg-emerald-100
-            disabled:cursor-not-allowed disabled:opacity-60
-            dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
-                disabled="@IsLoading">
-            @AppLoc[nameof(ResourceApp.save)]
-        </button>
-
-        <button type="button"
-                class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-4
-            text-sm font-medium text-slate-700 transition hover:bg-slate-50
-            disabled:cursor-not-allowed disabled:opacity-60
-            dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                @onclick="CloseModal"
-                disabled="@IsLoading">
-            @AppLoc[nameof(ResourceApp.cancel)]
-        </button>
-    </div>
 </div>

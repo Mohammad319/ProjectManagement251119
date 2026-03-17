@@ -2,6 +2,7 @@ using Application.Feature.Calculation.ResourceType.Commands;
 using Application.Feature.Calculation.ResourceType.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.DTO.ResourceType;
 
@@ -44,7 +45,8 @@ public partial class ResourceTypeUI
                 [nameof(ResourceTypeFormUI.ResourceType)] = model,
                 [nameof(ResourceTypeFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdateAsync)
             },
-            DialogSize.ExtraLarge);
+            DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(ResourceTypeFormUI.DialogFormId));
 
     private async Task ReverseElements()
     {

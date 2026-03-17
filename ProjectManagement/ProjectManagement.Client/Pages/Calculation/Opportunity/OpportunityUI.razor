@@ -2,6 +2,7 @@
 @using BlazorMHD.UI.Core.Services
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
 @using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Helper
 @inherits AppComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -179,7 +180,9 @@
             new Dictionary<string, object>
             {
                 [nameof(OpportunityFormUI.Opportunity)] = model,
-            }, DialogSize.ExtraLarge);
+            },
+            DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(OpportunityFormUI.DialogFormId));
     }
 
     protected override void OnInitialized()

@@ -1,5 +1,6 @@
 using Domain.DTO.User;
 using BlazorMHD.UI.Core.Services;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
@@ -56,7 +57,8 @@ public partial class Index
                 [nameof(UpdateUserUI.UserForm)] = user,
                 [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnModalResultAsync),
             },
-            DialogSize.ExtraLarge);
+            DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(UpdateUserUI.DialogFormId));
     }
 
     private void OpenCreateDepartment()

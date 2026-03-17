@@ -8,6 +8,7 @@
 @using Calculation.Share
 @using Calculation.Tender
 @using ProjectManagement.Client.Services.Folder
+@using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using Microsoft.AspNetCore.Authorization
 @using ProjectManagement.Client.Shared.MVVM.Folder
@@ -284,7 +285,8 @@
                 [nameof(CalculationFormUI.Callback)] =
                     EventCallback.Factory.Create<ListCalculationMVVM?>(this, CalcFormAsync)
             },
-            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+            BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(CalculationFormUI.DialogFormId));
     }
 
     void CalculationDetails(ListCalculationMVVM model)

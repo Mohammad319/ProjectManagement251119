@@ -2,6 +2,7 @@ using ProjectManagement.Client.Services.MHDBlazor;
 using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Shared;
 using BlazorMHD.UI.Core.Services;
+using ProjectManagement.Client.Helper;
 using Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
@@ -154,7 +155,8 @@ public partial class UsersIndex
                 [nameof(UpdateUserUI.DepartmentId)] = DepartmentId ?? 0,
                 [nameof(UpdateUserUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnEditUserResultAsync)
             },
-            DialogSize.ExtraLarge);
+            DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(UpdateUserUI.DialogFormId));
     }
 
     private async Task OnEditUserResultAsync(bool isSuccess)

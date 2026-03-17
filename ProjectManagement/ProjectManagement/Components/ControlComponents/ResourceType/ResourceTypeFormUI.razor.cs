@@ -11,6 +11,7 @@ namespace ProjectManagement.Components.ControlComponents.ResourceType;
 
 public partial class ResourceTypeFormUI : IDisposable
 {
+    public const string DialogFormId = "resourceTypeForm";
     [Parameter] public EventCallback<bool> Callback { get; set; }
     [Parameter] public ResourceTypeModel ResourceType { get; set; } = new();
 

@@ -9,6 +9,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
 {
     partial class ResourceFormUI
     {
+        public const string DialogFormId = "resForm";
+
         private void ChangeQuantityParam(string qp)
         {
             if (string.IsNullOrEmpty(qp))
@@ -111,6 +113,9 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
 
         async Task HandleSubmitAsync()
         {
+            if (btnSubmitDisabled)
+                return;
+
             btnSubmitDisabled = true;
             bool hasSuccess = false;
             var resource = Resource;

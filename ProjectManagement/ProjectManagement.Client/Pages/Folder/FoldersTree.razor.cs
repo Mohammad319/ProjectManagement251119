@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Helper.DropDown;
 using ProjectManagement.Client.Pages.Folder.Component;
 using ProjectManagement.Client.Shared.Model.Project;
@@ -195,7 +196,9 @@ namespace ProjectManagement.Client.Pages.Folder
                     [nameof(FolderFormUI.FolderForm)] = model,
                     [nameof(FolderFormUI.OnClickCallback)] =
                         EventCallback.Factory.Create(this, (FolderModel f) => UoWService.Folder.AddOrUpdateFolder(f))
-                }
+                },
+                BlazorMHD.UI.Core.Services.DialogSize.Large,
+                DialogButtonsHelper.CreateSaveCancelButtons(FolderFormUI.DialogFormId)
             );
 
         private void ModalForm(FolderMVVM model) =>

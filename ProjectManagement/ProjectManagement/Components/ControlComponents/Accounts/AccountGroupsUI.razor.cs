@@ -2,6 +2,7 @@ using Application.Feature.Account.Commands;
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
@@ -74,7 +75,9 @@ public partial class AccountGroupsUI
                 [nameof(AccountGroupsFormUI.Model)] = new PostAccountGroupDTO(),
                 [nameof(AccountGroupsFormUI.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, RefreshAsync)
-            });
+            },
+            DialogSize.Large,
+            DialogButtonsHelper.CreateSaveCancelButtons(AccountGroupsFormUI.DialogFormId));
     }
 
     private void EditForm(ListDTO item)
@@ -88,7 +91,9 @@ public partial class AccountGroupsUI
                     new PostAccountGroupDTO { Name = item.Name },
                 [nameof(AccountGroupsFormUI.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, RefreshAsync)
-            });
+            },
+            DialogSize.Large,
+            DialogButtonsHelper.CreateSaveCancelButtons(AccountGroupsFormUI.DialogFormId));
     }
 
     private async Task OnImportSavedAsync(bool refresh)

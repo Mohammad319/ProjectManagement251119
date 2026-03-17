@@ -7,6 +7,7 @@ namespace ProjectManagement.Components.ControlComponents.Accounts;
 
 public partial class AccountsFormUI
 {
+    public const string DialogFormId = "accountForm";
     [Parameter] public int Id { get; set; }
 
     [Parameter, EditorRequired]

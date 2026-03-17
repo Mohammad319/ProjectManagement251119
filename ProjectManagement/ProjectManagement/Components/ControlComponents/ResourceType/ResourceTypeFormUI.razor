@@ -1,7 +1,7 @@
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 
-<EditForm id="resourceTypeForm" EditContext="editContext" OnValidSubmit="HandleSubmitAsync" class="space-y-4 px-1 py-1">
+<EditForm id="@DialogFormId" EditContext="editContext" OnValidSubmit="HandleSubmitAsync" class="space-y-4 px-1 py-1">
     <DataAnnotationsValidator />
 
     <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -108,12 +108,3 @@
         </div>
     </div>
 </EditForm>
-
-<div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
-    <button type="submit" form="resourceTypeForm" class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" disabled="@IsLoading">
-        @AppLoc[nameof(ResourceApp.save)]
-    </button>
-    <button type="button" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="CloseModal" disabled="@IsLoading">
-        @AppLoc[nameof(ResourceApp.cancel)]
-    </button>
-</div>

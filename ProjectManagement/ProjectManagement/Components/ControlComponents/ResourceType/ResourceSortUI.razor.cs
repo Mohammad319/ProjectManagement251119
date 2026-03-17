@@ -2,6 +2,7 @@ using Application.Feature.Calculation.ResourceType.Commands;
 using Application.Feature.Calculation.ResourceType.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.DTO.ResourceType;
 
@@ -85,7 +86,8 @@ public partial class ResourceSortUI
                 [nameof(ResourceSortFormUI.ResourceSort)] = model,
                 [nameof(ResourceSortFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnSavedAsync)
             },
-            DialogSize.ExtraLarge);
+            DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(ResourceSortFormUI.DialogFormId));
     }
 
     private async Task OnSavedAsync(bool isSuccess)

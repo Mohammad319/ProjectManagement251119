@@ -2,6 +2,7 @@ using Application.Feature.Account.Commands;
 using Application.Feature.Account.Queries;
 using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.DTO.Account;
@@ -97,7 +98,8 @@ public partial class AccountUI
                 [nameof(AccountsFormUI.OnSaved)] =
                     EventCallback.Factory.Create<bool>(this, OnSavedAsync)
             },
-            DialogSize.ExtraLarge);
+            DialogSize.ExtraLarge,
+            DialogButtonsHelper.CreateSaveCancelButtons(AccountsFormUI.DialogFormId));
     }
 
     private async Task OnSavedAsync(bool ok)

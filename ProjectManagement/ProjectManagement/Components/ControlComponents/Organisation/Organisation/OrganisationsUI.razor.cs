@@ -3,6 +3,7 @@ using Application.Feature.Organisation.Organisation.Queries;
 using Domain.DTO.Category;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Shared.Constant;
@@ -123,7 +124,8 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
                     [nameof(OrganisationFormUI.Callback)] =
                         EventCallback.Factory.Create<bool>(this, RefreshAsync)
                 },
-                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge);
+                BlazorMHD.UI.Core.Services.DialogSize.ExtraLarge,
+                DialogButtonsHelper.CreateSaveCancelButtons(OrganisationFormUI.DialogFormId));
         }
 
         private void Remove(ShortListOrganisationDTO organisation)

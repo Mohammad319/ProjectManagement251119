@@ -17,6 +17,7 @@ using ProjectManagement.Components.Shared;
 
 public partial class UpdateUserUI : AppComponentBase
 {
+    public const string DialogFormId = "userForm";
     [Parameter] public EventCallback<bool> Callback { get; set; }
     [Parameter] public TenantUserDto UserForm { get; set; } = default!;
     [Parameter] public int? DepartmentId { get; set; }

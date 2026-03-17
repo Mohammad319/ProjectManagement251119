@@ -18,6 +18,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 {
     public partial class OrganisationFormUI
     {
+        public const string DialogFormId = "organisationForm";
         [Inject] ICommandDispatcher MicroBus { get; set; } = default!;
         [Inject] ContextMenuService ContextService { get; set; } = default!;
         [Inject] MhdServices MHD { get; set; } = default!;
