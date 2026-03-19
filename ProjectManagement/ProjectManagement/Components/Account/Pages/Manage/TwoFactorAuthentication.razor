@@ -7,11 +7,11 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Two-factor authentication (2FA)</PageTitle>
+<PageTitle>@PMIdentityText.TwoFactorAuthenticationTitleWithSuffix</PageTitle>
 
 <StatusMessage />
 <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-    Two-factor authentication (2FA)
+    @PMIdentityText.TwoFactorAuthenticationTitleWithSuffix
 </h3>
 
 @if (canTrack)
@@ -23,14 +23,14 @@
             <div role="alert"
                  class="mt-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900
                               dark:border-red-900/50 dark:bg-red-950 dark:text-red-100">
-                <strong class="block">You have no recovery codes left.</strong>
+                <strong class="block">@PMIdentityText.NoRecoveryCodesLeft</strong>
                 <p class="mt-1">
                     You must
                     <a href="/Account/Manage/GenerateRecoveryCodes"
                        class="font-medium underline underline-offset-2 hover:no-underline text-red-800 dark:text-red-200">
-                        generate a new set of recovery codes
+                        @PMIdentityText.GenerateNewRecoveryCodes
                     </a>
-                    before you can log in with a recovery code.
+                    @PMIdentityText.BeforeLoginWithRecoveryCode
                 </p>
             </div>
         }
@@ -39,12 +39,12 @@
             <div role="alert"
                  class="mt-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900
                               dark:border-red-900/50 dark:bg-red-950 dark:text-red-100">
-                <strong class="block">You have 1 recovery code left.</strong>
+                <strong class="block">@PMIdentityText.OneRecoveryCodeLeft</strong>
                 <p class="mt-1">
                     You can
                     <a href="/Account/Manage/GenerateRecoveryCodes"
                        class="font-medium underline underline-offset-2 hover:no-underline text-red-800 dark:text-red-200">
-                        generate a new set of recovery codes
+                        @PMIdentityText.GenerateNewRecoveryCodes
                     </a>.
                 </p>
             </div>
@@ -54,12 +54,12 @@
             <div role="alert"
                  class="mt-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-900
                               dark:border-yellow-700/60 dark:bg-yellow-950 dark:text-yellow-100">
-                <strong class="block">You have @recoveryCodesLeft recovery codes left.</strong>
+                <strong class="block">@PMIdentityText.Format(PMIdentityText.RecoveryCodesLeftFormat, recoveryCodesLeft)</strong>
                 <p class="mt-1">
-                    You should
+                    @PMIdentityText.YouShouldGenerateRecoveryCodes
                     <a href="/Account/Manage/GenerateRecoveryCodes"
                        class="font-medium underline underline-offset-2 hover:no-underline text-yellow-800 dark:text-yellow-200">
-                        generate a new set of recovery codes
+                        @PMIdentityText.GenerateNewRecoveryCodes
                     </a>.
                 </p>
             </div>
@@ -77,7 +77,7 @@
                             class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                                      transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                                      dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                        Forget this browser
+                        @PMIdentityText.ForgetThisBrowser
                     </button>
                 </form>
             }
@@ -86,20 +86,20 @@
                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                         transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                         dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Disable 2FA
+                @PMIdentityText.Disable2faAction
             </a>
 
             <a href="/Account/Manage/GenerateRecoveryCodes"
                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                         transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                         dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Reset recovery codes
+                @PMIdentityText.ResetRecoveryCodes
             </a>
         </div>
     }
 
     <h4 class="mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Authenticator app
+        @PMIdentityText.AuthenticatorApp
     </h4>
 
     @if (!hasAuthenticator)
@@ -108,7 +108,7 @@
            class="mt-2 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                       transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                       dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-            Add authenticator app
+            @PMIdentityText.AddAuthenticatorApp
         </a>
     }
     else
@@ -118,14 +118,14 @@
                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                         transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                         dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Set up authenticator app
+                @PMIdentityText.SetUpAuthenticatorApp
             </a>
 
             <a href="/Account/Manage/ResetAuthenticator"
                class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                         transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                         dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Reset authenticator app
+                @PMIdentityText.ResetAuthenticatorApp
             </a>
         </div>
     }
@@ -135,8 +135,8 @@ else
     <div role="alert"
          class="mt-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900
                   dark:border-red-900/50 dark:bg-red-950 dark:text-red-100">
-        <strong class="block">Privacy and cookie policy have not been accepted.</strong>
-        <p class="mt-1">You must accept the policy before you can enable two factor authentication.</p>
+        <strong class="block">@PMIdentityText.PrivacyPolicyNotAccepted</strong>
+        <p class="mt-1">@PMIdentityText.AcceptPolicyBefore2fa</p>
     </div>
 }
 
@@ -172,7 +172,7 @@ else
         await SignInManager.ForgetTwoFactorClientAsync();
 
         RedirectManager.RedirectToCurrentPageWithStatus(
-            "The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code.",
+            PMIdentityText.CurrentBrowserForgotten,
             HttpContext);
     }
 }

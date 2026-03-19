@@ -9,13 +9,13 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Manage email</PageTitle>
+<PageTitle>@PMIdentityText.ManageEmailTitle</PageTitle>
 
 <div class="mx-auto max-w-2xl py-4">
     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/70 sm:p-8">
         <div class="mb-6">
-            <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Manage email</h3>
-            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Email confirmations now use the active UI language template.</p>
+            <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">@PMIdentityText.ManageEmailTitle</h3>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">@PMIdentityText.ManageEmailDescription</p>
         </div>
 
         <StatusMessage Message="@message" />
@@ -29,7 +29,7 @@
             <ValidationSummary class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200" role="alert" />
 
             <div class="space-y-2">
-                <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-200">Current email</label>
+                <label for="email" class="block text-sm font-medium text-slate-700 dark:text-slate-200">@PMIdentityText.CurrentEmailLabel</label>
                 <div class="relative">
                     <input type="text" value="@email" id="email" disabled class="block w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-3 pr-12 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
                     @if (isEmailConfirmed)
@@ -40,19 +40,19 @@
                 @if (!isEmailConfirmed)
                 {
                     <button type="submit" form="send-verification-form" class="inline-flex items-center justify-center rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-100 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200 dark:hover:bg-sky-950/50">
-                        Send verification email
+                        @PMIdentityText.SendVerificationEmail
                     </button>
                 }
             </div>
 
             <div class="space-y-1">
-                <label for="Input.NewEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-200">New email</label>
+                <label for="Input.NewEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-200">@PMIdentityText.NewEmailLabel</label>
                 <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail" autocomplete="email" aria-required="true" class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
                 <ValidationMessage For="() => Input.NewEmail" class="text-sm text-red-600 dark:text-red-400" />
             </div>
 
             <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400">
-                Change email
+                @PMIdentityText.ChangeEmailAction
             </button>
         </EditForm>
     </div>
@@ -91,7 +91,7 @@
     {
         if (Input.NewEmail is null || Input.NewEmail == email)
         {
-            message = "Your email is unchanged.";
+            message = PMIdentityText.EmailUnchanged;
             return;
         }
 
@@ -109,7 +109,7 @@
             new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
 
         await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
-        message = "Confirmation link to change email sent. Please check your email.";
+        message = PMIdentityText.ChangeEmailConfirmationSent;
     }
 
     private async Task OnSendEmailVerificationAsync()
@@ -133,14 +133,14 @@
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
 
         await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
-        message = "Verification email sent. Please check your email.";
+        message = PMIdentityText.VerificationEmailSent;
     }
 
     private sealed class InputModel
     {
         [Required]
         [EmailAddress]
-        [Display(Name = "New email")]
+        [Display(Name = nameof(PMIdentityText.NewEmailLabel), ResourceType = typeof(PMIdentityText))]
         public string? NewEmail { get; set; }
     }
 }

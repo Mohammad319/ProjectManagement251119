@@ -366,4 +366,307 @@
   <data name="environmentalSystems" xml:space="preserve">
     <value>Miljösystem</value>
   </data>
+  <data name="chart" xml:space="preserve">
+    <value>Diagram</value>
+  </data>
+  <data name="calculationChart" xml:space="preserve">
+    <value>Kalkyldiagram</value>
+  </data>
+  <data name="parameters" xml:space="preserve">
+    <value>Parametrar</value>
+  </data>
+  <data name="itemsCount" xml:space="preserve">
+    <value>{0} objekt</value>
+  </data>
+  <data name="resourceParametersHint" xml:space="preserve">
+    <value>Definiera ateranvandbara variabler for den har resursen.</value>
+  </data>
+  <data name="times" xml:space="preserve">
+    <value>Tider</value>
+  </data>
+  <data name="resourceTimesHint" xml:space="preserve">
+    <value>Spara arbets- och tidsintervall som anvands i kalkyler.</value>
+  </data>
+  <data name="resourceNotesHint" xml:space="preserve">
+    <value>Samla anteckningar och overanteckningar for den valda resursen.</value>
+  </data>
+  <data name="actuallyQuantity" xml:space="preserve">
+    <value>Faktisk mangd</value>
+  </data>
+  <data name="workedQuantity" xml:space="preserve">
+    <value>Arbetad mangd</value>
+  </data>
+  <data name="onlyCodeText" xml:space="preserve">
+    <value>Endast kodtext</value>
+  </data>
+  <data name="quarter1" xml:space="preserve">
+    <value>Q1</value>
+  </data>
+  <data name="quarter2" xml:space="preserve">
+    <value>Q2</value>
+  </data>
+  <data name="quarter3" xml:space="preserve">
+    <value>Q3</value>
+  </data>
+  <data name="quarter4" xml:space="preserve">
+    <value>Q4</value>
+  </data>
+  <data name="sheetNr" xml:space="preserve">
+    <value>Bladnr</value>
+  </data>
+  <data name="file" xml:space="preserve">
+    <value>Fil</value>
+  </data>
+  <data name="all" xml:space="preserve">
+    <value>Alla</value>
+  </data>
+  <data name="settings" xml:space="preserve">
+    <value>Installningar</value>
+  </data>
+  <data name="moveToTop" xml:space="preserve">
+    <value>Flytta langst upp</value>
+  </data>
+  <data name="moveUp" xml:space="preserve">
+    <value>Flytta upp</value>
+  </data>
+  <data name="moveDown" xml:space="preserve">
+    <value>Flytta ned</value>
+  </data>
+  <data name="moveToBottom" xml:space="preserve">
+    <value>Flytta langst ned</value>
+  </data>
+  <data name="width" xml:space="preserve">
+    <value>Bredd</value>
+  </data>
+  <data name="freezeColumn" xml:space="preserve">
+    <value>Frys kolumn</value>
+  </data>
+  <data name="hideColumn" xml:space="preserve">
+    <value>Dolj kolumn</value>
+  </data>
+  <data name="showColumn" xml:space="preserve">
+    <value>Visa kolumn</value>
+  </data>
+  <data name="appearance" xml:space="preserve">
+    <value>Utseende</value>
+  </data>
+  <data name="dragAndReorder" xml:space="preserve">
+    <value>Dra och andra ordning</value>
+  </data>
+  <data name="visibleColumnsCount" xml:space="preserve">
+    <value>{0} synliga kolumner</value>
+  </data>
+  <data name="hiddenColumnsCount" xml:space="preserve">
+    <value>{0} dolda kolumner</value>
+  </data>
+  <data name="tableColorsAndBorderStyle" xml:space="preserve">
+    <value>Tabellfarger och kantlinjestil</value>
+  </data>
+  <data name="templateDetailsDescription" xml:space="preserve">
+    <value>Konfigurera malldetaljer, formatering och bladlayout.</value>
+  </data>
+  <data name="back" xml:space="preserve">
+    <value>Tillbaka</value>
+  </data>
+  <data name="templateSettings" xml:space="preserve">
+    <value>Mallinstallningar</value>
+  </data>
+  <data name="templateSettingsDescription" xml:space="preserve">
+    <value>Grundlaggande mallinformation och formatering.</value>
+  </data>
+  <data name="numberFormat" xml:space="preserve">
+    <value>Nummerformat</value>
+  </data>
+  <data name="round" xml:space="preserve">
+    <value>Avrundning</value>
+  </data>
+  <data name="savedTemplates" xml:space="preserve">
+    <value>Sparade mallar</value>
+  </data>
+  <data name="actions" xml:space="preserve">
+    <value>Atgarder</value>
+  </data>
+  <data name="calculationDetailsUnavailable" xml:space="preserve">
+    <value>Kalkyldetaljer ar inte tillgangliga.</value>
+  </data>
+  <data name="projectTimeline" xml:space="preserve">
+    <value>Projekttidslinje</value>
+  </data>
+  <data name="calculationTimeline" xml:space="preserve">
+    <value>Kalkyltidslinje</value>
+  </data>
+  <data name="incomeTotal" xml:space="preserve">
+    <value>Intakt totalt: {0}</value>
+  </data>
+  <data name="peopleAndOwnership" xml:space="preserve">
+    <value>Personer och ansvar</value>
+  </data>
+  <data name="addresses" xml:space="preserve">
+    <value>Adresser</value>
+  </data>
+  <data name="address" xml:space="preserve">
+    <value>Adress</value>
+  </data>
+  <data name="displayOrder" xml:space="preserve">
+    <value>Visningsordning</value>
+  </data>
+  <data name="projectAddresses" xml:space="preserve">
+    <value>Projektadresser</value>
+  </data>
+  <data name="calculationAddresses" xml:space="preserve">
+    <value>Kalkyladresser</value>
+  </data>
+  <data name="projectContacts" xml:space="preserve">
+    <value>Projektkontakter</value>
+  </data>
+  <data name="calculationContacts" xml:space="preserve">
+    <value>Kalkylkontakter</value>
+  </data>
+  <data name="projectNotes" xml:space="preserve">
+    <value>Projektanteckningar</value>
+  </data>
+  <data name="calculationNotes" xml:space="preserve">
+    <value>Kalkylanteckningar</value>
+  </data>
+  <data name="projectManager" xml:space="preserve">
+    <value>Projektledare</value>
+  </data>
+  <data name="searchProjects" xml:space="preserve">
+    <value>Sök projekt</value>
+  </data>
+  <data name="visibilityFilter" xml:space="preserve">
+    <value>Synlighetsfilter</value>
+  </data>
+  <data name="noFoldersAvailable" xml:space="preserve">
+    <value>Inga mappar tillgängliga.</value>
+  </data>
+  <data name="openSidebar" xml:space="preserve">
+    <value>Öppna sidofält</value>
+  </data>
+  <data name="workspace" xml:space="preserve">
+    <value>Arbetsyta</value>
+  </data>
+  <data name="selectFolderOrProject" xml:space="preserve">
+    <value>Välj en mapp eller ett projekt</value>
+  </data>
+  <data name="folderSelectionHint" xml:space="preserve">
+    <value>Den högra sidan visar projektlistor, kalkyler och detaljer baserat på den valda mappen.</value>
+  </data>
+  <data name="baseCostAverage" xml:space="preserve">
+    <value>Baskostnad (genomsnitt)</value>
+  </data>
+  <data name="projectDetailsUnavailable" xml:space="preserve">
+    <value>Projektdetaljer är inte tillgängliga.</value>
+  </data>
+  <data name="finished" xml:space="preserve">
+    <value>Avslutad</value>
+  </data>
+  <data name="projectNamePlaceholder" xml:space="preserve">
+    <value>Projektnamn...</value>
+  </data>
+  <data name="search" xml:space="preserve">
+    <value>Sök</value>
+  </data>
+  <data name="hideDetails" xml:space="preserve">
+    <value>Dölj detaljer</value>
+  </data>
+  <data name="showDetails" xml:space="preserve">
+    <value>Visa detaljer</value>
+  </data>
+  <data name="codePlaceholder" xml:space="preserve">
+    <value>Kod...</value>
+  </data>
+  <data name="searchResults" xml:space="preserve">
+    <value>Sökresultat</value>
+  </data>
+  <data name="projectsCount" xml:space="preserve">
+    <value>{0} projekt</value>
+  </data>
+  <data name="loading" xml:space="preserve">
+    <value>Laddar...</value>
+  </data>
+  <data name="ready" xml:space="preserve">
+    <value>Klar</value>
+  </data>
+  <data name="noProjectsFound" xml:space="preserve">
+    <value>Inga projekt hittades.</value>
+  </data>
+  <data name="projectsEmptyState" xml:space="preserve">
+    <value>Inga projekt än</value>
+  </data>
+  <data name="projectsEmptyStateHint" xml:space="preserve">
+    <value>Skapa ett projekt i den här mappen för att börja arbeta med kalkyler och offerter.</value>
+  </data>
+  <data name="storageOptions" xml:space="preserve">
+    <value>Lagringsalternativ</value>
+  </data>
+  <data name="storageOptionsHint" xml:space="preserve">
+    <value>Välj behörighetsnivå och sortering.</value>
+  </data>
+  <data name="storageLevel" xml:space="preserve">
+    <value>Lagringsnivå</value>
+  </data>
+  <data name="storageLevelHint" xml:space="preserve">
+    <value>Ange vilken nivå som ska användas vid sparning.</value>
+  </data>
+  <data name="storageSort" xml:space="preserve">
+    <value>Sortering</value>
+  </data>
+  <data name="storageSortHint" xml:space="preserve">
+    <value>Välj hur den sparade datan ska kategoriseras.</value>
+  </data>
+  <data name="resourceOverrides" xml:space="preserve">
+    <value>Resursöverskrivningar</value>
+  </data>
+  <data name="resourceOverridesHint" xml:space="preserve">
+    <value>Ändra användarsynliga värden utan att ändra den underliggande mallen.</value>
+  </data>
+  <data name="reset" xml:space="preserve">
+    <value>Återställ</value>
+  </data>
+  <data name="failedToSaveChanges" xml:space="preserve">
+    <value>Det gick inte att spara ändringarna.</value>
+  </data>
+  <data name="storageNoResourcesAvailable" xml:space="preserve">
+    <value>Inga resurser finns tillgängliga just nu. Välj en grupp ovan eller uppdatera inmatningarna.</value>
+  </data>
+  <data name="storageSelectAccount" xml:space="preserve">
+    <value>Välj ett konto</value>
+  </data>
+  <data name="storageMorning" xml:space="preserve">
+    <value>Morgon</value>
+  </data>
+  <data name="storageMorningCost" xml:space="preserve">
+    <value>Morgonkostnad</value>
+  </data>
+  <data name="storageDay" xml:space="preserve">
+    <value>Dag</value>
+  </data>
+  <data name="storageDayCost" xml:space="preserve">
+    <value>Dagkostnad</value>
+  </data>
+  <data name="storageEvening" xml:space="preserve">
+    <value>Kväll</value>
+  </data>
+  <data name="storageEveningCost" xml:space="preserve">
+    <value>Kvällskostnad</value>
+  </data>
+  <data name="storageFormulas" xml:space="preserve">
+    <value>Formler</value>
+  </data>
+  <data name="storageResult" xml:space="preserve">
+    <value>Resultat</value>
+  </data>
+  <data name="storageNoConditions" xml:space="preserve">
+    <value>Inga villkor.</value>
+  </data>
+  <data name="storageVariables" xml:space="preserve">
+    <value>Variabler</value>
+  </data>
+  <data name="storageEnterVariables" xml:space="preserve">
+    <value>Ange variabelvärden:</value>
+  </data>
+  <data name="taskActions" xml:space="preserve">
+    <value>Uppgiftsåtgärder</value>
+  </data>
 </root>

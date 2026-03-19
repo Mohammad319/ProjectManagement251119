@@ -192,7 +192,7 @@
             <div style="padding-top:10px;">
                 @if (Part == 1 || Part == 2)
                 {
-                    <button class="inline-flex items-center justify-center rounded-md border border-sky-400 px-3 py-1.5 text-sm font-medium text-sky-600 transition hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-900/30" @onclick="updateStyle">Preview Style</button>
+                    <button class="inline-flex items-center justify-center rounded-md border border-sky-400 px-3 py-1.5 text-sm font-medium text-sky-600 transition hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-sky-900/30" @onclick="updateStyle">@PMWebResource.PreviewStyle</button>
                     <button class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="() => Part = 0">@((MarkupString)Icons.Back)</button>
                 }
                 <div style="display:flex;@StyleRowStr">
@@ -209,7 +209,7 @@
                             }
                             else
                             {
-                                <label style="@attr.Style">Attribute Value</label>
+                                <label style="@attr.Style">@PMWebResource.AttributeValue</label>
                             }
                         }
                 </div>

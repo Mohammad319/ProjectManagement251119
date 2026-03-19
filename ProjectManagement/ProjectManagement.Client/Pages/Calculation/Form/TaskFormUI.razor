@@ -32,12 +32,12 @@
         <div class="flex flex-wrap gap-2">
             <div class="w-[200px]">
                 <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.code</label>
-                <InputText @bind-Value="TaskUpdate.Metadata.Code" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                <InputText @bind-Value="TaskUpdate.Metadata.Code" class="@InputClass" />
                 <ValidationMessage For="@(() => TaskUpdate.Metadata.Code)" />
             </div>
             <div class="flex-1 min-w-[350px]">
                 <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name </label>
-                <InputText @bind-Value="TaskUpdate.Name" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                <InputText @bind-Value="TaskUpdate.Name" class="@InputClass" />
                 <ValidationMessage For="@(() => TaskUpdate.Name)" />
             </div>
         </div>
@@ -51,7 +51,7 @@
 
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.quantity</label>
                     <div class="w-full inline-flex">
-                        <InputSelect class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                        <InputSelect class="@InputClass"
                                      @bind-Value:get="TaskUpdate.Metadata.QuantityParam"
                                      @bind-Value:set="(value) => ChangeQuantityParam(value)">
                             <option></option>
@@ -65,14 +65,14 @@
 
                         @if (TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ)
                         {
-                            <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                            <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="@InputClass" />
                         }
                     </div>
                 </div>
 
                 <div class="w-[110px]">
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.unit</label>
-                    <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                    <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Unit)" />
                 </div>
 
@@ -80,7 +80,7 @@
                 {
                     <div class="w-[110px]">
                         <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.cap </label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.Ca‌​p" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.Ca‌​p" class="@InputClass" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.Cap)" />
                     </div>
                 }
@@ -89,39 +89,39 @@
                 {
                     <div class="w-[130px]">
                         <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor1</label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@InputClass" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor1)" />
                     </div>
                     <div class="w-[130px]">
                         <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor2 </label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
                     </div>
                 }
                 <div class="w-[110px]">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">ActuallyQuantity </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["actuallyQuantity"]</label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.ActuallyQuantity)" />
                 </div>
                 <div class="w-[110px]">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">WorkedQ </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["workedQuantity"]</label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.WorkedQ)" />
                 </div>
 
                 <div class="w-[110px]">
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.priceSub </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceSubDB)" />
                 </div>
                 <div class="w-[110px]">
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.minPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.MinPrice)" />
                 </div>
                 <div class="w-[110px]">
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.ceilingPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.CeilingPrice)" />
                 </div>
             }
@@ -130,8 +130,8 @@
             {
                 <div class="w-[160px]">
                     <div class="flex items-center gap-2 mt-1 md:mt-6">
-                        <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText" class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" />
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Only Code Text</label>
+                        <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText" class="@InputClass" />
+                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["onlyCodeText"]</label>
                     </div>
                 </div>
             }
@@ -144,7 +144,7 @@
             <div class="flex flex-wrap gap-2">
                 <div class="w-[160px]">
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.status</label>
-                    <InputSelect @bind-Value="TaskUpdate.StatusId" class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                    <InputSelect @bind-Value="TaskUpdate.StatusId" class="@InputClass">
                         <option></option>
                         @if (Statuses != null)
                             foreach (var status in Statuses)
@@ -157,7 +157,7 @@
 
                 <div class="w-[160px]">
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.opportunity</label>
-                    <InputSelect @bind-Value="TaskUpdate.OpportunityId" class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                    <InputSelect @bind-Value="TaskUpdate.OpportunityId" class="@InputClass">
                         <option></option>
                         @if (Calc.Opportunities != null)
                             foreach (var opportunity in Calc.Opportunities)
@@ -170,13 +170,13 @@
 
                 <div class="w-[200px]">
                     <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.responsible</label>
-                    <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                    <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Responsible)" />
                 </div>
 
                 <div class="w-[110px]">
                     <div class="flex items-center gap-2 mt-1 md:mt-6">
-                        <InputCheckbox class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
+                        <InputCheckbox class="@InputClass" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
                         <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">
                             @ResourceLoc.inprecent
                         </label>
@@ -185,7 +185,7 @@
 
                 <div class="w-[110px]">
                     <div class="flex items-center gap-2 mt-1 md:mt-6">
-                        <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" />
+                        <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@InputClass" />
                         <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.active</label>
                     </div>
                 </div>
@@ -197,7 +197,7 @@
         <div class="flex flex-wrap gap-2">
             <div class="flex-grow">
                 <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.note </label>
-                <InputTextArea @bind-Value="TaskUpdate.Metadata.Note" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+                <InputTextArea @bind-Value="TaskUpdate.Metadata.Note" class="@InputClass" />
                 <ValidationMessage For="@(() => TaskUpdate.Metadata.Note)" />
             </div>
             <div class="w-[100px]">
@@ -214,7 +214,7 @@
             int d = i;
             <div class="flex flex-wrap gap-2 mt-1">
                 <div class="flex-grow">
-                    <textarea lang="3" @bind="TaskUpdate.Metadata.UpperNote[d]" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"></textarea>
+                    <textarea lang="3" @bind="TaskUpdate.Metadata.UpperNote[d]" class="@InputClass"></textarea>
                 </div>
                 <div class="w-[100px]">
                     <button type="button"
@@ -242,6 +242,9 @@
 
 
 @code {
+    private string LabelClass => "block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300";
+    private string InputClass => "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+
     public const string DialogFormId = "taskForm";
     List<TaskPostDTO> PostList = new();
     bool btnSubmitDisabled = false;

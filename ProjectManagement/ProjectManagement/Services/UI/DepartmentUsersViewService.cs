@@ -9,7 +9,7 @@ namespace ProjectManagement.Services.UI;
 
 public interface IDepartmentUsersViewService
 {
-    Task<List<TenantUserDto>> GetUsersAsync(int? departmentId, CancellationToken ct = default);
+    Task<List<TenantUserDto>> GetUsersAsync(int? departmentId, bool withoutDepartmentOnly = false, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -22,9 +22,11 @@ public sealed class DepartmentUsersViewService(
     UserManager<ApplicationUser> userManager,
     ITenantContext tenantContext) : IDepartmentUsersViewService
 {
-    public async Task<List<TenantUserDto>> GetUsersAsync(int? departmentId, CancellationToken ct = default)
+    public async Task<List<TenantUserDto>> GetUsersAsync(int? departmentId, bool withoutDepartmentOnly = false, CancellationToken ct = default)
     {
         var users = await tenantUserService.GetAllTenantUsersAsync(departmentId, ct);
+        if (withoutDepartmentOnly && !departmentId.HasValue)
+            users = users.Where(x => !x.DepartmentId.HasValue).ToList();
 
         var authUsers = await userManager.Users
             .AsNoTracking()

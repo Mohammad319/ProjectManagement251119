@@ -192,7 +192,7 @@
                                                             style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                             @bind:get="factors.Selected"
                                                             @bind:set="(value) => { factors.Selected = value ?? string.Empty; SomeHasChanged(); }">
-                                                        <option value="all">All</option>
+                                                        <option value="all">@AppLoc["all"]</option>
                                                         @foreach (var item in Calc.Factors.Where(x => x.NetCostTotaly > 0))
                                                         {
                                                             <option value="@(item.ResId + "," + item.SortId)">

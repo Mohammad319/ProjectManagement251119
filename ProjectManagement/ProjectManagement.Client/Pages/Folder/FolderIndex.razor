@@ -38,14 +38,14 @@
                                 <button type="button"
                                         class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                                         @onclick="ModalSeachForm"
-                                        title="Search projects">
+                                        title="@AppLoc["searchProjects"]">
                                     <span aria-hidden="true">@((MarkupString)Icons.Search)</span>
                                 </button>
 
                                 <button type="button"
                                     class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                                     @onclick="GetDepartmentAsync"
-                                        title="Departments">
+                                        title="@ResourceApp.department">
                                     <span aria-hidden="true">@((MarkupString)Icons.Department)</span>
                                 </button>
 
@@ -54,14 +54,14 @@
                                     <button type="button"
                                         class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                                         @onclick="() => ModalForm(new() { IsVisible = UoWService.Folder.IsVisible })"
-                                            title="New folder">
+                                            title="@AppLoc[LocalizerConst.New, ResourceLoc.folder]">
                                         <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
                                     </button>
 
                                     <button type="button"
                                         class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-1 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                                         @onclick="UoWService.Folder.LoadHiddenVisibleFoldersAsync"
-                                            title="Visibility filter">
+                                            title="@AppLoc["visibilityFilter"]">
                                         <span aria-hidden="true">@((MarkupString)(Icons.GetVisibleIcon(UoWService.Folder.IsVisible)))</span>
                                     </button>
                                 }
@@ -98,7 +98,7 @@
                         else
                         {
                             <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-1 py-8 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                                No folders available.
+                                @AppLoc["noFoldersAvailable"]
                             </div>
                         }
                     </div>
@@ -110,8 +110,8 @@
                     <button type="button"
                             class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                             @onclick="() => SideBarVisible = true"
-                            title="Open sidebar"
-                            aria-label="Open sidebar">
+                            title="@AppLoc["openSidebar"]"
+                            aria-label="@AppLoc["openSidebar"]">
                         @((MarkupString)Icons.ChevronRight)
                     </button>
                 </div>
@@ -141,10 +141,10 @@
                 {
                     <div class="flex h-full min-h-[60vh] items-center justify-center p-6">
                         <div class="max-w-xl rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-950/60">
-                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Workspace</div>
-                            <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">Select a folder or project</h3>
+                            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@AppLoc["workspace"]</div>
+                            <h3 class="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">@AppLoc["selectFolderOrProject"]</h3>
                             <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
-                                The right side shows project lists, calculations, and details based on the current folder selection.
+                                @AppLoc["folderSelectionHint"]
                             </p>
                         </div>
                     </div>

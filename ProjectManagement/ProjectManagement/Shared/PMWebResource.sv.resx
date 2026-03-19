@@ -26,13 +26,16 @@
   <data name="NewDepartment" xml:space="preserve"><value>Ny avdelning</value></data>
   <data name="QuickAction" xml:space="preserve"><value>Snabbåtgärd</value></data>
   <data name="OpenAllUsers" xml:space="preserve"><value>Öppna alla användare</value></data>
-  <data name="AdminUsersDescription" xml:space="preserve"><value>Visar alla tenant-användare, även användare utan avdelning.</value></data>
+  <data name="AdminUsersDescription" xml:space="preserve"><value>Visar tenant-användare som inte tillhör någon avdelning.</value></data>
   <data name="AllUsersLabel" xml:space="preserve"><value>Alla tenant-användare</value></data>
+  <data name="OpenUsersWithoutDepartment" xml:space="preserve"><value>Öppna användare utan avdelning</value></data>
+  <data name="UsersWithoutDepartmentLabel" xml:space="preserve"><value>Utan avdelning</value></data>
   <data name="UsersLabel" xml:space="preserve"><value>Användare</value></data>
   <data name="OpenUsers" xml:space="preserve"><value>Öppna användare</value></data>
   <data name="NoDepartmentsMessage" xml:space="preserve"><value>Inga avdelningar har skapats ännu.</value></data>
   <data name="DepartmentUsersTitle" xml:space="preserve"><value>Avdelningsanvändare</value></data>
-  <data name="AllTenantUsersTitle" xml:space="preserve"><value>Tenant-användare</value></data>
+  <data name="AllTenantUsersTitle" xml:space="preserve"><value>Alla tenant-användare</value></data>
+  <data name="UsersWithoutDepartmentTitle" xml:space="preserve"><value>Användare utan avdelning</value></data>
   <data name="DepartmentUsersDescription" xml:space="preserve"><value>Granska inloggningsstatus, roller, spärrinformation och användaråtgärder.</value></data>
   <data name="BackToDepartments" xml:space="preserve"><value>Tillbaka till avdelningar</value></data>
   <data name="Actions" xml:space="preserve"><value>Åtgärder</value></data>

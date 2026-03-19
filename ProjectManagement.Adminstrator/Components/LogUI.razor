@@ -163,46 +163,60 @@
     int month = 0;
     async Task DeleteAsync()
     {
-        IsLoading = true;   
-        DateTime date = DateTime.Now.AddMonths(month * -1).AddDays((day) * -1);
-        var i = await context.Logs.Where(x => x.TimeStamp < date).ToListAsync();
-        context.Logs.RemoveRange(i);
-        await context.SaveChangesAsync();
-        await GetTenants();
+        IsLoading = true;
+        DateTime date = DateTime.Now.AddMonths(month * -1).AddDays(day * -1);
+
+        await context.Logs
+            .Where(x => x.TimeStamp < date)
+            .ExecuteDeleteAsync();
+
+        await GetTaskAsync(true);
         IsLoading = false;
     }
     async Task DeleteAsync(LogEntity log)
     {
-        context.Logs.Remove(log);
-        await context.SaveChangesAsync();
-        await GetTenants();
+        await context.Logs
+            .Where(x => x.Id == log.Id)
+            .ExecuteDeleteAsync();
+
+        Logs.RemoveAll(x => x.Id == log.Id);
     }
     public async Task<List<LogEntity>> GetAsync(LogsFilter filter)
     {
         var query = context.Logs.AsNoTracking().AsQueryable();
-        if (Filter.Date1.HasValue)
-            query = query.Where(x => x.TimeStamp > Filter.Date1.Value);
-        if (Filter.Date2.HasValue)
-            query = query.Where(x => x.TimeStamp < Filter.Date2.Value.AddDays(1));
-        if (!string.IsNullOrWhiteSpace(Filter.Level))
-            query = query.Where(x => x.Level == Filter.Level);
-        if (Filter.TenantID.HasValue)
-            query = query.Where(x => x.TenantID == Filter.TenantID);
+        if (filter.Date1.HasValue)
+            query = query.Where(x => x.TimeStamp > filter.Date1.Value);
+        if (filter.Date2.HasValue)
+            query = query.Where(x => x.TimeStamp < filter.Date2.Value.AddDays(1));
+        if (!string.IsNullOrWhiteSpace(filter.Level))
+            query = query.Where(x => x.Level == filter.Level);
+        if (filter.TenantID.HasValue)
+            query = query.Where(x => x.TenantID == filter.TenantID);
 
-        return await query.OrderByDescending(x => x).Skip((Filter.PageNr - 1) * (Filter.Count))
-                .Take(Filter.Count).ToListAsync();
+        return await query
+            .OrderByDescending(x => x.TimeStamp)
+            .ThenByDescending(x => x.Id)
+            .Skip((Math.Max(filter.PageNr, 1) - 1) * filter.Count)
+            .Take(filter.Count)
+            .ToListAsync();
     }
 
     async Task GetTaskAsync(bool isNewRequest = false)
     {
         IsLoading = true;
+        if (isNewRequest)
+        {
+            Filter.PageNr = 1;
+            NectBtnActive = false;
+        }
+
         var Logs2 = await GetAsync(Filter);
 
-        if (Logs2.Count < Filter.Count)
-            NectBtnActive = true;
+        NectBtnActive = Logs2.Count < Filter.Count;
         if (!isNewRequest)
             Logs.AddRange(Logs2);
-        else Logs = Logs2;
+        else
+            Logs = Logs2;
         IsLoading = false;
     }
     async Task GetTenants()
@@ -214,7 +228,7 @@
     }
     protected async override Task OnInitializedAsync()
     {
-        Logs = await GetAsync(Filter);
+        await GetTaskAsync(true);
         await GetTenants();
     }
 }

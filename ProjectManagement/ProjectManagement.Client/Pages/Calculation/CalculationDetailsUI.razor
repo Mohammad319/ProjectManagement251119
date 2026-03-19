@@ -33,7 +33,7 @@
     {
         <div class="rounded-[28px] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-950/60">
             <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@ResourceLoc.details</div>
-            <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Calculation details are not available.</p>
+            <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">@AppLoc["calculationDetailsUnavailable"]</p>
         </div>
     }
     else
@@ -141,7 +141,7 @@
         @if (projectTimelineItems.Count > 0)
         {
             <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Project timeline</div>
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@AppLoc["projectTimeline"]</div>
                 <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     @foreach (var item in projectTimelineItems)
                     {
@@ -156,12 +156,12 @@
 
         <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Calculation timeline</div>
+                <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@AppLoc["calculationTimeline"]</div>
 
                 @if (incomeItems.Count > 0)
                 {
                     <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
-                        @ResourceLoc.income total: @FormatNumber(totalIncome)
+                        @AppLoc["incomeTotal", FormatNumber(totalIncome)]
                     </span>
                 }
             </div>
@@ -261,19 +261,19 @@
 
                                     <div class="mt-3 grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-200">
                                         <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
-                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q1</div>
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">@AppLoc["quarter1"]</div>
                                             <div class="mt-1 font-semibold">@FormatNumber(income.Q1)</div>
                                         </div>
                                         <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
-                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q2</div>
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">@AppLoc["quarter2"]</div>
                                             <div class="mt-1 font-semibold">@FormatNumber(income.Q2)</div>
                                         </div>
                                         <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
-                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q3</div>
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">@AppLoc["quarter3"]</div>
                                             <div class="mt-1 font-semibold">@FormatNumber(income.Q3)</div>
                                         </div>
                                         <div class="rounded-xl bg-white px-3 py-2 dark:bg-slate-900">
-                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Q4</div>
+                                            <div class="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">@AppLoc["quarter4"]</div>
                                             <div class="mt-1 font-semibold">@FormatNumber(income.Q4)</div>
                                         </div>
                                     </div>
@@ -288,7 +288,7 @@
                 @if (projectTeamItems.Count > 0 || calculationTeamItems.Count > 0 || projectResponsibles.Count > 0 || calculationResponsibles.Count > 0)
                 {
                     <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">People and ownership</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@AppLoc["peopleAndOwnership"]</div>
 
                         @if (projectTeamItems.Count > 0 || projectResponsibles.Count > 0)
                         {
@@ -361,7 +361,7 @@
                 @if (addressSections.Count > 0)
                 {
                     <section class="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Addresses</div>
+                        <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">@AppLoc["addresses"]</div>
 
                         <div class="mt-4 space-y-4">
                             @foreach (var group in addressSections)
@@ -379,7 +379,7 @@
                                             var lines = GetAddressLines(address);
 
                                             <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/50">
-                                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Address @(index + 1)</div>
+                                                <div class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppLoc["address"] @(index + 1)</div>
                                                 <div class="mt-2 space-y-1 text-sm text-slate-700 dark:text-slate-200">
                                                     @foreach (var line in lines)
                                                     {
@@ -578,7 +578,7 @@
         return items;
     }
 
-    private static List<DisplayField> BuildCalculationOverviewItems(CalculationDetailsDTO details)
+    private List<DisplayField> BuildCalculationOverviewItems(CalculationDetailsDTO details)
     {
         var items = new List<DisplayField>();
 
@@ -593,7 +593,7 @@
         items.Add(new(CalcResource.tax, FormatPercent(details.Tax)));
         items.Add(new(CalcResource.timeMonth, FormatNumber(details.TimeMonth)));
         items.Add(new(CalcResource.priority, FormatPercent(details.Priority)));
-        items.Add(new("Display order", details.Order.ToString()));
+        items.Add(new(AppLoc["displayOrder"], details.Order.ToString()));
 
         return items;
     }
@@ -622,7 +622,7 @@
         new(CalcResource.decisionDate, FormatDate(details.DecisionDate))
     ];
 
-    private static List<DisplayField> BuildProjectTeamItems(ProjectDetailsDTO? details)
+    private List<DisplayField> BuildProjectTeamItems(ProjectDetailsDTO? details)
     {
         if (details is null)
             return [];
@@ -631,7 +631,7 @@
 
         AddIfHasText(items, CalcResource.developer, details.Developer);
         AddIfHasText(items, ResourceLoc.clientsProjectmanager, details.ClientsManager);
-        AddIfHasText(items, "Project manager", details.ProjectManager);
+        AddIfHasText(items, AppLoc["projectManager"], details.ProjectManager);
         AddIfHasText(items, ResourceLoc.designer, details.Designer);
         AddIfHasText(items, CalcResource.supervisor, details.Supervisor);
         AddIfHasText(items, CalcResource.inspector, details.Inspector);
@@ -654,47 +654,47 @@
         return items;
     }
 
-    private static List<AddressSection> BuildAddressSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
+    private List<AddressSection> BuildAddressSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
     {
         var sections = new List<AddressSection>();
         var projectAddresses = GetMeaningfulAddresses(project?.Address);
         var calculationAddresses = GetMeaningfulAddresses(calculation.Address);
 
         if (projectAddresses.Count > 0)
-            sections.Add(new("Project addresses", projectAddresses));
+            sections.Add(new(AppLoc["projectAddresses"], projectAddresses));
 
         if (calculationAddresses.Count > 0)
-            sections.Add(new("Calculation addresses", calculationAddresses));
+            sections.Add(new(AppLoc["calculationAddresses"], calculationAddresses));
 
         return sections;
     }
 
-    private static List<ContactSection> BuildContactSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
+    private List<ContactSection> BuildContactSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
     {
         var sections = new List<ContactSection>();
         var projectContacts = GetMeaningfulContacts(project?.Contacts);
         var calculationContacts = GetMeaningfulContacts(calculation.Contacts);
 
         if (projectContacts.Count > 0)
-            sections.Add(new("Project contacts", projectContacts));
+            sections.Add(new(AppLoc["projectContacts"], projectContacts));
 
         if (calculationContacts.Count > 0)
-            sections.Add(new("Calculation contacts", calculationContacts));
+            sections.Add(new(AppLoc["calculationContacts"], calculationContacts));
 
         return sections;
     }
 
-    private static List<TextSection> BuildNoteSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
+    private List<TextSection> BuildNoteSections(ProjectDetailsDTO? project, CalculationDetailsDTO calculation)
     {
         var sections = new List<TextSection>();
         var projectNotes = GetNonEmpty(project?.Notes);
         var calculationNotes = GetNonEmpty(calculation.Notes);
 
         if (projectNotes.Count > 0)
-            sections.Add(new("Project notes", projectNotes));
+            sections.Add(new(AppLoc["projectNotes"], projectNotes));
 
         if (calculationNotes.Count > 0)
-            sections.Add(new("Calculation notes", calculationNotes));
+            sections.Add(new(AppLoc["calculationNotes"], calculationNotes));
 
         return sections;
     }

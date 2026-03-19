@@ -23,7 +23,7 @@
                     </div>
 
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        Configure template details, formatting, and sheet layout.
+                        @AppLoc["templateDetailsDescription"]
                     </p>
                 </div>
 
@@ -43,7 +43,7 @@
                             @onclick="async () => await Callback.InvokeAsync(false)"
                             class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800">
                         <span aria-hidden="true">@((MarkupString)Icons.Back)</span>
-                        <span>Back</span>
+                        <span>@AppLoc["back"]</span>
                     </button>
                 </div>
             </div>
@@ -57,10 +57,10 @@
                     <div class="sticky top-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                         <div class="mb-4">
                             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                                Template settings
+                                @AppLoc["templateSettings"]
                             </h3>
                             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                Basic template information and formatting.
+                                @AppLoc["templateSettingsDescription"]
                             </p>
                         </div>
 
@@ -93,7 +93,7 @@
 
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200">
-                                    Number format
+                                    @AppLoc["numberFormat"]
                                 </label>
                                 <InputSelect @bind-Value="TemplateUpdate.MathRound"
                                              class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
@@ -119,14 +119,14 @@
                         <div class="mt-5 border-t border-slate-200 pt-4 dark:border-slate-700">
                             <div class="grid grid-cols-2 gap-2 text-xs">
                                 <div class="rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/70">
-                                    <div class="text-slate-500 dark:text-slate-400">Date</div>
+                                    <div class="text-slate-500 dark:text-slate-400">@ResourceApp.date</div>
                                     <div class="mt-1 truncate font-medium text-slate-900 dark:text-slate-100">
                                         @(string.IsNullOrWhiteSpace(TemplateUpdate.DateFormat) ? "-" : TemplateUpdate.DateFormat)
                                     </div>
                                 </div>
 
                                 <div class="rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-800/70">
-                                    <div class="text-slate-500 dark:text-slate-400">Round</div>
+                                    <div class="text-slate-500 dark:text-slate-400">@AppLoc["round"]</div>
                                     <div class="mt-1 font-medium text-slate-900 dark:text-slate-100">
                                         @TemplateUpdate.MathRound
                                     </div>

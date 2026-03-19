@@ -25,6 +25,7 @@ public partial class Index
     private List<DepartmentDetailsDTO>? Departments;
     private DepartmentDetailsDTO? SelectedDepartment;
     private int? SelectedDepartmentIdForUsers;
+    private bool WithoutDepartmentOnly;
     private ViewMode Mode = ViewMode.List;
 
     protected override async Task OnInitializedAsync()
@@ -39,7 +40,8 @@ public partial class Index
     private void BackToList()
     {
         SelectedDepartment = null;
-        SelectedDepartmentIdForUsers = 0;
+        SelectedDepartmentIdForUsers = null;
+        WithoutDepartmentOnly = false;
         Mode = ViewMode.List;
 
         MHD.Modal.Close();
@@ -85,10 +87,19 @@ public partial class Index
             DialogSize.ExtraLarge);
     }
 
-    private void OpenAdminUsers()
+    private void OpenAllUsers()
     {
         SelectedDepartment = null;
         SelectedDepartmentIdForUsers = null;
+        WithoutDepartmentOnly = false;
+        Mode = ViewMode.Users;
+    }
+
+    private void OpenUsersWithoutDepartment()
+    {
+        SelectedDepartment = null;
+        SelectedDepartmentIdForUsers = null;
+        WithoutDepartmentOnly = true;
         Mode = ViewMode.Users;
     }
 
@@ -96,6 +107,7 @@ public partial class Index
     {
         SelectedDepartment = Departments?.FirstOrDefault(x => x.Id == departmentId);
         SelectedDepartmentIdForUsers = departmentId;
+        WithoutDepartmentOnly = false;
         Mode = ViewMode.Users;
     }
 

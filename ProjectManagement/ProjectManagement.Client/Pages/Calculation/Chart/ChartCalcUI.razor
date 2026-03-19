@@ -2,14 +2,17 @@
 @using System
 @using System.Linq
 @using System.Collections.Generic
+@using Microsoft.Extensions.Localization
 @using pax.BlazorChartJs
 
 @using ProjectManagement.Client.Services.Calculation
 @using ProjectManagement.Client.Services.Folder
+@using ProjectManagement.Client.Shared.ResourceFiles.APP
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 
 @inject FolderState Container
 @inject CalculationService CalcService
+@inject IStringLocalizer<ResourceApp> AppLoc
 
 <div class="w-full space-y-1">
     <div class="grid grid-cols-1 gap-1 md:grid-cols-2 xl:grid-cols-4">
@@ -69,9 +72,9 @@
         var netCostTotalyOH = factors.Select(x => (float)(Template?.Format(x.NetCostTotalyOH) ?? 0d)).ToList();
         var earningsValue = factors.Select(x => (float)(Template?.Format(x.EarningsValue) ?? 0d)).ToList();
 
-        NetCostTotalyPieCfg = CreatePieConfig(netCostTotaly, "NetCostTotaly");
-        NetCostTotalyOHPieCfg = CreatePieConfig(netCostTotalyOH, "NetCostTotalyOH");
-        EVCfg = CreatePieConfig(earningsValue, "EV");
+        NetCostTotalyPieCfg = CreatePieConfig(netCostTotaly, CalcResource.totalNetCost);
+        NetCostTotalyOHPieCfg = CreatePieConfig(netCostTotalyOH, CalcResource.netCalOH);
+        EVCfg = CreatePieConfig(earningsValue, CalcResource.earning);
         SumPieCfg = CreateSumPieConfig();
 
         BarCfg = CreateBarConfig(netCostTotaly, netCostTotalyOH, earningsValue);
@@ -135,7 +138,7 @@
             Type = ChartType.pie,
             Data = new ChartJsData
             {
-                Labels = new List<string> { "NetCostTotaly", "NetCostTotaly OH", "EV" },
+                Labels = new List<string> { CalcResource.totalNetCost, CalcResource.netCalOH, CalcResource.earning },
                 Datasets = new List<ChartJsDataset>
                 {
                     new PieDataset
@@ -150,7 +153,7 @@
                 Responsive = true,
                 Plugins = new()
                 {
-                    Title = new() { Display = true, Text = "Sum" }
+                    Title = new() { Display = true, Text = CalcResource.sum }
                 }
             }
         };
@@ -163,7 +166,7 @@
     {
         var labels = new List<string>(FactorLabels())
         {
-            "Sum"
+            CalcResource.sum
         };
 
         var sumNet = netCostTotaly.Sum();
@@ -172,21 +175,21 @@
 
         var dsNet = new BarDataset
         {
-            Label = "NetCostTotaly",
+            Label = CalcResource.totalNetCost,
             Data = netCostTotaly.Concat(new[] { sumNet }).Select(x => (object)x).ToList(),
             BackgroundColor = Enumerable.Repeat(ColorsChart[0], labels.Count).ToList()
         };
 
         var dsOH = new BarDataset
         {
-            Label = "NetCostTotalyOH",
+            Label = CalcResource.netCalOH,
             Data = netCostTotalyOH.Concat(new[] { sumOH }).Select(x => (object)x).ToList(),
             BackgroundColor = Enumerable.Repeat(ColorsChart[1], labels.Count).ToList()
         };
 
         var dsEV = new BarDataset
         {
-            Label = "EarningsValue",
+            Label = CalcResource.earning,
             Data = earningsValue.Concat(new[] { sumEV }).Select(x => (object)x).ToList(),
             BackgroundColor = Enumerable.Repeat(ColorsChart[2], labels.Count).ToList()
         };
@@ -204,7 +207,7 @@
                 Responsive = true,
                 Plugins = new()
                 {
-                    Title = new() { Display = true, Text = "Calculation Chart" },
+                    Title = new() { Display = true, Text = AppLoc["calculationChart"].Value },
                     Tooltip = new() { Mode = "index", Intersect = false }
                 },
                 Scales = new()

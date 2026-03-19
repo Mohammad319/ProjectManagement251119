@@ -8,10 +8,10 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Confirm email change</PageTitle>
+<PageTitle>@PMIdentityText.ConfirmEmailChangeTitle</PageTitle>
 
 <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-    Confirm email change
+    @PMIdentityText.ConfirmEmailChangeTitle
 </h1>
 
 <StatusMessage Message="@message" />
@@ -36,14 +36,16 @@
         if (UserId is null || Email is null || Code is null)
         {
             RedirectManager.RedirectToWithStatus(
-                "Account/Login", "Error: Invalid email change confirmation link.", HttpContext);
+                "Account/Login",
+                $"{PMIdentityText.ErrorPrefix} {PMIdentityText.InvalidEmailChangeConfirmationLink}",
+                HttpContext);
             return;
         }
 
         var user = await UserManager.FindByIdAsync(UserId);
         if (user is null)
         {
-            message = "Unable to find user with Id '{userId}'";
+            message = $"{PMIdentityText.ErrorPrefix} {PMIdentityText.Format(PMIdentityText.UnableToFindUserWithIdFormat, UserId)}";
             return;
         }
 
@@ -51,7 +53,7 @@
         var result = await UserManager.ChangeEmailAsync(user, Email, code);
         if (!result.Succeeded)
         {
-            message = "Error changing email.";
+            message = $"{PMIdentityText.ErrorPrefix} {PMIdentityText.ErrorChangingEmail}";
             return;
         }
 
@@ -60,11 +62,11 @@
         var setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
         if (!setUserNameResult.Succeeded)
         {
-            message = "Error changing user name.";
+            message = $"{PMIdentityText.ErrorPrefix} {PMIdentityText.ErrorChangingUserName}";
             return;
         }
 
         await SignInManager.RefreshSignInAsync(user);
-        message = "Thank you for confirming your email change.";
+        message = PMIdentityText.ThankYouForConfirmingEmailChange;
     }
 }

@@ -24,7 +24,7 @@ namespace ProjectManagement.Client.Pages.Folder
         //    });
         Modal.Show(new DialogModel
         {
-            Title = "Search Projects",
+            Title = AppLoc["searchProjects"],
             Content = builder =>
             {
                 builder.OpenComponent(0, typeof(ProjectsSearch));

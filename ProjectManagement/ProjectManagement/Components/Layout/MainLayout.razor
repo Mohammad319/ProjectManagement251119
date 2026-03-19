@@ -8,35 +8,35 @@
 
 <div class="mainContainer">
     <ErrorBoundary @ref="_boundary" @key="_errorKey">
-            <ChildContent>
-                <AuthorizeView>
-                    <Authorized>
-                        <NavMenu @rendermode="InteractiveServer"></NavMenu>
-                    </Authorized>
-                </AuthorizeView>
-                @Body
-            </ChildContent>
+        <ChildContent>
+            <AuthorizeView>
+                <Authorized>
+                    <NavMenu @rendermode="InteractiveServer"></NavMenu>
+                </Authorized>
+            </AuthorizeView>
+            @Body
+        </ChildContent>
 
-            <ErrorContent Context="ex">
-                <div class="mx-auto max-w-3xl rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700 shadow-sm dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-300">
-                    حدث خطأ في الواجهة.
-                </div>
-                @HandleUiError(ex)
-            </ErrorContent>
-        </ErrorBoundary>
-    </div>
+        <ErrorContent Context="ex">
+            <div class="mx-auto max-w-3xl rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700 shadow-sm dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-300">
+                @PMWebResource.UiErrorMessage
+            </div>
+            @HandleUiError(ex)
+        </ErrorContent>
+    </ErrorBoundary>
+</div>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    @PMWebResource.ErrorPageTitle
+    <a href="." class="reload">@PMWebResource.Reload</a>
+    <span class="dismiss">x</span>
 </div>
 
 @code {
     private ErrorBoundary? _boundary;
     private Exception? _pendingError;
     private bool _dialogShown;
-    private int _errorKey = 0;
+    private int _errorKey;
 
     private RenderFragment HandleUiError(Exception ex) => builder =>
     {
@@ -47,14 +47,18 @@
 
             _ = InvokeAsync(async () =>
             {
-                if (_dialogShown) return;
+                if (_dialogShown)
+                {
+                    return;
+                }
+
                 _dialogShown = true;
 #if DEBUG
                 Console.Error.WriteLine(ex.ToString());
 #endif
 
-                var msg = "حدث خطأ في الواجهة. حاول تحديث الصفحة.";
-                ErrorDialog.Show("خطأ", msg, traceId: null);
+                var msg = PMWebResource.UiErrorMessage;
+                ErrorDialog.Show(PMWebResource.UiErrorTitle, msg, traceId: null);
 
                 await Task.Yield();
 

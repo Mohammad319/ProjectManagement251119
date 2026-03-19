@@ -96,22 +96,22 @@ public ResourceMetadata Clone()
                 // Deep copy لتفادي مشاركة نفس الـ reference بين النسخ
                 Parameters = Parameters is null
                     ? new()
-                    : Parameters.Select(p => new ResourceParameter
+                    : [.. Parameters.Select(p => new ResourceParameter
                     {
                         Name = p.Name,
                         Unit = p.Unit,
                         Value = p.Value,
-                    }).ToList(),
+                    })],
 
                 Times = Times is null
-                    ? new()
-                    : Times.Select(t => new ResourceTime
+                    ? []
+                    : [.. Times.Select(t => new ResourceTime
                     {
                         Name = t.Name,
                         Value = t.Value,
                         Quantity = t.Quantity,
                         Cost = t.Cost,
-                    }).ToList(),
+                    })],
                 PriceSub = PriceSub,
 
                 Note = Note ?? string.Empty,

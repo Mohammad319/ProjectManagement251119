@@ -17,7 +17,7 @@ else
             <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@ResourceLoc.templates</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Saved templates</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">@AppLoc["savedTemplates"]</p>
                 </div>
 
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -39,7 +39,7 @@ else
                     <button @onclick="() => Form = new()"
                             class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200">
                         <span class="text-base leading-none">+</span>
-                        <span>New template</span>
+                        <span>@AppLoc["new {0}", ResourceLoc.template]</span>
                     </button>
                 </div>
             </div>
@@ -70,7 +70,7 @@ else
                     <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-700">
                         <thead class="bg-slate-50 dark:bg-slate-800/70">
                             <tr>
-                                <th class="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Actions</th>
+                                <th class="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["actions"]</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
                             </tr>
                         </thead>

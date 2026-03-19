@@ -56,12 +56,14 @@ public class PMWebResource
     public static string DepartmentsTitle => GetString(nameof(DepartmentsTitle), "Departments");
     public static string DepartmentsDescription => GetString(nameof(DepartmentsDescription), "Manage departments and their users.");
     public static string NewDepartment => GetString(nameof(NewDepartment), "New department");
-    public static string AllUsersHint => GetString(nameof(AllUsersHint), "Open all users across departments.");
+    public static string AllUsersHint => GetString(nameof(AllUsersHint), "Open the full tenant-wide user list.");
     public static string QuickAction => GetString(nameof(QuickAction), "Quick action");
     public static string OpenAllUsers => GetString(nameof(OpenAllUsers), "Open all users");
     public static string UsersLabel => GetString(nameof(UsersLabel), "Users");
-    public static string AdminUsersDescription => GetString(nameof(AdminUsersDescription), "Manage department users and their access.");
+    public static string AdminUsersDescription => GetString(nameof(AdminUsersDescription), "Shows tenant users who do not belong to any department.");
     public static string AllUsersLabel => GetString(nameof(AllUsersLabel), "All users");
+    public static string OpenUsersWithoutDepartment => GetString(nameof(OpenUsersWithoutDepartment), "Open users without a department");
+    public static string UsersWithoutDepartmentLabel => GetString(nameof(UsersWithoutDepartmentLabel), "Without department");
     public static string NoDepartmentsMessage => GetString(nameof(NoDepartmentsMessage), "No departments found.");
     public static string DepartmentUsersDescription => GetString(nameof(DepartmentUsersDescription), "Manage users belonging to the selected department.");
     public static string BackToDepartments => GetString(nameof(BackToDepartments), "Back to departments");
@@ -79,11 +81,28 @@ public class PMWebResource
     public static string NoUsersFound => GetString(nameof(NoUsersFound), "No users found.");
     public static string DepartmentUsersTitle => GetString(nameof(DepartmentUsersTitle), "Department users");
     public static string AllTenantUsersTitle => GetString(nameof(AllTenantUsersTitle), "All tenant users");
+    public static string UsersWithoutDepartmentTitle => GetString(nameof(UsersWithoutDepartmentTitle), "Users without a department");
     public static string RegisterUserHint => GetString(nameof(RegisterUserHint), "Create a login for this user and assign a department/role.");
     public static string EditUserHint => GetString(nameof(EditUserHint), "Update user details, role and lockout settings.");
     public static string EditDepartmentHint => GetString(nameof(EditDepartmentHint), "Update the selected department.");
     public static string CreateDepartmentHint => GetString(nameof(CreateDepartmentHint), "Create a new department for the tenant.");
     public static string ToggleVisibility => GetString(nameof(ToggleVisibility), "Toggle visibility");
+    public static string ProjectManagementHome => GetString(nameof(ProjectManagementHome), "ProjectManagement home");
+    public static string ToggleNavigation => GetString(nameof(ToggleNavigation), "Toggle navigation");
+    public static string Reload => GetString(nameof(Reload), "Reload");
+    public static string UiErrorTitle => GetString(nameof(UiErrorTitle), "Something went wrong");
+    public static string UiErrorMessage => GetString(nameof(UiErrorMessage), "An unexpected error occurred in the user interface. Please reload the page.");
+    public static string ErrorPageTitle => GetString(nameof(ErrorPageTitle), "An unexpected error occurred");
+    public static string ErrorPageMessage => GetString(nameof(ErrorPageMessage), "Sorry, an unexpected error occurred while processing your request.");
+    public static string TraceIdLabel => GetString(nameof(TraceIdLabel), "Trace ID");
+    public static string BackToHomeAction => GetString(nameof(BackToHomeAction), "Back to home");
+    public static string RefreshPageAction => GetString(nameof(RefreshPageAction), "Refresh page");
+    public static string LoadingApplications => GetString(nameof(LoadingApplications), "Loading applications...");
+    public static string PreviewStyle => GetString(nameof(PreviewStyle), "Preview style");
+    public static string AttributeValue => GetString(nameof(AttributeValue), "Attribute value");
+    public static string NumberFormat => GetString(nameof(NumberFormat), "Number format");
+    public static string NewTemplate => GetString(nameof(NewTemplate), "New template");
+    public static string Impressum => GetString(nameof(Impressum), "Impressum");
 
     private static string GetString(string name, string fallback)
         => ResourceManager.GetString(name, Culture) ?? fallback;

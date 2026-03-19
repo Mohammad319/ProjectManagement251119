@@ -3,15 +3,15 @@
 
 <div class="mx-auto max-w-3xl px-6 py-12">
     <div class="rounded-2xl border border-rose-200 bg-rose-50 p-8 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/40">
-        <h1 class="text-2xl font-semibold text-rose-800 dark:text-rose-200">حدث خطأ</h1>
+        <h1 class="text-2xl font-semibold text-rose-800 dark:text-rose-200">@PMWebResource.ErrorPageTitle</h1>
         <p class="mt-3 text-sm text-rose-700 dark:text-rose-300">
-            نعتذر، حدث خطأ غير متوقع أثناء معالجة طلبك.
+            @PMWebResource.ErrorPageMessage
         </p>
 
         @if (!string.IsNullOrWhiteSpace(TraceId))
         {
             <p class="mt-4 rounded-lg border border-rose-200/80 bg-white px-3 py-2 text-sm text-rose-700 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                <strong>رقم التتبع (TraceId):</strong>
+                <strong>@PMWebResource.TraceIdLabel:</strong>
                 <span class="font-mono">@TraceId</span>
             </p>
         }
@@ -19,11 +19,11 @@
         <div class="mt-6 flex flex-wrap gap-2">
             <button class="inline-flex items-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
                     @onclick="GoHome">
-                العودة للرئيسية
+                @PMWebResource.BackToHomeAction
             </button>
             <button class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
                     @onclick="Reload">
-                تحديث الصفحة
+                @PMWebResource.RefreshPageAction
             </button>
         </div>
     </div>

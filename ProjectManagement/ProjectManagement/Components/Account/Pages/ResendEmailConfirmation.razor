@@ -12,9 +12,9 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Resend email confirmation</PageTitle>
-<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Resend email confirmation</h1>
-<h2 class="text-lg text-gray-700 dark:text-gray-300">Enter your email.</h2>
+<PageTitle>@PMIdentityText.ResendEmailConfirmationTitle</PageTitle>
+<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">@PMIdentityText.ResendEmailConfirmationTitle</h1>
+<h2 class="text-lg text-gray-700 dark:text-gray-300">@PMIdentityText.EnterYourEmail</h2>
 <hr class="my-3 border-gray-300 dark:border-gray-700" />
 
 <StatusMessage Message="@message" />
@@ -49,7 +49,7 @@
                     class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Resend
+                @PMIdentityText.ResendAction
             </button>
         </EditForm>
     </div>
@@ -71,7 +71,7 @@
         var user = await UserManager.FindByEmailAsync(Input.Email!);
         if (user is null)
         {
-            message = "Verification email sent. Please check your email.";
+            message = PMIdentityText.VerificationEmailSent;
             return;
         }
 
@@ -83,7 +83,7 @@
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
         await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
-        message = "Verification email sent. Please check your email.";
+        message = PMIdentityText.VerificationEmailSent;
     }
 
     private sealed class InputModel

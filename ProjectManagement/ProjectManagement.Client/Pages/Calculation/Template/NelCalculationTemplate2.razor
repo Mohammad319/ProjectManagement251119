@@ -52,12 +52,12 @@
                                 @ResourceApp.visibleItems
                             </h3>
                             <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                @Temp.NetCalc.Columns.Count visible columns
+                                @AppLoc["visibleColumnsCount", Temp.NetCalc.Columns.Count]
                             </p>
                         </div>
 
                         <div class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                            Drag & reorder
+                            @AppLoc["dragAndReorder"]
                         </div>
                     </div>
                 </div>
@@ -73,8 +73,8 @@
                         <thead class="sticky top-0 z-10">
                             <tr class="bg-slate-100 text-[11px] font-semibold text-slate-800 dark:bg-slate-800 dark:text-slate-100">
                                 <th class="px-2 py-2 text-center">#</th>
-                                <th class="px-2 py-2 text-start">Name</th>
-                                <th class="px-2 py-2 text-center">Settings</th>
+                                <th class="px-2 py-2 text-start">@CalcResource.name</th>
+                                <th class="px-2 py-2 text-center">@AppLoc["settings"]</th>
                             </tr>
                         </thead>
 
@@ -102,7 +102,7 @@
                                             <button type="button"
                                                     class="@IconButtonSecondaryClass"
                                                     disabled="@isFirst"
-                                                    title="Move to top"
+                                                    title="@AppLoc["moveToTop"]"
                                                     @onclick="() => MoveToTop(col)">
                                                 ⇈
                                             </button>
@@ -110,7 +110,7 @@
                                             <button type="button"
                                                     class="@IconButtonSecondaryClass"
                                                     disabled="@isFirst"
-                                                    title="Move up"
+                                                    title="@AppLoc["moveUp"]"
                                                     @onclick="() => MoveUp(col)">
                                                 ▲
                                             </button>
@@ -130,7 +130,7 @@
                                             <button type="button"
                                                     class="@IconButtonSecondaryClass"
                                                     disabled="@isLast"
-                                                    title="Move down"
+                                                    title="@AppLoc["moveDown"]"
                                                     @onclick="() => MoveDown(col)">
                                                 ▼
                                             </button>
@@ -138,7 +138,7 @@
                                             <button type="button"
                                                     class="@IconButtonSecondaryClass"
                                                     disabled="@isLast"
-                                                    title="Move to bottom"
+                                                    title="@AppLoc["moveToBottom"]"
                                                     @onclick="() => MoveToBottom(col)">
                                                 ⇊
                                             </button>
@@ -150,19 +150,19 @@
                                     <div class="flex items-center justify-center gap-1.5 whitespace-nowrap">
                                         <input class="w-[58px] rounded-lg border border-slate-300 bg-white px-2 py-1 text-center text-[11px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                                                type="number"
-                                               title="Width"
+                                               title="@AppLoc["width"]"
                                                @bind="col.Width" />
 
                                         <button type="button"
                                                 class="@(col.Frozen? IconButtonWarningActiveClass : IconButtonWarningClass)"
-                                                title="Freeze column"
+                                                title="@AppLoc["freezeColumn"]"
                                                 @onclick="() => col.Frozen = !col.Frozen">
                                             @(col.Frozen ? "📍" : "📌")
                                         </button>
 
                                         <button type="button"
                                                 class="@IconButtonPrimaryClass"
-                                                title="Hide column"
+                                                title="@AppLoc["hideColumn"]"
                                                 @onclick="async () => await RemoveAsync(col)">
                                             <span>@((MarkupString)Icons.ChevronRight)</span>
                                         </button>
@@ -181,7 +181,7 @@
                         @ResourceApp.hiddenItems
                     </h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        @HiddenIds.Count() hidden columns
+                        @AppLoc["hiddenColumnsCount", HiddenIds.Count()]
                     </p>
                 </div>
 
@@ -190,7 +190,7 @@
                         <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900">
                             <tr class="text-[11px] text-slate-700 dark:text-slate-200">
                                 <th class="w-[56px] px-2 py-2 text-center"></th>
-                                <th class="px-2 py-2 text-start font-medium">Name</th>
+                                <th class="px-2 py-2 text-start font-medium">@CalcResource.name</th>
                             </tr>
                         </thead>
 
@@ -203,7 +203,7 @@
                                         <td class="px-2 py-2 text-center align-middle">
                                             <button type="button"
                                                     class="@IconButtonPrimaryClass"
-                                                    title="Show column"
+                                                    title="@AppLoc["showColumn"]"
                                                     @onclick="async () => await AddAsync(id)">
                                                 <span>@((MarkupString)Icons.ChevronLeft)</span>
                                             </button>
@@ -229,10 +229,10 @@
             <section class="w-[260px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-700">
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        Appearance
+                        @AppLoc["appearance"]
                     </h3>
                     <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Table colors and border style
+                        @AppLoc["tableColorsAndBorderStyle"]
                     </p>
                 </div>
 

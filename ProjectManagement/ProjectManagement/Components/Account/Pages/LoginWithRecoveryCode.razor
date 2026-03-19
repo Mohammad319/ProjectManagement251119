@@ -8,15 +8,14 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<LoginWithRecoveryCode> Logger
 
-<PageTitle>Recovery code verification</PageTitle>
-<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recovery code verification</h1>
+<PageTitle>@PMIdentityText.RecoveryCodeVerificationTitle</PageTitle>
+<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">@PMIdentityText.RecoveryCodeVerificationTitle</h1>
 <hr class="my-3 border-gray-300 dark:border-gray-700" />
 
 <StatusMessage Message="@message" />
 
 <p class="mb-4 text-gray-700 dark:text-gray-300">
-    You have requested to log in with a recovery code. This login will not be remembered until you provide
-    an authenticator app code at log in or disable 2FA and log in again.
+    @PMIdentityText.RecoveryCodeDescription
 </p>
 
 <div class="grid grid-cols-1">
@@ -39,7 +38,7 @@
                  peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
                  peer-focus:top-2 peer-focus:text-sm
                  dark:text-gray-400">
-                    Recovery Code
+                    @PMIdentityText.RecoveryCodeLabel
                 </label>
                 <ValidationMessage For="() => Input.RecoveryCode" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
             </div>
@@ -48,7 +47,7 @@
                     class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Log in
+                @PMIdentityText.LoginAction
             </button>
         </EditForm>
     </div>
@@ -94,7 +93,7 @@
         else
         {
             Logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", userId);
-            message = "Error: Invalid recovery code entered.";
+            message = $"{PMIdentityText.ErrorPrefix} {PMIdentityText.InvalidRecoveryCode}";
         }
     }
 
@@ -102,7 +101,7 @@
     {
         [Required]
         [DataType(DataType.Text)]
-        [Display(Name = "Recovery Code")]
+        [Display(Name = nameof(PMIdentityText.RecoveryCodeLabel), ResourceType = typeof(PMIdentityText))]
         public string RecoveryCode { get; set; } = "";
     }
 }

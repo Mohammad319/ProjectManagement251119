@@ -3,20 +3,19 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Personal Data</PageTitle>
+<PageTitle>@PMIdentityText.PersonalDataTitle</PageTitle>
 
 <StatusMessage />
-<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Personal Data</h3>
+<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">@PMIdentityText.PersonalDataTitle</h3>
 
 <div class="grid grid-cols-1 md:max-w-xl mt-3">
     <div class="space-y-4 text-gray-700 dark:text-gray-300">
         <p>
-            Your account contains personal data that you have given us.
-            This page allows you to download or delete that data.
+            @PMIdentityText.PersonalDataDescription
         </p>
 
         <p class="font-semibold text-red-700 dark:text-red-400">
-            Deleting this data will permanently remove your account, and this cannot be recovered.
+            @PMIdentityText.PersonalDataDeleteWarning
         </p>
 
         <!-- Note: Use an absolute path if needed -->
@@ -26,7 +25,7 @@
                     class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Download
+                @PMIdentityText.DownloadAction
             </button>
         </form>
 
@@ -35,7 +34,7 @@
                class="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
                transition-colors hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600
                dark:bg-red-500 dark:hover:bg-red-400 dark:focus-visible:outline-red-400">
-                Delete
+                @PMIdentityText.DeleteAction
             </a>
         </p>
     </div>

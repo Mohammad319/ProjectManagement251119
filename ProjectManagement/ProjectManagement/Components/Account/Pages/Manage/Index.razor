@@ -5,9 +5,9 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Profile</PageTitle>
+<PageTitle>@PMIdentityText.ProfileTitle</PageTitle>
 
-<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Profile</h3>
+<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">@PMIdentityText.ProfileTitle</h3>
 <StatusMessage />
 
 <div class="grid grid-cols-1">
@@ -36,7 +36,7 @@
                  peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
                  peer-focus:top-2 peer-focus:text-sm
                  dark:text-gray-400">
-                    Username
+                    @PMIdentityText.UsernameLabel
                 </label>
             </div>
 
@@ -55,7 +55,7 @@
                    peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
                    peer-focus:top-2 peer-focus:text-sm
                    dark:text-gray-400">
-                        Phone number
+                        @PMIdentityText.PhoneNumberLabel
                     </label>
                 </div>
                 <ValidationMessage For="() => Input.PhoneNumber" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
@@ -66,7 +66,7 @@
                     class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Save
+                @ResourceApp.save
             </button>
         </EditForm>
     </div>
@@ -113,19 +113,19 @@
             var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
             if (!setPhoneResult.Succeeded)
             {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+                RedirectManager.RedirectToCurrentPageWithStatus($"{PMIdentityText.ErrorPrefix} {PMIdentityText.FailedToSetPhoneNumber}", HttpContext);
                 return;
             }
         }
 
         await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        RedirectManager.RedirectToCurrentPageWithStatus(PMIdentityText.ProfileUpdated, HttpContext);
     }
 
     private sealed class InputModel
     {
         [Phone]
-        [Display(Name = "Phone number")]
+        [Display(Name = nameof(PMIdentityText.PhoneNumberLabel), ResourceType = typeof(PMIdentityText))]
         public string? PhoneNumber { get; set; }
     }
 }

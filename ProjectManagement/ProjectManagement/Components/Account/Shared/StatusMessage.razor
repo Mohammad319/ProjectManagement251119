@@ -1,6 +1,6 @@
 ﻿@if (!string.IsNullOrEmpty(DisplayMessage))
 {
-    var statusMessageClass = DisplayMessage.StartsWith("Error") || DisplayMessage.StartsWith("خطأ")
+    var statusMessageClass = DisplayMessage.StartsWith(PMIdentityText.ErrorPrefix, StringComparison.CurrentCultureIgnoreCase)
         ? "border-red-300 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950 dark:text-red-100"
         : "border-green-300 bg-green-50 text-green-900 dark:border-green-900/50 dark:bg-green-950 dark:text-green-100";
 

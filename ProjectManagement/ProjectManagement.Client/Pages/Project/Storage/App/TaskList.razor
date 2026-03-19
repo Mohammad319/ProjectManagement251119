@@ -20,12 +20,9 @@
         </button>
     }
 
-    <div>
-
+    <div class="w-[400px] shrink-0">
         <input type="text"
-               class="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-0.5 text-[13px]
-                              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                              focus:outline-none focus:ring-2 focus:ring-blue-500"
+               class="@($"{InputClass} w-full")"
                @bind="filterDto.NameOrCode"
                placeholder="@ResourceLoc.EnterPartOfCodeOrName" />
     </div>
@@ -57,6 +54,8 @@ else if (_tasks != null)
     }
 
 @code {
+    private string InputClass => "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+
     void StorageStateModal()
     {
         Modal.ShowComponent<StorageDataSourceConfigUI>(ResourceLoc.Description_SystemOrUserValues,

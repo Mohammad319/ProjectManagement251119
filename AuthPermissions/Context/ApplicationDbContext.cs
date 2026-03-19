@@ -15,8 +15,18 @@ namespace AuthPermissions.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<LogEntity>()
-                .ToTable("Logs", table => table.ExcludeFromMigrations());
+            modelBuilder.Entity<LogEntity>(entity =>
+            {
+                entity.ToTable("Logs", table => table.ExcludeFromMigrations());
+
+                // Serilog owns this table and several text columns can be NULL.
+                entity.Property(x => x.Message).IsRequired(false);
+                entity.Property(x => x.MessageTemplate).IsRequired(false);
+                entity.Property(x => x.Level).IsRequired(false);
+                entity.Property(x => x.Exception).IsRequired(false);
+                entity.Property(x => x.Properties).IsRequired(false);
+                entity.Property(x => x.UserId).HasMaxLength(450).IsRequired(false);
+            });
 
             modelBuilder.Entity<ApplicationUser>(entity =>
             {

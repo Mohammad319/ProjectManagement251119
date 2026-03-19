@@ -13,7 +13,7 @@
                 <div>
                     <h2 class="text-xl font-semibold text-blue-700">
                         @task.Name
-                        <button @onclick="() => CalcFunk(task)" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">Applay</button>
+                        <button @onclick="() => CalcFunk(task)" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">@AppLoc["Button_Apply"]</button>
                         <span role="button" @onclick="() => AddRemoveTask(task)" class="@(TaskResSelecteds.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
                             @((MarkupString)(TaskResSelecteds.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus2))
                         </span>
@@ -23,7 +23,7 @@
                 <div class="flex justify-between items-center">
                     @if ((task.ConditionEffect == null || task.ConditionEffect?.Any() != true))
                     {
-                        <p class="text-gray-600 dark:text-gray-300 italic">لا توجد شروط.</p>
+                        <p class="text-gray-600 dark:text-gray-300 italic">@AppLoc["storageNoConditions"]</p>
                     }
                     else
                     {
@@ -131,7 +131,7 @@
                                 <th class="px-4 py-2">@CalcResource.unit</th>
                                 <th class="px-4 py-2">@CalcResource.cost</th>
                                 <th class="px-4 py-2">@CalcResource.baseCost</th>
-                                <th class="px-4 py-2">CapWaste</th>
+                                <th class="px-4 py-2">@CalcResource.cap / @CalcResource.waste</th>
                                 <th class="px-4 py-2">@CalcResource.changeFactor1 / 2</th>
 
                             </tr>

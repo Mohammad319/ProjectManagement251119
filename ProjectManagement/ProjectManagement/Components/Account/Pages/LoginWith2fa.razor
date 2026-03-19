@@ -8,15 +8,15 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<LoginWith2fa> Logger
 
-<PageTitle>Two-factor authentication</PageTitle>
+<PageTitle>@PMResourceIdentity.Security_TwoFactorAuthentication</PageTitle>
 
-<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Two-factor authentication</h1>
+<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">@PMResourceIdentity.Security_TwoFactorAuthentication</h1>
 <hr class="my-3 border-gray-300 dark:border-gray-700" />
 
 <StatusMessage Message="@message" />
 
 <p class="mb-4 text-gray-700 dark:text-gray-300">
-    Your login is protected with an authenticator app. Enter your authenticator code below.
+    @PMIdentityText.TwoFactorDescription
 </p>
 
 <div class="grid grid-cols-1">
@@ -42,7 +42,7 @@
                  peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
                  peer-focus:top-2 peer-focus:text-sm
                  dark:text-gray-400">
-                    Authenticator code
+                    @PMIdentityText.VerificationCodeLabel
                 </label>
                 <ValidationMessage For="() => Input.TwoFactorCode" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
             </div>
@@ -53,7 +53,7 @@
                                @bind-Value="Input.RememberMachine"
                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500
                               dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-blue-400" />
-                <span>Remember this machine</span>
+                <span>@PMIdentityText.RememberThisMachine</span>
             </label>
 
             <!-- Submit -->
@@ -62,7 +62,7 @@
                         class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
                  transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                  dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                    Log in
+                    @PMIdentityText.LoginAction
                 </button>
             </div>
         </EditForm>
@@ -70,10 +70,10 @@
 </div>
 
 <p class="mt-4 text-gray-700 dark:text-gray-300">
-    Don't have access to your authenticator device? You can
+    @PMIdentityText.RecoveryDeviceUnavailable
     <a href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl"
        class="text-blue-700 underline underline-offset-2 hover:no-underline dark:text-blue-300">
-        log in with a recovery code
+        @PMIdentityText.LoginWithRecoveryCodeAction
     </a>.
 </p>
 
@@ -118,19 +118,19 @@
         else
         {
             Logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", userId);
-            message = "Error: Invalid authenticator code.";
+            message = $"{PMIdentityText.ErrorPrefix} {PMIdentityText.VerificationCodeInvalid}";
         }
     }
 
     private sealed class InputModel
     {
         [Required]
-        [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(7, ErrorMessageResourceName = nameof(PMIdentityText.PasswordLengthError), ErrorMessageResourceType = typeof(PMIdentityText), MinimumLength = 6)]
         [DataType(DataType.Text)]
-        [Display(Name = "Authenticator code")]
+        [Display(Name = nameof(PMIdentityText.VerificationCodeLabel), ResourceType = typeof(PMIdentityText))]
         public string? TwoFactorCode { get; set; }
 
-        [Display(Name = "Remember this machine")]
+        [Display(Name = nameof(PMIdentityText.RememberThisMachine), ResourceType = typeof(PMIdentityText))]
         public bool RememberMachine { get; set; }
     }
 }

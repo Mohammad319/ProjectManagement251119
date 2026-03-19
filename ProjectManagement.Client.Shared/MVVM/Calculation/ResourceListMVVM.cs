@@ -1,11 +1,7 @@
 ﻿using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
@@ -25,6 +21,17 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal CapWaste => Data.CapWaste;
         public decimal Cost => Data.Cost;
         public decimal? BaseCost => Data.BaseCost;
+        public decimal BaseCostVal()
+        {
+            if(Data.Times != null && Data.Times.Count > 0)
+            {
+                var v= Data.Times.Sum(t => t.Quantity * t.Cost * t.Value);
+
+                return v;
+            }
+
+            return Cost;
+        }
         public double? CO2 => Data.CO2;
 
         [JsonIgnore] public decimal PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? PriceSub.Value * Quantity.Value : 0;
@@ -34,27 +41,26 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     {
         public int Version { get; set; } = 0;
 
-        public ResourceListMVVM() { }
-        public Func<Task> OfferClick { get; set; }
+        public Func<Task>? OfferClick { get; set; }
 
         public int Id { get; set; }
         public int TaskId { get; set; }
         public int? OfferId { get; set; }
         public int? OpportunityId { get; set; }
 
-        public string Opportunity { get; set; }
+        public string? Opportunity { get; set; }
         public int? AccountId { get; set; }
-        public string Account { get; set; }
-        public string AccountCode { get; set; }
+        public string? Account { get; set; }
+        public string? AccountCode { get; set; }
 
-        public string Status { get; set; }
-        public string StatusColor { get; set; }
+        public string? Status { get; set; }
+        public string? StatusColor { get; set; }
         public int? StatusId { get; set; }
 
         public int? ResourceSortId { get; set; }
         public int? ResourceTypeId { get; set; }
-        public string ResName { get; set; }
-        public string Sort { get; set; }
+        public string? ResName { get; set; }
+        public string? Sort { get; set; }
 
         public decimal Factor { get; set; } = 1;
 
@@ -76,7 +82,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public void InvalidateCache()
         {
-            _netCostQ = null;         // ✅ مهم
+            _netCostQ = null;
             _netCostTotally = null;
             _apriceTotally = null;
             _totalCO2 = null;

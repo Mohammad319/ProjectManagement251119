@@ -366,4 +366,307 @@
   <data name="environmentalSystems" xml:space="preserve">
     <value>Environmental systems</value>
   </data>
+  <data name="chart" xml:space="preserve">
+    <value>Chart</value>
+  </data>
+  <data name="calculationChart" xml:space="preserve">
+    <value>Calculation chart</value>
+  </data>
+  <data name="parameters" xml:space="preserve">
+    <value>Parameters</value>
+  </data>
+  <data name="itemsCount" xml:space="preserve">
+    <value>{0} item(s)</value>
+  </data>
+  <data name="resourceParametersHint" xml:space="preserve">
+    <value>Define reusable variables for this resource.</value>
+  </data>
+  <data name="times" xml:space="preserve">
+    <value>Times</value>
+  </data>
+  <data name="resourceTimesHint" xml:space="preserve">
+    <value>Track work/time slices used in calculations.</value>
+  </data>
+  <data name="resourceNotesHint" xml:space="preserve">
+    <value>Capture notes and upper notes for the selected resource.</value>
+  </data>
+  <data name="actuallyQuantity" xml:space="preserve">
+    <value>Actual quantity</value>
+  </data>
+  <data name="workedQuantity" xml:space="preserve">
+    <value>Worked quantity</value>
+  </data>
+  <data name="onlyCodeText" xml:space="preserve">
+    <value>Only code text</value>
+  </data>
+  <data name="quarter1" xml:space="preserve">
+    <value>Q1</value>
+  </data>
+  <data name="quarter2" xml:space="preserve">
+    <value>Q2</value>
+  </data>
+  <data name="quarter3" xml:space="preserve">
+    <value>Q3</value>
+  </data>
+  <data name="quarter4" xml:space="preserve">
+    <value>Q4</value>
+  </data>
+  <data name="sheetNr" xml:space="preserve">
+    <value>Sheet no.</value>
+  </data>
+  <data name="file" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="all" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="moveToTop" xml:space="preserve">
+    <value>Move to top</value>
+  </data>
+  <data name="moveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="moveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="moveToBottom" xml:space="preserve">
+    <value>Move to bottom</value>
+  </data>
+  <data name="width" xml:space="preserve">
+    <value>Width</value>
+  </data>
+  <data name="freezeColumn" xml:space="preserve">
+    <value>Freeze column</value>
+  </data>
+  <data name="hideColumn" xml:space="preserve">
+    <value>Hide column</value>
+  </data>
+  <data name="showColumn" xml:space="preserve">
+    <value>Show column</value>
+  </data>
+  <data name="appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="dragAndReorder" xml:space="preserve">
+    <value>Drag and reorder</value>
+  </data>
+  <data name="visibleColumnsCount" xml:space="preserve">
+    <value>{0} visible columns</value>
+  </data>
+  <data name="hiddenColumnsCount" xml:space="preserve">
+    <value>{0} hidden columns</value>
+  </data>
+  <data name="tableColorsAndBorderStyle" xml:space="preserve">
+    <value>Table colors and border style</value>
+  </data>
+  <data name="templateDetailsDescription" xml:space="preserve">
+    <value>Configure template details, formatting, and sheet layout.</value>
+  </data>
+  <data name="back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="templateSettings" xml:space="preserve">
+    <value>Template settings</value>
+  </data>
+  <data name="templateSettingsDescription" xml:space="preserve">
+    <value>Basic template information and formatting.</value>
+  </data>
+  <data name="numberFormat" xml:space="preserve">
+    <value>Number format</value>
+  </data>
+  <data name="round" xml:space="preserve">
+    <value>Round</value>
+  </data>
+  <data name="savedTemplates" xml:space="preserve">
+    <value>Saved templates</value>
+  </data>
+  <data name="actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="calculationDetailsUnavailable" xml:space="preserve">
+    <value>Calculation details are not available.</value>
+  </data>
+  <data name="projectTimeline" xml:space="preserve">
+    <value>Project timeline</value>
+  </data>
+  <data name="calculationTimeline" xml:space="preserve">
+    <value>Calculation timeline</value>
+  </data>
+  <data name="incomeTotal" xml:space="preserve">
+    <value>Income total: {0}</value>
+  </data>
+  <data name="peopleAndOwnership" xml:space="preserve">
+    <value>People and ownership</value>
+  </data>
+  <data name="addresses" xml:space="preserve">
+    <value>Addresses</value>
+  </data>
+  <data name="address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="displayOrder" xml:space="preserve">
+    <value>Display order</value>
+  </data>
+  <data name="projectAddresses" xml:space="preserve">
+    <value>Project addresses</value>
+  </data>
+  <data name="calculationAddresses" xml:space="preserve">
+    <value>Calculation addresses</value>
+  </data>
+  <data name="projectContacts" xml:space="preserve">
+    <value>Project contacts</value>
+  </data>
+  <data name="calculationContacts" xml:space="preserve">
+    <value>Calculation contacts</value>
+  </data>
+  <data name="projectNotes" xml:space="preserve">
+    <value>Project notes</value>
+  </data>
+  <data name="calculationNotes" xml:space="preserve">
+    <value>Calculation notes</value>
+  </data>
+  <data name="projectManager" xml:space="preserve">
+    <value>Project manager</value>
+  </data>
+  <data name="searchProjects" xml:space="preserve">
+    <value>Search projects</value>
+  </data>
+  <data name="visibilityFilter" xml:space="preserve">
+    <value>Visibility filter</value>
+  </data>
+  <data name="noFoldersAvailable" xml:space="preserve">
+    <value>No folders available.</value>
+  </data>
+  <data name="openSidebar" xml:space="preserve">
+    <value>Open sidebar</value>
+  </data>
+  <data name="workspace" xml:space="preserve">
+    <value>Workspace</value>
+  </data>
+  <data name="selectFolderOrProject" xml:space="preserve">
+    <value>Select a folder or project</value>
+  </data>
+  <data name="folderSelectionHint" xml:space="preserve">
+    <value>The right side shows project lists, calculations, and details based on the current folder selection.</value>
+  </data>
+  <data name="baseCostAverage" xml:space="preserve">
+    <value>Base cost (AVG)</value>
+  </data>
+  <data name="projectDetailsUnavailable" xml:space="preserve">
+    <value>Project details are not available.</value>
+  </data>
+  <data name="finished" xml:space="preserve">
+    <value>Finished</value>
+  </data>
+  <data name="projectNamePlaceholder" xml:space="preserve">
+    <value>Project name...</value>
+  </data>
+  <data name="search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="hideDetails" xml:space="preserve">
+    <value>Hide details</value>
+  </data>
+  <data name="showDetails" xml:space="preserve">
+    <value>Show details</value>
+  </data>
+  <data name="codePlaceholder" xml:space="preserve">
+    <value>Code...</value>
+  </data>
+  <data name="searchResults" xml:space="preserve">
+    <value>Search results</value>
+  </data>
+  <data name="projectsCount" xml:space="preserve">
+    <value>{0} project(s)</value>
+  </data>
+  <data name="loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="noProjectsFound" xml:space="preserve">
+    <value>No projects found.</value>
+  </data>
+  <data name="projectsEmptyState" xml:space="preserve">
+    <value>No projects yet</value>
+  </data>
+  <data name="projectsEmptyStateHint" xml:space="preserve">
+    <value>Create a project in this folder to start working with calculations and offers.</value>
+  </data>
+  <data name="storageOptions" xml:space="preserve">
+    <value>Storage options</value>
+  </data>
+  <data name="storageOptionsHint" xml:space="preserve">
+    <value>Choose the permission level and the sorting.</value>
+  </data>
+  <data name="storageLevel" xml:space="preserve">
+    <value>Storage level</value>
+  </data>
+  <data name="storageLevelHint" xml:space="preserve">
+    <value>Define which level should be used for saving.</value>
+  </data>
+  <data name="storageSort" xml:space="preserve">
+    <value>Sorting</value>
+  </data>
+  <data name="storageSortHint" xml:space="preserve">
+    <value>Choose how the saved data should be categorized.</value>
+  </data>
+  <data name="resourceOverrides" xml:space="preserve">
+    <value>Resource overrides</value>
+  </data>
+  <data name="resourceOverridesHint" xml:space="preserve">
+    <value>Change user-facing values without modifying the underlying blueprint.</value>
+  </data>
+  <data name="reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="failedToSaveChanges" xml:space="preserve">
+    <value>Failed to save changes.</value>
+  </data>
+  <data name="storageNoResourcesAvailable" xml:space="preserve">
+    <value>No resources are available right now. Choose a group above or update the inputs.</value>
+  </data>
+  <data name="storageSelectAccount" xml:space="preserve">
+    <value>Select an account</value>
+  </data>
+  <data name="storageMorning" xml:space="preserve">
+    <value>Morning</value>
+  </data>
+  <data name="storageMorningCost" xml:space="preserve">
+    <value>Morning cost</value>
+  </data>
+  <data name="storageDay" xml:space="preserve">
+    <value>Day</value>
+  </data>
+  <data name="storageDayCost" xml:space="preserve">
+    <value>Day cost</value>
+  </data>
+  <data name="storageEvening" xml:space="preserve">
+    <value>Evening</value>
+  </data>
+  <data name="storageEveningCost" xml:space="preserve">
+    <value>Evening cost</value>
+  </data>
+  <data name="storageFormulas" xml:space="preserve">
+    <value>Formulas</value>
+  </data>
+  <data name="storageResult" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="storageNoConditions" xml:space="preserve">
+    <value>No conditions.</value>
+  </data>
+  <data name="storageVariables" xml:space="preserve">
+    <value>Variables</value>
+  </data>
+  <data name="storageEnterVariables" xml:space="preserve">
+    <value>Enter variable values:</value>
+  </data>
+  <data name="taskActions" xml:space="preserve">
+    <value>Task actions</value>
+  </data>
 </root>

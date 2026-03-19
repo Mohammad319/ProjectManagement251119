@@ -271,12 +271,12 @@
 
             <!-- PARAMETERS -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Parameters</label>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">@ResourceUpdate.Data.Parameters.Count item(s)</p>
-                        <p class="text-xs text-slate-400 dark:text-slate-500">Define reusable variables for this resource.</p>
-                        </div>
+                        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["parameters"]</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["itemsCount", ResourceUpdate.Data.Parameters.Count]</p>
+                                <p class="text-xs text-slate-400 dark:text-slate-500">@AppLoc["resourceParametersHint"]</p>
+                            </div>
 
                         <button type="button"
                                 class="@OutlineBlueButtonClass"
@@ -296,49 +296,50 @@
                         @for (int i = 0; i < ResourceUpdate.Data.Parameters.Count; i++)
                         {
                             int idx = i;
-                            <div class="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
-                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-10">
-                                    <div class="min-w-0 xl:col-span-4">
-                                        <label class="@LabelClass">@CalcResource.name</label>
-                                        <InputText class="@InputClass"
-                                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
-                                    </div>
+              <div class="mb-2 overflow-x-auto overflow-y-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+    <div class="flex min-w-max flex-nowrap items-end gap-2">
+        <div class="w-[260px] shrink-0">
+            <label class="@LabelClass">@CalcResource.name</label>
+            <InputText class="@InputClass"
+                       @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
+        </div>
 
-                                    <div class="min-w-0 xl:col-span-2">
-                                        <label class="@LabelClass">@CalcResource.unit</label>
-                                        <InputText class="@InputClass"
-                                                   @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
-                                    </div>
+        <div class="w-[140px] shrink-0">
+            <label class="@LabelClass">@CalcResource.unit</label>
+            <InputText class="@InputClass"
+                       @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
+        </div>
 
-                                    <div class="min-w-0 xl:col-span-3">
-                                        <label class="@LabelClass">@ResourceLoc.value</label>
-                                        <InputNumber class="@InputClass"
-                                                     @bind-Value="ResourceUpdate.Data.Parameters[idx].Value" />
-                                    </div>
+        <div class="w-[160px] shrink-0">
+            <label class="@LabelClass">@ResourceLoc.value</label>
+            <InputNumber class="@InputClass"
+                         @bind-Value="ResourceUpdate.Data.Parameters[idx].Value" />
+        </div>
 
-                                    <div class="min-w-0 xl:col-span-1 flex items-end">
-                                        <button type="button"
-                                                class="@DeleteIconButtonClass"
-                                                @onclick="() => RemoveParameter(idx)">
-                                            @((MarkupString)Icons.DeleteSVG)
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+        <div class="w-[42px] shrink-0">
+            <label class="invisible @LabelClass">X</label>
+            <button type="button"
+                    class="inline-flex h-[30px] w-[42px] items-center justify-center rounded bg-red-600 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500"
+                    @onclick="() => RemoveParameter(idx)">
+                @((MarkupString)Icons.DeleteSVG)
+            </button>
+        </div>
+    </div>
+</div>
                         }
                     }
             </MhdCard>
 
-            @if (Resource?.ResType == ResourceTypesEnum.Worker ||
-                            Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments)
+    @if (ResourceUpdate?.ResType == ResourceTypesEnum.Worker ||
+                                ResourceUpdate?.ResType == ResourceTypesEnum.MachinesAndEquipments)
             {
                 <!-- TIMES -->
                 <MhdCard Elevated="true" Compact="true" Class="mb-2">
                         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Times</label>
-                                <p class="text-xs text-slate-500 dark:text-slate-400">@ResourceUpdate.Data.Times.Count item(s)</p>
-                                <p class="text-xs text-slate-400 dark:text-slate-500">Track work/time slices used in calculations.</p>
+                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["times"]</label>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["itemsCount", ResourceUpdate.Data.Times.Count]</p>
+                                <p class="text-xs text-slate-400 dark:text-slate-500">@AppLoc["resourceTimesHint"]</p>
                             </div>
 
                             <button type="button"
@@ -403,7 +404,7 @@
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
                     <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.note</label>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">Capture notes and upper notes for the selected resource.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["resourceNotesHint"]</p>
 
                         <button type="button"
                                 class="@PrimaryBlueButtonClass"
@@ -418,28 +419,28 @@
                         <ValidationMessage For="@(() => ResourceUpdate.Data.Note)" />
                     </div>
 
-                    @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
-                    {
-                        int d = i;
-                        <div class="mb-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                                <div class="flex-1">
-                                    <label class="@LabelClass">@CalcResource.UpperNote</label>
-                                    <textarea @bind="ResourceUpdate.Data.UpperNote[d]"
-                                              class="@TextAreaClass"
-                                              rows="3"></textarea>
-                                </div>
+                @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
+                {
+                    int d = i;
+                    <div class="mb-3 overflow-x-auto overflow-y-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+                        <div class="flex min-w-max flex-nowrap items-end gap-2">
+                            <div class="min-w-[420px] flex-1">
+                                <label class="@LabelClass">@CalcResource.UpperNote</label>
+                                <textarea @bind="ResourceUpdate.Data.UpperNote[d]"
+                                          class="@TextAreaClass min-h-[88px]"
+                                          rows="3"></textarea>
+                            </div>
 
-                                <div class="sm:w-auto">
-                                    <button type="button"
-                                            class="@DeleteButtonClass"
-                                            @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
-                                        @((MarkupString)Icons.DeleteSVG)
-                                    </button>
-                                </div>
+                            <div class="w-[42px] shrink-0">
+                                <button type="button"
+                                        class="inline-flex h-10 w-[42px] items-center justify-center rounded bg-red-600 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500"
+                                        @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
+                                    @((MarkupString)Icons.DeleteSVG)
+                                </button>
                             </div>
                         </div>
-                    }
+                    </div>
+                }
             </MhdCard>
 
     </EditForm>

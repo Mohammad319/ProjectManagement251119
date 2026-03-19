@@ -6,7 +6,7 @@
 @implements IDisposable
 @inherits AppComponentBase
 
-<div class="px-2 space-y-1">
+<div class="px-1 space-y-1">
 
     <!-- ملخص أعلى الكارد -->
     <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
@@ -23,13 +23,13 @@
             <div class="@($"overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 {(Calc.Tap6 ? "" : "pointer-events-none opacity-60")}")">
                 <table class="min-w-full text-xs leading-tight text-xs">
                     <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10">
-                        <tr>
-                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left pl-20">@ResourceLoc.resource</th>
-                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.quantity</th>
-                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.cost</th>
-                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.baseCost</th>
-                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-center">@ResourceApp.date</th>
-                            <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@CalcResource.note</th>
+                        <tr class="p-1">
+                            <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left pl-20">@ResourceLoc.resource</th>
+                            <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.quantity</th>
+                            <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.cost</th>
+                            <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.baseCost</th>
+                            <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-center">@ResourceApp.date</th>
+                            <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@CalcResource.note</th>
                         </tr>
                     </thead>
 
@@ -40,10 +40,10 @@
                             {
                                 <!-- صف عنوان الشركة -->
                                 <tr class="transition-colors bg-slate-50/80 dark:bg-slate-900/70 border-l-4 border-indigo-400 dark:border-indigo-500">
-                                    <td colspan="6" class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 pl-20 py-1.5">
+                                    <td colspan="6" class="align-middle text-slate-700 dark:text-slate-200 pl-20 py-1.5">
                                         <div class="flex items-center justify-between gap-2">
 
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center gap-1">
                                                 <!-- زر توسيع / إخفاء عروض الشركة -->
                                                 <button @onclick="() => ToggleCompany(com.ID ?? 0)"
                                                         class="w-5 h-5 flex items-center justify-center text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 transition">
@@ -63,7 +63,7 @@
 
                                             @if (com.Quantity.HasValue)
                                             {
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px]
+                                                <span class="inline-flex items-center px-1 py-0.5 rounded-full text-[11px]
                                                                          bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
                                                       title="@CalcResource.quantity">
                                                     @Format(com.Quantity)
@@ -82,7 +82,7 @@
                                             class="transition-colors group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
 
                                             <!-- العمود الأول: الأزرار + اسم الـ Resource -->
-                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200">
+                                            <td class="align-middle text-slate-700 dark:text-slate-200">
                                                 <div class="flex items-center gap-2">
                                                     <!-- أزرار Edit/Delete تظهر فقط عند hover -->
                                                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
@@ -105,27 +105,27 @@
                                             </td>
 
                                             <!-- الكمية (من الشركة) -->
-                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
+                                            <td class="align-middle text-slate-700 dark:text-slate-200 text-right">
                                                 @Format(com.Quantity)
                                             </td>
 
                                             <!-- التكلفة -->
-                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
+                                            <td class="align-middle text-slate-700 dark:text-slate-200 text-right">
                                                 @Format(cat.Item1.Cost)
                                             </td>
 
                                             <!-- Base Cost -->
-                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
+                                            <td class="align-middle text-slate-700 dark:text-slate-200 text-right">
                                                 @Format(cat.Item1.BaseCost)
                                             </td>
 
                                             <!-- التاريخ -->
-                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-center text-[11px] text-slate-600 dark:text-slate-300">
+                                            <td class="align-middle text-slate-700 dark:text-slate-200 text-center text-[11px] text-slate-600 dark:text-slate-300">
                                                 @cat.Item1.Date.ToString(ConstValues.DateFormat)
                                             </td>
 
                                             <!-- الملاحظة -->
-                                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-[11px] text-slate-500 dark:text-slate-400">
+                                            <td class="align-middle text-slate-700 dark:text-slate-200 text-[11px] text-slate-500 dark:text-slate-400">
                                                 @if (string.IsNullOrWhiteSpace(cat.Item1.Comment))
                                                 {
                                                     <span class="text-slate-400 dark:text-slate-500 italic">

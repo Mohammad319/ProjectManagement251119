@@ -6,34 +6,34 @@
 @inherits AppComponentBase
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<div class="pl-1.5 @(Calc.Tap4 ? "" : "pointer-events-none opacity-60")">
+<div class="pl-1 @(Calc.Tap4 ? "" : "pointer-events-none opacity-60")">
     <div class="max-h-[420px] overflow-x-auto overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <table id="tableOpportunity" class="min-w-full table-auto border-collapse text-[13px] leading-4">
             <thead class="text-slate-900 dark:text-slate-100">
                 @if (Calc?.Opportunities != null)
                 {
-                    <tr class="bg-cyan-50 text-xs font-semibold dark:bg-cyan-900/50">
-                        <th class="sticky top-0 z-10 w-[104px] bg-cyan-50 px-2 py-2 text-center align-middle dark:bg-cyan-900/50"></th>
-                        <th class="sticky top-0 z-10 bg-cyan-50 px-2 py-2 text-center align-middle dark:bg-cyan-900/50"></th>
-                        <th class="sticky top-0 z-10 bg-cyan-50 px-2 py-2 text-center align-middle dark:bg-cyan-900/50"></th>
-                        <th class="sticky top-0 z-10 bg-cyan-50 px-2 py-2 text-center align-middle font-bold text-emerald-600 dark:bg-cyan-900/50 dark:text-emerald-400">
+                    <tr class="p-1 bg-cyan-50 text-xs font-semibold dark:bg-cyan-900/50">
+                        <th class="sticky top-0 z-10 w-[104px] bg-cyan-50 text-center align-middle dark:bg-cyan-900/50"></th>
+                        <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle dark:bg-cyan-900/50"></th>
+                        <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle dark:bg-cyan-900/50"></th>
+                        <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle font-bold text-emerald-600 dark:bg-cyan-900/50 dark:text-emerald-400">
                             @Calc.Opportunities.Sum(x => x.Metadata.ProbabilityWorth)
                         </th>
-                        <th class="sticky top-0 z-10 bg-cyan-50 px-2 py-2 text-center align-middle dark:bg-cyan-900/50"></th>
-                        <th class="sticky top-0 z-10 bg-cyan-50 px-2 py-2 text-center align-middle font-bold text-blue-600 dark:bg-cyan-900/50 dark:text-blue-400">
+                        <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle dark:bg-cyan-900/50"></th>
+                        <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle font-bold text-blue-600 dark:bg-cyan-900/50 dark:text-blue-400">
                             @Template.Format(Calc.Opportunities.Sum(x => (x.Metadata.ProbabilityPercent * x.Metadata.Value) / 100))
                         </th>
-                        <th class="sticky top-0 z-10 bg-cyan-50 px-2 py-2 text-center align-middle font-bold text-amber-600 dark:bg-cyan-900/50 dark:text-amber-400">
+                        <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle font-bold text-amber-600 dark:bg-cyan-900/50 dark:text-amber-400">
                             @Calc.Opportunities.Sum(x => x.Metadata.ProbabilityBest)
                         </th>
-                        <th class="sticky top-0 z-10 bg-cyan-50 px-2 py-2 text-center align-middle font-bold text-slate-700 dark:bg-cyan-900/50 dark:text-slate-100">
+                        <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle font-bold text-slate-700 dark:bg-cyan-900/50 dark:text-slate-100">
                             @Calc.Opportunities.Sum(x => x.Metadata.Value)
                         </th>
                     </tr>
                 }
 
-                <tr class="bg-slate-100 text-[11px] uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                    <th class="sticky top-0 z-10 w-[104px] bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">
+                <tr class="p-1 bg-slate-100 text-[11px] uppercase tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    <th class="sticky top-0 z-10 w-[104px] bg-slate-100 text-center align-middle dark:bg-slate-800">
                         <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger">
                             <button type="button"
                                     class="inline-flex h-7 w-7 items-center justify-center rounded-md border border-emerald-300 text-emerald-600 transition hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
@@ -43,13 +43,13 @@
                             </button>
                         </AuthorizeView>
                     </th>
-                    <th class="sticky top-0 z-10 bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">@ResourceLoc.opportunitiesRisks</th>
-                    <th class="sticky top-0 z-10 bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">@CalcResource.risk</th>
-                    <th class="sticky top-0 z-10 bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">@ResourceLoc.probabilityWorth</th>
-                    <th class="sticky top-0 z-10 bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">@ResourceLoc.probability</th>
-                    <th class="sticky top-0 z-10 bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">@ResourceLoc.probabilityValue</th>
-                    <th class="sticky top-0 z-10 bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">@ResourceLoc.probabilityBest</th>
-                    <th class="sticky top-0 z-10 bg-slate-100 px-2 py-2 text-center align-middle dark:bg-slate-800">@ResourceLoc.value</th>
+                    <th class="sticky top-0 z-10 bg-slate-100 text-center align-middle dark:bg-slate-800">@ResourceLoc.opportunitiesRisks</th>
+                    <th class="sticky top-0 z-10 bg-slate-100 text-center align-middle dark:bg-slate-800">@CalcResource.risk</th>
+                    <th class="sticky top-0 z-10 bg-slate-100 text-center align-middle dark:bg-slate-800">@ResourceLoc.probabilityWorth</th>
+                    <th class="sticky top-0 z-10 bg-slate-100 text-center align-middle dark:bg-slate-800">@ResourceLoc.probability</th>
+                    <th class="sticky top-0 z-10 bg-slate-100 text-center align-middle dark:bg-slate-800">@ResourceLoc.probabilityValue</th>
+                    <th class="sticky top-0 z-10 bg-slate-100 text-center align-middle dark:bg-slate-800">@ResourceLoc.probabilityBest</th>
+                    <th class="sticky top-0 z-10 bg-slate-100 text-center align-middle dark:bg-slate-800">@ResourceLoc.value</th>
                 </tr>
             </thead>
 
@@ -58,11 +58,11 @@
                 {
                     foreach (var status in Calc.Opportunities)
                     {
-                        <tr class="group cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
+                        <tr class="p-1 group cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60"
                             @oncontextmenu:preventDefault
                             @oncontextmenu="async () => await Context(status)">
 
-                            <td class="px-2 py-1.5 text-center align-middle">
+                            <td class="text-center align-middle">
                                 <div class="inline-flex items-center gap-1">
                                     @if (!string.IsNullOrEmpty(status.Metadata.Comment))
                                     {
@@ -90,42 +90,42 @@
                                 </div>
                             </td>
 
-                            <td class="max-w-[220px] px-2 py-2 text-center align-middle">
+                            <td class="max-w-[220px] text-center align-middle">
                                 <span class="block truncate" title="@status.OpportunitiesRisks">@status.OpportunitiesRisks</span>
                             </td>
 
-                            <td class="px-2 py-2 text-center align-middle">
-                                <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                            <td class="text-center align-middle">
+                                <span class="inline-flex items-center rounded-full bg-slate-100 px-1 py-0.5 text-[11px] text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                                     @status.OpportunityType
                                 </span>
                             </td>
 
-                            <td class="px-2 py-2 text-center align-middle">
+                            <td class="text-center align-middle">
                                 @status.Metadata.ProbabilityWorth
                             </td>
 
-                            <td class="px-2 py-2 text-center align-middle">
+                            <td class="text-center align-middle">
                                 @status.Metadata.ProbabilityPercent%
                             </td>
 
-                            <td class="px-2 py-2 text-center align-middle font-medium text-blue-700 dark:text-blue-300">
+                            <td class="text-center align-middle font-medium text-blue-700 dark:text-blue-300">
                                 @Template.Format((status.Metadata.ProbabilityPercent * status.Metadata.Value) / 100)
                             </td>
 
-                            <td class="px-2 py-2 text-center align-middle">
+                            <td class="text-center align-middle">
                                 @status.Metadata.ProbabilityBest
                             </td>
 
-                            <td class="px-2 py-2 text-center align-middle font-medium text-slate-800 dark:text-slate-100">
+                            <td class="text-center align-middle font-medium text-slate-800 dark:text-slate-100">
                                 @Template.Format(status.Metadata.Value)
                             </td>
                         </tr>
 
                         @if (status.ShowComment)
                         {
-                            <tr class="border-b border-slate-100 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-800/40">
+                            <tr class="p-1 border-b border-slate-100 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-800/40">
                                 <td></td>
-                                <td colspan="7" class="px-2 py-2 text-start align-middle text-slate-700 dark:text-slate-200">
+                                <td colspan="7" class="text-start align-middle text-slate-700 dark:text-slate-200">
                                     <div class="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900/70">
                                         @status.Metadata.Comment
                                     </div>

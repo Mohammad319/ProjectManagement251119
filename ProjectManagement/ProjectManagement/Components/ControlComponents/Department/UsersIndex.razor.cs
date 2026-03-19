@@ -14,6 +14,7 @@ namespace ProjectManagement.Components.ControlComponents.Department;
 public partial class UsersIndex
 {
     [Parameter] public int? DepartmentId { get; set; }
+    [Parameter] public bool WithoutDepartmentOnly { get; set; }
     [Parameter] public EventCallback<bool> OnClickCallback { get; set; }
 
     [Inject] public ITenantUserService TenantUserService { get; set; } = default!;
@@ -25,17 +26,23 @@ public partial class UsersIndex
     protected bool IsBusy { get; set; }
 
     private int? _lastDepartmentId;
+    private bool _lastWithoutDepartmentOnly;
 
     protected string PageTitle => DepartmentId.HasValue
         ? WebLoc["DepartmentUsersTitle"]
-        : WebLoc["AllTenantUsersTitle"];
+        : WithoutDepartmentOnly
+            ? WebLoc["UsersWithoutDepartmentTitle"]
+            : WebLoc["AllTenantUsersTitle"];
 
     protected override async Task OnParametersSetAsync()
     {
-        if (_lastDepartmentId == DepartmentId && Users is not null)
+        if (_lastDepartmentId == DepartmentId
+            && _lastWithoutDepartmentOnly == WithoutDepartmentOnly
+            && Users is not null)
             return;
 
         _lastDepartmentId = DepartmentId;
+        _lastWithoutDepartmentOnly = WithoutDepartmentOnly;
         await LoadAsync();
     }
 
@@ -52,7 +59,7 @@ public partial class UsersIndex
             IsLoading = true;
             await InvokeAsync(StateHasChanged);
 
-            Users = await DepartmentUsersViewService.GetUsersAsync(DepartmentId);
+            Users = await DepartmentUsersViewService.GetUsersAsync(DepartmentId, WithoutDepartmentOnly);
             Users ??= [];
         }
         finally

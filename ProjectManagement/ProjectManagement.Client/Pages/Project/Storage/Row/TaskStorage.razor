@@ -1,5 +1,7 @@
 ﻿@using ProjectManagement.Client.Constant;
 @using ProjectManagement.Client.Shared.MVVM.Calculation
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<ResourceApp> AppLoc
 @using ProjectManagement.Client.Shared.Model.Project.Calculation;
 @using ProjectManagement.Shared.DTO.Calculation
 @TaskRow(Task)
@@ -13,7 +15,7 @@
     {
         <tr class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 @color">
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">
-                <div class="inline-flex" role="group" aria-label="Basic example">
+                <div class="inline-flex" role="group" aria-label="@AppLoc["taskActions"]">
                     <span role="button" style="margin-left:@(left + "px")"
                           @onclick="() => task.Colspan = !task.Colspan">
                     @((MarkupString)Icons.TopBottom(task.Colspan))</span>

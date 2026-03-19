@@ -38,12 +38,14 @@
                 @if (!Folder.State.OtherDepartment)
                 {
                     <button type="button"
-                            class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                             @onclick="RefreshCalculationsAsync">
                         <span aria-hidden="true">@((MarkupString)Icons.GetVisibleIcon(IaVisible))</span>
                     </button>
                 }
-                <button class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-[11px] transition-all duration-150 hover:scale-105 active:scale-95 border-green-300 text-green-600 hover:bg-green-100 hover:ring-1 hover:ring-green-300 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500"
+
+                <button type="button"
+                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/50"
                         disabled="@Folder.State.OtherDepartment"
                         @onclick="() => UpdateForm(new ListCalculationMVVM())">
                     @((MarkupString)Icons.Plus2)
@@ -52,8 +54,7 @@
         </div>
     </div>
 
-
-<div class="mt-1 space-y-1">
+<div class="mr-1 space-y-1">
     @if (FilteredCalculations is not null)
     {
         @foreach (var calu in FilteredCalculations)
@@ -95,7 +96,7 @@
                                      @(calu.EndDate < DateTime.Today
                                                                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
                                                                            : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300")">
-                                        @(calu.EndDate < DateTime.Today ? "Finished" : "Active")
+                                        @(calu.EndDate < DateTime.Today ? AppLoc["finished"] : CalcResource.active)
                                     </span>
                                 </div>
                             </div>
@@ -161,19 +162,19 @@
         new NavTabItem
         {
             Key = "1",
-            Text = "All",
+            Text = AppLoc["all"],
             Icon = "📄"
         },
         new NavTabItem
         {
             Key = "2",
-            Text = "Active",
+            Text = CalcResource.active,
             Icon = "▶️"
         },
         new NavTabItem
         {
             Key = "3",
-            Text = "Finished",
+            Text = AppLoc["finished"],
             Icon = "✅"
         }
     };

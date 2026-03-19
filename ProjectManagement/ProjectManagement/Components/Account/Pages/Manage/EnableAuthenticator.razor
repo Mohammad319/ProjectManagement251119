@@ -9,7 +9,7 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<EnableAuthenticator> Logger
 
-<PageTitle>Configure authenticator app</PageTitle>
+<PageTitle>@PMIdentityText.ConfigureAuthenticatorTitle</PageTitle>
 
 @if (recoveryCodes is not null)
 {
@@ -20,47 +20,35 @@ else
     <StatusMessage Message="@message" />
 
     <h3 class="mt-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-        Configure authenticator app
+        @PMIdentityText.ConfigureAuthenticatorTitle
     </h3>
 
     <div class="mt-3 text-gray-700 dark:text-gray-300">
-        <p>To use an authenticator app go through the following steps:</p>
+        <p>@PMIdentityText.AuthenticatorStepsIntro</p>
 
         <ol class="list-decimal pl-6 space-y-6 mt-3">
             <li>
                 <p>
-                    Download a two-factor authenticator app like Microsoft Authenticator for
-                    <a href="https://go.microsoft.com/fwlink/?Linkid=825072"
-                       class="text-blue-700 underline underline-offset-2 hover:no-underline dark:text-blue-300">Android</a>
-                    and
-                    <a href="https://go.microsoft.com/fwlink/?Linkid=825073"
-                       class="text-blue-700 underline underline-offset-2 hover:no-underline dark:text-blue-300">iOS</a>
-                    or Google Authenticator for
-                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en"
-                       class="text-blue-700 underline underline-offset-2 hover:no-underline dark:text-blue-300">Android</a>
-                    and
-                    <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8"
-                       class="text-blue-700 underline underline-offset-2 hover:no-underline dark:text-blue-300">iOS</a>.
+                    @PMIdentityText.DownloadAuthenticatorApps
                 </p>
             </li>
 
             <li>
                 <p>
-                    Scan the QR Code or enter this key
+                    @PMIdentityText.ScanQrOrEnterKey
                     <kbd class="rounded-md border border-gray-300 bg-gray-50 px-1.5 py-0.5 font-mono text-sm text-gray-800
                               dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
                         @sharedKey
                     </kbd>
-                    into your two factor authenticator app. Spaces and casing do not matter.
                 </p>
 
                 <div role="alert"
                      class="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-blue-900
                             dark:border-blue-900/50 dark:bg-blue-950 dark:text-blue-100">
-                    Learn how to
+                    @PMIdentityText.QrCodeGenerationHelp
                     <a href="https://go.microsoft.com/fwlink/?Linkid=852423"
                        class="font-medium underline underline-offset-2 hover:no-underline">
-                        enable QR code generation
+                        @PMIdentityText.EnableQrCodeGeneration
                     </a>.
                 </div>
 
@@ -70,8 +58,7 @@ else
 
             <li>
                 <p>
-                    Once you have scanned the QR code or input the key above, your two factor authentication app will provide you
-                    with a unique code. Enter the code in the confirmation box below.
+                    @PMIdentityText.EnterVerificationCodePrompt
                 </p>
 
                 <div class="mt-4 grid grid-cols-1">
@@ -94,7 +81,7 @@ else
                                       peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
                                       peer-focus:top-2 peer-focus:text-sm
                                       dark:text-gray-400">
-                                    Verification Code
+                                    @PMIdentityText.VerificationCodeLabel
                                 </label>
                                 <ValidationMessage For="() => Input.Code" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
                             </div>
@@ -103,7 +90,7 @@ else
                                     class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
                                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
                                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                                Verify
+                                @PMIdentityText.VerifyAction
                             </button>
 
                             <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
@@ -160,7 +147,7 @@ else
 
         if (!is2faTokenValid)
         {
-            message = "Error: Verification code is invalid.";
+            message = $"{PMIdentityText.ErrorPrefix} {PMIdentityText.VerificationCodeInvalid}";
             return;
         }
 
@@ -168,7 +155,7 @@ else
         var userId = await UserManager.GetUserIdAsync(user);
         Logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
-        message = "Your authenticator app has been verified.";
+        message = PMIdentityText.AuthenticatorVerified;
 
         if (await UserManager.CountRecoveryCodesAsync(user) == 0)
         {
@@ -226,9 +213,9 @@ else
     private sealed class InputModel
     {
         [Required]
-        [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(7, ErrorMessageResourceName = nameof(PMIdentityText.PasswordLengthError), ErrorMessageResourceType = typeof(PMIdentityText), MinimumLength = 6)]
         [DataType(DataType.Text)]
-        [Display(Name = "Verification Code")]
+        [Display(Name = nameof(PMIdentityText.VerificationCodeLabel), ResourceType = typeof(PMIdentityText))]
         public string Code { get; set; } = "";
     }
 }

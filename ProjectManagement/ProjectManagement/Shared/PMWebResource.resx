@@ -26,13 +26,16 @@
   <data name="NewDepartment" xml:space="preserve"><value>New department</value></data>
   <data name="QuickAction" xml:space="preserve"><value>Quick action</value></data>
   <data name="OpenAllUsers" xml:space="preserve"><value>Open all users</value></data>
-  <data name="AdminUsersDescription" xml:space="preserve"><value>Shows all tenant users, including users without a department.</value></data>
+  <data name="AdminUsersDescription" xml:space="preserve"><value>Shows tenant users who do not belong to any department.</value></data>
   <data name="AllUsersLabel" xml:space="preserve"><value>All tenant users</value></data>
+  <data name="OpenUsersWithoutDepartment" xml:space="preserve"><value>Open users without a department</value></data>
+  <data name="UsersWithoutDepartmentLabel" xml:space="preserve"><value>Without department</value></data>
   <data name="UsersLabel" xml:space="preserve"><value>Users</value></data>
   <data name="OpenUsers" xml:space="preserve"><value>Open users</value></data>
   <data name="NoDepartmentsMessage" xml:space="preserve"><value>No departments have been created yet.</value></data>
   <data name="DepartmentUsersTitle" xml:space="preserve"><value>Department users</value></data>
-  <data name="AllTenantUsersTitle" xml:space="preserve"><value>Tenant users</value></data>
+  <data name="AllTenantUsersTitle" xml:space="preserve"><value>All tenant users</value></data>
+  <data name="UsersWithoutDepartmentTitle" xml:space="preserve"><value>Users without a department</value></data>
   <data name="DepartmentUsersDescription" xml:space="preserve"><value>Review sign-in status, roles, lockout information, and user maintenance actions.</value></data>
   <data name="BackToDepartments" xml:space="preserve"><value>Back to departments</value></data>
   <data name="Actions" xml:space="preserve"><value>Actions</value></data>

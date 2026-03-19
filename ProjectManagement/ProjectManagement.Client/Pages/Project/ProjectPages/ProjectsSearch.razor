@@ -24,7 +24,7 @@
                 <div class="flex min-w-max flex-nowrap items-end gap-2">
                     <div class="min-w-[320px] flex-1">
                         <InputText @bind-Value="@projectFilter.Name"
-                                   placeholder="Project name..."
+                                   placeholder="@AppLoc["projectNamePlaceholder"]"
                                    class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
                         <ValidationMessage For="(() => projectFilter.Name)" class="mt-1 text-xs text-red-600 dark:text-red-400" />
                     </div>
@@ -34,7 +34,7 @@
                             disabled="@IsLoading"
                             class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-600">
                         <span>@((MarkupString)Icons.Search)</span>
-                        <span>Search</span>
+                        <span>@AppLoc["search"]</span>
                     </button>
 
                     <button type="button"
@@ -42,7 +42,7 @@
                             @onclick="ToggleDetails"
                             class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
                         <span class="oi @(DetailsDiv ? "oi-chevron-top" : "oi-chevron-bottom")"></span>
-                        <span>@(DetailsDiv ? "Hide details" : "Show details")</span>
+                        <span>@(DetailsDiv ? AppLoc["hideDetails"] : AppLoc["showDetails"])</span>
                     </button>
                 </div>
             </div>
@@ -59,11 +59,11 @@
                         </label>
                         <InputSelect @bind-Value="projectFilter.NameOperator"
                                      class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20">
-                            <option value="%var%">%Var%</option>
+                            <option value="%var%">%...%</option>
                             <option value="==">==</option>
                             <option value="!=">!=</option>
-                            <option value="%var">%Var</option>
-                            <option value="var%">Var%</option>
+                            <option value="%var">%...</option>
+                            <option value="var%">...%</option>
                         </InputSelect>
                         <ValidationMessage For="(() => projectFilter.NameOperator)" class="mt-1 text-xs text-red-600 dark:text-red-400" />
                     </div>
@@ -73,7 +73,7 @@
                             @CalcResource.code
                         </label>
                         <InputText @bind-Value="@projectFilter.Code"
-                                   placeholder="Code..."
+                                   placeholder="@AppLoc["codePlaceholder"]"
                                    class="h-9 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20" />
                         <ValidationMessage For="@(() => projectFilter.Code)" class="mt-1 text-xs text-red-600 dark:text-red-400" />
                     </div>
@@ -152,28 +152,28 @@
         <div class="flex flex-col gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-800/70">
             <div>
                 <h6 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Search Results
+                    @AppLoc["searchResults"]
                 </h6>
                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                    @(projects?.Count ?? 0) project(s)
+                    @AppLoc["projectsCount", projects?.Count ?? 0]
                 </p>
             </div>
 
             <div class="inline-flex w-fit items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                @(IsLoading ? "Loading..." : "Ready")
+                @(IsLoading ? AppLoc["loading"] : AppLoc["ready"])
             </div>
         </div>
 
         @if (IsLoading)
         {
             <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                Loading...
+                @AppLoc["loading"]
             </div>
         }
         else if (projects == null || !projects.Any())
         {
             <div class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                No projects found.
+                @AppLoc["noProjectsFound"]
             </div>
         }
         else
