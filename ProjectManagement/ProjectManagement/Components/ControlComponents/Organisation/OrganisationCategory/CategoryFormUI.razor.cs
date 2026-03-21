@@ -17,17 +17,20 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
 
         protected override void OnParametersSet()
         {
-            var currentId = OrganisationCategory?.Id;
-            var sameReference = ReferenceEquals(LastCategoryReference, OrganisationCategory);
+            var category = OrganisationCategory ?? new();
+            var currentId = category.Id;
+            var sameReference = ReferenceEquals(LastCategoryReference, category);
             if (sameReference && LastCategoryId == currentId)
                 return;
 
-            PostOffer = new PostOrganisationCategoryDTO();
-            OrganisationCategory.CopyPropertiesTo(PostOffer);
-            PostOffer.CategoryId = OrganisationCategory.ParentCategoryId;
+            PostOffer = new PostOrganisationCategoryDTO
+            {
+                Name = category.Name,
+                CategoryId = category.ParentCategoryId
+            };
 
             LastCategoryId = currentId;
-            LastCategoryReference = OrganisationCategory;
+            LastCategoryReference = category;
         }
 
         private async Task Cancel()

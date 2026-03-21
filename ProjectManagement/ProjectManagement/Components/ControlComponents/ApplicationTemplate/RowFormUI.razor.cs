@@ -1,25 +1,21 @@
-using System;
-using System.Linq;
-using Domain.Entities.Application;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Shared.Model.Application;
 using ProjectManagement.Client.Shared.ViewModel;
-using ProjectManagement.Shared.Base.Application;
+using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.Helper;
 
 namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate;
 
 public partial class RowFormUI
 {
-    [Parameter] public RowEntity RowParameter { get; set; } = new();
+    [Parameter] public RowDTO RowParameter { get; set; } = new();
     [Parameter] public int PartPage { get; set; }
-    [Parameter] public EventCallback<RowEntity> Callback { get; set; }
+    [Parameter] public EventCallback<RowDTO> Callback { get; set; }
 
-    private RowEntity RowUpdate { get; set; } = new();
-    private AttributeBase AttributeForm { get; set; } = new();
+    private RowDTO RowUpdate { get; set; } = new();
+    private AttributeDTO AttributeForm { get; set; } = new();
     private StyleVM Style { get; set; } = new();
     private StyleVM StyleRow { get; set; } = new();
-    private bool IsLoading;
+    private bool IsLoading { get; set; }
     private string StyleStr { get; set; } = string.Empty;
     private string StyleRowStr { get; set; } = string.Empty;
     private int Part { get; set; }
@@ -46,14 +42,12 @@ public partial class RowFormUI
         await Callback.InvokeAsync(RowUpdate);
     }
 
-    private void CallBackField(AttributeBase attr)
+    private void CallBackField(AttributeDTO attr)
     {
-        AttributeForm = new AttributeBase();
+        AttributeForm = new AttributeDTO();
 
         if (attr is null)
-        {
             return;
-        }
 
         if (attr.ID == Guid.Empty)
         {
@@ -64,17 +58,15 @@ public partial class RowFormUI
 
         var oldAttr = RowUpdate.Attributes.FirstOrDefault(x => x.ID == attr.ID);
         if (oldAttr != null)
-        {
             attr.CopyPropertiesTo(oldAttr);
-        }
     }
 
-    private void Remove(AttributeBase attr)
+    private void Remove(AttributeDTO attr)
     {
         // Intentionally kept as placeholder for future confirm dialog integration.
     }
 
-    private bool RemoveAsync(AttributeBase st)
+    private bool RemoveAsync(AttributeDTO st)
     {
         RowUpdate.Attributes.Remove(st);
         StateHasChanged();

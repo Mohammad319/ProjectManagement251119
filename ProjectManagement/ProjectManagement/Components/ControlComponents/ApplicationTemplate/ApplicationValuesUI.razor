@@ -150,9 +150,9 @@
                 continue;
 
             if (attr.AttributeType == AttributeType.Int || attr.AttributeType == AttributeType.Double)
-                attr.Value = attr.ValdNumberVM.Default?.ToString();
+                attr.Value = attr.ValdNumberVM.Default?.ToString() ?? string.Empty;
             else if (attr.AttributeType == AttributeType.Text || attr.AttributeType == AttributeType.TextArea)
-                attr.Value = attr.ValdTextVM.Default;
+                attr.Value = attr.ValdTextVM.Default ?? string.Empty;
             else if (attr.AttributeType == AttributeType.Select)
                 attr.Value = attr.ValdSelectVM.Values.Count > attr.ValdSelectVM.DefaultIndex
                     ? attr.ValdSelectVM.Values[attr.ValdSelectVM.DefaultIndex]
@@ -194,7 +194,7 @@
         foreach (var attr in Application.Data.Row.SelectMany(x => x.Attributes ?? []))
         {
             if (attr.AttributeType == AttributeType.Bool)
-                attr.Value = attr.ValueBool.ToString();
+                attr.Value = (attr.ValueBool ?? false).ToString();
 
             ApplicationValues.Data.Attributes[attr.ID] = attr.Value ?? string.Empty;
         }

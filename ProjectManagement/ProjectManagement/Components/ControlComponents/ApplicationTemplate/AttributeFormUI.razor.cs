@@ -1,9 +1,8 @@
-using System;
 using Microsoft.AspNetCore.Components;
-using ProjectManagement.Client.Shared.Model.Application;
 using ProjectManagement.Client.Shared.ViewModel;
 using ProjectManagement.Shared;
 using ProjectManagement.Shared.Base.Application;
+using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.Helper;
 using System.Text.Json;
 
@@ -11,11 +10,11 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate;
 
 public partial class AttributeFormUI
 {
-        [Parameter] public AttributeBase Attribute { get; set; } = new();
-    [Parameter] public EventCallback<AttributeBase> Callback { get; set; }
+    [Parameter] public AttributeDTO Attribute { get; set; } = new();
+    [Parameter] public EventCallback<AttributeDTO> Callback { get; set; }
 
     private int PartPage { get; set; }
-    private AttributeBase AttributeUpdate { get; set; } = new();
+    private AttributeDTO AttributeUpdate { get; set; } = new();
     private StyleVM Style { get; set; } = new();
     private string StyleStr { get; set; } = string.Empty;
     private bool IsLoading;
@@ -42,9 +41,7 @@ public partial class AttributeFormUI
         PartPage = 1;
 
         if (string.IsNullOrEmpty(AttributeUpdate.Validation))
-        {
             return;
-        }
 
         if (AttributeUpdate.AttributeType is AttributeType.Int or AttributeType.Double)
         {
@@ -112,9 +109,7 @@ public partial class AttributeFormUI
     private async Task RemoveSelect(int i)
     {
         if (i < 0 || i >= ValidSelectVM.Values.Count)
-        {
             return;
-        }
 
         ShowSelect = false;
         await Task.Delay(1);

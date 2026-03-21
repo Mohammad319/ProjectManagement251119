@@ -1,27 +1,27 @@
-﻿using BlazorMHD.UI.Core.DesignSystem;
+using BlazorMHD.UI.Core.DesignSystem;
 using Application.Feature.Application.Commands;
 using Application.Feature.Identity.Department.Queries;
-using Domain.Entities.Application;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.General;
 
 namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
 {
     public partial class ApplicationFormUI
     {
-        [Parameter] public ApplicationEntity ApplicationUpdate { get; set; } = new();
+        [Parameter] public ApplicationDTO ApplicationUpdate { get; set; } = new();
         [Parameter] public EventCallback<bool> Callback { get; set; }
 
         private List<ListDTO> Departments = [];
-        private RowEntity? RowForm;
+        private RowDTO? RowForm;
         private bool IsLoading;
 
         protected override async Task OnParametersSetAsync()
         {
             Departments = await Dispatcher.Send(new GetDepartmentsAsListQuery()) ?? [];
 
-            ApplicationUpdate.Data ??= new ApplicationDataEntity();
+            ApplicationUpdate.Data ??= new ApplicationDataDTO();
             ApplicationUpdate.Data.Rows ??= [];
 
             if (ApplicationUpdate.Id == 0 && ApplicationUpdate.DepartmentId <= 0)
@@ -32,7 +32,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             }
         }
 
-        private void OpenNewRow() => RowForm = new RowEntity();
+        private void OpenNewRow() => RowForm = new RowDTO();
 
         private async Task HandleSubmitAsync()
         {
@@ -45,7 +45,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             try
             {
                 ApplicationUpdate.Name = (ApplicationUpdate.Name ?? string.Empty).Trim();
-                ApplicationUpdate.Data ??= new ApplicationDataEntity();
+                ApplicationUpdate.Data ??= new ApplicationDataDTO();
                 ApplicationUpdate.Data.Rows ??= [];
 
                 if (ApplicationUpdate.Id == 0)
@@ -62,7 +62,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             await Callback.InvokeAsync(isSuccess);
         }
 
-        private void CallBackRowForm(RowEntity row)
+        private void CallBackRowForm(RowDTO row)
         {
             if (row is not null)
             {
@@ -85,7 +85,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             RowForm = null;
         }
 
-        private void Remove(RowEntity row)
+        private void Remove(RowDTO row)
         {
             MHD.MessageYesNo(ResourceApp.delete,
                 AppLoc[LocalizerConst.deleteConfirmMsg, row.Name],
@@ -93,7 +93,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 EventCallback.Factory.Create(this, () => RemoveAsync(row)));
         }
 
-        private bool RemoveAsync(RowEntity row)
+        private bool RemoveAsync(RowDTO row)
         {
             ApplicationUpdate.Data.Rows.Remove(row);
             StateHasChanged();

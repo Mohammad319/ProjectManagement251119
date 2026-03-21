@@ -1,10 +1,9 @@
-﻿using Application.Feature.Application.Commands;
+using Application.Feature.Application.Commands;
 using Application.Feature.Application.Queries;
-using Domain.Entities.Application;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ProjectManagement.Shared.Base.Application;
 using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.DTO.App;
 using static ProjectManagement.Shared.Constant.PMRolesConst;
 
 namespace ProjectManagement.Server.Controllers.v1.TemplateCalc
@@ -17,6 +16,7 @@ namespace ProjectManagement.Server.Controllers.v1.TemplateCalc
         {
             return Ok(await MicroBus.Send(new GetApplicationQuery(wnv)));
         }
+
         [Authorize(Roles = Tenant.Users), HttpGet(URLConst.Application.AppCalculationValues + "/{calcId}")]
         public async Task<IActionResult> GetCalcAppValues(int calcId)
         {
@@ -25,15 +25,15 @@ namespace ProjectManagement.Server.Controllers.v1.TemplateCalc
 
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPost(URLConst.Application.AppCalculationValues)]
-        public async Task<IActionResult> Post(ApplicationValuesBase Dto)
+        public async Task<IActionResult> Post(ApplicationValuesDTO dto)
         {
-            Dto.UserId = GetUserId();
-            return Ok(await MicroBus.Send(new CreateCalcAppCommand(Dto,0,0)));
+            dto.UserId = GetUserId();
+            return Ok(await MicroBus.Send(new CreateCalcAppCommand(dto)));
         }
 
         [Authorize(Roles = Tenant.AdminManger)]
         [HttpPut(URLConst.Application.AppCalculationValues)]
-        public async Task<IActionResult> Put(ApplicationValuesEntity dto)
+        public async Task<IActionResult> Put(ApplicationValuesDTO dto)
         {
             return Ok(await MicroBus.Send(new UpdateCalcAppCommand(dto)));
         }
@@ -42,7 +42,7 @@ namespace ProjectManagement.Server.Controllers.v1.TemplateCalc
         [HttpDelete(URLConst.Application.AppCalculationValues + "/{id}")]
         public async Task<IActionResult> DeleteCalcApp(int id)
         {
-            return Ok(await MicroBus.Send(new DeleteCalcAppCommand (id)));
+            return Ok(await MicroBus.Send(new DeleteCalcAppCommand(id)));
         }
     }
 }

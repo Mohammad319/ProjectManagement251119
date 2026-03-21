@@ -1,8 +1,8 @@
-﻿using Application.Feature.Application.Commands;
+using Application.Feature.Application.Commands;
 using Application.Feature.Application.Queries;
-using Domain.Entities.Application;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Shared.Base.Application;
+using ProjectManagement.Shared.DTO.App;
 
 namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
 {
@@ -10,24 +10,24 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
     {
         private bool IsVisible = true;
         private bool Loading = true;
-        private List<ApplicationEntity> Applications = [];
-        private ApplicationEntity? ApplicationForm;
+        private List<ApplicationDTO> Applications = [];
+        private ApplicationDTO? ApplicationForm;
 
-        private List<ApplicationEntity> VisibleApplications
+        private List<ApplicationDTO> VisibleApplications
             => Applications.Where(x => x.IsVisible == IsVisible).ToList();
 
         private void ToggleVisibility() => IsVisible = !IsVisible;
 
-        private void OpenApplication(ApplicationEntity application)
+        private void OpenApplication(ApplicationDTO application)
             => ApplicationForm = application;
 
         private void NewApp()
         {
-            ApplicationForm = new ApplicationEntity
+            ApplicationForm = new ApplicationDTO
             {
                 Name = string.Empty,
                 IsVisible = true,
-                Data = new ApplicationDataEntity
+                Data = new ApplicationDataDTO
                 {
                     Rows =
                     [
@@ -35,7 +35,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                             "Row_1",
                             "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
                             "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 0,
                                 AttributeType = AttributeType.Text,
@@ -43,14 +43,14 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                                 Style = "color:#864184;background-color:#fff5ff;width:120px;margin-left:5px;margin-right:5px;font-weight:bold;",
                                 Required = true
                             },
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 1,
                                 AttributeType = AttributeType.Bool,
                                 ID = Guid.NewGuid(),
                                 Style = "color:#864184;background-color:#321fed;width:25px;margin-left:5px;margin-right:5px;font-weight:bold;"
                             },
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 2,
                                 AttributeType = AttributeType.Int,
@@ -61,7 +61,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                             "Row_2",
                             "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
                             "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 0,
                                 AttributeType = AttributeType.Text,
@@ -69,14 +69,14 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                                 Style = "color:#864184;background-color:#fff5ff;width:200px;margin-left:5px;margin-right:5px;font-weight:bold;",
                                 Required = true
                             },
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 1,
                                 AttributeType = AttributeType.Date,
                                 ID = Guid.NewGuid(),
                                 Style = "color:#864184;background-color:#fff5ff;width:180px;margin-left:5px;margin-right:5px;font-weight:bold;"
                             },
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 2,
                                 AttributeType = AttributeType.Int,
@@ -87,7 +87,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                             "Row_3",
                             "color:#43952d;background-color:#ebf5eb;width:200px;font-size:18px;text-align:center;font-weight:bold;",
                             "color:#00000;background-color:#ecebf4;height:50px;padding-left:3px;padding-right:5px;align-items:center;",
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 0,
                                 AttributeType = AttributeType.Text,
@@ -95,14 +95,14 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                                 Style = "color:#317c27;background-color:#f0fff4;width:170px;margin-left:5px;margin-right:5px;font-size:12px;text-align:center;",
                                 Required = true
                             },
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 1,
                                 AttributeType = AttributeType.Char,
                                 ID = Guid.NewGuid(),
                                 Style = "color:#9a8932;background-color:#fffde5;width:50px;margin-left:5px;margin-right:5px;font-size:12px;text-align:center;"
                             },
-                            new AttributeBase
+                            new AttributeDTO
                             {
                                 Order = 2,
                                 AttributeType = AttributeType.Double,
@@ -114,7 +114,7 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
             };
         }
 
-        private static RowEntity CreateRow(string name, string style, string styleRow, params AttributeBase[] attributes)
+        private static RowDTO CreateRow(string name, string style, string styleRow, params AttributeDTO[] attributes)
             => new()
             {
                 Name = name,
@@ -125,10 +125,10 @@ namespace ProjectManagement.Components.ControlComponents.ApplicationTemplate
                 Attributes = [.. attributes]
             };
 
-        private void Remove(ApplicationEntity application)
+        private void Remove(ApplicationDTO application)
             => MHD.DeleteMessage(application.Name, EventCallback.Factory.Create(this, () => RemoveAsync(application)));
 
-        private async Task RemoveAsync(ApplicationEntity application)
+        private async Task RemoveAsync(ApplicationDTO application)
         {
             var result = await Dispatcher.Send(new DeleteApplicationCommand(application.Id));
             if (result)

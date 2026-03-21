@@ -15,7 +15,6 @@ public partial class AccountGroupsUI
 {
     private int? GroupSelected;
     private List<ListDTO>? Groups;
-    private bool IsLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -27,23 +26,12 @@ public partial class AccountGroupsUI
 
     private async Task RefreshGroupsAsync()
     {
-        IsLoading = true;
-        await InvokeAsync(StateHasChanged);
+        Groups = await LoadGroupsAsync();
 
-        try
-        {
-            Groups = await LoadGroupsAsync();
+        if (GroupSelected.HasValue && Groups?.Any(x => x.Id == GroupSelected.Value) == true)
+            return;
 
-            if (GroupSelected.HasValue && Groups?.Any(x => x.Id == GroupSelected.Value) == true)
-                return;
-
-            GroupSelected = Groups?.FirstOrDefault()?.Id;
-        }
-        finally
-        {
-            IsLoading = false;
-            await InvokeAsync(StateHasChanged);
-        }
+        GroupSelected = Groups?.FirstOrDefault()?.Id;
     }
 
     private async Task ChangeAccountGroupSelectedAsync(ListDTO item)

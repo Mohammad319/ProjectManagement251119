@@ -55,7 +55,7 @@ public static class ServiceCollectionExtensions
         });
 
         // Misc
-        services.BlazorMHD();
+        services.AddBlazorMhdUI();
         services.AddHttpContextAccessor();
 
         // Middleware registrations

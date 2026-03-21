@@ -83,7 +83,7 @@ public partial class AccountUI
             Name = item.Name,
             AccountGroupId = GroupSelected,
             IsVisible = item.IsVisible,
-            Data = item.Metadata ?? new AccountData(),
+            Data = item.Data ?? new AccountData(),
         },
         AppLoc[LocalizerConst.Update, item.Name]);
 
