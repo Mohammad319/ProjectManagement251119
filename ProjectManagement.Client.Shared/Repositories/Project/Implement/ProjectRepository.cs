@@ -1,4 +1,5 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.General;
@@ -15,9 +16,15 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
         static string ProjectsURLBase => "api/v1/projects/";
 
         public async Task<List<ListProjectMVVM>> GetByFolderIdAsync(Guid folderId, bool IsVisible = true) =>
-            (await _httpRepository.GetAsync<List<ListProjectMVVM>>(ProjectsURLBase + URLConst.Project.GetByFolderDepartmentId + $"/{folderId}?isVisible={IsVisible}")).OrderByDescending(x => x.Order).ToList();
+            (await _httpRepository.GetAsync<List<ListProjectDTO>>(ProjectsURLBase + URLConst.Project.GetByFolderDepartmentId + $"/{folderId}?isVisible={IsVisible}"))
+                .Select(x => x.ToListProjectMVVM())
+                .OrderByDescending(x => x.Order)
+                .ToList();
         public async Task<List<ListProjectMVVM>> GetOtherDepartmentAsync(Guid folderId) =>
-            (await _httpRepository.GetAsync<List<ListProjectMVVM>>(ProjectsURLBase + URLConst.Project.GetProjectsOtherDepartment + $"/{folderId}")).OrderByDescending(x => x.Order).ToList();
+            (await _httpRepository.GetAsync<List<ListProjectDTO>>(ProjectsURLBase + URLConst.Project.GetProjectsOtherDepartment + $"/{folderId}"))
+                .Select(x => x.ToListProjectMVVM())
+                .OrderByDescending(x => x.Order)
+                .ToList();
         public async Task<GetProjectCalcConfigDTO> GetConfig(int? m, int? con, int? com, int? t)
         {
             if (!m.HasValue) m = 0;
@@ -28,7 +35,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Project.Implement
         }
         public async Task<List<SearchProjectsMVVM>> FilterAsync(ProjectFilter model)
         {
-            return await _httpRepository.PostAsync<List<SearchProjectsMVVM>, ProjectFilter>(model, ProjectsURLBase + URLConst.Project.Search);
+            var dtos = await _httpRepository.PostAsync<List<SearchProjectDTO>, ProjectFilter>(model, ProjectsURLBase + URLConst.Project.Search);
+            return dtos.Select(x => x.ToSearchProjectsMVVM()).ToList();
         }
         public async Task<ProjectDetailsDTO> DetailsAsync(Guid id) =>
             await _httpRepository.GetAsync<ProjectDetailsDTO>(ProjectsURLBase + URLConst.Details + "/" + id);

@@ -124,7 +124,7 @@
             <td class="border border-slate-300 px-2 py-1.5 dark:border-slate-700">
                 <div class="flex items-center gap-2" style="margin-left:@($"{left}px")">
                     <span class="cursor-pointer text-slate-500 transition hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
-                          @onclick="() => Sections!.Remove(Task)"
+                          @onclick="() => RemoveSection(Task)"
                           role="button">
                         @((MarkupString)Icons.Delete)
                     </span>
@@ -197,6 +197,12 @@
 
     async Task SaveConfirm()
     {
+        if (Sections is null || Sections.Count == 0)
+        {
+            wait = false;
+            return;
+        }
+
         wait = true;
         bool result = await Repo.Task.CreateAsync(Sections, Calc.Id);
         MHD.Notifications(ToastType.Add, result);
@@ -241,6 +247,8 @@
     {
         Statuses = await Repo.Task.GetAsync(null);
     }
+
+    void RemoveSection(TaskPostDTO task) => Sections?.Remove(task);
 
     void Close() => Modal.Close();
 }

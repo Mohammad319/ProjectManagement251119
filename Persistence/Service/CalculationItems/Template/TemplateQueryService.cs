@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Application.Mapping.Calculation;
+using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
@@ -13,21 +14,13 @@ namespace Application.Services.CalculationItems.TemplateTable
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // Projection مباشر -> لا حاجة لتحميل entity
-            return await context.Templates
+            var template = await context.Templates
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
                             (!departmentId.HasValue || x.DepartmentId == departmentId))
-                .Select(x => new TemplateModelDTO
-                {
-                    Name = x.Name,
-                    Currency = x.Metadata.Currency,
-                    DateFormat = x.Metadata.DateFormat,
-                    MathRound = x.Metadata.MathRound,
-                    NetCalc = x.Metadata.NetCalc,
-                    SummarySheet = x.Metadata.SummarySheet,
-                })
                 .FirstOrDefaultAsync(ct);
+
+            return template?.ToModel();
         }
 
         public async Task<List<TemplateListDTO>> GetByUserAsync(
@@ -36,7 +29,6 @@ namespace Application.Services.CalculationItems.TemplateTable
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            // DTO صغير -> استعلام خفيف
             return await context.Templates
                 .AsNoTracking()
                 .Where(x => x.DepartmentId == departmentId)

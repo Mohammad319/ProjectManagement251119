@@ -14,9 +14,9 @@
         {
             <div class="@GetTaskItemClasses(task)"
                  @ondrop="@(() => HandleDrop(task))"
-                 @ondragover="() => task.IsDragOver = true"
+                 @ondragover="() => task.Ui.IsDragOver = true"
                  @ondragover:preventDefault
-                 @ondragleave="@(() => task.IsDragOver = false)"
+                 @ondragleave="@(() => task.Ui.IsDragOver = false)"
                  @ondragstart="@(() => taskDraging = task)"
                  @ondragend="@(() => taskDraging = null)"
                  draggable="true">
@@ -93,7 +93,7 @@
             ? " opacity-60 border-2 border-dashed border-blue-500"
             : string.Empty;
 
-        var dragOver = task.IsDragOver
+        var dragOver = task.Ui.IsDragOver
             ? " bg-blue-50 dark:bg-blue-900/40"
             : string.Empty;
 
@@ -105,8 +105,8 @@
         if (taskDraging is null)
             return;
 
-        taskDraging.IsDragOver = false;
-        landingModel.IsDragOver = false;
+        taskDraging.Ui.IsDragOver = false;
+        landingModel.Ui.IsDragOver = false;
         if (Tasks == null) return;
         int index = Tasks.IndexOf(landingModel);
 
@@ -128,7 +128,7 @@
         }
 
         await Repo.Task.ReOrderAsync(taskDraging.Id, taskDraging.Order);
-        Tasks = Tasks.Where(x => x.FilterVisible)
+        Tasks = Tasks.Where(x => x.Ui.FilterVisible)
                      .OrderByDescending(x => x.Order)
                      .ToList();
 

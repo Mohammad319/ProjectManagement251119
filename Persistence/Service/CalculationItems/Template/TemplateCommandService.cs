@@ -1,3 +1,4 @@
+using Application.Mapping.Calculation;
 using Application.Services.CalculationItems.TemplateTable;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
@@ -16,17 +17,12 @@ namespace Persistence.Service.CalculationItems.Template
                 return new TemplateModelDTO();
 
             var template = new TemplateEntity(dto.Name, dto.Active, departmentId);
-
-            var meta = new TemplateData();
-            dto.CopyPropertiesTo(meta);
-            template.UpdateMetadata(meta);
+            template.UpdateMetadata(dto.ToTemplateData());
 
             context.Templates.Add(template);
             await context.SaveChangesAsync(ct);
 
-            var model = new TemplateModelDTO { Id = template.Id, Name = template.Name };
-            meta.CopyPropertiesTo(model);
-            return model;
+            return template.ToModel();
         }
 
         public async Task<bool> UpdateAsync(int id, TemplateListPostDTO dto, int? departmentId, CancellationToken ct)
@@ -42,10 +38,7 @@ namespace Persistence.Service.CalculationItems.Template
             if (template == null)
                 return false;
 
-            var newMeta = new TemplateData();
-            dto.CopyPropertiesTo(newMeta);
-
-            template.Update(dto.Name, dto.Active, departmentId, newMeta);
+            template.Update(dto.Name, dto.Active, departmentId, dto.ToTemplateData());
 
             await context.SaveChangesAsync(ct);
             return true;
@@ -100,12 +93,9 @@ namespace Persistence.Service.CalculationItems.Template
             calc.SetTemplate(templateId is > 0 ? templateId : null);
             await context.SaveChangesAsync(ct);
 
-            var model = new TemplateModelDTO { Id = template?.Id ?? 0, Name = template?.Name ?? calc.Name };
-
-            if (template != null)
-                template.Metadata.CopyPropertiesTo(model);
-
-            return model;
+            return template != null
+                ? template.ToModel()
+                : new TemplateModelDTO { Id = 0, Name = calc.Name };
         }
     }
 }

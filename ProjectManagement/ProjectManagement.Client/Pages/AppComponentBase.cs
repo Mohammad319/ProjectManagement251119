@@ -24,6 +24,7 @@ namespace ProjectManagement.Client.Pages
         // 🟨 Injected Services
         [Inject] protected ContextMenuService ContextService { get; set; } = default!;
         [Inject] protected CalculationService CalcService { get; set; } = default!;
+        [Inject] protected CalculationInteractionState InteractionState { get; set; } = default!;
         [Inject] protected FolderService Folder { get; set; } = default!;
         [Inject] protected IUnitOfWorkService UoWService { get; set; } = default!;
     }

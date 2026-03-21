@@ -1,4 +1,5 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.Repositories.Folder;
 using ProjectManagement.Shared.Constant;
@@ -14,9 +15,15 @@ namespace ProjectManagement.Client.Shared.Repositories.Folder
     {
         static string FolderURLBase => PMAPIConst.Folders;
         public async Task<List<FolderMVVM>> GetByDepartmentAsync(int DepartmentId)
-            => (await _httpRepository.GetAsync<List<FolderMVVM>>(FolderURLBase + URLConst.Folder.GetFoldersByDepartmentId + $"/{DepartmentId}")).OrderByDescending(x => x.Order).ToList();
+            => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.Folder.GetFoldersByDepartmentId + $"/{DepartmentId}"))
+                .Select(x => x.ToFolderMVVM())
+                .OrderByDescending(x => x.Order)
+                .ToList();
         public async Task<List<FolderMVVM>> GetByVisible(bool IsVisible)
-            => (await _httpRepository.GetAsync<List<FolderMVVM>>(FolderURLBase + URLConst.GetList + $"?isVisible={IsVisible}")).OrderByDescending(x => x.Order).ToList();
+            => (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + URLConst.GetList + $"?isVisible={IsVisible}"))
+                .Select(x => x.ToFolderMVVM())
+                .OrderByDescending(x => x.Order)
+                .ToList();
         public async Task<DetailsFolderDTO> DetailsAsync(Guid id)
         {
             return await _httpRepository.GetAsync<DetailsFolderDTO>(FolderURLBase + "details/" + id);
@@ -40,7 +47,9 @@ namespace ProjectManagement.Client.Shared.Repositories.Folder
 
         public async Task<List<FolderMVVM>> GetAllVisibleAsync()
         {
-            return await _httpRepository.GetAsync<List<FolderMVVM>>(FolderURLBase + "getall");
+            return (await _httpRepository.GetAsync<List<ListFolderDTO>>(FolderURLBase + "getall"))
+                .Select(x => x.ToFolderMVVM())
+                .ToList();
         }
     }
 }

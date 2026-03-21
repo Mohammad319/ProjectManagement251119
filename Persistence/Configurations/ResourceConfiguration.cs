@@ -3,8 +3,21 @@ using Domain.Entities.ResourceType;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Persistence.Serialization;
+using ProjectManagement.Shared.Constant;
 
 namespace Persistence.Configurations;
+
+internal static class CalculationMetadataComputedColumns
+{
+    internal static string JsonString(string propertyName, int maxLength)
+        => $"CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.{propertyName}'))), '') AS nvarchar({maxLength}))";
+
+    internal static string JsonBool(string propertyName, bool defaultValue)
+        => $"CAST(CASE LOWER(JSON_VALUE([Metadata], '$.{propertyName}')) WHEN 'true' THEN 1 WHEN '1' THEN 1 WHEN 'false' THEN 0 WHEN '0' THEN 0 ELSE {(defaultValue ? 1 : 0)} END AS bit)";
+
+    internal static string JsonInt(string propertyName, int defaultValue)
+        => $"COALESCE(TRY_CONVERT(int, JSON_VALUE([Metadata], '$.{propertyName}')), {defaultValue})";
+}
 
 internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<ResourceTypeEntity>
 {
@@ -86,6 +99,16 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 
+        builder.Property(x => x.Note)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonString(nameof(ResourceEntity.Note), FieldLengths.Comment),
+                stored: true);
+
+        builder.Property(x => x.Unit)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonString(nameof(ResourceEntity.Unit), FieldLengths.Unit),
+                stored: true);
+
         builder.HasIndex(x => new { x.TenantId, x.TaskId, x.SortOrder })
             .HasDatabaseName("IX_Resources_Tenant_Task_Sort");
 
@@ -146,6 +169,36 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
+
+        builder.Property(x => x.Note)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonString(nameof(TaskEntity.Note), FieldLengths.Comment),
+                stored: true);
+
+        builder.Property(x => x.Unit)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonString(nameof(TaskEntity.Unit), FieldLengths.Unit),
+                stored: true);
+
+        builder.Property(x => x.Code)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonString(nameof(TaskEntity.Code), FieldLengths.Code),
+                stored: true);
+
+        builder.Property(x => x.IsActive)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonBool(nameof(TaskEntity.IsActive), defaultValue: true),
+                stored: true);
+
+        builder.Property(x => x.IsOH)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonBool(nameof(TaskEntity.IsOH), defaultValue: false),
+                stored: true);
+
+        builder.Property(x => x.Type)
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonInt(nameof(TaskEntity.Type), defaultValue: 0),
+                stored: true);
 
         builder.HasOne(x => x.Status)
             .WithMany(x => x.Tasks)

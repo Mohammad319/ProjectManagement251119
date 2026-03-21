@@ -99,7 +99,7 @@ namespace Persistence.Service.CalculationItems.Task
 
                 // توحيد IsOH بناء على Parent
                 foreach (var task in safeTasks)
-                    task.Metadata.IsOH = parentTask.Metadata.IsOH;
+                    task.IsOH = parentTask.IsOH;
             }
             else
             {
@@ -229,7 +229,7 @@ namespace Persistence.Service.CalculationItems.Task
                         if (task == null)
                             continue;
 
-                        task.Metadata.IsOH = isOH;
+                        task.SetIsOH(isOH);
                         TaskExtention.SetNetCalcId(task);
                         task.SetParentTask(parentTaskId);
 
@@ -275,11 +275,17 @@ namespace Persistence.Service.CalculationItems.Task
                     root.SetParentTask(parentTaskId);
 
                     if (!string.IsNullOrEmpty(root.Metadata.QuantityParam))
-                        root.Metadata.QuantityParam = PMValuesConst.FixedQ;
+                    {
+                        root.UpdateMetadata(m => m.QuantityParam = PMValuesConst.FixedQ);
+                    }
 
-                    root.Metadata.Quantity = item.Value;
+                    root.UpdateMetadata(m =>
+                    {
+                        m.Quantity = item.Value;
+                        m.IsOH = isOH;
+                    });
+
                     root.SetCalculation(targetCalcId);
-                    root.Metadata.IsOH = isOH;
                     root.SetSortOrder(maxOrder.Value);
                     maxOrder += 100;
 
@@ -466,7 +472,7 @@ namespace Persistence.Service.CalculationItems.Task
             if (taskWithCalcId == null)
                 return false;
 
-                        var task = taskWithCalcId.Task;
+            var task = taskWithCalcId.Task;
 
             // optimistic concurrency: if UI sends RowVersion, detect stale edits
             if (dto.RowVersion is { Length: > 0 })

@@ -1,236 +1,140 @@
-﻿﻿@using BlazorMHD.UI.Components.Feedback.Splitter
-@using BlazorMHD.UI.Core.Services
-@using ContextMenuMHD
-@using ProjectManagement.Client.Helper
-@using ProjectManagement.Client.Pages.Calculation.Form
-@using ProjectManagement.Client.Pages.Calculation.Table.DragDrop
+@using BlazorMHD.UI.Components.Feedback.Splitter
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList
 @using ProjectManagement.Client.Pages.Project.Storage
-@using ProjectManagement.Client.Services.Calculation
-@using ProjectManagement.Client.Shared.MVVM.Calculation
-@using ProjectManagement.Client.Shared.SharedComponent
-@using ProjectManagement.Shared.DTO.Project
-@inherits AppComponentBase
-@inject IContextMenuBuilderService ContextBuilderService
-@inject ContextMenuService ContextMenuService
 
-<div id="tit" class="flex flex-wrap items-center gap-2 px-2">
+@if (!HasCalculation)
+{
+    <section class="calc-state-panel calc-state-panel-muted" data-testid="calculation-page-unavailable">
+        <div class="calc-state-copy">
+            <p class="calc-state-title">@AppLoc["calculationDetailsUnavailable"]</p>
+        </div>
+    </section>
+}
+else
+{
+    <div class="calc-page-shell">
+        <div class="calc-page-header" data-testid="calculation-page-header">
+            <CalculationToolbar />
 
-    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-          @onclick="OpenTaskForm"
-          title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">
-        @Icons.Plus2
-    </span>
+            <section class="calc-status-strip" data-testid="calculation-page-status">
+                <div class="calc-status-chips">
+                    <span class="calc-status-chip">
+                        <span class="calc-status-chip-label">@AppLoc["visibleItems"]</span>
+                        <strong>@VisibleItemCountText</strong>
+                    </span>
 
-    <AuthorizeView Roles="@PMRolesConst.Tenant.AdminManger" Context="Auth_1">
-        <Authorized>
-            @if (Calc.Tap1)
-            {
-                <span title="@ResourceApp.importFromFile"
-                      class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-                      @onclick="() => Modal.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge)">
-                    @((MarkupString)Icons.ImportFromFile)
-                </span>
+                    <button type="button"
+                            data-testid="status-toggle-tasks"
+                            class="@GetToggleChipClass(Calc!.ShowTasks)"
+                            aria-pressed="@(Calc.ShowTasks ? "true" : "false")"
+                            @onclick="ToggleShowTasks">
+                        <span class="calc-status-chip-label">@ResourceLoc.task</span>
+                        <strong>@TaskCount</strong>
+                    </button>
 
-                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-                      title="@ResourceLoc.template"
-                      @onclick="() => Modal.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(
-                      ResourceLoc.templates,
-                                            Icons.Template,
-                                            new Dictionary<string, object>()
-                                            {
-                                                [nameof(Pages.Calculation.Template.TemplateSetDefaultUI.Tab)] = 1,
-                                            },
-                                            DialogSize.ExtraLarge)">
-                @((MarkupString)Icons.Template)
-            </span>
+                    <button type="button"
+                            data-testid="status-toggle-resources"
+                            class="@GetToggleChipClass(Calc!.ShowResources)"
+                            aria-pressed="@(Calc.ShowResources ? "true" : "false")"
+                            @onclick="ToggleShowResources">
+                        <span class="calc-status-chip-label">@ResourceLoc.resource</span>
+                        <strong>@ResourceCount</strong>
+                    </button>
 
-            <span title="@ResourceApp.reOrder"
-                  class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-                  @onclick="() => Modal.ShowComponent<DragDropTaskUI>(ResourceApp.reOrder, Icons.ReorderRows, null, DialogSize.ExtraLarge)">
-                @((MarkupString)Icons.ReorderRows)
-            </span>
-                        }
+                    <button type="button"
+                            data-testid="status-toggle-comments"
+                            class="@GetToggleChipClass(CalcService.ShowComments)"
+                            aria-pressed="@(CalcService.ShowComments ? "true" : "false")"
+                            @onclick="ToggleComments">
+                        <span class="calc-status-chip-label">@CalcResource.note</span>
+                    </button>
 
-            @if (SelectedData.SelectedItems.Count != 0)
-            {
-                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-                      @onclick="UnSelectedAll"
-                      title="@ResourceLoc.unselectAll">
-                    @((MarkupString)Icons.NotSelected)
-                </span>
-            }
+                    <button type="button"
+                            data-testid="status-toggle-only-active"
+                            class="@GetToggleChipClass(Calc!.OnlyActive)"
+                            aria-pressed="@(Calc.OnlyActive ? "true" : "false")"
+                            @onclick="ToggleOnlyActive">
+                        <span class="calc-status-chip-label">@ResourceLoc.onlyActive</span>
+                    </button>
 
-            @if (TemporaryData.HasPasteOption(CalculationItemType.task)
-                        && (!(TemporaryData.CopyTypeo == CopyType.Move && TemporaryData.OldCalcID == Calc.Id)
-                        || TemporaryData.CopyTypeo == CopyType.Copy))
-            {
-                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-                      @onclick="async () => await PasteItem(0)"
-                      title="@ResourceApp.paste">
-                    @((MarkupString)Icons.Paste)
-                </span>
-            }
+                    @if (SelectedItemCount > 0)
+                    {
+                        <button type="button"
+                                data-testid="status-clear-selection"
+                                class="calc-status-chip calc-status-chip-accent calc-status-chip-action"
+                                @onclick="ClearSelection">
+                            <span class="calc-status-chip-label">@AppLoc["selectedItems"]</span>
+                            <strong>@SelectedItemCount</strong>
+                        </button>
+                    }
 
-            @if (CalcService.Offer != null)
-            {
-                <span class="inline-flex items-center px-2 py-1 text-[11px] md:text-xs
-                                 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
-                    @(ResourceLoc.offer + $" : {ResourceLoc.category} {CalcService.Offer.SubCategory}>{CalcService.Offer.SubCategory} {ResourceApp.organisation} {CalcService.Offer.Organisation}")
-                </span>
+                    @if (HasActiveFilters)
+                    {
+                        <button type="button"
+                                data-testid="status-clear-filters"
+                                class="calc-status-chip calc-status-chip-action"
+                                @onclick="ClearFilters">
+                            <span class="calc-status-chip-label">@AppLoc["visibilityFilter"]</span>
+                            <strong>@AppLoc["clearFilters"]</strong>
+                        </button>
+                    }
+                </div>
+            </section>
+        </div>
 
-                <span class="ml-1 font-bold text-sm text-red-600 hover:text-red-700 cursor-pointer"
-                      role="button"
-                      @onclick="() => CalcService.Offer = null">
-                    X
-                </span>
-            }
-        </Authorized>
-    </AuthorizeView>
-
-    <div class="relative">
-        <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800" @onclick="ToggleFilterDropdown">
-            🧾 @ResourceApp.DisplayOptions
-        </span>
-
-        @if (IsFilterDropdownOpen)
+        @if (ShowEmptyState)
         {
-            <div class="absolute z-50 mt-1 w-56 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-lg text-sm">
-                <div class="px-3 py-2 border-b border-gray-100 dark:border-slate-700 font-semibold">
-                    @ResourceApp.DisplayOptions
+            <section class="calc-state-panel" data-testid="calculation-page-empty">
+                <div class="calc-state-copy">
+                    <p class="calc-state-title">@AppLoc["calculationTableEmptyState"]</p>
+                    <p class="calc-state-hint">@AppLoc["calculationTableEmptyStateHint"]</p>
+                </div>
+            </section>
+        }
+        else if (ShowNoVisibleRowsState)
+        {
+            <section class="calc-state-panel calc-state-panel-muted" data-testid="calculation-page-no-visible-rows">
+                <div class="calc-state-copy">
+                    <p class="calc-state-title">@AppLoc["calculationTableNoVisibleRows"]</p>
+                    <p class="calc-state-hint">@NoVisibleRowsHint</p>
                 </div>
 
-                <label class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <input type="checkbox"
-                           class="rounded" checked
-                           @bind-value="Calc.ShowTasks"
-                           @bind-value:event="onchange"
-                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
-                    <span>@ResourceLoc.task</span>
-                </label>
-
-                <label class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <input type="checkbox"
-                           class="rounded" checked
-                           @bind-value="Calc.ShowResources"
-                           @bind-value:event="onchange"
-                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
-                    <span>@ResourceLoc.resource</span>
-                </label>
-
-                <label class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700">
-                    <input type="checkbox"
-                           class="rounded" checked
-                           @bind-value="CalcService.ShowComments"
-                           @bind-value:event="onchange"
-                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
-                    <span>@CalcResource.note</span>
-                </label>
-
-                <label class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 border-t border-gray-100 dark:border-slate-700">
-                    <input type="checkbox"
-                           class="rounded"
-                           @bind-value="Calc.OnlyActive"
-                           @bind-value:event="onchange"
-                           @bind-value:after="@(() => Calc.NotifyGridRefresh(flatListDirty: true))" />
-                    <span>@ResourceLoc.onlyActive</span>
-                </label>
-            </div>
+                @if (HasActiveFilters)
+                {
+                    <button type="button"
+                            class="calc-state-action"
+                            @onclick="ClearFilters">
+                        @AppLoc["clearFilters"]
+                    </button>
+                }
+            </section>
         }
+
+        <VerticalSplitter Class="h-[80vh] border border-zinc-200 dark:border-zinc-800 rounded-2xl"
+                          InitialTopHeight="400"
+                          MinTopHeight="50"
+                          MinBottomHeight="25"
+                          MaxTopHeight="900"
+                          SplitterThickness="6"
+                          LiveResize="true"
+                          StorageKey="calc-main-vertical-splitter">
+
+            <TopContent>
+                <div class="divNetCalc"
+                     style="--net-text-color:@Template?.NetCalc?.Color?.Text;
+                            --net-border-color:@Template?.NetCalc?.Color?.Border;
+                            --net-header-bg:@Template?.NetCalc?.Color?.Header;
+                            --net-note-color:@Template?.NetCalc?.Color?.Note;
+                            --net-border-style:@Template?.NetCalc?.Color?.BorderStyle;">
+                    <CalcDataGrid />
+                </div>
+            </TopContent>
+
+            <BottomContent>
+                <div class="px-1">
+                    <GetFromStorage ParentID="Calc!.Id" CalcType="CalculationItemType.task" />
+                </div>
+            </BottomContent>
+        </VerticalSplitter>
     </div>
-
-    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800" @onclick="ItemsOnlyOH">
-        @(Calc.OHFactors ? "OH" : CalcResource.netCal)
-    </span>
-
-    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-          title="@CalcResource.quantity"
-          @onclick="() => Modal.ShowComponent<QuantityListUI>(CalcResource.quantity, Icons.ResetQuantity, null, DialogSize.Medium, DialogButtonsHelper.CreateSaveCancelButtons(QuantityListUI.DialogFormId))">
-        @((MarkupString)Icons.ResetQuantity)
-    </span>
-
-</div>
-
-<VerticalSplitter Class="h-[80vh] border border-zinc-200 dark:border-zinc-800 rounded-2xl"
-                  InitialTopHeight="400"
-                  MinTopHeight="50"
-                  MinBottomHeight="25"
-                  MaxTopHeight="900"
-                  SplitterThickness="6"
-                  LiveResize="true"
-                  StorageKey="calc-main-vertical-splitter">
-
-    <TopContent>
-        <div class="divNetCalc"
-             style="--net-text-color:@Template?.NetCalc.Color.Text;
-                    --net-border-color:@Template?.NetCalc.Color.Border;
-                    --net-header-bg:@Template?.NetCalc.Color.Header;
-                    --net-note-color:@Template?.NetCalc.Color.Note;
-                    --net-border-style:@Template?.NetCalc.Color.BorderStyle;">
-            <CalcDataGrid />
-        </div>
-    </TopContent>
-
-    <BottomContent>
-        <div class="px-1">
-             <GetFromStorage ParentID="Calc.Id" CalcType="CalculationItemType.task" /> 
-        </div>
-    </BottomContent>
-</VerticalSplitter>
-
-@code {
-    private bool IsFilterDropdownOpen;
-
-    private void ToggleFilterDropdown()
-    {
-        IsFilterDropdownOpen = !IsFilterDropdownOpen;
-    }
-
-    private void OpenTaskForm()
-    {
-        Modal.ShowComponent<TaskFormUI>(
-            AppLoc[LocalizerConst.New, ResourceLoc.task],
-            Icons.NewTask,
-            new Dictionary<string, object> { [nameof(TaskFormUI.Task)] = new TaskListMVVM() },
-            DialogSize.ExtraLarge,
-            DialogButtonsHelper.CreateSaveCancelButtons(TaskFormUI.DialogFormId));
-    }
-
-    private void ItemsOnlyOH()
-    {
-        Calc.OHFactors = !Calc.OHFactors;
-        Calc.NotifyGridRefresh(flatListDirty: true);
-    }
-
-    private void UnSelectedAll()
-    {
-        SelectedData.Reset();
-        Calc.NotifyGridRefresh(flatListDirty: false);
-    }
-
-    private async Task PasteItem(int taskId)
-    {
-        var post = new PostStorygeDTO
-        {
-            copyType = TemporaryData.CopyTypeo!.Value,
-            OldCalcID = TemporaryData.OldCalcID,
-            NewCalcID = Calc.Id,
-            IsOH = Calc.OHFactors,
-            ParentID = taskId,
-            WithCildren = true,
-            Items = TemporaryData.SelectedItems,
-            Type = TemporaryData.ItemsType!.Value
-        };
-
-        bool result = await Repo.Storage.CreateItem(post);
-        if (result)
-        {
-            SelectedData.Reset();
-            MHD.Notifications(ToastType.Info, result);
-        }
-        else
-        {
-            MHD.Notifications(ToastType.Danger, false);
-        }
-    }
 }

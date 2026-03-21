@@ -1,7 +1,6 @@
-using Persistence.Serialization;
-using System.Text.Json;
 using Application.Feature.Offer;
 using Application.Interfaces;
+using Application.Mapping.Offer;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
@@ -36,7 +35,7 @@ namespace Persistence.Service.Offer
             var entity = new OfferEntity(
                 resourceId: dto.ResourceId,
                 organisationId: dto.OrganisationId,
-                metadata: BuildOfferData(dto),
+                metadata: dto.ToData(),
                 comment: dto.Comment);
 
             context.Offers.Add(entity);
@@ -70,7 +69,7 @@ namespace Persistence.Service.Offer
             if (dto.RowVersion is { Length: > 0 })
                 context.Entry(entity).Property(x => x.RowVersion).OriginalValue = dto.RowVersion;
 
-            entity.Update(dto.OrganisationId, BuildOfferData(dto), dto.Comment);
+            entity.Update(dto.OrganisationId, dto.ToData(), dto.Comment);
 
             try
             {
@@ -150,9 +149,11 @@ namespace Persistence.Service.Offer
 
             if (offer is not null)
             {
-                resource.Metadata.Cost = offer.Metadata.Cost;
-                resource.Metadata.BaseCost = offer.Metadata.BaseCost;
-                resource.Metadata.Normalize();
+                resource.UpdateMetadata(m =>
+                {
+                    m.Cost = offer.Metadata.Cost;
+                    m.BaseCost = offer.Metadata.BaseCost;
+                });
             }
 
             await context.SaveChangesAsync(ct);
@@ -196,7 +197,7 @@ namespace Persistence.Service.Offer
             var result = await context.Offers
                 .AsNoTracking()
                 .Where(x => x.OrganisationId == organisationId && x.Resource.Task.CalculationId == calcId)
-                .Select(ProjectListOfferDto())
+                .Select(OfferDtoMapper.ProjectListDto())
                 .ToListAsync(ct);
 
             await NotifyOfferAsync(calcId, OperationType.Update, 0, result);
@@ -266,7 +267,7 @@ namespace Persistence.Service.Offer
                         : string.Empty,
                     ResName = x.Resource.Name,
                     TaskName = x.Resource.Task.Name,
-                    TaskCode = x.Resource.Task.Metadata.Code,
+                    TaskCode = x.Resource.Task.Code ?? string.Empty,
                     CalcName = x.Resource.Task.Calculation.Name,
                     CalcCode = x.Resource.Task.Calculation.Code
                 })
@@ -284,30 +285,6 @@ namespace Persistence.Service.Offer
                     Data = data
                 });
 
-        private static OfferData BuildOfferData(PostOfferDTO dto)
-            => new()
-            {
-                Cost = dto.Cost,
-                BaseCost = dto.BaseCost,
-                Contact = dto.Contact,
-                Comment = dto.Comment ?? string.Empty
-            };
-
-        private static System.Linq.Expressions.Expression<Func<OfferEntity, ListOfferDTO>> ProjectListOfferDto() =>
-            x => new ListOfferDTO
-            {
-                Id = x.Id,
-                RowVersion = x.RowVersion,
-                BaseCost = x.Metadata.BaseCost,
-                Cost = x.Metadata.Cost,
-                Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,
-                Comment = x.Comment ?? string.Empty,
-                Date = x.Date,
-                OrganisationId = x.OrganisationId,
-                SubCategory = x.Organisation != null && x.Organisation.OrganisationCategory != null ? x.Organisation.OrganisationCategory.Name : string.Empty,
-                Category = x.Organisation != null && x.Organisation.OrganisationCategory != null && x.Organisation.OrganisationCategory.ParentCategory != null ? x.Organisation.OrganisationCategory.ParentCategory.Name : string.Empty
-            };
-
         private static System.Linq.Expressions.Expression<Func<OfferEntity, OfferWithCalcId>> ProjectOfferWithCalcId() =>
             x => new OfferWithCalcId(
                 x.Resource!.Task!.CalculationId,
@@ -317,6 +294,7 @@ namespace Persistence.Service.Offer
                     RowVersion = x.RowVersion,
                     BaseCost = x.Metadata.BaseCost,
                     Cost = x.Metadata.Cost,
+                    Contact = x.Metadata.Contact,
                     Organisation = x.Organisation != null ? x.Organisation.Name : string.Empty,
                     Comment = x.Comment ?? string.Empty,
                     Date = x.Date,

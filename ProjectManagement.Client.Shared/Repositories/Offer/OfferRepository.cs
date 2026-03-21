@@ -1,8 +1,10 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Offer;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Offer
@@ -17,7 +19,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Offer
 
         public async Task<List<ListOfferCalcInfoMVVM>> GetByFilterAsync(OfferFilterDTO model)
         {
-            return await _httpRepository.PostAsync<List<ListOfferCalcInfoMVVM>, OfferFilterDTO>(model, OfferURLBase + URLConst.Offer.Filter);
+            var dtos = await _httpRepository.PostAsync<List<ListOfferCalcInfo>, OfferFilterDTO>(model, OfferURLBase + URLConst.Offer.Filter);
+            return dtos.Select(x => x.ToListOfferCalcInfoMVVM()).ToList();
         }
         public async Task<int> AddAsync(PostOfferDTO model)
         {

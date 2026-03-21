@@ -1,4 +1,5 @@
 @using ProjectManagement.Client.Constant
+@using ProjectManagement.Client.Services.Calculation
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Model.Project.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
@@ -178,7 +179,7 @@
             if (TempForm.Id > 0)
             {
                 refresh = await Repo.Template.UpdateAsync(TemplateUpdate, TempForm.Id);
-                Calc.NotifyGridRefresh(flatListDirty: true);
+                CalcService.RequestGridRefresh(CalculationGridRefreshKind.View);
             }
             else if (await Repo.Template.CreateAsync(TemplateUpdate) != null)
             {

@@ -7,7 +7,17 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
     public class ResFromData : ResourceBase
     {
-        public ResourceMetadata Data { get; set; } = new();
+        private ResourceMetadata? data = new();
+
+        public ResourceMetadata Data
+        {
+            get
+            {
+                data ??= new ResourceMetadata();
+                return data;
+            }
+            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
+        }
 
         public string Note => Data.Note;
         public List<string> UpperNote => Data.UpperNote;
@@ -21,27 +31,15 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal CapWaste => Data.CapWaste;
         public decimal Cost => Data.Cost;
         public decimal? BaseCost => Data.BaseCost;
-        public decimal BaseCostVal()
-        {
-            if(Data.Times != null && Data.Times.Count > 0)
-            {
-                var v= Data.Times.Sum(t => t.Quantity * t.Cost * t.Value);
-
-                return v;
-            }
-
-            return Cost;
-        }
         public double? CO2 => Data.CO2;
 
-        [JsonIgnore] public decimal PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? PriceSub.Value * Quantity.Value : 0;
+        [JsonIgnore] public decimal PriceSubTotal => Data.PriceSub.HasValue && Quantity.HasValue ? Data.PriceSub.Value * Quantity.Value : 0;
     }
 
     public class ResourceListMVVM : ResFromData
     {
-        public int Version { get; set; } = 0;
-
-        public Func<Task>? OfferClick { get; set; }
+        [JsonIgnore] public ResourceUiState Ui { get; } = new();
+        [JsonIgnore] public ResourceComputedState Computed { get; } = new();
 
         public int Id { get; set; }
         public int TaskId { get; set; }
@@ -62,41 +60,51 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string? ResName { get; set; }
         public string? Sort { get; set; }
 
-        public decimal Factor { get; set; } = 1;
+        [JsonIgnore]
+        public decimal Factor
+        {
+            get => this.GetComputedFactor();
+            set => this.SetComputedFactor(value);
+        }
 
         public List<ListOfferMVVM> Offers { get; set; } = [];
+        [JsonIgnore] public bool HasSelectedOffer { get; private set; }
 
-        private decimal? _netCostQ;
-        private decimal? _netCostTotally;
-        private decimal? _apriceTotally;
-        private double? _totalCO2;
-
-        [JsonIgnore] public decimal NetCostQ => _netCostQ ??= Quantity.HasValue && Quantity > 0 ? NetCostTotaly / Quantity.Value : 0;
-        [JsonIgnore] public decimal NetCostTotaly => _netCostTotally ??= (BaseCost ?? 0) + (Quantity * Cost ?? 0);
-        [JsonIgnore] public decimal ApriceTotally => _apriceTotally ??= Factor * NetCostTotaly;
-        [JsonIgnore]
-        public double? TotalCO2 => _totalCO2 ??=
-            (CO2.HasValue && Quantity.HasValue)
-                ? (double)Quantity.Value * CO2.Value
-                : null;
+        [JsonIgnore] public decimal NetCostQ => this.GetComputedNetCostQ();
+        //[JsonIgnore] public decimal NetCostTotaly => this.GetComputedNetCostTotaly();
+        //[JsonIgnore] public decimal ApriceTotally => this.GetComputedApriceTotally();
+        //[JsonIgnore] public double? TotalCO2 => this.GetComputedTotalCO2();
 
         public void InvalidateCache()
         {
-            _netCostQ = null;
-            _netCostTotally = null;
-            _apriceTotally = null;
-            _totalCO2 = null;
+            Computed.Reset();
         }
 
-        [JsonIgnore] public bool HasOffer => Offers?.Count > 0;
+        [JsonIgnore] public bool HasOffer => Offers.Count > 0;
         [JsonIgnore] public bool HasCap => ResType is ResourceTypesEnum.MachinesAndEquipments or ResourceTypesEnum.Worker;
         [JsonIgnore] public bool HasWast => ResType is ResourceTypesEnum.Materials;
 
-        public bool HasOfferSelected() => OfferId.HasValue && Offers?.Any(x => x.Id == OfferId) == true;
+        public bool HasOfferSelected() => HasSelectedOffer;
 
-        [JsonIgnore] public bool FilterVisible { get; set; } = true;
-        [JsonIgnore] public bool HasUpdated { get; set; }
-        [JsonIgnore] public bool IsDragOver { get; set; }
+        public void SyncOfferSelection()
+        {
+            if (!OfferId.HasValue || Offers.Count == 0)
+            {
+                HasSelectedOffer = false;
+                return;
+            }
+
+            for (int i = 0; i < Offers.Count; i++)
+            {
+                if (Offers[i].Id == OfferId.Value)
+                {
+                    HasSelectedOffer = true;
+                    return;
+                }
+            }
+
+            HasSelectedOffer = false;
+        }
 
         public void RemoveOffer(int id)
         {
@@ -105,6 +113,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             {
                 if (OfferId == id) OfferId = null;
                 Offers.Remove(offer);
+                SyncOfferSelection();
             }
         }
     }

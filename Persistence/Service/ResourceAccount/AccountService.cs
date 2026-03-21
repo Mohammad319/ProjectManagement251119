@@ -1,4 +1,5 @@
 using Application.Feature.Account;
+using Application.Mapping.Account;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
@@ -16,14 +17,7 @@ namespace Persistence.Service.ResourceAccount
                 .AsNoTracking()
                 .Where(x => x.AccountGroupId == groupId)
                 .OrderBy(x => x.Code)
-                .Select(x => new AccountManageDTO
-                {
-                    Id = x.Id,
-                    Code = x.Code,
-                    Name = x.Name,
-                    IsVisible = x.IsVisible,
-                    Metadata = x.Metadata,
-                })
+                .Select(AccountDtoMapper.ProjectManageDto())
                 .ToListAsync(ct);
         }
 
@@ -59,7 +53,7 @@ namespace Persistence.Service.ResourceAccount
                 name: dto.Name,
                 accountGroupId: dto.AccountGroupId,
                 isVisible: dto.IsVisible,
-                data: dto.Data
+                data: dto.ToData()
             );
 
             context.Accounts.Add(entity);
@@ -86,7 +80,7 @@ namespace Persistence.Service.ResourceAccount
                 name: dto.Name,
                 groupId: dto.AccountGroupId,
                 isVisible: dto.IsVisible,
-                data: dto.Data
+                data: dto.ToData()
             );
 
             await context.SaveChangesAsync(ct);

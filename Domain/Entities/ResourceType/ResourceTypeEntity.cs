@@ -28,7 +28,7 @@ namespace Domain.Entities.ResourceType
         public ResourceTypeData Metadata
         {
             get => _metadata ??= new();
-            private set => _metadata = value;
+            private set => _metadata = ResourceTypeMetadataMapper.Build(value);
         }
 
         [JsonIgnore]
@@ -55,12 +55,19 @@ namespace Domain.Entities.ResourceType
             IsVisible = dto.IsVisible;
             Kind = dto.Type;
             AccountId = NormalizeOptionalPositive(dto.AccountId, nameof(dto.AccountId));
+            Metadata = dto.Data;
+        }
 
-            var metadata = new ResourceTypeData();
-            dto.CopyPropertiesTo(metadata);
-            metadata.Unit = NormalizeOptional(metadata.Unit) ?? string.Empty;
-            metadata.Normalize();
-            Metadata = metadata;
+        public ResourceTypeData GetMetadataSnapshot()
+            => ResourceTypeMetadataMapper.Build(_metadata);
+
+        public void UpdateMetadata(Action<ResourceTypeData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
         }
 
         public void UpdateOrder(int sortOrder) => SetSortOrder(sortOrder);
@@ -87,7 +94,5 @@ namespace Domain.Entities.ResourceType
             return value.Value;
         }
 
-        private static string? NormalizeOptional(string? value)
-            => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 }

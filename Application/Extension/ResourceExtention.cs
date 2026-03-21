@@ -1,4 +1,5 @@
 using Domain.Entities.Calculation;
+using Application.Mapping.Offer;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
@@ -9,18 +10,12 @@ namespace Application.Extention
     {
         public static ResourceListDTO MapToResourceListDTO(this ResourceEntity r)
         {
-            var data = r.Metadata?.Clone() ?? new ResourceMetadata();
-
-            if (!string.IsNullOrWhiteSpace(r.Note))
-                data.Note = r.Note!;
-
-            if (!string.IsNullOrWhiteSpace(r.Unit))
-                data.Unit = r.Unit!;
+            var data = r.GetMetadataSnapshot();
 
             return new ResourceListDTO
             {
                 Name = r.Name,
-                Active = r.IsActive,
+                IsActive = r.IsActive,
                 Id = r.Id,
                 RowVersion = r.RowVersion,
                 ResType = r.ResType,
@@ -29,7 +24,7 @@ namespace Application.Extention
                 AccountId = r.AccountId,
                 StatusId = r.StatusId,
                 OfferId = r.PrimaryOfferId,
-                Order = r.SortOrder,
+                SortOrder = r.SortOrder,
                 OpportunityId = r.OpportunityId,
                 Data = data,
                 Opportunity = r.Opportunity?.OpportunityType ?? string.Empty,
@@ -46,25 +41,15 @@ namespace Application.Extention
 
         public static ListOfferDTO MapToListOfferDTO(OfferEntity of)
         {
-            return new ListOfferDTO
-            {
-                Id = of.Id,
-                RowVersion = of.RowVersion,
-                BaseCost = of.Metadata.BaseCost,
-                Cost = of.Metadata.Cost,
-                Comment = of.Comment ?? string.Empty,
-                Date = of.Date,
-                OrganisationId = of.OrganisationId,
-                Organisation = of.Organisation != null ? of.Organisation.Name : string.Empty,
-                SubCategory = of.Organisation != null && of.Organisation.OrganisationCategory != null ? of.Organisation.OrganisationCategory.Name : string.Empty,
-                Category = of.Organisation != null && of.Organisation.OrganisationCategory != null && of.Organisation.OrganisationCategory.ParentCategory != null ? of.Organisation.OrganisationCategory.ParentCategory.Name : string.Empty
-            };
+            return of.ToListDto();
         }
 
         public static ResourceEntity Parse(this ResourcePostDTO res, int taskID)
         {
-            res.Data.Note = res.Note ?? res.Data.Note;
-            res.Data.Unit = res.Unit ?? res.Data.Unit;
+            res.Data = CalculationItemMetadataMapper.BuildResourceMetadata(
+                res.Data,
+                res.Note,
+                res.Unit);
 
             return ResourceEntity.Create(res, res.SortOrder, taskID > 0 ? taskID : null);
         }

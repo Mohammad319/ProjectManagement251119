@@ -17,7 +17,7 @@ namespace ProjectManagement.Adminstrator.DependencyInjection
             services.AddScoped<IUsersService, UsersService>();
             services.AddScoped<ILoggerPM, Logger>();
             services.AddScoped<ITasksUserComputationServiceWasm, TasksUserComputationServiceWasm>();
-            services.BlazorMHD();
+            services.AddBlazorMhdUI();
             services.AddAuthorizationCore();
             services.AddSingleton<ContextMenuService>();
             services.AddLocalization();

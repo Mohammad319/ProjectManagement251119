@@ -1,7 +1,9 @@
-﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
@@ -12,7 +14,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         static string OpportunityURLBase => "api/v1/opportunity/";
         public async Task<List<OpportunityModel>> GetAsync(int id)
         {
-            return await _httpRepository.GetAsync<List<OpportunityModel>>(OpportunityURLBase + id);
+            var dtos = await _httpRepository.GetAsync<List<OpportunityListDTO>>(OpportunityURLBase + id);
+            return dtos.Select(x => x.ToOpportunityModel()).ToList();
         }
         public async Task<int> CreateAsync(PostOpportunityDTO model, int calcultionId)
         {

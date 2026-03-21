@@ -1,4 +1,5 @@
-﻿using Application.Feature.Organisation.Organisation;
+using Application.Feature.Organisation.Organisation;
+using Application.Mapping.Organisation;
 using Domain.Entities.Organisation;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
@@ -25,7 +26,8 @@ namespace Persistence.Service.Organisation
 
             var entity = await db.Organisation
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
-            if (entity == null) return false;
+            if (entity == null)
+                return false;
 
             entity.Update(dto);
             await db.SaveChangesAsync(ct);
@@ -55,10 +57,11 @@ namespace Persistence.Service.Organisation
                 .Include(x => x.Offers)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (entity == null) return false;
+            if (entity == null)
+                return false;
 
             foreach (var offer in entity.Offers)
-                offer.Update(null, offer.Metadata, offer.Comment);
+                offer.Update(null, offer.GetMetadataSnapshot(), offer.Comment);
 
             db.Organisation.Remove(entity);
             await db.SaveChangesAsync(ct);
@@ -69,54 +72,24 @@ namespace Persistence.Service.Organisation
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-            var x = await db.Organisation
+            var entity = await db.Organisation
                 .AsNoTracking()
                 .Include(x => x.OrganisationCategory).ThenInclude(c => c.ParentCategory)
                 .Include(x => x.OrganisationType)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (x == null) return null;
-
-            return new OrganisationDetailsDTO
-            {
-                Name = x.Name,
-                Category = x.OrganisationCategory?.ParentCategory?.Name ?? string.Empty,
-                SubCategory = x.OrganisationCategory?.Name ?? string.Empty,
-                Type = x.OrganisationType?.Name ?? string.Empty,
-                Address = x.Metadata.Address ?? [],
-                Contacts = x.Metadata.Contacts ?? [],
-                Email = x.Metadata.Email ?? string.Empty,
-                Mobile = x.Metadata.Mobile ?? string.Empty,
-                Notes = x.Metadata.Notes ?? [],
-                Rating = x.Metadata.Rating,
-                Status = x.Metadata.Status ?? string.Empty,
-                URL = x.Metadata.URL ?? string.Empty
-            };
+            return entity?.ToDetailsDto();
         }
 
         public async Task<PostOrganisationDTO?> GetPostAsync(int id, CancellationToken ct = default)
         {
             await using var db = await dbFactory.CreateDbContextAsync(ct);
 
-            var x = await db.Organisation
+            var entity = await db.Organisation
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
 
-            if (x == null) return null;
-
-            return new PostOrganisationDTO
-            {
-                Name = x.Name,
-                CategoryId = x.OrganisationCategoryId,
-                OrganisationTypeID = x.OrganisationTypeId,
-                IsVisible = x.IsVisible,
-                Address = x.Metadata.Address ?? [],
-                Contacts = x.Metadata.Contacts ?? [],
-                Email = x.Metadata.Email ?? string.Empty,
-                Notes = x.Metadata.Notes ?? [],
-                Rating = x.Metadata.Rating,
-                URL = x.Metadata.URL ?? string.Empty
-            };
+            return entity?.ToPostDto();
         }
 
         public async Task<List<ShortListOrganisationDTO>> GetByCategoryAsync(int categoryId, bool isVisible, CancellationToken ct = default)

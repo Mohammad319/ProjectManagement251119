@@ -34,7 +34,17 @@ public ResourceTypesEnum ResType { get; set; }
         /// <summary>
         /// ✅ مصدر واحد للحقيقة لكل بيانات الحساب (Quantity/Cost/Factors/...)
         /// </summary>
-        public ResourceMetadata Data { get; set; } = new();
+        private ResourceMetadata? data = new();
+
+        public ResourceMetadata Data
+        {
+            get
+            {
+                data ??= new ResourceMetadata();
+                return data;
+            }
+            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
+        }
 
         public int? OfferId { get; set; }
         public int? AccountId { get; set; }
@@ -115,16 +125,35 @@ public ResourceTypesEnum ResType { get; set; }
         public int Id { get; set; }
         public int GroupId { get; set; }
 
-        public ResourceMetadata Data { get; set; } = new();
+        private ResourceMetadata? data = new();
+
+        public ResourceMetadata Data
+        {
+            get
+            {
+                data ??= new ResourceMetadata();
+                return data;
+            }
+            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
+        }
         [JsonIgnore] public bool Colspan = false;
     }
 
     public class ResourceListDTO : ResourceBase
     {
-        public int SortOrder { get; set; }
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
-        public ResourceMetadata Data { get; set; } = new();
+        private ResourceMetadata? data = new();
+
+        public ResourceMetadata Data
+        {
+            get
+            {
+                data ??= new ResourceMetadata();
+                return data;
+            }
+            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
+        }
         public int TaskId { get; set; }
         public int? OfferId { get; set; }
         public int? OpportunityId { get; set; }

@@ -26,16 +26,21 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             else NetCostTotaly += resNetCost;
         }
 
-        public static Factors AddNewFactor(bool oh, ResourceListMVVM res) => new()
+        public static Factors AddNewFactor(bool oh, ResourceListMVVM res)
         {
-            NetCostTotaly = !oh ? res.NetCostTotaly : 0,
-            NetCostTotalyOH = oh ? res.NetCostTotaly : 0,
-            SortId = res.ResourceSortId,
-            ResourceType = res.ResType,
-            Sort = res.Sort ?? string.Empty,
-            ResName = res.ResName ?? string.Empty,
-            ResId = res.ResourceTypeId,
-        };
+            var netCostTotaly = res.GetComputedNetCostTotaly();
+
+            return new()
+            {
+                NetCostTotaly = !oh ? netCostTotaly : 0,
+                NetCostTotalyOH = oh ? netCostTotaly : 0,
+                SortId = res.ResourceSortId,
+                ResourceType = res.ResType,
+                Sort = res.Sort ?? string.Empty,
+                ResName = res.ResName ?? string.Empty,
+                ResId = res.ResourceTypeId,
+            };
+        }
 
         public decimal KV()
         {

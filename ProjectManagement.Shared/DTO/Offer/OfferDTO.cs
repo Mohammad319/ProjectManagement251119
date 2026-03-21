@@ -1,6 +1,8 @@
-﻿using ProjectManagement.Shared.Base.Offer;
+using ProjectManagement.Shared.Base.Offer;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Helper;
 using System;
+using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Shared.DTO.Offer
 {
@@ -22,55 +24,93 @@ namespace ProjectManagement.Shared.DTO.Offer
         public decimal? MinBaseCost { get; set; }
 
         public int? OrganisationId { get; set; }
-
     }
-    public class PostOfferDTO : OfferBase
-    {
-        public string Contact { get; set; } = string.Empty;
-        public decimal Cost { get; set; }
-        public decimal BaseCost { get; set; }
-        //[Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public int ResourceId { get; set; }
-        
 
-        /// <summary>
-        /// Concurrency token (rowversion). Send this back on updates to detect stale edits.
-        /// </summary>
-        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-public int? OrganisationId { get; set; }
-        public int? ContactOrganisationId { get; set; }
-    }
     public class OfferData
     {
         public string Comment { get; set; } = string.Empty;
         public string Contact { get; set; } = string.Empty;
         public decimal Cost { get; set; }
         public decimal BaseCost { get; set; }
-    
+
+        public OfferData Clone()
+        {
+            return new OfferData
+            {
+                Comment = MetadataCloneHelper.CopyText(Comment),
+                Contact = MetadataCloneHelper.CopyText(Contact),
+                Cost = Cost,
+                BaseCost = BaseCost
+            };
+        }
+
         public void Normalize()
         {
             Cost = RoundMoney(Cost);
             BaseCost = RoundMoney(BaseCost);
-            // keep strings tidy
-            Comment = (Comment ?? string.Empty).Trim();
-            Contact = (Contact ?? string.Empty).Trim();
+            Comment = MetadataCloneHelper.CopyText(Comment).Trim();
+            Contact = MetadataCloneHelper.CopyText(Contact).Trim();
         }
 
         private static decimal RoundMoney(decimal value)
             => Math.Round(value, 2, MidpointRounding.AwayFromZero);
-}
-    public class ListOfferDTO
+    }
+
+    public class PostOfferDTO : OfferBase
     {
-        public int Id { get; set; }
-        
+        private OfferData? data = new();
+
+        [JsonIgnore]
+        public OfferData Data
+        {
+            get
+            {
+                data ??= new OfferData();
+                return data;
+            }
+            set => data = value?.Clone() ?? new OfferData();
+        }
+
+        public string Contact
+        {
+            get => Data.Contact;
+            set => Data.Contact = MetadataCloneHelper.CopyText(value);
+        }
+
+        public decimal Cost
+        {
+            get => Data.Cost;
+            set => Data.Cost = value;
+        }
+
+        public decimal BaseCost
+        {
+            get => Data.BaseCost;
+            set => Data.BaseCost = value;
+        }
+
+        public int ResourceId { get; set; }
 
         /// <summary>
         /// Concurrency token (rowversion). Send this back on updates to detect stale edits.
         /// </summary>
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
-public string Organisation { get; set; } = string.Empty;
+
         public int? OrganisationId { get; set; }
-        //public string Unit { get; set; } = string.Empty;
+        public int? ContactOrganisationId { get; set; }
+    }
+
+    public class ListOfferDTO
+    {
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Concurrency token (rowversion). Send this back on updates to detect stale edits.
+        /// </summary>
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
+        public string Organisation { get; set; } = string.Empty;
+        public int? OrganisationId { get; set; }
         public decimal BaseCost { get; set; }
         public decimal Cost { get; set; }
         public string SubCategory { get; set; } = string.Empty;
@@ -85,7 +125,6 @@ public string Organisation { get; set; } = string.Empty;
         public string UCMobile { get; set; } = string.Empty;
         public string Contact { get; set; } = string.Empty;
     }
-
 
     public class ListOfferCalcInfo : ListOfferDTO
     {

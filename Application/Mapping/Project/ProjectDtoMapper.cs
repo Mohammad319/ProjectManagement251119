@@ -1,0 +1,58 @@
+using Domain.Entities.Project;
+using ProjectManagement.Shared.DTO.Project;
+
+namespace Application.Mapping.Project
+{
+    public static class ProjectDtoMapper
+    {
+        public static PostProjectDTO ToPostDto(this ProjectEntity entity)
+        {
+            ArgumentNullException.ThrowIfNull(entity);
+
+            return new PostProjectDTO
+            {
+                Name = entity.Name,
+                Code = entity.Code ?? string.Empty,
+                StartDate = entity.StartDate,
+                EndDate = entity.EndDate,
+                TenderDeadline = entity.TenderDeadline,
+                TenderQA = entity.TenderQA,
+                FolderId = entity.FolderId,
+                OrganisationId = entity.OrganisationId,
+                ProcurementMethodsId = entity.ProcurementMethodId,
+                CompensationId = entity.CompensationId,
+                ContractId = entity.ContractId,
+                TypeId = entity.ProjectTypeId,
+                IsVisible = entity.IsVisible,
+                Order = entity.SortOrder,
+                Data = entity.GetMetadataSnapshot()
+            };
+        }
+
+        public static ProjectDetailsDTO ToDetailsDto(this ProjectEntity entity)
+        {
+            ArgumentNullException.ThrowIfNull(entity);
+
+            return new ProjectDetailsDTO
+            {
+                Name = entity.Name,
+                Code = entity.Code ?? string.Empty,
+                StartDate = entity.StartDate,
+                EndDate = entity.EndDate,
+                TenderDeadline = entity.TenderDeadline,
+                TenderQA = entity.TenderQA,
+                Order = entity.SortOrder,
+                IsVisible = entity.IsVisible,
+                Folder = entity.Folder?.Name ?? string.Empty,
+                Organisation = entity.Organisation?.Name ?? string.Empty,
+                ProcurementMethods = entity.ProcurementMethod?.Name ?? string.Empty,
+                Compensation = entity.Compensation?.Name ?? string.Empty,
+                Contract = entity.Contract?.Name ?? string.Empty,
+                Type = entity.ProjectType?.Name ?? string.Empty,
+                Created = entity.CreatedAt,
+                LastModified = entity.UpdatedAt,
+                Data = entity.GetMetadataSnapshot()
+            };
+        }
+    }
+}

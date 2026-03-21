@@ -1,5 +1,6 @@
 using Application.Feature.Project.Project;
 using Application.Helper;
+using Application.Mapping.Project;
 using Domain.Entities.Project;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Context;
@@ -154,20 +155,30 @@ namespace Persistence.Service.Project
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Projects
+            var project = await context.Projects
                 .AsNoTracking()
+                .Include(x => x.Folder)
+                .Include(x => x.Organisation)
+                .Include(x => x.ProcurementMethod)
+                .Include(x => x.Compensation)
+                .Include(x => x.Contract)
+                .Include(x => x.ProjectType)
                 .Where(x => x.Id == id)
-                .Select(ProjectSelectors.Details)
                 .FirstOrDefaultAsync(ct);
+
+            return project?.ToDetailsDto();
         }
 
         public async Task<PostProjectDTO?> GetPostAsync(Guid id, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            return await context.Projects.AsNoTracking()
+
+            var project = await context.Projects
+                .AsNoTracking()
                 .Where(x => x.Id == id)
-                .Select(ProjectSelectors.Post)
                 .FirstOrDefaultAsync(ct);
+
+            return project?.ToPostDto();
         }
 
         public async Task<IEnumerable<ListProjectDTO>> GetByFolderAsync(Guid folderId, bool isVisible, int userId, int? departmentId, CancellationToken ct)

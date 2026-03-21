@@ -1,0 +1,14 @@
+@using ProjectManagement.Shared.DTO.Offer
+
+@if (Offer != null && !string.IsNullOrWhiteSpace(BadgeText))
+{
+    <span class="inline-flex items-center px-2 py-1 text-[11px] md:text-xs rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">
+        @BadgeText
+    </span>
+
+    <span class="ml-1 font-bold text-sm text-red-600 hover:text-red-700 cursor-pointer"
+          role="button"
+          @onclick="TableCoordinator.ClearOfferSelection">
+        X
+    </span>
+}

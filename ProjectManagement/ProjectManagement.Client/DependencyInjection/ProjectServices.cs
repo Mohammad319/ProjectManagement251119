@@ -19,7 +19,7 @@ namespace ProjectManagement.Client.DependencyInjection
                 options.ChartJsPluginDatalabelsLocation = "https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2";
             });
 
-            services.BlazorMHD();
+            services.AddBlazorMhdUI();
             return services;
         }
     }

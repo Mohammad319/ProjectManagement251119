@@ -37,8 +37,10 @@ builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 builder.Services.AddApplicationServices();
 
-var connectionString = builder.Configuration.GetConnectionString("PMPConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("PMPConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' (or legacy 'PMPConnection') not found.");
 
 builder.Services.AddCustomAuthentication(connectionString);
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>

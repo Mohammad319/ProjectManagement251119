@@ -1,5 +1,5 @@
-﻿using Application.Interfaces;
-using Application.Feature.Calculation.Opportunity;
+using Application.Interfaces;
+using Application.Mapping.Calculation;
 using Application.Services.CalculationItems.Opportunity;
 using Domain.Entities.Calculation;
 using Persistence.Factory;
@@ -9,36 +9,15 @@ namespace Persistence.Service.CalculationItems.Opportunity
 {
     public sealed class OpportunityService(IDbContextFactoryTenant dbFactory, INotificationHub notification) : IOpportunityService
     {
-        public async Task<List<OpportunityEntity>> GetByCalculationAsync(int calculationId, CancellationToken ct = default)
+        public async Task<List<OpportunityListDTO>> GetByCalculationAsync(int calculationId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            return await context.Opportunity
+            var entities = await context.Opportunity
                 .Where(x => x.CalculationId == calculationId)
                 .AsNoTracking()
                 .OrderByDescending(x => x.Id)
                 .ToListAsync(ct);
-        }
-
-        public async Task<IReadOnlyList<OpportunityListItemDto>> GetListByCalculationAsync(int calculationId, CancellationToken ct = default)
-        {
-            await using var context = await dbFactory.CreateDbContextAsync(ct);
-            return await context.Opportunity
-                .AsNoTracking()
-                .Where(x => x.CalculationId == calculationId)
-                .OrderByDescending(x => x.Id)
-                .Select(x => new OpportunityListItemDto
-                {
-                    Id = x.Id,
-                    CalculationId = x.CalculationId,
-                    OpportunitiesRisks = x.OpportunitiesRisks,
-                    OpportunityType = x.OpportunityType ?? string.Empty,
-                    ProbabilityWorth = x.Metadata.ProbabilityWorth,
-                    ProbabilityPercent = x.Metadata.ProbabilityPercent,
-                    ProbabilityBest = x.Metadata.ProbabilityBest,
-                    Value = x.Metadata.Value,
-                    Comment = x.Metadata.Comment ?? string.Empty
-                })
-                .ToListAsync(ct);
+            return entities.Select(x => x.ToListDto()).ToList();
         }
 
         public async Task<int> CreateAsync(PostOpportunityDTO dto, int calculationId, CancellationToken ct = default)
@@ -56,7 +35,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
                 dto.OpportunitiesRisks,
                 dto.OpportunityType,
                 calculationId,
-                dto.Metadata ?? new OpportunityData());
+                dto.ToMetadata());
 
             context.Opportunity.Add(entity);
             await context.SaveChangesAsync(ct);
@@ -65,7 +44,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
                 calculationId.ToString(),
                 ObjectTypHub.Opportunity,
                 OperationType.Add,
-                entity.CreateSnapshot());
+                entity.ToListDto());
 
             return entity.Id;
         }
@@ -81,7 +60,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
             entity.Update(
                 dto.OpportunitiesRisks,
                 dto.OpportunityType,
-                dto.Metadata ?? new OpportunityData());
+                dto.ToMetadata());
 
             await context.SaveChangesAsync(ct);
 
@@ -89,7 +68,7 @@ namespace Persistence.Service.CalculationItems.Opportunity
                 entity.CalculationId.ToString(),
                 ObjectTypHub.Opportunity,
                 OperationType.Update,
-                entity.CreateSnapshot());
+                entity.ToListDto());
 
             return true;
         }

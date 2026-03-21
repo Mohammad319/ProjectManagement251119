@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 
 namespace ProjectManagement.Client.Services.Calculation.CalculationItems
@@ -15,7 +17,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         MhdServices Mhd,
         ContextMenuService ContextMenuService,
         IContextMenuBuilderService context,
-        DialogService dialogService)
+        DialogService dialogService,
+        CalculationInteractionState interactionState)
     {
         private static bool TaskAffectsCalculation(TaskListMVVM oldT, TaskListMVVM newT)
         {
@@ -54,10 +57,10 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public void Remove(TaskListMVVM task)
         {
-            if (!SelectedData.ExistItem(CalculationItemType.task, task.Id))
+            if (!interactionState.IsSelected(CalculationItemType.task, task.Id))
                 Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([task.Id])));
             else
-                Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. SelectedData.SelectedItems.Select(x => x.Id)])));
+                Mhd.DeleteMessage(task.Name ?? string.Empty, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. interactionState.SelectedItems.Select(x => x.Id)])));
         }
 
         public void FromHub(OperationType ot, object obj)
@@ -76,9 +79,11 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             }
             else if (ot == OperationType.Update)
             {
-                var task = obj.FromJsonWeb<TaskListMVVM>();
-                if (task is null)
+                var taskDto = obj.FromJsonWeb<TaskListDTO>();
+                if (taskDto is null)
                     return;
+
+                var task = taskDto.ToTaskListMVVM();
 
                 // ✅ O(1)
                 if (!calc.TryGetTask(task.Id, out var oldSection) || oldSection == null)
@@ -98,19 +103,24 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             }
             else if (ot == OperationType.AddRange)
             {
-                var tasks = obj.FromJsonWeb<List<TaskListMVVM>>();
-                if (tasks is null)
+                var taskDtos = obj.FromJsonWeb<List<TaskListDTO>>();
+                if (taskDtos is null)
                     return;
+
+                var tasks = taskDtos.Select(x => x.ToTaskListMVVM()).ToList();
+
                 calc.AddTasks(tasks);
             }
             else if (ot == OperationType.MoveRange)
             {
-                var list = obj.FromJsonWeb<Tuple<List<TaskListMVVM>, List<int>>>();
+                var list = obj.FromJsonWeb<Tuple<List<TaskListDTO>, List<int>>>();
                 if (list is null)
                     return;
 
+                var movedTasks = list.Item1?.Select(x => x.ToTaskListMVVM()).ToList() ?? [];
+
                 calc.RemoveTasks(list.Item2 ?? []);
-                calc.AddTasks(list.Item1 ?? []);
+                calc.AddTasks(movedTasks);
             }
         }
 
@@ -121,7 +131,11 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
             var result = await Repo.DeleteAsync(CalcContainer.Calculation.Id, items);
             Mhd.Notifications(ToastType.Delete, result);
-            if (result) dialogService.Close();
+            if (!result)
+                return;
+
+            interactionState.ResetSelection();
+            dialogService.Close();
         }
     }
 }

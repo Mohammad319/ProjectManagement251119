@@ -3,8 +3,10 @@ using Domain.Entities.Base;
 using Domain.Entities.Organisation;
 using Domain.Entities.Project;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.Calculation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -18,7 +20,7 @@ namespace Domain.Entities.Calculation
         public CalculationData Metadata
         {
             get => _metadata ??= new CalculationData();
-            private set => _metadata = value;
+            private set => _metadata = CloneMetadata(value);
         }
 
         public List<HourlyPriceListGroupDTO> HourlyPrice { get; set; }
@@ -148,8 +150,8 @@ namespace Domain.Entities.Calculation
                 Tax = original.Tax,
                 PublicationDate = original.PublicationDate,
                 DecisionDate = original.DecisionDate,
-                HourlyPrice = original.HourlyPrice,
-                Factors = original.Factors,
+                HourlyPrice = CloneHourlyPrice(original.HourlyPrice),
+                Factors = CloneFactors(original.Factors),
                 Metadata = new(),
                 CreatedBy = userId,
                 CreatedAt = DateTime.UtcNow,
@@ -176,12 +178,24 @@ namespace Domain.Entities.Calculation
 
         public void UpdateFactors(List<OHFactors> factors)
         {
-            Factors = factors ?? [];
+            Factors = CloneFactors(factors);
         }
 
         public void UpdateHourlyPriceList(List<HourlyPriceListGroupDTO> hourlyPriceList)
         {
-            HourlyPrice = hourlyPriceList ?? [];
+            HourlyPrice = CloneHourlyPrice(hourlyPriceList);
+        }
+
+        public CalculationData GetMetadataSnapshot()
+            => CloneMetadata(_metadata);
+
+        public void UpdateMetadata(Action<CalculationData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
         }
 
         public void Update(CalculationPostDTO dto)
@@ -198,9 +212,9 @@ namespace Domain.Entities.Calculation
             SetTenderDates(dto.TenderDeadline, dto.TenderQA, dto.PublicationDate, dto.DecisionDate);
             UpdateOrder(dto.Order);
 
-            Metadata = dto.Metadata ?? new CalculationData();
-            HourlyPrice = dto.HourlyPrice ?? [];
-            Factors = dto.Factors ?? [];
+            Metadata = dto.Metadata;
+            HourlyPrice = CloneHourlyPrice(dto.HourlyPrice);
+            Factors = CloneFactors(dto.Factors);
 
             SetVisibility(dto.IsPrivate, dto.IsVisible);
 
@@ -281,5 +295,114 @@ namespace Domain.Entities.Calculation
 
             return normalized;
         }
+
+        private static CalculationData CloneMetadata(CalculationData? metadata)
+        {
+            metadata ??= new CalculationData();
+
+            return new CalculationData
+            {
+                QuanityList = metadata.QuanityList?.Select(CloneQuantity).ToList() ?? [],
+                TimeMonth = metadata.TimeMonth,
+                Priority = metadata.Priority,
+                Address = metadata.Address?.Select(CloneAddress).ToList() ?? [],
+                Notes = metadata.Notes?.ToList() ?? [],
+                Responsibles = metadata.Responsibles?.ToList() ?? [],
+                Contacts = metadata.Contacts?.Select(CloneContact).ToList() ?? [],
+                Income = metadata.Income?.Select(CloneIncome).ToList() ?? [],
+                Maps = metadata.Maps ?? string.Empty,
+                Developer = metadata.Developer ?? string.Empty,
+                ClientsManager = metadata.ClientsManager ?? string.Empty,
+                Designer = metadata.Designer ?? string.Empty,
+                OverviewInfo = metadata.OverviewInfo ?? string.Empty,
+                ContactPerson = metadata.ContactPerson ?? string.Empty,
+                Supervisor = metadata.Supervisor ?? string.Empty,
+                Inspector = metadata.Inspector ?? string.Empty
+            };
+        }
+
+        private static List<HourlyPriceListGroupDTO> CloneHourlyPrice(List<HourlyPriceListGroupDTO>? groups)
+            => groups?.Select(CloneHourlyPriceGroup).ToList() ?? [];
+
+        private static List<OHFactors> CloneFactors(List<OHFactors>? factors)
+            => factors?.Select(CloneFactor).ToList() ?? [];
+
+        private static QuanityListDTO CloneQuantity(QuanityListDTO source)
+            => new()
+            {
+                Name = source.Name ?? string.Empty,
+                Quantity = source.Quantity
+            };
+
+        private static AddressDTO CloneAddress(AddressDTO source)
+            => new()
+            {
+                Street = source.Street ?? string.Empty,
+                ZIPCode = source.ZIPCode ?? string.Empty,
+                Nr = source.Nr ?? string.Empty,
+                City = source.City ?? string.Empty,
+                Region = source.Region ?? string.Empty,
+                Country = source.Country ?? string.Empty
+            };
+
+        private static UnderContactOrganisationBase CloneContact(UnderContactOrganisationBase source)
+            => new()
+            {
+                CommentIsVisible = source.CommentIsVisible,
+                FirstName = source.FirstName ?? string.Empty,
+                LastName = source.LastName ?? string.Empty,
+                Email = source.Email ?? string.Empty,
+                Telefone = source.Telefone ?? string.Empty,
+                Mobile = source.Mobile ?? string.Empty,
+                Department = source.Department ?? string.Empty,
+                Note = source.Note ?? string.Empty,
+                Status = source.Status
+            };
+
+        private static IncomeBase CloneIncome(IncomeBase source)
+            => new()
+            {
+                Year = source.Year,
+                Q1 = source.Q1,
+                Q2 = source.Q2,
+                Q3 = source.Q3,
+                Q4 = source.Q4
+            };
+
+        private static OHFactors CloneFactor(OHFactors source)
+            => new()
+            {
+                ResourceType = source.ResourceType,
+                SortId = source.SortId,
+                ResId = source.ResId,
+                IsLocked = source.IsLocked,
+                Earnings = source.Earnings,
+                Key = source.Key,
+                Unit = source.Unit ?? string.Empty,
+                DivisionKey = source.DivisionKey,
+                Selected = source.Selected ?? "all"
+            };
+
+        private static HourlyPriceListGroupDTO CloneHourlyPriceGroup(HourlyPriceListGroupDTO source)
+            => new()
+            {
+                Code = source.Code ?? string.Empty,
+                Name = source.Name ?? string.Empty,
+                Comment = source.Comment ?? string.Empty,
+                SubItemsVisible = source.SubItemsVisible,
+                Items = source.Items?.Select(CloneHourlyPriceItem).ToList() ?? []
+            };
+
+        private static HourlyPriceListItemDTO CloneHourlyPriceItem(HourlyPriceListItemDTO source)
+            => new()
+            {
+                Code = source.Code ?? string.Empty,
+                Name = source.Name ?? string.Empty,
+                Unit = source.Unit ?? string.Empty,
+                Quantity = source.Quantity,
+                CostMarketPrices = source.CostMarketPrices,
+                CostSubmittedPrices = source.CostSubmittedPrices,
+                Comment = source.Comment ?? string.Empty
+            };
     }
 }

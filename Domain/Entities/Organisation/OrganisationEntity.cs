@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.Calculation;
 using Domain.Entities.Project;
 using Domain.Helper.Organisation;
@@ -18,7 +18,7 @@ namespace Domain.Entities.Organisation
         public OrganisationData Metadata
         {
             get => _metadata ??= new OrganisationData();
-            private set => _metadata = value;
+            private set => _metadata = OrganisationDataFactory.Clone(value);
         }
 
         public int OrganisationCategoryId { get; private set; }
@@ -65,6 +65,18 @@ namespace Domain.Entities.Organisation
         }
 
         public void SetVisibility(bool visible) => IsVisible = visible;
+
+        public OrganisationData GetMetadataSnapshot()
+            => OrganisationDataFactory.Clone(_metadata);
+
+        public void UpdateMetadata(Action<OrganisationData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
+        }
 
         private static string NormalizeName(string? value)
         {

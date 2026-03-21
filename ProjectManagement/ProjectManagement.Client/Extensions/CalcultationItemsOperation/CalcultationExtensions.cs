@@ -56,19 +56,21 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                         var c = children[i];
                         if (!c.Active) continue;
 
-                        netQ += c.Calc_NetCostQ;
-                        netTot += c.Calc_NetCostTotaly;
-                        apriceTot += c.Calc_ApriceTotally;
+                        netQ += c.GetComputedNetCostQ();
+                        netTot += c.GetComputedNetCostTotaly();
+                        apriceTot += c.GetComputedApriceTotally();
 
-                        if (c.Calc_TotalCO2.HasValue)
+                        var childTotalCo2 = c.GetComputedTotalCO2();
+                        if (childTotalCo2.HasValue)
                         {
-                            totalCo2 += c.Calc_TotalCO2.Value;
+                            totalCo2 += childTotalCo2.Value;
                             hasCo2 = true;
                         }
 
-                        if (c.Calc_BaseCost.HasValue)
+                        var childBaseCost = c.GetComputedBaseCost();
+                        if (childBaseCost.HasValue)
                         {
-                            baseCost += c.Calc_BaseCost.Value;
+                            baseCost += childBaseCost.Value;
                             hasBaseCost = true;
                         }
                     }
@@ -83,13 +85,14 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                         var r = res[i];
                         if (!r.Active) continue;
 
-                        netQ += r.NetCostQ;
-                        netTot += r.NetCostTotaly;
-                        apriceTot += r.ApriceTotally;
+                        netQ += r.GetComputedNetCostQ();
+                        netTot += r.GetComputedNetCostTotaly();
+                        apriceTot += r.GetComputedApriceTotally();
 
-                        if (r.TotalCO2.HasValue)
+                        var resourceTotalCo2 = r.GetComputedTotalCO2();
+                        if (resourceTotalCo2.HasValue)
                         {
-                            totalCo2 += r.TotalCO2.Value;
+                            totalCo2 += resourceTotalCo2.Value;
                             hasCo2 = true;
                         }
 
@@ -101,11 +104,12 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                     }
                 }
 
-                t.Calc_NetCostQ = netQ;
-                t.Calc_NetCostTotaly = netTot;
-                t.Calc_ApriceTotally = apriceTot;
-                t.Calc_TotalCO2 = hasCo2 ? totalCo2 : null;
-                t.Calc_BaseCost = hasBaseCost ? baseCost : null;
+                t.SetComputedAggregates(
+                    netQ,
+                    netTot,
+                    apriceTot,
+                    hasCo2 ? totalCo2 : null,
+                    hasBaseCost ? baseCost : null);
             }
         }
 
@@ -118,6 +122,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
             calc.Factors ??= [];
             calc.QuanityList ??= [];
+            calc.InvalidateAllCaches();
 
             // Index سريع للـQuanityList (بدل FirstOrDefault آلاف المرات)
             var qIndex = BuildQuantityIndex(calc.QuanityList);
@@ -270,7 +275,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                         if (res.Sort != f.Sort) f.Sort = res.Sort ?? string.Empty;
 
                         // ✅ اجمع في نفس الـ factor القادم من REST (يحافظ على Earnings=22)
-                        f.AddResValue(taskIsOH, res.NetCostTotaly);
+                        f.AddResValue(taskIsOH, res.GetComputedNetCostTotaly());
                     }
                 }
             }
@@ -309,7 +314,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                     var key = new FactorKey(res.ResourceTypeId, res.ResourceSortId, res.ResType);
 
                     if (index.TryGetValue(key, out var factor) && factor is not null)
-                        res.Factor = factor.Factor;
+                        res.SetComputedFactor(factor.Factor);
                 }
             }
         }
@@ -467,6 +472,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 throw new InvalidOperationException("resource.Data must not be null.");
 
             var data = resource.Data;
+            ApplyResourceParameterFactor(data);
 
             if (resource.HasCap && cap.HasValue)
                 data.CapWaste = cap.Value;
@@ -486,7 +492,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
             else
             {
-                var baseCalc = effectiveTaskQuantity * resource.ChangeFactor1 * resource.ChangeFactor2;
+                var baseCalc = effectiveTaskQuantity * data.ChangeFactor1 * data.ChangeFactor2;
                 var capWaste = data.CapWaste;
 
                 if (resource.HasWast && capWaste != 0)
@@ -496,6 +502,49 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 else
                     data.Quantity = baseCalc;
             }
+
+            ApplyResourceTimedCost(data);
         }
+
+        private static void ApplyResourceParameterFactor(ResourceMetadata data)
+        {
+            var parameters = data.Parameters;
+            if (parameters is null || parameters.Count == 0)
+                return;
+
+            decimal product = 1m;
+            for (int i = 0; i < parameters.Count; i++)
+                product *= parameters[i].Value;
+
+            data.ChangeFactor1 = RoundFactor(product);
+        }
+
+        private static void ApplyResourceTimedCost(ResourceMetadata data)
+        {
+            var times = data.Times;
+            if (times is null || times.Count == 0)
+                return;
+
+            var quantity = data.Quantity ?? 0m;
+            if (quantity <= 0m)
+            {
+                data.Cost = 0m;
+                return;
+            }
+
+            decimal total = 0m;
+            for (int i = 0; i < times.Count; i++)
+                total += times[i].Quantity * times[i].Cost;
+
+            data.Cost = RoundMoney(total / quantity);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal RoundMoney(decimal value) =>
+            Math.Round(value, 2, MidpointRounding.AwayFromZero);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static decimal RoundFactor(decimal value) =>
+            Math.Round(value, 4, MidpointRounding.AwayFromZero);
     }
 }

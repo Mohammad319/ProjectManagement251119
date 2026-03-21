@@ -14,20 +14,7 @@ namespace Application.Mapping.CalcItems
 
         public static TaskListDTO MapToTaskListDTO(this TaskEntity t)
         {
-            var meta = t.Metadata?.Clone() ?? new TaskMetadata();
-
-            if (!string.IsNullOrWhiteSpace(t.Note))
-                meta.Note = t.Note!;
-
-            if (!string.IsNullOrWhiteSpace(t.Unit))
-                meta.Unit = t.Unit!;
-
-            if (!string.IsNullOrWhiteSpace(t.Code))
-                meta.Code = t.Code!;
-
-            meta.Type = t.Type;
-            meta.IsActive = t.IsActive;
-            meta.IsOH = t.IsOH;
+            var meta = t.GetMetadataSnapshot();
 
             return new TaskListDTO
             {
@@ -36,7 +23,7 @@ namespace Application.Mapping.CalcItems
                 RowVersion = t.RowVersion,
                 Name = t.Name,
                 OpportunityId = t.OpportunityId,
-                Order = t.SortOrder,
+                SortOrder = t.SortOrder,
                 StatusId = t.StatusId,
                 Status = t.Status?.Name ?? string.Empty,
                 StatusColor = t.Status?.Color ?? string.Empty,
@@ -48,7 +35,7 @@ namespace Application.Mapping.CalcItems
 
         public static TaskEntity MapToTaskEntity(TaskPostDTO dto, int calcId)
         {
-            var task = TaskEntity.Create(calcId, dto, dto.Order, dto.ParentTaskId);
+            var task = TaskEntity.Create(calcId, dto, dto.SortOrder, dto.ParentTaskId);
             task.Resources = dto.Resources?.Select(x => x.Parse(dto.Id)).ToList() ?? [];
             task.Tasks = dto.Tasks?.Select(t => MapToTaskEntity(t, calcId)).ToList() ?? [];
             return task;

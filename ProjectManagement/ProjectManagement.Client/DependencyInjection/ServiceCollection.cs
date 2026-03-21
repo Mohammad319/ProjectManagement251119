@@ -11,7 +11,9 @@ namespace ProjectManagement.Client.DependencyInjection
         {
             services.AddScoped<FolderService>();
             services.AddScoped<FolderState>();
+            services.AddScoped<CalculationInteractionState>();
             services.AddScoped<CalculationService>();
+            services.AddScoped<ICalculationTableCoordinator, CalculationTableCoordinator>();
             services.AddScoped<ResourceService>();
             services.AddScoped<TaskService>();
             services.AddScoped<MhdServices>();

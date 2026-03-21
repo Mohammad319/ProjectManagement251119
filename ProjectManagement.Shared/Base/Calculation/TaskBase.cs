@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System;
+using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Shared.Base.Calculation
 {
@@ -108,5 +109,12 @@ public TaskMetadata Clone()
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
         public int Order { get; set; }
+
+        [JsonIgnore]
+        public int SortOrder
+        {
+            get => Order;
+            set => Order = value;
+        }
     }
 }

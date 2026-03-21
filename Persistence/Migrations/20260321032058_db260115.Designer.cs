@@ -12,7 +12,7 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260313061654_db260115")]
+    [Migration("20260321032058_db260115")]
     partial class db260115
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.2")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -593,8 +593,10 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Note")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(500)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(500))", true);
 
                     b.Property<int?>("OpportunityId")
                         .HasColumnType("int");
@@ -630,8 +632,10 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Unit")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)");
+                        .HasColumnType("nvarchar(25)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(25))", true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -897,8 +901,10 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Code")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(20)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Code'))), '') AS nvarchar(20))", true);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -907,10 +913,14 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bit")
+                        .HasComputedColumnSql("CAST(CASE LOWER(JSON_VALUE([Metadata], '$.IsActive')) WHEN 'true' THEN 1 WHEN '1' THEN 1 WHEN 'false' THEN 0 WHEN '0' THEN 0 ELSE 1 END AS bit)", true);
 
                     b.Property<bool>("IsOH")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bit")
+                        .HasComputedColumnSql("CAST(CASE LOWER(JSON_VALUE([Metadata], '$.IsOH')) WHEN 'true' THEN 1 WHEN '1' THEN 1 WHEN 'false' THEN 0 WHEN '0' THEN 0 ELSE 0 END AS bit)", true);
 
                     b.Property<string>("Metadata")
                         .IsRequired()
@@ -922,8 +932,10 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Note")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(500)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(500))", true);
 
                     b.Property<int?>("OpportunityId")
                         .HasColumnType("int");
@@ -947,11 +959,15 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Type")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("int")
+                        .HasComputedColumnSql("COALESCE(TRY_CONVERT(int, JSON_VALUE([Metadata], '$.Type')), 0)", true);
 
                     b.Property<string>("Unit")
+                        .ValueGeneratedOnAddOrUpdate()
                         .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)");
+                        .HasColumnType("nvarchar(25)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(25))", true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

@@ -1,6 +1,7 @@
 using Application.Feature.Calculation.Task;
 using Domain.Entities.Calculation;
 using Persistence.Factory;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 
 namespace Persistence.Service.CalculationItems.Task
@@ -25,8 +26,16 @@ namespace Persistence.Service.CalculationItems.Task
                 .Select(x => new TaskListDTO
                 {
                     Id = x.Id,
-                    Metadata = x.Metadata,
+                    Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
+                        x.Metadata,
+                        x.Note,
+                        x.Unit,
+                        x.Code,
+                        x.IsActive,
+                        x.Type,
+                        x.IsOH),
                     Name = x.Name,
+                    SortOrder = x.SortOrder,
                     StatusColor = x.Status != null ? x.Status.Color : string.Empty,
                     Status = x.Status != null ? x.Status.Name : string.Empty,
                     TaskId = x.ParentTaskId,

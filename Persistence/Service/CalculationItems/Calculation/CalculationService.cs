@@ -234,7 +234,7 @@ namespace Persistence.Service.CalculationItems.Calculation
             if (calculation is null)
                 return false;
 
-            calculation.Metadata.QuanityList = model ?? [];
+            calculation.UpdateMetadata(m => m.QuanityList = model ?? []);
             Touch(calculation, calculation.UpdatedBy ?? calculation.CreatedBy ?? 0);
             await db.SaveChangesAsync(cancellationToken);
 

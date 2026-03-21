@@ -58,7 +58,8 @@ namespace Persistence.Service.CalculationItems.Resource
                 if (sourceCalcId != parent.NewCalcID)
                 {
                     copy.ClearCrossCalculationState(resetQuantityParam: true);
-                    copy.Metadata.Quantity = valueById.TryGetValue(sourceId, out var v) ? v : copy.Metadata.Quantity;
+                    if (valueById.TryGetValue(sourceId, out var v))
+                        copy.UpdateMetadata(m => m.Quantity = v);
                 }
                 else
                 {
@@ -185,12 +186,7 @@ namespace Persistence.Service.CalculationItems.Resource
 
                 if (parent.CalID != sourceCalcId)
                 {
-                    if (!string.IsNullOrEmpty(resource.Metadata.QuantityParam))
-                        resource.Metadata.QuantityParam = PMValuesConst.FixedQ;
-
-                    resource.Offers = [];
-                    resource.PrimaryOfferId = null;
-                    resource.OpportunityId = null;
+                    resource.ClearCrossCalculationState(resetQuantityParam: true);
                 }
 
                 var nextOrder = parent.Max.HasValue ? parent.Max.Value + 100 : 100;
@@ -330,7 +326,6 @@ namespace Persistence.Service.CalculationItems.Resource
                 context.Entry(entity).Property(x => x.RowVersion).OriginalValue = res.RowVersion;
 
             entity.Update(res);
-            entity.Metadata.QuantityParam = res.Data.QuantityParam;
 
             try
             {

@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation.Template;
@@ -16,7 +16,7 @@ namespace Domain.Entities.Calculation
         public TemplateData Metadata
         {
             get => _metadata ??= new TemplateData();
-            private set => _metadata = value;
+            private set => _metadata = TemplateMetadataMapper.Build(value);
         }
 
         [JsonIgnore]
@@ -40,10 +40,6 @@ namespace Domain.Entities.Calculation
             DepartmentId = departmentId;
         }
 
-        // ----------------------------------------------
-        // Behavior
-        // ----------------------------------------------
-
         public void SetName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -60,9 +56,21 @@ namespace Domain.Entities.Calculation
             Metadata = metadata;
         }
 
+        public TemplateData GetMetadataSnapshot()
+            => TemplateMetadataMapper.Build(_metadata);
+
         public void UpdateMetadata(TemplateData metadata)
         {
             Metadata = metadata;
+        }
+
+        public void UpdateMetadata(Action<TemplateData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
         }
 
         public void SetVisibility(bool isVisible)

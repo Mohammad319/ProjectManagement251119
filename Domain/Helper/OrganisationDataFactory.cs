@@ -1,4 +1,4 @@
-﻿using ProjectManagement.Shared.DTO.Organisation;
+using ProjectManagement.Shared.DTO.Organisation;
 
 namespace Domain.Helper.Organisation
 {
@@ -8,28 +8,36 @@ namespace Domain.Helper.Organisation
         {
             ArgumentNullException.ThrowIfNull(dto);
 
+            return Clone(dto.Data);
+        }
+
+        public static OrganisationData Clone(OrganisationData? data)
+        {
+            data ??= new OrganisationData();
+
             return new OrganisationData
             {
-                Address = dto.Address ?? [],
-                VerificationDate = dto.VerificationDate,
-                InvoiceVerificationDate = dto.InvoiceVerificationDate,
-                Contacts = dto.Contacts ?? [],
-                Email = Normalize(dto.Email),
-                EnvironmentalSystems = dto.EnvironmentalSystems,
-                IDNumber = Normalize(dto.IDNumber),
-                Mobile = Normalize(dto.Mobile),
-                Notes = (dto.Notes ?? []).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).ToList(),
-                NumberOfWorkersCards = dto.NumberOfWorkersCards,
-                Phone = Normalize(dto.Phone),
-                PIDNumber = Normalize(dto.PIDNumber),
-                QualitySystems = dto.QualitySystems,
-                Rating = dto.Rating,
-                SocialLaborAgreement = dto.SocialLaborAgreement,
-                Status = Normalize(dto.Status),
-                URL = Normalize(dto.URL)
+                Address = Domain.Helper.MetadataCloneHelper.CloneAddresses(data.Address),
+                VerificationDate = data.VerificationDate,
+                InvoiceVerificationDate = data.InvoiceVerificationDate,
+                Contacts = Domain.Helper.MetadataCloneHelper.CloneContacts(data.Contacts),
+                Email = Normalize(data.Email),
+                EnvironmentalSystems = data.EnvironmentalSystems,
+                IDNumber = Normalize(data.IDNumber),
+                Mobile = Normalize(data.Mobile),
+                Notes = (data.Notes ?? []).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).ToList(),
+                NumberOfWorkersCards = data.NumberOfWorkersCards,
+                Phone = Normalize(data.Phone),
+                PIDNumber = Normalize(data.PIDNumber),
+                QualitySystems = data.QualitySystems,
+                Rating = data.Rating,
+                SocialLaborAgreement = data.SocialLaborAgreement,
+                Status = Normalize(data.Status),
+                URL = Normalize(data.URL)
             };
         }
 
-        private static string Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+        private static string Normalize(string? value)
+            => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
     }
 }

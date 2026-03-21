@@ -1,11 +1,9 @@
-﻿using Application.Interfaces;
-using Domain.Entities.Application;
-using ProjectManagement.Shared.Base.Application;
-using System;
+using Application.Interfaces;
+using ProjectManagement.Shared.DTO.App;
 
 namespace Application.Feature.Application.Commands
 {
-    public sealed record CreateApplicationCommand(ApplicationEntity Dto) : IRequest<int>;
+    public sealed record CreateApplicationCommand(ApplicationDTO Dto) : IRequest<int>;
 
     public class CreateApplicationCommandHandler(IApplicationService context) : IRequestHandler<CreateApplicationCommand, int>
     {

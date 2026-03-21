@@ -1,4 +1,5 @@
 ﻿using ProjectManagement.Shared.Base.AppTenant;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.ProjectAppStorage;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Enums;
@@ -43,6 +44,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
         foreach (var resource in resources)
         {
+            ApplyResourceParameterFactor(resource.Data);
             var baseCalc = taskQuantity.Value * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
 
             if (resource.HasWast && resource.Data.CapWaste != 0)
@@ -51,6 +53,8 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                 resource.Data.Quantity = baseCalc / resource.Data.CapWaste;
             else
                 resource.Data.Quantity = baseCalc;
+
+            ApplyResourceTimedCost(resource.Data);
         }
     }
 
@@ -160,6 +164,9 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                 GetOptionFormulas(ra, ans.SelectedChoiceOptionIds);
                 GetNumericFormulas(ra, ans.NumericValuesByGroupId);
 
+                var resourceData = ra.Resource.Data.Clone();
+                resourceData.CapWaste = cawaste;
+
                 ResourceDto res = new()
                 {
                     Id = ra.Resource.Id,
@@ -172,19 +179,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     StatusId = ra.Resource.StatusId,
                     CalcResCost = ra.Resource.CalcResCost,
                     MenuId = ra.Resource.MenuId,
-                    Data = new Base.Calculation.ResourceMetadata()
-                    {
-                        CapWaste = cawaste,
-                        ChangeFactor1 = ra.Resource.Data.ChangeFactor1,
-                        ChangeFactor2 = ra.Resource.Data.ChangeFactor2,
-                        BaseCost = ra.Resource.Data.BaseCost,
-                        Unit = ra.Resource.Data.Unit,
-                        Cost = ra.Resource.Data.Cost,
-                        Quantity = ra.Resource.Data.Quantity,
-                        Note = ra.Resource.Data.Note,
-                        UpperNote = ra.Resource.Data.UpperNote,
-                        CO2 = ra.Resource.Data.CO2,
-                    },
+                    Data = resourceData,
                     ResType = ra.Resource.ResType,
                     Active = ra.Resource.Active,
                     Formulas = ra.Formulas,
@@ -201,6 +196,39 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
         ResourceFormulaApplier.ApplyAll(task.ResultResources, task.ParameterValues);
         return true;
+    }
+
+    private static void ApplyResourceParameterFactor(ResourceMetadata data)
+    {
+        var parameters = data.Parameters;
+        if (parameters is null || parameters.Count == 0)
+            return;
+
+        decimal product = 1m;
+        for (int i = 0; i < parameters.Count; i++)
+            product *= parameters[i].Value;
+
+        data.ChangeFactor1 = Math.Round(product, 4, MidpointRounding.AwayFromZero);
+    }
+
+    private static void ApplyResourceTimedCost(ResourceMetadata data)
+    {
+        var times = data.Times;
+        if (times is null || times.Count == 0)
+            return;
+
+        var quantity = data.Quantity ?? 0m;
+        if (quantity <= 0m)
+        {
+            data.Cost = 0m;
+            return;
+        }
+
+        decimal total = 0m;
+        for (int i = 0; i < times.Count; i++)
+            total += times[i].Quantity * times[i].Cost;
+
+        data.Cost = Math.Round(total / quantity, 2, MidpointRounding.AwayFromZero);
     }
 
     public bool Combine(bool a, bool b, ConditionLogic op)

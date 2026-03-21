@@ -1,9 +1,11 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.General;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
@@ -35,8 +37,11 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         }
         public async Task<bool> DeleteAsync(int calcID, IEnumerable<int> items) => await _httpRepository.DeleteAsync(ResourceURLBase + calcID, items);
 
-        public async Task<List<ResourceListMVVM>> GetByFilterAsync(FilterCalculationItemsDto res) =>
-            await _httpRepository.PostAsync<List<ResourceListMVVM>, FilterCalculationItemsDto>(res, ResourceURLBase + URLConst.Filter);
+        public async Task<List<ResourceListMVVM>> GetByFilterAsync(FilterCalculationItemsDto res)
+        {
+            var dtos = await _httpRepository.PostAsync<List<ResourceListDTO>, FilterCalculationItemsDto>(res, ResourceURLBase + URLConst.Filter);
+            return dtos.Select(x => x.ToResourceListMVVM()).ToList();
+        }
 
         public async Task<ResourceFormDTO> GetConfigForm()
         {

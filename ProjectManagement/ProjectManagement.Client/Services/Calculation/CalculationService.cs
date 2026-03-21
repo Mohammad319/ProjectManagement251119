@@ -1,11 +1,13 @@
 ﻿using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.Calculation;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.ViewModel;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
 
 namespace ProjectManagement.Client.Services.Calculation
@@ -13,12 +15,55 @@ namespace ProjectManagement.Client.Services.Calculation
     public class CalculationService(
         ITemplateRepository templateRepo,
         ICalculationRepository calcRepo,
-        FolderState folderState, MhdServices mhdServices)
+        FolderState folderState,
+        MhdServices mhdServices,
+        CalculationInteractionState interactionState)
     {
-        public bool ShowComments { get; set; } = true;
+        private bool showComments = true;
+
+        public event Action? CommentsVisibilityChanged;
+        public event Action? GridViewMaterialized;
+
+        public bool ShowComments
+        {
+            get => showComments;
+            set
+            {
+                if (showComments == value)
+                    return;
+
+                showComments = value;
+                CommentsVisibilityChanged?.Invoke();
+            }
+        }
+
         public ListOfferDTO? Offer { get; set; }
 
         public event EventHandler PageChanged = delegate { };
+
+        public void RequestGridRefresh(CalculationGridRefreshKind kind = CalculationGridRefreshKind.View)
+        {
+            var calculation = folderState.Calculation;
+            if (calculation == null)
+                return;
+
+            switch (kind)
+            {
+                case CalculationGridRefreshKind.Structure:
+                    calculation.NotifyGridRefresh(flatListDirty: true, structureFlatListDirty: true);
+                    break;
+
+                case CalculationGridRefreshKind.FlatList:
+                    calculation.NotifyGridRefresh(flatListDirty: true);
+                    break;
+
+                default:
+                    calculation.NotifyGridRefresh(flatListDirty: false);
+                    break;
+            }
+        }
+
+        public void NotifyGridViewMaterialized() => GridViewMaterialized?.Invoke();
 
         private async Task<CalculationMVVM?> NewCalculation(int id)
         {
@@ -27,7 +72,7 @@ namespace ProjectManagement.Client.Services.Calculation
             if (calculation is null)
                 return null;
 
-            SelectedData.Reset();
+            interactionState.ResetSelection();
             calculation.Id = id;
             calculation.BuildTaskHierarchy();
             calculation.RebuildHierarchyAndIndexes();
@@ -72,7 +117,7 @@ namespace ProjectManagement.Client.Services.Calculation
             {
                 case OperationType.Update:
                     {
-                        var updated = obj.FromJsonWeb<OpportunityModel>();
+                        var updated = obj.FromJsonWeb<OpportunityListDTO>()?.ToOpportunityModel();
                         if (updated is null) return;
 
                         var existing = opportunities.FirstOrDefault(x => x.Id == updated.Id);
@@ -94,7 +139,7 @@ namespace ProjectManagement.Client.Services.Calculation
 
                 case OperationType.Add:
                     {
-                        var added = obj.FromJsonWeb<OpportunityModel>();
+                        var added = obj.FromJsonWeb<OpportunityListDTO>()?.ToOpportunityModel();
                         if (added != null)
                             opportunities.Add(added);
                         break;
@@ -106,11 +151,12 @@ namespace ProjectManagement.Client.Services.Calculation
         {
             if (ot != OperationType.Update || folderState.Calculation is null) return;
 
-            var calcN = obj.FromJsonWeb<CalculationMVVM>();
-            if (calcN is null) return;
+            var calcDto = obj.FromJsonWeb<CalculationPageDTO>();
+            if (calcDto is null) return;
 
-            // احتفظ بالـ Tasks الحالية
-            foreach (var item in calcN.Factors)
+            // السيرفر يرسل DTO جزئي هنا، لذلك نحدّث فقط الحقول التي يضمن إرسالها
+            // بدل إسقاطه على CalculationMVVM كاملة وإعادة قيم أخرى إلى defaults.
+            foreach (var item in calcDto.Factors.Select(x => x.ToFactors()))
             {
                 var neuF = folderState.Calculation.Factors
                     .FirstOrDefault(x => x.ResourceType == item.ResourceType &&
@@ -129,11 +175,14 @@ namespace ProjectManagement.Client.Services.Calculation
                     folderState.Calculation.Factors.Add(item);
                 }
             }
-            folderState.Calculation.HourlyPriceList = calcN.HourlyPriceList;
-            folderState.Calculation.Tax = calcN.Tax;
-            folderState.Calculation.AdditionalCostEarnings = calcN.AdditionalCostEarnings;
-            folderState.Calculation.TenderExcelTax = calcN.TenderExcelTax;
-            folderState.Calculation.TenderInclTax = calcN.TenderInclTax;
+
+            folderState.Calculation.QuanityList = calcDto.QuanityList ?? [];
+            folderState.Calculation.Tax = (int)calcDto.Tax;
+            folderState.Calculation.Name = calcDto.Name ?? string.Empty;
+            folderState.Calculation.Code = calcDto.Code ?? string.Empty;
+            folderState.Calculation.Supervisor = calcDto.Supervisor ?? string.Empty;
+            folderState.Calculation.Inspector = calcDto.Inspector ?? string.Empty;
+            folderState.Calculation.TemplateId = calcDto.TemplateId;
         }
 
         public void GetFilter(FilterVM? filter)
@@ -144,6 +193,7 @@ namespace ProjectManagement.Client.Services.Calculation
 
             folderState.Calculation.FilterVM = filter;
             CalculationStaticFun.Filter(filter, folderState.Calculation.Tasks);
+            RequestGridRefresh(CalculationGridRefreshKind.FlatList);
         }
     }
 }

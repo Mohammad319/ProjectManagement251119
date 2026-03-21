@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Enums;
 
@@ -14,6 +14,7 @@ namespace Domain.Entities.Calculation
         public bool Tap5 { get => Tabs.HasFlag(ShareTabs.Tap5); set => Tabs = value ? Tabs | ShareTabs.Tap5 : Tabs & ~ShareTabs.Tap5; }
         public bool Tap6 { get => Tabs.HasFlag(ShareTabs.Tap6); set => Tabs = value ? Tabs | ShareTabs.Tap6 : Tabs & ~ShareTabs.Tap6; }
     }
+
     public sealed class ShareCalcEntity : AuditableEntity<int>
     {
         public int DepartmentId { get; private set; }
@@ -28,7 +29,7 @@ namespace Domain.Entities.Calculation
         public ShareCalcData Metadata
         {
             get => _metadata ??= new ShareCalcData();
-            private set => _metadata = value;
+            private set => _metadata = CloneMetadata(value);
         }
 
         private ShareCalcEntity() { }
@@ -46,46 +47,27 @@ namespace Domain.Entities.Calculation
             DepartmentId = departmentId;
             Metadata = data ?? new ShareCalcData();
         }
+
+        public ShareCalcData GetMetadataSnapshot()
+            => CloneMetadata(_metadata);
+
+        public void UpdateMetadata(Action<ShareCalcData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
+        }
+
+        private static ShareCalcData CloneMetadata(ShareCalcData? data)
+        {
+            data ??= new ShareCalcData();
+
+            return new ShareCalcData
+            {
+                Tabs = data.Tabs
+            };
+        }
     }
-
-    //public sealed class ShareCalcEntity : AuditableEntity<int>
-    //{
-    //    public int DepartmentId { get; private set; }
-    //    public DepartmentEntity Department { get; private set; } = null!;
-
-    //    public int CalculationId { get; private set; }
-    //    public CalculationEntity Calculation { get; private set; } = null!;
-
-    //    // المستخدم المنشئ (CreatedBy موجود في AuditableEntity)
-    //    public UserEntity? CreatedAtUser { get; private set; }
-
-    //    private ShareCalcData? _metadata;
-    //    public ShareCalcData Metadata
-    //    {
-    //        get => _metadata ??= new ShareCalcData();
-    //        private set => _metadata = value;
-    //    }
-
-    //    private ShareCalcEntity() { } // EF
-
-    //    public ShareCalcEntity(int calculationId, int departmentId, int createdBy, ShareCalcData metadata)
-    //    {
-    //        CalculationId = calculationId;
-    //        DepartmentId = departmentId;
-    //        CreatedBy = createdBy;
-    //        Metadata = metadata ?? new ShareCalcData();
-    //    }
-
-    //    public void UpdateTabs(ShareCalcData data)
-    //    {
-    //        Metadata = data ?? new ShareCalcData();
-    //    }
-
-    //    public void UpdateDepartment(int departmentId)
-    //    {
-    //        DepartmentId = departmentId;
-    //    }
-    //}
-
-
 }

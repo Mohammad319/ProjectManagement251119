@@ -32,8 +32,12 @@ public int? ParentTaskId { get; set; }
 
         public TaskMetadata Metadata
         {
-            get { data ??= new TaskMetadata(); return data; }
-            set { data = value ?? new TaskMetadata(); }
+            get
+            {
+                data ??= new TaskMetadata();
+                return data;
+            }
+            set { data = CalculationItemMetadataMapper.CloneTaskMetadata(value); }
         }
 
         public string Note
@@ -125,8 +129,12 @@ public int? ParentTaskId { get; set; }
 
         public TaskMetadata Data
         {
-            get { data ??= new TaskMetadata(); return data; }
-            set { data = value ?? new TaskMetadata(); }
+            get
+            {
+                data ??= new TaskMetadata();
+                return data;
+            }
+            set { data = CalculationItemMetadataMapper.CloneTaskMetadata(value); }
         }
 
         public List<ResourceStorageListDTO> Resources { get; set; } = [];
@@ -136,7 +144,17 @@ public int? ParentTaskId { get; set; }
 
     public class TaskListDTO : TaskBase
     {
-        public TaskMetadata Metadata { get; set; } = new();
+        private TaskMetadata? metadata = new();
+
+        public TaskMetadata Metadata
+        {
+            get
+            {
+                metadata ??= new TaskMetadata();
+                return metadata;
+            }
+            set { metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value); }
+        }
         public int Id { get; set; }
         public int? TaskId { get; set; }
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();

@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Folder;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Offer;
+using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Hub;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.Project;
@@ -20,8 +23,11 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         ContextMenuService ContextMenuService,
         IContextMenuBuilderService context,
         IOfferRepository Offer,
-        DialogService dialogService) : IDisposable
+        DialogService dialogService,
+        CalculationInteractionState interactionState) : IDisposable
     {
+        public event Action<int>? OfferStateChanged;
+
         public static bool AffectsCalculation(ResourceListMVVM oldR, ResourceListMVVM newR)
         {
             // عدّل حسب منطقك الحقيقي
@@ -37,8 +43,68 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (oldR.Data?.CO2 != newR.Data?.CO2) return true;
             if (oldR.Data?.ChangeFactor1 != newR.Data?.ChangeFactor1) return true;
             if (oldR.Data?.ChangeFactor2 != newR.Data?.ChangeFactor2) return true;
+            if (HasEffectiveChangeFactor1Changed(oldR.Data, newR.Data)) return true;
+            if (HasEffectiveCostChanged(oldR.Data, newR.Data)) return true;
 
             return false;
+        }
+
+        private static bool HasEffectiveChangeFactor1Changed(ResourceMetadata? oldData, ResourceMetadata? newData)
+        {
+            bool oldHasParameters = oldData?.Parameters is { Count: > 0 };
+            bool newHasParameters = newData?.Parameters is { Count: > 0 };
+
+            if (!oldHasParameters && !newHasParameters)
+                return false;
+
+            return GetEffectiveChangeFactor1(oldData) != GetEffectiveChangeFactor1(newData);
+        }
+
+        private static bool HasEffectiveCostChanged(ResourceMetadata? oldData, ResourceMetadata? newData)
+        {
+            bool oldHasTimes = oldData?.Times is { Count: > 0 };
+            bool newHasTimes = newData?.Times is { Count: > 0 };
+
+            if (!oldHasTimes && !newHasTimes)
+                return false;
+
+            return GetEffectiveCost(oldData) != GetEffectiveCost(newData);
+        }
+
+        private static decimal GetEffectiveChangeFactor1(ResourceMetadata? data)
+        {
+            if (data is null)
+                return 0m;
+
+            var parameters = data.Parameters;
+            if (parameters is null || parameters.Count == 0)
+                return data.ChangeFactor1;
+
+            decimal product = 1m;
+            for (int i = 0; i < parameters.Count; i++)
+                product *= parameters[i].Value;
+
+            return Math.Round(product, 4, MidpointRounding.AwayFromZero);
+        }
+
+        private static decimal GetEffectiveCost(ResourceMetadata? data)
+        {
+            if (data is null)
+                return 0m;
+
+            var times = data.Times;
+            if (times is null || times.Count == 0)
+                return data.Cost;
+
+            var quantity = data.Quantity ?? 0m;
+            if (quantity <= 0m)
+                return 0m;
+
+            decimal total = 0m;
+            for (int i = 0; i < times.Count; i++)
+                total += times[i].Quantity * times[i].Cost;
+
+            return Math.Round(total / quantity, 2, MidpointRounding.AwayFromZero);
         }
 
         public async Task HandleOfferAsync(ResourceListMVVM res)
@@ -112,13 +178,23 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                     // بما أن كودك الأصلي ينادي res.RemoveOffer(offerId)، نبحث عن resource عبر OfferId بسرعة:
                     // (لو عندك Offer يحمل ResourceId استخدمه هنا مباشرة. إن لم يكن، نعمل fallback مرة واحدة)
                     var res = calc.Tasks.SelectMany(t => t.Resources).FirstOrDefault(r => r.Offers.Any(o => o.Id == offerId));
-                    res?.RemoveOffer(offerId);
+                    if (res != null)
+                    {
+                        res.RemoveOffer(offerId);
+                        calc.OfferById.Remove(offerId);
+                        OfferStateChanged?.Invoke(res.Id);
+                    }
                 }
                 else
                 {
                     // fallback safe
                     var res = calc.Tasks.SelectMany(t => t.Resources).FirstOrDefault(r => r.Offers.Any(o => o.Id == offerId));
-                    res?.RemoveOffer(offerId);
+                    if (res != null)
+                    {
+                        res.RemoveOffer(offerId);
+                        calc.OfferById.Remove(offerId);
+                        OfferStateChanged?.Invoke(res.Id);
+                    }
                 }
             }
             else if (ot == OperationType.Update)
@@ -128,7 +204,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
                 if (list.Data != null)
                 {
-                    List<ListOfferMVVM> listOO = list.GetData<List<ListOfferMVVM>>() ?? [];
+                    List<ListOfferMVVM> listOO = (list.GetData<List<ListOfferDTO>>() ?? [])
+                        .Select(x => x.ToListOfferMVVM())
+                        .ToList();
 
                     for (int i = 0; i < listOO.Count; i++)
                     {
@@ -145,7 +223,11 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                     if (res == null) return;
 
                     if (string.IsNullOrEmpty(list.Parent))
+                    {
                         res.OfferId = null;
+                        res.SyncOfferSelection();
+                        OfferStateChanged?.Invoke(res.Id);
+                    }
                     else if (int.TryParse(list.Parent, out int offerID))
                     {
                         res.OfferId = offerID;
@@ -155,6 +237,9 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                             res.Data.BaseCost = off.BaseCost;
                             res.Data.Cost = off.Cost;
                         }
+
+                        res.SyncOfferSelection();
+                        OfferStateChanged?.Invoke(res.Id);
                     }
                 }
             }
@@ -163,16 +248,20 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 var list = obj.FromJsonWeb<HubDataDto>();
                 if (list == null) return;
 
-                var offer = list.GetData<ListOfferMVVM>();
-                if (offer == null) return;
+                var offerDto = list.GetData<ListOfferDTO>();
+                if (offerDto == null) return;
+
+                var offer = offerDto.ToListOfferMVVM();
 
                 var res = Get(list.ParentId);
                 if (res == null) return;
 
                 res.Offers.Add(offer);
+                res.SyncOfferSelection();
 
                 // تحديث Offer index فوراً
                 calc.OfferById[offer.Id] = offer;
+                OfferStateChanged?.Invoke(res.Id);
             }
         }
 
@@ -189,16 +278,19 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             }
             else if (ot == OperationType.Update)
             {
-                var newG = obj.FromJsonWeb<ResourceListMVVM>();
-                if (newG == null) return false;
+                var resourceDto = obj.FromJsonWeb<ResourceListDTO>();
+                if (resourceDto == null) return false;
+
+                var newG = resourceDto.ToResourceListMVVM();
 
                 var oldRes = Get(newG.Id);
                 if (oldRes == null) return false;
 
                 var affects = AffectsCalculation(oldRes, newG);
 
-                newG.OfferClick = oldRes.OfferClick;
+                newG.Ui.OfferClick = oldRes.Ui.OfferClick;
                 newG.CopyPropertiesTo(oldRes);
+                oldRes.SyncOfferSelection();
 
                 calc.LastHubChangeAffectsCalc |= affects;
                 return true;
@@ -208,17 +300,19 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 var list = obj.FromJsonWeb<HubDataDto>();
                 if (list == null) return false;
 
-                var res = list.GetData<ResourceListMVVM>();
-                if (res != null)
-                    calc.Add(res);
+                var resDto = list.GetData<ResourceListDTO>();
+                if (resDto != null)
+                    calc.Add(resDto.ToResourceListMVVM());
             }
             else if (ot == OperationType.AddRange)
             {
                 var list = obj.FromJsonWeb<HubDataDto>();
                 if (list == null) return false;
 
-                var resources = list.GetData<List<ResourceListMVVM>>();
-                if (resources == null) return false;
+                var resourceDtos = list.GetData<List<ResourceListDTO>>();
+                if (resourceDtos == null) return false;
+
+                var resources = resourceDtos.Select(x => x.ToResourceListMVVM()).ToList();
 
                 // ✅ إصلاح bug + أسرع
                 calc.AddRangeResources(resources);
@@ -263,10 +357,10 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
         public void Remove(ResourceListMVVM resource)
         {
-            if (!SelectedData.ExistItem(CalculationItemType.resource, resource.Id))
+            if (!interactionState.IsSelected(CalculationItemType.resource, resource.Id))
                 Mhd.DeleteMessage(resource.Name, EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([resource.Id])));
             else
-                Mhd.DeleteMessage("", EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. SelectedData.SelectedItems.Select(x => x.Id)])));
+                Mhd.DeleteMessage("", EventCallback.Factory.Create(this, () => ConfirmedRemoveAsync([.. interactionState.SelectedItems.Select(x => x.Id)])));
         }
 
         public async Task ConfirmedRemoveAsync(List<int> items)
@@ -275,9 +369,12 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (calc == null) return;
 
             bool result = await Repo.DeleteAsync(calc.Id, items);
-            SelectedData.Reset();
             Mhd.Notifications(ToastType.Delete, result);
-            if (result) dialogService.Close();
+            if (!result)
+                return;
+
+            interactionState.ResetSelection();
+            dialogService.Close();
         }
 
         public void Dispose() { }

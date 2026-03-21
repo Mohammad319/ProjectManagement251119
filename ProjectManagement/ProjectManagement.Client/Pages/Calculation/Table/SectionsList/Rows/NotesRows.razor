@@ -1,0 +1,40 @@
+@using ProjectManagement.Client.Services.Calculation
+@inject CalculationService CalcService
+@implements IDisposable
+
+@if (CalcService.ShowComments && Notes?.Count > 0)
+{
+    foreach (var note in Notes)
+    {
+        <tr class="netNote">
+            <td class="NettdDiv bg-white dark:bg-black"
+                colspan="@LeadingColumns"
+                style="width:@($"{TemplateConst.Col0}px;")">
+            </td>
+            <td colspan="@ValueColumns">
+                @note
+            </td>
+        </tr>
+    }
+}
+
+@code {
+    [Parameter] public IReadOnlyList<string>? Notes { get; set; }
+    [Parameter] public int LeadingColumns { get; set; }
+    [Parameter] public int ValueColumns { get; set; }
+
+    protected override void OnInitialized()
+    {
+        CalcService.CommentsVisibilityChanged += HandleCommentsChanged;
+    }
+
+    private void HandleCommentsChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        CalcService.CommentsVisibilityChanged -= HandleCommentsChanged;
+    }
+}

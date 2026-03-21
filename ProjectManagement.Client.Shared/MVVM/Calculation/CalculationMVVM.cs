@@ -20,7 +20,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         int Index,
         TaskListMVVM? Task,
         ResourceListMVVM? Resource,
-        int Depth)
+        int Depth,
+        bool ParentActive = true)
     {
         public bool IsTask => Task is not null;
         public bool IsResource => Resource is not null;
@@ -30,19 +31,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             Task is not null ? (1L << 60) | (uint)Task.Id :
             Resource is not null ? (2L << 60) | (uint)Resource.Id :
             0;
-
-        public string VersionKey =>
-            Task is not null ? $"T_{Task.Id}" :
-            Resource is not null ? $"R_{Resource.Id}" :
-            "X";
     }
 
     public class CalculationMVVM
     {
         [JsonIgnore] public bool LastHubChangeAffectsCalc { get; set; } = false;
         [JsonIgnore] public bool FlatListDirty { get; set; } = true;
-        [JsonIgnore] public int GridVersion { get; private set; } = 1;
-        public void BumpGridVersion() => GridVersion++;
+        [JsonIgnore] private bool StructureFlatListDirty { get; set; } = true;
 
         // ParentId -> Children Tasks
         [JsonIgnore] public Dictionary<int, List<TaskListMVVM>> ChildrenLookup { get; private set; } = new();
@@ -55,6 +50,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         // القائمة المسطّحة المستخدمة في Virtualize
         public List<FlatItem>? AllFlatItems { get; set; }
+        [JsonIgnore] private List<FlatItem>? StructureFlatItems { get; set; }
 
         // ====== Indexes (أهم تحسين للسرعة) ======
         [JsonIgnore] public Dictionary<int, TaskListMVVM> TaskById { get; private set; } = new();
@@ -104,7 +100,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public bool OnlyActive { get; set; }
         public bool ShowTasks { get; set; } = true;
         public bool ShowResources { get; set; } = true;
-        public bool ShowComment { get; set; } = true;
 
         public bool OHFactors { get; set; }
 
@@ -117,8 +112,11 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         // ====== إشعار الجدول بالتحديث ======
         public event Action? OnChangeInCalculation;
 
-        public void NotifyGridRefresh(bool flatListDirty = false)
+        public void NotifyGridRefresh(bool flatListDirty = false, bool structureFlatListDirty = false)
         {
+            if (structureFlatListDirty)
+                StructureFlatListDirty = true;
+
             if (flatListDirty)
                 FlatListDirty = true;
 
@@ -132,7 +130,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         {
             BuildTaskHierarchy();
             RebuildIndexes();
-            FlatListDirty = true;
+            MarkStructureDirty();
         }
 
         // ====== بناء شجرة المهام ======
@@ -196,6 +194,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                         var res = t.Resources[r];
                         ResourceById[res.Id] = res;
                         res.TaskId = t.Id;
+                        res.SyncOfferSelection();
 
                         if (res.Offers is not null)
                         {
@@ -253,6 +252,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
             task.Resources ??= [];
             task.Resources.Add(res);
+            res.SyncOfferSelection();
 
             // تحديث indexes بشكل incremental (بدون full rebuild)
             ResourceById[res.Id] = res;
@@ -262,7 +262,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                     OfferById[res.Offers[i].Id] = res.Offers[i];
             }
 
-            FlatListDirty = true;
+            MarkStructureDirty();
         }
 
         public void AddRangeResources(IEnumerable<ResourceListMVVM> resources)
@@ -301,7 +301,29 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 }
             }
 
+            MarkStructureDirty();
+        }
+
+        public bool TryToggleTaskCollapse(TaskListMVVM task)
+        {
+            if (task is null || StructureFlatItems is null || StructureFlatListDirty)
+                return false;
+
+            int taskIndex = FindTaskFlatIndex(task.Id, StructureFlatItems);
+            if (taskIndex < 0)
+                return false;
+
+            int depth = StructureFlatItems[taskIndex].Depth;
+            task.Ui.CollSpan = !task.Ui.CollSpan;
+
+            if (!task.Ui.CollSpan)
+                RemoveTaskDescendants(StructureFlatItems, taskIndex, depth);
+            else
+                InsertTaskDescendants(StructureFlatItems, task, taskIndex, depth);
+
+            ReindexFlatItems(StructureFlatItems, taskIndex + 1);
             FlatListDirty = true;
+            return true;
         }
 
         // ====== Invalidate + Calculation ======
@@ -325,17 +347,101 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         // ====== بناء القائمة المسطّحة ======
         public List<FlatItem> BuildFlatList()
         {
+            if (!ShowTasks && !ShowResources)
+            {
+                MaxDepth = 0;
+                return [];
+            }
+
+            EnsureStructureFlatList();
+            if (StructureFlatItems is null || StructureFlatItems.Count == 0)
+            {
+                MaxDepth = 0;
+                return [];
+            }
+
             MaxDepth = 0;
 
-            // capacity تقريبي لتقليل realloc
-            var flat = new List<FlatItem>(Math.Max(256, Tasks.Count * 2));
+            int estimatedCapacity = Math.Max(256, StructureFlatItems.Count);
+            var flat = new List<FlatItem>(estimatedCapacity);
+            bool[] branchVisibleByDepth = new bool[Math.Max(8, MaxDepth + Tasks.Count + 4)];
+            bool[] branchActiveByDepth = new bool[branchVisibleByDepth.Length];
 
             int index = 0;
-            BuildFlatListInternal(RootTasks, 0, flat, ref index);
+            for (int i = 0; i < StructureFlatItems.Count; i++)
+            {
+                var item = StructureFlatItems[i];
+                if (item.IsTask)
+                {
+                    var task = item.Task!;
+                    bool parentBranchVisible = item.Depth == 0 || branchVisibleByDepth[item.Depth - 1];
+                    bool parentBranchActive = item.Depth == 0 || branchActiveByDepth[item.Depth - 1];
+                    bool branchVisible = parentBranchVisible && IsTaskBranchVisible(task);
+                    bool branchActive = parentBranchActive && task.Active;
+                    branchVisibleByDepth[item.Depth] = branchVisible;
+                    branchActiveByDepth[item.Depth] = branchActive;
+
+                    if (!branchVisible || !ShowTasks)
+                        continue;
+
+                    flat.Add(new FlatItem(index++, task, null, item.Depth, parentBranchActive));
+                    if (item.Depth > MaxDepth)
+                        MaxDepth = item.Depth;
+                }
+                else if (item.IsResource)
+                {
+                    bool parentBranchVisible = item.Depth == 0 || branchVisibleByDepth[item.Depth - 1];
+                    bool parentBranchActive = item.Depth == 0 || branchActiveByDepth[item.Depth - 1];
+                    if (!parentBranchVisible || !ShowResources)
+                        continue;
+
+                    var resource = item.Resource!;
+                    if (!resource.Ui.FilterVisible)
+                        continue;
+
+                    flat.Add(new FlatItem(index++, null, resource, item.Depth, parentBranchActive));
+                    if (item.Depth > MaxDepth)
+                        MaxDepth = item.Depth;
+                }
+            }
+
             return flat;
         }
 
-        private void BuildFlatListInternal(
+        private int FindTaskFlatIndex(int taskId, List<FlatItem> flatItems)
+        {
+            for (int i = 0; i < flatItems.Count; i++)
+            {
+                if (flatItems[i].Task?.Id == taskId)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        private void RemoveTaskDescendants(List<FlatItem> flatItems, int taskIndex, int depth)
+        {
+            int start = taskIndex + 1;
+            int count = 0;
+
+            while (start + count < flatItems.Count && flatItems[start + count].Depth > depth)
+                count++;
+
+            if (count > 0)
+                flatItems.RemoveRange(start, count);
+        }
+
+        private void InsertTaskDescendants(List<FlatItem> flatItems, TaskListMVVM task, int taskIndex, int depth)
+        {
+            List<FlatItem> descendants = [];
+            int index = taskIndex + 1;
+            BuildStructureDescendants(task, depth + 1, descendants, ref index);
+
+            if (descendants.Count > 0)
+                flatItems.InsertRange(taskIndex + 1, descendants);
+        }
+
+        private void BuildStructureFlatListInternal(
             List<TaskListMVVM> tasks,
             int depth,
             List<FlatItem> flat,
@@ -344,40 +450,75 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             for (int i = 0; i < tasks.Count; i++)
             {
                 var task = tasks[i];
-
-                // بدل LINQ Where: if مباشر (أقل GC)
-                if (!task.FilterVisible) continue;
-                if (task.IsOH != OHFactors) continue;
-                if (OnlyActive && !task.Active) continue;
-
-                // صف المهمة
                 flat.Add(new FlatItem(index++, task, null, depth));
-                if (depth > MaxDepth) MaxDepth = depth;
 
-                // لو المهمة مغلقة لا نضيف أولادها
-                if (!task.CollSpan)
+                if (!task.Ui.CollSpan)
                     continue;
 
-                // الموارد التابعة للمهمة
-                if (task.Resources is not null)
-                {
-                    for (int r = 0; r < task.Resources.Count; r++)
-                    {
-                        var res = task.Resources[r];
-                        if (!res.FilterVisible) continue;
+                BuildStructureDescendants(task, depth + 1, flat, ref index);
+            }
+        }
 
-                        flat.Add(new FlatItem(index++, null, res, depth + 1));
-                        if (depth + 1 > MaxDepth) MaxDepth = depth + 1;
-                    }
-                }
-
-                // المهام الفرعية
-                if (task.Tasks is not null && task.Tasks.Count > 0)
+        private void BuildStructureDescendants(
+            TaskListMVVM task,
+            int depth,
+            List<FlatItem> flat,
+            ref int index)
+        {
+            if (task.Resources is not null)
+            {
+                for (int i = 0; i < task.Resources.Count; i++)
                 {
-                    if (depth + 1 > MaxDepth) MaxDepth = depth + 1;
-                    BuildFlatListInternal(task.Tasks, depth + 1, flat, ref index);
+                    var res = task.Resources[i];
+                    flat.Add(new FlatItem(index++, null, res, depth));
                 }
             }
+
+            if (task.Tasks is null || task.Tasks.Count == 0)
+                return;
+
+            for (int i = 0; i < task.Tasks.Count; i++)
+            {
+                var child = task.Tasks[i];
+                flat.Add(new FlatItem(index++, child, null, depth));
+
+                if (!child.Ui.CollSpan)
+                    continue;
+
+                BuildStructureDescendants(child, depth + 1, flat, ref index);
+            }
+        }
+
+        private void ReindexFlatItems(List<FlatItem> flatItems, int startIndex)
+        {
+            for (int i = startIndex; i < flatItems.Count; i++)
+            {
+                var item = flatItems[i];
+                flatItems[i] = new FlatItem(i, item.Task, item.Resource, item.Depth, item.ParentActive);
+            }
+        }
+
+        private bool IsTaskBranchVisible(TaskListMVVM task) =>
+            task.Ui.FilterVisible &&
+            task.IsOH == OHFactors &&
+            (!OnlyActive || task.Active);
+
+        private void EnsureStructureFlatList()
+        {
+            if (!StructureFlatListDirty && StructureFlatItems is not null)
+                return;
+
+            int index = 0;
+            var flat = new List<FlatItem>(Math.Max(256, Tasks.Count + ResourceById.Count));
+            BuildStructureFlatListInternal(RootTasks, 0, flat, ref index);
+            StructureFlatItems = flat;
+            StructureFlatListDirty = false;
+        }
+
+        private void MarkStructureDirty()
+        {
+            StructureFlatListDirty = true;
+            FlatListDirty = true;
         }
     }
 }

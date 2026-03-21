@@ -1,4 +1,5 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
@@ -34,7 +35,9 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
             return await _httpRepository.GetAsync<int>(CalcURLBase + URLConst.Calculation.Copy + $"/{ProjectId}/{calcId}");
         }
         public async Task<List<ListCalculationMVVM>> GetAsync(Guid guid, bool isVisible = true)
-            => [.. (await _httpRepository.GetAsync<List<ListCalculationMVVM>>(CalcURLBase + guid + $"?isVisible={isVisible}")).OrderByDescending(x => x.Order)];
+            => [.. (await _httpRepository.GetAsync<List<ListCalculationDTO>>(CalcURLBase + guid + $"?isVisible={isVisible}"))
+                .Select(x => x.ToListCalculationMVVM())
+                .OrderByDescending(x => x.Order)];
 
         public async Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(int calcid)
         {
@@ -45,7 +48,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         }
         public async Task<List<ListCalculationMVVM>> GetShareCalculationsAsync(Guid projectId)
         {
-            return (await _httpRepository.GetAsync<List<ListCalculationMVVM>>(CalcURLBase + URLConst.Calculation.Share + "/" + projectId)).OrderByDescending(x => x.Order).ToList();
+            return (await _httpRepository.GetAsync<List<ListCalculationDTO>>(CalcURLBase + URLConst.Calculation.Share + "/" + projectId))
+                .Select(x => x.ToListCalculationMVVM())
+                .OrderByDescending(x => x.Order)
+                .ToList();
         }
         public async Task<CalculationDetailsDTO> DetailsAsync(int id)
         {
@@ -54,7 +60,11 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         public async Task<CalculationMVVM> GetPageAsync(int id, bool otherdepartment)
         {
             string page = otherdepartment ? URLConst.Calculation.SharedPage : URLConst.Calculation.Page;
-            return await _httpRepository.GetAsync<CalculationMVVM>(CalcURLBase + $"{page}/{id}");
+            CalculationPageDTO dto = otherdepartment
+                ? await _httpRepository.GetAsync<CalculationPageOtherDepartmentDTO>(CalcURLBase + $"{page}/{id}")
+                : await _httpRepository.GetAsync<CalculationPageDTO>(CalcURLBase + $"{page}/{id}");
+
+            return dto.ToCalculationMVVM();
         }
         public async Task<CalculationPostDTO> GetPostAsync(int id) =>
             await _httpRepository.GetAsync<CalculationPostDTO>(CalcURLBase + URLConst.Calculation.GetToPost + $"/{id}");

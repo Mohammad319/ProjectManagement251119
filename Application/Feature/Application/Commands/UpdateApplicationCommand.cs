@@ -1,15 +1,13 @@
-﻿using Application.Interfaces;
-using Domain.Entities.Application;
-using System;
+using Application.Interfaces;
+using ProjectManagement.Shared.DTO.App;
 
 namespace Application.Feature.Application.Commands
 {
-    public sealed record UpdateApplicationCommand(ApplicationEntity dto) : IRequest<bool>;
+    public sealed record UpdateApplicationCommand(ApplicationDTO dto) : IRequest<bool>;
 
-    public class UpdateApplicationCommandHandler(IApplicationService _dataAccess) : IRequestHandler<UpdateApplicationCommand, bool>
+    public class UpdateApplicationCommandHandler(IApplicationService dataAccess) : IRequestHandler<UpdateApplicationCommand, bool>
     {
         public async Task<bool> Handle(UpdateApplicationCommand request, CancellationToken cancellationToken)
-         => await _dataAccess.UpdateAsync(request.dto, cancellationToken);
-
+         => await dataAccess.UpdateAsync(request.dto, cancellationToken);
     }
 }

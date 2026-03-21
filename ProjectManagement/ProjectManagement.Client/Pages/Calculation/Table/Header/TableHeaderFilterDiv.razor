@@ -9,8 +9,6 @@
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.ResourceType;
 
-@inherits AppComponentBase
-
 <style>
     .modalFilter {
         display: block;
@@ -307,6 +305,11 @@
 </tr>
 
 @code {
+    [Inject] private ProjectManagement.Client.Services.Calculation.CalculationService CalcService { get; set; } = default!;
+    [Inject] private ProjectManagement.Client.Services.Folder.FolderState FolderState { get; set; } = default!;
+    [Inject] private ITaskRepository TaskRepository { get; set; } = default!;
+    [Inject] private IResourceTypeRepository ResourceTypeRepository { get; set; } = default!;
+
     string? FilterAttrStr;
     List<string> FilterValues = [];
     FilterType FilterType = FilterType.equals;
@@ -317,6 +320,8 @@
     string display = "none";
     string none = "none";
     MouseEventArgs MouseEvent = new MouseEventArgs();
+    private ProjectManagement.Client.Shared.MVVM.Calculation.CalculationMVVM Calc => FolderState.Calculation ?? throw new InvalidOperationException("TableHeaderFilterDiv requires an active calculation.");
+    private ProjectManagement.Client.Shared.MVVM.Calculation.TemplateMVVM Template => Calc.Template;
 
     private FilterVM Filter => Calc.FilterVM ??= new();
 
@@ -354,8 +359,8 @@
 
     protected async override Task OnInitializedAsync()
     {
-        Statuses = (await Repo.Task.GetAsync())?.ToList() ?? [];
-        ResourceTypes = await Repo.ResType.GetLocalAsync() ?? [];
+        Statuses = (await TaskRepository.GetAsync())?.ToList() ?? [];
+        ResourceTypes = await ResourceTypeRepository.GetLocalAsync() ?? [];
     }
 
     public async Task EnterCodeClick(MouseEventArgs e1, NetColumnId i)

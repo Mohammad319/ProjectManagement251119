@@ -1,158 +1,19 @@
-﻿@using System.Globalization
+@using System.Globalization
 @using Microsoft.Extensions.Localization
-@using Microsoft.JSInterop
 @using Calculation.Table.Header
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows
 @using ProjectManagement.Client.Shared.MVVM.Calculation
-@using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
-@using ProjectManagement.Shared.Enums
-@inherits AppComponentBase
 @inject IStringLocalizer<CalcResource> CalcLoc
-@inject IJSRuntime JS
 
 <style>
     @Template.StyleNetCalc
-    .divNetCalc td input:not([type="checkbox"]) {
-        background-color: transparent;
-        border-color: transparent;
-        width: 100%;
-        height: 100%;
-        padding: 0 2px;
-        font-size: 12px;
-    }
-
-    .divNetCalc td input:focus {
-        outline: none;
-        border-color: var(--net-border-color);
-        background-color: rgba(0, 0, 0, 0.02);
-    }
-
-    .divNetCalc th:active {
-        cursor: grabbing;
-    }
-
-    .resizer {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 5px;
-        cursor: col-resize;
-        user-select: none;
-    }
-
-        .resizer:hover, .resizing {
-            border-right: 2px solid #aba8a6;
-        }
-
-    .netNote {
-        background-color: var(--net-note-color);
-        font-style: italic;
-    }
-
-    .divNetCalc {
-        display: block;
-        width: 100%;
-        overflow: auto;
-        height: 100%;
-        font-size: 12px;
-        color: var(--net-text-color);
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background-color: #fafafa;
-    }
-
-        .divNetCalc table {
-            border-collapse: separate;
-            width: 100%;
-            border-spacing: 0;
-            table-layout: fixed;
-            background-color: #ffffff;
-        }
-
-        .divNetCalc td, .divNetCalc th {
-            border-bottom: 1px var(--net-border-style) var(--net-border-color) !important;
-            border-left: 1px var(--net-border-style) var(--net-border-color);
-            border-right: none !important;
-            padding: 0 2px;
-            line-height: 15px;
-        }
-
-        .divNetCalc th {
-            cursor: grab;
-            user-select: none;
-            position: sticky;
-            top: 0;
-            background: var(--net-header-bg);
-            z-index: 2;
-            font-weight: 600;
-            font-size: 11px;
-            text-align: start;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            box-shadow: 0 1px 0 rgba(15, 23, 42, 0.12);
-        }
-
-        .divNetCalc td {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 11px;
-        }
-
-        .divNetCalc tr {
-            line-height: 12px;
-        }
-
-    .num-cell {
-        text-align: right;
-        direction: ltr;
-        padding-right: 4px;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .divNetCalc tbody tr:hover {
-        background-color: rgba(0, 0, 0, 0.03);
-        transition: background-color 120ms ease-out;
-    }
-
-    .NettdDiv {
-        background-color: #ffffff;
-        border-right: 1px solid var(--net-border-color);
-    }
-
-    .resizable-table {
-        border-radius: 4px;
-    }
-
-    .draggable-table {
-        position: relative;
-    }
-
-    .netNote {
-        background-color: var(--net-note-color);
-        font-size: 11px;
-        font-style: italic;
-    }
-
-        .netNote td {
-            padding: 2px 6px;
-            border-top: none;
-        }
-
-            .netNote td:last-child {
-                border-left: 3px solid rgba(0, 0, 0, 0.2);
-            }
-
-    .divNetCalc tbody tr:hover td {
-        box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.5);
-    }
 </style>
 
 <table tabindex="0"
        @onkeydown="HandleKeyDown"
-       @onkeyup="TableRenderHelpers.HandleKeyUp"
+       @onkeyup="HandleKeyUp"
        id="resizeMe"
        class="resizable-table"
        style="position:relative;table-layout:fixed;margin:0px;">
@@ -174,12 +35,12 @@
                 <th id="h1" class="draggable-table"></th>
             }
 
-            @for (int i = 0; i < Template.NetCalc.Columns.Count; i++)
+            @for (int i = 0; i < HeaderColumns.Count; i++)
             {
                 <th id="@("h" + (i + 2))"
                     class="@("colH" + (i + 2)) draggable-table"
-                    style="width:@(Template.NetCalc.Columns[i].Width)px;">
-                    @CalcLoc[NetColumnLoc.Key[Template.NetCalc.Columns[i].Id]]
+                    style="width:@(HeaderColumns[i].Width)px;">
+                    @CalcLoc[NetColumnLoc.Key[HeaderColumns[i].Id]]
                 </th>
             }
         </tr>
@@ -202,10 +63,8 @@
                 @if (item.IsTask && Calc.ShowTasks)
                 {
                     <TaskRowComponent @key="item.Key"
-                                      OnContextClick="UoWService.Task.ContextMenu"
-                                      OnClick="OnClick"
                                       Task="item.Task"
-                                      ActiveParent="true"
+                                      ActiveParent="item.ParentActive"
                                       OnCollapseToggle="ToggleCollSpan"
                                       Color="@TemplateConstBase.Task"
                                       Left="@(item.Depth * 10)"
@@ -215,6 +74,8 @@
                 {
                     <ResourceRowComponent @key="item.Key"
                                           Resource="item.Resource"
+                                          TaskBranchActive="item.ParentActive"
+                                          Color="@(Template.NetCalc?.Color?.Resource ?? string.Empty)"
                                           Left="@(item.Depth * 10)"
                                           Colmuns="Columns" />
                 }
@@ -222,167 +83,3 @@
         </Virtualize>
     </tbody>
 </table>
-
-@code {
-    private Virtualize<FlatItem>? virtualizeComponent;
-
-    private List<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Columns = new();
-    private bool TH1ISvisible;
-
-    private Action? _onChangeHandler;
-
-    // لتفادي إعادة بناء الأعمدة/الـtemplate بدون داعي
-    private decimal _lastTax;
-    private int _lastRound;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("initializeResizableColumns");
-        }
-    }
-
-    protected override void OnInitialized()
-    {
-        _onChangeHandler = () => _ = InvokeAsync(ForceReload);
-        Calc.OnChangeInCalculation += _onChangeHandler;
-
-        _lastTax = Calc.Tax;
-        _lastRound = Template.MathRound;
-
-        Columns = TableRenderHelpers.GetColumns(Calc.Tax, Template.MathRound);
-        Template.FreezCol();
-        TH1ISvisible = true;
-
-        // بناء أولي
-        Calc.FlatListDirty = true;
-        _ = InvokeAsync(ForceReload);
-    }
-
-    private void EnsureColumnsUpToDate()
-    {
-        // ✅ إعادة بناء الأعمدة فقط إذا تغيّرت tax أو round
-        if (_lastTax != Calc.Tax || _lastRound != Template.MathRound || Columns.Count == 0)
-        {
-            _lastTax = Calc.Tax;
-            _lastRound = Template.MathRound;
-            Columns = TableRenderHelpers.GetColumns(Calc.Tax, Template.MathRound);
-        }
-    }
-
-    private void OnClick(TaskListMVVM task) =>
-        TableRenderHelpers.HandleItemSelected(task.Id, task.Metadata.Quantity, CalculationItemType.task);
-    private bool _reloadPending;
-
-    private async Task ForceReload()
-    {
-        if (_reloadPending) return;
-        _reloadPending = true;
-
-        try
-        {
-            await Task.Yield(); // يجمع أحداث نفس اللحظة
-
-            EnsureColumnsUpToDate();
-
-            if (Calc.AllFlatItems == null || Calc.FlatListDirty)
-            {
-                Calc.AllFlatItems = Calc.BuildFlatList();
-                //Calc.AllFlatItems = Calc.BuildFlatList(Calc.Tasks.Where(x => x.TaskId == null));
-
-                Calc.FlatListDirty = false;
-
-                if (Calc.MaxDepth > 0)
-                    Template.StartCol1 = (Calc.MaxDepth * 10) + 15;
-            }
-
-            if (virtualizeComponent != null)
-                await virtualizeComponent.RefreshDataAsync();
-
-            await InvokeAsync(StateHasChanged);
-        }
-        finally
-        {
-            _reloadPending = false;
-        }
-    }
-
-
-    private ValueTask<ItemsProviderResult<FlatItem>> LoadItems(ItemsProviderRequest request)
-    {
-        var list = Calc.AllFlatItems;
-        if (list == null || list.Count == 0)
-            return new(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), 0));
-
-        int start = request.StartIndex;
-        if ((uint)start >= (uint)list.Count)
-            return new(new ItemsProviderResult<FlatItem>(Array.Empty<FlatItem>(), list.Count));
-
-        int count = Math.Min(request.Count, list.Count - start);
-
-        // ✅ بدون نسخ (Zero-GC أثناء scroll)
-        IReadOnlyList<FlatItem> slice = new ListSlice<FlatItem>(list, start, count);
-        return new(new ItemsProviderResult<FlatItem>(slice, list.Count));
-    }
-
-    protected void HandleKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Control" || e.Key == "Shift" || e.Key == "Alt")
-            TemporaryData.Key = e.Key;
-    }
-
-    private void ShFilter()
-    {
-        if (Calc.FilterVM == null)
-        {
-            Calc.FilterVM = new();
-        }
-        else
-        {
-            CalcService.GetFilter(null);
-            Calc.FilterVM = null;
-        }
-
-        // الفلتر يغيّر المعروض => بنيوي
-        Calc.NotifyGridRefresh(flatListDirty: true);
-    }
-
-    private Task ToggleCollSpan(TaskListMVVM task)
-    {
-        // فتح/إغلاق يغيّر المعروض => بنيوي
-        task.CollSpan = !task.CollSpan;
-        Calc.NotifyGridRefresh(flatListDirty: true);
-        return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        if (_onChangeHandler != null)
-            Calc.OnChangeInCalculation -= _onChangeHandler;
-    }
-
-    private sealed class ListSlice<T> : IReadOnlyList<T>
-    {
-        private readonly List<T> _list;
-        private readonly int _start;
-        public int Count { get; }
-
-        public ListSlice(List<T> list, int start, int count)
-        {
-            _list = list;
-            _start = start;
-            Count = count;
-        }
-
-        public T this[int index] => _list[_start + index];
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            for (int i = 0; i < Count; i++)
-                yield return _list[_start + i];
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-    }
-}

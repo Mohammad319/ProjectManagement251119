@@ -4,14 +4,14 @@
 
 @if (Task?.Resources != null && Task.Resources.Any())
 {
-    @foreach (var resource in Task.Resources.Where(x => x.FilterVisible)
+    @foreach (var resource in Task.Resources.Where(x => x.Ui.FilterVisible)
                                                 .OrderByDescending(x => x.Order))
     {
         <div class="@GetResourceItemClasses(resource)"
              @ondrop="@(() => HandleDrop(resource))"
-             @ondragover="() => resource.IsDragOver = true"
+             @ondragover="() => resource.Ui.IsDragOver = true"
              @ondragover:preventDefault
-             @ondragleave="@(() => resource.IsDragOver = false)"
+             @ondragleave="@(() => resource.Ui.IsDragOver = false)"
              @ondragstart="@(() => resourceDraging = resource)"
              @ondragend="@(() => resourceDraging = null)"
              draggable="true">
@@ -63,7 +63,7 @@ else
             ? " opacity-60 border-2 border-dashed border-sky-500"
             : string.Empty;
 
-        var dragOver = resource.IsDragOver
+        var dragOver = resource.Ui.IsDragOver
             ? " bg-sky-50 dark:bg-sky-900/50"
             : string.Empty;
 
@@ -72,8 +72,10 @@ else
 
     private async void HandleDrop(ResourceListMVVM landingModel)
     {
-        resourceDraging?.IsDragOver = false;
-        landingModel.IsDragOver = false;
+        if (resourceDraging is not null)
+            resourceDraging.Ui.IsDragOver = false;
+
+        landingModel.Ui.IsDragOver = false;
 
         if (resourceDraging is not null)
         {
@@ -99,7 +101,7 @@ else
             }
 
             Task.Resources = Task.Resources
-                .Where(x => x.FilterVisible)
+                .Where(x => x.Ui.FilterVisible)
                 .OrderByDescending(x => x.Order)
                 .ToList();
 

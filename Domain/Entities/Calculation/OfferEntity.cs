@@ -21,7 +21,7 @@ namespace Domain.Entities.Calculation
         public OfferData Metadata
         {
             get => _metadata ??= new OfferData();
-            private set => _metadata = value;
+            private set => _metadata = CloneMetadata(value);
         }
 
         public int? OrganisationId { get; private set; }
@@ -40,7 +40,7 @@ namespace Domain.Entities.Calculation
         {
             ResourceId = resourceId;
             OrganisationId = organisationId;
-            Metadata = NormalizeMetadata(metadata);
+            Metadata = metadata;
             Comment = NormalizeComment(comment);
             Date = DateTime.UtcNow;
         }
@@ -48,22 +48,42 @@ namespace Domain.Entities.Calculation
         public void Update(int? organisationId, OfferData metadata, string? comment)
         {
             OrganisationId = organisationId;
-            Metadata = NormalizeMetadata(metadata);
+            Metadata = metadata;
             Comment = NormalizeComment(comment);
             Date = DateTime.UtcNow;
         }
 
-        public void SetBaseCost(decimal baseCost)
+        public OfferData GetMetadataSnapshot()
+            => CloneMetadata(_metadata);
+
+        public void UpdateMetadata(Action<OfferData> update)
         {
-            Metadata.BaseCost = Math.Round(baseCost, 2, MidpointRounding.AwayFromZero);
-            Metadata.Normalize();
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
         }
 
-        private static OfferData NormalizeMetadata(OfferData? metadata)
+        public void SetBaseCost(decimal baseCost)
+        {
+            UpdateMetadata(m => m.BaseCost = baseCost);
+        }
+
+        private static OfferData CloneMetadata(OfferData? metadata)
         {
             metadata ??= new OfferData();
-            metadata.Normalize();
-            return metadata;
+
+            var copy = new OfferData
+            {
+                Comment = metadata.Comment ?? string.Empty,
+                Contact = metadata.Contact ?? string.Empty,
+                Cost = metadata.Cost,
+                BaseCost = metadata.BaseCost
+            };
+
+            copy.Normalize();
+            return copy;
         }
 
         private static string? NormalizeComment(string? comment)

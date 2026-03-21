@@ -20,7 +20,7 @@ namespace Domain.Entities.Calculation
         public OpportunityData Metadata
         {
             get => _metadata ??= new OpportunityData();
-            private set => _metadata = value;
+            private set => _metadata = CloneMetadata(value);
         }
 
         [JsonIgnore]
@@ -39,7 +39,7 @@ namespace Domain.Entities.Calculation
             SetRisks(opportunitiesRisks);
             OpportunityType = NormalizeOptional(opportunityType);
             CalculationId = calculationId;
-            Metadata = NormalizeMetadata(metadata);
+            Metadata = metadata;
         }
 
         public void SetRisks(string risks)
@@ -54,7 +54,19 @@ namespace Domain.Entities.Calculation
         {
             SetRisks(opportunitiesRisks);
             OpportunityType = NormalizeOptional(opportunityType);
-            Metadata = NormalizeMetadata(metadata);
+            Metadata = metadata;
+        }
+
+        public OpportunityData GetMetadataSnapshot()
+            => CloneMetadata(_metadata);
+
+        public void UpdateMetadata(Action<OpportunityData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
         }
 
         public OpportunityEntity CreateSnapshot()
@@ -65,22 +77,22 @@ namespace Domain.Entities.Calculation
                 OpportunitiesRisks = OpportunitiesRisks,
                 OpportunityType = OpportunityType,
                 CalculationId = CalculationId,
-                Metadata = new OpportunityData
-                {
-                    ProbabilityWorth = Metadata.ProbabilityWorth,
-                    ProbabilityPercent = Metadata.ProbabilityPercent,
-                    ProbabilityBest = Metadata.ProbabilityBest,
-                    Value = Metadata.Value,
-                    Comment = Metadata.Comment?.Trim() ?? string.Empty
-                }
+                Metadata = GetMetadataSnapshot()
             };
         }
 
-        private static OpportunityData NormalizeMetadata(OpportunityData? metadata)
+        private static OpportunityData CloneMetadata(OpportunityData? metadata)
         {
             metadata ??= new OpportunityData();
-            metadata.Comment = metadata.Comment?.Trim() ?? string.Empty;
-            return metadata;
+
+            return new OpportunityData
+            {
+                ProbabilityWorth = metadata.ProbabilityWorth,
+                ProbabilityPercent = metadata.ProbabilityPercent,
+                ProbabilityBest = metadata.ProbabilityBest,
+                Value = metadata.Value,
+                Comment = metadata.Comment?.Trim() ?? string.Empty
+            };
         }
 
         private static string? NormalizeOptional(string? value)

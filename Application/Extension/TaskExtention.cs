@@ -14,7 +14,7 @@ namespace Application.Extention
             {
                 task.SetCalculation(calcId);
                 task.ResetIdentityForClone();
-                task.Metadata.IsOH = oh;
+                task.SetIsOH(oh);
 
                 if (calcId != oldcalcId)
                     task.ClearOpportunity();
@@ -49,7 +49,7 @@ namespace Application.Extention
             foreach (var child in task.Tasks)
             {
                 child.SetCalculation(task.CalculationId);
-                child.Metadata.IsOH = task.Metadata.IsOH;
+                child.SetIsOH(task.IsOH);
                 SetNetCalcId(child);
             }
         }

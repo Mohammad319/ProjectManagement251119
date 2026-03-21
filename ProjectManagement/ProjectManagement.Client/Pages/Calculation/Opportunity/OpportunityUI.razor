@@ -21,7 +21,7 @@
                         </th>
                         <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle dark:bg-cyan-900/50"></th>
                         <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle font-bold text-blue-600 dark:bg-cyan-900/50 dark:text-blue-400">
-                            @Template.Format(Calc.Opportunities.Sum(x => (x.Metadata.ProbabilityPercent * x.Metadata.Value) / 100))
+                            @Template.Format(GetTotalProbabilityValue())
                         </th>
                         <th class="sticky top-0 z-10 bg-cyan-50 text-center align-middle font-bold text-amber-600 dark:bg-cyan-900/50 dark:text-amber-400">
                             @Calc.Opportunities.Sum(x => x.Metadata.ProbabilityBest)
@@ -109,7 +109,7 @@
                             </td>
 
                             <td class="text-center align-middle font-medium text-blue-700 dark:text-blue-300">
-                                @Template.Format((status.Metadata.ProbabilityPercent * status.Metadata.Value) / 100)
+                                @Template.Format(GetProbabilityValue(status))
                             </td>
 
                             <td class="text-center align-middle">
@@ -117,7 +117,7 @@
                             </td>
 
                             <td class="text-center align-middle font-medium text-slate-800 dark:text-slate-100">
-                                @Template.Format(status.Metadata.Value)
+                                @Template.Format(status.Metadata.Value ?? 0)
                             </td>
                         </tr>
 
@@ -140,6 +140,12 @@
 </div>
 
 @code {
+    double GetTotalProbabilityValue() =>
+        Calc?.Opportunities?.Sum(GetProbabilityValue) ?? 0;
+
+    static double GetProbabilityValue(OpportunityModel item) =>
+        ((item.Metadata.ProbabilityPercent ?? 0) * (item.Metadata.Value ?? 0)) / 100;
+
     async Task Context(OpportunityModel item)
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();

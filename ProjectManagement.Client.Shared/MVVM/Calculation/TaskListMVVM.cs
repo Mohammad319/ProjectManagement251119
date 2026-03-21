@@ -31,7 +31,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 Type = task.Type,
                 IsOH = task.IsOH,
                 Metadata = task.Metadata,
-                Colspan = task.CollSpan,
+                Colspan = task.Ui.CollSpan,
                 Tasks = [.. task.Tasks.Select(t => GetToPost(t))],
                 Name = task.Name,
                 Order = task.Order,
@@ -43,7 +43,19 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
     public class TaskListMVVM : TaskBase
     {
-        public TaskMetadata Metadata { get; set; } = new();
+        private TaskMetadata? metadata = new();
+        [JsonIgnore] public TaskUiState Ui { get; } = new();
+        [JsonIgnore] public TaskComputedState Computed { get; } = new();
+
+        public TaskMetadata Metadata
+        {
+            get
+            {
+                metadata ??= new TaskMetadata();
+                return metadata;
+            }
+            set { metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value); }
+        }
 
         public string Note => Metadata.Note;
         public List<string> UpperNote => Metadata.UpperNote;
@@ -70,37 +82,28 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal? MinPrice => Metadata.MinPrice;
         public decimal? CeilingPrice => Metadata.CeilingPrice;
 
-        // =========================
-        // ✅ محسوبات سريعة (لا LINQ)
-        // =========================
-        [JsonIgnore] public decimal Calc_NetCostQ { get; set; }
-        [JsonIgnore] public decimal Calc_NetCostTotaly { get; set; }
-        [JsonIgnore] public decimal Calc_ApriceTotally { get; set; }
-        [JsonIgnore] public double? Calc_TotalCO2 { get; set; }
-        [JsonIgnore] public decimal? Calc_BaseCost { get; set; }
-
-        [JsonIgnore] public decimal NetCostQ => Calc_NetCostQ;
-        [JsonIgnore] public decimal NetCostTotaly => Calc_NetCostTotaly;
-        [JsonIgnore] public decimal ApriceTotally => Calc_ApriceTotally;
+        [JsonIgnore] public decimal NetCostQ => this.GetComputedNetCostQ();
+        [JsonIgnore] public decimal NetCostTotaly => this.GetComputedNetCostTotaly();
+        [JsonIgnore] public decimal ApriceTotally => this.GetComputedApriceTotally();
 
         [JsonIgnore]
         public decimal PriceQ =>
             (Metadata.Quantity.HasValue && Metadata.Quantity.Value > 0)
-                ? (Calc_ApriceTotally / Metadata.Quantity.Value)
+                ? (this.GetComputedApriceTotally() / Metadata.Quantity.Value)
                 : 0;
 
-        [JsonIgnore] public double? TotalCO2 => Calc_TotalCO2;
-        [JsonIgnore] public decimal? BaseCost => Calc_BaseCost;
+        [JsonIgnore] public double? TotalCO2 => this.GetComputedTotalCO2();
+        [JsonIgnore] public decimal? BaseCost => this.GetComputedBaseCost();
 
         // هذه بقيت “خفيفة” (ما فيها LINQ)
         [JsonIgnore] public decimal PriceSub => Metadata.PriceSubDB ?? Math.Round(PriceQ);
         [JsonIgnore] public decimal PriceSubTotal => Metadata.Quantity.HasValue ? PriceSub * Metadata.Quantity.Value : 0;
-        [JsonIgnore] public decimal Diff => PriceSubTotal - ApriceTotally;
+        [JsonIgnore] public decimal Diff => PriceSubTotal - this.GetComputedApriceTotally();
 
         private static decimal TaxFactor(decimal taxPercent) => 1m + (taxPercent / 100m);
 
         public decimal PriceQTax(decimal taxPercent) => PriceQ * TaxFactor(taxPercent);
-        public decimal ApriceTotallyTax(decimal taxPercent) => ApriceTotally * TaxFactor(taxPercent);
+        public decimal ApriceTotallyTax(decimal taxPercent) => this.GetComputedApriceTotally() * TaxFactor(taxPercent);
 
         public decimal PriceActuallyQuantity => ActuallyQuantity * PriceSub;
         public decimal PriceWorkedQ => WorkedQ * PriceSub;
@@ -114,46 +117,40 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public bool HasVoice => Metadata.HasVoice;
         public string Responsible => Metadata.Responsible;
 
-        public int Version { get; set; } = 0;
-
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is not TaskListMVVM other)
                 return false;
 
             return Id == other.Id &&
-                   CollSpan == other.CollSpan &&
+                   Ui.CollSpan == other.Ui.CollSpan &&
                    (Metadata?.IsActive == other.Metadata?.IsActive) &&
                    (Metadata?.Quantity == other.Metadata?.Quantity);
         }
 
         public override int GetHashCode() =>
-            HashCode.Combine(Id, CollSpan, Metadata?.IsActive, Metadata?.Quantity);
+            HashCode.Combine(Id, Ui.CollSpan, Metadata?.IsActive, Metadata?.Quantity);
 
         public TaskListMVVM()
         {
-            Metadata ??= new();
+            Metadata = new();
             Resources = [];
             Tasks = [];
         }
 
         public int? TaskId { get; set; }
-        public string Opportunity { get; set; }
+        public string Opportunity { get; set; } = string.Empty;
         public int Id { get; set; }
-        public string Status { get; set; }
-        public string StatusColor { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string StatusColor { get; set; } = string.Empty;
 
         public List<TaskListMVVM> Tasks { get; set; }
         public List<ResourceListMVVM> Resources { get; set; }
 
-        // بدل InvalidateCache القديم: الآن فقط صفّر الـCalc_* + صفّر caches الموارد
+        // إعادة ضبط الحالة المحسوبة الحالية + caches الموارد التابعة.
         public void InvalidateCache()
         {
-            Calc_NetCostQ = 0;
-            Calc_NetCostTotaly = 0;
-            Calc_ApriceTotally = 0;
-            Calc_TotalCO2 = null;
-            Calc_BaseCost = null;
+            Computed.Reset();
 
             if (Resources is not null)
             {
@@ -162,33 +159,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             }
         }
 
-        [JsonIgnore] public bool FilterVisible { get; set; } = true;
-        [JsonIgnore] public bool CollSpan { get; set; } = true;
-        [JsonIgnore] public bool HasUpdated { get; set; }
-        [JsonIgnore] public bool IsDragOver { get; set; }
-
         public int? StatusId { get; set; }
         public int? OpportunityId { get; set; }
-
-        //Resource (خاص بنوع Task "Resource" عندك)
-        public int? OfferId { get; set; }
-        public int? AccountId { get; set; }
-        public string Account { get; set; }
-        public string AccountCode { get; set; }
-        public int? ResourceSortId { get; set; }
-        public int? ResourceTypeId { get; set; }
-        public string ResName { get; set; }
-        public string Sort { get; set; }
-        public double Factor { get; set; } = 1;
-        public List<ListOfferMVVM> Offers { get; set; } = [];
-
-        public bool HasOffer => Offers != null && Offers.Count != 0;
-
-        public bool HasOfferSelected() =>
-            OfferId.HasValue && Offers != null && Offers.FirstOrDefault(x => x.Id == OfferId) != null;
-
-        public ResourceTypesEnum ResType { get; set; }
-        [JsonIgnore] public bool HasCap => ResType is (ResourceTypesEnum.MachinesAndEquipments or ResourceTypesEnum.Worker);
-        [JsonIgnore] public bool HasWast => ResType is ResourceTypesEnum.Materials;
     }
 }

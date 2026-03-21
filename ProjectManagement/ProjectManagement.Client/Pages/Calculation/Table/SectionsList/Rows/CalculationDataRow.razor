@@ -1,0 +1,16 @@
+<tr @onclick="OnClick"
+    @oncontextmenu="OnContextMenu"
+    @oncontextmenu:preventDefault
+    style="@RowStyle">
+    <CalculationHierarchyCell IndentPx="Left"
+                              CanToggle="CanToggle"
+                              IsExpanded="IsExpanded"
+                              ShowPlaceholder="ShowHierarchyPlaceholder"
+                              OnToggle="OnToggle" />
+
+    @Cells
+</tr>
+
+<NotesRows Notes="Notes"
+           LeadingColumns="3"
+           ValueColumns="ValueColumns" />

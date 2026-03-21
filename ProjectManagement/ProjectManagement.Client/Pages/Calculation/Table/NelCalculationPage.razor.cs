@@ -1,82 +1,161 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-using ProjectManagement.Shared.Constant;
-using ProjectManagement.Shared.DTO.Calculation.Template;
+using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Localization;
+using ProjectManagement.Client.Services.Calculation;
+using ProjectManagement.Client.Services.Folder;
+using ProjectManagement.Client.Shared.MVVM.Calculation;
+using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using ProjectManagement.Client.Shared.ViewModel;
+using System.Globalization;
 
-namespace ProjectManagement.Client.Pages.Calculation.Table
+namespace ProjectManagement.Client.Pages.Calculation.Table;
+
+public partial class NelCalculationPage : ComponentBase, IDisposable
 {
-    public partial class NelCalculationPage : IDisposable
+    [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
+    [Inject] private CalculationService CalcService { get; set; } = default!;
+    [Inject] private CalculationInteractionState InteractionState { get; set; } = default!;
+    [Inject] private FolderState FolderState { get; set; } = default!;
+
+    private Action? _onFolderChanged;
+    private Action? _onInteractionChanged;
+    private Action? _onCommentsVisibilityChanged;
+    private Action? _onGridViewMaterialized;
+    private Action? _onCalculationChanged;
+    private CalculationMVVM? _observedCalculation;
+
+    private CalculationMVVM? Calc => FolderState.Calculation;
+    private TemplateMVVM? Template => Calc?.Template;
+
+    private bool HasCalculation => Calc is not null;
+    private int TaskCount => Calc?.Tasks.Count ?? 0;
+    private int ResourceCount => Calc?.ResourceById.Count ?? 0;
+    private int SelectedItemCount => InteractionState.SelectedItems.Count;
+    private bool HasFlatListSnapshot => Calc is not null && (Calc.AllFlatItems is not null || TaskCount == 0);
+    private int VisibleItemCount => Calc?.AllFlatItems?.Count ?? 0;
+    private string VisibleItemCountText => HasFlatListSnapshot ? VisibleItemCount.ToString(CultureInfo.InvariantCulture) : "...";
+    private bool ShowEmptyState => Calc is not null && TaskCount == 0;
+    private bool ShowNoVisibleRowsState => Calc is not null && !ShowEmptyState && HasFlatListSnapshot && VisibleItemCount == 0;
+    private bool HasActiveFilters => HasVisibleFilter(Calc?.FilterVM);
+    private string NoVisibleRowsHint => HasActiveFilters
+        ? AppLoc["calculationTableNoResultsHint"]
+        : AppLoc["calculationTableNoVisibleRowsHint"];
+    private static string ActiveToggleChipClass => "calc-status-chip calc-status-chip-toggle is-active";
+    private static string InactiveToggleChipClass => "calc-status-chip calc-status-chip-toggle is-muted";
+
+    protected override void OnInitialized()
     {
-        private DotNetObjectReference<NelCalculationPage>? _dotNetRef;
+        _onFolderChanged = HandleFolderChanged;
+        FolderState.OnChange += _onFolderChanged;
 
-        [Inject]
-        private IJSRuntime JS { get; set; } = default!;
+        _onInteractionChanged = () => _ = InvokeAsync(StateHasChanged);
+        InteractionState.Changed += _onInteractionChanged;
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                _dotNetRef = DotNetObjectReference.Create(this);
-                await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
-            }
-        }
+        _onCommentsVisibilityChanged = () => _ = InvokeAsync(StateHasChanged);
+        CalcService.CommentsVisibilityChanged += _onCommentsVisibilityChanged;
 
-        [JSInvokable]
-        public async Task SaveTemplateBlazor(string item)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(item))
-                    return;
+        _onGridViewMaterialized = () => _ = InvokeAsync(StateHasChanged);
+        CalcService.GridViewMaterialized += _onGridViewMaterialized;
 
-                string[] arr = item.Split("||", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                if (arr.Length < 2 ||
-                    !int.TryParse(arr[0], out int headerIndex) ||
-                    !int.TryParse(arr[1], out int newWidth))
-                {
-                    return;
-                }
+        _onCalculationChanged = () => _ = InvokeAsync(StateHasChanged);
+        ObserveCalculation();
+    }
 
-                newWidth = Math.Max(PMValuesConst.MinWidthCol, newWidth);
+    private void HandleFolderChanged()
+    {
+        ObserveCalculation();
+        _ = InvokeAsync(StateHasChanged);
+    }
 
-                if (headerIndex == 1)
-                {
-                    Template.StartCol1 = newWidth;
-                }
-                else
-                {
-                    int templateColumnIndex = headerIndex - 2;
-                    if (templateColumnIndex < 0 || templateColumnIndex >= Template.NetCalc.Columns.Count)
-                        return;
+    private void ObserveCalculation()
+    {
+        if (ReferenceEquals(_observedCalculation, Calc))
+            return;
 
-                    Template.NetCalc.Columns[templateColumnIndex].Width = newWidth;
-                }
+        if (_observedCalculation is not null && _onCalculationChanged is not null)
+            _observedCalculation.OnChangeInCalculation -= _onCalculationChanged;
 
-                Template.FreezCol();
-                await InvokeAsync(StateHasChanged);
+        _observedCalculation = Calc;
 
-                if (Calc?.TemplateId > 0)
-                {
-                    TemplateListPostDTO temp = new();
-                    Template.CopyPropertiesTo(temp);
-                    await Repo.Template.UpdateAsync(temp, Calc.TemplateId.Value);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message + " Template has been not updated");
-            }
-        }
+        if (_observedCalculation is not null && _onCalculationChanged is not null)
+            _observedCalculation.OnChangeInCalculation += _onCalculationChanged;
+    }
 
-        protected override void OnInitialized()
-        {
-            // اجعل الجدول هو المسؤول عن بناء FlatList عند أول تحميل
-            Calc.FlatListDirty = true;
-        }
+    private void ClearFilters()
+    {
+        if (Calc is null)
+            return;
 
-        public void Dispose()
-        {
-            _dotNetRef?.Dispose();
-        }
+        CalcService.GetFilter(null);
+        Calc.FilterVM = null;
+        StateHasChanged();
+    }
+
+    private void ClearSelection() => InteractionState.ResetSelection();
+
+    private void ToggleShowTasks()
+    {
+        if (Calc is null)
+            return;
+
+        Calc.ShowTasks = !Calc.ShowTasks;
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+    }
+
+    private void ToggleShowResources()
+    {
+        if (Calc is null)
+            return;
+
+        Calc.ShowResources = !Calc.ShowResources;
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+    }
+
+    private void ToggleComments() => CalcService.ShowComments = !CalcService.ShowComments;
+
+    private void ToggleOnlyActive()
+    {
+        if (Calc is null)
+            return;
+
+        Calc.OnlyActive = !Calc.OnlyActive;
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+    }
+
+    private static string GetToggleChipClass(bool isActive) =>
+        isActive ? ActiveToggleChipClass : InactiveToggleChipClass;
+
+    public void Dispose()
+    {
+        if (_onFolderChanged is not null)
+            FolderState.OnChange -= _onFolderChanged;
+
+        if (_onInteractionChanged is not null)
+            InteractionState.Changed -= _onInteractionChanged;
+
+        if (_onCommentsVisibilityChanged is not null)
+            CalcService.CommentsVisibilityChanged -= _onCommentsVisibilityChanged;
+
+        if (_onGridViewMaterialized is not null)
+            CalcService.GridViewMaterialized -= _onGridViewMaterialized;
+
+        if (_observedCalculation is not null && _onCalculationChanged is not null)
+            _observedCalculation.OnChangeInCalculation -= _onCalculationChanged;
+    }
+
+    private static bool HasVisibleFilter(FilterVM? filter)
+    {
+        if (filter is null)
+            return false;
+
+        return filter.Code.Count > 0
+            || filter.Name.Count > 0
+            || filter.Account.Count > 0
+            || filter.Status.Count > 0
+            || filter.ResourceTypeId > 0
+            || filter.Resource.Count > 0
+            || filter.ResourceTypeSystem.Count > 0
+            || filter.ResourceSortId.HasValue
+            || filter.ResourceSort.Count > 0
+            || filter.Unit.Count > 0;
     }
 }

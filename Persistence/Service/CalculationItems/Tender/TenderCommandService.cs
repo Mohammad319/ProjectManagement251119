@@ -138,7 +138,7 @@ namespace Persistence.Service.CalculationItems.Tender
         private static async global::System.Threading.Tasks.Task SyncAttributeValuesAsync(
             ShardingSingleDbContext context,
             int tenderId,
-            Dictionary<int, double> attributes,
+            Dictionary<int, double>? attributes,
             CancellationToken ct)
         {
             attributes ??= [];

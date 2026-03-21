@@ -8,12 +8,20 @@ namespace ProjectManagement.Shared.Base.Application
     public class ApplicationValuesData
     {
         public Dictionary<Guid, string> Attributes { get; set; } = [];
+
+        public ApplicationValuesData Clone()
+        {
+            return new ApplicationValuesData
+            {
+                Attributes = Attributes?.ToDictionary(x => x.Key, x => x.Value ?? string.Empty) ?? []
+            };
+        }
     }
     public class ApplicationValuesBase
     {
         public int UserId { get; set; }
         ApplicationValuesData? data;
-        public ApplicationValuesData Data { get { data ??= new ApplicationValuesData(); return data; } set { data = value; } }
+        public ApplicationValuesData Data { get { data ??= new ApplicationValuesData(); return data; } set { data = value?.Clone() ?? new ApplicationValuesData(); } }
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]

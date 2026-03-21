@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.ResourceType;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Account;
@@ -24,7 +24,7 @@ namespace Domain.Entities.Calculation
         public AccountData Metadata
         {
             get => _metadata ??= new();
-            private set => _metadata = value;
+            private set => _metadata = CloneMetadata(value);
         }
 
         [JsonIgnore, ForeignKey(nameof(AccountGroupId))]
@@ -80,6 +80,28 @@ namespace Domain.Entities.Calculation
             SetGroup(groupId);
             SetVisibility(isVisible);
             Metadata = data ?? new AccountData();
+        }
+
+        public AccountData GetMetadataSnapshot()
+            => CloneMetadata(_metadata);
+
+        public void UpdateMetadata(Action<AccountData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
+        }
+
+        private static AccountData CloneMetadata(AccountData? data)
+        {
+            data ??= new AccountData();
+
+            return new AccountData
+            {
+                Comments = data.Comments?.ToList() ?? []
+            };
         }
     }
 }

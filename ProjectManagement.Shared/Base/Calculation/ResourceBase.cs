@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Shared.Base.Calculation
 {
@@ -11,7 +12,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     {
         public string Name { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
-        public double Value { get; set; } = 1;
+        public decimal Value { get; set; } = 1;
 
     }
     public class ResourceTime()
@@ -143,5 +144,19 @@ public ResourceMetadata Clone()
         public string Name { get; set; } = string.Empty;
         public int Order { get; set; }
         public bool Active { get; set; } = true;
+
+        [JsonIgnore]
+        public int SortOrder
+        {
+            get => Order;
+            set => Order = value;
+        }
+
+        [JsonIgnore]
+        public bool IsActive
+        {
+            get => Active;
+            set => Active = value;
+        }
     }
 }

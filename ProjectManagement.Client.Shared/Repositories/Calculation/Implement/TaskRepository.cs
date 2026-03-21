@@ -1,4 +1,5 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
@@ -30,7 +31,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         }
         public async Task<bool> DeleteAsync(int calcID, IEnumerable<int> items) => await _httpRepository.DeleteAsync(TaskURLBase + $"{calcID}", items);
 
-        public async Task<List<TaskListMVVM>> GetByFilterAsync(FilterCalculationItemsDto task) =>
-            await _httpRepository.PostAsync<List<TaskListMVVM>, FilterCalculationItemsDto>(task, TaskURLBase + URLConst.Filter);
+        public async Task<List<TaskListMVVM>> GetByFilterAsync(FilterCalculationItemsDto task)
+        {
+            var dtos = await _httpRepository.PostAsync<List<TaskListDTO>, FilterCalculationItemsDto>(task, TaskURLBase + URLConst.Filter);
+            return dtos.Select(x => x.ToTaskListMVVM()).ToList();
+        }
     }
 }

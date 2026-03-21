@@ -12,6 +12,6 @@ namespace ProjectManagement.Client.Shared.Model.Application
         [JsonIgnore]
         public bool Accordion { get; set; }
 
-        public ApplicationModel Application { get; set; }
+        public ApplicationModel Application { get; set; } = new();
     }
 }

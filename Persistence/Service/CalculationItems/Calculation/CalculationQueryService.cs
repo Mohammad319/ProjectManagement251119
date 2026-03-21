@@ -1,5 +1,6 @@
 namespace Persistence.Service.CalculationItems.Calculation
 {
+    using global::Application.Mapping.Calculation;
     using Domain.Entities.Calculation;
     using global::Application.Feature.Calculation.Calculation;
     using Microsoft.EntityFrameworkCore;
@@ -75,44 +76,16 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Calculations
+            var calculation = await context.Calculations
                 .AsNoTracking()
+                .Include(x => x.Compensation)
+                .Include(x => x.Contract)
+                .Include(x => x.ProcurementMethods)
+                .Include(x => x.Type)
                 .Where(x => x.Id == id)
-                .Select(x => new CalculationDetailsDTO
-                {
-                    TenderQA = x.TenderQA,
-                    TenderDeadline = x.TenderDeadline,
-                    Priority = x.Metadata.Priority,
-                    Procurement = x.Procurement,
-                    Name = x.Name,
-                    Tax = x.Tax,
-                    TimeMonth = x.Metadata.TimeMonth,
-                    Compensation = x.Compensation != null ? x.Compensation.Name : string.Empty,
-                    Contract = x.Contract != null ? x.Contract.Name : string.Empty,
-                    ProcurementMethods = x.ProcurementMethods != null ? x.ProcurementMethods.Name : string.Empty,
-                    Type = x.Type != null ? x.Type.Name : string.Empty,
-                    Order = x.SortOrder,
-                    ClientsManager = x.Metadata.ClientsManager,
-                    Code = x.Code,
-                    ContactPerson = x.Metadata.ContactPerson,
-                    Contacts = x.Metadata.Contacts,
-                    Address = x.Metadata.Address,
-                    DecisionDate = x.DecisionDate,
-                    Designer = x.Metadata.Designer,
-                    Developer = x.Metadata.Developer,
-                    EndDate = x.EndDate,
-                    Income = x.Metadata.Income,
-                    StartDate = x.StartDate,
-                    Supervisor = x.Metadata.Supervisor,
-                    PublicationDate = x.PublicationDate,
-                    HourlyPrice = x.HourlyPrice,
-                    Maps = x.Metadata.Maps,
-                    Notes = x.Metadata.Notes,
-                    Inspector = x.Metadata.Inspector,
-                    OverviewInfo = x.Metadata.OverviewInfo,
-                    Responsibles = x.Metadata.Responsibles
-                })
                 .FirstOrDefaultAsync(ct);
+
+            return calculation?.ToDetailsDto();
         }
 
         public async Task<CalculationPostDTO?> GetPostModelAsync(
@@ -121,48 +94,12 @@ namespace Persistence.Service.CalculationItems.Calculation
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.Calculations
+            var calculation = await context.Calculations
                 .AsNoTracking()
                 .Where(x => x.Id == id)
-                .Select(x => new CalculationPostDTO
-                {
-                    TenderQA = x.TenderQA,
-                    TenderDeadline = x.TenderDeadline,
-                    CompensationId = x.CompensationId,
-                    ContractId = x.ContractId,
-                    Procurement = x.Procurement,
-                    ProcurementMethodsId = x.ProcurementMethodsId,
-                    Name = x.Name,
-                    Tax = x.Tax,
-                    TypeId = x.TypeId,
-                    IsPrivate = x.IsPrivate,
-                    Code = x.Code,
-                    OrganisationId = x.OrganisationId,
-                    EndDate = x.EndDate,
-                    StatusId = x.StatusId,
-                    IsVisible = x.IsVisible,
-                    StartDate = x.StartDate,
-                    TimeMonth = x.Metadata.TimeMonth,
-                    Order = x.SortOrder,
-                    ClientsManager = x.Metadata.ClientsManager,
-                    ContactPerson = x.Metadata.ContactPerson,
-                    Contacts = x.Metadata.Contacts,
-                    Address = x.Metadata.Address,
-                    DecisionDate = x.DecisionDate,
-                    Designer = x.Metadata.Designer,
-                    Developer = x.Metadata.Developer,
-                    Income = x.Metadata.Income,
-                    Supervisor = x.Metadata.Supervisor,
-                    PublicationDate = x.PublicationDate,
-                    HourlyPrice = x.HourlyPrice,
-                    Maps = x.Metadata.Maps,
-                    Notes = x.Metadata.Notes,
-                    Inspector = x.Metadata.Inspector,
-                    OverviewInfo = x.Metadata.OverviewInfo,
-                    Responsibles = x.Metadata.Responsibles,
-                    Priority = x.Metadata.Priority
-                })
                 .FirstOrDefaultAsync(ct);
+
+            return calculation?.ToPostDto();
         }
 
         public async Task<List<HourlyPriceListGroupDTO>> GetHourlyPriceListAsync(

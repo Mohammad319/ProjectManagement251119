@@ -1,4 +1,4 @@
-﻿using Domain.Entities.Base;
+using Domain.Entities.Base;
 using Domain.Entities.Calculation;
 using Domain.Entities.Folder;
 using Domain.Entities.Organisation;
@@ -12,24 +12,7 @@ namespace Domain.Entities.Project
     public static class ProjectMappingExtensions
     {
         public static ProjectData ToMetadata(this PostProjectDTO dto)
-        {
-            return new ProjectData
-            {
-                Procurement = dto.Procurement,
-                ProjectManager = dto.ProjectManager,
-                Notes = dto.Notes,
-                ClientsContactPersonTender = dto.ClientsContactPersonTender,
-                Address = dto.Address,
-                ClientsManager = dto.ClientsManager,
-                Contacts = dto.Contacts,
-                Designer = dto.Designer,
-                Developer = dto.Developer,
-                Inspector = dto.Inspector,
-                OverviewInfoProject = dto.OverviewInfoProject,
-                Responsibles = dto.Responsibles,
-                Supervisor = dto.Supervisor
-            };
-        }
+            => ProjectMetadataMapper.Build(dto);
     }
 
     public sealed class ProjectEntity : AuditableSoftDeletableEntity<Guid>
@@ -48,25 +31,21 @@ namespace Domain.Entities.Project
         public DateTime TenderDeadline { get; private set; } = DateTime.UtcNow;
         public DateTime TenderQA { get; private set; } = DateTime.UtcNow;
 
-        // ترتيب العرض العام
         public int SortOrder { get; private set; }
 
         private ProjectData? _metadata;
         public ProjectData Metadata
         {
             get => _metadata ??= new ProjectData();
-            private set => _metadata = value;
+            private set => _metadata = ProjectMetadataMapper.Build(value);
         }
 
-        // نوع المشروع (اختياري)
         public int? ProjectTypeId { get; private set; }
         public TypeEntity? ProjectType { get; private set; }
 
-        // مجلد المشروع (أساسي)
         public Guid FolderId { get; private set; }
         public FolderEntity Folder { get; private set; } = null!;
 
-        // المنظمة المالكة (اختيارية)
         public int? OrganisationId { get; private set; }
         public OrganisationEntity? Organisation { get; private set; }
 
@@ -84,7 +63,7 @@ namespace Domain.Entities.Project
         [JsonIgnore]
         public ICollection<CalculationEntity> Calculations { get; private set; } = [];
 
-        private ProjectEntity() { } // EF
+        private ProjectEntity() { }
 
         public static ProjectEntity Create(
             PostProjectDTO dto,
@@ -123,6 +102,18 @@ namespace Domain.Entities.Project
             ContractId = dto.ContractId;
 
             Metadata = dto.ToMetadata();
+        }
+
+        public ProjectData GetMetadataSnapshot()
+            => ProjectMetadataMapper.Build(_metadata);
+
+        public void UpdateMetadata(Action<ProjectData> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
         }
 
         public void UpdateOrder(int newOrder) => SortOrder = newOrder;

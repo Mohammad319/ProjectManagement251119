@@ -1,13 +1,8 @@
-﻿using BlazorMHD.UI.Core.Services;
+using BlazorMHD.UI.Core.Services;
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Helper;
-using ProjectManagement.Client.Pages.Calculation.Form;
-using ProjectManagement.Client.Pages.Calculation.Table;
-using ProjectManagement.Client.Pages.Calculation.Table.DragDrop;
-using ProjectManagement.Client.Pages.Project.Storage;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
-using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
@@ -18,22 +13,16 @@ namespace ProjectManagement.Client.Services.Calculation
     public interface IContextMenuBuilderService
     {
         List<MenuItem> BuildGeneralContextMenu(bool isAdmin = false);
-        List<MenuItem> BuildTaskContextMenu(TaskListMVVM item, Action Remove, Action Duplicate);
-        List<MenuItem> BuildResourceContextMenu(ResourceListMVVM item, int taskId, Action remove, Action Duplicate);
+        List<MenuItem> BuildTaskContextMenu(TaskListMVVM item, Action remove, Action duplicate);
+        List<MenuItem> BuildResourceContextMenu(ResourceListMVVM item, int taskId, Action remove, Action duplicate);
     }
 
-    // ملاحظة: هنا تستخدم primary constructor (C# 12 / .NET 8)
     public class ContextMenuBuilderService(
-        FolderState CalcService,
-        IStringLocalizer<ResourceApp> AppLoc,
-        IStorageRepository Storage,
-        MhdServices Mhd,
-        DialogService dialogService
-    ) : IContextMenuBuilderService
+        FolderState folderState,
+        IStringLocalizer<ResourceApp> appLoc,
+        CalculationInteractionState interactionState,
+        ICalculationTableCoordinator tableCoordinator) : IContextMenuBuilderService
     {
-        #region MenuItem Helpers
-
-        // للعمليات async (ترجع Task)
         private MenuItem NewMenuItem(string icon, string label, Func<Task>? onClick) =>
             new()
             {
@@ -42,7 +31,6 @@ namespace ProjectManagement.Client.Services.Calculation
                 OnClickAsync = onClick
             };
 
-        // للعمليات العادية (Action ترجع void)
         private MenuItem NewMenuItem(string icon, string label, Action onClick) =>
             new()
             {
@@ -51,23 +39,19 @@ namespace ProjectManagement.Client.Services.Calculation
                 OnClickAsync = () =>
                 {
                     onClick();
-                    return Task.CompletedTask; // هنا لا يوجد أي خطأ، لأن lambda ترجع Task
+                    return Task.CompletedTask;
                 }
             };
-
-        #endregion
 
         public List<MenuItem> BuildGeneralContextMenu(bool isAdmin = false)
         {
             var list = new List<MenuItem>();
-            var calculation = CalcService.Calculation;
+            var calculation = folderState.Calculation;
 
-            // عنصر إنشاء مهمة جديدة
             MenuItem newTaskItem = NewMenuItem(
                 Icons.NewTask,
-                AppLoc[LocalizerConst.New, ResourceLoc.task],
-                () => OpenTaskForm(new())
-            );
+                appLoc[LocalizerConst.New, ResourceLoc.task],
+                () => tableCoordinator.ShowTaskForm(new()));
 
             if (isAdmin)
             {
@@ -75,149 +59,110 @@ namespace ProjectManagement.Client.Services.Calculation
                 [
                     newTaskItem,
                     NewMenuItem(Icons.ImportFromCloud,
-                        AppLoc[LocalizerConst.Import, ResourceLoc.task],
-                        () => OpenGetFromStorage(0, CalculationItemType.task)),
+                        appLoc[LocalizerConst.Import, ResourceLoc.task],
+                        () => tableCoordinator.ShowGetFromStorage(0, CalculationItemType.task)),
 
                     NewMenuItem(Icons.ImportFromFile,
                         ResourceApp.importFromFile,
-                        () => ImportFromFile()),
+                        tableCoordinator.ShowImportDialog),
 
                     NewMenuItem(Icons.Template,
                         ResourceLoc.template,
-                        () => OpenTemplateDialog()),
+                        tableCoordinator.ShowTemplateDialog),
 
                     NewMenuItem(Icons.ReorderRows,
                         ResourceApp.reOrder,
-                        () => OpenReorder(null)),
+                        () => tableCoordinator.ShowTaskReorderDialog()),
                 ];
 
-                if (SelectedData.SelectedItems.Count != 0)
-                    list.Add(NewMenuItem(Icons.NotSelected, ResourceLoc.unselectAll, UnSelectedAll));
+                if (interactionState.SelectedItems.Count != 0)
+                    list.Add(NewMenuItem(Icons.NotSelected, ResourceLoc.unselectAll, tableCoordinator.UnselectAll));
 
-                if (TemporaryData.HasPasteOption(CalculationItemType.task)
-                    && (!(TemporaryData.CopyTypeo == CopyType.Move && TemporaryData.OldCalcID == calculation?.Id)
-                        || TemporaryData.CopyTypeo == CopyType.Copy))
+                if (tableCoordinator.CanPaste(CalculationItemType.task))
                 {
-                    // هذا Async → يذهب إلى overload الأول (Func<Task>)
                     list.Add(NewMenuItem(
                         Icons.Paste,
                         ResourceApp.paste,
-                        async () => await PasteItem(0)
-                    ));
+                        async () => await tableCoordinator.PasteAsync(0)));
                 }
             }
 
-            // عناصر عامة (لا تتطلب isAdmin)
             list.Add(NewMenuItem(
                 calculation?.OnlyActive == true ? Icons.Active : Icons.NotActive,
                 ResourceLoc.onlyActive,
-                ItemsOnlyActive
-            ));
+                tableCoordinator.ToggleOnlyActive));
 
             list.Add(NewMenuItem(
                 calculation?.OHFactors == true ? Icons.Active : Icons.NotActive,
                 "OH",
-                ItemsOnlyOH
-            ));
+                tableCoordinator.ToggleOH));
 
             list.Add(NewMenuItem(
                 Icons.ResetQuantity,
                 CalcResource.quantity,
-                () => dialogService.ShowComponent<QuantityListUI>(
-                    CalcResource.quantity,
-                    Icons.ResetQuantity,
-                    null,
-                    DialogSize.Medium,
-                    DialogButtonsHelper.CreateSaveCancelButtons(QuantityListUI.DialogFormId))
-            ));
+                tableCoordinator.ShowQuantityDialog));
 
             return list;
         }
 
-        void UnSelectedAll()
-        {
-            SelectedData.Reset();
-            CalcService.Calculation?.NotifyGridRefresh(flatListDirty: true);
-        }
-
-        void ItemsOnlyActive()
-        {
-            if (CalcService.Calculation is null) return;
-            CalcService.Calculation.OnlyActive = !CalcService.Calculation.OnlyActive;
-            CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
-        }
-
-        void ItemsOnlyOH()
-        {
-            if (CalcService.Calculation is null) return;
-            CalcService.Calculation.OHFactors = !CalcService.Calculation.OHFactors;
-            CalcService.Calculation.NotifyGridRefresh(flatListDirty: true);
-        }
-
-        void ImportFromFile() =>
-            dialogService.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge);
-
-        public List<MenuItem> BuildTaskContextMenu(TaskListMVVM item, Action Remove, Action Duplicate)
+        public List<MenuItem> BuildTaskContextMenu(TaskListMVVM item, Action remove, Action duplicate)
         {
             var list = new List<MenuItem>();
 
             if (item.Metadata.Type != TaskType.CodeName && (item.Tasks == null || item.Tasks.Count == 0))
             {
-                list.Add(NewMenuItem(Icons.NewResource, AppLoc[LocalizerConst.New, ResourceLoc.resource], () => OpenResourceForm(new() { TaskId = item.Id })
-                ));
+                list.Add(NewMenuItem(
+                    Icons.NewResource,
+                    appLoc[LocalizerConst.New, ResourceLoc.resource],
+                    () => tableCoordinator.ShowResourceForm(new() { TaskId = item.Id })));
 
                 list.Add(NewMenuItem(
                     Icons.ImportFromCloud,
-                    AppLoc[LocalizerConst.Import, ResourceLoc.resource],
-                    () => OpenGetFromStorage(item.Id, CalculationItemType.resource)
-                ));
+                    appLoc[LocalizerConst.Import, ResourceLoc.resource],
+                    () => tableCoordinator.ShowGetFromStorage(item.Id, CalculationItemType.resource)));
             }
 
             if (item.Resources == null || item.Resources.Count == 0)
             {
                 list.Add(NewMenuItem(
                     Icons.NewSubTask,
-                    AppLoc[LocalizerConst.New, ResourceLoc.task],
-                    () => OpenTaskForm(new TaskListMVVM { TaskId = item.Id })
-                ));
+                    appLoc[LocalizerConst.New, ResourceLoc.task],
+                    () => tableCoordinator.ShowTaskForm(new TaskListMVVM { TaskId = item.Id })));
 
                 list.Add(NewMenuItem(
                     Icons.ImportFromCloud,
-                    AppLoc[LocalizerConst.Import, ResourceLoc.SubTask],
-                    () => OpenGetFromStorage(item.Id, CalculationItemType.task)
-                ));
+                    appLoc[LocalizerConst.Import, ResourceLoc.SubTask],
+                    () => tableCoordinator.ShowGetFromStorage(item.Id, CalculationItemType.task)));
             }
 
             list.AddRange([
                 NewMenuItem(
                     Icons.SaveCloud,
                     ResourceLoc.saveCloud,
-                    () => OpenSaveToStorage(item)
+                    () => tableCoordinator.ShowSaveToStorage(item)
                 ),
                 NewMenuItem(
                     Icons.Duplicate,
                     ResourceApp.duplicate,
-                    Duplicate
+                    duplicate
                 ),
                 NewMenuItem(
                     Icons.Copy,
                     ResourceApp.copy,
-                    () => TemporaryData.Copy(
-                        CalcService.Calculation?.Id ?? 0,
+                    () => interactionState.Copy(
+                        folderState.Calculation?.Id ?? 0,
                         item.Id,
                         item.Metadata?.Quantity ?? 0,
                         CalculationItemType.task)
                 ),
             ]);
 
-            if (TemporaryData.SelectedItems.Count > 0 &&
-                ((TemporaryData.ItemsType == CalculationItemType.task && (item.Resources == null || item.Resources.Count == 0))
-                || (TemporaryData.ItemsType == CalculationItemType.resource && (item.Tasks == null || item.Tasks.Count == 0))))
+            if (tableCoordinator.CanPasteIntoTask(item))
             {
                 list.Add(NewMenuItem(
                     Icons.Paste,
                     ResourceApp.paste,
-                    async () => await PasteItem(item.Id)
+                    async () => await tableCoordinator.PasteAsync(item.Id)
                 ));
             }
 
@@ -225,17 +170,17 @@ namespace ProjectManagement.Client.Services.Calculation
                 NewMenuItem(
                     Icons.ReorderRows,
                     ResourceApp.reOrder,
-                    () => OpenReorder(item)
+                    () => tableCoordinator.ShowTaskReorderDialog(item)
                 ),
                 NewMenuItem(
                     Icons.Edit,
                     ResourceApp.edit,
-                    () => OpenTaskForm(item)
+                    () => tableCoordinator.ShowTaskForm(item)
                 ),
                 NewMenuItem(
                     Icons.Delete,
                     ResourceApp.delete,
-                    Remove
+                    remove
                 ),
             ]);
 
@@ -246,24 +191,24 @@ namespace ProjectManagement.Client.Services.Calculation
             ResourceListMVVM item,
             int taskId,
             Action remove,
-            Action Duplicate
-        ) =>
+            Action duplicate)
+            =>
             [
                 NewMenuItem(
                     Icons.SaveCloud,
                     ResourceLoc.saveCloud,
-                    () => OpenSaveToStorage(item)
+                    () => tableCoordinator.ShowSaveToStorage(item)
                 ),
                 NewMenuItem(
                     Icons.Duplicate,
                     ResourceApp.duplicate,
-                    Duplicate
+                    duplicate
                 ),
                 NewMenuItem(
                     Icons.Copy,
                     ResourceApp.copy,
-                    () => TemporaryData.Copy(
-                        CalcService.Calculation?.Id ?? 0,
+                    () => interactionState.Copy(
+                        folderState.Calculation?.Id ?? 0,
                         item.Id,
                         item.Quantity,
                         CalculationItemType.resource)
@@ -271,8 +216,8 @@ namespace ProjectManagement.Client.Services.Calculation
                 NewMenuItem(
                     Icons.Cut,
                     ResourceApp.cut,
-                    () => TemporaryData.Cut(
-                        CalcService.Calculation?.Id ?? 0,
+                    () => interactionState.Cut(
+                        folderState.Calculation?.Id ?? 0,
                         item.Id,
                         item.Quantity,
                         CalculationItemType.resource)
@@ -280,7 +225,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 NewMenuItem(
                     Icons.Edit,
                     ResourceApp.edit,
-                    () => OpenResourceForm(item)
+                    () => tableCoordinator.ShowResourceForm(item)
                 ),
                 NewMenuItem(
                     Icons.Delete,
@@ -288,99 +233,5 @@ namespace ProjectManagement.Client.Services.Calculation
                     remove
                 ),
             ];
-
-        #region Helper Methods
-
-        private void OpenTaskForm(TaskListMVVM model)
-        {
-            string title = model.Id == 0
-                ? AppLoc[LocalizerConst.New, ResourceLoc.task]
-                : AppLoc[LocalizerConst.Update, model.Name];
-
-            dialogService.ShowComponent<TaskFormUI>(title, Icons.NewTask,
-                new Dictionary<string, object> { [nameof(TaskFormUI.Task)] = model },
-                DialogSize.ExtraLarge,
-                DialogButtonsHelper.CreateSaveCancelButtons(TaskFormUI.DialogFormId));
-        }
-
-        private void OpenResourceForm(ResourceListMVVM model)
-        {
-            string title = model.Id == 0
-                ? AppLoc[LocalizerConst.New, ResourceLoc.resource]
-                : AppLoc[LocalizerConst.Update, model.Name];
-
-            dialogService.ShowComponent<ResourceFormUI>(title, Icons.NewResource,
-                new Dictionary<string, object>
-                {
-                    [nameof(ResourceFormUI.Resource)] = model
-                },
-                DialogSize.ExtraLarge,
-                DialogButtonsHelper.CreateSaveCancelButtons(ResourceFormUI.DialogFormId));
-        }
-
-        private void OpenSaveToStorage(object obj) =>
-            dialogService.ShowComponent<SaveStorargeUI>(
-                ResourceApp.save,
-                Icons.SaveCloud,
-                new Dictionary<string, object>
-                {
-                    [nameof(SaveStorargeUI.Parent)] = obj
-                }, DialogSize.ExtraLarge);
-
-        private void OpenGetFromStorage(int parentID, CalculationItemType type) =>
-           dialogService.ShowComponent<GetFromStorage>(
-                ResourceApp.import,
-                Icons.ImportFromCloud,
-                new Dictionary<string, object>
-                {
-                    [nameof(GetFromStorage.ParentID)] = parentID,
-                    [nameof(GetFromStorage.CalcType)] = type
-                }, DialogSize.ExtraLarge);
-
-        private void OpenReorder(TaskListMVVM? taskId) =>
-            dialogService.ShowComponent<DragDropTaskUI>(
-                ResourceApp.reOrder,
-                Icons.ReorderRows,
-                new Dictionary<string, object>
-                {
-                    [nameof(DragDropTaskUI.Task)] = taskId ?? new TaskListMVVM()
-                }, DialogSize.ExtraLarge);
-
-        private void OpenTemplateDialog() =>
-            dialogService.ShowComponent<Pages.Calculation.Template.TemplateSetDefaultUI>(
-                ResourceLoc.templates,
-                Icons.Template,
-                new Dictionary<string, object>
-                {
-                    [nameof(Pages.Calculation.Template.TemplateSetDefaultUI.Tab)] = 1,
-                }, DialogSize.ExtraLarge);
-
-        private async Task PasteItem(int taskId)
-        {
-            var post = new PostStorygeDTO
-            {
-                copyType = TemporaryData.CopyTypeo ?? CopyType.Copy,
-                OldCalcID = TemporaryData.OldCalcID,
-                NewCalcID = CalcService.Calculation?.Id ?? 0,
-                IsOH = CalcService.Calculation?.OHFactors ?? false,
-                ParentID = taskId,
-                WithCildren = true,
-                Items = TemporaryData.SelectedItems,
-                Type = TemporaryData.ItemsType ?? CalculationItemType.task
-            };
-
-            bool result = await Storage.CreateItem(post);
-            if (result)
-            {
-                SelectedData.Reset();
-                Mhd.Notifications(ToastType.Info, result);
-            }
-            else
-            {
-                Mhd.Notifications(ToastType.Danger, false);
-            }
-        }
-
-        #endregion
     }
 }

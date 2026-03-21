@@ -1,25 +1,27 @@
 using Application.Feature.Application;
-using Domain.Entities.Application;
+using Application.Mapping.App;
 using Persistence.Factory;
-using ProjectManagement.Shared.Base.Application;
+using ProjectManagement.Shared.DTO.App;
 
 namespace Persistence.Service.Application
 {
     public class ApplicationService(IDbContextFactoryTenant dbFactory) : IApplicationService
     {
-        public async Task<IEnumerable<ApplicationValuesEntity>> GetCalcAppAsync(int calcId, CancellationToken ct)
+        public async Task<List<ApplicationValuesDTO>> GetCalcAppAsync(int calcId, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
-            return await context.ApplicationValues
+            var entities = await context.ApplicationValues
                 .AsNoTracking()
                 .Include(x => x.Application)
                 .Where(x => x.CalculationId == calcId)
                 .OrderByDescending(x => x.LastUpdate)
                 .ThenByDescending(x => x.Id)
                 .ToListAsync(ct);
+
+            return entities.Select(x => x.ToDto()).ToList();
         }
 
-        public async Task<List<ApplicationEntity>> GetApplicationQueryAsync(bool withNoneVisible, CancellationToken ct)
+        public async Task<List<ApplicationDTO>> GetApplicationQueryAsync(bool withNoneVisible, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -27,10 +29,12 @@ namespace Persistence.Service.Application
             if (!withNoneVisible)
                 query = query.Where(x => x.IsVisible);
 
-            return await query
+            var entities = await query
                 .OrderByDescending(x => x.LastUpdate)
                 .ThenByDescending(x => x.Id)
                 .ToListAsync(ct);
+
+            return entities.Select(x => x.ToDto()).ToList();
         }
 
         public async Task<IReadOnlyList<ApplicationListItemDto>> GetApplicationListAsync(bool withNoneVisible, CancellationToken ct)
@@ -82,7 +86,7 @@ namespace Persistence.Service.Application
                 .ToListAsync(ct);
         }
 
-        public async Task<int> CreateAsync(ApplicationEntity dto, CancellationToken ct)
+        public async Task<int> CreateAsync(ApplicationDTO dto, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -93,53 +97,53 @@ namespace Persistence.Service.Application
             if (!departmentExists)
                 return 0;
 
-            var entity = ApplicationEntity.Create(
-                dto.DepartmentId,
-                dto.IsVisible,
-                dto.UserId,
-                dto.Name,
-                dto.Data);
-
+            var payload = dto.ToEntity();
+            var entity = Domain.Entities.Application.ApplicationEntity.Create(
+                payload.DepartmentId,
+                payload.IsVisible,
+                payload.UserId,
+                payload.Name,
+                payload.Data);
             context.Applications.Add(entity);
             await context.SaveChangesAsync(ct);
             return entity.Id;
         }
 
-        public async Task<int> CreateCalcApp(ApplicationValuesBase dto, int calculationId, int applicationId, CancellationToken ct)
+        public async Task<int> CreateCalcApp(ApplicationValuesDTO dto, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var calculationExists = await context.Calculations
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == calculationId, ct);
+                .AnyAsync(x => x.Id == dto.CalculationId, ct);
 
             if (!calculationExists)
                 return 0;
 
             var applicationExists = await context.Applications
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == applicationId, ct);
+                .AnyAsync(x => x.Id == dto.ApplicationId, ct);
 
             if (!applicationExists)
                 return 0;
 
             var existingId = await context.ApplicationValues
                 .AsNoTracking()
-                .Where(x => x.CalculationId == calculationId && x.ApplicationId == applicationId)
+                .Where(x => x.CalculationId == dto.CalculationId && x.ApplicationId == dto.ApplicationId)
                 .Select(x => (int?)x.Id)
                 .FirstOrDefaultAsync(ct);
 
             if (existingId.HasValue)
                 return existingId.Value;
 
-            var entity = ApplicationValuesEntity.Create(
-                calculationId,
-                applicationId,
-                dto.UserId,
-                dto.Name,
-                dto.Responsible,
-                dto.Data);
-
+            var payload = dto.ToEntity();
+            var entity = Domain.Entities.Application.ApplicationValuesEntity.Create(
+                payload.CalculationId,
+                payload.ApplicationId,
+                payload.UserId,
+                payload.Name,
+                payload.Responsible,
+                payload.Data);
             context.ApplicationValues.Add(entity);
             await context.SaveChangesAsync(ct);
             return entity.Id;
@@ -183,7 +187,7 @@ namespace Persistence.Service.Application
             return true;
         }
 
-        public async Task<bool> UpdateAsync(ApplicationEntity dto, CancellationToken ct)
+        public async Task<bool> UpdateAsync(ApplicationDTO dto, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -192,12 +196,12 @@ namespace Persistence.Service.Application
             if (entity is null)
                 return false;
 
-            entity.UpdateFrom(dto);
+            entity.UpdateFrom(dto.ToEntity());
             await context.SaveChangesAsync(ct);
             return true;
         }
 
-        public async Task<bool> UpdateCalcAppAsync(ApplicationValuesEntity dto, CancellationToken ct)
+        public async Task<bool> UpdateCalcAppAsync(ApplicationValuesDTO dto, CancellationToken ct)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
@@ -206,7 +210,7 @@ namespace Persistence.Service.Application
             if (entity is null)
                 return false;
 
-            entity.UpdateFrom(dto);
+            entity.UpdateFrom(dto.ToEntity());
             await context.SaveChangesAsync(ct);
             return true;
         }

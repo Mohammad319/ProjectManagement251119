@@ -10,6 +10,11 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
     partial class ResourceFormUI
     {
         public const string DialogFormId = "resForm";
+        private ResourceMetadata ResourceData => ResourceUpdate.Data;
+
+        private void AddUpperNote() => ResourceData.UpperNote.Add(string.Empty);
+
+        private void RemoveUpperNoteAt(int index) => ResourceData.UpperNote.RemoveAt(index);
 
         private void ChangeQuantityParam(string qp)
         {

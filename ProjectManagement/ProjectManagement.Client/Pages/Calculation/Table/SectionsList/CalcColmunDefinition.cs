@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Components;
-using ProjectManagement.Shared.Constants;
+using Microsoft.AspNetCore.Components.Rendering;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList
 {
     public record CalcColmunDefinition<TTask, TRes>
     {
-        public Func<TTask, RenderFragment> TaskRender { get; init; } = _ => __builder => { };
-        public Func<TRes, RenderFragment> ResRender { get; init; } = _ => __builder => { };
+        public NetColumnId Id { get; set; }
+        public Action<RenderTreeBuilder, TTask> TaskRender { get; init; } = static (_, _) => { };
+        public Action<RenderTreeBuilder, TRes> ResRender { get; init; } = static (_, _) => { };
     }
 }

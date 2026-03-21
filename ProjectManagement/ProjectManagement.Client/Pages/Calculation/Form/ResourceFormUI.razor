@@ -408,25 +408,25 @@
 
                         <button type="button"
                                 class="@PrimaryBlueButtonClass"
-                                @onclick="() => ResourceUpdate.Data.UpperNote.Add(string.Empty)">
+                                @onclick="AddUpperNote">
                             @CalcResource.UpperNote
                         </button>
                     </div>
 
                     <div class="mb-3">
-                        <InputTextArea @bind-Value="ResourceUpdate.Data.Note"
+                        <InputTextArea @bind-Value="ResourceData.Note"
                                        class="@TextAreaClass" />
-                        <ValidationMessage For="@(() => ResourceUpdate.Data.Note)" />
+                        <ValidationMessage For="@(() => ResourceData.Note)" />
                     </div>
 
-                @for (int i = 0; i < ResourceUpdate.Data.UpperNote.Count; i++)
+                @for (int i = 0; i < ResourceData.UpperNote.Count; i++)
                 {
                     int d = i;
                     <div class="mb-3 overflow-x-auto overflow-y-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
                         <div class="flex min-w-max flex-nowrap items-end gap-2">
                             <div class="min-w-[420px] flex-1">
                                 <label class="@LabelClass">@CalcResource.UpperNote</label>
-                                <textarea @bind="ResourceUpdate.Data.UpperNote[d]"
+                                <textarea @bind="ResourceData.UpperNote[d]"
                                           class="@TextAreaClass min-h-[88px]"
                                           rows="3"></textarea>
                             </div>
@@ -434,7 +434,7 @@
                             <div class="w-[42px] shrink-0">
                                 <button type="button"
                                         class="inline-flex h-10 w-[42px] items-center justify-center rounded bg-red-600 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500"
-                                        @onclick="() => ResourceUpdate.Data.UpperNote.RemoveAt(d)">
+                                        @onclick="() => RemoveUpperNoteAt(d)">
                                     @((MarkupString)Icons.DeleteSVG)
                                 </button>
                             </div>

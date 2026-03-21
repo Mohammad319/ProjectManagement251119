@@ -1,4 +1,5 @@
-﻿using Application.Feature.Calculation.CalcShare;
+using Application.Feature.Calculation.CalcShare;
+using Application.Mapping.Calculation;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
@@ -27,21 +28,7 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             }
 
             return await query
-                .Select(x => new ListShareCalcDTO
-                {
-                    Id = x.Id,
-                    DepartmentId = x.DepartmentId,
-                    UserId = x.CreatedBy,
-                    User = ((x.CreatedAtUser == null ? string.Empty : (x.CreatedAtUser.FirstName ?? string.Empty)) + " " +
-                            (x.CreatedAtUser == null ? string.Empty : (x.CreatedAtUser.LastName ?? string.Empty))).Trim(),
-                    Tap1 = x.Metadata.Tap1,
-                    Tap2 = x.Metadata.Tap2,
-                    Tap3 = x.Metadata.Tap3,
-                    Tap4 = x.Metadata.Tap4,
-                    Tap5 = x.Metadata.Tap5,
-                    Tap6 = x.Metadata.Tap6,
-                    Department = x.Department == null ? string.Empty : (x.Department.Name ?? string.Empty)
-                })
+                .Select(ShareCalcDtoMapper.ProjectListDto())
                 .ToListAsync(ct);
         }
 
@@ -56,7 +43,7 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             if (!await CalculationAndDepartmentExistAsync(context, dto.CalculationId, dto.DepartmentId, ct))
                 return 0;
 
-            var data = BuildMetadata(dto.Tap1, dto.Tap2, dto.Tap3, dto.Tap4, dto.Tap5, dto.Tap6);
+            var data = dto.ToMetadata();
 
             var existing = await context.ShareCalc
                 .FirstOrDefaultAsync(x => x.CalculationId == dto.CalculationId && x.DepartmentId == dto.DepartmentId, ct);
@@ -94,9 +81,7 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             if (entity is null)
                 return false;
 
-            var data = BuildMetadata(dto.Tap1, dto.Tap2, dto.Tap3, dto.Tap4, dto.Tap5, dto.Tap6);
-
-            entity.Update(entity.DepartmentId, data);
+            entity.Update(entity.DepartmentId, dto.ToMetadata());
 
             await context.SaveChangesAsync(ct);
             return true;
@@ -178,17 +163,6 @@ namespace Persistence.Service.CalculationItems.ShareCalc
             await context.SaveChangesAsync(ct);
             return true;
         }
-
-        private static ShareCalcData BuildMetadata(bool tap1, bool tap2, bool tap3, bool tap4, bool tap5, bool tap6)
-            => new()
-            {
-                Tap1 = tap1,
-                Tap2 = tap2,
-                Tap3 = tap3,
-                Tap4 = tap4,
-                Tap5 = tap5,
-                Tap6 = tap6
-            };
 
         private static async Task<bool> CalculationAndDepartmentExistAsync(
             ShardingSingleDbContext context,

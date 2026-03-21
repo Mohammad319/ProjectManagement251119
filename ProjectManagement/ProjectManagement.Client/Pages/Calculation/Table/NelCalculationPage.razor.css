@@ -1,0 +1,173 @@
+.calc-page-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.calc-page-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: max-content;
+    min-width: 100%;
+}
+
+.calc-status-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+    padding: 0;
+}
+
+.calc-status-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+}
+
+.calc-status-chip {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    background: rgba(248, 250, 252, 0.95);
+    color: #0f172a;
+    font-size: 0.76rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.calc-status-chip button,
+.calc-status-chip-toggle,
+.calc-status-chip-action {
+    font: inherit;
+}
+
+.calc-status-chip-label {
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.66rem;
+}
+
+.calc-status-chip-accent {
+    border-color: rgba(14, 116, 144, 0.3);
+    background: rgba(236, 254, 255, 0.95);
+}
+
+.calc-status-chip-action {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    cursor: pointer;
+    transition: background-color 120ms ease-out, border-color 120ms ease-out;
+}
+
+.calc-status-chip-action:hover {
+    background: rgba(224, 242, 254, 0.95);
+    border-color: rgba(14, 165, 233, 0.35);
+}
+
+.calc-status-chip-toggle {
+    cursor: pointer;
+    transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+}
+
+.calc-status-chip-toggle.is-active {
+    border-color: rgba(14, 116, 144, 0.24);
+    background: rgba(236, 254, 255, 0.95);
+}
+
+.calc-status-chip-toggle.is-muted {
+    color: #475569;
+    background: rgba(241, 245, 249, 0.92);
+}
+
+.calc-status-chip-toggle.is-muted .calc-status-chip-label {
+    color: #94a3b8;
+}
+
+.calc-status-chip-toggle:hover {
+    border-color: rgba(14, 165, 233, 0.3);
+}
+
+.calc-state-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 1rem;
+    padding: 0.85rem 1rem;
+    background:
+        linear-gradient(135deg, rgba(241, 245, 249, 0.95), rgba(255, 255, 255, 0.98));
+}
+
+.calc-state-panel-muted {
+    background:
+        linear-gradient(135deg, rgba(248, 250, 252, 0.92), rgba(241, 245, 249, 0.98));
+}
+
+.calc-state-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.calc-state-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 0.96rem;
+    font-weight: 700;
+}
+
+.calc-state-hint {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.84rem;
+}
+
+.calc-state-action {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    background: #0f766e;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 120ms ease-out;
+}
+
+.calc-state-action:hover {
+    background: #115e59;
+}
+
+.divNetCalc {
+    display: block;
+    width: 100%;
+    overflow: auto;
+    height: 100%;
+    font-size: 12px;
+    color: var(--net-text-color);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: #fafafa;
+}
+
+.divNetCalc ::deep tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    transition: background-color 120ms ease-out;
+}
+
+.divNetCalc ::deep tbody tr:hover td {
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.5);
+}
+
+@media (max-width: 768px) {
+    .calc-state-panel {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

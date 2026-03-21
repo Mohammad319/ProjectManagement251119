@@ -280,8 +280,8 @@
     void UpdateStatus(TaskListMVVM task)
     {
         var st = Statuses?.FirstOrDefault(x => x.Id == TaskUpdate.StatusId);
-        task.Status = st?.Name;
-        task.StatusColor = st?.Color;
+        task.Status = st?.Name ?? string.Empty;
+        task.StatusColor = st?.Color ?? string.Empty;
     }
 
     void CheckTaskType(TaskPostDTO po)

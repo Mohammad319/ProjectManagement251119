@@ -1,10 +1,10 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
-using ProjectManagement.Client.Shared.Model.Project.Calculation;
+using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using System.Collections.Generic;
-using System.Text.Json;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
@@ -15,25 +15,36 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         public async Task<List<TemplateMVVM>> GetAsync(int? department)
         {
             if (department.HasValue)
-                return await _httpRepository.GetAsync<List<TemplateMVVM>>(TemplateURLBase + URLConst.Template.GetByDepartment + $"/{department}");
-            else return await _httpRepository.GetAsync<List<TemplateMVVM>>(TemplateURLBase + URLConst.GetAll);
+            {
+                return (await _httpRepository.GetAsync<List<TemplateListDTO>>(TemplateURLBase + URLConst.Template.GetByDepartment + $"/{department}"))
+                    .Select(x => x.ToTemplateMVVM())
+                    .ToList();
+            }
+
+            return (await _httpRepository.GetAsync<List<TemplateListDTO>>(TemplateURLBase + URLConst.GetAll))
+                .Select(x => x.ToTemplateMVVM())
+                .ToList();
         }
         public async Task<TemplateMVVM> GetByIdAsync(int id)
         {
-            return await _httpRepository.GetAsync<TemplateMVVM>(TemplateURLBase + URLConst.Template.GetById + $"/{id}");
+            var dto = await _httpRepository.GetAsync<TemplateModelDTO>(TemplateURLBase + URLConst.Template.GetById + $"/{id}");
+            return dto.ToTemplateMVVM();
         }
         public async Task<TemplateMVVM> SetDefaultAsync(int id, int? newTemplate)
         {
-            return await _httpRepository.GetAsync<TemplateMVVM>(TemplateURLBase + URLConst.Template.Set + $"/{id}/{newTemplate}");
+            var dto = await _httpRepository.GetAsync<TemplateModelDTO>(TemplateURLBase + URLConst.Template.Set + $"/{id}/{newTemplate}");
+            return dto.ToTemplateMVVM();
            
         }
         public async Task<TemplateMVVM> CreateAsync(TemplateListPostDTO model)
         {
-            return await _httpRepository.PostAsync<TemplateMVVM, TemplateListPostDTO>(model, TemplateURLBase);
+            var dto = await _httpRepository.PostAsync<TemplateModelDTO, TemplateListPostDTO>(model, TemplateURLBase);
+            return dto.ToTemplateMVVM();
         }
         public async Task<TemplateMVVM> CreateAsync(int? departmentId, TemplateListPostDTO model)
         {
-            return await _httpRepository.PostAsync<TemplateMVVM, TemplateListPostDTO>(model, TemplateURLBase + URLConst.Template.PostAdmin + "/" + departmentId);
+            var dto = await _httpRepository.PostAsync<TemplateModelDTO, TemplateListPostDTO>(model, TemplateURLBase + URLConst.Template.PostAdmin + "/" + departmentId);
+            return dto.ToTemplateMVVM();
         }
         public async Task<bool> UpdateAsync(TemplateListPostDTO model, int id)
         {

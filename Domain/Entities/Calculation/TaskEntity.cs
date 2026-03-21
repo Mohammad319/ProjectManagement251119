@@ -16,7 +16,7 @@ namespace Domain.Entities.Calculation
         public TaskMetadata Metadata
         {
             get => _metadata ??= new TaskMetadata();
-            set => _metadata = NormalizeMetadata(value);
+            set => ApplyMetadataSnapshot(value);
         }
 
         [Required, MaxLength(FieldLengths.Name)]
@@ -92,14 +92,8 @@ namespace Domain.Entities.Calculation
             var clone = new TaskEntity
             {
                 Name = source.Name,
-                Code = source.Code,
                 StatusId = source.StatusId,
-                Type = source.Type,
-                Unit = source.Unit,
-                Note = source.Note,
-                IsActive = source.IsActive,
-                IsOH = source.IsOH,
-                Metadata = source.Metadata.Clone(),
+                Metadata = source.GetMetadataSnapshot(),
             };
 
             clone.SetSortOrder(source.SortOrder);
@@ -118,29 +112,33 @@ namespace Domain.Entities.Calculation
             ArgumentNullException.ThrowIfNull(dto);
 
             Name = NormalizeRequired(dto.Name, "Task name is required.");
-            Note = NormalizeOptional(dto.Note);
-            Unit = NormalizeOptional(dto.Unit);
-            Code = NormalizeOptional(dto.Code);
-
-            IsActive = dto.IsActive;
-            Type = dto.Type;
-            IsOH = dto.IsOH;
-
-            Metadata = dto.Metadata?.Clone() ?? new TaskMetadata();
-
-            // Keep duplicated fields in sync (scalar columns + JSON metadata)
-            Metadata.Note = Note ?? string.Empty;
-            Metadata.Unit = Unit ?? string.Empty;
-            Metadata.Code = Code ?? string.Empty;
-            Metadata.Type = Type;
-            Metadata.IsActive = IsActive;
-            Metadata.IsOH = IsOH;
-            Metadata.Normalize();
+            Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
+                dto.Metadata,
+                dto.Note,
+                dto.Unit,
+                dto.Code,
+                dto.IsActive,
+                dto.Type,
+                dto.IsOH);
 
             OpportunityId = dto.OpportunityId;
             StatusId = dto.StatusId;
             SetParentTask(dto.ParentTaskId);
         }
+
+        public TaskMetadata GetMetadataSnapshot()
+            => CalculationItemMetadataMapper.BuildTaskMetadata(_metadata, Note, Unit, Code, IsActive, Type, IsOH);
+
+        public void UpdateMetadata(Action<TaskMetadata> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
+        }
+
+        public void SetIsOH(bool isOH) => UpdateMetadata(x => x.IsOH = isOH);
 
         public void SetSortOrder(int sortOrder)
         {
@@ -177,17 +175,20 @@ namespace Domain.Entities.Calculation
             Opportunity = null;
         }
 
-        private static TaskMetadata NormalizeMetadata(TaskMetadata? metadata)
+        private void ApplyMetadataSnapshot(TaskMetadata? metadata)
         {
-            var clean = metadata?.Clone() ?? new TaskMetadata();
-            clean.Note = NormalizeOptional(clean.Note) ?? string.Empty;
-            clean.Unit = NormalizeOptional(clean.Unit) ?? string.Empty;
-            clean.Code = NormalizeOptional(clean.Code) ?? string.Empty;
-            clean.Responsible = NormalizeOptional(clean.Responsible) ?? string.Empty;
-            clean.QuantityParam = NormalizeOptional(clean.QuantityParam) ?? string.Empty;
-            clean.Normalize();
-            return clean;
+            var snapshot = NormalizeMetadata(metadata);
+            _metadata = snapshot;
+            Note = NormalizeOptional(snapshot.Note);
+            Unit = NormalizeOptional(snapshot.Unit);
+            Code = NormalizeOptional(snapshot.Code);
+            IsActive = snapshot.IsActive;
+            Type = snapshot.Type;
+            IsOH = snapshot.IsOH;
         }
+
+        private static TaskMetadata NormalizeMetadata(TaskMetadata? metadata)
+            => CalculationItemMetadataMapper.CloneTaskMetadata(metadata);
 
         private static string NormalizeRequired(string? value, string errorMessage)
         {

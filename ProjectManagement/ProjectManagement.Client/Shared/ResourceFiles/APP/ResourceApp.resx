@@ -309,6 +309,12 @@
   <data name="visibleItems" xml:space="preserve">
     <value>Visible items</value>
   </data>
+  <data name="selectedItems" xml:space="preserve">
+    <value>Selected items</value>
+  </data>
+  <data name="clearFilters" xml:space="preserve">
+    <value>Clear filter</value>
+  </data>
   <data name="yes" xml:space="preserve">
     <value>Yes</value>
   </data>
@@ -488,6 +494,21 @@
   </data>
   <data name="calculationDetailsUnavailable" xml:space="preserve">
     <value>Calculation details are not available.</value>
+  </data>
+  <data name="calculationTableEmptyState" xml:space="preserve">
+    <value>No tasks yet</value>
+  </data>
+  <data name="calculationTableEmptyStateHint" xml:space="preserve">
+    <value>Add a task or pull items from storage to start building this calculation.</value>
+  </data>
+  <data name="calculationTableNoVisibleRows" xml:space="preserve">
+    <value>No rows are currently visible</value>
+  </data>
+  <data name="calculationTableNoVisibleRowsHint" xml:space="preserve">
+    <value>Adjust the display options to bring tasks and resources back into view.</value>
+  </data>
+  <data name="calculationTableNoResultsHint" xml:space="preserve">
+    <value>Clear the current filter or adjust the display options to show more tasks and resources.</value>
   </data>
   <data name="projectTimeline" xml:space="preserve">
     <value>Project timeline</value>

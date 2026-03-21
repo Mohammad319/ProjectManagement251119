@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
+using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using System.Threading;
 
@@ -128,7 +129,9 @@ namespace ProjectManagement.Client.Pages.Calculation
             // ===== إشعار الـGrid =====
             // structural => إعادة بناء FlatList
             // numeric فقط => RefreshDataAsync
-            Calc.NotifyGridRefresh(flatListDirty: doStructural);
+            CalcService.RequestGridRefresh(doStructural
+                ? CalculationGridRefreshKind.FlatList
+                : CalculationGridRefreshKind.View);
 
             // ===== إعادة رندر الصفحة =====
             await InvokeAsync(StateHasChanged);

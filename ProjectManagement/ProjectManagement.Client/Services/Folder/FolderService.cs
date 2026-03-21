@@ -106,9 +106,13 @@ namespace ProjectManagement.Client.Services.Folder
         {
             if (folder is null) return;
 
-            folder.Projects ??= folderState.OtherDepartment
-                ? await projectRepo.GetOtherDepartmentAsync(folder.Id)
-                : await projectRepo.GetByFolderIdAsync(folder.Id);
+            if (!folder.ProjectsLoaded)
+            {
+                folder.Projects = folderState.OtherDepartment
+                    ? await projectRepo.GetOtherDepartmentAsync(folder.Id)
+                    : await projectRepo.GetByFolderIdAsync(folder.Id);
+                folder.ProjectsLoaded = true;
+            }
 
             if (folder.Projects != null)
                 folder.Projects = folder.Projects.OrderByDescending(x => x.Order).ToList();
@@ -127,9 +131,13 @@ namespace ProjectManagement.Client.Services.Folder
         {
             if (project is null) return;
 
-            project.Calculations ??= folderState.OtherDepartment
-                ? await calcRepo.GetShareCalculationsAsync(project.Id)
-                : await calcRepo.GetAsync(project.Id);
+            if (!project.CalculationsLoaded)
+            {
+                project.Calculations = folderState.OtherDepartment
+                    ? await calcRepo.GetShareCalculationsAsync(project.Id)
+                    : await calcRepo.GetAsync(project.Id);
+                project.CalculationsLoaded = true;
+            }
 
             if (project.Calculations != null)
                 project.Calculations = project.Calculations.OrderByDescending(x => x.Order).ToList();

@@ -17,7 +17,7 @@ namespace Domain.Entities.Calculation
         public ResourceMetadata Metadata
         {
             get => _metadata ??= new ResourceMetadata();
-            set => _metadata = NormalizeMetadata(value);
+            set => ApplyMetadataSnapshot(value);
         }
 
         [Required, MaxLength(FieldLengths.Name)]
@@ -94,9 +94,7 @@ namespace Domain.Entities.Calculation
                 Name = source.Name,
                 ResType = source.ResType,
                 IsActive = source.IsActive,
-                Unit = source.Unit,
-                Note = source.Note,
-                Metadata = source.Metadata.Clone(),
+                Metadata = source.GetMetadataSnapshot(),
                 AccountId = source.AccountId,
                 StatusId = source.StatusId,
                 ResourceSortId = source.ResourceSortId,
@@ -112,17 +110,13 @@ namespace Domain.Entities.Calculation
             ArgumentNullException.ThrowIfNull(dto);
 
             Name = NormalizeRequired(dto.Name, "Resource name is required.");
-            Note = NormalizeOptional(dto.Note);
-            Unit = NormalizeOptional(dto.Unit);
             ResType = dto.ResType;
             IsActive = dto.IsActive;
 
-            Metadata = dto.Data?.Clone() ?? new ResourceMetadata();
-
-            // Keep duplicated fields in sync (scalar columns + JSON metadata)
-            Metadata.Note = Note ?? string.Empty;
-            Metadata.Unit = Unit ?? string.Empty;
-            Metadata.Normalize();
+            Metadata = CalculationItemMetadataMapper.BuildResourceMetadata(
+                dto.Data,
+                dto.Note,
+                dto.Unit);
 
             SetSortOrder(dto.SortOrder);
 
@@ -132,6 +126,18 @@ namespace Domain.Entities.Calculation
             ResourceSortId = dto.ResourceSortId;
             ResourceTypeId = dto.ResourceTypeId;
             PrimaryOfferId = dto.OfferId;
+        }
+
+        public ResourceMetadata GetMetadataSnapshot()
+            => CalculationItemMetadataMapper.BuildResourceMetadata(_metadata, Note, Unit);
+
+        public void UpdateMetadata(Action<ResourceMetadata> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            var snapshot = GetMetadataSnapshot();
+            update(snapshot);
+            Metadata = snapshot;
         }
 
         public void SetTask(int taskId)
@@ -162,7 +168,7 @@ namespace Domain.Entities.Calculation
             Offers = [];
 
             if (resetQuantityParam && !string.IsNullOrWhiteSpace(Metadata.QuantityParam))
-                Metadata.QuantityParam = PMValuesConst.FixedQ;
+                UpdateMetadata(m => m.QuantityParam = PMValuesConst.FixedQ);
         }
 
         public void ResetIdentityForClone()
@@ -180,15 +186,16 @@ namespace Domain.Entities.Calculation
             Offers = [];
         }
 
-        private static ResourceMetadata NormalizeMetadata(ResourceMetadata? metadata)
+        private void ApplyMetadataSnapshot(ResourceMetadata? metadata)
         {
-            var clean = metadata?.Clone() ?? new ResourceMetadata();
-            clean.Note = NormalizeOptional(clean.Note) ?? string.Empty;
-            clean.Unit = NormalizeOptional(clean.Unit) ?? string.Empty;
-            clean.QuantityParam = NormalizeOptional(clean.QuantityParam) ?? string.Empty;
-            clean.Normalize();
-            return clean;
+            var snapshot = NormalizeMetadata(metadata);
+            _metadata = snapshot;
+            Note = NormalizeOptional(snapshot.Note);
+            Unit = NormalizeOptional(snapshot.Unit);
         }
+
+        private static ResourceMetadata NormalizeMetadata(ResourceMetadata? metadata)
+            => CalculationItemMetadataMapper.CloneResourceMetadata(metadata);
 
         private static string NormalizeRequired(string? value, string errorMessage)
         {

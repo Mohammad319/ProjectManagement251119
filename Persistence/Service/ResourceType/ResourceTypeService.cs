@@ -1,4 +1,5 @@
 using Application.Feature.ResourceType;
+using Application.Mapping.ResourceType;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.General;
@@ -129,56 +130,26 @@ namespace Persistence.Service.ResourceType
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.ResourceTypes
+            var entities = await context.ResourceTypes
                 .AsNoTracking()
                 .Where(x => x.IsVisible == isVisible)
                 .OrderBy(x => x.SortOrder)
-                .Select(x => new ResourceTypeModel
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Type = x.Kind,
-                    IsVisible = x.IsVisible,
-                    Order = x.SortOrder,
-                    AccountId = x.AccountId,
-                    Cost = x.Metadata.Cost,
-                    BaseCost = x.Metadata.BaseCost,
-                    Unit = x.Metadata.Unit,
-                    FixedQ = x.Metadata.FixedQ,
-                    CO2 = x.Metadata.CO2,
-                    CapWaste = x.Metadata.CapWaste,
-                    ChangeFactor1 = x.Metadata.ChangeFactor1,
-                    ChangeFactor2 = x.Metadata.ChangeFactor2
-                })
                 .ToListAsync(ct);
+
+            return entities.Select(x => x.ToModel()).ToList();
         }
 
         public async Task<List<ResourceSortModel>> GetSortsAsync(int resourceTypeId, CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            return await context.ResourceSorts
+            var entities = await context.ResourceSorts
                 .AsNoTracking()
                 .Where(x => x.ResourceTypeId == resourceTypeId)
                 .OrderBy(x => x.SortOrder)
-                .Select(x => new ResourceSortModel
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    IsVisible = x.IsVisible,
-                    Order = x.SortOrder,
-                    ResourceTypeId = x.ResourceTypeId,
-                    AccountId = x.AccountId,
-                    Cost = x.Metadata.Cost,
-                    BaseCost = x.Metadata.BaseCost,
-                    Unit = x.Metadata.Unit,
-                    FixedQ = x.Metadata.FixedQ,
-                    ChangeFactor1 = x.Metadata.ChangeFactor1,
-                    ChangeFactor2 = x.Metadata.ChangeFactor2,
-                    CO2 = x.Metadata.CO2,
-                    CapWaste = x.Metadata.CapWaste
-                })
                 .ToListAsync(ct);
+
+            return entities.Select(x => x.ToModel()).ToList();
         }
 
         public async Task<ResourceFormDTO> GetVisualFormAsync(CancellationToken ct = default)
@@ -186,47 +157,14 @@ namespace Persistence.Service.ResourceType
             var result = new ResourceFormDTO();
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
-            result.ResourceTypes = await context.ResourceTypes
+            var resourceTypes = await context.ResourceTypes
                 .AsNoTracking()
+                .Include(x => x.ResourcesSort)
                 .Where(x => x.IsVisible)
                 .OrderBy(x => x.SortOrder)
-                .Select(x => new ListResourceTypeDTO
-                {
-                    Id = x.Id,
-                    Name = x.Name,
-                    Type = x.Kind,
-                    Order = x.SortOrder,
-                    IsVisible = x.IsVisible,
-                    AccountId = x.AccountId ?? 0,
-                    ChangeFactor1 = x.Metadata.ChangeFactor1,
-                    ChangeFactor2 = x.Metadata.ChangeFactor2,
-                    BaseCost = x.Metadata.BaseCost,
-                    CapWaste = x.Metadata.CapWaste,
-                    CO2 = x.Metadata.CO2,
-                    Cost = x.Metadata.Cost,
-                    FixedQ = x.Metadata.FixedQ,
-                    Unit = x.Metadata.Unit,
-                    ResourcesSort = x.ResourcesSort
-                        .OrderBy(rs => rs.SortOrder)
-                        .Select(rs => new ListResourceSortDTO
-                        {
-                            Id = rs.Id,
-                            Name = rs.Name,
-                            Order = rs.SortOrder,
-                            IsVisible = rs.IsVisible,
-                            AccountId = rs.AccountId ?? 0,
-                            ChangeFactor1 = rs.Metadata.ChangeFactor1,
-                            ChangeFactor2 = rs.Metadata.ChangeFactor2,
-                            BaseCost = rs.Metadata.BaseCost,
-                            CapWaste = rs.Metadata.CapWaste,
-                            CO2 = rs.Metadata.CO2,
-                            Cost = rs.Metadata.Cost,
-                            FixedQ = rs.Metadata.FixedQ,
-                            Unit = rs.Metadata.Unit
-                        })
-                        .ToList()
-                })
                 .ToListAsync(ct);
+
+            result.ResourceTypes = resourceTypes.Select(x => x.ToListDto()).ToList();
 
             result.Statues = await context.ResourceStatus
                 .AsNoTracking()
