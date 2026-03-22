@@ -36,6 +36,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private int _lastRound;
     private string _lastColumnSignature = string.Empty;
     private bool _reloadPending;
+    private bool _jsSyncPending = true;
     private bool _disposed;
     private static readonly IReadOnlyDictionary<NetColumnId, int> DefaultWidths =
         TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x.Width);
@@ -44,11 +45,15 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !_disposed)
-        {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
-        }
+        if (_disposed)
+            return;
+
+        if (!firstRender && !_jsSyncPending)
+            return;
+
+        _dotNetRef ??= DotNetObjectReference.Create(this);
+        _jsSyncPending = false;
+        await JS.InvokeVoidAsync("initializeResizableColumns", _dotNetRef);
     }
 
     protected override void OnInitialized()
@@ -147,6 +152,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             if (refreshItems)
                 CalcService.NotifyGridViewMaterialized();
 
+            _jsSyncPending = true;
             await InvokeAsync(StateHasChanged);
         }
         finally
@@ -200,6 +206,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         Template.FreezCol();
         RefreshColumns();
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.View);
+        _jsSyncPending = true;
         await InvokeAsync(StateHasChanged);
 
         if (Calc.TemplateId > 0)
@@ -251,6 +258,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             await virtualizeComponent.RefreshDataAsync();
 
         CalcService.NotifyGridViewMaterialized();
+        _jsSyncPending = true;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -265,6 +273,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         var round = Template?.MathRound ?? 0;
         Columns = CalcColumnFactory.GetColumns(Calc.Tax, round, templateColumns);
         HeaderColumns = BuildHeaderColumns(Columns, templateColumns);
+        _jsSyncPending = true;
     }
 
     private static IReadOnlyList<ColumnHeader> BuildHeaderColumns(

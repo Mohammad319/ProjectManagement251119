@@ -7,11 +7,15 @@ window.initializeResizableColumns = function (dotNetRef) {
     if (!table) return;
 
     createResizableTable(table);
+    window.requestAnimationFrame(() => syncFrozenColumns(table));
 };
 
 const createResizableTable = (table) => {
-    const cols = table.querySelectorAll('th');
+    const cols = table.querySelectorAll('thead th');
     cols.forEach(col => {
+        if (col.querySelector(':scope > .resizer'))
+            return;
+
         const resizer = document.createElement('div');
         resizer.classList.add('resizer');
         resizer.style.height = `${table.offsetHeight}px`;
@@ -44,6 +48,7 @@ const createResizableColumn = function (col, resizer) {
         const newWidth = parseInt(window.getComputedStyle(col).width, 10);
         SaveTemplateJs(`${elementID}||${newWidth}`);
         SetNewNTHChild(+elementID + 1, newWidth - w);
+        syncFrozenColumns(document.getElementById('resizeMe'));
         document.removeEventListener('mousemove', mouseMoveHandler);
     };
 
@@ -54,29 +59,33 @@ var lefts = [];
 
 const ResetNeetCalcTable = (index) => {
     const table = document.getElementById('resizeMe');
-    const headers = table.querySelectorAll("th");
+    if (!table) return;
+
+    const headers = table.querySelectorAll('thead th');
 
     for (let i = index; i < headers.length; i++) {
-        const prevLeft = parseInt(window.getComputedStyle(headers[i - 1]).left, 10) || 0;
-        lefts.push(prevLeft);
-        headers[i - 1].style.left = "auto";
+        const prevLeft = parseInt(window.getComputedStyle(headers[i - 1]).left, 10);
+        lefts.push(Number.isNaN(prevLeft) ? NaN : prevLeft);
+        headers[i - 1].style.left = 'auto';
 
-        table.querySelectorAll(`td:nth-child(${i})`).forEach(td => {
-            td.style.left = "auto";
+        table.querySelectorAll(`tbody tr.calc-data-row > td:nth-child(${i})`).forEach(td => {
+            td.style.left = 'auto';
         });
     }
 };
 
 const SetNewNTHChild = (index, plusLeft) => {
     const table = document.getElementById('resizeMe');
-    const headers = table.querySelectorAll("th");
+    if (!table) return;
+
+    const headers = table.querySelectorAll('thead th');
     for (let i = index; i < headers.length; i++) {
-        let left = lefts[i - index] || 0;
-        if (left > 0) {
+        let left = lefts[i - index];
+        if (!Number.isNaN(left) && left >= 0) {
             left += plusLeft;
             headers[i - 1].style.left = `${left}px`;
 
-            table.querySelectorAll(`td:nth-child(${i})`).forEach(td => {
+            table.querySelectorAll(`tbody tr.calc-data-row > td:nth-child(${i})`).forEach(td => {
                 td.style.left = `${left}px`;
             });
         }
@@ -84,9 +93,51 @@ const SetNewNTHChild = (index, plusLeft) => {
     lefts = [];
 };
 
+function clearFrozenColumns(table) {
+    table.querySelectorAll('.pm-frozen-col').forEach(el => {
+        el.classList.remove('pm-frozen-col', 'pm-frozen-header');
+        el.style.position = '';
+        el.style.zIndex = '';
+        el.style.background = '';
+    });
+}
+
+function applyFrozenColumn(el, left, isHeader, order) {
+    el.classList.add('pm-frozen-col');
+    if (isHeader) el.classList.add('pm-frozen-header');
+    el.style.position = 'sticky';
+    el.style.left = `${left}px`;
+    el.style.zIndex = isHeader ? `${40 - order}` : `${20 - order}`;
+
+    if (!el.style.background) {
+        el.style.background = isHeader ? 'var(--net-header-bg)' : '#ffffff';
+    }
+}
+
+function syncFrozenColumns(table) {
+    if (!table) return;
+
+    clearFrozenColumns(table);
+
+    const headers = Array.from(table.querySelectorAll('thead th'));
+    headers.forEach((th, index) => {
+        const rawLeft = window.getComputedStyle(th).left;
+        const left = parseInt(rawLeft, 10);
+
+        if (Number.isNaN(left))
+            return;
+
+        applyFrozenColumn(th, left, true, index);
+
+        table.querySelectorAll(`tbody tr.calc-data-row > td:nth-child(${index + 1})`).forEach(td => {
+            applyFrozenColumn(td, left, false, index);
+        });
+    });
+}
+
 function SaveTemplateJs(event) {
     if (!window.nelCalcDotNetRef) {
-        console.warn("nelCalcDotNetRef is not set");
+        console.warn('nelCalcDotNetRef is not set');
         return;
     }
 

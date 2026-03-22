@@ -93,7 +93,7 @@ else
         else if (ShowNoVisibleRowsState)
         {
             <section class="calc-state-panel calc-state-panel-muted" data-testid="calculation-page-no-visible-rows">
-            <div class="my-4 calc-state-copy">
+            <div class="calc-state-copy p-5">
                     <p class="calc-state-title">@AppLoc["calculationTableNoVisibleRows"]</p>
                     <p class="calc-state-hint">@NoVisibleRowsHint</p>
                 </div>
@@ -107,7 +107,7 @@ else
                     </button>
                 }
             </section>
-        }
+    }
 
         <VerticalSplitter Class="h-[80vh] border border-zinc-200 dark:border-zinc-800 rounded-2xl"
                           InitialTopHeight="400"
@@ -138,4 +138,6 @@ else
                 </div>
             </BottomContent>
         </VerticalSplitter>
+ 
+    
 }

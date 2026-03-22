@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
-using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.DTO.Project;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows;
 

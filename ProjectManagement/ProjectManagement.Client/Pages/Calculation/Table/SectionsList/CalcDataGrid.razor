@@ -11,75 +11,76 @@
     @Template.StyleNetCalc
 </style>
 
-<table tabindex="0"
-       @onkeydown="HandleKeyDown"
-       @onkeyup="HandleKeyUp"
-       id="resizeMe"
-       class="resizable-table"
-       style="position:relative;table-layout:fixed;margin:0px;">
-    <thead>
-        <tr id="header-row">
-            @if (TH1ISvisible)
-            {
-                <th @key="Template.StartCol1"
-                    id="h1"
-                    class="draggable-table"
-                    style="width:@(Template.StartCol1 + "px;")">
-                    <span role="button" @onclick="ShFilter" class="text-outline-info">
-                        @((MarkupString)Icons.Filter)
-                    </span>
-                </th>
-            }
-            else
-            {
-                <th id="h1" class="draggable-table"></th>
-            }
-
-            @for (int i = 0; i < HeaderColumns.Count; i++)
-            {
-                <th id="@("h" + (i + 2))"
-                    class="@("colH" + (i + 2)) draggable-table"
-                    style="width:@(HeaderColumns[i].Width)px;">
-                    @CalcLoc[NetColumnLoc.Key[HeaderColumns[i].Id]]
-                </th>
-            }
-        </tr>
-    </thead>
-
-    <tbody>
-        @if (Calc.FilterVM != null)
-        {
-            <ProjectManagement.Client.Pages.Calculation.Table.Header.TableHeaderFilterDiv />
-        }
-
-        <Virtualize @ref="virtualizeComponent"
-                    SpacerElement="tr"
-                    TItem="FlatItem"
-                    Context="item"
-                    ItemsProvider="LoadItems"
-                    ItemSize="22"
-                    OverscanCount="6">
-            <ItemContent>
-                @if (item.IsTask && Calc.ShowTasks)
+<div class="divNetCalc">
+    <table tabindex="0"
+           @onkeydown="HandleKeyDown"
+           @onkeyup="HandleKeyUp"
+           id="resizeMe"
+           class="resizable-table">
+        <thead>
+            <tr id="header-row">
+                @if (TH1ISvisible)
                 {
-                    <TaskRowComponent @key="item.Key"
-                                      Task="item.Task"
-                                      ActiveParent="item.ParentActive"
-                                      OnCollapseToggle="ToggleCollSpan"
-                                      Color="@TemplateConstBase.Task"
-                                      Left="@(item.Depth * 10)"
-                                      Colmuns="Columns" />
+                    <th @key="Template.StartCol1"
+                        id="h1"
+                        class="draggable-table"
+                        style="width:@(Template.StartCol1 + "px;")">
+                        <span role="button" @onclick="ShFilter" class="text-outline-info">
+                            @((MarkupString)Icons.Filter)
+                        </span>
+                    </th>
                 }
-                else if (item.IsResource && Calc.ShowResources)
+                else
                 {
-                    <ResourceRowComponent @key="item.Key"
-                                          Resource="item.Resource"
-                                          TaskBranchActive="item.ParentActive"
-                                          Color="@(Template.NetCalc?.Color?.Resource ?? string.Empty)"
+                    <th id="h1" class="draggable-table"></th>
+                }
+
+                @for (int i = 0; i < HeaderColumns.Count; i++)
+                {
+                    <th id="@("h" + (i + 2))"
+                        class="@("colH" + (i + 2)) draggable-table"
+                        style="width:@(HeaderColumns[i].Width)px;">
+                        @CalcLoc[NetColumnLoc.Key[HeaderColumns[i].Id]]
+                    </th>
+                }
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Calc.FilterVM != null)
+            {
+                <ProjectManagement.Client.Pages.Calculation.Table.Header.TableHeaderFilterDiv />
+            }
+
+            <Virtualize @ref="virtualizeComponent"
+                        SpacerElement="tr"
+                        TItem="FlatItem"
+                        Context="item"
+                        ItemsProvider="LoadItems"
+                        ItemSize="22"
+                        OverscanCount="6">
+                <ItemContent>
+                    @if (item.IsTask && Calc.ShowTasks)
+                    {
+                        <TaskRowComponent @key="item.Key"
+                                          Task="item.Task"
+                                          ActiveParent="item.ParentActive"
+                                          OnCollapseToggle="ToggleCollSpan"
+                                          Color="@TemplateConstBase.Task"
                                           Left="@(item.Depth * 10)"
                                           Colmuns="Columns" />
-                }
-            </ItemContent>
-        </Virtualize>
-    </tbody>
-</table>
+                    }
+                    else if (item.IsResource && Calc.ShowResources)
+                    {
+                        <ResourceRowComponent @key="item.Key"
+                                              Resource="item.Resource"
+                                              TaskBranchActive="item.ParentActive"
+                                              Color="@(Template.NetCalc?.Color?.Resource ?? string.Empty)"
+                                              Left="@(item.Depth * 10)"
+                                              Colmuns="Columns" />
+                    }
+                </ItemContent>
+            </Virtualize>
+        </tbody>
+    </table>
+</div>
