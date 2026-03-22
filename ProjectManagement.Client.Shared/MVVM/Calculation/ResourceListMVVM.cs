@@ -19,14 +19,11 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
         }
 
-        public string Note => Data.Note;
-        public List<string> UpperNote => Data.UpperNote;
         public string QuantityParam => Data.QuantityParam;
         public decimal? Quantity => Data.Quantity;
         public string Unit => Data.Unit;
         public decimal ChangeFactor1 => Data.ChangeFactor1;
         public decimal ChangeFactor2 => Data.ChangeFactor2;
-        public decimal? PriceSub => Data.PriceSub;
 
         public decimal CapWaste => Data.CapWaste;
         public decimal Cost => Data.Cost;
@@ -71,9 +68,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         [JsonIgnore] public bool HasSelectedOffer { get; private set; }
 
         [JsonIgnore] public decimal NetCostQ => this.GetComputedNetCostQ();
-        //[JsonIgnore] public decimal NetCostTotaly => this.GetComputedNetCostTotaly();
-        //[JsonIgnore] public decimal ApriceTotally => this.GetComputedApriceTotally();
-        //[JsonIgnore] public double? TotalCO2 => this.GetComputedTotalCO2();
 
         public void InvalidateCache()
         {

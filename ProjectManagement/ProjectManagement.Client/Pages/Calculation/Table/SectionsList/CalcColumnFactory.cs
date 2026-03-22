@@ -207,7 +207,7 @@ public static class CalcColumnFactory
             [NetColumnId.PriceSub] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceSub),
-                ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.PriceSub)
+                ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.Data.PriceSub)
             },
             [NetColumnId.PriceTotalSub] = new()
             {
@@ -277,7 +277,7 @@ public static class CalcColumnFactory
             [NetColumnId.Note] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderTextTd(b, t.Note),
-                ResRender = (b, r) => TableRenderHelpers.RenderTextTd(b, r.Note)
+                ResRender = (b, r) => TableRenderHelpers.RenderTextTd(b, r.Data.Note)
             },
         };
 

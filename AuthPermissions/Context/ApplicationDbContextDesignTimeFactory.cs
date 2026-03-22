@@ -20,13 +20,14 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
     private static string ResolveConnectionString()
     {
         return FirstNonEmpty(
-                   Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection"),
                    Environment.GetEnvironmentVariable("ConnectionStrings__PMTConnection"),
                    Environment.GetEnvironmentVariable("ConnectionStrings__PMPConnection"),
+                   Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection"),
                    TryReadConnectionStringFromSettings())
                ?? throw new InvalidOperationException(
                    "No SQL Server connection string was found for ApplicationDbContext. " +
-                   "Set 'ConnectionStrings__DefaultConnection' or define 'DefaultConnection', 'PMTConnection', or 'PMPConnection' in an appsettings file.");
+                   "Set 'ConnectionStrings__PMTConnection', 'ConnectionStrings__PMPConnection', or fallback 'ConnectionStrings__DefaultConnection', " +
+                   "or define 'PMTConnection', 'PMPConnection', or 'DefaultConnection' in an appsettings file.");
     }
 
     private static string? TryReadConnectionStringFromSettings()
@@ -102,9 +103,9 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
         if (!document.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings))
             return null;
 
-        return ReadConnectionString(connectionStrings, "DefaultConnection")
-               ?? ReadConnectionString(connectionStrings, "PMTConnection")
-               ?? ReadConnectionString(connectionStrings, "PMPConnection");
+        return ReadConnectionString(connectionStrings, "PMTConnection")
+               ?? ReadConnectionString(connectionStrings, "PMPConnection")
+               ?? ReadConnectionString(connectionStrings, "DefaultConnection");
     }
 
     private static string? ReadConnectionString(JsonElement connectionStrings, string key)

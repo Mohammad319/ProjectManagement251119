@@ -12,9 +12,9 @@ public static class AppConnectionStringsReader
             ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsConnection' (or 'TaskResourceBlueprintsDb') not found.");
 
         var defaultConnection =
-            config.GetConnectionString("DefaultConnection")
-            ?? config.GetConnectionString("PMTConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' (or legacy 'PMTConnection') not found.");
+            config.GetConnectionString("PMTConnection")
+            ?? config.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'PMTConnection' (or fallback 'DefaultConnection') not found.");
 
         return new AppConnectionStrings(defaultConnection, taskResourceBlueprintsConnection);
     }

@@ -1,3 +1,4 @@
+using AuthPermissions.Bootstrap;
 using AuthPermissions.Context;
 using AuthPermissions.Services;
 using Microsoft.AspNetCore.Builder;
@@ -20,6 +21,7 @@ public static class AuthPermissionsBootstrapExtensions
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
+        await AuthPermissionsMigrationBootstrapper.BaselineExistingSchemaAsync(authDbContext, app.Logger);
         await authDbContext.Database.MigrateAsync();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 

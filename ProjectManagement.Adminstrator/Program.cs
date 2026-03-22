@@ -38,9 +38,9 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 builder.Services.AddApplicationServices();
 
 var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? builder.Configuration.GetConnectionString("PMPConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' (or legacy 'PMPConnection') not found.");
+    builder.Configuration.GetConnectionString("PMPConnection")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'PMPConnection' (or fallback 'DefaultConnection') not found.");
 
 builder.Services.AddCustomAuthentication(connectionString);
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
