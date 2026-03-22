@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
+using ProjectManagement.Configuration;
 using ProjectManagement.Middleware;
 using ProjectManagement.Services;
 using Serilog;
-using Serilog.Events;
 
 namespace ProjectManagement.Extensions;
 
@@ -29,13 +30,11 @@ public static class MiddlewareExtensions
 
                 if (path.StartsWithSegments("/_framework", StringComparison.OrdinalIgnoreCase))
                 {
-                    // One year + immutable for fingerprinted files
                     ctx.Context.Response.Headers.CacheControl = "public,max-age=31536000,immutable";
                 }
                 else
                 {
-                    // Reasonable default; tweak as you like
-                    ctx.Context.Response.Headers.CacheControl = "public,max-age=604800"; // 7 days
+                    ctx.Context.Response.Headers.CacheControl = "public,max-age=604800";
                 }
             }
         });
@@ -43,6 +42,15 @@ public static class MiddlewareExtensions
         // CorrelationId early
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<SecurityHeadersMiddleware>();
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+            {
+                diagnosticContext.Set("TraceId", httpContext.TraceIdentifier);
+                diagnosticContext.Set("RemoteIp", httpContext.Connection.RemoteIpAddress?.ToString());
+                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            };
+        });
 
         if (isDev)
         {
@@ -106,45 +114,41 @@ public static class MiddlewareExtensions
 
         // TenantContext after auth (depends on claims)
         app.UseMiddleware<TenantContextMiddleware>();
-        app.UseMiddleware<TenantLogContextMiddleware>();
-
-        // Request logging after auth/tenant resolution so logs contain user/tenant metadata.
-        app.UseSerilogRequestLogging(options =>
-        {
-            options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
-            options.GetLevel = (httpContext, _, ex) =>
-            {
-                if (ex is not null || httpContext.Response.StatusCode >= 500)
-                    return LogEventLevel.Error;
-
-                if (httpContext.Response.StatusCode >= 400)
-                    return LogEventLevel.Warning;
-
-                return LogEventLevel.Information;
-            };
-
-            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
-            {
-                var tenantContext = httpContext.RequestServices.GetService<TenantContext>();
-
-                diagnosticContext.Set("TraceId", httpContext.TraceIdentifier);
-                diagnosticContext.Set("RemoteIp", httpContext.Connection.RemoteIpAddress?.ToString());
-                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
-                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-                diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
-
-                if (tenantContext?.TenantId > 0)
-                    diagnosticContext.Set("TenantID", tenantContext.TenantId);
-
-                if (tenantContext?.UserId is > 0)
-                    diagnosticContext.Set("UserId", tenantContext.UserId.Value);
-
-                if (tenantContext?.DepartmentId is > 0)
-                    diagnosticContext.Set("DepartmentId", tenantContext.DepartmentId.Value);
-            };
-        });
 
         app.UseAntiforgery();
+
+        return app;
+    }
+
+    public static WebApplication LogProductionConfigurationWarnings(this WebApplication app, AppConnectionStrings conn)
+    {
+        if (!app.Environment.IsProduction())
+            return app;
+
+        var config = app.Configuration;
+        var warnings = new List<string>();
+
+        if (string.Equals(config["AllowedHosts"], "*", StringComparison.Ordinal))
+            warnings.Add("AllowedHosts is '*'. Restrict this to your production host names.");
+
+        if (!string.IsNullOrWhiteSpace(config["User:Email"]) || !string.IsNullOrWhiteSpace(config["User:Password"]))
+            warnings.Add("User:Email/User:Password are still present in configuration. Move them out of appsettings for production.");
+
+        if (string.Equals(config["TenantReload:Secret"], "dev-only-tenant-reload-secret", StringComparison.Ordinal))
+            warnings.Add("TenantReload:Secret still uses the development placeholder.");
+
+        if (conn.DefaultConnection.Contains(@".\SQLEXPRESS", StringComparison.OrdinalIgnoreCase) ||
+            conn.DefaultConnection.Contains("Encrypt=False", StringComparison.OrdinalIgnoreCase))
+            warnings.Add("Primary connection string still looks like a local/dev SQL configuration (.\"SQLEXPRESS or Encrypt=False).");
+
+        if (string.IsNullOrWhiteSpace(config["DataProtection:KeysPath"]))
+            warnings.Add("DataProtection:KeysPath is missing. Persist keys in production so sign-in cookies survive restarts.");
+
+        if (string.IsNullOrWhiteSpace(config["MailSettings:Host"]))
+            warnings.Add("MailSettings:Host is empty. Account recovery / email flows may fail in production.");
+
+        foreach (var warning in warnings)
+            app.Logger.LogWarning("GoLive warning: {Warning}", warning);
 
         return app;
     }
@@ -157,7 +161,6 @@ public static class MiddlewareExtensions
             {
                 var ctx = statusCtx.HttpContext;
 
-                // don't override if already JSON
                 var contentType = ctx.Response.ContentType ?? "";
                 if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase) ||
                     contentType.Contains("application/json", StringComparison.OrdinalIgnoreCase))

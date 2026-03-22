@@ -10,23 +10,12 @@ using Serilog.Events;
 public class ClientLogsController : ControllerBase
 {
     [HttpPost]
-    [RequestSizeLimit(16 * 1024)]
     public IActionResult Post([FromBody] ClientLogEvent e)
     {
         if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Length > 2000)
             return BadRequest();
 
-        if (!string.IsNullOrWhiteSpace(e.Url) && e.Url.Length > 2000)
-            return BadRequest();
-
-        if (!string.IsNullOrWhiteSpace(e.TraceId) && e.TraceId.Length > 200)
-            return BadRequest();
-
-        if (!string.IsNullOrWhiteSpace(e.Exception) && e.Exception.Length > 8000)
-            return BadRequest();
-
         var serverTraceId = HttpContext.TraceIdentifier;
-        var isAuthenticated = User?.Identity?.IsAuthenticated == true;
 
         var level = e.Level?.ToLowerInvariant() switch
         {
@@ -39,9 +28,9 @@ public class ClientLogsController : ControllerBase
             _ => LogEventLevel.Error
         };
 
-        // Only trust identity claims when the caller is authenticated.
-        var userId = isAuthenticated ? User?.FindFirst("UserId")?.Value : null;
-        var tenantId = isAuthenticated ? User?.FindFirst("TenantID")?.Value : null;
+        // اختياري: خذها من claims إن وجدت
+        var userId = User?.FindFirst("UserId")?.Value ?? e.UserId;
+        var tenantId = User?.FindFirst("TenantID")?.Value ?? e.TenantId;
 
         var logger = Log.ForContext("App", "ProjectManagement.Client")
             .ForContext("Environment", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"))
@@ -50,8 +39,7 @@ public class ClientLogsController : ControllerBase
             .ForContext("ClientUrl", e.Url)
             .ForContext("ClientTimeUtc", e.ClientTimeUtc?.UtcDateTime)
             .ForContext("ClientUserId", userId)
-            .ForContext("ClientTenantId", tenantId)
-            .ForContext("ClientAuthenticated", isAuthenticated);
+            .ForContext("ClientTenantId", tenantId);
 
         if (string.IsNullOrWhiteSpace(e.Exception))
             logger.Write(level, "{ClientMessage}", e.Message);

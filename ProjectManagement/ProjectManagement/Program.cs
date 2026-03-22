@@ -1,41 +1,16 @@
 ﻿using AuthPermissions;
+using AuthPermissions.Context;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using ProjectManagement.Configuration;
 using ProjectManagement.Extensions;
-using ProjectManagement.HealthChecks;
 using ProjectManagement.SignalR;
-using Sentry;
-using Sentry.Extensibility;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-
-// Optional but production-ready crash monitoring.
-// With no DSN configured, Sentry stays effectively inactive.
-builder.WebHost.UseSentry(options =>
-{
-    options.SendDefaultPii = false;
-    options.AttachStacktrace = true;
-    options.MaxRequestBodySize = RequestSize.None;
-    options.SetBeforeSend((@event, _) =>
-    {
-        @event.ServerName = null;
-
-        if (@event.Request?.Headers is not null)
-        {
-            @event.Request.Headers.Remove("Authorization");
-            @event.Request.Headers.Remove("Cookie");
-            @event.Request.Headers.Remove("X-Tenant-Secret");
-            @event.Request.Headers.Remove("X-Tenant-Reload-Secret");
-        }
-
-        return @event;
-    });
-});
 
 // Logging
 Log.Logger = new LoggerConfiguration()
@@ -58,26 +33,16 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddProjectManagementApp(builder, conn);
 
 var app = builder.Build();
-app.ValidateDeploymentSafety();
+
+
+// Surface production-safety warnings early in the logs.
+app.LogProductionConfigurationWarnings(conn);
 
 // Ensure AuthPermissions schema/roles are initialized before hosted services start querying tenants.
 await app.InitializeAuthPermissionsAsync();
 
 // Pipeline
 app.UseProjectManagementPipeline();
-
-// Health endpoints
-app.MapHealthChecks("/health/live", new HealthCheckOptions
-{
-    Predicate = _ => false,
-    ResponseWriter = HealthCheckResponseWriter.WriteAsync
-}).AllowAnonymous();
-
-app.MapHealthChecks("/health/ready", new HealthCheckOptions
-{
-    Predicate = registration => registration.Tags.Contains("ready"),
-    ResponseWriter = HealthCheckResponseWriter.WriteAsync
-}).AllowAnonymous();
 
 // Endpoints
 app.MapStaticAssets();
@@ -89,6 +54,40 @@ app.MapRazorComponents<ProjectManagement.Components.App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(ProjectManagement.Client._Imports).Assembly);
 
+
 app.MapAdditionalIdentityEndpoints();
+
+app.MapGet("/health/live", () => Results.Ok(new { status = "live" }))
+    .AllowAnonymous()
+    .WithTags("Health");
+
+app.MapGet("/health/ready", async (IServiceProvider services, CancellationToken ct) =>
+    {
+        try
+        {
+            using var scope = services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var canConnect = await db.Database.CanConnectAsync(ct);
+
+            if (!canConnect)
+            {
+                return Results.Problem(
+                    title: "Database unavailable",
+                    detail: "The application is running, but the primary database is not reachable.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
+            return Results.Ok(new { status = "ready" });
+        }
+        catch (Exception ex)
+        {
+            return Results.Problem(
+                title: "Startup dependency check failed",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+    })
+    .AllowAnonymous()
+    .WithTags("Health");
 
 app.Run();
