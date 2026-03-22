@@ -690,4 +690,20 @@
   <data name="taskActions" xml:space="preserve">
     <value>Task actions</value>
   </data>
+  <data name="close" xml:space="preserve"><value>Close</value></data>
+  <data name="networkUnavailableTitle" xml:space="preserve"><value>Unable to connect</value></data>
+  <data name="networkUnavailableMessage" xml:space="preserve"><value>Can't reach the server. Check your network and try again.</value></data>
+  <data name="permissionsTitle" xml:space="preserve"><value>Permissions</value></data>
+  <data name="permissionsRefreshMessage" xml:space="preserve"><value>We will re-check the session and permissions automatically.</value></data>
+  <data name="permissionsDeniedMessage" xml:space="preserve"><value>You do not have permission to perform this action.</value></data>
+  <data name="requestFailedTitle" xml:space="preserve"><value>Request failed</value></data>
+  <data name="requestFailedMessage" xml:space="preserve"><value>Unable to complete the request.</value></data>
+  <data name="serverErrorTitle" xml:space="preserve"><value>Server error</value></data>
+  <data name="serverErrorMessage" xml:space="preserve"><value>A server error occurred. Please try again later.</value></data>
+  <data name="sessionTitle" xml:space="preserve"><value>Session</value></data>
+  <data name="sessionRefreshMessage" xml:space="preserve"><value>The session expired temporarily. We will try to refresh the sign-in automatically.</value></data>
+  <data name="signInTitle" xml:space="preserve"><value>Sign in</value></data>
+  <data name="signInRedirectMessage" xml:space="preserve"><value>We could not restore the session automatically. You will be redirected to sign in.</value></data>
+  <data name="inputValueRequired" xml:space="preserve"><value>The input value cannot be null or empty.</value></data>
+  <data name="jsonDeserializationFailed" xml:space="preserve"><value>Failed to convert the JSON value to the requested object.</value></data>
 </root>

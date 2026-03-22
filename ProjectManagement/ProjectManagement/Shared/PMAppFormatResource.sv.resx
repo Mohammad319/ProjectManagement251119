@@ -242,4 +242,8 @@ Vid frågor om användarvillkoren, kontakta oss via e-post: ataya@atayasoft.de
   <data name="width" xml:space="preserve">
     <value>Width</value>
   </data>
+  <data name="ThirdPartyLibrariesDescription" xml:space="preserve"><value>Den här applikationen är byggd på .NET-plattformen och använder flera bibliotek med öppen källkod. Vi tackar utvecklarna bakom dessa komponenter för deras arbete.</value></data>
+  <data name="ThirdPartyLibrariesMicrosoftNotice" xml:space="preserve"><value>.NET- och ASP.NET Core-biblioteken som används tillhandahålls av Microsoft och är licensierade under MIT-licensen.</value></data>
+  <data name="ThirdPartyLibrariesOwnership" xml:space="preserve"><value>Varje bibliotek tillhör sina respektive upphovspersoner och bidragsgivare.</value></data>
+  <data name="MitLicenseLabel" xml:space="preserve"><value>MIT-licens</value></data>
 </root>

@@ -1,15 +1,18 @@
 namespace ProjectManagement.Client.Handless;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Repositories;
+using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Shared.Helper;
 using System.Net;
 
 public class UnauthorizedRedirectHandler(
     IErrorDialog ui,
     NavigationManager nav,
-    IClientLogger clientLogger) : DelegatingHandler
+    IClientLogger clientLogger,
+    IStringLocalizer<ResourceApp> appLoc) : DelegatingHandler
 {
     private static DateTime _lastDialogUtc = DateTime.MinValue;
 
@@ -23,13 +26,13 @@ public class UnauthorizedRedirectHandler(
 
             if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
             {
-                ShowOnce("الجلسة", "انتهت الجلسة مؤقتًا. سنحاول تحديث تسجيل الدخول تلقائيًا.");
+                ShowOnce(appLoc["sessionTitle"], appLoc["sessionRefreshMessage"]);
                 _ = clientLogger.ErrorAsync($"Unauthorized (401) recovered via refresh for {request.RequestUri}");
                 nav.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
             }
             else
             {
-                ShowOnce("تسجيل الدخول", "تعذر استعادة الجلسة تلقائيًا. سيتم تحويلك لتسجيل الدخول.");
+                ShowOnce(appLoc["signInTitle"], appLoc["signInRedirectMessage"]);
                 _ = clientLogger.ErrorAsync($"Unauthorized (401) redirected to login for {request.RequestUri}");
                 nav.NavigateTo(AuthRecoveryPathHelper.BuildLoginUrl(currentLocalUrl), forceLoad: true);
             }

@@ -241,4 +241,8 @@ If you have any questions regarding these Terms of Use, please contact us at: at
   <data name="width" xml:space="preserve">
     <value>Width</value>
   </data>
+  <data name="ThirdPartyLibrariesDescription" xml:space="preserve"><value>This application is built using the .NET platform and relies on several open-source libraries. We gratefully acknowledge the work of the developers behind these components.</value></data>
+  <data name="ThirdPartyLibrariesMicrosoftNotice" xml:space="preserve"><value>.NET and ASP.NET Core libraries used are provided by Microsoft and licensed under the MIT License.</value></data>
+  <data name="ThirdPartyLibrariesOwnership" xml:space="preserve"><value>Each library is the property of its respective authors and contributors.</value></data>
+  <data name="MitLicenseLabel" xml:space="preserve"><value>MIT License</value></data>
 </root>

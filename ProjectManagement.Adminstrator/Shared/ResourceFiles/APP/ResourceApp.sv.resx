@@ -402,4 +402,89 @@
   <data name="send" xml:space="preserve">
     <value>Skicka</value>
   </data>
+  <data name="loading" xml:space="preserve"><value>Laddar...</value></data>
+  <data name="addCondition" xml:space="preserve"><value>Lägg till villkor</value></data>
+  <data name="logic" xml:space="preserve"><value>Logik</value></data>
+  <data name="choiceResourceLogic" xml:space="preserve"><value>Val ↔ resurs</value></data>
+  <data name="choiceNumericLogic" xml:space="preserve"><value>Val ↔ numerisk</value></data>
+  <data name="numericResourceLogic" xml:space="preserve"><value>Numerisk ↔ resurs</value></data>
+  <data name="andText" xml:space="preserve"><value>OCH</value></data>
+  <data name="orText" xml:space="preserve"><value>ELLER</value></data>
+  <data name="noConditionsYet" xml:space="preserve"><value>Inga villkor ännu.</value></data>
+  <data name="any" xml:space="preserve"><value>Valfritt</value></data>
+  <data name="selectPlaceholder" xml:space="preserve"><value>-- Välj --</value></data>
+  <data name="choiceGroup" xml:space="preserve"><value>Valsgrupp</value></data>
+  <data name="choiceOption" xml:space="preserve"><value>Valalternativ</value></data>
+  <data name="numericGroup" xml:space="preserve"><value>Numerisk grupp</value></data>
+  <data name="bindingsEquations" xml:space="preserve"><value>Bindningsekvationer</value></data>
+  <data name="addChoiceBinding" xml:space="preserve"><value>Lägg till valbindning</value></data>
+  <data name="addNumericBinding" xml:space="preserve"><value>Lägg till numerisk bindning</value></data>
+  <data name="saveConditionFirstToEnableBindings" xml:space="preserve"><value>Spara villkoret först för att aktivera bindningar.</value></data>
+  <data name="saveBinding" xml:space="preserve"><value>Spara bindning</value></data>
+  <data name="saveNumericBinding" xml:space="preserve"><value>Spara numerisk bindning</value></data>
+  <data name="addEquation" xml:space="preserve"><value>Lägg till ekvation</value></data>
+  <data name="deleteBinding" xml:space="preserve"><value>Ta bort bindning</value></data>
+  <data name="deleteNumericBinding" xml:space="preserve"><value>Ta bort numerisk bindning</value></data>
+  <data name="saved" xml:space="preserve"><value>Sparad</value></data>
+  <data name="noFormulas" xml:space="preserve"><value>Inga formler</value></data>
+  <data name="numericBindings" xml:space="preserve"><value>Numeriska bindningar</value></data>
+  <data name="equation" xml:space="preserve"><value>Ekvation</value></data>
+  <data name="equationExpressionPlaceholder" xml:space="preserve"><value>Uttryck...</value></data>
+  <data name="removeEquation" xml:space="preserve"><value>Ta bort den här ekvationen</value></data>
+  <data name="chooseOptionFirst" xml:space="preserve"><value>Välj först ett alternativ.</value></data>
+  <data name="chooseNumericGroupFirst" xml:space="preserve"><value>Välj först en numerisk grupp.</value></data>
+  <data name="selectAll" xml:space="preserve"><value>Markera alla</value></data>
+  <data name="clearAll" xml:space="preserve"><value>Rensa alla</value></data>
+  <data name="textValuePlaceholder" xml:space="preserve"><value>Textvärde</value></data>
+  <data name="numericValuePlaceholder" xml:space="preserve"><value>Numeriskt värde</value></data>
+  <data name="invalidNumericValue" xml:space="preserve"><value>Ogiltigt numeriskt värde.</value></data>
+  <data name="valueMustBeAtLeast" xml:space="preserve"><value>Värdet måste vara minst {0}.</value></data>
+  <data name="valueMustBeAtMost" xml:space="preserve"><value>Värdet måste vara högst {0}.</value></data>
+  <data name="choiceGroups" xml:space="preserve"><value>Valsgrupper</value></data>
+  <data name="addGroup" xml:space="preserve"><value>Lägg till grupp</value></data>
+  <data name="sectionKey" xml:space="preserve"><value>Sektionsnyckel</value></data>
+  <data name="optionalPlaceholder" xml:space="preserve"><value>(valfritt)</value></data>
+  <data name="selection" xml:space="preserve"><value>Urval</value></data>
+  <data name="multiple" xml:space="preserve"><value>Flera</value></data>
+  <data name="single" xml:space="preserve"><value>Enkel</value></data>
+  <data name="addOption" xml:space="preserve"><value>Lägg till alternativ</value></data>
+  <data name="optionLabel" xml:space="preserve"><value>Alternativtext</value></data>
+  <data name="revealSectionKeys" xml:space="preserve"><value>Visa sektionsnycklar (kommaseparerade)</value></data>
+  <data name="revealSectionKeysPlaceholder" xml:space="preserve"><value>t.ex. detaljer, avancerat, extra</value></data>
+  <data name="setDefault" xml:space="preserve"><value>Ange som standard</value></data>
+  <data name="noChoiceGroups" xml:space="preserve"><value>Inga valsgrupper.</value></data>
+  <data name="numericGroups" xml:space="preserve"><value>Numeriska grupper</value></data>
+  <data name="noNumericGroups" xml:space="preserve"><value>Inga numeriska grupper.</value></data>
+  <data name="resourceChoiceGroups" xml:space="preserve"><value>Resursvalsgrupper</value></data>
+  <data name="resource" xml:space="preserve"><value>Resurs</value></data>
+  <data name="resourceAssignments" xml:space="preserve"><value>Resurstilldelningar</value></data>
+  <data name="menuId" xml:space="preserve"><value>Meny-ID</value></data>
+  <data name="noResourceGroups" xml:space="preserve"><value>Inga resursgrupper.</value></data>
+  <data name="properties" xml:space="preserve"><value>Egenskaper</value></data>
+  <data name="propertyGroupDefaultName" xml:space="preserve"><value>Ny egenskapsgrupp</value></data>
+  <data name="questionGroupDefaultName" xml:space="preserve"><value>Grupp</value></data>
+  <data name="questionOptionDefaultName" xml:space="preserve"><value>Alternativ</value></data>
+  <data name="numericGroupDefaultName" xml:space="preserve"><value>Numerisk</value></data>
+  <data name="resourceGroupDefaultName" xml:space="preserve"><value>Resurser</value></data>
+  <data name="moreResultsAvailable" xml:space="preserve"><value>Fler resultat finns. Förfina sökningen...</value></data>
+  <data name="searchResourcePlaceholder" xml:space="preserve"><value>Sök resurs...</value></data>
+  <data name="choiceRequirements" xml:space="preserve"><value>Valvillkor</value></data>
+  <data name="resourceRequirements" xml:space="preserve"><value>Resursvillkor</value></data>
+  <data name="numericRequirements" xml:space="preserve"><value>Numeriska villkor</value></data>
+  <data name="variableRequirements" xml:space="preserve"><value>Variabelvillkor</value></data>
+  <data name="add" xml:space="preserve"><value>Lägg till</value></data>
+  <data name="none" xml:space="preserve"><value>Inga</value></data>
+  <data name="group" xml:space="preserve"><value>Grupp</value></data>
+  <data name="item" xml:space="preserve"><value>Post</value></data>
+  <data name="groupKey" xml:space="preserve"><value>Gruppnyckel</value></data>
+  <data name="remove" xml:space="preserve"><value>Ta bort</value></data>
+  <data name="variable" xml:space="preserve"><value>Variabel</value></data>
+  <data name="thickness" xml:space="preserve"><value>Tjocklek</value></data>
+  <data name="length" xml:space="preserve"><value>Längd</value></data>
+  <data name="density" xml:space="preserve"><value>Densitet</value></data>
+  <data name="thirdPartyLibrariesTitle" xml:space="preserve"><value>Tredjepartsbibliotek</value></data>
+  <data name="thirdPartyLibrariesDescription" xml:space="preserve"><value>Den här applikationen är byggd på .NET-plattformen och använder flera bibliotek med öppen källkod. Vi tackar utvecklarna bakom dessa komponenter för deras arbete.</value></data>
+  <data name="thirdPartyLibrariesMicrosoftNotice" xml:space="preserve"><value>.NET- och ASP.NET Core-biblioteken som används tillhandahålls av Microsoft och är licensierade under MIT-licensen.</value></data>
+  <data name="thirdPartyLibrariesOwnership" xml:space="preserve"><value>Varje bibliotek tillhör sina respektive upphovspersoner och bidragsgivare.</value></data>
+  <data name="mitLicenseLabel" xml:space="preserve"><value>MIT-licens</value></data>
 </root>

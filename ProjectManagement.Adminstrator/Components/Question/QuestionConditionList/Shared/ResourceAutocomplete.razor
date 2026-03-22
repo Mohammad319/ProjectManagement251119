@@ -1,16 +1,17 @@
 @using System.Linq
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
+@using ProjectManagement.Adminstrator.Components
 @using TaskResourceBlueprints.Dto.Resource
 @using TaskResourceBlueprints.Services.Resource
 
-@inherits ComponentBase
+@inherits AppComponentBase
 
 @inject IResourceBlueprintsService ResourceService
 
 <div class="relative">
     <input class="@InputCss"
-           placeholder="@Placeholder"
+           placeholder="@EffectivePlaceholder"
            value="@_searchText"
            @oninput="OnInput"
            @onkeydown="OnKeyDown"
@@ -40,7 +41,7 @@
             @if (_hasMore)
             {
                 <li class="px-3 py-2 text-xs text-gray-400">
-                    المزيد من النتائج متوفرة، ضيّق البحث...
+                    @AppLoc["moreResultsAvailable"]
                 </li>
             }
         </ul>
@@ -54,7 +55,7 @@
 
     [Parameter] public string? InitialName { get; set; }
 
-    [Parameter] public string? Placeholder { get; set; } = "Search resource...";
+    [Parameter] public string? Placeholder { get; set; }
     [Parameter] public bool Disabled { get; set; }
 
     [Parameter] public int MinChars { get; set; } = 2;
@@ -74,6 +75,9 @@
     private CancellationTokenSource? _cts;
     private int? _lastAppliedValue;
     private string? _lastAppliedInitialName;
+
+    private string EffectivePlaceholder
+        => string.IsNullOrWhiteSpace(Placeholder) ? AppLoc["searchResourcePlaceholder"] : Placeholder!;
 
     protected override async Task OnParametersSetAsync()
     {

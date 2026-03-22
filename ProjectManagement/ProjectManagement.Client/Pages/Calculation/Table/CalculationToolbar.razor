@@ -2,8 +2,8 @@
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 
-<div id="tit" class="flex flex-nowrap items-center gap-2 px-2 whitespace-nowrap shrink-0">
-    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+<div id="tit" class="flex flex-nowrap items-center gap-1 px-2 whitespace-nowrap shrink-0">
+    <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
           @onclick="() => TableCoordinator.ShowTaskForm(new TaskListMVVM())"
           title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">
         @Icons.Plus2
@@ -14,19 +14,19 @@
             @if (Calc.Tap1)
             {
                 <span title="@ResourceApp.importFromFile"
-                      class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+                      class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="TableCoordinator.ShowImportDialog">
                     @((MarkupString)Icons.ImportFromFile)
                 </span>
 
-                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+                <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       title="@ResourceLoc.template"
                       @onclick="TableCoordinator.ShowTemplateDialog">
                     @((MarkupString)Icons.Template)
                 </span>
 
                 <span title="@ResourceApp.reOrder"
-                      class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+                      class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="() => TableCoordinator.ShowTaskReorderDialog()">
                     @((MarkupString)Icons.ReorderRows)
                 </span>
@@ -34,7 +34,7 @@
 
             @if (InteractionState.SelectedItems.Count != 0)
             {
-                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+                <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="TableCoordinator.UnselectAll"
                       title="@ResourceLoc.unselectAll">
                     @((MarkupString)Icons.NotSelected)
@@ -43,7 +43,7 @@
 
             @if (CanPasteTasks)
             {
-                <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+                <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
                       @onclick="() => TableCoordinator.PasteAsync(0)"
                       title="@ResourceApp.paste">
                     @((MarkupString)Icons.Paste)
@@ -57,14 +57,14 @@
         </Authorized>
     </AuthorizeView>
 
-    <CalculationDisplayOptions />
+    @* <CalculationDisplayOptions /> *@
 
-    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+    <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
           @onclick="TableCoordinator.ToggleOH">
         @(Calc.OHFactors ? "OH" : CalcResource.netCal)
     </span>
 
-    <span class="inline-flex items-center rounded px-2 py-1 text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
+    <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
           title="@CalcResource.quantity"
           @onclick="TableCoordinator.ShowQuantityDialog">
         @((MarkupString)Icons.ResetQuantity)

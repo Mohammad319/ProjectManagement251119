@@ -9,7 +9,7 @@
     @if (Tasks != null) foreach (var Storage in Tasks)
         {
             <TaskStorage Task="Storage.StorageValue" WithContent="true">
-                <span role="button" @onclick="() => AddRemove(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
+                <span role="button" @onclick="() => AddRemoveAsync(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
                     @((MarkupString)(IDs.Any(x => x == Storage.Id) ? Icons.Minus : Icons.Plus))
                 </span>
             </TaskStorage>
@@ -20,7 +20,7 @@ else
     if (Resources != null) foreach (var Storage in Resources)
         {
             <ResourcesStorage Resource="Storage.StorageValue">
-                <span role="button" @onclick="() => AddRemove(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
+                <span role="button" @onclick="() => AddRemoveAsync(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
                     @((MarkupString)(IDs.Any(x => x == Storage.Id) ? Icons.Minus : Icons.Plus))
                 </span>
             </ResourcesStorage>
@@ -34,13 +34,12 @@ else
     [Parameter] public EventCallback Callback { get; set; }
     List<int> IDs = [];
     public bool SaveBtnVisible() => (IDs != null && IDs.Count != 0);
-    void AddRemove(int id)
+    async Task AddRemoveAsync(int id)
     {
-        int oldCount = IDs.Count;
         if (IDs.Any(x => x == id)) IDs.Remove(id);
         else IDs.Add(id);
-        int newCount = IDs.Count;  
-        Callback.InvokeAsync().Wait();
+
+        await Callback.InvokeAsync();
     }
     public async Task GetAsync(GetFilterDTO Post)
     {

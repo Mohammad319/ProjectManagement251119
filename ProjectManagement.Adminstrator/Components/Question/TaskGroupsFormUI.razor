@@ -1,4 +1,4 @@
-﻿@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Questions.Groups
 @using TaskResourceBlueprints.Entities.Resources
@@ -24,11 +24,10 @@
         Task = await TaskGroupsQuery.GetTaskWithConditionsAsync(ID, CancellationToken.None)
                ?? new TaskDefinition();
         Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(Task.Id, CancellationToken.None))
-.Select(f => new ResourceCategory() { Id = f.Id, DisplayName = f.DisplayName }).ToList();
+            .Select(f => new ResourceCategory() { Id = f.Id, DisplayName = f.DisplayName }).ToList();
         Task.QuestionGroups ??= [];
         Task.NumericQuestions ??= [];
         Task.ResourceSelectors ??= [];
-
     }
 
     private async Task SaveAsync()
@@ -41,9 +40,13 @@
 
     private void Close() => MHD.Modal.Close();
 
-    // ====== Choice ======
     private void AddChoiceGroup()
-        => Task.QuestionGroups.Add(new QuestionGroupDefinition { TaskId = ID, DisplayName = "Group", SortOrder = Task.QuestionGroups.Count });
+        => Task.QuestionGroups.Add(new QuestionGroupDefinition
+        {
+            TaskId = ID,
+            DisplayName = AppLoc["questionGroupDefaultName"],
+            SortOrder = Task.QuestionGroups.Count
+        });
 
     private void RemoveChoiceGroup(QuestionGroupDefinition g)
         => Task.QuestionGroups.Remove(g);
@@ -53,7 +56,7 @@
         g.Options.Add(new QuestionOptionDefinition
         {
             QuestionGroupId = g.Id,
-            DisplayName = "Option",
+            DisplayName = AppLoc["questionOptionDefaultName"],
             SortOrder = g.Options.Count
         });
         NormalizeNestedSortOrders();
@@ -65,16 +68,24 @@
         NormalizeNestedSortOrders();
     }
 
-    // ====== Numeric ======
     private void AddNumericGroup()
-        => Task.NumericQuestions.Add(new NumericQuestionDefinition { TaskId = ID, DisplayName = "Numeric", SortOrder = Task.NumericQuestions.Count });
+        => Task.NumericQuestions.Add(new NumericQuestionDefinition
+        {
+            TaskId = ID,
+            DisplayName = AppLoc["numericGroupDefaultName"],
+            SortOrder = Task.NumericQuestions.Count
+        });
 
     private void RemoveNumericGroup(NumericQuestionDefinition g)
         => Task.NumericQuestions.Remove(g);
 
-    // ====== Resources ======
     private void AddResourceGroup()
-        => Task.ResourceSelectors.Add(new ResourceSelectorDefinition { TaskId = ID, DisplayName = "Resources", SortOrder = Task.ResourceSelectors.Count });
+        => Task.ResourceSelectors.Add(new ResourceSelectorDefinition
+        {
+            TaskId = ID,
+            DisplayName = AppLoc["resourceGroupDefaultName"],
+            SortOrder = Task.ResourceSelectors.Count
+        });
 
     private void RemoveResourceGroup(ResourceSelectorDefinition g)
         => Task.ResourceSelectors.Remove(g);
@@ -128,7 +139,6 @@
         StateHasChanged();
     }
 
-    // ====== Move helpers ======
     private static void MoveUp<T>(IList<T> list, T item)
     {
         var i = list.IndexOf(item);
@@ -180,7 +190,6 @@
         NormalizeNestedSortOrders();
     }
 
-    // ====== Helpers: RevealSectionKeys ======
     private static string GetRevealKeys(QuestionOptionDefinition o)
         => o?.RevealedSectionKeys is { Count: > 0 } ? string.Join(", ", o.RevealedSectionKeys) : string.Empty;
 
@@ -200,7 +209,7 @@
 
 @if (Task == null)
 {
-    <div class="text-xs text-gray-500 dark:text-gray-400">Loading…</div>
+    <div class="text-xs text-gray-500 dark:text-gray-400">@AppLoc["loading"]</div>
 }
 else
 {
@@ -208,238 +217,231 @@ else
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-            <!-- Header: Task name + actions -->
-            <div class="flex items-center gap-1 mb-1">
-                <div class="flex-1 min-w-[280px]">
-                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
-                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" value="@Task?.Name" readonly />
-                </div>
-
-                <div class="flex flex-wrap gap-1.5 place-self-end">
-                    <button type="submit" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">@ResourceApp.save</button>
-                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="Close">@ResourceApp.cancel</button>
-                </div>
+        <div class="flex items-center gap-1 mb-1">
+            <div class="flex-1 min-w-[280px]">
+                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" value="@Task?.Name" readonly />
             </div>
 
-            <!-- Choice Groups -->
-            <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-                <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
-                    <h4 class="font-semibold">Choice Groups</h4>
-                    <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddChoiceGroup">Add Group</button>
-                </div>
+            <div class="flex flex-wrap gap-1.5 place-self-end">
+                <button type="submit" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">@ResourceApp.save</button>
+                <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="Close">@ResourceApp.cancel</button>
+            </div>
+        </div>
 
-                @if (Task?.QuestionGroups is { Count: > 0 } questionGroups)
+        <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
+            <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
+                <h4 class="font-semibold">@AppLoc["choiceGroups"]</h4>
+                <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddChoiceGroup">@AppLoc["addGroup"]</button>
+            </div>
+
+            @if (Task?.QuestionGroups is { Count: > 0 } questionGroups)
+            {
+                <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
+                @foreach (var g in questionGroups.OrderBy(x => x.SortOrder))
                 {
-                    <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
-                    @foreach (var g in questionGroups.OrderBy(x => x.SortOrder))
-                    {
-                        <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
-                                <div class="md:col-span-3">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
-                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Order</label>
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
-                                </div>
-
-                                <div class="md:col-span-3">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Section Key</label>
-                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="(optional)" />
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Selection</label>
-                                    <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="g.SelectionMode">
-                                        <option value="@SelectionMode.Multiple">Multiple</option>
-                                        <option value="@SelectionMode.Single">Single</option>
-                                    </select>
-                                </div>
-
-                                <div class="md:col-span-2 place-self-end">
-                                    <div class="inline-flex gap-1.5">
-                                        <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveChoiceGroup(g))">x</button>
-                                        <button type="button" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="(() => AddChoiceOption(g))">Add Option</button>
-                                    </div>
-                                </div>
+                    <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
+                            <div class="md:col-span-3">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
                             </div>
 
-                            @if (g.Options?.Count > 0)
-                            {
-                                <div class="mt-1.5">
-                                    @foreach (var o in g.Options)
-                                    {
-                                        <div class="rounded-lg border border-gray-100 bg-white/70 p-1.5 mb-1.5 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                                            <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
-                                                <div class="md:col-span-4">
-                                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Option Label</label>
-                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="o.DisplayName" />
-                                                </div>
+                            <div class="md:col-span-2">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.sort</label>
+                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
+                            </div>
 
-                                                <div class="md:col-span-6">
-                                                    <label class="mb-1 text-xs text-gray-700 dark:text-gray-200">
-                                                        Reveal Section Keys (comma-separated)
-                                                    </label>
-                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                                           value="@GetRevealKeys(o)"
-                                                           @onchange="e => SetRevealKeys(o, e.Value?.ToString())"
-                                                           placeholder="e.g. details, advanced, extras" />
-                                                </div>
+                            <div class="md:col-span-3">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["sectionKey"]</label>
+                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
+                            </div>
 
-                                                <div class="md:col-span-2 place-self-end">
-                                                    <div class="inline-flex gap-1.5">
-                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">Set Default</button>
+                            <div class="md:col-span-2">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["selection"]</label>
+                                <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="g.SelectionMode">
+                                    <option value="@SelectionMode.Multiple">@AppLoc["multiple"]</option>
+                                    <option value="@SelectionMode.Single">@AppLoc["single"]</option>
+                                </select>
+                            </div>
 
-                                                        <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
-                                                        <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionDown(g, o))">↓</button>
-                                                        <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveChoiceOption(g, o))">x</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-                    </div>
-                }
-                else
-                {
-                    <div class="text-xs text-gray-500 dark:text-gray-400">No choice groups.</div>
-                }
-            </section>
-
-            <!-- Numeric Groups -->
-            <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-                <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
-                    <h4 class="font-semibold">Numeric Groups</h4>
-                    <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddNumericGroup">Add Group</button>
-                </div>
-
-                @if (Task?.NumericQuestions?.Count > 0)
-                {
-                    <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
-                    @foreach (var g in Task.NumericQuestions!.OrderBy(x => x.SortOrder))
-                    {
-                        <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
-                            <!-- NOTE: this row is 8 columns; keep spans sum = 8 -->
-                            <div class="grid grid-cols-1 md:grid-cols-8 gap-1.5">
-                                <div class="md:col-span-2">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Name</label>
-                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
-                                </div>
-
-                                <div class="md:col-span-1">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Order</label>
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Section Key</label>
-                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="(optional)" />
-                                </div>
-
-                                <div class="md:col-span-1">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Min</label>
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.MinInputValue" />
-                                </div>
-
-                                <div class="md:col-span-1">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Max</label>
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.MaxInputValue" />
-                                </div>
-
-                                <div class="md:col-span-1 place-self-end">
-                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveNumericGroup(g))">x</button>
+                            <div class="md:col-span-2 place-self-end">
+                                <div class="inline-flex gap-1.5">
+                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveChoiceGroup(g))">x</button>
+                                    <button type="button" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="(() => AddChoiceOption(g))">@AppLoc["addOption"]</button>
                                 </div>
                             </div>
                         </div>
-                    }
-                    </div>
-                }
-                else
-                {
-                    <div class="text-xs text-gray-500 dark:text-gray-400">No numeric groups.</div>
-                }
-            </section>
 
-            <!-- Resource Choice Groups -->
-            <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-                <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
-                    <h4 class="font-semibold">Resource Choice Groups</h4>
-                    <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddResourceGroup">Add Group</button>
-                </div>
-
-                @if (Task?.ResourceSelectors?.Count > 0)
-                {
-                    <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
-                    @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
-                    {
-                        <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
-                                <div class="md:col-span-4">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Name</label>
-                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
-                                </div>
-
-                                <div class="md:col-span-2">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Order</label>
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
-                                </div>
-
-                                <div class="md:col-span-4">
-                                    <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Section Key</label>
-                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="(optional)" />
-                                </div>
-
-                                <div class="md:col-span-2 place-self-end">
-                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveResourceGroup(g))">x</button>
-                                </div>
-                            </div>
-
+                        @if (g.Options?.Count > 0)
+                        {
                             <div class="mt-1.5">
-                                <FolderResourcesAddUI TaskId="Task.Id"
-                                                      ResIds="(g.Items ?? []).Select(x => x.ResourceId).ToList()"
-                                                      OnSave="(e)=>AddDelete(g,e)" />
-
-                                @if (g.Items?.Count > 0)
+                                @foreach (var o in g.Options)
                                 {
-                                    foreach (var it in g.Items)
-                                    {
-                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5 mb-1.5">
-                                            <div class="md:col-span-10">
-                                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Resource</label>
-                                                <ResourceAutocomplete MinChars="2" PageSize="20"
-                                                                      InitialName="@it.Resource?.Name"
-                                                                      Value="it.ResourceId"
-                                                                      ValueChanged="@(v => it.ResourceId = v ?? 0)"
-                                                                      @* OnPicked="@(sel => { it.ResourceId = sel.id; StateHasChanged(); })" *@
-                                                                      />
+                                    <div class="rounded-lg border border-gray-100 bg-white/70 p-1.5 mb-1.5 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
+                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
+                                            <div class="md:col-span-4">
+                                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["optionLabel"]</label>
+                                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="o.DisplayName" />
+                                            </div>
+
+                                            <div class="md:col-span-6">
+                                                <label class="mb-1 text-xs text-gray-700 dark:text-gray-200">
+                                                    @AppLoc["revealSectionKeys"]
+                                                </label>
+                                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                                       value="@GetRevealKeys(o)"
+                                                       @onchange="e => SetRevealKeys(o, e.Value?.ToString())"
+                                                       placeholder="@AppLoc["revealSectionKeysPlaceholder"]" />
                                             </div>
 
                                             <div class="md:col-span-2 place-self-end">
                                                 <div class="inline-flex gap-1.5">
-                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
-                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
-                                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveResourceItem(g, it))">x</button>
+                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">@AppLoc["setDefault"]</button>
+
+                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
+                                                    <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveChoiceOptionDown(g, o))">↓</button>
+                                                    <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveChoiceOption(g, o))">x</button>
                                                 </div>
                                             </div>
                                         </div>
-                                    }
+                                    </div>
                                 }
                             </div>
-                        </div>
-                    }
+                        }
                     </div>
                 }
-                else
+                </div>
+            }
+            else
+            {
+                <div class="text-xs text-gray-500 dark:text-gray-400">@AppLoc["noChoiceGroups"]</div>
+            }
+        </section>
+
+        <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
+            <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
+                <h4 class="font-semibold">@AppLoc["numericGroups"]</h4>
+                <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddNumericGroup">@AppLoc["addGroup"]</button>
+            </div>
+
+            @if (Task?.NumericQuestions?.Count > 0)
+            {
+                <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
+                @foreach (var g in Task.NumericQuestions!.OrderBy(x => x.SortOrder))
                 {
-                    <div class="text-xs text-gray-500 dark:text-gray-400">No resource groups.</div>
+                    <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
+                        <div class="grid grid-cols-1 md:grid-cols-8 gap-1.5">
+                            <div class="md:col-span-2">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
+                            </div>
+
+                            <div class="md:col-span-1">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.sort</label>
+                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["sectionKey"]</label>
+                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
+                            </div>
+
+                            <div class="md:col-span-1">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppControll.min</label>
+                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.MinInputValue" />
+                            </div>
+
+                            <div class="md:col-span-1">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppControll.max</label>
+                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.MaxInputValue" />
+                            </div>
+
+                            <div class="md:col-span-1 place-self-end">
+                                <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveNumericGroup(g))">x</button>
+                            </div>
+                        </div>
+                    </div>
                 }
-            </section>
+                </div>
+            }
+            else
+            {
+                <div class="text-xs text-gray-500 dark:text-gray-400">@AppLoc["noNumericGroups"]</div>
+            }
+        </section>
+
+        <section class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
+            <div class="flex items-center gap-1 md:flex-nowrap flex-wrap">
+                <h4 class="font-semibold">@AppLoc["resourceChoiceGroups"]</h4>
+                <button type="button" class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white ml-auto" @onclick="AddResourceGroup">@AppLoc["addGroup"]</button>
+            </div>
+
+            @if (Task?.ResourceSelectors?.Count > 0)
+            {
+                <div class="mt-1 grid grid-cols-1 gap-1.5 md:grid-cols-2 xl:grid-cols-3 items-stretch">
+                @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
+                {
+                    <div class="mt-1 h-full rounded border border-gray-200 bg-white/60 p-1.5 dark:border-gray-700 dark:bg-gray-900/40">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5">
+                            <div class="md:col-span-4">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.name</label>
+                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.DisplayName" />
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.sort</label>
+                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SortOrder" />
+                            </div>
+
+                            <div class="md:col-span-4">
+                                <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["sectionKey"]</label>
+                                <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
+                            </div>
+
+                            <div class="md:col-span-2 place-self-end">
+                                <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveResourceGroup(g))">x</button>
+                            </div>
+                        </div>
+
+                        <div class="mt-1.5">
+                            <FolderResourcesAddUI TaskId="Task.Id"
+                                                  ResIds="(g.Items ?? []).Select(x => x.ResourceId).ToList()"
+                                                  OnSave="(e)=>AddDelete(g,e)" />
+
+                            @if (g.Items?.Count > 0)
+                            {
+                                foreach (var it in g.Items)
+                                {
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5 mb-1.5">
+                                        <div class="md:col-span-10">
+                                            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["resource"]</label>
+                                            <ResourceAutocomplete MinChars="2" PageSize="20"
+                                                                  InitialName="@it.Resource?.Name"
+                                                                  Value="it.ResourceId"
+                                                                  ValueChanged="@(v => it.ResourceId = v ?? 0)" />
+                                        </div>
+
+                                        <div class="md:col-span-2 place-self-end">
+                                            <div class="inline-flex gap-1.5">
+                                                <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
+                                                <button type="button" class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
+                                                <button type="button" class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="(() => RemoveResourceItem(g, it))">x</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+                </div>
+            }
+            else
+            {
+                <div class="text-xs text-gray-500 dark:text-gray-400">@AppLoc["noResourceGroups"]</div>
+            }
+        </section>
 
     </EditForm>
 }

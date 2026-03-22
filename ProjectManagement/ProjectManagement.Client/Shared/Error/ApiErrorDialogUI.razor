@@ -1,10 +1,12 @@
-﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components
+@using ProjectManagement.Client.Shared.ResourceFiles.APP
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ResourceApp> AppLoc
 
 <div class="p-4">
-    <h3 class="text-lg font-semibold mb-2 dark:text-white">@Title</h3>
+    <h3 class="text-lg font-semibold mb-2 dark:text-white">@DialogTitle</h3>
 
     <p class="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line">
-        @Message
+        @DialogMessage
     </p>
 
     @if (!string.IsNullOrWhiteSpace(TraceId))
@@ -17,16 +19,19 @@
     <div class="mt-5 flex justify-end">
         <button class="px-4 py-2 rounded bg-slate-200 dark:bg-slate-700 dark:text-white"
                 @onclick="Close">
-            إغلاق
+            @AppLoc["close"]
         </button>
     </div>
 </div>
 
 @code {
-    [Parameter] public string Title { get; set; } = "حدث خطأ";
-    [Parameter] public string Message { get; set; } = "تعذر إتمام العملية.";
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Message { get; set; }
     [Parameter] public string? TraceId { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
+
+    private string DialogTitle => string.IsNullOrWhiteSpace(Title) ? AppLoc[nameof(ResourceApp.error)] : Title;
+    private string DialogMessage => string.IsNullOrWhiteSpace(Message) ? AppLoc["requestFailedMessage"] : Message;
 
     private Task Close() => OnClose.HasDelegate ? OnClose.InvokeAsync() : Task.CompletedTask;
 }

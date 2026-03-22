@@ -1,8 +1,10 @@
-﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components
+@using ProjectManagement.Adminstrator.Components
+@using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
 @using TaskResourceBlueprints.Services.QuestionConditions
-@using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
+@inherits AppComponentBase
 
 @code {
     [Parameter] public ConditionDefinition Condition { get; set; } = null!;
@@ -21,32 +23,32 @@
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-1">
     <div>
-        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Choice ↔ Resource</label>
+        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["choiceResourceLogic"]</label>
         <InputSelect TValue="ConditionLogic"
                      @bind-Value="Condition.OptionResourceLogic"
                      class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-            <option value="And">AND</option>
-            <option value="Or">OR</option>
+            <option value="And">@AppLoc["andText"]</option>
+            <option value="Or">@AppLoc["orText"]</option>
         </InputSelect>
     </div>
 
     <div>
-        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Choice ↔ Numeric</label>
+        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["choiceNumericLogic"]</label>
         <InputSelect TValue="ConditionLogic"
                      @bind-Value="Condition.OptionNumericLogic"
                      class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-            <option value="And">AND</option>
-            <option value="Or">OR</option>
+            <option value="And">@AppLoc["andText"]</option>
+            <option value="Or">@AppLoc["orText"]</option>
         </InputSelect>
     </div>
 
     <div>
-        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Numeric ↔ @ResourceLoc.resource</label>
+        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["numericResourceLogic"]</label>
         <InputSelect TValue="ConditionLogic"
                      @bind-Value="Condition.NumericResourceLogic"
                      class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-            <option value="And">AND</option>
-            <option value="Or">OR</option>
+            <option value="And">@AppLoc["andText"]</option>
+            <option value="Or">@AppLoc["orText"]</option>
         </InputSelect>
     </div>
 </div>

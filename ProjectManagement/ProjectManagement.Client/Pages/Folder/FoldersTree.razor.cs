@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using ProjectManagement.Client.Helper;
@@ -16,20 +16,29 @@ namespace ProjectManagement.Client.Pages.Folder
     public partial class FoldersTree : IDisposable
     {
         [Inject] private IJSRuntime JS { get; set; } = default!;
+        [Inject] private IClientLogger ClientLogger { get; set; } = default!;
 
         private const string LastSelectionKey = "LastSelection";
 
-        private class LastSelection
+        private sealed class LastSelection
         {
             public Guid FolderId { get; set; }
             public Guid? ProjectId { get; set; }
             public int? CalculationId { get; set; }
         }
+
+        private bool _jsReady;
+        private bool _restoreCompleted;
+        private bool _restoreInProgress;
+
+        private object? CalcDraging { get; set; }
+
         private async Task SeFolder(FolderMVVM folder)
         {
             await Folder.NewFolder(folder);
-            await SaveLastSelection(folder, null, null);
+            await SaveLastSelection(folder);
         }
+
         private async Task SaveLastSelection(FolderMVVM folder, ListProjectMVVM? project = null, ListCalculationMVVM? calculation = null)
         {
             var selection = new LastSelection
@@ -40,69 +49,146 @@ namespace ProjectManagement.Client.Pages.Folder
             };
 
             var json = JsonSerializer.Serialize(selection);
-            await JS.InvokeVoidAsync("localStorage.setItem", LastSelectionKey, json);
-        }
-        private bool _initializedFromLastSelection = false;
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender && !_initializedFromLastSelection)
+
+            try
             {
-                _initializedFromLastSelection = true;
-                //await RestoreLastSelection();
+                await JS.InvokeVoidAsync("localStorage.setItem", LastSelectionKey, json);
+            }
+            catch (Exception ex)
+            {
+                await ClientLogger.ErrorAsync("Saving folder tree selection failed", ex: ex);
             }
         }
-        private async Task RestoreLastSelection()
-        {
-            var json = await JS.InvokeAsync<string?>("localStorage.getItem", LastSelectionKey);
-            if (string.IsNullOrWhiteSpace(json))
-                return;
-
-            var selection = JsonSerializer.Deserialize<LastSelection>(json);
-            if (selection is null)
-                return;
-
-            var folder = UoWService.Folder.State.FoldersList?
-                .FirstOrDefault(f => f.Id == selection.FolderId);
-            if (folder is null)
-                return;
-
-            folder.ShowProjects = true;
-
-            ListProjectMVVM? project = null;
-            ListCalculationMVVM? calc = null;
-
-            if (selection.ProjectId.HasValue)
-            {
-                await Folder.SetProjectsToFolder(folder);
-                project = folder.Projects?.FirstOrDefault(p => p.Id == selection.ProjectId.Value);
-                if (project is not null)
-                {
-                    project.ShowCalculations = true;
-                    await Folder.SetCalcsToProject(project);
-                }
-            }
-
-            if (selection.CalculationId.HasValue && project is not null)
-            {
-                calc = project.Calculations?.FirstOrDefault(c => c.Id == selection.CalculationId.Value);
-                if (calc is not null)
-                {
-                    await CalcService.SetCalc(calc.Id, project, folder);
-                }
-            }
-        }
-        private object? CalcDraging { get; set; }
 
         protected override void OnInitialized()
         {
             UoWService.Folder.State.OnChange += Refresh;
         }
 
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+                _jsReady = true;
+
+            if (!_jsReady || _restoreCompleted || _restoreInProgress)
+                return;
+
+            if (HasActiveSelection())
+            {
+                _restoreCompleted = true;
+                return;
+            }
+
+            if (UoWService.Folder.State.FoldersList.Count == 0)
+                return;
+
+            _restoreInProgress = true;
+            try
+            {
+                _restoreCompleted = await RestoreLastSelectionAsync();
+            }
+            finally
+            {
+                _restoreInProgress = false;
+            }
+        }
+
         public void Dispose()
         {
             UoWService.Folder.State.OnChange -= Refresh;
         }
+
         public void Refresh() => InvokeAsync(StateHasChanged);
+
+        private bool HasActiveSelection() =>
+            Folder.State.FolderSelected is not null ||
+            Folder.State.ProjectSelected is not null ||
+            Folder.State.Calculation is not null;
+
+        private async Task<bool> RestoreLastSelectionAsync()
+        {
+            string? json;
+
+            try
+            {
+                json = await JS.InvokeAsync<string?>("localStorage.getItem", LastSelectionKey);
+            }
+            catch (Exception ex)
+            {
+                await ClientLogger.ErrorAsync("Loading folder tree selection failed", ex: ex);
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(json))
+                return true;
+
+            LastSelection? selection;
+            try
+            {
+                selection = JsonSerializer.Deserialize<LastSelection>(json);
+            }
+            catch (JsonException ex)
+            {
+                await ClearLastSelectionAsync();
+                await ClientLogger.ErrorAsync("Folder tree selection payload is invalid", ex: ex);
+                return true;
+            }
+
+            if (selection is null || selection.FolderId == Guid.Empty)
+            {
+                await ClearLastSelectionAsync();
+                return true;
+            }
+
+            var folder = UoWService.Folder.State.FoldersList
+                .FirstOrDefault(f => f.Id == selection.FolderId);
+            if (folder is null)
+            {
+                await ClearLastSelectionAsync();
+                return true;
+            }
+
+            await Folder.NewFolder(folder);
+
+            if (!selection.ProjectId.HasValue)
+                return true;
+
+            var project = folder.Projects?.FirstOrDefault(p => p.Id == selection.ProjectId.Value);
+            if (project is null)
+            {
+                await SaveLastSelection(folder);
+                return true;
+            }
+
+            await Folder.SetCalcsToProject(project);
+            project.ShowCalculations = true;
+            Folder.State.SetCalculation(null, project, folder);
+
+            if (!selection.CalculationId.HasValue)
+                return true;
+
+            var calculation = project.Calculations?.FirstOrDefault(c => c.Id == selection.CalculationId.Value);
+            if (calculation is null)
+            {
+                await SaveLastSelection(folder, project);
+                return true;
+            }
+
+            await CalcService.SetCalc(calculation.Id, project, folder);
+            return true;
+        }
+
+        private async Task ClearLastSelectionAsync()
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("localStorage.removeItem", LastSelectionKey);
+            }
+            catch (Exception ex)
+            {
+                await ClientLogger.ErrorAsync("Clearing folder tree selection failed", ex: ex);
+            }
+        }
 
         private async Task CollapseFolder(FolderMVVM folder)
         {
@@ -160,7 +246,8 @@ namespace ProjectManagement.Client.Pages.Folder
 
             var folder = UoWService.Folder.State.FoldersList
                 .FirstOrDefault(f => f.Projects != null && f.Projects.Any(p => p.Id == project.Id));
-            if (folder is null) return;
+            if (folder is null)
+                return;
 
             double order = DropDownHelper.HandleDrop(project, draggingProject, folder.Projects);
             if (order > -1)
@@ -173,7 +260,6 @@ namespace ProjectManagement.Client.Pages.Folder
             await InvokeAsync(StateHasChanged);
         }
 
-        // drag enter/leave/over للمجلدات
         private void OnDragEnterFolder(FolderMVVM folder)
         {
             if (CalcDraging is FolderMVVM dragging && dragging != folder)

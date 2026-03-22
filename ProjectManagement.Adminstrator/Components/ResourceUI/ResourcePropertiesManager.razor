@@ -1,16 +1,17 @@
-﻿@using System.Globalization
+@using System.Globalization
 @using Microsoft.EntityFrameworkCore
+@using ProjectManagement.Adminstrator.Components
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Infrastructure
-@inject IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
+@inherits AppComponentBase
+@inject IDbContextFactory<TaskResourceBlueprintsContext> ContextFactory
 
-@* ========== UI ========== *@
 <div class="space-y-3">
     @if (isLoading)
     {
-        <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">جاري التحميل…</div>
+        <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">@AppLoc["loading"]</div>
     }
     else if (!string.IsNullOrWhiteSpace(loadError))
     {
@@ -24,8 +25,8 @@
                 <div class="flex items-center justify-between p-2">
                     <h3 class="text-[12px]">@set.DisplayName (@set.Attributes.Count)</h3>
                     <div class="inline-flex items-center gap-2">
-                        <button class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800" @onclick="() => LinkAllInSetAsync(set)">تحديد الكل</button>
-                        <button class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800" @onclick="() => UnlinkAllInSetAsync(set)">إلغاء الكل</button>
+                        <button class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800" @onclick="() => LinkAllInSetAsync(set)">@AppLoc["selectAll"]</button>
+                        <button class="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800" @onclick="() => UnlinkAllInSetAsync(set)">@AppLoc["clearAll"]</button>
                     </div>
                 </div>
 
@@ -53,20 +54,18 @@
                                     @if (p.DataType == DataType.Text)
                                     {
                                         <input class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                                               placeholder="قيمة نصية"
+                                               placeholder="@AppLoc["textValuePlaceholder"]"
                                                value="@bind!.TextValue"
                                                @onchange="async e => await SaveTextAsync(p, e.Value?.ToString())" />
                                     }
                                     else
                                     {
-                                       
-                                            var numAttrs = new Dictionary<string, object>();
-                                            if (p.StepValue.HasValue) numAttrs["min"] = p.StepValue.Value.ToString(CultureInfo.InvariantCulture);
-                                            if (p.MaxNumericValue.HasValue) numAttrs["max"] = p.MaxNumericValue.Value.ToString(CultureInfo.InvariantCulture);
-                                            var shown = bind!.NumericValue?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+                                        var numAttrs = new Dictionary<string, object>();
+                                        if (p.StepValue.HasValue) numAttrs["min"] = p.StepValue.Value.ToString(CultureInfo.InvariantCulture);
+                                        if (p.MaxNumericValue.HasValue) numAttrs["max"] = p.MaxNumericValue.Value.ToString(CultureInfo.InvariantCulture);
+                                        var shown = bind!.NumericValue?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
 
                                         <div class="flex flex-nowrap items-center">
-
                                             @if (p.StepValue.HasValue || p.MaxNumericValue.HasValue)
                                             {
                                                 <span class="text-xs text-gray-500 ms-2 whitespace-nowrap shrink-0" dir="ltr">
@@ -75,13 +74,11 @@
                                             }
                                             <input class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                                                    type="number" step="any"
-                                                   placeholder="قيمة رقمية"
+                                                   placeholder="@AppLoc["numericValuePlaceholder"]"
                                                    value="@shown"
                                                    @onchange="async e => await SaveNumberAsync(p, e.Value?.ToString())"
                                                    @attributes="numAttrs" />
-
                                         </div>
-
                                     }
                                 }
                             </div>
@@ -98,28 +95,22 @@
 
     private bool isLoading = true;
     private string? loadError;
-
-    // نجلب المجموعات مع خصائصها
     private List<ResourceAttributeSet> propertySets = new();
-
-    // قاموس سريع للوصول إلى الربط الحالي لكل خاصية لهذا المورد
-    // key: AttributeId  =>  value: Bind
     private Dictionary<int, ResourceAttributeValue> bindsByPropId = new();
 
     protected override async Task OnParametersSetAsync() => await ReloadAsync();
 
     private async Task ReloadAsync()
     {
-        isLoading = true; loadError = null;
+        isLoading = true;
+        loadError = null;
         try
         {
             using var db = await ContextFactory.CreateDbContextAsync();
 
-            // خصائص + مجموعاتها
             propertySets = await db.ResourceAttributeSets.AsNoTracking()
                                    .Include(s => s.Attributes).ToListAsync();
 
-            // جميع الربوط الخاصة بهذا المورد
             var binds = await db.ResourceAttributeValues.AsNoTracking()
                                 .Where(b => b.ResourceId == ResourceId).ToListAsync();
 
@@ -136,15 +127,14 @@
         }
     }
 
-    // ===== Helpers =====
     private ResourceAttributeValue? GetBind(int propertyId)
         => bindsByPropId.TryGetValue(propertyId, out var b) ? b : null;
 
     private static string FormatRange(double? min, double? max)
     {
         if (min is null && max is null) return string.Empty;
-        if (min is not null && max is not null) return $"[{min} – {max}]";
-        return min is not null ? $"≥ {min}" : $"≤ {max}";
+        if (min is not null && max is not null) return $"[{min} - {max}]";
+        return min is not null ? $">= {min}" : $"<= {max}";
     }
 
     private static double? Clamp(double? v, double? min, double? max)
@@ -169,7 +159,6 @@
         return Clamp(candidate, p.StepValue, p.MaxNumericValue);
     }
 
-    // ===== Actions =====
     private async Task ToggleBindAsync(ResourceAttribute p, bool link)
     {
         try
@@ -197,7 +186,6 @@
                 }
                 else
                 {
-                    // تحديث نوع القيمة الافتراضي حسب نوع الخاصية (اختياري)
                     if (p.DataType == DataType.Text)
                     {
                         bind.NumericValue = null;
@@ -270,18 +258,27 @@
         {
             if (!double.TryParse(valueStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
             {
-                loadError = "قيمة رقمية غير صالحة.";
+                loadError = AppLoc["invalidNumericValue"];
                 StateHasChanged();
                 return;
             }
             value = parsed;
         }
 
-        // تحقق المدى
         if (value is not null)
         {
-            if (p.StepValue.HasValue && value < p.StepValue) { loadError = $"القيمة يجب أن تكون ≥ {p.StepValue}"; StateHasChanged(); return; }
-            if (p.MaxNumericValue.HasValue && value > p.MaxNumericValue) { loadError = $"القيمة يجب أن تكون ≤ {p.MaxNumericValue}"; StateHasChanged(); return; }
+            if (p.StepValue.HasValue && value < p.StepValue)
+            {
+                loadError = string.Format(CultureInfo.CurrentCulture, AppLoc["valueMustBeAtLeast"], p.StepValue);
+                StateHasChanged();
+                return;
+            }
+            if (p.MaxNumericValue.HasValue && value > p.MaxNumericValue)
+            {
+                loadError = string.Format(CultureInfo.CurrentCulture, AppLoc["valueMustBeAtMost"], p.MaxNumericValue);
+                StateHasChanged();
+                return;
+            }
         }
 
         try
@@ -320,7 +317,6 @@
             using var db = await ContextFactory.CreateDbContextAsync();
             var ids = set.Attributes.Select(p => p.Id).ToHashSet();
 
-            // اجلب الموجود
             var existing = await db.Set<ResourceAttributeValue>()
                                    .Where(b => b.ResourceId == ResourceId && ids.Contains(b.AttributeId))
                                    .ToListAsync();

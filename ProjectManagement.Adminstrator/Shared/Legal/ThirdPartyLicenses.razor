@@ -1,22 +1,22 @@
-﻿
-<h2>Third-Party Libraries</h2>
+@inject Microsoft.Extensions.Localization.IStringLocalizer<ProjectManagement.Adminstrator.Shared.ResourceFiles.APP.ResourceApp> AppLoc
+
+<h2>@AppLoc["thirdPartyLibrariesTitle"]</h2>
 
 <p>
-    This application is built using the .NET platform and relies on several open-source libraries.
-    We gratefully acknowledge the work of the developers behind these components.
+    @AppLoc["thirdPartyLibrariesDescription"]
 </p>
 
 <ul>
-    <li>Blazored.LocalStorage – MIT License</li>
-    <li>ClosedXML – MIT License</li>
-    <li>ChartJs.Blazor.Fork – MIT License</li>
-    @* <li>Newtonsoft.Json – MIT License</li> *@
+    <li>Blazored.LocalStorage - @AppLoc["mitLicenseLabel"]</li>
+    <li>ClosedXML - @AppLoc["mitLicenseLabel"]</li>
+    <li>ChartJs.Blazor.Fork - @AppLoc["mitLicenseLabel"]</li>
+    @* <li>Newtonsoft.Json - @AppLoc["mitLicenseLabel"]</li> *@
 </ul>
 
 <p>
-    .NET and ASP.NET Core libraries used are provided by Microsoft and licensed under the MIT License.
+    @AppLoc["thirdPartyLibrariesMicrosoftNotice"]
 </p>
 
 <p>
-    Each library is the property of its respective authors and contributors.
+    @AppLoc["thirdPartyLibrariesOwnership"]
 </p>

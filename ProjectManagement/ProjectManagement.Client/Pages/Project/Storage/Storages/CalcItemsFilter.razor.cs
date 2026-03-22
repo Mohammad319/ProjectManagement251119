@@ -49,7 +49,7 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
             if (Post.Items.Count == 0) return false;
             return await Repo.Storage.CreateItem(Post);
         }
-        void Add(int id, decimal? q)
+        async Task AddAsync(int id, decimal? q)
         {
             if (Post.Items.Any(x => x.Id == id))
             {
@@ -60,7 +60,7 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
                 }
             }
             else Post.Items.Add(new ResourceTaskItemDTO(id, q));
-            Callback.InvokeAsync().Wait();
+            await Callback.InvokeAsync();
         }
         public async Task<int> GetObjectTypeAsync(int n)
         {

@@ -12,7 +12,6 @@
 }
 else
 {
-    <div class="calc-page-shell">
         <div class="calc-page-header" data-testid="calculation-page-header">
             <CalculationToolbar />
 
@@ -94,7 +93,7 @@ else
         else if (ShowNoVisibleRowsState)
         {
             <section class="calc-state-panel calc-state-panel-muted" data-testid="calculation-page-no-visible-rows">
-                <div class="calc-state-copy">
+            <div class="my-4 calc-state-copy">
                     <p class="calc-state-title">@AppLoc["calculationTableNoVisibleRows"]</p>
                     <p class="calc-state-hint">@NoVisibleRowsHint</p>
                 </div>
@@ -120,14 +119,17 @@ else
                           StorageKey="calc-main-vertical-splitter">
 
             <TopContent>
+        
                 <div class="divNetCalc"
                      style="--net-text-color:@Template?.NetCalc?.Color?.Text;
-                            --net-border-color:@Template?.NetCalc?.Color?.Border;
-                            --net-header-bg:@Template?.NetCalc?.Color?.Header;
-                            --net-note-color:@Template?.NetCalc?.Color?.Note;
-                            --net-border-style:@Template?.NetCalc?.Color?.BorderStyle;">
+                    --net-border-color:@Template?.NetCalc?.Color?.Border;
+                    --net-header-bg:@Template?.NetCalc?.Color?.Header;
+                    --net-note-color:@Template?.NetCalc?.Color?.Note;
+                    --net-border-style:@Template?.NetCalc?.Color?.BorderStyle;">
                     <CalcDataGrid />
                 </div>
+            
+
             </TopContent>
 
             <BottomContent>
@@ -136,5 +138,4 @@ else
                 </div>
             </BottomContent>
         </VerticalSplitter>
-    </div>
 }

@@ -77,4 +77,9 @@
   <data name="RemoveNote" xml:space="preserve"><value>Ta bort anteckning</value></data>
   <data name="LoadingOrganisationDetails" xml:space="preserve"><value>Laddar organisationsdetaljer...</value></data>
   <data name="NoContactsAvailable" xml:space="preserve"><value>Det finns inga kontakter för denna organisation.</value></data>
+  <data name="UiErrorTitle" xml:space="preserve"><value>Något gick fel</value></data>
+  <data name="UiErrorMessage" xml:space="preserve"><value>Ett oväntat fel uppstod i användargränssnittet. Ladda om sidan.</value></data>
+  <data name="ErrorPageTitle" xml:space="preserve"><value>Ett oväntat fel uppstod</value></data>
+  <data name="ErrorPageMessage" xml:space="preserve"><value>Tyvärr uppstod ett oväntat fel när din begäran behandlades.</value></data>
+  <data name="TraceIdLabel" xml:space="preserve"><value>Spårnings-ID</value></data>
 </root>

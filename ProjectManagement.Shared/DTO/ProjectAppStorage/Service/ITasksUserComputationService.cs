@@ -1,9 +1,11 @@
-﻿using ProjectManagement.Shared.Base.AppTenant;
+using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.ProjectAppStorage;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Helper.ProjectAppStorage;
+using ProjectManagement.Shared.Resource;
+using System.Globalization;
 
 namespace ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 
@@ -37,6 +39,9 @@ public interface ITasksUserComputationServiceWasm
 public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServiceWasm
 {
     private readonly Dictionary<int, UserAnswers> _answers = [];
+
+    private static string SharedText(string key, string fallback)
+        => ResLocalize.ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? fallback;
 
     public void CalcQuantityResource(List<ResourceDto> resources, decimal? taskQuantity)
     {
@@ -103,16 +108,23 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     public decimal ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters)
     {
         if (string.IsNullOrWhiteSpace(toUnit) || string.IsNullOrWhiteSpace(fromUnit))
-            throw new ArgumentException("اختر وحدتي التحويل أولاً.");
+            throw new ArgumentException(SharedText("SelectUnitsFirst", "Select the conversion units first."));
         if (quantity <= 0)
-            throw new ArgumentException("الكمية غير صالحة.");
+            throw new ArgumentException(SharedText("InvalidQuantity", "Invalid quantity."));
 
         if (!UnitRulesCatalog.TryGet(toUnit, fromUnit, out var rule))
-            throw new ArgumentException($"لا توجد قاعدة تحويل من {fromUnit} إلى {toUnit}.");
+            throw new ArgumentException(string.Format(
+                CultureInfo.CurrentCulture,
+                SharedText("MissingUnitConversionRule", "No conversion rule exists from {0} to {1}."),
+                fromUnit,
+                toUnit));
 
         var missing = rule.Params.Select(p => p.Key).Where(k => !parameters.ContainsKey(k)).ToList();
         if (missing.Count > 0)
-            throw new ArgumentException($"القيم الناقصة: {string.Join(", ", missing)}");
+            throw new ArgumentException(string.Format(
+                CultureInfo.CurrentCulture,
+                SharedText("MissingValues", "Missing values: {0}"),
+                string.Join(", ", missing)));
 
         return rule.Compute(quantity, parameters);
     }

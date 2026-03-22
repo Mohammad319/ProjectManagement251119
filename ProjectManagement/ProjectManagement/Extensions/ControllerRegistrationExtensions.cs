@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using ProjectManagement.Shared.Resource;
+using System.Globalization;
 
 namespace ProjectManagement.Extensions;
 
 public static class ControllerRegistrationExtensions
 {
+    private static string SharedText(string key, string fallback)
+        => ResLocalize.ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? fallback;
+
     public static IServiceCollection AddProjectControllers(this IServiceCollection services)
     {
         services.AddProblemDetails(options =>
@@ -23,8 +28,8 @@ public static class ControllerRegistrationExtensions
                     var pd = new ValidationProblemDetails(context.ModelState)
                     {
                         Status = StatusCodes.Status400BadRequest,
-                        Title = "Validation error",
-                        Detail = "البيانات المرسلة غير صحيحة."
+                        Title = SharedText("ValidationErrorTitle", "Validation error"),
+                        Detail = SharedText("InvalidInputDetails", "The submitted data is invalid.")
                     };
                     pd.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
                     return new BadRequestObjectResult(pd);

@@ -1,7 +1,8 @@
-﻿@inject IHttpContextAccessor HttpContextAccessor
+@using ProjectManagement.Shared
+@inject IHttpContextAccessor HttpContextAccessor
 
 <div class="alert alert-danger">
-    <h5>حدث خطأ أثناء عرض الصفحة</h5>
-    <p>حاول تحديث الصفحة. إذا استمر الخطأ تواصل مع الدعم.</p>
-    <small>TraceId: @HttpContextAccessor.HttpContext?.TraceIdentifier</small>
+    <h5>@PMWebResource.ErrorPageTitle</h5>
+    <p>@PMWebResource.ErrorPageMessage</p>
+    <small>@PMWebResource.TraceIdLabel: @HttpContextAccessor.HttpContext?.TraceIdentifier</small>
 </div>

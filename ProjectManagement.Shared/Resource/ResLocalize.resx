@@ -144,4 +144,12 @@
   <data name="URL" xml:space="preserve">
     <value>Please enter a valid website</value>
   </data>
+  <data name="ValidationErrorTitle" xml:space="preserve"><value>Validation error</value></data>
+  <data name="InvalidInputDetails" xml:space="preserve"><value>The submitted data is not valid.</value></data>
+  <data name="SelectUnitsFirst" xml:space="preserve"><value>Choose both units before converting.</value></data>
+  <data name="InvalidQuantity" xml:space="preserve"><value>The quantity is not valid.</value></data>
+  <data name="MissingUnitConversionRule" xml:space="preserve"><value>No conversion rule exists from {0} to {1}.</value></data>
+  <data name="MissingValues" xml:space="preserve"><value>Missing values: {0}</value></data>
+  <data name="UndefinedResourceVariable" xml:space="preserve"><value>Variable {0} is not defined for this resource.</value></data>
+  <data name="FormulaEvaluationFailed" xml:space="preserve"><value>Failed to evaluate formula: '{0}'</value></data>
 </root>

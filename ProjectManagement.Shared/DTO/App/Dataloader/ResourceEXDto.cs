@@ -1,7 +1,8 @@
-﻿using ProjectManagement.Shared.Base.AppTenant;
+using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Helper.ProjectAppStorage;
+using ProjectManagement.Shared.Resource;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -59,6 +60,9 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     }
     public class ResourceEXDto : ResourceDLBase
     {
+        private static string SharedText(string key, string fallback)
+            => ResLocalize.ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? fallback;
+
         [JsonIgnore] public CalcResCost CalcResCost { get; set; } = new();
 
         [JsonIgnore] public List<decimal> Values { get; set; } = [];
@@ -105,7 +109,7 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                 case "chf1": Data.ChangeFactor1 = value; break;
                 case "chf2": Data.ChangeFactor2 = value; break;
 
-                // توافق خلفي
+                // Backward compatibility
                 case "cap": Data.Cap = value; Data.CapWaste = value; break;
                 case "waste": Data.Waste = value; Data.CapWaste = value; break;
                 case "capwaste": Data.CapWaste = value; break;
@@ -114,7 +118,10 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                 case "cost": Data.Cost = value; break;
 
                 default:
-                    Console.WriteLine($"⚠️ المتغير {name} غير معرف داخل المورد.");
+                    Console.WriteLine(string.Format(
+                        CultureInfo.CurrentCulture,
+                        SharedText("UndefinedResourceVariable", "The variable {0} is not defined inside the resource."),
+                        name));
                     break;
             }
         }
@@ -131,7 +138,10 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
                     all[kv.Key] = kv.Value;
 
             if (!ExpressionEvaluator.TryEval(formula, all, out var result))
-                throw new InvalidOperationException($"خطأ في تقييم المعادلة: '{formula}'");
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    SharedText("FormulaEvaluationFailed", "Failed to evaluate the formula: '{0}'"),
+                    formula));
 
             SetVariable(targetVariable, result);
         }

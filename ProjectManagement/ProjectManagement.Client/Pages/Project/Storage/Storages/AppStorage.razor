@@ -77,9 +77,9 @@
                                             <div class="mb-1">
                                                 <h3 class="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-1">
                                                     <span class="text-xs px-2 py-0 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded-full">
-                                                        متغيرات: @condition.ExternalVariables.Count
+                                                        @AppLoc["storageVariables"]: @condition.ExternalVariables.Count
                                                     </span>
-                                                    🔢 إدخال قيم المتغيرات:
+                                                    @AppLoc["storageEnterVariables"]
                                                 </h3>
                                                 <div class="grid">
                                                     @foreach (var variable in condition.ExternalVariables)
@@ -206,7 +206,7 @@
                                                                             {
                                                                                 <select class="p-1 border text-xs rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                                                                         @bind="variable.Value">
-                                                                                    <option value="">-- اختر --</option>
+                                                                                    <option value="">-- @AppLoc["select"] --</option>
                                                                                     @foreach (var val in variable.AllowedValues)
                                                                                     {
                                                                                         <option value="@val">@val</option>
@@ -239,7 +239,7 @@
             }
             else
             {
-                @* <p class="text-sm text-red-500">لا توجد موارد مضافة لهذه المهمة.</p> *@
+    @* <p class="text-sm text-red-500">No resources have been added for this task.</p> *@
             }
         </div>
     }

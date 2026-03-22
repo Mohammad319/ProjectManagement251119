@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Repositories;
+using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Shared.Helper;
 using System.Net;
 using System.Text.Json;
@@ -11,7 +13,8 @@ namespace ProjectManagement.Client.Handless;
 public class ApiErrorHandler(
     IErrorDialog ui,
     IClientLogger clientLogger,
-    NavigationManager navigationManager) : DelegatingHandler
+    NavigationManager navigationManager,
+    IStringLocalizer<ResourceApp> appLoc) : DelegatingHandler
 {
     private DateTime _lastDialogUtc = DateTime.MinValue;
 
@@ -32,13 +35,13 @@ public class ApiErrorHandler(
         }
         catch (HttpRequestException ex)
         {
-            ShowOnce("تعذر الاتصال", "لا يمكن الاتصال بالخادم. تحقق من الشبكة ثم حاول مرة أخرى.");
+            ShowOnce(appLoc["networkUnavailableTitle"], appLoc["networkUnavailableMessage"]);
             _ = clientLogger.ErrorAsync("Network error while calling API", traceId: null, ex: ex);
             throw;
         }
         catch (Exception ex)
         {
-            ShowOnce("خطأ", "حدث خطأ غير متوقع.");
+            ShowOnce(appLoc["error"], appLoc["AnUnexpectedErrorHasOccurred"]);
             _ = clientLogger.ErrorAsync("Unexpected client error while calling API", traceId: null, ex: ex);
             throw;
         }
@@ -55,13 +58,13 @@ public class ApiErrorHandler(
 
             if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
             {
-                ShowOnce("الصلاحيات", "سنعيد التحقق من الجلسة والصلاحيات تلقائيًا.");
+                ShowOnce(appLoc["permissionsTitle"], appLoc["permissionsRefreshMessage"]);
                 _ = clientLogger.ErrorAsync($"Forbidden (403) recovered via refresh for {request.RequestUri}", traceId: null, ex: null);
                 navigationManager.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
                 return response;
             }
 
-            ShowOnce("الصلاحيات", "ليس لديك صلاحية لتنفيذ هذه العملية.");
+            ShowOnce(appLoc["permissionsTitle"], appLoc["permissionsDeniedMessage"]);
             var endpoint = request.RequestUri?.ToString() ?? "(unknown-endpoint)";
             _ = clientLogger.ErrorAsync($"Forbidden (403) from API {endpoint}", traceId: null, ex: null);
             return response;
@@ -73,8 +76,8 @@ public class ApiErrorHandler(
         if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase))
         {
             var pd = TryParseProblemDetails(body);
-            var title = pd?.Title ?? "فشل الطلب";
-            var detail = pd?.Detail ?? "تعذر إتمام الطلب.";
+            var title = pd?.Title ?? appLoc["requestFailedTitle"];
+            var detail = pd?.Detail ?? appLoc["requestFailedMessage"];
             var traceId = pd?.TraceId;
 
             ShowOnce(title, detail, traceId);
@@ -85,13 +88,13 @@ public class ApiErrorHandler(
 
         if (LooksLikeHtml(body))
         {
-            ShowOnce("خطأ في الخادم", "حدث خطأ في الخادم. حاول لاحقًا.");
+            ShowOnce(appLoc["serverErrorTitle"], appLoc["serverErrorMessage"]);
             _ = clientLogger.ErrorAsync("API returned HTML error page", traceId: null, new Exception(body));
             return response;
         }
 
-        var message = string.IsNullOrWhiteSpace(body) ? "تعذر إتمام الطلب." : Trim(body, 300);
-        ShowOnce("فشل الطلب", message);
+        var message = string.IsNullOrWhiteSpace(body) ? appLoc["requestFailedMessage"] : Trim(body, 300);
+        ShowOnce(appLoc["requestFailedTitle"], message);
         _ = clientLogger.ErrorAsync("API returned non-success response", traceId: null, new Exception(body));
 
         return response;

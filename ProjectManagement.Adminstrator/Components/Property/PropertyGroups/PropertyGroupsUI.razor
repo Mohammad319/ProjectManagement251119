@@ -10,7 +10,7 @@
 @inject IResourceAttributeSetService GroupPropertiesService
 <button @onclick="UpdateForm"
         class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-        title="إضافة">
+        title="@AppLoc[nameof(ResourceApp.newItem)]">
     @((MarkupString)Icons.Plus)
 </button>
 <MhdTable TItem="ResourceAttributeSet" Items="ActionsTasks">
@@ -24,8 +24,8 @@
                 <div class="flex items-center gap-2">
                     <button @onclick="() => Properties(status)"
                             class="inline-flex items-center rounded-xl bg-blue-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
-                            title="Property" aria-label="Property">
-                        Property
+                            title="@AppLoc["properties"]" aria-label="@AppLoc["properties"]">
+                        @AppLoc["properties"]
                     </button>
                     <button @onclick="() => UpdateForm(status)"
                             class="inline-flex items-center rounded-xl bg-amber-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
@@ -45,13 +45,13 @@
 </MhdTable>
 @code {
     List<ResourceAttributeSet> ActionsTasks = [];
-    void UpdateForm() => UpdateForm(new ResourceAttributeSet() { DisplayName = "name" });
+    void UpdateForm() => UpdateForm(new ResourceAttributeSet() { DisplayName = AppLoc["propertyGroupDefaultName"] });
     void UpdateForm(ResourceAttributeSet model)
     {
         ResourceAttributeSet up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
 
-        Modal.ShowComponent<PropertyGroupsFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+        Modal.ShowComponent<PropertyGroupsFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, AppLoc["properties"]] :
             AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
                 {
                 [nameof(PropertyGroupsFormUI.Model)] = up,
@@ -61,7 +61,7 @@
     }
     void Properties(ResourceAttributeSet model)
     {
-        Modal.ShowComponent<PropertyResourceIndexUI>("Property", new Dictionary<string, object>
+        Modal.ShowComponent<PropertyResourceIndexUI>(AppLoc["properties"], new Dictionary<string, object>
             {
             [nameof(PropertyResourceIndexUI.GroupId)] = model.Id,
             } , DialogSize.Medium);

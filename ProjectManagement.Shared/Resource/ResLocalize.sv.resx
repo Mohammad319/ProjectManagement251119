@@ -144,4 +144,12 @@
   <data name="URL" xml:space="preserve">
     <value>Ange en giltig webbplats</value>
   </data>
+  <data name="ValidationErrorTitle" xml:space="preserve"><value>Valideringsfel</value></data>
+  <data name="InvalidInputDetails" xml:space="preserve"><value>De skickade uppgifterna är inte giltiga.</value></data>
+  <data name="SelectUnitsFirst" xml:space="preserve"><value>Välj båda enheterna innan konvertering.</value></data>
+  <data name="InvalidQuantity" xml:space="preserve"><value>Kvantiteten är inte giltig.</value></data>
+  <data name="MissingUnitConversionRule" xml:space="preserve"><value>Det finns ingen konverteringsregel från {0} till {1}.</value></data>
+  <data name="MissingValues" xml:space="preserve"><value>Saknade värden: {0}</value></data>
+  <data name="UndefinedResourceVariable" xml:space="preserve"><value>Variabeln {0} är inte definierad för den här resursen.</value></data>
+  <data name="FormulaEvaluationFailed" xml:space="preserve"><value>Det gick inte att beräkna formeln: '{0}'</value></data>
 </root>

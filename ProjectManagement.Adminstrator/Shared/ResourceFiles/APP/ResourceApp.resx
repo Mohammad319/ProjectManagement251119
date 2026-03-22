@@ -402,4 +402,89 @@
   <data name="send" xml:space="preserve">
     <value>Send</value>
   </data>
+  <data name="loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="addCondition" xml:space="preserve"><value>Add condition</value></data>
+  <data name="logic" xml:space="preserve"><value>Logic</value></data>
+  <data name="choiceResourceLogic" xml:space="preserve"><value>Choice ↔ resource</value></data>
+  <data name="choiceNumericLogic" xml:space="preserve"><value>Choice ↔ numeric</value></data>
+  <data name="numericResourceLogic" xml:space="preserve"><value>Numeric ↔ resource</value></data>
+  <data name="andText" xml:space="preserve"><value>AND</value></data>
+  <data name="orText" xml:space="preserve"><value>OR</value></data>
+  <data name="noConditionsYet" xml:space="preserve"><value>No conditions yet.</value></data>
+  <data name="any" xml:space="preserve"><value>Any</value></data>
+  <data name="selectPlaceholder" xml:space="preserve"><value>-- Select --</value></data>
+  <data name="choiceGroup" xml:space="preserve"><value>Choice group</value></data>
+  <data name="choiceOption" xml:space="preserve"><value>Choice option</value></data>
+  <data name="numericGroup" xml:space="preserve"><value>Numeric group</value></data>
+  <data name="bindingsEquations" xml:space="preserve"><value>Binding equations</value></data>
+  <data name="addChoiceBinding" xml:space="preserve"><value>Add choice binding</value></data>
+  <data name="addNumericBinding" xml:space="preserve"><value>Add numeric binding</value></data>
+  <data name="saveConditionFirstToEnableBindings" xml:space="preserve"><value>Save the condition first to enable bindings.</value></data>
+  <data name="saveBinding" xml:space="preserve"><value>Save binding</value></data>
+  <data name="saveNumericBinding" xml:space="preserve"><value>Save numeric binding</value></data>
+  <data name="addEquation" xml:space="preserve"><value>Add equation</value></data>
+  <data name="deleteBinding" xml:space="preserve"><value>Delete binding</value></data>
+  <data name="deleteNumericBinding" xml:space="preserve"><value>Delete numeric binding</value></data>
+  <data name="saved" xml:space="preserve"><value>Saved</value></data>
+  <data name="noFormulas" xml:space="preserve"><value>No formulas</value></data>
+  <data name="numericBindings" xml:space="preserve"><value>Numeric bindings</value></data>
+  <data name="equation" xml:space="preserve"><value>Equation</value></data>
+  <data name="equationExpressionPlaceholder" xml:space="preserve"><value>Expression...</value></data>
+  <data name="removeEquation" xml:space="preserve"><value>Remove this equation</value></data>
+  <data name="chooseOptionFirst" xml:space="preserve"><value>Choose an option first.</value></data>
+  <data name="chooseNumericGroupFirst" xml:space="preserve"><value>Choose a numeric group first.</value></data>
+  <data name="selectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="clearAll" xml:space="preserve"><value>Clear all</value></data>
+  <data name="textValuePlaceholder" xml:space="preserve"><value>Text value</value></data>
+  <data name="numericValuePlaceholder" xml:space="preserve"><value>Numeric value</value></data>
+  <data name="invalidNumericValue" xml:space="preserve"><value>Invalid numeric value.</value></data>
+  <data name="valueMustBeAtLeast" xml:space="preserve"><value>Value must be at least {0}.</value></data>
+  <data name="valueMustBeAtMost" xml:space="preserve"><value>Value must be at most {0}.</value></data>
+  <data name="choiceGroups" xml:space="preserve"><value>Choice groups</value></data>
+  <data name="addGroup" xml:space="preserve"><value>Add group</value></data>
+  <data name="sectionKey" xml:space="preserve"><value>Section key</value></data>
+  <data name="optionalPlaceholder" xml:space="preserve"><value>(optional)</value></data>
+  <data name="selection" xml:space="preserve"><value>Selection</value></data>
+  <data name="multiple" xml:space="preserve"><value>Multiple</value></data>
+  <data name="single" xml:space="preserve"><value>Single</value></data>
+  <data name="addOption" xml:space="preserve"><value>Add option</value></data>
+  <data name="optionLabel" xml:space="preserve"><value>Option label</value></data>
+  <data name="revealSectionKeys" xml:space="preserve"><value>Reveal section keys (comma-separated)</value></data>
+  <data name="revealSectionKeysPlaceholder" xml:space="preserve"><value>e.g. details, advanced, extras</value></data>
+  <data name="setDefault" xml:space="preserve"><value>Set default</value></data>
+  <data name="noChoiceGroups" xml:space="preserve"><value>No choice groups.</value></data>
+  <data name="numericGroups" xml:space="preserve"><value>Numeric groups</value></data>
+  <data name="noNumericGroups" xml:space="preserve"><value>No numeric groups.</value></data>
+  <data name="resourceChoiceGroups" xml:space="preserve"><value>Resource choice groups</value></data>
+  <data name="resource" xml:space="preserve"><value>Resource</value></data>
+  <data name="resourceAssignments" xml:space="preserve"><value>Resource assignments</value></data>
+  <data name="menuId" xml:space="preserve"><value>Menu ID</value></data>
+  <data name="noResourceGroups" xml:space="preserve"><value>No resource groups.</value></data>
+  <data name="properties" xml:space="preserve"><value>Properties</value></data>
+  <data name="propertyGroupDefaultName" xml:space="preserve"><value>New property group</value></data>
+  <data name="questionGroupDefaultName" xml:space="preserve"><value>Group</value></data>
+  <data name="questionOptionDefaultName" xml:space="preserve"><value>Option</value></data>
+  <data name="numericGroupDefaultName" xml:space="preserve"><value>Numeric</value></data>
+  <data name="resourceGroupDefaultName" xml:space="preserve"><value>Resources</value></data>
+  <data name="moreResultsAvailable" xml:space="preserve"><value>More results are available. Refine your search...</value></data>
+  <data name="searchResourcePlaceholder" xml:space="preserve"><value>Search resource...</value></data>
+  <data name="choiceRequirements" xml:space="preserve"><value>Choice requirements</value></data>
+  <data name="resourceRequirements" xml:space="preserve"><value>Resource requirements</value></data>
+  <data name="numericRequirements" xml:space="preserve"><value>Numeric requirements</value></data>
+  <data name="variableRequirements" xml:space="preserve"><value>Variable requirements</value></data>
+  <data name="add" xml:space="preserve"><value>Add</value></data>
+  <data name="none" xml:space="preserve"><value>None</value></data>
+  <data name="group" xml:space="preserve"><value>Group</value></data>
+  <data name="item" xml:space="preserve"><value>Item</value></data>
+  <data name="groupKey" xml:space="preserve"><value>Group key</value></data>
+  <data name="remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="variable" xml:space="preserve"><value>Variable</value></data>
+  <data name="thickness" xml:space="preserve"><value>Thickness</value></data>
+  <data name="length" xml:space="preserve"><value>Length</value></data>
+  <data name="density" xml:space="preserve"><value>Density</value></data>
+  <data name="thirdPartyLibrariesTitle" xml:space="preserve"><value>Third-party libraries</value></data>
+  <data name="thirdPartyLibrariesDescription" xml:space="preserve"><value>This application is built using the .NET platform and relies on several open-source libraries. We gratefully acknowledge the work of the developers behind these components.</value></data>
+  <data name="thirdPartyLibrariesMicrosoftNotice" xml:space="preserve"><value>.NET and ASP.NET Core libraries used are provided by Microsoft and licensed under the MIT License.</value></data>
+  <data name="thirdPartyLibrariesOwnership" xml:space="preserve"><value>Each library is the property of its respective authors and contributors.</value></data>
+  <data name="mitLicenseLabel" xml:space="preserve"><value>MIT License</value></data>
 </root>

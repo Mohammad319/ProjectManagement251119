@@ -77,4 +77,9 @@
   <data name="RemoveNote" xml:space="preserve"><value>Remove note</value></data>
   <data name="LoadingOrganisationDetails" xml:space="preserve"><value>Loading organisation details...</value></data>
   <data name="NoContactsAvailable" xml:space="preserve"><value>No contacts are available for this organisation.</value></data>
+  <data name="UiErrorTitle" xml:space="preserve"><value>Something went wrong</value></data>
+  <data name="UiErrorMessage" xml:space="preserve"><value>An unexpected error occurred in the user interface. Please reload the page.</value></data>
+  <data name="ErrorPageTitle" xml:space="preserve"><value>An unexpected error occurred</value></data>
+  <data name="ErrorPageMessage" xml:space="preserve"><value>Sorry, an unexpected error occurred while processing your request.</value></data>
+  <data name="TraceIdLabel" xml:space="preserve"><value>Trace ID</value></data>
 </root>

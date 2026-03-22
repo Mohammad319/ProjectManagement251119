@@ -140,7 +140,7 @@
                     @if (Post.Type == CalculationItemType.task){
                         foreach (var task in (List as IEnumerable<TaskListMVVM> ?? Enumerable.Empty<TaskListMVVM>())) {
                         <tr class="@UiStyles.ClassTask">
-                                <td><span @onclick="()=> Add(task.Id,task.Metadata.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
+                                <td><span @onclick="() => AddAsync(task.Id, task.Metadata.Quantity)" class="@(Post.Items.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
                                     @((MarkupString)(Post.Items.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus))
                     </span>
                 </td>
@@ -160,7 +160,7 @@
                         foreach (var Resource in (List as IEnumerable<ResourceListMVVM> ?? Enumerable.Empty<ResourceListMVVM>()))
                         {
                         <tr class="@UiStyles.ClassResource">
-                                <td><span @onclick="()=> Add(Resource.Id,Resource.Quantity)" class="@(Post.Items.Any(x => x.Id == Resource.Id) ? "text-danger" : "text-primary")">
+                                <td><span @onclick="() => AddAsync(Resource.Id, Resource.Quantity)" class="@(Post.Items.Any(x => x.Id == Resource.Id) ? "text-danger" : "text-primary")">
                                     @((MarkupString)(Post.Items.Any(x => x.Id == Resource.Id) ? Icons.Minus : Icons.Plus))
                     </span></td>
                                 <td></td>

@@ -13,7 +13,7 @@
         @foreach (var task in Tasks)
         {
             <div class="@GetTaskItemClasses(task)"
-                 @ondrop="@(() => HandleDrop(task))"
+                 @ondrop="@(() => HandleDropAsync(task))"
                  @ondragover="() => task.Ui.IsDragOver = true"
                  @ondragover:preventDefault
                  @ondragleave="@(() => task.Ui.IsDragOver = false)"
@@ -100,39 +100,44 @@
         return baseClasses + dragging + dragOver;
     }
 
-    private async void HandleDrop(TaskListMVVM landingModel)
+    private async Task HandleDropAsync(TaskListMVVM landingModel)
     {
-        if (taskDraging is null)
-            return;
-
-        taskDraging.Ui.IsDragOver = false;
-        landingModel.Ui.IsDragOver = false;
-        if (Tasks == null) return;
-        int index = Tasks.IndexOf(landingModel);
-
-        if (index == 0)
+        try
         {
-            taskDraging.Order = landingModel.Order + 100;
-        }
-        else if (taskDraging.Order < landingModel.Order)
-        {
-            taskDraging.Order = (landingModel.Order + Tasks[index - 1].Order) / 2;
-        }
-        else if (taskDraging.Order > landingModel.Order && (index + 1) < Tasks.Count)
-        {
-            taskDraging.Order = (Tasks[index + 1].Order + landingModel.Order) / 2;
-        }
-        else
-        {
-            taskDraging.Order = landingModel.Order - 100;
-        }
+            if (taskDraging is null)
+                return;
 
-        await Repo.Task.ReOrderAsync(taskDraging.Id, taskDraging.Order);
-        Tasks = Tasks.Where(x => x.Ui.FilterVisible)
-                     .OrderByDescending(x => x.Order)
-                     .ToList();
+            taskDraging.Ui.IsDragOver = false;
+            landingModel.Ui.IsDragOver = false;
+            if (Tasks == null) return;
+            int index = Tasks.IndexOf(landingModel);
 
-        taskDraging = null;
-        StateHasChanged();
+            if (index == 0)
+            {
+                taskDraging.Order = landingModel.Order + 100;
+            }
+            else if (taskDraging.Order < landingModel.Order)
+            {
+                taskDraging.Order = (landingModel.Order + Tasks[index - 1].Order) / 2;
+            }
+            else if (taskDraging.Order > landingModel.Order && (index + 1) < Tasks.Count)
+            {
+                taskDraging.Order = (Tasks[index + 1].Order + landingModel.Order) / 2;
+            }
+            else
+            {
+                taskDraging.Order = landingModel.Order - 100;
+            }
+
+            await Repo.Task.ReOrderAsync(taskDraging.Id, taskDraging.Order);
+            Tasks = Tasks.Where(x => x.Ui.FilterVisible)
+                         .OrderByDescending(x => x.Order)
+                         .ToList();
+        }
+        finally
+        {
+            taskDraging = null;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 }
