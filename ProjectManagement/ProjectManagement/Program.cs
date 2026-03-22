@@ -7,6 +7,7 @@ using ProjectManagement.Extensions;
 using ProjectManagement.HealthChecks;
 using ProjectManagement.SignalR;
 using Sentry;
+using Sentry.Extensibility;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);

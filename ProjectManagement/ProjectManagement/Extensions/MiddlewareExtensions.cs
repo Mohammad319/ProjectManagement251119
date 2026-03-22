@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using ProjectManagement.Middleware;
 using ProjectManagement.Services;
+using Serilog;
 using Serilog.Events;
 
 namespace ProjectManagement.Extensions;
