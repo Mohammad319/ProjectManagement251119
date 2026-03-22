@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using ProjectManagement.Middleware;
 using ProjectManagement.Services;
+using Serilog.Events;
 
 namespace ProjectManagement.Extensions;
 
@@ -41,6 +41,7 @@ public static class MiddlewareExtensions
 
         // CorrelationId early
         app.UseMiddleware<CorrelationIdMiddleware>();
+        app.UseMiddleware<SecurityHeadersMiddleware>();
 
         if (isDev)
         {
@@ -57,6 +58,7 @@ public static class MiddlewareExtensions
 
         app.UseHttpsRedirection();
         app.UseRouting();
+        app.UseRateLimiter();
 
         // API status code pages (problem+json)
         app.UseApiStatusCodePages();
@@ -103,6 +105,43 @@ public static class MiddlewareExtensions
 
         // TenantContext after auth (depends on claims)
         app.UseMiddleware<TenantContextMiddleware>();
+        app.UseMiddleware<TenantLogContextMiddleware>();
+
+        // Request logging after auth/tenant resolution so logs contain user/tenant metadata.
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+            options.GetLevel = (httpContext, _, ex) =>
+            {
+                if (ex is not null || httpContext.Response.StatusCode >= 500)
+                    return LogEventLevel.Error;
+
+                if (httpContext.Response.StatusCode >= 400)
+                    return LogEventLevel.Warning;
+
+                return LogEventLevel.Information;
+            };
+
+            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+            {
+                var tenantContext = httpContext.RequestServices.GetService<TenantContext>();
+
+                diagnosticContext.Set("TraceId", httpContext.TraceIdentifier);
+                diagnosticContext.Set("RemoteIp", httpContext.Connection.RemoteIpAddress?.ToString());
+                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+
+                if (tenantContext?.TenantId > 0)
+                    diagnosticContext.Set("TenantID", tenantContext.TenantId);
+
+                if (tenantContext?.UserId is > 0)
+                    diagnosticContext.Set("UserId", tenantContext.UserId.Value);
+
+                if (tenantContext?.DepartmentId is > 0)
+                    diagnosticContext.Set("DepartmentId", tenantContext.DepartmentId.Value);
+            };
+        });
 
         app.UseAntiforgery();
 

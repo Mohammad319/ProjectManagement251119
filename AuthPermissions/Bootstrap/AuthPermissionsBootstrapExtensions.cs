@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AuthPermissions;
 
@@ -27,6 +29,13 @@ public static class AuthPermissionsBootstrapExtensions
 
         if (!await IdentityUserSyncHelper.EnsureRolesExistAsync(roleManager, IdentityUserSyncHelper.GetAllRoles()))
             throw new InvalidOperationException("Failed to initialize application roles.");
+
+        var allowConfiguredAdmin = app.Environment.IsDevelopment() || configuration.GetValue<bool>("Bootstrap:EnableConfiguredAdmin");
+        if (!allowConfiguredAdmin)
+        {
+            app.Logger.LogInformation("Configured bootstrap admin sync is disabled for this environment.");
+            return;
+        }
 
         var email = configuration["User:Email"]?.Trim();
         var password = configuration["User:Password"];
