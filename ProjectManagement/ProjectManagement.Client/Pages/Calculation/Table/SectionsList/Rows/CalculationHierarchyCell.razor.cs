@@ -13,7 +13,8 @@ public partial class CalculationHierarchyCell
     private string IndentStyle => IndentPx > 0 ? $"padding-left:{IndentPx}px;" : string.Empty;
 
     private const string ToggleClass =
-        "inline-flex items-center justify-center rounded-full " +
+                //"inline-flex items-center justify-center rounded-full " +
+                "inline-flex h-5 w-5 items-center justify-center rounded-md  " +
         "border border-slate-400 dark:border-slate-600 " +
         "bg-transparent dark:bg-transparent " +
         "w-5 h-5 cursor-pointer transition-all duration-200 ease-out " +

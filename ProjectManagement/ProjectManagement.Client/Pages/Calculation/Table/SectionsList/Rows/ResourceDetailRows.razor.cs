@@ -91,8 +91,8 @@ public partial class ResourceDetailRows
     private static void RenderNameCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
         var dotClass = line.Kind == DetailKind.Time
-            ? "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-500 dark:bg-slate-400"
-            : "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400 dark:bg-slate-500";
+            ? "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-500"
+            : "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400";
 
         builder.OpenElement(seq++, "div");
         builder.AddAttribute(seq++, "class", "flex min-w-0 items-start gap-2");
@@ -102,7 +102,7 @@ public partial class ResourceDetailRows
         builder.CloseElement();
 
         builder.OpenElement(seq++, "span");
-        builder.AddAttribute(seq++, "class", "truncate text-[11px] text-slate-700 dark:text-slate-200");
+        builder.AddAttribute(seq++, "class", "truncate text-[11px] text-slate-700 ");
         builder.AddContent(seq++, line.Name);
         builder.CloseElement();
 
@@ -112,7 +112,7 @@ public partial class ResourceDetailRows
     private static void RenderQuantityCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
         builder.OpenElement(seq++, "span");
-        builder.AddAttribute(seq++, "class", "text-[11px] font-medium text-slate-700 dark:text-slate-200");
+        builder.AddAttribute(seq++, "class", "text-[11px] font-medium text-slate-700 ");
         builder.AddContent(seq++, line.QuantityText);
         builder.CloseElement();
     }
@@ -120,7 +120,7 @@ public partial class ResourceDetailRows
     private static void RenderUnitCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
         builder.OpenElement(seq++, "span");
-        builder.AddAttribute(seq++, "class", "text-[11px] text-slate-600 dark:text-slate-300");
+        builder.AddAttribute(seq++, "class", "text-[11px] text-slate-600 ");
         builder.AddContent(seq++, string.IsNullOrWhiteSpace(line.Unit) ? "—" : line.Unit);
         builder.CloseElement();
     }
@@ -128,14 +128,14 @@ public partial class ResourceDetailRows
     private static void RenderCostCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
         builder.OpenElement(seq++, "span");
-        builder.AddAttribute(seq++, "class", "text-[11px] font-medium text-slate-700 dark:text-slate-200");
+        builder.AddAttribute(seq++, "class", "text-[11px] font-medium text-slate-700 ");
         builder.AddContent(seq++, line.CostText ?? string.Empty);
         builder.CloseElement();
     }
 
     private static string GetDetailCellClass(NetColumnId columnId)
     {
-        var baseClass = "border-t border-slate-200/60 px-2 py-1.5 align-middle dark:border-slate-700/60";
+        var baseClass = "border-t border-slate-200/60 px-2 py-1.5 align-middle";
 
         if (columnId == NetColumnId.Name)
             return baseClass + " text-left";
@@ -213,4 +213,4 @@ public partial class ResourceDetailRows
         public string QuantityText { get; set; } = string.Empty;
         public string? CostText { get; set; }
     }
-}-
+}
