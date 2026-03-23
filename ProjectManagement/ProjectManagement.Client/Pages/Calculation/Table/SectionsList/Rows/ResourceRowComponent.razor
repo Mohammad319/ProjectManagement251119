@@ -4,9 +4,20 @@
 
 <CalculationDataRow RowStyle="@RowStyle"
                     Left="Left"
+                    CanToggle="HasDetails"
+                    IsExpanded="IsDetailsOpen"
+                    OnToggle="ToggleDetails"
                     ShowHierarchyPlaceholder="Left > 0"
                     OnClick="Click"
                     OnContextMenu="Context"
                     Cells="_resourceCells"
                     Notes="Resource.Data?.UpperNote"
                     ValueColumns="Colmuns.Count" />
+
+@if (HasDetails && IsDetailsOpen)
+{
+    <ResourceDetailRows Resource="Resource"
+                        Colmuns="Colmuns"
+                        Left="Left"
+                        Color="Color" />
+}

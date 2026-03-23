@@ -18,10 +18,8 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class ResourceTime()
     {
         public string Name { get; set; } = string.Empty;
-        public decimal Value { get; set; } = 1;
         public decimal Quantity { get; set; } = 1;
         public decimal Cost { get; set; } = 1;
-
     }
     public class ResourceMetadata
     {
@@ -79,7 +77,6 @@ namespace ProjectManagement.Shared.Base.Calculation
             {
                 foreach (var t in Times)
                 {
-                    t.Value = RoundFactor(t.Value);
                     t.Quantity = RoundQuantity(t.Quantity);
                     t.Cost = RoundMoney(t.Cost);
                 }
@@ -109,7 +106,6 @@ public ResourceMetadata Clone()
                     : [.. Times.Select(t => new ResourceTime
                     {
                         Name = t.Name,
-                        Value = t.Value,
                         Quantity = t.Quantity,
                         Cost = t.Cost,
                     })],

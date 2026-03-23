@@ -143,7 +143,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
                 Calc.FlatListDirty = false;
 
                 if (Calc.MaxDepth > 0)
-                    Template.StartCol1 = (Calc.MaxDepth * 10) + 15;
+                    Template.StartCol1 = (Calc.MaxDepth * 10) + 25;
             }
 
             if (refreshItems && virtualizeComponent != null)
@@ -252,7 +252,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         Calc.FlatListDirty = false;
 
         if (Calc.MaxDepth > 0)
-            Template.StartCol1 = (Calc.MaxDepth * 10) + 15;
+            Template.StartCol1 = (Calc.MaxDepth * 10) + 25;
 
         if (virtualizeComponent != null)
             await virtualizeComponent.RefreshDataAsync();

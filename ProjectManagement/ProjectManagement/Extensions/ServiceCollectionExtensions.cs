@@ -119,7 +119,7 @@ public static class ServiceCollectionExtensions
 
         // Middleware registrations
         services.AddTransient<CorrelationIdMiddleware>();
-        services.AddTransient<SecurityHeadersMiddleware>();
+        //services.AddTransient<SecurityHeadersMiddleware>();
 
         // Controllers + model validation response
         services.AddProjectControllers();

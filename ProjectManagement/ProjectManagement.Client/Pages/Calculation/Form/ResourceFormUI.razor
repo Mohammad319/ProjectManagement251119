@@ -360,42 +360,38 @@
                             @for (int i = 0; i < ResourceUpdate.Data.Times.Count; i++)
                             {
                                 int idx = i;
-                                <div class="rounded-xl border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/60">
-                                    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
-                                        <div class="min-w-0 xl:col-span-4">
-                                            <label class="@LabelClass">@CalcResource.name</label>
-                                            <InputText class="@InputClass"
-                                                       @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
-                                        </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/60 overflow-x-auto">
+                        <div class="flex flex-nowrap items-end gap-3 min-w-[900px]">
+        
+                            <div class="min-w-0 w-[320px] shrink-0">
+                                <label class="@LabelClass">@CalcResource.name</label>
+                                <InputText class="@InputClass"
+                                           @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
+                            </div>
 
-                               @*          <div class="min-w-0 xl:col-span-2">
-                                            <label class="@LabelClass">@ResourceLoc.value</label>
-                                            <InputNumber class="@InputClass"
-                                                         @bind-Value="ResourceUpdate.Data.Times[idx].Value" />
-                                        </div> *@
+                            <div class="min-w-0 w-[180px] shrink-0">
+                                <label class="@LabelClass">@CalcResource.quantity</label>
+                                <InputNumber class="@InputClass"
+                                             @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
+                            </div>
 
-                                        <div class="min-w-0 xl:col-span-2">
-                                            <label class="@LabelClass">@CalcResource.quantity</label>
-                                            <InputNumber class="@InputClass"
-                                                         @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
-                                        </div>
+                            <div class="min-w-0 w-[220px] shrink-0">
+                                <label class="@LabelClass">@CalcResource.cost</label>
+                                <InputNumber class="@InputClass"
+                                             @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
+                            </div>
 
-                                        <div class="min-w-0 xl:col-span-3">
-                                            <label class="@LabelClass">@CalcResource.cost</label>
-                                            <InputNumber class="@InputClass"
-                                                         @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
-                                        </div>
+                            <div class="w-[44px] shrink-0 flex items-end">
+                                <button type="button"
+                                        class="@DeleteIconButtonClass"
+                                        @onclick="() => RemoveTime(idx)">
+                                    @((MarkupString)Icons.DeleteSVG)
+                                </button>
+                            </div>
 
-                                        <div class="min-w-0 xl:col-span-1 flex items-end">
-                                            <button type="button"
-                                                    class="@DeleteIconButtonClass"
-                                                    @onclick="() => RemoveTime(idx)">
-                                                @((MarkupString)Icons.DeleteSVG)
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
+                        </div>
+                    </div>
+}
                         }
                 </MhdCard>
             }

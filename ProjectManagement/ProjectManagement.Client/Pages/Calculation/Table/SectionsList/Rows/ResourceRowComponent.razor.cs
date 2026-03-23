@@ -23,7 +23,13 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     protected override int SelectionItemId => Resource.Id;
     protected override decimal? SelectionQuantity => Resource.Quantity;
 
+    private bool IsDetailsOpen { get; set; }
+
     private string RowStyle => Resource.Style(Color, TaskBranchActive, IsRowSelected);
+
+    private bool HasParameters => Resource?.Data?.Parameters?.Count > 0;
+    private bool HasTimes => Resource?.Data?.Times?.Count > 0;
+    private bool HasDetails => HasParameters || HasTimes;
 
     protected override void OnInitialized()
     {
@@ -31,10 +37,17 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
         ResourceService.OfferStateChanged += HandleOfferStateChanged;
     }
 
-    private void Click() =>
-        SelectCurrentItem();
+    private void Click() => SelectCurrentItem();
 
     private Task Context() => Resource.Ui.ContextClick?.Invoke() ?? Task.CompletedTask;
+
+    private void ToggleDetails()
+    {
+        if (!HasDetails)
+            return;
+
+        IsDetailsOpen = !IsDetailsOpen;
+    }
 
     private void HandleOfferStateChanged(int resourceId)
     {

@@ -6,7 +6,6 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
     public class TemplateMVVM : TemplateData
     {
-        public string Format(object x) => UiStyles.Format(x, MathRound);
         public double Format(double x) => UiStyles.Format(x, MathRound);
         public double Format(decimal x) => UiStyles.Format((double)x, MathRound);
         public double Format(decimal? x) => UiStyles.Format((double)(x ?? 0m), MathRound);

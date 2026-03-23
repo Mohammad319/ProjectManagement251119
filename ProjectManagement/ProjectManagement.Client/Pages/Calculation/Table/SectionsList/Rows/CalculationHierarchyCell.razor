@@ -2,11 +2,18 @@
     <div class="flex items-center" style="@IndentStyle">
         @if (CanToggle)
         {
-            <span class="@ToggleClass"
+        @*     <span class="@ToggleClass"
                   role="button"
                   @onclick="HandleToggle"
                   @onclick:stopPropagation="true">
                 @((MarkupString)Icons.TopBottom(IsExpanded))
+            </span> *@
+
+            <span role="button"
+                  @onclick="HandleToggle"
+                  @onclick:stopPropagation="true" 
+                  class="inline-flex h-5 w-5 items-center justify-center rounded-md border border-slate-300/70 text-[10px] bg-white/80 text-slate-600 dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-300">
+                @(IsExpanded ? "−" : "+")
             </span>
         }
         else if (ShowPlaceholder)

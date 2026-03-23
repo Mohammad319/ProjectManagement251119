@@ -54,7 +54,7 @@ public class CloneAndMappingTests
             ],
             Times =
             [
-                new ResourceTime { Name = "install", Value = 1.5m, Quantity = 2m, Cost = 7m }
+                new ResourceTime { Name = "install", Quantity = 2m, Cost = 7m }
             ]
         };
 
