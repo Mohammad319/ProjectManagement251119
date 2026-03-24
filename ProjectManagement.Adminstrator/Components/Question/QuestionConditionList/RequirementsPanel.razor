@@ -74,207 +74,262 @@
     };
 }
 
-<div class="">
-    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-        <div class="flex items-center gap-1">
-            <h5 class="font-medium text-gray-800 dark:text-gray-100">@AppLoc["choiceRequirements"]</h5>
-            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white ml-auto" @onclick="AddChoiceReq">@AppLoc["add"]</button>
+<div class="space-y-4">
+    <section class="pm-card-muted overflow-hidden">
+        <div class="pm-card-header">
+            <div>
+                <h4 class="pm-title">@AppLoc["choiceRequirements"]</h4>
+                <p class="pm-subtitle mt-1">Bind the condition to specific choice groups and options.</p>
+            </div>
+            <div class="pm-toolbar">
+                <span class="pm-chip">@(Condition?.OptionRules?.Count ?? 0)</span>
+                <button class="pm-btn-outline" @onclick="AddChoiceReq">@AppLoc["add"]</button>
+            </div>
         </div>
 
-        @if (Condition?.OptionRules == null || Condition.OptionRules.Count == 0)
-        {
-            <div class="text-gray-600 dark:text-gray-300">@AppLoc["none"]</div>
-        }
-        else
-        {
-            @foreach (var r in Condition.OptionRules)
+        <div class="pm-card-body">
+            @if (Condition?.OptionRules == null || Condition.OptionRules.Count == 0)
             {
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
-                    <div class="md:col-span-4">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["group"]</label>
-                        <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" value="@r.QuestionGroupId" @onchange="e => OnChoiceGroupChanged(r, e)">
-                            <option value="0">@AppLoc["selectPlaceholder"]</option>
-                            @foreach (var g in ChoiceGroups)
-                            {
-                                <option value="@g.Id">@g.DisplayName</option>
-                            }
-                        </select>
-                    </div>
+                <div class="pm-empty">@AppLoc["none"]</div>
+            }
+            else
+            {
+                <div class="space-y-3">
+                    @foreach (var r in Condition.OptionRules)
+                    {
+                        <div class="pm-subcard" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                <div class="pm-field md:col-span-4">
+                                    <label class="pm-label">@AppLoc["group"]</label>
+                                    <select class="pm-select" value="@r.QuestionGroupId" @onchange="e => OnChoiceGroupChanged(r, e)">
+                                        <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                        @foreach (var g in ChoiceGroups)
+                                        {
+                                            <option value="@g.Id">@g.DisplayName</option>
+                                        }
+                                    </select>
+                                </div>
 
-                    <div class="md:col-span-5">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["choiceOption"]</label>
-                        <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="r.OptionId">
-                            <option value="0">@AppLoc["selectPlaceholder"]</option>
-                            @foreach (var opt in GetLocalChoiceOptions(r.QuestionGroupId))
-                            {
-                                <option value="@opt.Id">@opt.DisplayName</option>
-                            }
-                        </select>
-                    </div>
+                                <div class="pm-field md:col-span-5">
+                                    <label class="pm-label">@AppLoc["choiceOption"]</label>
+                                    <select class="pm-select" @bind="r.OptionId">
+                                        <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                        @foreach (var opt in GetLocalChoiceOptions(r.QuestionGroupId))
+                                        {
+                                            <option value="@opt.Id">@opt.DisplayName</option>
+                                        }
+                                    </select>
+                                </div>
 
-                    <div class="md:col-span-2">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["groupKey"]</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.GroupKey" />
-                    </div>
+                                <div class="pm-field md:col-span-2">
+                                    <label class="pm-label">@AppLoc["groupKey"]</label>
+                                    <input type="number" class="pm-input" @bind="r.GroupKey" />
+                                </div>
 
-                    <div class="place-self-end">
-                        <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="@AppLoc["remove"]" @onclick="() => RemoveChoiceReq(r)">x</button>
-                    </div>
+                                <div class="flex items-end md:col-span-1">
+                                    <button class="pm-btn-outline-danger w-full" title="@AppLoc["remove"]" @onclick="() => RemoveChoiceReq(r)">
+                                        @AppLoc["remove"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
-        }
-    </div>
+        </div>
+    </section>
 
-    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-        <div class="flex items-center gap-1">
-            <h5 class="font-medium text-gray-800 dark:text-gray-100">@AppLoc["resourceRequirements"]</h5>
-            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white ml-auto" @onclick="AddResReq">@AppLoc["add"]</button>
+    <section class="pm-card-muted overflow-hidden">
+        <div class="pm-card-header">
+            <div>
+                <h4 class="pm-title">@AppLoc["resourceRequirements"]</h4>
+                <p class="pm-subtitle mt-1">Require a matching selector group and resource item.</p>
+            </div>
+            <div class="pm-toolbar">
+                <span class="pm-chip">@(Condition?.ResourceRules?.Count ?? 0)</span>
+                <button class="pm-btn-outline" @onclick="AddResReq">@AppLoc["add"]</button>
+            </div>
         </div>
 
-        @if (Condition?.ResourceRules == null || Condition.ResourceRules.Count == 0)
-        {
-            <div class="text-gray-600 dark:text-gray-300">@AppLoc["none"]</div>
-        }
-        else
-        {
-            @foreach (var r in Condition.ResourceRules)
+        <div class="pm-card-body">
+            @if (Condition?.ResourceRules == null || Condition.ResourceRules.Count == 0)
             {
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
-                    <div class="md:col-span-4">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["group"]</label>
-                        <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" value="@r.SelectorId" @onchange="e => OnResGroupChanged(r, e)">
-                            <option value="0">@AppLoc["selectPlaceholder"]</option>
-                            @foreach (var g in ResourceGroups)
-                            {
-                                <option value="@g.Id">@g.DisplayName</option>
-                            }
-                        </select>
-                    </div>
+                <div class="pm-empty">@AppLoc["none"]</div>
+            }
+            else
+            {
+                <div class="space-y-3">
+                    @foreach (var r in Condition.ResourceRules)
+                    {
+                        <div class="pm-subcard">
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                <div class="pm-field md:col-span-4">
+                                    <label class="pm-label">@AppLoc["group"]</label>
+                                    <select class="pm-select" value="@r.SelectorId" @onchange="e => OnResGroupChanged(r, e)">
+                                        <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                        @foreach (var g in ResourceGroups)
+                                        {
+                                            <option value="@g.Id">@g.DisplayName</option>
+                                        }
+                                    </select>
+                                </div>
 
-                    <div class="md:col-span-5">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["item"]</label>
-                        <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="r.SelectorItemId">
-                            <option value="0">@AppLoc["selectPlaceholder"]</option>
-                            @foreach (var it in GetResourceItems(r.SelectorId))
-                            {
-                                <option value="@it.Id">@it?.Resource?.Name</option>
-                            }
-                        </select>
-                    </div>
+                                <div class="pm-field md:col-span-5">
+                                    <label class="pm-label">@AppLoc["item"]</label>
+                                    <select class="pm-select" @bind="r.SelectorItemId">
+                                        <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                        @foreach (var it in GetResourceItems(r.SelectorId))
+                                        {
+                                            <option value="@it.Id">@it?.Resource?.Name</option>
+                                        }
+                                    </select>
+                                </div>
 
-                    <div class="md:col-span-2">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["groupKey"]</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.GroupKey" />
-                    </div>
+                                <div class="pm-field md:col-span-2">
+                                    <label class="pm-label">@AppLoc["groupKey"]</label>
+                                    <input type="number" class="pm-input" @bind="r.GroupKey" />
+                                </div>
 
-                    <div class="place-self-end">
-                        <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="@AppLoc["remove"]" @onclick="() => RemoveResReq(r)">x</button>
-                    </div>
+                                <div class="flex items-end md:col-span-1">
+                                    <button class="pm-btn-outline-danger w-full" title="@AppLoc["remove"]" @onclick="() => RemoveResReq(r)">
+                                        @AppLoc["remove"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
-        }
-    </div>
+        </div>
+    </section>
 
-    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-        <div class="flex items-center gap-1">
-            <h5 class="font-medium text-gray-800 dark:text-gray-100">@AppLoc["numericRequirements"]</h5>
-            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white ml-auto" @onclick="AddNumReq">@AppLoc["add"]</button>
+    <section class="pm-card-muted overflow-hidden">
+        <div class="pm-card-header">
+            <div>
+                <h4 class="pm-title">@AppLoc["numericRequirements"]</h4>
+                <p class="pm-subtitle mt-1">Define allowed min and max ranges for numeric questions.</p>
+            </div>
+            <div class="pm-toolbar">
+                <span class="pm-chip">@(Condition?.NumericRules?.Count ?? 0)</span>
+                <button class="pm-btn-outline" @onclick="AddNumReq">@AppLoc["add"]</button>
+            </div>
         </div>
 
-        @if (Condition?.NumericRules == null || Condition.NumericRules.Count == 0)
-        {
-            <div class="text-gray-600 dark:text-gray-300">@AppLoc["none"]</div>
-        }
-        else
-        {
-            @foreach (var r in Condition.NumericRules)
+        <div class="pm-card-body">
+            @if (Condition?.NumericRules == null || Condition.NumericRules.Count == 0)
             {
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2">
-                    <div class="md:col-span-2">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["group"]</label>
-                        <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" value="@r.NumericQuestionId" @onchange="e => OnNumericGroupChanged(r, e)">
-                            <option value="0">@AppLoc["selectPlaceholder"]</option>
-                            @foreach (var g in NumericGroups)
-                            {
-                                <option value="@g.Id">@g.DisplayName (@g.Id)</option>
-                            }
-                        </select>
-                    </div>
+                <div class="pm-empty">@AppLoc["none"]</div>
+            }
+            else
+            {
+                <div class="space-y-3">
+                    @foreach (var r in Condition.NumericRules)
+                    {
+                        <div class="pm-subcard">
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+                                <div class="pm-field md:col-span-2">
+                                    <label class="pm-label">@AppLoc["group"]</label>
+                                    <select class="pm-select" value="@r.NumericQuestionId" @onchange="e => OnNumericGroupChanged(r, e)">
+                                        <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                        @foreach (var g in NumericGroups)
+                                        {
+                                            <option value="@g.Id">@g.DisplayName (@g.Id)</option>
+                                        }
+                                    </select>
+                                </div>
 
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppControll.min</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.MinAllowedValue" />
-                    </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@AppControll.min</label>
+                                    <input type="number" class="pm-input" @bind="r.MinAllowedValue" />
+                                </div>
 
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppControll.max</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.MaxAllowedValue" />
-                    </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@AppControll.max</label>
+                                    <input type="number" class="pm-input" @bind="r.MaxAllowedValue" />
+                                </div>
 
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["groupKey"]</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.GroupKey" />
-                    </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@AppLoc["groupKey"]</label>
+                                    <input type="number" class="pm-input" @bind="r.GroupKey" />
+                                </div>
 
-                    <div class="place-self-end">
-                        <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="@AppLoc["remove"]" @onclick="() => RemoveNumReq(r)">x</button>
-                    </div>
+                                <div class="flex items-end">
+                                    <button class="pm-btn-outline-danger w-full" title="@AppLoc["remove"]" @onclick="() => RemoveNumReq(r)">
+                                        @AppLoc["remove"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
-        }
-    </div>
+        </div>
+    </section>
 
-    <div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-        <div class="flex items-center gap-1">
-            <h5 class="font-medium text-gray-800 dark:text-gray-100">@AppLoc["variableRequirements"]</h5>
-            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white ml-auto" @onclick="AddVarReq">@AppLoc["add"]</button>
+    <section class="pm-card-muted overflow-hidden">
+        <div class="pm-card-header">
+            <div>
+                <h4 class="pm-title">@AppLoc["variableRequirements"]</h4>
+                <p class="pm-subtitle mt-1">Add reusable variable constraints such as thickness, width, or cost.</p>
+            </div>
+            <div class="pm-toolbar">
+                <span class="pm-chip">@(Condition?.VariableRules?.Count ?? 0)</span>
+                <button class="pm-btn-outline" @onclick="AddVarReq">@AppLoc["add"]</button>
+            </div>
         </div>
 
-        @if (Condition?.VariableRules == null || Condition.VariableRules.Count == 0)
-        {
-            <div class="text-gray-600 dark:text-gray-300">@AppLoc["none"]</div>
-        }
-        else
-        {
-            @foreach (var r in Condition.VariableRules)
+        <div class="pm-card-body">
+            @if (Condition?.VariableRules == null || Condition.VariableRules.Count == 0)
             {
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
-                    <div class="md:col-span-2">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["variable"]</label>
-                        <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" value="@r.VariableName"
-                                @onchange="e => r.VariableName = Convert.ToString(e.Value) ?? string.Empty">
-                            <option value="">@AppLoc["selectPlaceholder"]</option>
-                            <option value="Thickness">@GetVarLabel("Thickness")</option>
-                            <option value="Width">@GetVarLabel("Width")</option>
-                            <option value="Length">@GetVarLabel("Length")</option>
-                            <option value="Density">@GetVarLabel("Density")</option>
-                            <option value="quantity">@GetVarLabel("quantity")</option>
-                            <option value="cost">@GetVarLabel("cost")</option>
-                            <option value="basecost">@GetVarLabel("basecost")</option>
-                        </select>
-                    </div>
+                <div class="pm-empty">@AppLoc["none"]</div>
+            }
+            else
+            {
+                <div class="space-y-3">
+                    @foreach (var r in Condition.VariableRules)
+                    {
+                        <div class="pm-subcard" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
+                                <div class="pm-field md:col-span-2">
+                                    <label class="pm-label">@AppLoc["variable"]</label>
+                                    <select class="pm-select" value="@r.VariableName"
+                                            @onchange="e => r.VariableName = Convert.ToString(e.Value) ?? string.Empty">
+                                        <option value="">@AppLoc["selectPlaceholder"]</option>
+                                        <option value="Thickness">@GetVarLabel("Thickness")</option>
+                                        <option value="Width">@GetVarLabel("Width")</option>
+                                        <option value="Length">@GetVarLabel("Length")</option>
+                                        <option value="Density">@GetVarLabel("Density")</option>
+                                        <option value="quantity">@GetVarLabel("quantity")</option>
+                                        <option value="cost">@GetVarLabel("cost")</option>
+                                        <option value="basecost">@GetVarLabel("basecost")</option>
+                                    </select>
+                                </div>
 
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppControll.min</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.MinAllowedValue" />
-                    </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@AppControll.min</label>
+                                    <input type="number" class="pm-input" @bind="r.MinAllowedValue" />
+                                </div>
 
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppControll.max</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.MaxAllowedValue" />
-                    </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@AppControll.max</label>
+                                    <input type="number" class="pm-input" @bind="r.MaxAllowedValue" />
+                                </div>
 
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["groupKey"]</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="r.GroupKey" />
-                    </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@AppLoc["groupKey"]</label>
+                                    <input type="number" class="pm-input" @bind="r.GroupKey" />
+                                </div>
 
-                    <div class="place-self-end">
-                        <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="@AppLoc["remove"]" @onclick="() => RemoveVarReq(r)">x</button>
-                    </div>
+                                <div class="flex items-end">
+                                    <button class="pm-btn-outline-danger w-full" title="@AppLoc["remove"]" @onclick="() => RemoveVarReq(r)">
+                                        @AppLoc["remove"]
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
-        }
-    </div>
-
+        </div>
+    </section>
 </div>

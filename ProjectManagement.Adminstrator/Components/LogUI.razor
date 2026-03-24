@@ -1,4 +1,4 @@
-﻿@using AuthPermissions.Entity
+@using AuthPermissions.Entity
 @using Domain.Repository.AuthPermissions
 @using Microsoft.EntityFrameworkCore
 @using ProjectManagement.Adminstrator.Services.Users
@@ -10,146 +10,165 @@
 @inject ApplicationDbContext context
 @inject IUsersService TenantRepo
 
-<EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
-    <!-- شبكة: 5 أعمدة من md+ مع gap=1 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-1">
+<div class="pm-page">
+    <section class="pm-card">
+        <div class="pm-card-header">
+            <div>
+                <h2 class="pm-title">System logs</h2>
+                <p class="pm-subtitle mt-1">Filter, review, and clean operational log entries.</p>
+            </div>
 
-        <!-- Date 1 -->
-        <div class="flex flex-col gap-1">
-            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceApp.date 1</label>
-            <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="Filter.Date1" />
-        </div>
-
-        <!-- Date 2 -->
-        <div class="flex flex-col gap-1">
-            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@ResourceApp.date 2</label>
-            <InputDate class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind-Value="Filter.Date2" />
-        </div>
-
-        <!-- Tenant -->
-        <div class="flex flex-col gap-1">
-            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppControll.tenant</label>
-            <InputSelect class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind-Value="Filter.TenantID">
-                <option></option>
-                @if (Tenants is not null)
-                {
-                    foreach (var tenant in Tenants)
-                    {
-                        <option value="@tenant.Id">@tenant.Name</option>
-                    }
-                }
-            </InputSelect>
-        </div>
-
-        <!-- Level -->
-        <div class="flex flex-col gap-1">
-            <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">Level</label>
-            <InputSelect class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind-Value="Filter.Level">
-                <option></option>
-                <option value="Debug">Debug</option>
-                <option value="Information">Information</option>
-                <option value="Warning">Warning</option>
-                <option value="Error">Error</option>
-                <option value="Critical">Critical</option>
-            </InputSelect>
-        </div>
-
-        <!-- Tools -->
-        <div>
-            <label class="text-xs text-gray-700 dark:text-gray-200">@AppControll.Delete_older_from_Month_Day</label>
-            <div class="flex items-center gap-1 my-1">
-                <input type="number" placeholder="MM" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="month" />
-                <input type="number" placeholder="DD" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white ml-1" @bind="day" />
-
-                <div class="inline-flex gap-2 ml-2">
-                    <button type="button"
-                            class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white "
-                            title="Delete older"
-                            @onclick="DeleteAsync"
-                            disabled="@IsLoading">
-                        @Icons.Delete
-                    </button>
-
-                    <button type="submit"
-                            class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white "
-                            form="versionForm"
-                            disabled="@IsLoading">
-                        @ResourceApp.send
-                    </button>
-                </div>
+            <div class="pm-toolbar">
+                <span class="pm-chip">Loaded: @Logs.Count</span>
+                <span class="pm-chip">Page: @Filter.PageNr</span>
             </div>
         </div>
 
-    </div>
-</EditForm>
+        <div class="pm-card-body">
+            <EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceApp.date 1</label>
+                        <InputDate class="pm-input" @bind-Value="Filter.Date1" />
+                    </div>
 
-<!-- جدول ضمن بطاقة -->
-<div class="mt-2 rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60 overflow-hidden">
-    <div class="overflow-x-auto min-w-0">
-        <table class="table-fixed w-full text-sm">
-            <!-- عدّل النسب هنا عند الحاجة -->
-            <colgroup>
-                <col class="w-[222px]" />   @* TimeStamp/Level ثابت *@
-                <col class="w-1/3" />       @* Message *@
-                <col class="w-2/3" />       @* Properties *@
-            </colgroup>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceApp.date 2</label>
+                        <InputDate class="pm-input" @bind-Value="Filter.Date2" />
+                    </div>
 
-            <thead class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100">
-                <tr>
-                    <th class="p-1 text-left text-sm font-semibold text-start">TimeStamp / Level</th>
-                    <th class="p-1 text-left text-sm font-semibold text-start">Message</th>
-                    <th class="p-1 text-left text-sm font-semibold text-start">Properties</th>
-                </tr>
-            </thead>
+                    <div class="pm-field">
+                        <label class="pm-label">@AppControll.tenant</label>
+                        <InputSelect class="pm-select" @bind-Value="Filter.TenantID">
+                            <option></option>
+                            @if (Tenants is not null)
+                            {
+                                foreach (var tenant in Tenants)
+                                {
+                                    <option value="@tenant.Id">@tenant.Name</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
 
-            <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
-                @if (IsLoading)
-                {
-                    <tr class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
-                        <td class="p-1 text-sm text-gray-800 dark:text-gray-300 text-gray-600 dark:text-gray-300" colspan="3">Loading…</td>
-                    </tr>
-                }
-                else if (Logs is null || !Logs.Any())
-                {
-                    <tr class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
-                        <td class="p-1 text-sm text-gray-800 dark:text-gray-300 text-gray-600 dark:text-gray-300" colspan="3">No data.</td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var log in Logs)
-                    {
-                        <tr class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
-                            <!-- TimeStamp / Level -->
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300 whitespace-nowrap">
-                                <div>@log.TimeStamp.ToString("dd.MM.yyyy HH:mm")</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">@log.Level</div>
-                            </td>
+                    <div class="pm-field">
+                        <label class="pm-label">Level</label>
+                        <InputSelect class="pm-select" @bind-Value="Filter.Level">
+                            <option></option>
+                            <option value="Debug">Debug</option>
+                            <option value="Information">Information</option>
+                            <option value="Warning">Warning</option>
+                            <option value="Error">Error</option>
+                            <option value="Critical">Critical</option>
+                        </InputSelect>
+                    </div>
 
-                            <!-- Message: يلتف داخل العرض -->
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300 whitespace-normal break-words">
-                                @log.Message
-                            </td>
+                    <div class="pm-field">
+                        <label class="pm-label">@AppControll.Delete_older_from_Month_Day</label>
+                        <div class="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+                            <input type="number" placeholder="MM" class="pm-input" @bind="month" />
+                            <input type="number" placeholder="DD" class="pm-input" @bind="day" />
 
-                            <!-- Properties: يلتف داخل العرض -->
-                            <td class="p-1 text-sm text-gray-800 dark:text-gray-300 whitespace-normal break-words">
-                                @log.Properties
-                            </td>
+                            <div class="pm-toolbar justify-end">
+                                <button type="button"
+                                        class="pm-btn-danger"
+                                        title="Delete older"
+                                        @onclick="DeleteAsync"
+                                        disabled="@IsLoading">
+                                    @Icons.Delete
+                                </button>
+
+                                <button type="submit"
+                                        class="pm-btn-primary"
+                                        form="versionForm"
+                                        disabled="@IsLoading">
+                                    @ResourceApp.send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    </section>
+
+    <section class="pm-card overflow-hidden">
+        <div class="pm-card-header">
+            <div>
+                <h3 class="pm-title">Entries</h3>
+                <p class="pm-subtitle mt-1">Newest log entries appear first.</p>
+            </div>
+
+            <div class="pm-toolbar">
+                <button class="pm-btn-secondary"
+                        disabled="@(NectBtnActive || IsLoading)"
+                        @onclick="async () => { Filter.PageNr = Filter.PageNr + 1; await GetTaskAsync(); }">
+                    @AppControll.more
+                </button>
+            </div>
+        </div>
+
+        <div class="pm-card-body-sm">
+            <div class="pm-table-wrap">
+                <table class="pm-table table-fixed">
+                    <colgroup>
+                        <col class="w-[220px]" />
+                        <col class="w-[34%]" />
+                        <col class="w-[46%]" />
+                    </colgroup>
+
+                    <thead>
+                        <tr>
+                            <th>Time / Level</th>
+                            <th>Message</th>
+                            <th>Properties</th>
                         </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
+                    </thead>
 
-<!-- Pagination -->
-<div class="mt-2 flex items-center gap-1">
-    <button class="px-2 py-1 border border-blue-500 text-blue-500 rounded transition hover:bg-blue-500 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white "
-            disabled="@(NectBtnActive || IsLoading)"
-            @onclick="async () => { Filter.PageNr = Filter.PageNr + 1; await GetTaskAsync(); }">
-        @AppControll.more
-    </button>
+                    <tbody>
+                        @if (IsLoading)
+                        {
+                            <tr>
+                                <td colspan="3">
+                                    <div class="pm-alert-info">Loading…</div>
+                                </td>
+                            </tr>
+                        }
+                        else if (Logs is null || !Logs.Any())
+                        {
+                            <tr>
+                                <td colspan="3">
+                                    <div class="pm-empty">No log data for the current filter.</div>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var log in Logs)
+                            {
+                                <tr>
+                                    <td class="whitespace-nowrap">
+                                        <div class="font-medium text-slate-900 dark:text-slate-100">@log.TimeStamp.ToString("dd.MM.yyyy HH:mm")</div>
+                                        <div class="mt-1">
+                                            <span class="@GetLevelBadgeClass(log.Level)">@log.Level</span>
+                                        </div>
+                                    </td>
+
+                                    <td class="whitespace-normal break-words">
+                                        @log.Message
+                                    </td>
+
+                                    <td class="whitespace-normal break-words">
+                                        @log.Properties
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </div>
 
 @code {
@@ -161,6 +180,15 @@
     List<GetTenantsDTO> Tenants = [];
     int day = 7;
     int month = 0;
+
+    private string GetLevelBadgeClass(string? level)
+        => level switch
+        {
+            "Error" or "Critical" => "pm-chip-rose",
+            "Warning" => "pm-chip-amber",
+            _ => "pm-chip-blue"
+        };
+
     async Task DeleteAsync()
     {
         IsLoading = true;
@@ -173,6 +201,7 @@
         await GetTaskAsync(true);
         IsLoading = false;
     }
+
     async Task DeleteAsync(LogEntity log)
     {
         await context.Logs
@@ -181,6 +210,7 @@
 
         Logs.RemoveAll(x => x.Id == log.Id);
     }
+
     public async Task<List<LogEntity>> GetAsync(LogsFilter filter)
     {
         var query = context.Logs.AsNoTracking().AsQueryable();
@@ -219,6 +249,7 @@
             Logs = Logs2;
         IsLoading = false;
     }
+
     async Task GetTenants()
     {
         IsLoading = true;
@@ -226,6 +257,7 @@
         IsLoading = false;
         StateHasChanged();
     }
+
     protected async override Task OnInitializedAsync()
     {
         await GetTaskAsync(true);

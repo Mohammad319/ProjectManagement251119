@@ -10,29 +10,33 @@
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
 <div class="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
-    <aside class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="mb-3 border-b border-slate-200 pb-3 dark:border-slate-800">
-            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Site Admin</div>
-            <h1 class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">Control Center</h1>
-            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Global management for folders, tenants, users, logs, actions, units, and resource blueprints.
-            </p>
+    <aside class="pm-card xl:sticky xl:top-24 xl:self-start">
+        <div class="pm-card-header">
+            <div>
+                <div class="pm-label">Site Admin</div>
+                <h1 class="pm-title-lg mt-1">Control Center</h1>
+                <p class="pm-subtitle mt-2">
+                    Global management for folders, tenants, users, logs, actions, units, and resource blueprints.
+                </p>
+            </div>
         </div>
 
-        <nav class="space-y-1.5">
-            <button type="button" class="@NavButtonClass(null)" @onclick="() => Component = null">@AppControll.index</button>
-            <button type="button" class="@NavButtonClass(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">Folders</button>
-            <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">@AppControll.appUsers</button>
-            <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
-            <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
-            <button type="button" class="@NavButtonClass(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">Actions</button>
-            <button type="button" class="@NavButtonClass(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">Task &amp; Question</button>
-            <button type="button" class="@NavButtonClass(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">Units</button>
-            <button type="button" class="@NavButtonClass(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">Property</button>
-        </nav>
+        <div class="pm-card-body-sm">
+            <nav class="space-y-1.5">
+                <button type="button" class="@NavButtonClass(null)" @onclick="() => Component = null">@AppControll.index</button>
+                <button type="button" class="@NavButtonClass(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">Folders</button>
+                <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">@AppControll.appUsers</button>
+                <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
+                <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
+                <button type="button" class="@NavButtonClass(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">Actions</button>
+                <button type="button" class="@NavButtonClass(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">Task &amp; Question</button>
+                <button type="button" class="@NavButtonClass(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">Units</button>
+                <button type="button" class="@NavButtonClass(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">Property</button>
+            </nav>
+        </div>
     </aside>
 
-    <section class="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section class="pm-card min-w-0 overflow-hidden">
         @if (Component is not null)
         {
             <div class="min-w-0 overflow-x-auto p-3 sm:p-4 lg:p-5">
@@ -44,10 +48,19 @@
             <div class="flex min-h-[70vh] flex-col items-center justify-center gap-6 p-8 text-center">
                 <img src="Icons/BigLogo.png" alt="ProjectManagement Admin" class="max-h-52 w-auto opacity-90 dark:opacity-80" />
                 <div class="max-w-2xl">
-                    <h2 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Welcome to the site administration area</h2>
-                    <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    <h2 class="pm-title-lg">Welcome to the site administration area</h2>
+                    <p class="pm-subtitle mt-3">
                         This application is reserved for global administration tasks. Tenant-facing workflows stay inside the main ProjectManagement app.
                     </p>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                    <span class="pm-chip">Folders</span>
+                    <span class="pm-chip">Users</span>
+                    <span class="pm-chip">Tenants</span>
+                    <span class="pm-chip">Logs</span>
+                    <span class="pm-chip">Resources</span>
+                    <span class="pm-chip">Questions</span>
                 </div>
             </div>
         }
@@ -58,7 +71,5 @@
     private Type? Component;
 
     private string NavButtonClass(Type? cmp)
-        => Component == cmp
-            ? "flex w-full items-center justify-between rounded-xl bg-blue-600 px-3 py-2.5 text-left text-sm font-medium text-white shadow-sm transition dark:bg-blue-500"
-            : "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-slate-100";
+        => Component == cmp ? "pm-sidebar-link-active" : "pm-sidebar-link";
 }

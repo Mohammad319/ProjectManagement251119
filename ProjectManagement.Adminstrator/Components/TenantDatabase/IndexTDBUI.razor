@@ -10,81 +10,74 @@
 @inject IUsersService sersService
 @inject ApplicationDbContext context
 
-<div class="space-y-4">
-    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@AppControll.tenant</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400">@((Tenants?.Count ?? 0)) @AppControll.Db</p>
-        </div>
-
-        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
-            <button class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-                    @onclick="() => UpdateForm(new())">
-                <span class="text-base leading-none">+</span>
-                <span>@ResourceApp._new</span>
-            </button>
-        </div>
-    </div>
-
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-            <p class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.Db</p>
-        </div>
-
-        @if (Tenants is { Count: > 0 })
-        {
-            <div class="overflow-x-auto p-4">
-                <MhdTable TItem="TenantDatabaseEntity" Items="Tenants" ShowFilter="false">
-                    <HeaderTemplate>
-                        <th class="w-40 p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
-                        <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
-                        <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@AppControll.Db</th>
-                    </HeaderTemplate>
-                    <ChildContent>
-                        <MhdTableColumn>
-                            <Template Context="tenant">
-                                <div class="flex items-center gap-2 py-1">
-                                    <button class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/30 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300"
-                                            title="@ResourceApp.edit"
-                                            @onclick="() => UpdateForm(tenant)">
-                                        @Icons.Edit
-                                    </button>
-                                    <button class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500/30 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300"
-                                            title="@ResourceApp.delete"
-                                            @onclick="() => Remove(tenant)">
-                                        @((MarkupString)Icons.Delete)
-                                    </button>
-                                </div>
-                            </Template>
-                        </MhdTableColumn>
-                        <MhdTableColumn>
-                            <Template Context="tenant">
-                                <div class="min-w-40 py-1">
-                                    <p class="font-medium text-slate-900 dark:text-slate-100">@tenant.Name</p>
-                                </div>
-                            </Template>
-                        </MhdTableColumn>
-                        <MhdTableColumn>
-                            <Template Context="tenant">
-                                <div class="max-w-[42rem] truncate py-1 text-sm text-slate-600 dark:text-slate-300"
-                                     title="@tenant.ConnectionString"
-                                     @oncontextmenu:preventDefault
-                                     @oncontextmenu="() => Context(tenant)">
-                                    @tenant.ConnectionString
-                                </div>
-                            </Template>
-                        </MhdTableColumn>
-                    </ChildContent>
-                </MhdTable>
+<div class="pm-page">
+    <section class="pm-card overflow-hidden">
+        <div class="pm-card-header">
+            <div>
+                <h2 class="pm-title">@AppControll.Db</h2>
+                <p class="pm-subtitle mt-1">Manage tenant database entries and connection strings used by the admin application.</p>
             </div>
-        }
-        else
-        {
-            <div class="px-6 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
-                @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+
+            <div class="pm-toolbar">
+                <span class="pm-chip">@(Tenants?.Count ?? 0)</span>
+                <button class="pm-btn-success" @onclick="() => UpdateForm(new())">@ResourceApp._new</button>
             </div>
-        }
-    </div>
+        </div>
+
+        <div class="pm-card-body">
+            @if (Tenants is { Count: > 0 })
+            {
+                <div class="overflow-x-auto">
+                    <MhdTable TItem="TenantDatabaseEntity" Items="Tenants" ShowFilter="false">
+                        <HeaderTemplate>
+                            <th class="w-40 p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
+                            <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                            <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@AppControll.Db</th>
+                        </HeaderTemplate>
+                        <ChildContent>
+                            <MhdTableColumn>
+                                <Template Context="tenant">
+                                    <div class="flex items-center gap-2 py-1">
+                                        <button class="pm-icon-btn-amber"
+                                                title="@ResourceApp.edit"
+                                                @onclick="() => UpdateForm(tenant)">
+                                            @Icons.Edit
+                                        </button>
+                                        <button class="pm-icon-btn-danger"
+                                                title="@ResourceApp.delete"
+                                                @onclick="() => Remove(tenant)">
+                                            @((MarkupString)Icons.Delete)
+                                        </button>
+                                    </div>
+                                </Template>
+                            </MhdTableColumn>
+                            <MhdTableColumn>
+                                <Template Context="tenant">
+                                    <div class="min-w-40 py-1">
+                                        <p class="font-medium text-slate-900 dark:text-slate-100">@tenant.Name</p>
+                                    </div>
+                                </Template>
+                            </MhdTableColumn>
+                            <MhdTableColumn>
+                                <Template Context="tenant">
+                                    <div class="max-w-[42rem] truncate py-1 text-sm text-slate-600 dark:text-slate-300"
+                                         title="@tenant.ConnectionString"
+                                         @oncontextmenu:preventDefault
+                                         @oncontextmenu="() => Context(tenant)">
+                                        @tenant.ConnectionString
+                                    </div>
+                                </Template>
+                            </MhdTableColumn>
+                        </ChildContent>
+                    </MhdTable>
+                </div>
+            }
+            else
+            {
+                <div class="pm-empty">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
+            }
+        </div>
+    </section>
 </div>
 
 @code{

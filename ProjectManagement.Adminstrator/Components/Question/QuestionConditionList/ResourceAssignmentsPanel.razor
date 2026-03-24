@@ -179,286 +179,347 @@
     }
 }
 
-<div class="rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
-    <div class="flex items-center gap-1">
-        <h5 class="font-medium text-gray-800 dark:text-gray-100">@AppLoc["resourceAssignments"]</h5>
+<section class="pm-card-muted overflow-hidden">
+    <div class="pm-card-header">
+        <div>
+            <h4 class="pm-title">@AppLoc["resourceAssignments"]</h4>
+            <p class="pm-subtitle mt-1">Attach resources, formulas, and conditional bindings to the active condition.</p>
+        </div>
+        <div class="pm-toolbar">
+            <span class="pm-chip">@Condition.Assignments.Count</span>
+        </div>
     </div>
 
-    <div>
-        <FolderResourcesAddUI TaskId="Condition.TaskId"
-                              ResIds="Condition.Assignments.Select(x => x.ResourceId).ToList()"
-                              OnSave="ToggleAssignment" />
-    </div>
+    <div class="pm-card-body space-y-4">
+        <div class="pm-subcard">
+            <FolderResourcesAddUI TaskId="Condition.TaskId"
+                                  ResIds="Condition.Assignments.Select(x => x.ResourceId).ToList()"
+                                  OnSave="ToggleAssignment" />
+        </div>
 
-    @if (Condition.Assignments.Count == 0)
-    {
-        <div>@AppLoc["none"]</div>
-    }
-    else
-    {
-        @foreach (var a in Condition.Assignments)
+        @if (Condition.Assignments.Count == 0)
         {
-            <div class="mt-2 mb-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
-                    <div class="md:col-span-3">
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["resource"]</label>
-                        <ResourceAutocomplete MinChars="2" PageSize="20"
-                                              Value="a.ResourceId"
-                                              ValueChanged="@(v => a.ResourceId = v ?? 0)"
-                                              InitialName="@(a.Resource?.Name)" />
-                    </div>
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor1</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.ChangeFactor1" />
-                    </div>
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor2</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.ChangeFactor2" />
-                    </div>
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">
-                            @if (a.Resource?.ResType == ResourceTypesEnum.Materials)
-                            {
-                                <span>@CalcResource.waste</span>
-                            }
-                            else
-                            {
-                                <span>@CalcResource.cap</span>
-                            }
-                        </label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.CapWaste" />
-                    </div>
-                    <div>
-                        <label class="md:col-span-2 block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.baseCost</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.BaseCost" />
-                    </div>
-                    <div>
-                        <label class="md:col-span-2 block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["menuId"]</label>
-                        <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.MenuId" />
-                    </div>
-                    <div>
-                        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.active</label>
-                        <input type="checkbox" class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:text-blue-400" @bind="a.IsActive" />
-                    </div>
-
-                    <div class="md:col-span-2 place-self-end">
-                        @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
-                             a.Resource?.ResType == ResourceTypesEnum.Worker)
-                        {
-                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="@(() => AddRole(a))">@($"{AppLoc["add"]} {AppControll.capRole}")</button>
-                        }
-                        <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">+</button>
-                        <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="() => RemoveAssignment(a)">x</button>
-                    </div>
-                </div>
-
-                @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
-                     a.Resource?.ResType == ResourceTypesEnum.Worker)
+            <div class="pm-empty">@AppLoc["none"]</div>
+        }
+        else
+        {
+            <div class="space-y-4">
+                @foreach (var a in Condition.Assignments)
                 {
-                    <div class="mt-2 rounded-lg border border-gray-100 bg-white/70 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                        <div class="inline-flex gap-2">
-                            <div></div>
-                            <div>@AppControll.min</div>
-                            <div>@AppControll.max</div>
-                            <div>@CalcResource.cap</div>
-                            <div>#</div>
+                    <section class="pm-card overflow-hidden">
+                        <div class="pm-card-header">
+                            <div>
+                                <h5 class="pm-title">@(a.Resource?.Name ?? $"{AppLoc["resource"]} #{a.ResourceId}")</h5>
+                                <p class="pm-subtitle mt-1">@(a.Resource?.ResType?.ToString() ?? "Resource")</p>
+                            </div>
+
+                            <div class="pm-toolbar">
+                                <span class="@(a.IsActive ? "pm-status-on" : "pm-status-off")">@(a.IsActive ? "ON" : "OFF")</span>
+                                <button class="pm-btn-outline-danger" @onclick="() => RemoveAssignment(a)">@AppLoc["remove"]</button>
+                            </div>
                         </div>
 
-                        @if (a.CapacityRoles is not null && a.CapacityRoles.Count > 0)
-                        {
-                            @for (int i = 0; i < a.CapacityRoles.Count; i++)
-                            {
-                                var index = i;
-                                var role = a.CapacityRoles[index];
+                        <div class="pm-card-body space-y-4">
+                            <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                                <div class="pm-field md:col-span-3">
+                                    <label class="pm-label">@AppLoc["resource"]</label>
+                                    <ResourceAutocomplete MinChars="2" PageSize="20"
+                                                          Value="a.ResourceId"
+                                                          ValueChanged="@(v => a.ResourceId = v ?? 0)"
+                                                          InitialName="@(a.Resource?.Name)" />
+                                </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@CalcResource.changeFactor1</label>
+                                    <input type="number" class="pm-input" @bind="a.ChangeFactor1" />
+                                </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@CalcResource.changeFactor2</label>
+                                    <input type="number" class="pm-input" @bind="a.ChangeFactor2" />
+                                </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">
+                                        @if (a.Resource?.ResType == ResourceTypesEnum.Materials)
+                                        {
+                                            <span>@CalcResource.waste</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@CalcResource.cap</span>
+                                        }
+                                    </label>
+                                    <input type="number" class="pm-input" @bind="a.CapWaste" />
+                                </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@CalcResource.baseCost</label>
+                                    <input type="number" class="pm-input" @bind="a.BaseCost" />
+                                </div>
+                                <div class="pm-field">
+                                    <label class="pm-label">@AppLoc["menuId"]</label>
+                                    <input type="number" class="pm-input" @bind="a.MenuId" />
+                                </div>
+                                <div class="pm-field md:col-span-2">
+                                    <label class="pm-label">@CalcResource.active</label>
+                                    <div class="flex h-[42px] items-center rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-700 dark:bg-slate-900">
+                                        <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="a.IsActive" />
+                                    </div>
+                                </div>
+                            </div>
 
-                                <div class="inline-flex gap-2">
-                                    <div class="flex items-center">
-                                        <button type="button" title="@AppLoc["remove"]"
-                                                class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white h-6 w-6 p-0 flex items-center justify-center"
-                                                @onclick="() => a.CapacityRoles.Remove(role)">
-                                            x
-                                        </button>
+                            <div class="pm-toolbar">
+                                @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
+                                     a.Resource?.ResType == ResourceTypesEnum.Worker)
+                                {
+                                    <button class="pm-btn-outline" @onclick="@(() => AddRole(a))">@($"{AppLoc["add"]} {AppControll.capRole}")</button>
+                                }
+                                <button class="pm-btn-outline" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">@AppLoc["addEquation"]</button>
+                            </div>
+
+                            @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
+                                 a.Resource?.ResType == ResourceTypesEnum.Worker)
+                            {
+                                <div class="pm-subcard space-y-3">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div>
+                                            <div class="pm-title">@AppControll.capRole</div>
+                                            <div class="pm-subtitle mt-1">Capacity breakpoints for workers and equipment.</div>
+                                        </div>
+                                        <span class="pm-chip">@(a.CapacityRoles?.Count ?? 0)</span>
                                     </div>
 
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="role.Min" />
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="role.Max" />
-                                    <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="role.Value" />
+                                    @if (a.CapacityRoles is not null && a.CapacityRoles.Count > 0)
+                                    {
+                                        <div class="space-y-2">
+                                            @for (int i = 0; i < a.CapacityRoles.Count; i++)
+                                            {
+                                                var index = i;
+                                                var role = a.CapacityRoles[index];
 
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">@(index + 1)</div>
+                                                <div class="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[auto_repeat(3,minmax(0,1fr))_40px] dark:border-slate-700 dark:bg-slate-800/60">
+                                                    <button type="button"
+                                                            title="@AppLoc["remove"]"
+                                                            class="pm-btn-outline-danger md:w-12"
+                                                            @onclick="() => a.CapacityRoles.Remove(role)">
+                                                        ✕
+                                                    </button>
+
+                                                    <div class="pm-field">
+                                                        <label class="pm-label">@AppControll.min</label>
+                                                        <input type="number" class="pm-input" @bind="role.Min" />
+                                                    </div>
+
+                                                    <div class="pm-field">
+                                                        <label class="pm-label">@AppControll.max</label>
+                                                        <input type="number" class="pm-input" @bind="role.Max" />
+                                                    </div>
+
+                                                    <div class="pm-field">
+                                                        <label class="pm-label">@CalcResource.cap</label>
+                                                        <input type="number" class="pm-input" @bind="role.Value" />
+                                                    </div>
+
+                                                    <div class="flex items-end justify-center pb-2 text-xs font-medium text-slate-500 dark:text-slate-400">#@(index + 1)</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="pm-empty">@AppLoc["none"]</div>
+                                    }
                                 </div>
                             }
-                        }
-                    </div>
-                }
 
-                @if (a.Expressions is not null && a.Expressions.Count > 0)
-                {
-                    <div class="mt-2 font-medium text-gray-800 dark:text-gray-100">@CalcResource.Formulas</div>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
-                        @for (int i = 0; i < a.Expressions.Count; i++)
-                        {
-                            var index = i;
-                            <div class="flex items-center gap-1">
-                                <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="() => a.Expressions.RemoveAt(index)">x</button>
-                                <input type="text" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="a.Expressions[index]" />
-                            </div>
-                        }
-                    </div>
-                }
-
-                <div class="mt-2 rounded border border-gray-200 bg-white/60 p-1 dark:border-gray-700 dark:bg-gray-900/40">
-                    <div class="flex items-center gap-1 font-semibold text-sm">
-                        <div class="text-gray-800 dark:text-gray-100">@AppLoc["bindingsEquations"]</div>
-                        @if (CanAddBindingsFor(a))
-                        {
-                            <div class="flex flex-wrap gap-2">
-                                <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="() => AddOptionBindingUI(a.Id)">@AppLoc["addChoiceBinding"]</button>
-                                <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="() => AddNumericBindingUI(a.Id)">@AppLoc["addNumericBinding"]</button>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="text-[12px] text-yellow-600 dark:text-yellow-400">@AppLoc["saveConditionFirstToEnableBindings"]</div>
-                        }
-                    </div>
-
-                    @if (OptBindsByRA.TryGetValue(a.Id, out var obList) && obList.Count > 0)
-                    {
-                        <div class="mt-1">
-                            @foreach (var b in obList)
+                            @if (a.Expressions is not null && a.Expressions.Count > 0)
                             {
-                                <section class="mb-1 rounded-lg border border-gray-100 bg-white/70 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                                    <div class="flex items-center gap-1 justify-between">
-                                        <div class="inline-flex gap-2">
-                                            <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
-                                                    value="@b.ChoiceGroupId"
-                                                    aria-label="@AppLoc["choiceGroup"]"
-                                                    @onchange="e => OnOptionGroupChanged(b, e)">
-                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
-                                                @foreach (var g in TaskChoiceGroups)
-                                                {
-                                                    <option value="@g.Id">@g.DisplayName</option>
-                                                }
-                                            </select>
-
-                                            <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="b.ChoiceOptionId" aria-label="@AppLoc["choiceOption"]">
-                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
-                                                @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
-                                                {
-                                                    <option value="@o.Id">@o.DisplayName</option>
-                                                }
-                                            </select>
-                                        </div>
+                                <div class="pm-subcard space-y-3">
+                                    <div class="flex items-center justify-between gap-2">
                                         <div>
-                                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" title="@AppLoc["saveBinding"]" @onclick="async () => await OnSaveOption(a.Id, b)">@AppLoc["save"]</button>
-                                            <button class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white" title="@AppLoc["addEquation"]" @onclick="() => AddOptionEq(b)">@AppLoc["addEquation"]</button>
-                                            <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="@AppLoc["deleteBinding"]" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
+                                            <div class="pm-title">@CalcResource.Formulas</div>
+                                            <div class="pm-subtitle mt-1">Expressions applied directly to this resource assignment.</div>
                                         </div>
+                                        <span class="pm-chip">@a.Expressions.Count</span>
                                     </div>
 
-                                    @if (b.LastError is not null)
-                                    {
-                                        <div class="mt-1 text-xs text-rose-600">⚠ @b.LastError</div>
-                                    }
-                                    @if (b.SavedOk)
-                                    {
-                                        <div class="text-green-600 dark:text-green-400">✓ @AppLoc["saved"]</div>
-                                    }
+                                    <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                                        @for (int i = 0; i < a.Expressions.Count; i++)
+                                        {
+                                            var index = i;
+                                            <div class="flex items-center gap-2">
+                                                <button class="pm-btn-outline-danger" @onclick="() => a.Expressions.RemoveAt(index)">✕</button>
+                                                <input type="text" class="pm-input" @bind="a.Expressions[index]" />
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
 
-                                    @if (b.Formulas.Count == 0)
+                            <div class="pm-subcard space-y-4">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <div class="pm-title">@AppLoc["bindingsEquations"]</div>
+                                        <div class="pm-subtitle mt-1">Save the condition once to enable persisted bindings for this resource assignment.</div>
+                                    </div>
+
+                                    @if (CanAddBindingsFor(a))
                                     {
-                                        <div>@AppLoc["noFormulas"]</div>
+                                        <div class="pm-toolbar">
+                                            <button class="pm-btn-outline" @onclick="() => AddOptionBindingUI(a.Id)">@AppLoc["addChoiceBinding"]</button>
+                                            <button class="pm-btn-outline" @onclick="() => AddNumericBindingUI(a.Id)">@AppLoc["addNumericBinding"]</button>
+                                        </div>
                                     }
                                     else
                                     {
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                            @for (int i = 0; i < b.Formulas.Count; i++)
-                                            {
-                                                var idx = i;
-                                                <div class="flex items-center gap-1">
-                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
-                                                    <button class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white p-2"
-                                                            title="@AppLoc["removeEquation"]"
-                                                            @onclick="() => RemoveOptionEq(b, idx)">✕</button>
-                                                </div>
-                                            }
-                                        </div>
+                                        <span class="pm-chip-amber">@AppLoc["saveConditionFirstToEnableBindings"]</span>
                                     }
-                                </section>
-                            }
-                        </div>
-                    }
+                                </div>
 
-                    @if (NumBindsByRA.TryGetValue(a.Id, out var nbList) && nbList.Count > 0)
-                    {
-                        <div class="mt-4">
-                            <div class="mb-2 flex items-center gap-1 font-semibold text-sm">
-                                <div class="text-[12px] uppercase text-gray-600 dark:text-gray-300">@AppLoc["numericBindings"]</div>
-                                <span class="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-black dark:bg-gray-700 dark:text-white">@nbList.Count</span>
-                            </div>
+                                @if (OptBindsByRA.TryGetValue(a.Id, out var obList) && obList.Count > 0)
+                                {
+                                    <div class="space-y-3">
+                                        @foreach (var b in obList)
+                                        {
+                                            <section class="pm-subcard space-y-3">
+                                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                                    <div class="grid min-w-0 flex-1 grid-cols-1 gap-3 md:grid-cols-2">
+                                                        <div class="pm-field">
+                                                            <label class="pm-label">@AppLoc["choiceGroup"]</label>
+                                                            <select class="pm-select"
+                                                                    value="@b.ChoiceGroupId"
+                                                                    aria-label="@AppLoc["choiceGroup"]"
+                                                                    @onchange="e => OnOptionGroupChanged(b, e)">
+                                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                                                @foreach (var g in TaskChoiceGroups)
+                                                                {
+                                                                    <option value="@g.Id">@g.DisplayName</option>
+                                                                }
+                                                            </select>
+                                                        </div>
 
-                            @foreach (var b in nbList)
-                            {
-                                <section class="mb-3 rounded-lg border border-gray-100 bg-white/70 p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900/50">
-                                    <div class="flex items-center gap-1 justify-between">
-                                        <div class="inline-flex gap-2">
-                                            <div>
-                                                <select class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600" @bind="b.NumericId" aria-label="@AppLoc["numericGroup"]">
-                                                    <option value="0">@AppLoc["selectPlaceholder"]</option>
-                                                    @foreach (var ng in TaskNumericGroups)
-                                                    {
-                                                        <option value="@ng.Id">@ng.DisplayName</option>
-                                                    }
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="b.InputMinValue" placeholder="@AppControll.min" />
-                                            </div>
-                                            <div>
-                                                <input type="number" class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @bind="b.InputMaxValue" placeholder="@AppControll.max" />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" title="@AppLoc["saveNumericBinding"]" @onclick="async () => await OnSaveNumeric(a.Id, b)">@AppLoc["save"]</button>
-                                            <button class="px-2 py-1 border border-green-600 text-green-600 rounded transition hover:bg-green-600 hover:text-white dark:border-green-400 dark:text-green-400 dark:hover:bg-green-400 dark:hover:text-white" title="@AppLoc["addEquation"]" @onclick="() => AddNumericEq(b)">@AppLoc["addEquation"]</button>
-                                            <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" title="@AppLoc["deleteNumericBinding"]" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
-                                        </div>
+                                                        <div class="pm-field">
+                                                            <label class="pm-label">@AppLoc["choiceOption"]</label>
+                                                            <select class="pm-select" @bind="b.ChoiceOptionId" aria-label="@AppLoc["choiceOption"]">
+                                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                                                @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
+                                                                {
+                                                                    <option value="@o.Id">@o.DisplayName</option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="pm-toolbar">
+                                                        <button class="pm-btn-success" title="@AppLoc["saveBinding"]" @onclick="async () => await OnSaveOption(a.Id, b)">@AppLoc["save"]</button>
+                                                        <button class="pm-btn-outline" title="@AppLoc["addEquation"]" @onclick="() => AddOptionEq(b)">@AppLoc["addEquation"]</button>
+                                                        <button class="pm-btn-outline-danger" title="@AppLoc["deleteBinding"]" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
+                                                    </div>
+                                                </div>
+
+                                                @if (b.LastError is not null)
+                                                {
+                                                    <div class="pm-alert-error">⚠ @b.LastError</div>
+                                                }
+                                                @if (b.SavedOk)
+                                                {
+                                                    <div class="pm-chip-blue">✓ @AppLoc["saved"]</div>
+                                                }
+
+                                                @if (b.Formulas.Count == 0)
+                                                {
+                                                    <div class="pm-empty">@AppLoc["noFormulas"]</div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                                                        @for (int i = 0; i < b.Formulas.Count; i++)
+                                                        {
+                                                            var idx = i;
+                                                            <div class="flex items-center gap-2">
+                                                                <input class="pm-input" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
+                                                                <button class="pm-btn-outline-danger" title="@AppLoc["removeEquation"]" @onclick="() => RemoveOptionEq(b, idx)">✕</button>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                            </section>
+                                        }
                                     </div>
+                                }
 
-                                    @if (b.Formulas.Count == 0)
-                                    {
-                                        <div>@AppLoc["none"]</div>
-                                    }
-                                    else
-                                    {
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                            @for (int i = 0; i < b.Formulas.Count; i++)
-                                            {
-                                                var idx = i;
-                                                <div class="inline-flex gap-2">
-                                                    <input class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
-                                                    <button class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white p-2"
-                                                            title="@AppLoc["removeEquation"]"
-                                                            @onclick="() => RemoveNumericEq(b, idx)">✕</button>
-                                                </div>
-                                            }
+                                @if (NumBindsByRA.TryGetValue(a.Id, out var nbList) && nbList.Count > 0)
+                                {
+                                    <div class="space-y-3 pt-2">
+                                        <div class="flex items-center gap-2">
+                                            <div class="pm-title">@AppLoc["numericBindings"]</div>
+                                            <span class="pm-chip">@nbList.Count</span>
                                         </div>
-                                    }
 
-                                    @if (b.LastError is not null)
-                                    {
-                                        <div class="mt-1 text-xs text-rose-600">⚠ @b.LastError</div>
-                                    }
-                                    @if (b.SavedOk)
-                                    {
-                                        <div class="text-green-600 dark:text-green-400">✓ @AppLoc["saved"]</div>
-                                    }
-                                </section>
-                            }
+                                        @foreach (var b in nbList)
+                                        {
+                                            <section class="pm-subcard space-y-3">
+                                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                                    <div class="grid min-w-0 flex-1 grid-cols-1 gap-3 md:grid-cols-3">
+                                                        <div class="pm-field">
+                                                            <label class="pm-label">@AppLoc["numericGroup"]</label>
+                                                            <select class="pm-select" @bind="b.NumericId" aria-label="@AppLoc["numericGroup"]">
+                                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                                                @foreach (var ng in TaskNumericGroups)
+                                                                {
+                                                                    <option value="@ng.Id">@ng.DisplayName</option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                        <div class="pm-field">
+                                                            <label class="pm-label">@AppControll.min</label>
+                                                            <input type="number" class="pm-input" @bind="b.InputMinValue" placeholder="@AppControll.min" />
+                                                        </div>
+                                                        <div class="pm-field">
+                                                            <label class="pm-label">@AppControll.max</label>
+                                                            <input type="number" class="pm-input" @bind="b.InputMaxValue" placeholder="@AppControll.max" />
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="pm-toolbar">
+                                                        <button class="pm-btn-success" title="@AppLoc["saveNumericBinding"]" @onclick="async () => await OnSaveNumeric(a.Id, b)">@AppLoc["save"]</button>
+                                                        <button class="pm-btn-outline" title="@AppLoc["addEquation"]" @onclick="() => AddNumericEq(b)">@AppLoc["addEquation"]</button>
+                                                        <button class="pm-btn-outline-danger" title="@AppLoc["deleteNumericBinding"]" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
+                                                    </div>
+                                                </div>
+
+                                                @if (b.Formulas.Count == 0)
+                                                {
+                                                    <div class="pm-empty">@AppLoc["none"]</div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                                                        @for (int i = 0; i < b.Formulas.Count; i++)
+                                                        {
+                                                            var idx = i;
+                                                            <div class="flex items-center gap-2">
+                                                                <input class="pm-input" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
+                                                                <button class="pm-btn-outline-danger" title="@AppLoc["removeEquation"]" @onclick="() => RemoveNumericEq(b, idx)">✕</button>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+
+                                                @if (b.LastError is not null)
+                                                {
+                                                    <div class="pm-alert-error">⚠ @b.LastError</div>
+                                                }
+                                                @if (b.SavedOk)
+                                                {
+                                                    <div class="pm-chip-blue">✓ @AppLoc["saved"]</div>
+                                                }
+                                            </section>
+                                        }
+                                    </div>
+                                }
+                            </div>
                         </div>
-                    }
-                </div>
+                    </section>
+                }
             </div>
         }
-    }
-</div>
+    </div>
+</section>

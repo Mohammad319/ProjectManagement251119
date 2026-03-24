@@ -21,49 +21,62 @@
     [Parameter] public Func<int, NumericBindVM, Task> OnDeleteNumeric { get; set; } = (_, _) => Task.CompletedTask;
 }
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-1">
-    <div>
-        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["choiceResourceLogic"]</label>
-        <InputSelect TValue="ConditionLogic"
-                     @bind-Value="Condition.OptionResourceLogic"
-                     class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-            <option value="And">@AppLoc["andText"]</option>
-            <option value="Or">@AppLoc["orText"]</option>
-        </InputSelect>
+<section class="pm-card-muted">
+    <div class="pm-card-header">
+        <div>
+            <h3 class="pm-title">Condition logic</h3>
+            <p class="pm-subtitle mt-1">Choose how option, numeric, and resource requirements are combined.</p>
+        </div>
     </div>
 
-    <div>
-        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["choiceNumericLogic"]</label>
-        <InputSelect TValue="ConditionLogic"
-                     @bind-Value="Condition.OptionNumericLogic"
-                     class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-            <option value="And">@AppLoc["andText"]</option>
-            <option value="Or">@AppLoc["orText"]</option>
-        </InputSelect>
-    </div>
+    <div class="pm-card-body">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div class="pm-field">
+                <label class="pm-label">@AppLoc["choiceResourceLogic"]</label>
+                <InputSelect TValue="ConditionLogic"
+                             @bind-Value="Condition.OptionResourceLogic"
+                             class="pm-select">
+                    <option value="And">@AppLoc["andText"]</option>
+                    <option value="Or">@AppLoc["orText"]</option>
+                </InputSelect>
+            </div>
 
-    <div>
-        <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@AppLoc["numericResourceLogic"]</label>
-        <InputSelect TValue="ConditionLogic"
-                     @bind-Value="Condition.NumericResourceLogic"
-                     class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-            <option value="And">@AppLoc["andText"]</option>
-            <option value="Or">@AppLoc["orText"]</option>
-        </InputSelect>
+            <div class="pm-field">
+                <label class="pm-label">@AppLoc["choiceNumericLogic"]</label>
+                <InputSelect TValue="ConditionLogic"
+                             @bind-Value="Condition.OptionNumericLogic"
+                             class="pm-select">
+                    <option value="And">@AppLoc["andText"]</option>
+                    <option value="Or">@AppLoc["orText"]</option>
+                </InputSelect>
+            </div>
+
+            <div class="pm-field">
+                <label class="pm-label">@AppLoc["numericResourceLogic"]</label>
+                <InputSelect TValue="ConditionLogic"
+                             @bind-Value="Condition.NumericResourceLogic"
+                             class="pm-select">
+                    <option value="And">@AppLoc["andText"]</option>
+                    <option value="Or">@AppLoc["orText"]</option>
+                </InputSelect>
+            </div>
+        </div>
     </div>
+</section>
+
+<div class="mt-4 space-y-4">
+    <RequirementsPanel Condition="Condition"
+                       ChoiceGroups="TaskChoiceGroups"
+                       NumericGroups="TaskNumericGroups"
+                       ResourceGroups="ResourceGroups" />
+
+    <ResourceAssignmentsPanel Condition="Condition"
+                              TaskChoiceGroups="TaskChoiceGroups"
+                              TaskNumericGroups="TaskNumericGroups"
+                              OptBindsByRA="OptBindsByRA"
+                              NumBindsByRA="NumBindsByRA"
+                              OnSaveOption="OnSaveOption"
+                              OnSaveNumeric="OnSaveNumeric"
+                              OnDeleteOption="OnDeleteOption"
+                              OnDeleteNumeric="OnDeleteNumeric" />
 </div>
-
-<RequirementsPanel Condition="Condition"
-                   ChoiceGroups="TaskChoiceGroups"
-                   NumericGroups="TaskNumericGroups"
-                   ResourceGroups="ResourceGroups" />
-
-<ResourceAssignmentsPanel Condition="Condition"
-                          TaskChoiceGroups="TaskChoiceGroups"
-                          TaskNumericGroups="TaskNumericGroups"
-                          OptBindsByRA="OptBindsByRA"
-                          NumBindsByRA="NumBindsByRA"
-                          OnSaveOption="OnSaveOption"
-                          OnSaveNumeric="OnSaveNumeric"
-                          OnDeleteOption="OnDeleteOption"
-                          OnDeleteNumeric="OnDeleteNumeric" />

@@ -211,44 +211,67 @@
     }
 }
 
-<div dir="ltr">
+<div dir="ltr" class="pm-page">
     @if (isLoading)
     {
-        <div class="bg-cyan-600 text-white dark:bg-cyan-700 dark:text-white">@AppLoc["loading"]</div>
+        <div class="pm-alert-info">@AppLoc["loading"]</div>
     }
     else if (!string.IsNullOrEmpty(error))
     {
-        <div class="bg-red-100 text-white dark:bg-red-700 dark:text-white">@AppLoc["error"]: @error</div>
+        <div class="pm-alert-error">@AppLoc["error"]: @error</div>
     }
     else if (editing is null)
     {
-        <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white mb-1" @onclick="NewCondition">
-            @AppLoc["addCondition"]
-        </button>
+        <section class="pm-card">
+            <div class="pm-card-header">
+                <div>
+                    <h3 class="pm-title">Conditions</h3>
+                    <p class="pm-subtitle mt-1">Create and manage rules that drive resource assignments.</p>
+                </div>
 
-        <ConditionList Conditions="conditions"
-                       ResourceGroups="resourceGroups"
-                       ChoiceGroups="taskChoiceGroups"
-                       NumericGroups="taskNumericGroups"
-                       OnEdit="EditConditionAsync"
-                       OnDelete="DeleteConditionAsync" />
+                <div class="pm-toolbar">
+                    <span class="pm-chip">@conditions.Count</span>
+                    <button class="pm-btn-primary" @onclick="NewCondition">@AppLoc["addCondition"]</button>
+                </div>
+            </div>
+
+            <div class="pm-card-body">
+                <ConditionList Conditions="conditions"
+                               ResourceGroups="resourceGroups"
+                               ChoiceGroups="taskChoiceGroups"
+                               NumericGroups="taskNumericGroups"
+                               OnEdit="EditConditionAsync"
+                               OnDelete="DeleteConditionAsync" />
+            </div>
+        </section>
     }
     else
     {
-        <div class="flex flex-wrap gap-2 mb-1">
-            <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white" @onclick="SaveConditionAsync">@AppLoc["save"]</button>
-            <button class="px-2 py-1 border border-red-600 text-red-600 rounded transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-400 dark:hover:bg-red-400 dark:hover:text-white" @onclick="CancelEdit">@AppLoc["cancel"]</button>
-        </div>
+        <section class="pm-card overflow-hidden">
+            <div class="pm-card-header">
+                <div>
+                    <h3 class="pm-title">Edit condition</h3>
+                    <p class="pm-subtitle mt-1">Adjust logic, requirements, and resource assignments in one place.</p>
+                </div>
 
-        <ConditionEditor Condition="editing"
-                         ResourceGroups="resourceGroups"
-                         TaskChoiceGroups="taskChoiceGroups"
-                         TaskNumericGroups="taskNumericGroups"
-                         OptBindsByRA="optBindsByRA"
-                         NumBindsByRA="numBindsByRA"
-                         OnSaveOption="SaveOptionBindingAsync"
-                         OnSaveNumeric="SaveNumericBindingAsync"
-                         OnDeleteOption="DeleteOptionBindingAsync"
-                         OnDeleteNumeric="DeleteNumericBindingAsync" />
+                <div class="pm-toolbar">
+                    <button class="pm-btn-success" @onclick="SaveConditionAsync">@AppLoc["save"]</button>
+                    <button class="pm-btn-secondary" @onclick="CancelEdit">@AppLoc["cancel"]</button>
+                </div>
+            </div>
+
+            <div class="pm-card-body">
+                <ConditionEditor Condition="editing"
+                                 ResourceGroups="resourceGroups"
+                                 TaskChoiceGroups="taskChoiceGroups"
+                                 TaskNumericGroups="taskNumericGroups"
+                                 OptBindsByRA="optBindsByRA"
+                                 NumBindsByRA="numBindsByRA"
+                                 OnSaveOption="SaveOptionBindingAsync"
+                                 OnSaveNumeric="SaveNumericBindingAsync"
+                                 OnDeleteOption="DeleteOptionBindingAsync"
+                                 OnDeleteNumeric="DeleteNumericBindingAsync" />
+            </div>
+        </section>
     }
 </div>
