@@ -1,22 +1,24 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<ProjectManagement.Adminstrator.Shared.ResourceFiles.APP.ResourceApp> AppLoc
 
-<h2>@AppLoc["thirdPartyLibrariesTitle"]</h2>
+<section class="pm-card overflow-hidden">
+    <div class="pm-card-header">
+        <div>
+            <div class="pm-eyebrow">Legal</div>
+            <h2 class="pm-card-title mt-1">@AppLoc["thirdPartyLibrariesTitle"]</h2>
+            <p class="pm-card-subtitle">Overview of the third-party libraries and notices used by the administrator application.</p>
+        </div>
+    </div>
 
-<p>
-    @AppLoc["thirdPartyLibrariesDescription"]
-</p>
+    <div class="pm-card-body pm-legal-prose">
+        <p>@AppLoc["thirdPartyLibrariesDescription"]</p>
 
-<ul>
-    <li>Blazored.LocalStorage - @AppLoc["mitLicenseLabel"]</li>
-    <li>ClosedXML - @AppLoc["mitLicenseLabel"]</li>
-    <li>ChartJs.Blazor.Fork - @AppLoc["mitLicenseLabel"]</li>
-    @* <li>Newtonsoft.Json - @AppLoc["mitLicenseLabel"]</li> *@
-</ul>
+        <ul>
+            <li>Blazored.LocalStorage — @AppLoc["mitLicenseLabel"]</li>
+            <li>ClosedXML — @AppLoc["mitLicenseLabel"]</li>
+            <li>ChartJs.Blazor.Fork — @AppLoc["mitLicenseLabel"]</li>
+        </ul>
 
-<p>
-    @AppLoc["thirdPartyLibrariesMicrosoftNotice"]
-</p>
-
-<p>
-    @AppLoc["thirdPartyLibrariesOwnership"]
-</p>
+        <p>@AppLoc["thirdPartyLibrariesMicrosoftNotice"]</p>
+        <p>@AppLoc["thirdPartyLibrariesOwnership"]</p>
+    </div>
+</section>

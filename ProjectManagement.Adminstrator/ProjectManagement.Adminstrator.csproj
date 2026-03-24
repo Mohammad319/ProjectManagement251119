@@ -52,9 +52,6 @@
     <Content Update="**\postcss.config.js" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
-  <Target Name="BuildTailwindCss" BeforeTargets="Build;Publish" Condition="Exists('$(MSBuildProjectDirectory)\package.json')">
-    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="!Exists('$(MSBuildProjectDirectory)\node_modules')" />
-    <Exec Command="npm run tw:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
-  </Target>
+
 
 </Project>

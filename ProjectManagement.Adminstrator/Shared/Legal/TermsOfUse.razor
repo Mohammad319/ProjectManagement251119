@@ -1,8 +1,17 @@
-﻿@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Localization
 @using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll
-.AppControll
 @inject IStringLocalizer<AppControll> L
 
-<p>@((MarkupString)L["TermsContent"].Value.Replace("\n", "<br />"))</p>
+<section class="pm-card overflow-hidden">
+    <div class="pm-card-header">
+        <div>
+            <div class="pm-eyebrow">Legal</div>
+            <h2 class="pm-card-title mt-1">@L["TermsTitle"]</h2>
+            <p class="pm-card-subtitle">Terms and conditions that govern the use of the platform.</p>
+        </div>
+    </div>
 
-@* <p>@((MarkupString)L["TermsContent"].Value.Replace(Environment.NewLine, "<br />"))</p> *@
+    <div class="pm-card-body pm-legal-prose">
+        <p>@((MarkupString)L["TermsContent"].Value.Replace("\n", "<br />"))</p>
+    </div>
+</section>

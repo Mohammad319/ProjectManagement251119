@@ -1,113 +1,208 @@
-﻿@using TaskResourceBlueprints.Entities
+@using TaskResourceBlueprints.Entities
 @using ProjectManagement.Adminstrator.Services.MHDBlazor
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @inject MhdServices MHD
 @inject TaskResourceBlueprints.Services.Resource.IResourceBlueprintsService ResourceService
 
-<div class="space-y-3">
-    <EditForm Model="CalcResCost" OnValidSubmit="HandleSubmit" class="">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="text-sm text-red-600 dark:text-red-400" />
-        <div class="grid grid-cols-4 gap-2">
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">Period</div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">@Resource?.Data?.Quantity</div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">%</div>
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">@Resource?.Data?.Cost</div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">Morning</div>
+<div class="pm-page">
+    <section class="pm-card">
+        <div class="pm-card-header">
             <div>
-                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Morgen" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Morgen * 100m) / (Resource?.Data?.Quantity ?? 1m), 2) : 0)%
-            </div>
-            <div>
-                <InputNumber @bind-Value="CalcResCost.MorgenCost" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+                <h3 class="pm-card-title">Cost distribution</h3>
+                <p class="pm-card-subtitle">Split the selected resource quantity across morning, day, and evening periods.</p>
             </div>
 
-            <!-- Day -->
-            <div class="text-sm text-gray-600 dark:text-gray-300">Day</div>
-            <div>
-                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Day" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">
-                @((Resource?.Data?.Quantity ?? 0) > 0 ? Math.Round((CalcResCost.Day * 100m) / (Resource?.Data?.Quantity ?? 1m), 2) : 0)%
-            </div>
-            <div>
-                <InputNumber @bind-Value="CalcResCost.DayCost" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-            </div>
-            @{
-                var totalQty = Resource?.Data?.Quantity ?? 0m;
-                var used = (CalcResCost.Morgen + CalcResCost.Day);
-                var eveningQty = (used > totalQty) ? 0 : (totalQty - used);
-                CalcResCost.Evening = Convert.ToInt32(eveningQty);
-                var eveningPct = totalQty > 0 ? Math.Round((eveningQty * 100m) / totalQty, 2) : 0;
-            }
-            <div class="text-sm text-gray-600 dark:text-gray-300">Evening</div>
-            <div>
-                <input disabled value="@eveningQty" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">@eveningPct%</div>
-            <div>
-                <InputNumber @bind-Value="CalcResCost.EveningCost" class="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="pm-chip-soft">Qty: @(Resource?.Data?.Quantity ?? 0)</span>
+                <span class="pm-chip">Cost: @(Resource?.Data?.Cost ?? 0)</span>
             </div>
         </div>
 
-        <div class="mt-3 flex justify-end">
-            <button type="submit" class="rounded border border-emerald-600 px-3 py-1.5 text-sm text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-900/30">@ResourceApp.save</button>
+        <div class="pm-card-body">
+            <EditForm Model="CalcResCost" OnValidSubmit="HandleSubmit" class="space-y-5">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-sm text-rose-600 dark:text-rose-400" />
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="pm-stat">
+                        <div class="pm-stat-label">Morning %</div>
+                        <div class="pm-stat-value">@GetPercentage(CalcResCost.Morgen)%</div>
+                    </div>
+                    <div class="pm-stat">
+                        <div class="pm-stat-label">Day %</div>
+                        <div class="pm-stat-value">@GetPercentage(CalcResCost.Day)%</div>
+                    </div>
+                    <div class="pm-stat">
+                        <div class="pm-stat-label">Evening %</div>
+                        <div class="pm-stat-value">@GetEveningPercentage()%</div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] gap-3 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:grid">
+                        <div>Period</div>
+                        <div>@Resource?.Data?.Quantity</div>
+                        <div>%</div>
+                        <div>@Resource?.Data?.Cost</div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] md:items-end">
+                            <div>
+                                <label class="pm-label">Period</label>
+                                <div class="pm-chip">Morning</div>
+                            </div>
+                            <div>
+                                <label class="pm-label">Quantity</label>
+                                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Morgen" class="pm-input" />
+                            </div>
+                            <div>
+                                <label class="pm-label">%</label>
+                                <input value="@($"{GetPercentage(CalcResCost.Morgen)}%")" class="pm-input pm-input-readonly" disabled />
+                            </div>
+                            <div>
+                                <label class="pm-label">Cost</label>
+                                <InputNumber @bind-Value="CalcResCost.MorgenCost" class="pm-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] md:items-end">
+                            <div>
+                                <label class="pm-label">Period</label>
+                                <div class="pm-chip">Day</div>
+                            </div>
+                            <div>
+                                <label class="pm-label">Quantity</label>
+                                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Day" class="pm-input" />
+                            </div>
+                            <div>
+                                <label class="pm-label">%</label>
+                                <input value="@($"{GetPercentage(CalcResCost.Day)}%")" class="pm-input pm-input-readonly" disabled />
+                            </div>
+                            <div>
+                                <label class="pm-label">Cost</label>
+                                <InputNumber @bind-Value="CalcResCost.DayCost" class="pm-input" />
+                            </div>
+                        </div>
+                    </div>
+
+                    @{ var eveningQty = GetEveningQuantity(); }
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] md:items-end">
+                            <div>
+                                <label class="pm-label">Period</label>
+                                <div class="pm-chip">Evening</div>
+                            </div>
+                            <div>
+                                <label class="pm-label">Quantity</label>
+                                <input disabled value="@eveningQty" class="pm-input pm-input-readonly" />
+                            </div>
+                            <div>
+                                <label class="pm-label">%</label>
+                                <input disabled value="@($"{GetEveningPercentage()}%")" class="pm-input pm-input-readonly" />
+                            </div>
+                            <div>
+                                <label class="pm-label">Cost</label>
+                                <InputNumber @bind-Value="CalcResCost.EveningCost" class="pm-input" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pm-divider pt-4">
+                    <div class="pm-toolbar justify-end">
+                        <button type="submit" class="pm-btn pm-btn-primary">@ResourceApp.save</button>
+                    </div>
+                </div>
+            </EditForm>
         </div>
-    </EditForm>
+    </section>
 </div>
 
 @code {
     [Parameter, EditorRequired] public ResourceDefinition? Resource { get; set; }
 
-    CalcResCost CalcResCost = new();
+    private CalcResCost CalcResCost = new();
     [Parameter] public EventCallback<bool> CallBack { get; set; }
 
     protected override void OnInitialized()
     {
         if (Resource?.CalcResCost != null)
+        {
             CalcResCost = new()
-                {
-                    DayCost = Resource.CalcResCost.DayCost,
-                    Day = Resource.CalcResCost.Day,
-                    Evening = Resource.CalcResCost.Evening,
-                    EveningCost = Resource.CalcResCost.EveningCost,
-                    Morgen = Resource.CalcResCost.Morgen,
-                    MorgenCost = Resource.CalcResCost.MorgenCost,
-                    IsPercent = Resource.CalcResCost.IsPercent,
-                    Quantity = Resource.CalcResCost.Quantity,
-                };
+            {
+                DayCost = Resource.CalcResCost.DayCost,
+                Day = Resource.CalcResCost.Day,
+                Evening = Resource.CalcResCost.Evening,
+                EveningCost = Resource.CalcResCost.EveningCost,
+                Morgen = Resource.CalcResCost.Morgen,
+                MorgenCost = Resource.CalcResCost.MorgenCost,
+                IsPercent = Resource.CalcResCost.IsPercent,
+                Quantity = Resource.CalcResCost.Quantity,
+            };
+        }
         else
         {
             CalcResCost.Day = Convert.ToInt32(Resource?.Data?.Quantity ?? 0);
             CalcResCost.DayCost = Resource?.Data?.Cost ?? 0;
         }
     }
+
     public void IsPercent()
     {
         CalcResCost.IsPercent = true;
         CalcResCost.Quantity = null;
     }
+
     public void IsNotPercent()
     {
         CalcResCost.IsPercent = false;
         CalcResCost.Quantity ??= 0;
     }
-    async Task HandleSubmit()
+
+    private decimal GetTotalQty() => Resource?.Data?.Quantity ?? 0m;
+
+    private decimal GetPercentage(int value)
+    {
+        var total = GetTotalQty();
+        return total > 0 ? Math.Round((value * 100m) / total, 2) : 0;
+    }
+
+    private decimal GetEveningQuantity()
+    {
+        var totalQty = GetTotalQty();
+        var used = CalcResCost.Morgen + CalcResCost.Day;
+        var eveningQty = used > totalQty ? 0 : totalQty - used;
+        CalcResCost.Evening = Convert.ToInt32(eveningQty);
+        return eveningQty;
+    }
+
+    private decimal GetEveningPercentage()
+    {
+        var total = GetTotalQty();
+        var eveningQty = GetEveningQuantity();
+        return total > 0 ? Math.Round((eveningQty * 100m) / total, 2) : 0;
+    }
+
+    private async Task HandleSubmit()
     {
         if (Resource is null)
+        {
             return;
+        }
 
         Resource.CalcResCost = CalcResCost;
         Resource.Data.Cost = CalcResCost.CalcCost();
-        if(await ResourceService.UpdateAsync(Resource))
+        if (await ResourceService.UpdateAsync(Resource))
         {
             MHD.Modal.Close();
-            await CallBack.InvokeAsync(true);  
+            await CallBack.InvokeAsync(true);
         }
     }
-    async Task HandleValidSubmit()
+
+    private async Task HandleValidSubmit()
     {
         if (Resource is not null)
         {

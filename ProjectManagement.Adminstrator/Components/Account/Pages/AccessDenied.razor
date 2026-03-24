@@ -1,12 +1,16 @@
-﻿@page "/Account/AccessDenied"
+@page "/Account/AccessDenied"
 
 <PageTitle>Access denied</PageTitle>
 
-<header class="mt-6">
-    <h1 class="text-2xl font-bold text-red-700 dark:text-red-400">
-        Access denied
-    </h1>
-    <p class="mt-2 text-red-600 dark:text-red-300">
-        You do not have access to this resource.
-    </p>
-</header>
+<main class="pm-auth-shell">
+    <section class="pm-state-card">
+        <div class="pm-state-icon pm-state-icon-danger">!</div>
+        <h1 class="pm-state-title">Access denied</h1>
+        <p class="pm-state-text">
+            You do not have permission to access this resource.
+        </p>
+        <div class="pm-state-actions">
+            <a href="/" class="pm-btn pm-btn-secondary">Back to dashboard</a>
+        </div>
+    </section>
+</main>

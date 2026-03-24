@@ -11,164 +11,142 @@
 @inject IUsersService TenantRepo
 
 <div class="pm-page">
-    <section class="pm-card">
-        <div class="pm-card-header">
-            <div>
-                <h2 class="pm-title">System logs</h2>
-                <p class="pm-subtitle mt-1">Filter, review, and clean operational log entries.</p>
-            </div>
-
-            <div class="pm-toolbar">
-                <span class="pm-chip">Loaded: @Logs.Count</span>
-                <span class="pm-chip">Page: @Filter.PageNr</span>
-            </div>
-        </div>
-
-        <div class="pm-card-body">
-            <EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-                    <div class="pm-field">
-                        <label class="pm-label">@ResourceApp.date 1</label>
-                        <InputDate class="pm-input" @bind-Value="Filter.Date1" />
-                    </div>
-
-                    <div class="pm-field">
-                        <label class="pm-label">@ResourceApp.date 2</label>
-                        <InputDate class="pm-input" @bind-Value="Filter.Date2" />
-                    </div>
-
-                    <div class="pm-field">
-                        <label class="pm-label">@AppControll.tenant</label>
-                        <InputSelect class="pm-select" @bind-Value="Filter.TenantID">
-                            <option></option>
-                            @if (Tenants is not null)
-                            {
-                                foreach (var tenant in Tenants)
-                                {
-                                    <option value="@tenant.Id">@tenant.Name</option>
-                                }
-                            }
-                        </InputSelect>
-                    </div>
-
-                    <div class="pm-field">
-                        <label class="pm-label">Level</label>
-                        <InputSelect class="pm-select" @bind-Value="Filter.Level">
-                            <option></option>
-                            <option value="Debug">Debug</option>
-                            <option value="Information">Information</option>
-                            <option value="Warning">Warning</option>
-                            <option value="Error">Error</option>
-                            <option value="Critical">Critical</option>
-                        </InputSelect>
-                    </div>
-
-                    <div class="pm-field">
-                        <label class="pm-label">@AppControll.Delete_older_from_Month_Day</label>
-                        <div class="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-                            <input type="number" placeholder="MM" class="pm-input" @bind="month" />
-                            <input type="number" placeholder="DD" class="pm-input" @bind="day" />
-
-                            <div class="pm-toolbar justify-end">
-                                <button type="button"
-                                        class="pm-btn-danger"
-                                        title="Delete older"
-                                        @onclick="DeleteAsync"
-                                        disabled="@IsLoading">
-                                    @Icons.Delete
-                                </button>
-
-                                <button type="submit"
-                                        class="pm-btn-primary"
-                                        form="versionForm"
-                                        disabled="@IsLoading">
-                                    @ResourceApp.send
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </EditForm>
-        </div>
+    <section class="pm-page-header">
+        <div class="pm-page-kicker">Operations</div>
+        <h2 class="pm-page-title">Application logs</h2>
+        <p class="pm-page-subtitle">Filter operational logs by time, tenant, and severity. Clean up older records without leaving the admin workspace.</p>
     </section>
 
-    <section class="pm-card overflow-hidden">
-        <div class="pm-card-header">
-            <div>
-                <h3 class="pm-title">Entries</h3>
-                <p class="pm-subtitle mt-1">Newest log entries appear first.</p>
+    <EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
+        <div class="pm-toolbar">
+            <div class="grid flex-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+                <div>
+                    <label class="pm-label">@ResourceApp.date 1</label>
+                    <InputDate class="pm-field" @bind-Value="Filter.Date1" />
+                </div>
+
+                <div>
+                    <label class="pm-label">@ResourceApp.date 2</label>
+                    <InputDate class="pm-field" @bind-Value="Filter.Date2" />
+                </div>
+
+                <div>
+                    <label class="pm-label">@AppControll.tenant</label>
+                    <InputSelect class="pm-field" @bind-Value="Filter.TenantID">
+                        <option></option>
+                        @if (Tenants is not null)
+                        {
+                            foreach (var tenant in Tenants)
+                            {
+                                <option value="@tenant.Id">@tenant.Name</option>
+                            }
+                        }
+                    </InputSelect>
+                </div>
+
+                <div>
+                    <label class="pm-label">Level</label>
+                    <InputSelect class="pm-field" @bind-Value="Filter.Level">
+                        <option></option>
+                        <option value="Debug">Debug</option>
+                        <option value="Information">Information</option>
+                        <option value="Warning">Warning</option>
+                        <option value="Error">Error</option>
+                        <option value="Critical">Critical</option>
+                    </InputSelect>
+                </div>
+
+                <div>
+                    <label class="pm-label">@AppControll.Delete_older_from_Month_Day</label>
+                    <div class="grid grid-cols-[1fr_1fr_auto] gap-2">
+                        <input type="number" placeholder="MM" class="pm-field" @bind="month" />
+                        <input type="number" placeholder="DD" class="pm-field" @bind="day" />
+                        <button type="button"
+                                class="pm-btn pm-btn-danger h-[42px] px-3"
+                                title="Delete older"
+                                @onclick="DeleteAsync"
+                                disabled="@IsLoading">
+                            @Icons.Delete
+                        </button>
+                    </div>
+                    <div class="pm-help">Deletes records older than the selected month/day offset.</div>
+                </div>
             </div>
 
-            <div class="pm-toolbar">
-                <button class="pm-btn-secondary"
-                        disabled="@(NectBtnActive || IsLoading)"
-                        @onclick="async () => { Filter.PageNr = Filter.PageNr + 1; await GetTaskAsync(); }">
-                    @AppControll.more
+            <div class="pm-toolbar-row">
+                <button type="submit"
+                        class="pm-btn pm-btn-primary"
+                        form="versionForm"
+                        disabled="@IsLoading">
+                    @ResourceApp.send
                 </button>
             </div>
         </div>
+    </EditForm>
 
-        <div class="pm-card-body-sm">
-            <div class="pm-table-wrap">
-                <table class="pm-table table-fixed">
-                    <colgroup>
-                        <col class="w-[220px]" />
-                        <col class="w-[34%]" />
-                        <col class="w-[46%]" />
-                    </colgroup>
-
-                    <thead>
+    <div class="pm-table-wrap">
+        <div class="pm-table-scroll">
+            <table class="pm-table table-fixed">
+                <colgroup>
+                    <col class="w-[220px]" />
+                    <col class="w-[34%]" />
+                    <col class="w-[46%]" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Timestamp / Level</th>
+                        <th>Message</th>
+                        <th>Properties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (IsLoading)
+                    {
                         <tr>
-                            <th>Time / Level</th>
-                            <th>Message</th>
-                            <th>Properties</th>
+                            <td colspan="3">
+                                <div class="py-6 text-sm text-slate-500 dark:text-slate-400">Loading logs…</div>
+                            </td>
                         </tr>
-                    </thead>
-
-                    <tbody>
-                        @if (IsLoading)
+                    }
+                    else if (Logs is null || !Logs.Any())
+                    {
+                        <tr>
+                            <td colspan="3">
+                                <div class="py-6 text-sm text-slate-500 dark:text-slate-400">No log records matched the current filter.</div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var log in Logs)
                         {
                             <tr>
-                                <td colspan="3">
-                                    <div class="pm-alert-info">Loading…</div>
+                                <td>
+                                    <div class="font-medium text-slate-900 dark:text-slate-100">@log.TimeStamp.ToString("dd.MM.yyyy HH:mm")</div>
+                                    <div class="mt-1">
+                                        <span class="@(GetLevelClass(log.Level))">@log.Level</span>
+                                    </div>
                                 </td>
+                                <td class="whitespace-normal break-words">@log.Message</td>
+                                <td class="whitespace-normal break-words text-slate-500 dark:text-slate-400">@log.Properties</td>
                             </tr>
                         }
-                        else if (Logs is null || !Logs.Any())
-                        {
-                            <tr>
-                                <td colspan="3">
-                                    <div class="pm-empty">No log data for the current filter.</div>
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var log in Logs)
-                            {
-                                <tr>
-                                    <td class="whitespace-nowrap">
-                                        <div class="font-medium text-slate-900 dark:text-slate-100">@log.TimeStamp.ToString("dd.MM.yyyy HH:mm")</div>
-                                        <div class="mt-1">
-                                            <span class="@GetLevelBadgeClass(log.Level)">@log.Level</span>
-                                        </div>
-                                    </td>
-
-                                    <td class="whitespace-normal break-words">
-                                        @log.Message
-                                    </td>
-
-                                    <td class="whitespace-normal break-words">
-                                        @log.Properties
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
-    </section>
+    </div>
+
+    <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/70">
+        <div class="text-sm text-slate-500 dark:text-slate-400">
+            Page <span class="font-semibold text-slate-800 dark:text-slate-200">@Filter.PageNr</span>
+        </div>
+        <button class="pm-btn pm-btn-secondary"
+                disabled="@(NectBtnActive || IsLoading)"
+                @onclick="async () => { Filter.PageNr = Filter.PageNr + 1; await GetTaskAsync(); }">
+            @AppControll.more
+        </button>
+    </div>
 </div>
 
 @code {
@@ -181,13 +159,14 @@
     int day = 7;
     int month = 0;
 
-    private string GetLevelBadgeClass(string? level)
-        => level switch
-        {
-            "Error" or "Critical" => "pm-chip-rose",
-            "Warning" => "pm-chip-amber",
-            _ => "pm-chip-blue"
-        };
+    string GetLevelClass(string? level) => level switch
+    {
+        "Error" => "pm-pill pm-pill-danger",
+        "Critical" => "pm-pill pm-pill-danger",
+        "Warning" => "pm-pill pm-pill-warning",
+        "Information" => "pm-pill pm-pill-info",
+        _ => "pm-pill pm-pill-muted"
+    };
 
     async Task DeleteAsync()
     {

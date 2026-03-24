@@ -10,160 +10,161 @@
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
 <div class="pm-page">
-    <div class="pm-toolbar">
-        <button class="pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync()">@ResourceApp.back</button>
-    </div>
+    <section class="pm-page-header">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <div class="pm-page-kicker">Tenant details</div>
+                <h2 class="pm-page-title">@(TenantPut?.Name ?? "Tenant")</h2>
+                <p class="pm-page-subtitle">Inspect tenant metadata, limits, contact details, and linked users from one screen.</p>
+            </div>
+            <button class="pm-btn pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync()">
+                @ResourceApp.back
+            </button>
+        </div>
+    </section>
 
     @if (TenantPut is TenantEntity tenant)
     {
-        <section class="pm-card overflow-hidden">
-            <div class="pm-card-header">
-                <div>
-                    <h2 class="pm-title">@tenant.Name</h2>
-                    <p class="pm-subtitle mt-1">Tenant overview, limits, contact information, and linked users.</p>
-                </div>
-                <div class="pm-toolbar">
-                    @if (tenant.DateExpire.HasValue)
-                    {
-                        <span class="pm-chip-amber">@tenant.DateExpire.Value.ToString("dd.MM.yyyy")</span>
-                    }
-                    <span class="pm-chip">@tenant.MaxUsers @AppControll.maxUsers</span>
-                </div>
-            </div>
+        <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <section class="pm-card p-5">
+                <div class="pm-section-title">Tenant profile</div>
+                <div class="pm-section-subtitle">Core identifiers, limits, and contact information.</div>
 
-            <div class="pm-card-body">
-                <table class="pm-kv-table">
-                    <tbody>
-                        <tr>
-                            <th>@CalcResource.name</th>
-                            <td>@tenant.Name</td>
-                        </tr>
-                        <tr>
-                            <th>@AppControll.Db</th>
-                            <td>@tenant.TenantDB?.Name</td>
-                        </tr>
-                        @if (tenant.DateExpire.HasValue)
+                <dl class="mt-5 grid gap-x-4 gap-y-4 sm:grid-cols-2">
+                    <div class="pm-card-soft p-4">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@CalcResource.name</dt>
+                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.Name</dd>
+                    </div>
+                    <div class="pm-card-soft p-4">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.Db</dt>
+                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.TenantDB?.Name</dd>
+                    </div>
+                    <div class="pm-card-soft p-4">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.expire</dt>
+                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : "—")</dd>
+                    </div>
+                    <div class="pm-card-soft p-4">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Ownership</dt>
+                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+                            @if (tenant.TenantDBId.HasValue)
+                            {
+                                <span class="pm-pill pm-pill-success">Own database</span>
+                            }
+                            else
+                            {
+                                <span class="pm-pill pm-pill-muted">Shared database</span>
+                            }
+                        </dd>
+                    </div>
+                    <div class="pm-card-soft p-4">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.maxUsers</dt>
+                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.MaxUsers</dd>
+                    </div>
+                    <div class="pm-card-soft p-4">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.maxCalculations</dt>
+                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.MaxCalculations</dd>
+                    </div>
+                    <div class="pm-card-soft p-4 sm:col-span-2">
+                        <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Contact</dt>
+                        <dd class="mt-2 grid gap-2 text-sm text-slate-700 dark:text-slate-200 sm:grid-cols-2">
+                            <div><span class="font-medium">@ResourceIdentity.email:</span> @tenant.Email</div>
+                            <div><span class="font-medium">@ResourceIdentity.phone:</span> @tenant.Phone</div>
+                            <div><span class="font-medium">@ResourceIdentity.mobile:</span> @tenant.Mobile</div>
+                            <div><span class="font-medium">@ResourceIdentity.fax:</span> @tenant.Fax</div>
+                            <div><span class="font-medium">@ResourceIdentity.country:</span> @tenant.Country</div>
+                            <div><span class="font-medium">@ResourceIdentity.build:</span> @tenant.BuildNumber</div>
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="pm-card p-5">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <div class="pm-section-title">Tenant users</div>
+                        <div class="pm-section-subtitle">View linked users and apply administrative actions.</div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if (CanManageTenantUsers)
                         {
-                            <tr>
-                                <th>@AppControll.expire</th>
-                                <td>@tenant.DateExpire.Value.ToString("dd.MM.yyyy")</td>
-                            </tr>
+                            <button class="pm-btn pm-btn-primary" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">New user</button>
                         }
-                        <tr>
-                            <th>@AppControll.maxUsers</th>
-                            <td>@tenant.MaxUsers</td>
-                        </tr>
-                        <tr>
-                            <th>@AppControll.maxCalculations</th>
-                            <td>@tenant.MaxCalculations</td>
-                        </tr>
-                        <tr>
-                            <th>@ResourceIdentity.email</th>
-                            <td>@tenant.Email</td>
-                        </tr>
-                        <tr>
-                            <th>@ResourceIdentity.fax</th>
-                            <td>@tenant.Fax</td>
-                        </tr>
-                        <tr>
-                            <th>@ResourceIdentity.phone</th>
-                            <td>@tenant.Phone</td>
-                        </tr>
-                        <tr>
-                            <th>@ResourceIdentity.mobile</th>
-                            <td>@tenant.Mobile @tenant.BuildNumber</td>
-                        </tr>
-                        <tr>
-                            <th>@ResourceIdentity.country</th>
-                            <td>@tenant.Country</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
 
-        <section class="pm-card overflow-hidden">
-            <div class="pm-card-header">
-                <div>
-                    <h3 class="pm-title">@ResourceIdentity.users</h3>
-                    <p class="pm-subtitle mt-1">Users connected to this tenant, including lockout state and company bootstrap tools.</p>
+                        @if (Users == null || !Users.Any())
+                        {
+                            <button class="pm-btn pm-btn-secondary" @onclick="async () => await GetUsersAsync()">@ResourceIdentity.users</button>
+                        }
+                    </div>
                 </div>
-                <div class="pm-toolbar">
-                    @if (CanManageTenantUsers)
-                    {
-                        <button class="pm-btn-success" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">New User</button>
-                    }
-                    @if (Users == null || !Users.Any())
-                    {
-                        <button class="pm-btn-secondary" @onclick="async () => await GetUsersAsync()">@ResourceIdentity.users</button>
-                    }
-                    else
-                    {
-                        <span class="pm-chip">@Users.Count</span>
-                    }
-                </div>
-            </div>
 
-            <div class="pm-card-body">
                 @if (Users == null || !Users.Any())
                 {
-                    <div class="pm-empty">No users loaded yet.</div>
+                    <div class="pm-empty mt-5 min-h-[220px]">
+                        <div class="pm-empty-title">No users loaded</div>
+                        <div class="pm-empty-copy">Load tenant users to inspect lockout status, department assignment, and add baseline company information.</div>
+                    </div>
                 }
                 else
                 {
-                    <div class="pm-table-wrap">
-                        <table class="pm-table">
-                            <thead>
-                                <tr>
-                                    <th>@ResourceIdentity.email</th>
-                                    <th>@CalcResource.code</th>
-                                    <th>@CalcResource.name</th>
-                                    <th>@ResourceIdentity.lockoutEnd</th>
-                                    <th>@ResourceIdentity.lockoutStart</th>
-                                    <th>@ResourceApp.department</th>
-                                    <th>Tools</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var user in Users)
-                                {
-                                    <tr @oncontextmenu:preventDefault
-                                        @oncontextmenu="() => Context(user)">
-                                        <td>@user.Email</td>
-                                        <td>@user.UserName</td>
-                                        <td>
-                                            <div class="font-medium text-slate-900 dark:text-slate-100">@user.Firstname @user.Lastname</div>
-                                        </td>
-                                        <td>
-                                            <div class="flex items-center gap-2">
-                                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-800" disabled value="@user.LockoutEnabled" />
-                                                <span>@(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : string.Empty)</span>
-                                            </div>
-                                        </td>
-                                        <td>@(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") : string.Empty)</td>
-                                        <td>@user.DepartmentId</td>
-                                        <td>
-                                            @if (CanManageTenantUsers)
-                                            {
-                                                <button class="pm-btn-outline"
-                                                        @onclick="() => AddBasicCompanyInfoAsync(user)"
-                                                        disabled="@IsAddingCompanyInfoFor(user)">
-                                                    @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
-                                                </button>
-                                            }
-                                        </td>
+                    <div class="pm-table-wrap mt-5">
+                        <div class="pm-table-scroll">
+                            <table class="pm-table">
+                                <thead>
+                                    <tr>
+                                        <th>@ResourceIdentity.email</th>
+                                        <th>@CalcResource.code</th>
+                                        <th>@CalcResource.name</th>
+                                        <th>@ResourceIdentity.lockoutEnd</th>
+                                        <th>@ResourceIdentity.lockoutStart</th>
+                                        <th>@ResourceApp.department</th>
+                                        <th>Action</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in Users)
+                                    {
+                                        <tr @oncontextmenu:preventDefault @oncontextmenu="() => Context(user)">
+                                            <td>@user.Email</td>
+                                            <td>@user.UserName</td>
+                                            <td>@user.Firstname @user.Lastname</td>
+                                            <td>
+                                                <div class="flex items-center gap-2">
+                                                    @if (user.LockoutEnabled)
+                                                    {
+                                                        <span class="pm-pill pm-pill-warning">Locked</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="pm-pill pm-pill-muted">Open</span>
+                                                    }
+                                                </div>
+                                                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : "—")</div>
+                                            </td>
+                                            <td>@(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") : "—")</td>
+                                            <td>@user.DepartmentId</td>
+                                            <td>
+                                                @if (CanManageTenantUsers)
+                                                {
+                                                    <button class="pm-btn pm-btn-secondary px-3 py-2 text-xs"
+                                                            @onclick="() => AddBasicCompanyInfoAsync(user)"
+                                                            disabled="@IsAddingCompanyInfoFor(user)">
+                                                        @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
-            </div>
-        </section>
+            </section>
+        </div>
     }
 </div>
 
-@code{
+@code {
     bool IsAddingCompanyInfoFor(ApplicationUser user) =>
         !string.IsNullOrWhiteSpace(AddingCompanyInfoForUserId) && AddingCompanyInfoForUserId == user.Id;
 
@@ -183,7 +184,9 @@
         try
         {
             var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id, user.UserId));
-            MHD.MessageOk(ResourceApp.newItem, result ? "Basic company info added/updated successfully." : "No changes were required.", result ? MhdState.Success : MhdState.Info);
+            MHD.MessageOk(ResourceApp.newItem,
+                result ? "Basic company info added/updated successfully." : "No changes were required.",
+                result ? MhdState.Success : MhdState.Info);
         }
         finally
         {

@@ -1,12 +1,16 @@
-﻿@page "/Account/Lockout"
+@page "/Account/Lockout"
 
 <PageTitle>Locked out</PageTitle>
 
-<header class="mt-6">
-    <h1 class="text-2xl font-bold text-red-700 dark:text-red-400">
-        Locked out
-    </h1>
-    <p role="alert" class="mt-2 text-red-600 dark:text-red-300">
-        This account has been locked out, please try again later.
-    </p>
-</header>
+<main class="pm-auth-shell">
+    <section class="pm-state-card">
+        <div class="pm-state-icon pm-state-icon-danger">!</div>
+        <h1 class="pm-state-title">Account locked</h1>
+        <p class="pm-state-text">
+            This account has been temporarily locked. Please try again later or contact support.
+        </p>
+        <div class="pm-state-actions">
+            <a href="Account/Login" class="pm-btn pm-btn-secondary">Back to login</a>
+        </div>
+    </section>
+</main>

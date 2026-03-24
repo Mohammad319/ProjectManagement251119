@@ -210,7 +210,7 @@
                         <div class="pm-card-header">
                             <div>
                                 <h5 class="pm-title">@(a.Resource?.Name ?? $"{AppLoc["resource"]} #{a.ResourceId}")</h5>
-                                <p class="pm-subtitle mt-1">@(a.Resource?.ResType?.ToString() ?? "Resource")</p>
+                                <p class="pm-subtitle mt-1">@(a.Resource?.ResType.ToString() ?? "Resource")</p>
                             </div>
 
                             <div class="pm-toolbar">

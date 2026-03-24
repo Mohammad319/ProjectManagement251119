@@ -1,19 +1,27 @@
-﻿@page "/Account/ConfirmEmail"
+@page "/Account/ConfirmEmail"
 
 @using System.Text
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
-
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Confirm email</PageTitle>
 
-<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-    Confirm email
-</h1>
-<StatusMessage Message="@statusMessage" />
+<main class="pm-auth-shell">
+    <section class="pm-state-card">
+        <div class="pm-state-icon pm-state-icon-success">✓</div>
+        <h1 class="pm-state-title">Confirm email</h1>
+        <p class="pm-state-text">We are validating your email confirmation request.</p>
+        <div class="mt-4">
+            <StatusMessage Message="@statusMessage" />
+        </div>
+        <div class="pm-state-actions">
+            <a href="Account/Login" class="pm-btn pm-btn-secondary">Back to login</a>
+        </div>
+    </section>
+</main>
 
 @code {
     private string? statusMessage;
@@ -39,13 +47,13 @@
         if (user is null)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-            statusMessage = $"Error loading user with ID {UserId}";
+            statusMessage = $"Error: Error loading user with ID {UserId}";
         }
         else
         {
             var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
             var result = await UserManager.ConfirmEmailAsync(user, code);
-            statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            statusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error: Error confirming your email.";
         }
     }
 }

@@ -1,26 +1,32 @@
-﻿@page "/Account/Manage/ResetAuthenticator"
+@page "/Account/Manage/ResetAuthenticator"
 @using Microsoft.AspNetCore.Identity
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<ResetAuthenticator> Logger
+
 <PageTitle>Reset authenticator key</PageTitle>
+
 <StatusMessage />
-<h3>Reset authenticator key</h3>
-<div class="alert alert-warning" role="alert">
-    <p>
-        <span class="glyphicon glyphicon-warning-sign"></span>
-        <strong>If you reset your authenticator key your authenticator app will not work until you reconfigure it.</strong>
-    </p>
-    <p>
-        This process disables 2FA until you verify your authenticator app.
-        If you do not complete your authenticator app configuration you may lose access to your account.
-    </p>
-</div>
-<div>
+
+<div class="space-y-5">
+    <header class="space-y-2">
+        <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Reset authenticator key</h3>
+        <p class="text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Resetting the key disables your authenticator app until you configure it again.
+        </p>
+    </header>
+
+    <div class="pm-alert pm-alert-warning space-y-3">
+        <p class="font-medium">If you reset your authenticator key, your authenticator app will stop working until you reconfigure it.</p>
+        <p>
+            This process disables 2FA until you verify the authenticator app again. Make sure you complete the configuration afterwards.
+        </p>
+    </div>
+
     <form @formname="reset-authenticator" @onsubmit="OnSubmitAsync" method="post">
         <AntiforgeryToken />
-        <button class="btn btn-danger" type="submit">Reset authenticator key</button>
+        <button class="pm-btn pm-btn-danger" type="submit">Reset authenticator key</button>
     </form>
 </div>
 

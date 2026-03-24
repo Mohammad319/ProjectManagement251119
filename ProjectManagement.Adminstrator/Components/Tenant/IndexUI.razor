@@ -1,6 +1,6 @@
 @using Domain.Repository.AuthPermissions
 @using ProjectManagement.Adminstrator.Services.Users
-@using ProjectManagement.Shared.DTO.Tenant
+@using ProjectManagement.Shared.DTO.Tenant;
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 @inherits AppComponentBase
 @inject IUsersService sersService
@@ -12,72 +12,76 @@
 else
 {
     <div class="pm-page">
-        <section class="pm-card overflow-hidden">
-            <div class="pm-card-header">
+        <section class="pm-page-header">
+            <div class="pm-page-kicker">Tenant administration</div>
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
-                    <h2 class="pm-title">@AppControll.tenant</h2>
-                    <p class="pm-subtitle mt-1">Manage tenant accounts, expiry dates, database mapping, and linked users.</p>
+                    <h2 class="pm-page-title">Tenants</h2>
+                    <p class="pm-page-subtitle">Review tenant databases, expiry dates, and ownership model. Right-click rows for contextual actions and click any tenant to open details.</p>
                 </div>
-
-                <div class="pm-toolbar">
-                    <span class="pm-chip">@(Tenants?.Count ?? 0)</span>
-                    @if (CanManageTenants)
-                    {
-                        <button class="pm-btn-success" @onclick="() => UpdateForm(new())">@ResourceApp.newItem</button>
-                    }
-                </div>
-            </div>
-
-            <div class="pm-card-body">
-                @if (Tenants is null || Tenants.Count == 0)
+                @if (CanManageTenants)
                 {
-                    <div class="pm-empty">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
-                }
-                else
-                {
-                    <div class="pm-table-wrap">
-                        <table class="pm-table">
-                            <thead>
-                                <tr>
-                                    <th>@CalcResource.name</th>
-                                    <th>@AppControll.Db</th>
-                                    <th>@AppControll.dateExpire</th>
-                                    <th>@AppControll.hasOwnDb</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var tenant in Tenants)
-                                {
-                                    <tr class="cursor-pointer"
-                                        @onclick="() => DetailsPage = tenant"
-                                        @oncontextmenu:preventDefault
-                                        @oncontextmenu="() => Context(tenant)">
-                                        <td>
-                                            <div class="font-medium text-slate-900 dark:text-slate-100">@tenant.Name</div>
-                                        </td>
-                                        <td>
-                                            <div class="break-words">@tenant.DB @tenant.DatabaseInfoName</div>
-                                        </td>
-                                        <td>
-                                            @(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : string.Empty)
-                                        </td>
-                                        <td>
-                                            @if (tenant.HasOwnDb)
-                                            {
-                                                <span class="pm-chip-blue">Yes</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="pm-chip">No</span>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                    <button class="pm-btn pm-btn-primary" @onclick="() => UpdateForm(new())">
+                        @ResourceApp.newItem
+                    </button>
                 }
             </div>
         </section>
+
+        <div class="pm-table-wrap">
+            <div class="pm-table-scroll">
+                <table class="pm-table">
+                    <thead>
+                        <tr>
+                            <th>@CalcResource.name</th>
+                            <th>@AppControll.Db</th>
+                            <th>@AppControll.dateExpire</th>
+                            <th>@AppControll.hasOwnDb</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Tenants != null && Tenants.Any())
+                        {
+                            foreach (var tenant in Tenants)
+                            {
+                                <tr class="cursor-pointer"
+                                    @onclick="() => DetailsPage = tenant"
+                                    @oncontextmenu:preventDefault
+                                    @oncontextmenu="() => Context(tenant)">
+                                    <td>
+                                        <div class="font-medium text-slate-900 dark:text-slate-100">@tenant.Name</div>
+                                    </td>
+                                    <td>
+                                        <div>@tenant.DB</div>
+                                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@tenant.DatabaseInfoName</div>
+                                    </td>
+                                    <td>
+                                        @(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : "—")
+                                    </td>
+                                    <td>
+                                        @if (tenant.HasOwnDb)
+                                        {
+                                            <span class="pm-pill pm-pill-success">Dedicated</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="pm-pill pm-pill-muted">Shared</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4">
+                                    <div class="py-10 text-center text-sm text-slate-500 dark:text-slate-400">No tenants found.</div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 }

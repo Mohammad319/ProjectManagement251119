@@ -1,23 +1,32 @@
-﻿@using Microsoft.Extensions.Localization
-@using Microsoft.JSInterop
 @using System.Globalization
-.APP
-@inject IStringLocalizer<ResourceApp> appLocalizer
-<div class="mb-3 row">
-    <div>
-        <select class="form-select" @bind="Culture">
-            @foreach (var culture in cultures)
-            {
-                <option value="@culture">@culture.DisplayName</option>
-            }
-        </select>
+@using Microsoft.JSInterop
+
+<div class="space-y-2">
+    <label class="pm-label">Language</label>
+
+    <div class="grid gap-2 sm:grid-cols-2">
+        @foreach (var culture in cultures)
+        {
+            var active = Culture.Name == culture.Name;
+            <button type="button"
+                    class="@(active ? "pm-nav-link pm-nav-link-active justify-between" : "pm-nav-link justify-between border border-slate-200 dark:border-slate-700")"
+                    @onclick="() => Culture = culture">
+                <span class="flex items-center gap-2">
+                    <span class="text-base" aria-hidden="true">@GetFlag(culture)</span>
+                    <span>@GetCultureLabel(culture)</span>
+                </span>
+                <span class="text-xs font-semibold opacity-80">@culture.TwoLetterISOLanguageName.ToUpperInvariant()</span>
+            </button>
+        }
     </div>
 </div>
 
 @code {
     [Inject] public NavigationManager NavManager { get; set; } = default!;
     [Inject] public IJSRuntime JSRuntime { get; set; } = default!;
+
     readonly CultureInfo[] cultures = [new CultureInfo("en-US"), new CultureInfo("sv-SE")];
+
     CultureInfo Culture
     {
         get => CultureInfo.CurrentCulture;
@@ -27,10 +36,24 @@
             {
                 var js = (IJSInProcessRuntime)JSRuntime;
                 js.InvokeVoid("blazorCulture.set", value.Name);
-
                 NavManager.NavigateTo(NavManager.Uri, forceLoad: true);
             }
         }
     }
-}
 
+    private static string GetCultureLabel(CultureInfo culture)
+        => culture.Name switch
+        {
+            "sv-SE" => "Svenska",
+            "en-US" => "English",
+            _ => culture.DisplayName
+        };
+
+    private static string GetFlag(CultureInfo culture)
+        => culture.Name switch
+        {
+            "sv-SE" => "🇸🇪",
+            "en-US" => "🇺🇸",
+            _ => "🌐"
+        };
+}

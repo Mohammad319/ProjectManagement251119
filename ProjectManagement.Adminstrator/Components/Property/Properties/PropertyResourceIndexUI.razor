@@ -7,46 +7,62 @@
 @inherits AppComponentBase
 @inject IResourceAttributeService ResourcePropertiesService
 
-<button @onclick="() => UpdateForm()"
-        class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
-        title="@AppLoc[nameof(ResourceApp.newItem)]" aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
-    @((MarkupString)Icons.Plus)
-</button>
-<MhdTable TItem="ResourceAttribute" Items="PropertiesList?.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
-    <HeaderTemplate>
-        <th style="width:200px;" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"></th>
-        <th style="width:200px;" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.code</th>
-        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
-    </HeaderTemplate>
-    <ChildContent>
-        <MhdTableColumn>
-            <Template Context="status">
-                <div class="flex items-center gap-2">
-                    <button @onclick="() => UpdateForm(status)"
-                            class="inline-flex items-center rounded-xl bg-amber-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-                            title="@ResourceApp.update" aria-label="@ResourceApp.update">
-                        @Icons.Edit
-                    </button>
+<div class="pm-page">
+    <div class="pm-page-header">
+        <div>
+            <h3 class="pm-page-title">@AppLoc["properties"]</h3>
+            <p class="pm-page-subtitle">Review and manage the properties in the selected property group.</p>
+        </div>
 
-                    <button @onclick="() => Remove(status)"
-                            class="inline-flex items-center rounded-xl bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/40"
-                            title="@ResourceApp.delete"
-                            aria-label="@ResourceApp.delete">
-                        @Icons.Delete 
-                    </button>
-                </div>
-            </Template>
-        </MhdTableColumn>
-        <MhdTableColumn Title="" ValueSelector="@(c => "p" + c.Id)"></MhdTableColumn>
-        <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
-    </ChildContent>
-</MhdTable>
+        <div class="pm-action-stack">
+            <span class="pm-chip">@PropertiesList.Count items</span>
+            <button type="button" class="pm-btn-success" @onclick="() => UpdateForm()" title="@AppLoc[nameof(ResourceApp.newItem)]" aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
+                <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                <span>@AppLoc[nameof(ResourceApp.newItem)]</span>
+            </button>
+        </div>
+    </div>
+
+    @if (PropertiesList.Count == 0)
+    {
+        <div class="pm-empty">@ResourceApp.ThereAreNoItemsToDisplay</div>
+    }
+    else
+    {
+        <div class="pm-card">
+            <MhdTable TItem="ResourceAttribute" Items="PropertiesList.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
+                <HeaderTemplate>
+                    <th style="width:240px;" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"></th>
+                    <th style="width:200px;" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.code</th>
+                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
+                </HeaderTemplate>
+                <ChildContent>
+                    <MhdTableColumn>
+                        <Template Context="status">
+                            <div class="pm-action-stack">
+                                <button @onclick="() => UpdateForm(status)" class="pm-btn-warning !px-3 !py-2 !text-xs" title="@ResourceApp.update" aria-label="@ResourceApp.update">
+                                    @Icons.Edit
+                                </button>
+                                <button @onclick="() => Remove(status)" class="pm-btn-danger !px-3 !py-2 !text-xs" title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
+                                    @Icons.Delete
+                                </button>
+                            </div>
+                        </Template>
+                    </MhdTableColumn>
+                    <MhdTableColumn Title="" ValueSelector="@(c => "p" + c.Id)"></MhdTableColumn>
+                    <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
+                </ChildContent>
+            </MhdTable>
+        </div>
+    }
+</div>
+
 @code {
     [Parameter] public int GroupId { get; set; } = new();
-    List<ResourceAttribute> PropertiesList = new(); 
+    List<ResourceAttribute> PropertiesList = new();
 
     void Remove(ResourceAttribute model) =>
-MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
+        MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
     async Task ConfirmRemoveAsync(ResourceAttribute model)
     {
@@ -57,20 +73,22 @@ MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => Co
             StateHasChanged();
         }
     }
+
     void UpdateForm() => UpdateForm(new ResourceAttribute() { DisplayName = "" });
+
     void UpdateForm(ResourceAttribute model)
     {
         ResourceAttribute up = new() { DisplayName = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
         up.AttributeSetId = GroupId;
-        Modal.ShowComponent<PropertyResourceFormUI>(model.Id == 0 ? 
+        Modal.ShowComponent<PropertyResourceFormUI>(model.Id == 0 ?
             AppLoc[LocalizerConst.New, ""] :
-                    AppLoc[LocalizerConst.Update,"(p" + model.Id + ") ," + model.DisplayName], new Dictionary<string, object>
+                    AppLoc[LocalizerConst.Update, "(p" + model.Id + ") ," + model.DisplayName], new Dictionary<string, object>
                     {
                         [nameof(PropertyResourceFormUI.GroupId)] = GroupId,
                         [nameof(PropertyResourceFormUI.ResourceProp)] = up,
                         [nameof(PropertyResourceFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-                    } , DialogSize.Medium);
+                    }, DialogSize.Medium);
     }
 
     async Task BtnUpdate(bool IsSuccess)
@@ -82,8 +100,10 @@ MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => Co
         Modal.Close();
         StateHasChanged();
     }
+
     List<ResourceAttributeSet> Groups = new();
     int SelectedGroupId = 0;
+
     protected async override Task OnInitializedAsync()
     {
         PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);

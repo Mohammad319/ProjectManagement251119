@@ -1,4 +1,4 @@
-﻿@page "/Account/ResendEmailConfirmation"
+@page "/Account/ResendEmailConfirmation"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -6,49 +6,40 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 
-
 @inject UserManager<ApplicationUser> UserManager
 @inject IEmailSender<ApplicationUser> EmailSender
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<StatusMessage Message="@message" />
+<PageTitle>Resend email confirmation</PageTitle>
 
-<div class="grid grid-cols-1">
-    <div class="max-w-md">
-        <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-5">
+<main class="pm-auth-shell">
+    <div class="pm-auth-card">
+        <div class="pm-auth-header">
+            <h1 class="pm-auth-title">Resend email confirmation</h1>
+            <p class="pm-auth-subtitle">Enter your email to receive a new verification link.</p>
+        </div>
+
+        <StatusMessage Message="@message" />
+
+        <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post" class="pm-auth-form">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+            <ValidationSummary class="pm-validation-summary" role="alert" />
 
-            <!-- Email (floating label) -->
-            <div class="relative">
+            <div class="pm-field">
+                <label for="Input.Email" class="pm-label">Email</label>
                 <InputText @bind-Value="Input.Email"
                            id="Input.Email"
                            autocomplete="username"
                            aria-required="true"
-                           placeholder=" "
-                           class="peer block w-full rounded-md border border-gray-300 bg-white px-3 pt-6 pb-2 text-gray-900 shadow-sm
-                 placeholder-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
-                 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
-                <label for="Input.Email"
-                       class="pointer-events-none absolute left-3 top-2 text-sm text-gray-500 transition-all
-                 peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
-                 peer-focus:top-2 peer-focus:text-sm
-                 dark:text-gray-400">
-                    Email
-                </label>
-                <ValidationMessage For="() => Input.Email" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
+                           class="pm-input" />
+                <ValidationMessage For="() => Input.Email" class="pm-validation" />
             </div>
 
-            <button type="submit"
-                    class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
-               transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-               dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Resend
-            </button>
+            <button type="submit" class="pm-btn pm-btn-primary w-full">Resend confirmation</button>
         </EditForm>
     </div>
-</div>
+</main>
 
 @code {
     private string? message;

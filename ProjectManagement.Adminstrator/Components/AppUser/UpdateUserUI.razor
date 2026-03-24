@@ -6,20 +6,20 @@
 @inject IUsersService UsersService
 @inject AuthenticationStateProvider AuthStateProvider
 
-<div class="space-y-4 p-1">
+<div class="pm-form-shell">
     @if (Form is not null)
     {
-        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync2" class="space-y-4">
+        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync2" class="pm-form-shell">
             <DataAnnotationsValidator />
 
             @if (!string.IsNullOrWhiteSpace(FormError))
             {
-                <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200">
+                <div class="pm-validation-summary">
                     @FormError
                 </div>
             }
 
-            <ValidationSummary class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200" />
+            <ValidationSummary class="pm-validation-summary" />
 
             @if (string.IsNullOrEmpty(UserForm?.Id))
             {
@@ -28,105 +28,121 @@
                 </div>
             }
 
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="firstname">@ResourceIdentity.firstname</label>
-                    <InputText id="firstname" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.Firstname" />
-                    <ValidationMessage For="@(() => Form.Firstname)" class="text-sm text-red-600 dark:text-red-400" />
+            <section class="pm-form-section">
+                <div>
+                    <h3 class="pm-form-section-title">User profile</h3>
+                    <p class="pm-form-section-text">Basic contact details and role assignment for the selected account.</p>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="lastname">@ResourceIdentity.lastname</label>
-                    <InputText id="lastname" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.Lastname" />
-                    <ValidationMessage For="@(() => Form.Lastname)" class="text-sm text-red-600 dark:text-red-400" />
-                </div>
-
-                <div class="space-y-1 lg:col-span-2">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="email">@ResourceIdentity.email</label>
-                    <InputText id="email" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.Email" />
-                    <ValidationMessage For="@(() => Form.Email)" class="text-sm text-red-600 dark:text-red-400" />
-                </div>
-
-                @if (string.IsNullOrEmpty(UserForm?.Id))
-                {
-                    <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="password">Password (optional)</label>
-                        <InputText id="password" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.Password" />
+                <div class="pm-form-grid-2">
+                    <div class="pm-field">
+                        <label class="pm-label" for="firstname">@ResourceIdentity.firstname</label>
+                        <InputText id="firstname" class="pm-input" @bind-Value="Form.Firstname" />
+                        <ValidationMessage For="@(() => Form.Firstname)" class="pm-validation-message" />
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="confirmPassword">Confirm password (optional)</label>
-                        <InputText id="confirmPassword" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.ConfirmPassword" />
+
+                    <div class="pm-field">
+                        <label class="pm-label" for="lastname">@ResourceIdentity.lastname</label>
+                        <InputText id="lastname" class="pm-input" @bind-Value="Form.Lastname" />
+                        <ValidationMessage For="@(() => Form.Lastname)" class="pm-validation-message" />
                     </div>
-                }
 
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="phone">@ResourceIdentity.phone</label>
-                    <InputText id="phone" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.PhoneNumber" />
-                    <ValidationMessage For="@(() => Form.PhoneNumber)" class="text-sm text-red-600 dark:text-red-400" />
-                </div>
+                    <div class="pm-field md:col-span-2">
+                        <label class="pm-label" for="email">@ResourceIdentity.email</label>
+                        <InputText id="email" class="pm-input" @bind-Value="Form.Email" />
+                        <ValidationMessage For="@(() => Form.Email)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="role">@ResourceIdentity.role</label>
-                    @if (Roles is not null && !TenantId.HasValue)
+                    @if (string.IsNullOrEmpty(UserForm?.Id))
                     {
-                        <select id="role" @bind="Form.Role" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-                            <option value="@PMRolesConst.APP.Admin">@ResourceIdentity.Admin</option>
-                            <option value="@PMRolesConst.APP.SuperManger">@ResourceIdentity.SuperManger</option>
-                            <option value="@PMRolesConst.APP.Manger">@ResourceIdentity.Manger</option>
-                            <option value="@PMRolesConst.APP.User">@ResourceIdentity.User</option>
-                        </select>
+                        <div class="pm-field">
+                            <label class="pm-label" for="password">Password (optional)</label>
+                            <InputText id="password" type="password" class="pm-input" @bind-Value="Form.Password" />
+                        </div>
+                        <div class="pm-field">
+                            <label class="pm-label" for="confirmPassword">Confirm password (optional)</label>
+                            <InputText id="confirmPassword" type="password" class="pm-input" @bind-Value="Form.ConfirmPassword" />
+                        </div>
                     }
-                    else if (Roles is not null)
-                    {
-                        <select id="role" @bind="Form.Role" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-                            <option value="@PMRolesConst.Tenant.Admin">@ResourceIdentity.Admin</option>
-                            <option value="@PMRolesConst.Tenant.SuperManger">@ResourceIdentity.SuperManger</option>
-                            <option value="@PMRolesConst.Tenant.Manger">@ResourceIdentity.Manger</option>
-                            <option value="@PMRolesConst.Tenant.User">@ResourceIdentity.User</option>
-                        </select>
-                    }
-                </div>
 
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="lockoutStart">@ResourceIdentity.lockoutStart</label>
-                    <div class="flex items-center gap-2">
-                        <InputDate id="lockoutStart" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.LockoutStart" />
-                        <button class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-600 transition hover:bg-rose-50 dark:border-rose-900/70 dark:bg-slate-950 dark:text-rose-300 dark:hover:bg-rose-950/30" type="button" @onclick="() => Form.LockoutStart = null">
-                            @Icons.Delete
-                        </button>
+                    <div class="pm-field">
+                        <label class="pm-label" for="phone">@ResourceIdentity.phone</label>
+                        <InputText id="phone" class="pm-input" @bind-Value="Form.PhoneNumber" />
+                        <ValidationMessage For="@(() => Form.PhoneNumber)" class="pm-validation-message" />
                     </div>
-                    <ValidationMessage For="@(() => Form.LockoutStart)" class="text-sm text-red-600 dark:text-red-400" />
-                </div>
 
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" for="lockoutEnd">@ResourceIdentity.lockoutEnd</label>
-                    <div class="flex items-center gap-2">
-                        <InputDate id="lockoutEnd" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="Form.LockoutEnd" />
-                        <button class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-600 transition hover:bg-rose-50 dark:border-rose-900/70 dark:bg-slate-950 dark:text-rose-300 dark:hover:bg-rose-950/30" type="button" @onclick="() => Form.LockoutEnd = null">
-                            @Icons.Delete
-                        </button>
+                    <div class="pm-field">
+                        <label class="pm-label" for="role">@ResourceIdentity.role</label>
+                        @if (Roles is not null && !TenantId.HasValue)
+                        {
+                            <select id="role" @bind="Form.Role" class="pm-select">
+                                <option value="@PMRolesConst.APP.Admin">@ResourceIdentity.Admin</option>
+                                <option value="@PMRolesConst.APP.SuperManger">@ResourceIdentity.SuperManger</option>
+                                <option value="@PMRolesConst.APP.Manger">@ResourceIdentity.Manger</option>
+                                <option value="@PMRolesConst.APP.User">@ResourceIdentity.User</option>
+                            </select>
+                        }
+                        else if (Roles is not null)
+                        {
+                            <select id="role" @bind="Form.Role" class="pm-select">
+                                <option value="@PMRolesConst.Tenant.Admin">@ResourceIdentity.Admin</option>
+                                <option value="@PMRolesConst.Tenant.SuperManger">@ResourceIdentity.SuperManger</option>
+                                <option value="@PMRolesConst.Tenant.Manger">@ResourceIdentity.Manger</option>
+                                <option value="@PMRolesConst.Tenant.User">@ResourceIdentity.User</option>
+                            </select>
+                        }
                     </div>
-                    <ValidationMessage For="@(() => Form.LockoutEnd)" class="text-sm text-red-600 dark:text-red-400" />
                 </div>
-            </div>
+            </section>
 
-            <div class="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60 md:grid-cols-2">
-                <label class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
-                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.PhoneNumberConfirmed" id="phoneConfirmed" />
-                    <span>@ResourceIdentity.phoneNumberConfirmed</span>
-                </label>
+            <section class="pm-form-section">
+                <div>
+                    <h3 class="pm-form-section-title">Access control</h3>
+                    <p class="pm-form-section-text">Manage lockout windows and confirmation flags.</p>
+                </div>
 
-                <label class="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
-                    <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.LockoutEnabled" id="lockoutEnabled" />
-                    <span>@ResourceIdentity.logout</span>
-                </label>
-            </div>
+                <div class="pm-form-grid-2">
+                    <div class="pm-field">
+                        <label class="pm-label" for="lockoutStart">@ResourceIdentity.lockoutStart</label>
+                        <div class="flex items-center gap-2">
+                            <InputDate id="lockoutStart" class="pm-input" @bind-Value="Form.LockoutStart" />
+                            <button class="pm-btn-danger-soft h-10 w-10 px-0" type="button" @onclick="() => Form.LockoutStart = null">
+                                @Icons.Delete
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => Form.LockoutStart)" class="pm-validation-message" />
+                    </div>
 
-            <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
-                <button type="button" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="async () => await Callback.InvokeAsync(false)">
+                    <div class="pm-field">
+                        <label class="pm-label" for="lockoutEnd">@ResourceIdentity.lockoutEnd</label>
+                        <div class="flex items-center gap-2">
+                            <InputDate id="lockoutEnd" class="pm-input" @bind-Value="Form.LockoutEnd" />
+                            <button class="pm-btn-danger-soft h-10 w-10 px-0" type="button" @onclick="() => Form.LockoutEnd = null">
+                                @Icons.Delete
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => Form.LockoutEnd)" class="pm-validation-message" />
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <label class="pm-inline-check">
+                        <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.PhoneNumberConfirmed" id="phoneConfirmed" />
+                        <span>@ResourceIdentity.phoneNumberConfirmed</span>
+                    </label>
+
+                    <label class="pm-inline-check">
+                        <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.LockoutEnabled" id="lockoutEnabled" />
+                        <span>@ResourceIdentity.logout</span>
+                    </label>
+                </div>
+            </section>
+
+            <div class="pm-toolbar">
+                <button type="button" class="pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync(false)">
                     @ResourceApp.cancel
                 </button>
-                <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400" disabled="@IsLoading" aria-busy="@IsLoading">
+                <button type="submit" class="pm-btn-primary" disabled="@IsLoading" aria-busy="@IsLoading">
                     @ResourceApp.save
                 </button>
             </div>

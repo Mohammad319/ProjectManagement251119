@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     content: [
-        "./**/*.{razor,html,cshtml,cs}",
+        "./**/*.{razor,html,cshtml,cs}"
     ],
     darkMode: "class",
     safelist: [
@@ -12,10 +12,10 @@ module.exports = {
         "max-w-5xl",
         "max-w-[1800px]",
         "tracking-[0.2em]",
-        "backdrop-blur-[2px]",
+        "backdrop-blur-[2px]"
     ],
     theme: {
-        extend: {},
+        extend: {}
     },
-    plugins: [],
+    plugins: []
 };

@@ -12,16 +12,31 @@
 @inject IResourceBlueprintsService ResourceService
 @inject IResourceCategoryService ResourceFolderService
 
-<ResourcesBrowser EnableFolderContext="true">
-    <RowActions Context="r">
-        <button class="inline-flex items-center rounded-md border border-blue-600 px-3 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950/40" title="Property" @onclick="() => Property(r)">Property</button>
-        <button class="inline-flex items-center rounded-md border border-amber-600 px-3 py-1.5 text-sm font-medium text-amber-600 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-amber-400 dark:text-amber-300 dark:hover:bg-amber-950/40" title="Update" @onclick="() => UpdateForm(r)">@Icons.Edit</button>
-        <button class="inline-flex items-center rounded-md border border-slate-500 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-400 dark:text-slate-200 dark:hover:bg-slate-800" title="Remove" @onclick="() => Remove(r)">@Icons.Delete</button>
-    </RowActions>
-</ResourcesBrowser>
+<div class="pm-page">
+    <div class="pm-page-header">
+        <div>
+            <h2 class="pm-page-title">Resources</h2>
+            <p class="pm-page-subtitle">Manage folders, resources, and related properties from one view.</p>
+        </div>
+
+        <div class="pm-action-stack">
+            <button type="button" class="pm-btn-primary" @onclick="PropertyGroups">@AppLoc["properties"]</button>
+        </div>
+    </div>
+
+    <ResourcesBrowser EnableFolderContext="true">
+        <RowActions Context="r">
+            <button class="pm-btn-primary !px-3 !py-1.5 !text-xs" title="Property" @onclick="() => Property(r)">Property</button>
+            <button class="pm-btn-warning !px-3 !py-1.5 !text-xs" title="Update" @onclick="() => UpdateForm(r)">@Icons.Edit</button>
+            <button class="pm-btn-danger !px-3 !py-1.5 !text-xs" title="Remove" @onclick="() => Remove(r)">@Icons.Delete</button>
+        </RowActions>
+    </ResourcesBrowser>
+</div>
+
 @code {
     private List<ResourceCategory> folders = new();
     private List<ResourceDefinition> resourcesToShow = new();
+
     protected override async Task OnInitializedAsync()
     {
         folders = await ResourceFolderService.GetAllAsync();
@@ -30,7 +45,9 @@
     async Task Refreeh() { await UpdateResourcesAsync(); }
 
     void PropertyGroups() => MHD.Modal.ShowComponent<PropertyGroupsUI>("Property Groups");
-    void Property(ResourceDefinition model) { 
+
+    void Property(ResourceDefinition model)
+    {
         MHD.Modal.ShowComponent<ResourcePropertiesManager>(model.Name,
         new Dictionary<string, object>
         {
@@ -46,6 +63,7 @@
         });
 
     void Remove(ResourceDefinition model) => MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => DeleteR(model.Id)));
+
     async Task DeleteR(int id)
     {
         if (await ResourceService.DeleteAsync(id))
@@ -54,11 +72,12 @@
             StateHasChanged();
         }
     }
+
     async Task OnSaved()
     {
         await UpdateResourcesAsync();
-
     }
+
     private async Task UpdateResourcesAsync()
     {
         resourcesToShow.Clear();

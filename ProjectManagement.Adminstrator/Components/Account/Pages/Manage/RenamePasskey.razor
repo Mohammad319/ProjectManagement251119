@@ -1,5 +1,4 @@
-﻿@page "/Account/Manage/RenamePasskey/{Id}"
-
+@page "/Account/Manage/RenamePasskey/{Id}"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -8,27 +7,41 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
 
-<EditForm Model="Input" OnValidSubmit="Rename" FormName="rename-passkey" method="post">
-    <DataAnnotationsValidator />
-    @if (passkey?.Name is { } name)
-    {
-        <h4>Enter a new name for your "@name" passkey</h4>
-    }
-    else
-    {
-        <h4>Enter a name for your passkey</h4>
-    }
-    <hr />
-    <ValidationSummary class="text-danger" role="alert" />
-    <div class="form-floating mb-3">
-        <InputText @bind-Value="Input.Name" id="Input.Name" class="form-control" aria-required="true" placeholder="My passkey" />
-        <label for="Input.Name" class="form-label">Passkey name</label>
-        <ValidationMessage For="() => Input.Name" class="text-danger" />
-    </div>
+<PageTitle>Rename passkey</PageTitle>
+
+<div class="space-y-5 max-w-2xl">
     <div>
-        <button type="submit" class="w-100 btn btn-lg btn-primary">Continue</button>
+        <h2 class="pm-page-title text-xl">Rename passkey</h2>
+        <p class="pm-page-subtitle mt-1">
+            @if (passkey?.Name is { } name)
+            {
+                <span>Update the display name for your "@name" passkey.</span>
+            }
+            else
+            {
+                <span>Choose a clear name so you can identify this passkey later.</span>
+            }
+        </p>
     </div>
-</EditForm>
+
+    <div class="pm-card-soft">
+        <EditForm Model="Input" OnValidSubmit="Rename" FormName="rename-passkey" method="post" class="pm-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="pm-validation" role="alert" />
+
+            <div class="pm-field">
+                <label for="Input.Name" class="pm-label">Passkey name</label>
+                <InputText @bind-Value="Input.Name" id="Input.Name" class="pm-input" aria-required="true" placeholder="My passkey" />
+                <ValidationMessage For="() => Input.Name" class="pm-validation" />
+            </div>
+
+            <div class="flex flex-wrap gap-3 pt-1">
+                <button type="submit" class="pm-btn pm-btn-primary">Continue</button>
+                <a href="/Account/Manage/Passkeys" class="pm-btn pm-btn-secondary">Back</a>
+            </div>
+        </EditForm>
+    </div>
+</div>
 
 @code {
     private ApplicationUser? user;
@@ -70,6 +83,11 @@
         {
             RedirectManager.RedirectToWithStatus("Account/Manage/Passkeys", "Error: The specified passkey could not be found.", HttpContext);
             return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Input.Name) && !string.IsNullOrWhiteSpace(passkey.Name))
+        {
+            Input.Name = passkey.Name;
         }
     }
 

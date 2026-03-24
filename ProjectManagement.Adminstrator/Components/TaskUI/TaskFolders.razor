@@ -4,96 +4,128 @@
 @inject ITaskResourceService FoldersService
 @inject IResourceCategoryService ResourceCategoryService
 
-<div class="flex flex-wrap gap-4">
-    <div class="w-full max-w-[220px] space-y-2">
-        @if (Folders is null)
-        {
-            <div class="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">Lädt Ordner …</div>
-        }
-        else if (Folders.Count == 0)
-        {
-            <div class="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">Keine Ordner verfügbar.</div>
-        }
-        else
-        {
-            @foreach (var f in Folders)
+<div class="pm-page">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
+        <aside class="pm-card-soft">
+            <div class="pm-section-header !mb-3">
+                <div>
+                    <h3 class="pm-section-title">Folders</h3>
+                    <p class="pm-section-subtitle">Choose a folder to assign or remove resources for this task.</p>
+                </div>
+            </div>
+
+            @if (Folders is null)
             {
-                <div role="button">
-                    <button class="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-left text-sm font-medium text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
-                            @onclick="() => LoadResourcesAsync(f.Id, f.DisplayName)">
-                        @f.DisplayName
-                    </button>
+                <div class="pm-empty !px-4 !py-6">Lädt Ordner …</div>
+            }
+            else if (Folders.Count == 0)
+            {
+                <div class="pm-empty !px-4 !py-6">Keine Ordner verfügbar.</div>
+            }
+            else
+            {
+                <div class="space-y-2">
+                    @foreach (var f in Folders)
+                    {
+                        var selected = SelectedFolderId == f.Id;
+                        <button class="w-full rounded-xl border px-3 py-2 text-left text-sm font-medium transition @(selected ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-300" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800")"
+                                @onclick="() => LoadResourcesAsync(f.Id, f.DisplayName)">
+                            @f.DisplayName
+                        </button>
+                    }
                 </div>
             }
-        }
-    </div>
+        </aside>
 
-    <div class="min-w-[350px] flex-1 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <table class="w-full border-collapse text-sm">
-            <thead class="bg-slate-50 dark:bg-slate-900/70">
-                <tr>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.active</th>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.resourceType</th>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.unit</th>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.quantity</th>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.changeFactor1 / 2</th>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.cap / @CalcResource.waste</th>
-                    <th class="p-2 text-left font-semibold text-slate-700 dark:text-slate-200">@CalcResource.baseCost</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (SelectedFolderName is null)
-                {
-                    <tr class="border-t border-slate-200 dark:border-slate-800">
-                        <td class="p-3 text-center text-slate-500 dark:text-slate-400" colspan="8">
-                            Bitte wählen Sie einen Ordner.
-                        </td>
-                    </tr>
-                }
-                else if (Rows is null)
-                {
-                    <tr class="border-t border-slate-200 dark:border-slate-800">
-                        <td class="p-3 text-center text-slate-500 dark:text-slate-400" colspan="8">
-                            Lädt Ressourcen in „@SelectedFolderName“…
-                        </td>
-                    </tr>
-                }
-                else if (Rows.Count == 0)
-                {
-                    <tr class="border-t border-slate-200 dark:border-slate-800">
-                        <td class="p-3 text-center text-slate-500 dark:text-slate-400" colspan="8">
-                            Keine Ressourcen in diesem Ordner.
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var r in Rows)
+        <section class="pm-table-shell">
+            <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 sm:px-5">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h3 class="pm-section-title">Resources</h3>
+                        <p class="pm-section-subtitle">
+                            @if (string.IsNullOrWhiteSpace(SelectedFolderName))
+                            {
+                                <span>Bitte wählen Sie einen Ordner.</span>
+                            }
+                            else
+                            {
+                                <span>@SelectedFolderName</span>
+                            }
+                        </p>
+                    </div>
+
+                    @if (Rows is not null)
                     {
-                        <tr class="border-t border-slate-200 dark:border-slate-800">
-                            <td class="p-2 text-slate-700 dark:text-slate-200">
-                                <div class="flex items-center gap-2">
-                                    <button class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-700 transition hover:bg-blue-100 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300"
-                                            @onclick="() => ToggleAssignAsync(r)">
-                                        @(r.IsAssigned ? "-" : "+")
-                                    </button>
-                                    <span>@r.Name</span>
-                                </div>
-                            </td>
-
-                            <td class="p-2 text-slate-700 dark:text-slate-200"><span>—</span></td>
-                            <td class="p-2 text-slate-700 dark:text-slate-200">@r.ResourceType</td>
-                            <td class="p-2 text-slate-700 dark:text-slate-200">@r.UnitCode</td>
-                            <td class="p-2 text-slate-700 dark:text-slate-200">@r.Quantity</td>
-                            <td class="p-2 text-slate-700 dark:text-slate-200">@r.ChangeFactor1 / @r.ChangeFactor2</td>
-                            <td class="p-2 text-slate-700 dark:text-slate-200">@r.WasteFactor</td>
-                            <td class="p-2 text-slate-700 dark:text-slate-200">@r.BaseCost</td>
-                        </tr>
+                        <span class="pm-chip">@Rows.Count items</span>
                     }
-                }
-            </tbody>
-        </table>
+                </div>
+            </div>
+
+            @if (SelectedFolderName is null)
+            {
+                <div class="p-5">
+                    <div class="pm-empty">Bitte wählen Sie einen Ordner.</div>
+                </div>
+            }
+            else if (Rows is null)
+            {
+                <div class="p-5">
+                    <div class="pm-empty">Lädt Ressourcen in „@SelectedFolderName“…</div>
+                </div>
+            }
+            else if (Rows.Count == 0)
+            {
+                <div class="p-5">
+                    <div class="pm-empty">Keine Ressourcen in diesem Ordner.</div>
+                </div>
+            }
+            else
+            {
+                <div class="pm-table-scroll">
+                    <table class="pm-table">
+                        <thead>
+                            <tr>
+                                <th>@CalcResource.name</th>
+                                <th>@CalcResource.active</th>
+                                <th>@CalcResource.resourceType</th>
+                                <th>@CalcResource.unit</th>
+                                <th>@CalcResource.quantity</th>
+                                <th>@CalcResource.changeFactor1 / 2</th>
+                                <th>@CalcResource.cap / @CalcResource.waste</th>
+                                <th>@CalcResource.baseCost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Rows)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="flex min-w-[260px] items-center gap-3">
+                                            <button class="@(r.IsAssigned ? "pm-btn-danger !h-8 !px-2 !py-1 !text-xs" : "pm-btn-success !h-8 !px-2 !py-1 !text-xs")"
+                                                    @onclick="() => ToggleAssignAsync(r)">
+                                                @(r.IsAssigned ? "-" : "+")
+                                            </button>
+                                            <div>
+                                                <div class="font-medium text-slate-800 dark:text-slate-100">@r.Name</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="@(r.IsAssigned ? "pm-badge-success" : "pm-chip")">@(r.IsAssigned ? CalcResource.active : "—")</span>
+                                    </td>
+                                    <td>@r.ResourceType</td>
+                                    <td>@r.UnitCode</td>
+                                    <td>@r.Quantity</td>
+                                    <td>@r.ChangeFactor1 / @r.ChangeFactor2</td>
+                                    <td>@r.WasteFactor</td>
+                                    <td>@r.BaseCost</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
     </div>
 </div>
 
@@ -103,6 +135,7 @@
     private List<FolderDto>? Folders;
     private List<ResourceRowDto>? Rows;
     private string? SelectedFolderName;
+    private int? SelectedFolderId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -111,6 +144,7 @@
 
     private async Task LoadResourcesAsync(int folderId, string folderName)
     {
+        SelectedFolderId = folderId;
         SelectedFolderName = folderName;
         Rows = null;
         StateHasChanged();
@@ -126,10 +160,9 @@
         else
             await FoldersService.RemoveResourceFromTaskAsync(TaskId, r.Id);
 
-        var current = Folders?.FirstOrDefault(f => f.DisplayName == SelectedFolderName);
-        if (current is not null)
+        if (SelectedFolderId is int folderId)
         {
-            var (rows, _) = await FoldersService.GetFolderResourcesAsync(TaskId, current.Id);
+            var (rows, _) = await FoldersService.GetFolderResourcesAsync(TaskId, folderId);
             Rows = rows.ToList();
         }
     }

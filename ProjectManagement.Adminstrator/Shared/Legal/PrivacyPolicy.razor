@@ -1,7 +1,17 @@
-﻿@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Localization
 @using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll
-.AppControll
 @inject IStringLocalizer<AppControll> L
 
-<h2>@L["PrivacyTitle"]</h2>
-<p>@L["PrivacyContent"]</p>
+<section class="pm-card overflow-hidden">
+    <div class="pm-card-header">
+        <div>
+            <div class="pm-eyebrow">Legal</div>
+            <h2 class="pm-card-title mt-1">@L["PrivacyTitle"]</h2>
+            <p class="pm-card-subtitle">How personal data is handled within the application and related services.</p>
+        </div>
+    </div>
+
+    <div class="pm-card-body pm-legal-prose">
+        <p>@L["PrivacyContent"]</p>
+    </div>
+</section>

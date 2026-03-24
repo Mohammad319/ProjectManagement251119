@@ -1,9 +1,19 @@
-﻿@page "/Account/InvalidUser"
+@page "/Account/InvalidUser"
 
 <PageTitle>Invalid user</PageTitle>
 
-<h3 class="text-xl font-semibold text-red-700 dark:text-red-400 mt-3">
-    Invalid user
-</h3>
-
-<StatusMessage />
+<main class="pm-auth-shell">
+    <section class="pm-state-card">
+        <div class="pm-state-icon pm-state-icon-danger">!</div>
+        <h1 class="pm-state-title">Invalid user</h1>
+        <p class="pm-state-text">
+            We could not load the requested user account. Please sign in again or contact an administrator.
+        </p>
+        <div class="mt-4">
+            <StatusMessage Message="Error: Invalid user." />
+        </div>
+        <div class="pm-state-actions">
+            <a href="Account/Login" class="pm-btn pm-btn-primary">Back to login</a>
+        </div>
+    </section>
+</main>

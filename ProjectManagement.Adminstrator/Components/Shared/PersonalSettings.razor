@@ -1,90 +1,99 @@
-﻿@using ProjectManagement.Adminstrator.Components.Account.Pages.Manage
+@using ProjectManagement.Adminstrator.Components.Account.Pages.Manage
 @using ProjectManagement.Adminstrator.Shared.Culture
 @using ProjectManagement.Adminstrator.Shared.Legal
 @inherits AppComponentBase
-<div class="flex flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
-    <nav class="w-64 h-full bg-gray-100 dark:bg-gray-800 p-0 shadow-md" aria-label="Settings menu">
-        <ul class="flex flex-col space-y-1 m-0 p-0 list-none">
-            <li role="button" @onclick="() => SelectedPage = PageSetting.ChangePassword" class="@GetItemClass(PageSetting.ChangePassword)">
-                <span>@ResourceIdentity.changePassword</span>
-            </li>
-            <li role="button" @onclick="() => SelectedPage = PageSetting.Language" class="@GetItemClass(PageSetting.Language)">
-                <span>@ResourceApp.language</span>
-            </li>
-            <li role="button" @onclick="() => SelectedPage = PageSetting.Impressum" class="@GetItemClass(PageSetting.Impressum)">
-                <span>Impressum</span>
-            </li>
-            <li role="button" @onclick="() => SelectedPage = PageSetting.Privacy" class="@GetItemClass(PageSetting.Privacy)">
-                <span>@AppControll.TabPrivacy</span>
-            </li>
-            <li role="button" @onclick="() => SelectedPage = PageSetting.Terms" class="@GetItemClass(PageSetting.Terms)">
-                <span>@AppControll.TabTerms</span>
-            </li>
-            <li role="button" @onclick="() => SelectedPage = PageSetting.Licenses" class="@GetItemClass(PageSetting.Licenses)">
-                <span>@AppControll.TabLicenses</span>
-            </li>
-        </ul>
-    </nav>
 
-    <div class="flex-1 p-1 overflow-auto">
-        @if (SelectedPage == PageSetting.ChangePassword)
-        {
-            <ChangePassword></ChangePassword>
-        }
-        else if (SelectedPage == PageSetting.Language)
-        {
-            <CultureSelector></CultureSelector>
-        }
-        else if (SelectedPage == PageSetting.Impressum)
-        {
+<div class="grid min-h-0 gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
+    <aside class="pm-card overflow-hidden">
+        <div class="pm-card-header">
             <div>
-                <ImpressumUI></ImpressumUI>
+                <div class="pm-eyebrow">Settings</div>
+                <div class="pm-card-title mt-1">Preferences</div>
+                <p class="pm-card-subtitle">Profile, localization, legal details, and account controls.</p>
             </div>
-        }
-        else if (SelectedPage == PageSetting.Privacy)
-        {
-            <div>
-                <h2>@AppControll.TabPrivacy</h2>
-                <p>@AppControll.PrivacyContent</p>
-            </div>
-        }
-        else if (SelectedPage == PageSetting.Terms)
-        {
-            <div>
-                <p>@((MarkupString)AppControll.TermsContent.Replace("\n", "<br />"))</p>
-            </div>
-        }
-        else if (SelectedPage == PageSetting.Licenses)
-        {
-            <div>
-                <ThirdPartyLicenses></ThirdPartyLicenses>
-            </div>
-        }
-    </div>
+        </div>
+
+        <nav class="p-3" aria-label="Settings menu">
+            <ul class="space-y-1">
+                <li>
+                    <button type="button" class="@GetItemClass(PageSetting.ChangePassword)" @onclick="() => SelectedPage = PageSetting.ChangePassword">@ResourceIdentity.changePassword</button>
+                </li>
+                <li>
+                    <button type="button" class="@GetItemClass(PageSetting.Language)" @onclick="() => SelectedPage = PageSetting.Language">@ResourceApp.language</button>
+                </li>
+                <li>
+                    <button type="button" class="@GetItemClass(PageSetting.Impressum)" @onclick="() => SelectedPage = PageSetting.Impressum">Impressum</button>
+                </li>
+                <li>
+                    <button type="button" class="@GetItemClass(PageSetting.Privacy)" @onclick="() => SelectedPage = PageSetting.Privacy">@AppControll.TabPrivacy</button>
+                </li>
+                <li>
+                    <button type="button" class="@GetItemClass(PageSetting.Terms)" @onclick="() => SelectedPage = PageSetting.Terms">@AppControll.TabTerms</button>
+                </li>
+                <li>
+                    <button type="button" class="@GetItemClass(PageSetting.Licenses)" @onclick="() => SelectedPage = PageSetting.Licenses">@AppControll.TabLicenses</button>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <section class="pm-card min-w-0 overflow-hidden">
+        <div class="pm-card-body min-h-[32rem] overflow-auto">
+            @if (SelectedPage == PageSetting.ChangePassword)
+            {
+                <div class="pm-page-header">
+                    <div class="pm-eyebrow">Security</div>
+                    <h2 class="pm-title">@ResourceIdentity.changePassword</h2>
+                    <p class="pm-subtitle">Update your password to keep the administrator account protected.</p>
+                </div>
+
+                <ChangePassword />
+            }
+            else if (SelectedPage == PageSetting.Language)
+            {
+                <div class="pm-page-header">
+                    <div class="pm-eyebrow">Localization</div>
+                    <h2 class="pm-title">@ResourceApp.language</h2>
+                    <p class="pm-subtitle">Choose how the administration interface should be displayed.</p>
+                </div>
+
+                <CultureSelector />
+            }
+            else if (SelectedPage == PageSetting.Impressum)
+            {
+                <ImpressumUI />
+            }
+            else if (SelectedPage == PageSetting.Privacy)
+            {
+                <PrivacyPolicy />
+            }
+            else if (SelectedPage == PageSetting.Terms)
+            {
+                <TermsOfUse />
+            }
+            else if (SelectedPage == PageSetting.Licenses)
+            {
+                <ThirdPartyLicenses />
+            }
+        </div>
+    </section>
 </div>
 
 @code {
-    private string GetItemClass(PageSetting page)
-    {
-        if (SelectedPage == page)
-        {
-            return "px-4 py-2 rounded text-left transition cursor-pointer bg-blue-500 text-white";
-        }
-        else
-        {
-            return "px-4 py-2 rounded text-left transition cursor-pointer bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700";
-        }
-    }
-}
-
-@code {
     [Parameter] public EventCallback CallBack { get; set; }
-    PageSetting SelectedPage;
 
+    private PageSetting SelectedPage = PageSetting.ChangePassword;
 
-    enum PageSetting
+    private string GetItemClass(PageSetting page)
+        => $"pm-sidebar-link {(SelectedPage == page ? "pm-sidebar-link-active" : string.Empty)}";
+
+    private enum PageSetting
     {
-        ChangePassword, Language, Impressum,
-        Privacy, Terms, Licenses
+        ChangePassword,
+        Language,
+        Impressum,
+        Privacy,
+        Terms,
+        Licenses
     }
 }

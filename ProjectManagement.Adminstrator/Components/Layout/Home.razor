@@ -9,67 +9,255 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
-<div class="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
-    <aside class="pm-card xl:sticky xl:top-24 xl:self-start">
-        <div class="pm-card-header">
+<div class="pm-page">
+    <section class="pm-page-header">
+        <div class="pm-page-kicker">Administration</div>
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
-                <div class="pm-label">Site Admin</div>
-                <h1 class="pm-title-lg mt-1">Control Center</h1>
-                <p class="pm-subtitle mt-2">
-                    Global management for folders, tenants, users, logs, actions, units, and resource blueprints.
+                <h1 class="pm-page-title">Admin control room</h1>
+                <p class="pm-page-subtitle">
+                    Manage shared data and platform-wide definitions from one place: tenants, folders, users, logs,
+                    task blueprints, units, properties, and action catalogs.
                 </p>
             </div>
-        </div>
 
-        <div class="pm-card-body-sm">
-            <nav class="space-y-1.5">
-                <button type="button" class="@NavButtonClass(null)" @onclick="() => Component = null">@AppControll.index</button>
-                <button type="button" class="@NavButtonClass(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">Folders</button>
-                <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">@AppControll.appUsers</button>
-                <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
-                <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
-                <button type="button" class="@NavButtonClass(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">Actions</button>
-                <button type="button" class="@NavButtonClass(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">Task &amp; Question</button>
-                <button type="button" class="@NavButtonClass(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">Units</button>
-                <button type="button" class="@NavButtonClass(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">Property</button>
-            </nav>
-        </div>
-    </aside>
-
-    <section class="pm-card min-w-0 overflow-hidden">
-        @if (Component is not null)
-        {
-            <div class="min-w-0 overflow-x-auto p-3 sm:p-4 lg:p-5">
-                <DynamicComponent Type="Component" />
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="pm-kbd">Restricted</span>
+                <span class="pm-kbd">Shared scope</span>
+                <span class="pm-kbd">Interactive server</span>
             </div>
-        }
-        else
-        {
-            <div class="flex min-h-[70vh] flex-col items-center justify-center gap-6 p-8 text-center">
-                <img src="Icons/BigLogo.png" alt="ProjectManagement Admin" class="max-h-52 w-auto opacity-90 dark:opacity-80" />
-                <div class="max-w-2xl">
-                    <h2 class="pm-title-lg">Welcome to the site administration area</h2>
-                    <p class="pm-subtitle mt-3">
-                        This application is reserved for global administration tasks. Tenant-facing workflows stay inside the main ProjectManagement app.
-                    </p>
-                </div>
-
-                <div class="flex flex-wrap items-center justify-center gap-2">
-                    <span class="pm-chip">Folders</span>
-                    <span class="pm-chip">Users</span>
-                    <span class="pm-chip">Tenants</span>
-                    <span class="pm-chip">Logs</span>
-                    <span class="pm-chip">Resources</span>
-                    <span class="pm-chip">Questions</span>
-                </div>
-            </div>
-        }
+        </div>
     </section>
+
+    <div class="pm-grid-shell">
+        <aside class="pm-sidebar">
+            <div class="pm-sidebar-head">
+                <div class="pm-page-kicker">Workspaces</div>
+                <h2 class="text-lg font-semibold text-slate-950 dark:text-white">Navigate the admin area</h2>
+                <p class="text-sm leading-6 text-slate-500 dark:text-slate-400">Choose a section on the left. The selected screen loads in the main workspace without leaving the dashboard.</p>
+            </div>
+
+            <div class="pm-nav-group">
+                <div class="pm-nav-caption">Overview</div>
+                <button type="button" class="@NavButtonClass(null)" @onclick="() => Component = null">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.Company)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">Dashboard</span>
+                        <span class="pm-nav-copy">Open the admin overview.</span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="pm-nav-group">
+                <div class="pm-nav-caption">Structure</div>
+                <button type="button" class="@NavButtonClass(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.Folder)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">Folders</span>
+                        <span class="pm-nav-copy">Review global folder structure.</span>
+                    </span>
+                </button>
+                <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.Storage)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">@AppControll.tenant</span>
+                        <span class="pm-nav-copy">Inspect tenant scope and database ownership.</span>
+                    </span>
+                </button>
+                <button type="button" class="@NavButtonClass(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.List)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">Units</span>
+                        <span class="pm-nav-copy">Maintain shared measurement catalogs.</span>
+                    </span>
+                </button>
+                <button type="button" class="@NavButtonClass(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.Settings)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">Properties</span>
+                        <span class="pm-nav-copy">Manage reusable property groups.</span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="pm-nav-group">
+                <div class="pm-nav-caption">People & operations</div>
+                <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(UserAppUI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.Person)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">@AppControll.appUsers</span>
+                        <span class="pm-nav-copy">Review roles and site administrators.</span>
+                    </span>
+                </button>
+                <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.Search)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">Logs</span>
+                        <span class="pm-nav-copy">Audit the latest operational records.</span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="pm-nav-group">
+                <div class="pm-nav-caption">Execution</div>
+                <button type="button" class="@NavButtonClass(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.Refresh)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">Actions</span>
+                        <span class="pm-nav-copy">Maintain action, fall, and location lists.</span>
+                    </span>
+                </button>
+                <button type="button" class="@NavButtonClass(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">
+                    <span class="pm-nav-icon">@((MarkupString)Icons.NewTask)</span>
+                    <span class="min-w-0 flex-1">
+                        <span class="pm-nav-title">Task &amp; question</span>
+                        <span class="pm-nav-copy">Edit blueprint tasks and related questions.</span>
+                    </span>
+                </button>
+            </div>
+        </aside>
+
+        <section class="min-w-0 space-y-5">
+            @if (Component is not null)
+            {
+                <div class="pm-card p-5 sm:p-6">
+                    <div class="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <div class="pm-page-kicker">Workspace</div>
+                            <h2 class="text-xl font-semibold text-slate-950 dark:text-white">@GetComponentTitle()</h2>
+                            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Work inside the selected admin area. Return to the overview at any time.</p>
+                        </div>
+                        <button type="button" class="pm-btn pm-btn-secondary" @onclick="() => Component = null">
+                            @((MarkupString)Icons.Back)
+                            <span>Back to dashboard</span>
+                        </button>
+                    </div>
+
+                    <DynamicComponent Type="Component" />
+                </div>
+            }
+            else
+            {
+                <div class="pm-stat-grid">
+                    <div class="pm-stat-card">
+                        <div class="pm-stat-label">Core modules</div>
+                        <div class="pm-stat-value">8</div>
+                        <div class="pm-stat-note">Tenants, folders, users, logs, actions, tasks, units, and properties.</div>
+                    </div>
+                    <div class="pm-stat-card">
+                        <div class="pm-stat-label">Primary focus</div>
+                        <div class="pm-stat-value">Control</div>
+                        <div class="pm-stat-note">Use this app for shared maintenance, not tenant day-to-day work.</div>
+                    </div>
+                    <div class="pm-stat-card">
+                        <div class="pm-stat-label">Flow</div>
+                        <div class="pm-stat-value">Browse → edit</div>
+                        <div class="pm-stat-note">Choose a workspace, inspect the data, then open editor dialogs only when needed.</div>
+                    </div>
+                    <div class="pm-stat-card">
+                        <div class="pm-stat-label">Impact</div>
+                        <div class="pm-stat-value">Platform-wide</div>
+                        <div class="pm-stat-note">Changes here affect shared catalogs, tenant setup, and operational metadata.</div>
+                    </div>
+                </div>
+
+                <div class="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_22rem]">
+                    <div class="space-y-5 min-w-0">
+                        <div class="pm-card p-6 sm:p-7">
+                            <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                                <div class="max-w-3xl">
+                                    <div class="pm-page-kicker">Start here</div>
+                                    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">A cleaner shell for daily admin work.</h2>
+                                    <p class="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-400">
+                                        The admin app should feel focused and structured. Open one workspace at a time,
+                                        use clear tables and dialogs, and keep platform-level changes separate from tenant workflows.
+                                    </p>
+                                </div>
+
+                                <div class="pm-logo-card">
+                                    <img src="Icons/BigLogo.png" alt="ProjectManagement Admin" class="max-h-20 w-auto opacity-90 dark:opacity-80" />
+                                </div>
+                            </div>
+
+                            <div class="pm-quick-grid mt-6">
+                                <button type="button" class="pm-quick-card" @onclick="() => Component = typeof(Tenant.IndexUI)">
+                                    <span class="pm-quick-icon">@((MarkupString)Icons.Storage)</span>
+                                    <span class="pm-quick-title">Tenants</span>
+                                    <span class="pm-quick-copy">Review tenant records, expiry, and database model.</span>
+                                </button>
+                                <button type="button" class="pm-quick-card" @onclick="() => Component = typeof(FolderTree2UI)">
+                                    <span class="pm-quick-icon">@((MarkupString)Icons.Folder)</span>
+                                    <span class="pm-quick-title">Folders</span>
+                                    <span class="pm-quick-copy">Inspect and organize the shared folder tree.</span>
+                                </button>
+                                <button type="button" class="pm-quick-card" @onclick="() => Component = typeof(UserAppUI)">
+                                    <span class="pm-quick-icon">@((MarkupString)Icons.Person)</span>
+                                    <span class="pm-quick-title">Users</span>
+                                    <span class="pm-quick-copy">Manage site administrators and user scope.</span>
+                                </button>
+                                <button type="button" class="pm-quick-card" @onclick="() => Component = typeof(LogUI)">
+                                    <span class="pm-quick-icon">@((MarkupString)Icons.Search)</span>
+                                    <span class="pm-quick-title">Logs</span>
+                                    <span class="pm-quick-copy">Filter and review operational records.</span>
+                                </button>
+                                <button type="button" class="pm-quick-card" @onclick="() => Component = typeof(ControlTaskStatusUI)">
+                                    <span class="pm-quick-icon">@((MarkupString)Icons.Refresh)</span>
+                                    <span class="pm-quick-title">Actions</span>
+                                    <span class="pm-quick-copy">Maintain action types, locations, and falls.</span>
+                                </button>
+                                <button type="button" class="pm-quick-card" @onclick="() => Component = typeof(TaskDLIndexUI)">
+                                    <span class="pm-quick-icon">@((MarkupString)Icons.NewTask)</span>
+                                    <span class="pm-quick-title">Task blueprints</span>
+                                    <span class="pm-quick-copy">Edit task definitions, resources, and questions.</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div class="pm-card p-5">
+                            <div class="pm-section-title">How to use this area</div>
+                            <ul class="pm-list mt-4">
+                                <li class="pm-list-item">Open one workspace from the left navigation.</li>
+                                <li class="pm-list-item">Use filters and tables to inspect shared data first.</li>
+                                <li class="pm-list-item">Open edit dialogs only for targeted changes.</li>
+                                <li class="pm-list-item">Return to the dashboard when you need another workspace.</li>
+                            </ul>
+                        </div>
+
+                        <div class="pm-card p-5">
+                            <div class="pm-section-title">Good admin boundaries</div>
+                            <ul class="pm-list mt-4">
+                                <li class="pm-list-item">Shared catalogs and platform settings belong here.</li>
+                                <li class="pm-list-item">Tenant-specific daily workflows belong in the main app.</li>
+                                <li class="pm-list-item">Use logs and tenant views for correction and audit.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+        </section>
+    </div>
 </div>
 
 @code {
     private Type? Component;
 
     private string NavButtonClass(Type? cmp)
-        => Component == cmp ? "pm-sidebar-link-active" : "pm-sidebar-link";
+        => Component == cmp
+            ? "pm-nav-link pm-nav-link-active"
+            : "pm-nav-link";
+
+    private string GetComponentTitle()
+    {
+        if (Component == typeof(FolderTree2UI)) return "Folders";
+        if (Component == typeof(Tenant.IndexUI)) return "Tenants";
+        if (Component == typeof(UnitsGroupIndexUI)) return "Units";
+        if (Component == typeof(PropertyGroupsUI)) return "Properties";
+        if (Component == typeof(UserAppUI)) return "Users";
+        if (Component == typeof(LogUI)) return "Logs";
+        if (Component == typeof(ControlTaskStatusUI)) return "Actions";
+        if (Component == typeof(TaskDLIndexUI)) return "Task & question";
+        return "Workspace";
+    }
 }

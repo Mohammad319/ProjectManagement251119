@@ -1,4 +1,4 @@
-@using ContextMenuMHD
+﻿@using ContextMenuMHD
 @using Microsoft.EntityFrameworkCore
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
@@ -10,56 +10,79 @@
 @using ProjectManagement.Shared.Enums
 @inject IResourceCategoryService ResourceFolderService
 
-<div class="grid gap-4 xl:grid-cols-[18rem_minmax(0,1fr)]">
-    <aside class="pm-card overflow-hidden">
-        <div class="pm-card-header">
-            <div>
-                <h3 class="pm-title">Folders</h3>
-                <p class="pm-subtitle mt-1">Choose a folder to display its resources.</p>
+<div class="pm-page">
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+        <aside class="pm-card-soft">
+            <div class="pm-section-header !mb-3">
+                <div>
+                    <h3 class="pm-section-title">Folders</h3>
+                    <p class="pm-section-subtitle">Select a folder to show its resources.</p>
+                </div>
+
+                @if (EnableFolderContext)
+                {
+                    <button type="button" class="pm-btn-primary" @onclick="() => AddFolder(null)">
+                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                        <span>@ResourceApp.newItem</span>
+                    </button>
+                }
             </div>
 
-            @if (EnableFolderContext)
-            {
-                <button class="pm-btn-outline" @onclick="() => AddFolder(null)">
-                    @((MarkupString)Icons.Plus)
-                </button>
-            }
-        </div>
-
-        <div class="pm-card-body-sm max-h-[70vh] overflow-auto">
-            @FolderTreeHelper.RenderFolderTreeRecursive(
+            <div class="max-h-[70vh] overflow-auto pr-1">
+                @FolderTreeHelper.RenderFolderTreeRecursive(
                     this,
                     Folders,
                     expanded,
                     selectedFolderIds,
                     EventCallback.Factory.Create<ResourceCategory>(this, ToggleSelectionAsync),
                     EnableFolderContext
-                    ? EventCallback.Factory.Create<ResourceCategory>(this, ContextF)
-                    : EventCallback<ResourceCategory>.Empty)
-        </div>
-    </aside>
-
-    <section class="pm-card min-w-0 overflow-hidden">
-        <div class="pm-card-header">
-            <div>
-                <h3 class="pm-title">Resources</h3>
-                <p class="pm-subtitle mt-1">Selected folders: @selectedFolderIds.Count • Resources: @resourcesToShow.Count</p>
+                        ? EventCallback.Factory.Create<ResourceCategory>(this, ContextF)
+                        : EventCallback<ResourceCategory>.Empty)
             </div>
-        </div>
+        </aside>
 
-        <div class="pm-card-body-sm">
+        <section class="pm-table-shell">
+            <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 sm:px-5">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h3 class="pm-section-title">Resources</h3>
+                        <p class="pm-section-subtitle">
+                            @if (selectedFolderIds.Count == 0)
+                            {
+                                <span>Select one folder to review its resources.</span>
+                            }
+                            else
+                            {
+                                <span>@SelectedFolderLabel</span>
+                            }
+                        </p>
+                    </div>
+
+                    <div class="pm-action-stack">
+                        @if (selectedFolderIds.Count > 0)
+                        {
+                            <span class="pm-chip">@resourcesToShow.Count items</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
             @if (!selectedFolderIds.Any())
             {
-                <div class="pm-empty">Select one folder to display its resources.</div>
+                <div class="p-5">
+                    <div class="pm-empty">Select one or more folders to see resources.</div>
+                </div>
             }
             else if (!resourcesToShow.Any())
             {
-                <div class="pm-empty">No resources were found in the selected folder.</div>
+                <div class="p-5">
+                    <div class="pm-empty">No resources in the selected folders.</div>
+                </div>
             }
             else
             {
-                <div class="pm-table-wrap">
-                    <table class="pm-table min-w-[1100px] border-separate border-spacing-0">
+                <div class="pm-table-scroll">
+                    <table class="pm-table">
                         <thead>
                             <tr>
                                 <th>@CalcResource.name</th>
@@ -69,8 +92,8 @@
                                 <th>@CalcResource.quantity</th>
                                 <th>@CalcResource.changeFactor1 / 2</th>
                                 <th>@CalcResource.cap / @CalcResource.waste</th>
-                                <th>@CalcResource.cap</th>
                                 <th>@CalcResource.cost</th>
+                                <th>@CalcResource.baseCost</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,22 +101,22 @@
                             {
                                 <tr>
                                     <td>
-                                        <div class="flex flex-wrap items-center gap-2">
+                                        <div class="flex min-w-[260px] items-center gap-2">
                                             @if (RowActions is not null)
                                             {
                                                 @if (r.ResType == ResourceTypesEnum.MachinesAndEquipments || r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.Managers)
                                                 {
-                                                    <button type="button" class="pm-btn-outline" @onclick="() => CalcModeal(r)">Calc</button>
+                                                    <button type="button" class="pm-btn-primary !px-2 !py-1 !text-xs" @onclick="() => CalcModeal(r)">Calc</button>
                                                 }
-
                                                 @RowActions(r)
                                             }
-
-                                            <span class="font-medium text-slate-900 dark:text-slate-100">@r.Name</span>
+                                            <div class="min-w-0">
+                                                <div class="truncate font-medium text-slate-800 dark:text-slate-100">@r.Name</div>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" checked="@r.IsActive" disabled />
+                                        <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" checked="@r.IsActive" disabled />
                                     </td>
                                     <td>@r.ResType</td>
                                     <td>@r.Data.Unit</td>
@@ -108,8 +131,8 @@
                     </table>
                 </div>
             }
-        </div>
-    </section>
+        </section>
+    </div>
 </div>
 
 @code {
@@ -120,6 +143,10 @@
     private List<ResourceDefinition> resourcesToShow = new();
     private HashSet<int> expanded = new();
     private HashSet<int> selectedFolderIds = new();
+
+    private string SelectedFolderLabel => selectedFolderIds.Count == 1
+        ? Folders.FirstOrDefault(x => x.Id == selectedFolderIds.First())?.DisplayName ?? string.Empty
+        : string.Join(", ", Folders.Where(x => selectedFolderIds.Contains(x.Id)).Select(x => x.DisplayName));
 
     void CalcModeal(ResourceDefinition model) => MHD.Modal.ShowComponent<CalcResCostUI>(model.Name,
     new Dictionary<string, object>
@@ -150,21 +177,21 @@
     async Task ContextF(ResourceCategory item)
     {
         var list = new List<MenuItem>()
-            {
-                new() { Label = $"➕ Resource", OnClickAsync = () => {UpdateForm(new ResourceDefinition(){FolderId = item.Id}); return Task.CompletedTask; } },
-                new() { Label = $"➕ Subfolder", OnClickAsync = () => {AddFolder(item.Id); return Task.CompletedTask; } },
-                new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => {UpdateForm(item); return Task.CompletedTask; } },
-                new() { Label = $"🗑 {ResourceApp.delete}", OnClickAsync = () => {Remove(item); return Task.CompletedTask; } },
-            };
+        {
+            new() { Label = $"➕ Resource", OnClickAsync = () => { UpdateForm(new ResourceDefinition(){ FolderId = item.Id }); return Task.CompletedTask; } },
+            new() { Label = $"➕ Subfolder", OnClickAsync = () => { AddFolder(item.Id); return Task.CompletedTask; } },
+            new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } },
+            new() { Label = $"🗑 {ResourceApp.delete}", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } },
+        };
         await ContextService.ShowMenuAsync(list);
     }
 
     void UpdateForm(ResourceDefinition model) => MHD.Modal.ShowComponent<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
-new Dictionary<string, object>
-{
-[nameof(ResourceFormDLUI.model)] = model,
-    [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
-});
+    new Dictionary<string, object>
+    {
+        [nameof(ResourceFormDLUI.model)] = model,
+        [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
+    });
 
     async Task RefreshAsync()
     {
@@ -173,13 +200,15 @@ new Dictionary<string, object>
     }
 
     private void AddFolder(int? parentID) => UpdateForm(new ResourceCategory() { DisplayName = "", ParentCategoryId = parentID });
+
     void UpdateForm(ResourceCategory model) =>
-    Modal.ShowComponent<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
-        AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
-        {
-            [nameof(FolderFormUI.Form)] = model,
-            [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-        }, DialogSize.Medium);
+        Modal.ShowComponent<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+            AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+            {
+                [nameof(FolderFormUI.Form)] = model,
+                [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+            }, DialogSize.Medium);
+
     void Remove(ResourceCategory model) => MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => DeleteFolder(model.Id)));
 
     private async Task DeleteFolder(int id)

@@ -1,11 +1,10 @@
-﻿@page "/Account/Manage/Email"
+@page "/Account/Manage/Email"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
-
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IEmailSender<ApplicationUser> EmailSender
@@ -14,111 +13,63 @@
 
 <PageTitle>Manage email</PageTitle>
 
-<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Manage email</h3>
+<div class="space-y-5">
+    <div>
+        <h2 class="pm-page-title text-xl">Manage email</h2>
+        <p class="pm-page-subtitle mt-1">Keep your sign-in and notification email up to date.</p>
+    </div>
 
-<StatusMessage Message="@message" />
+    <StatusMessage Message="@message" />
 
-<div class="grid grid-cols-1 gap-6">
-    <div class="max-w-xl">
-        <form @onsubmit="OnSendEmailVerificationAsync"
-              @formname="send-verification"
-              id="send-verification-form"
-              method="post">
-            <AntiforgeryToken />
-        </form>
+    <form @onsubmit="OnSendEmailVerificationAsync"
+          @formname="send-verification"
+          id="send-verification-form"
+          method="post">
+        <AntiforgeryToken />
+    </form>
 
+    <div class="pm-card-soft max-w-2xl">
         <EditForm Model="Input"
                   FormName="change-email"
                   OnValidSubmit="OnValidSubmitAsync"
                   method="post"
-                  class="space-y-6">
+                  class="pm-form">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+            <ValidationSummary class="pm-validation" role="alert" />
 
-            @if (isEmailConfirmed)
-            {
-                <!-- Confirmed email (disabled input with checkmark) -->
-                <div class="relative">
-                    <input type="text"
-                           value="@email"
-                           id="email"
-                           placeholder=" "
-                           disabled
-                           class="peer block w-full rounded-lg border border-gray-300 bg-gray-100 px-3 pt-6 pb-2 text-gray-700 shadow-sm
-                           placeholder-transparent disabled:cursor-not-allowed
-                           focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500
-                           dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
-                    <label for="email"
-                           class="pointer-events-none absolute left-3 top-2 text-sm text-gray-500 transition-all
-                           peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
-                           peer-focus:top-2 peer-focus:text-sm
-                           dark:text-gray-400">
-                        Email
-                    </label>
-                    <span class="absolute inset-y-0 right-3 flex items-center text-green-600 font-bold dark:text-green-400">✓</span>
+            <div class="pm-field">
+                <label for="email" class="pm-label">Current email</label>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <input type="text" id="email" value="@email" disabled class="pm-input pm-input-disabled sm:flex-1" />
+                    @if (isEmailConfirmed)
+                    {
+                        <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950 dark:text-emerald-300">
+                            Confirmed
+                        </span>
+                    }
+                    else
+                    {
+                        <button type="submit" form="send-verification-form" class="pm-btn pm-btn-secondary">
+                            Send verification
+                        </button>
+                    }
                 </div>
-            }
-            else
-            {
-                <!-- Unconfirmed email (disabled input + link button to send verification) -->
-                <div class="space-y-2">
-                    <div class="relative">
-                        <input type="text"
-                               value="@email"
-                               id="email"
-                               placeholder=" "
-                               disabled
-                               class="peer block w-full rounded-lg border border-gray-300 bg-gray-100 px-3 pt-6 pb-2 text-gray-700 shadow-sm
-                             placeholder-transparent disabled:cursor-not-allowed
-                             focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500
-                             dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
-                        <label for="email"
-                               class="pointer-events-none absolute left-3 top-2 text-sm text-gray-500 transition-all
-                             peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
-                             peer-focus:top-2 peer-focus:text-sm
-                             dark:text-gray-400">
-                            Email
-                        </label>
-                    </div>
-
-                    <button type="submit"
-                            form="send-verification-form"
-                            class="inline-flex items-center text-sm font-medium text-blue-700 underline underline-offset-2 hover:no-underline
-                           dark:text-blue-300">
-                        Send verification email
-                    </button>
-                </div>
-            }
-
-            <!-- New email input -->
-            <div>
-                <div class="relative">
-                    <InputText @bind-Value="Input.NewEmail"
-                               id="Input.NewEmail"
-                               autocomplete="email"
-                               aria-required="true"
-                               placeholder=" "
-                               class="peer block w-full rounded-lg border border-gray-300 bg-white px-3 pt-6 pb-2 text-gray-900 shadow-sm
-                   placeholder-transparent
-                   focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500
-                   dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
-                    <label for="Input.NewEmail"
-                           class="pointer-events-none absolute left-3 top-2 text-sm text-gray-500 transition-all
-                   peer-placeholder-shown:top-3 peer-placeholder-shown:text-base
-                   peer-focus:top-2 peer-focus:text-sm
-                   dark:text-gray-400">
-                        New email
-                    </label>
-                </div>
-                <ValidationMessage For="() => Input.NewEmail" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
+                <p class="pm-help">A confirmation email is required when the address changes.</p>
             </div>
 
-            <button type="submit"
-                    class="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
-               transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-               dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Change email
-            </button>
+            <div class="pm-field">
+                <label for="Input.NewEmail" class="pm-label">New email</label>
+                <InputText @bind-Value="Input.NewEmail"
+                           id="Input.NewEmail"
+                           autocomplete="email"
+                           aria-required="true"
+                           class="pm-input" />
+                <ValidationMessage For="() => Input.NewEmail" class="pm-validation" />
+            </div>
+
+            <div class="flex flex-wrap gap-3 pt-1">
+                <button type="submit" class="pm-btn pm-btn-primary">Change email</button>
+            </div>
         </EditForm>
     </div>
 </div>

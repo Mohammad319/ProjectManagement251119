@@ -10,132 +10,159 @@
 @inject IUsersService sersService
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
-<div class="space-y-4">
+<div class="pm-form-shell">
     @if (Put != null)
     {
-        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm">
+        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm" class="pm-form-shell">
             <DataAnnotationsValidator />
-            <ValidationSummary class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300" />
+            <ValidationSummary class="pm-validation-summary" />
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                @if (Id == 0)
-                {
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.Db</label>
-                        <InputSelect @bind-Value="Put.TenantDBId" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                            @if (Databases != null)
-                            {
-                                foreach (var status in Databases)
+            <section class="pm-form-section">
+                <div>
+                    <h3 class="pm-form-section-title">General</h3>
+                    <p class="pm-form-section-text">Main tenant identity, website, and expiration settings.</p>
+                </div>
+
+                <div class="pm-form-grid">
+                    @if (Id == 0)
+                    {
+                        <div class="pm-field">
+                            <label class="pm-label">@AppControll.Db</label>
+                            <InputSelect @bind-Value="Put.TenantDBId" class="pm-select">
+                                @if (Databases != null)
                                 {
-                                    <option value="@status.Id">@status.Name</option>
+                                    foreach (var status in Databases)
+                                    {
+                                        <option value="@status.Id">@status.Name</option>
+                                    }
                                 }
-                            }
-                        </InputSelect>
+                            </InputSelect>
+                        </div>
+                    }
+
+                    <div class="pm-field">
+                        <label class="pm-label">@CalcResource.name</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Name" />
+                        <ValidationMessage For="@(() => Put.Name)" class="pm-validation-message" />
                     </div>
-                }
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Name" />
-                    <ValidationMessage For="@(() => Put.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">url:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Website" />
-                    <ValidationMessage For="@(() => Put.Website)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.expire:</label>
-                    <InputDate class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.DateExpire" />
-                    <ValidationMessage For="@(() => Put.DateExpire)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">Url</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Website" />
+                        <ValidationMessage For="@(() => Put.Website)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.maxUsers:</label>
-                    <InputNumber class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.MaxUsers" />
-                    <ValidationMessage For="@(() => Put.MaxUsers)" class="text-sm text-rose-600 dark:text-rose-400" />
+                    <div class="pm-field">
+                        <label class="pm-label">@AppControll.expire</label>
+                        <InputDate class="pm-input" @bind-Value="@Put.DateExpire" />
+                        <ValidationMessage For="@(() => Put.DateExpire)" class="pm-validation-message" />
+                    </div>
+                </div>
+            </section>
+
+            <section class="pm-form-section">
+                <div>
+                    <h3 class="pm-form-section-title">Limits</h3>
+                    <p class="pm-form-section-text">Usage caps for users and calculations.</p>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.maxCalculations:</label>
-                    <InputNumber class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.MaxCalculations" />
-                    <ValidationMessage For="@(() => Put.MaxCalculations)" class="text-sm text-rose-600 dark:text-rose-400" />
+                <div class="pm-form-grid-2">
+                    <div class="pm-field">
+                        <label class="pm-label">@AppControll.maxUsers</label>
+                        <InputNumber class="pm-input" @bind-Value="@Put.MaxUsers" />
+                        <ValidationMessage For="@(() => Put.MaxUsers)" class="pm-validation-message" />
+                    </div>
+
+                    <div class="pm-field">
+                        <label class="pm-label">@AppControll.maxCalculations</label>
+                        <InputNumber class="pm-input" @bind-Value="@Put.MaxCalculations" />
+                        <ValidationMessage For="@(() => Put.MaxCalculations)" class="pm-validation-message" />
+                    </div>
+                </div>
+            </section>
+
+            <section class="pm-form-section">
+                <div>
+                    <h3 class="pm-form-section-title">Contact details</h3>
+                    <p class="pm-form-section-text">Communication and address information for the tenant.</p>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.phone:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Phone" />
-                    <ValidationMessage For="@(() => Put.Phone)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                <div class="pm-form-grid">
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.phone</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Phone" />
+                        <ValidationMessage For="@(() => Put.Phone)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.mobile:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Mobile" />
-                    <ValidationMessage For="@(() => Put.Mobile)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.mobile</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Mobile" />
+                        <ValidationMessage For="@(() => Put.Mobile)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.fax:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Fax" />
-                    <ValidationMessage For="@(() => Put.Fax)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.fax</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Fax" />
+                        <ValidationMessage For="@(() => Put.Fax)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Email" />
-                    <ValidationMessage For="@(() => Put.Email)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.email</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Email" />
+                        <ValidationMessage For="@(() => Put.Email)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.country:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Country" />
-                    <ValidationMessage For="@(() => Put.Country)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.country</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Country" />
+                        <ValidationMessage For="@(() => Put.Country)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.city:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.City" />
-                    <ValidationMessage For="@(() => Put.City)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.city</label>
+                        <InputText class="pm-input" @bind-Value="@Put.City" />
+                        <ValidationMessage For="@(() => Put.City)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.zipCode:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.PostCode" />
-                    <ValidationMessage For="@(() => Put.PostCode)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.zipCode</label>
+                        <InputText class="pm-input" @bind-Value="@Put.PostCode" />
+                        <ValidationMessage For="@(() => Put.PostCode)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@AppControll.street:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Street" />
-                    <ValidationMessage For="@(() => Put.Street)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@AppControll.street</label>
+                        <InputText class="pm-input" @bind-Value="@Put.Street" />
+                        <ValidationMessage For="@(() => Put.Street)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.build:</label>
-                    <InputText class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.BuildNumber" />
-                    <ValidationMessage For="@(() => Put.BuildNumber)" class="text-sm text-rose-600 dark:text-rose-400" />
-                </div>
+                    <div class="pm-field">
+                        <label class="pm-label">@ResourceIdentity.build</label>
+                        <InputText class="pm-input" @bind-Value="@Put.BuildNumber" />
+                        <ValidationMessage For="@(() => Put.BuildNumber)" class="pm-validation-message" />
+                    </div>
 
-                <div class="space-y-1 md:col-span-2 xl:col-span-4">
-                    <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note:</label>
-                    <InputTextArea class="min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none ring-sky-500 transition focus:ring-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind-Value="@Put.Note" />
-                    <ValidationMessage For="@(() => Put.Note)" class="text-sm text-rose-600 dark:text-rose-400" />
+                    <div class="pm-field pm-field-wide">
+                        <label class="pm-label">@CalcResource.note</label>
+                        <InputTextArea class="pm-textarea" @bind-Value="@Put.Note" />
+                        <ValidationMessage For="@(() => Put.Note)" class="pm-validation-message" />
+                    </div>
                 </div>
-            </div>
+            </section>
         </EditForm>
 
-        <div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
-            <button type="submit" form="tenantForm" class="inline-flex items-center rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50" disabled="@IsLoading">
+        <div class="pm-toolbar">
+            <button type="submit" form="tenantForm" class="pm-btn-success" disabled="@IsLoading">
                 @ResourceApp.save
             </button>
-            <button type="button" class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync(false)">
+            <button type="button" class="pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync(false)">
                 @ResourceApp.cancel
             </button>
         </div>
     }
 </div>
 
-    @code{
+@code{
     [Parameter] public int Id { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
     bool IsLoading = false;

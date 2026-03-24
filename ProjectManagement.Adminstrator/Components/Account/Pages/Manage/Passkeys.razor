@@ -1,5 +1,4 @@
-﻿@page "/Account/Manage/Passkeys"
-
+@page "/Account/Manage/Passkeys"
 
 @using Microsoft.AspNetCore.Identity
 @using System.ComponentModel.DataAnnotations
@@ -11,53 +10,65 @@
 
 <PageTitle>Manage your passkeys</PageTitle>
 
-<h3>Manage your passkeys</h3>
+<div class="space-y-5">
+    <div>
+        <h2 class="pm-page-title text-xl">Passkeys</h2>
+        <p class="pm-page-subtitle mt-1">Manage passwordless sign-in credentials registered on this account.</p>
+    </div>
 
-<StatusMessage />
+    <StatusMessage />
 
-@if (currentPasskeys is { Count: > 0 })
-{
-    <table class="table">
-        <tbody>
-            @foreach (var passkey in currentPasskeys)
-            {
-                <tr>
-                    <td>@(passkey.Name ?? "Unnamed passkey")</td>
-                    <td>
-                        @{
-                            var credentialId = Base64Url.EncodeToString(passkey.CredentialId);
-                        }
-                        <form @formname="@($"update-passkey-{credentialId}")" @onsubmit="UpdatePasskey" method="post">
-                            <AntiforgeryToken />
-                            <div>
-                                <input type="hidden" name="CredentialId" value="@credentialId" />
-                                <button type="submit" name="Action" value="rename" class="btn btn-primary" title="Rename this passkey">Rename</button>
-                                <button type="submit" name="Action" value="delete" class="btn btn-danger" title="Remove this passkey from your account">Delete</button>
-                            </div>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No passkeys are registered.</p>
-}
-
-<form @formname="add-passkey" @onsubmit="AddPasskey" method="post">
-    <AntiforgeryToken />
-    @if (currentPasskeys is { Count: >= MaxPasskeyCount })
+    @if (currentPasskeys is { Count: > 0 })
     {
-        <p class="text-danger">You have reached the maximum number of allowed passkeys. Please delete one before adding a new one.</p>
+        <div class="pm-table-wrap">
+            <table class="pm-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th class="w-[260px]">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var passkey in currentPasskeys)
+                    {
+                      var credentialId = Base64Url.EncodeToString(passkey.CredentialId);
+                        <tr>
+                            <td>@(passkey.Name ?? "Unnamed passkey")</td>
+                            <td>
+                                <form @formname="@($"update-passkey-{credentialId}")" @onsubmit="UpdatePasskey" method="post">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="CredentialId" value="@credentialId" />
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="submit" name="Action" value="rename" class="pm-btn pm-btn-secondary" title="Rename this passkey">Rename</button>
+                                        <button type="submit" name="Action" value="delete" class="pm-btn pm-btn-danger" title="Remove this passkey from your account">Delete</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
     else
     {
-        <PasskeySubmit Operation="PasskeyOperation.Create" Name="Input" class="btn btn-primary">Add a new passkey</PasskeySubmit>
+        <div class="pm-empty">No passkeys are registered.</div>
     }
 
-</form>
+    <div class="pm-card-soft">
+        <form @formname="add-passkey" @onsubmit="AddPasskey" method="post" class="space-y-3">
+            <AntiforgeryToken />
+            @if (currentPasskeys is { Count: >= MaxPasskeyCount })
+            {
+                <div class="pm-alert pm-alert-warning">You have reached the maximum number of allowed passkeys. Please delete one before adding a new one.</div>
+            }
+            else
+            {
+                <PasskeySubmit Operation="PasskeyOperation.Create" Name="Input" class="pm-btn pm-btn-primary">Add a new passkey</PasskeySubmit>
+            }
+        </form>
+    </div>
+</div>
 
 @code {
     private const int MaxPasskeyCount = 100;
@@ -130,7 +141,6 @@ else
             return;
         }
 
-        // Immediately prompt the user to enter a name for the credential
         var credentialIdBase64Url = Base64Url.EncodeToString(attestationResult.Passkey.CredentialId);
         RedirectManager.RedirectTo($"Account/Manage/RenamePasskey/{credentialIdBase64Url}");
     }

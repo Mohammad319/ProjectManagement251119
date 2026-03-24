@@ -1,31 +1,58 @@
-﻿@page "/rt"
-@using Microsoft.JSInterop
-<button @onclick="async ()=> await Cl()">dfdg</button>
-@if(t){
-    <table class="resizable-table">
-        <thead>
-            <tr>
-                <th class="sticky">ID <span class="resize-handle"></span></th>
-                <th>Name <span class="resize-handle"></span></th>
-                <th>Position <span class="resize-handle"></span></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var emp in Employees)
-            {
-                <tr>
-                    <td class="sticky">@emp.Id</td>
-                    <td>@emp.Name</td>
-                    <td>@emp.Position</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+@page "/rt"
 
+<div class="mx-auto max-w-5xl space-y-4">
+    <section class="pm-section">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <div class="pm-eyebrow">Internal preview</div>
+                <h1 class="pm-title mt-1">Shared table style sandbox</h1>
+                <p class="pm-subtitle mt-2">Use this internal page to preview the shared admin table style and empty-state treatment.</p>
+            </div>
+
+            <button class="pm-btn-secondary" @onclick="ToggleRows">
+                @(showRows ? "Show empty state" : "Show sample rows")
+            </button>
+        </div>
+    </section>
+
+    <section class="pm-table-wrap">
+        @if (showRows)
+        {
+            <div class="overflow-x-auto">
+                <table class="pm-table">
+                    <thead>
+                        <tr>
+                            <th class="pm-th">ID</th>
+                            <th class="pm-th">Name</th>
+                            <th class="pm-th">Position</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var emp in Employees)
+                        {
+                            <tr class="pm-tr">
+                                <td class="pm-td font-medium">@emp.Id</td>
+                                <td class="pm-td">@emp.Name</td>
+                                <td class="pm-td">@emp.Position</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="pm-empty m-4">
+                <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">No rows to display</div>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">This is the shared empty state that can be reused in admin tables and list views.</p>
+            </div>
+        }
+    </section>
+</div>
 
 @code {
-    bool t = false;
+    private bool showRows = true;
+
     public List<Employee> Employees { get; set; } = new()
     {
         new Employee { Id = 1, Name = "John Doe", Position = "Developer" },
@@ -33,27 +60,12 @@
         new Employee { Id = 3, Name = "Alice Brown", Position = "Designer" }
     };
 
+    private void ToggleRows() => showRows = !showRows;
+
     public class Employee
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Position { get; set; } = string.Empty;
     }
-    async Task Cl()
-    {
-        t = !t;
-        await Task.Delay(1000);
-        StateHasChanged();
-        if (t)
-        await JS.InvokeVoidAsync("initializeResizableColumns");
-    }
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("initializeResizableColumns");
-        }
-    }
-
-    [Inject] IJSRuntime JS { get; set; } = null!;
 }

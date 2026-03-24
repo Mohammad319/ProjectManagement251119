@@ -1,16 +1,30 @@
-﻿@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Localization
 @using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll
-.AppControll
 @inject IStringLocalizer<AppControll> L
 
-<h1>@L["WelcomeText"]</h1>
-<h3>@L["TermsTitle"]</h3>
-<p>@L["BusinessActivity"]</p>
-<p>@L["ImpressumTxt"]</p>
-<h3>@L["PrivacyTitle"]</h3>
-<p>@L["PrivacyContent"]</p>
-<footer>
-    <p>@L["CompanyAddress"]</p>
-    <p>@L["ContactEmail"]</p>
-    <p>@L["FooterCopyright"]</p>
-</footer>
+<section class="pm-card overflow-hidden">
+    <div class="pm-card-header">
+        <div>
+            <div class="pm-eyebrow">Legal</div>
+            <h1 class="pm-card-title mt-1">Impressum</h1>
+            <p class="pm-card-subtitle">Business and contact information for the administration platform.</p>
+        </div>
+    </div>
+
+    <div class="pm-card-body pm-legal-prose">
+        <h3>@L["WelcomeText"]</h3>
+        <p>@L["BusinessActivity"]</p>
+
+        <h3>@L["TermsTitle"]</h3>
+        <p>@L["ImpressumTxt"]</p>
+
+        <h3>@L["PrivacyTitle"]</h3>
+        <p>@L["PrivacyContent"]</p>
+
+        <div class="mt-6 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <p>@L["CompanyAddress"]</p>
+            <p>@L["ContactEmail"]</p>
+            <p>@L["FooterCopyright"]</p>
+        </div>
+    </div>
+</section>

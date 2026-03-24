@@ -4,50 +4,79 @@
 @inject ITaskUnitGroupService UnitGroupsService
 @inherits AppComponentBase
 
-<div class="mb-3 flex items-center gap-2">
-    <button @onclick="() => UpdateForm()"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-green-300 text-green-700 transition hover:bg-green-100 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30">
-        @((MarkupString)Icons.Plus)
-    </button>
+<div class="pm-page">
+    <div class="pm-card">
+        <div class="pm-card-header">
+            <div>
+                <h2 class="pm-title">Unit groups</h2>
+                <p class="pm-subtitle">@((FallsList?.Count ?? 0)) items loaded</p>
+            </div>
 
-    <button @onclick="() => IsVisible = !IsVisible"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-            title="@ResourceApp.hiddenItems / @ResourceApp.visibleItems"
-            aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
-        @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-    </button>
+            <div class="pm-toolbar">
+                <button @onclick="UpdateForm" class="pm-btn-icon-success" title="@ResourceApp._new" aria-label="@ResourceApp._new">
+                    @((MarkupString)Icons.Plus)
+                </button>
+
+                <button @onclick="() => IsVisible = !IsVisible"
+                        class="pm-btn-icon"
+                        title="@ResourceApp.hiddenItems / @ResourceApp.visibleItems"
+                        aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
+                    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (FallsList is null)
+    {
+        <div class="pm-empty">Loading...</div>
+    }
+    else if (FallsList.Any())
+    {
+        <div class="pm-card overflow-hidden">
+            <div class="overflow-x-auto">
+                <MhdTable TItem="TaskUnitGroup" Items="FallsList">
+                    <HeaderTemplate>
+                        <th style="width:200px;" class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-start text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"></th>
+                        <th class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-start text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">@CalcResource.name</th>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        <MhdTableColumn>
+                            <Template Context="status">
+                                <div class="flex items-center gap-2">
+                                    <button @onclick="() => UpdateForm(status)"
+                                            class="pm-btn-icon-warning"
+                                            title="@ResourceApp.update"
+                                            aria-label="@ResourceApp.update">
+                                        @Icons.Edit
+                                    </button>
+
+                                    <button @onclick="() => Remove(status)"
+                                            class="pm-btn-icon-danger"
+                                            title="@ResourceApp.delete"
+                                            aria-label="@ResourceApp.delete">
+                                        @Icons.Delete
+                                    </button>
+                                </div>
+                            </Template>
+                        </MhdTableColumn>
+                        <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
+                    </ChildContent>
+                </MhdTable>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="pm-empty">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
+    }
 </div>
 
-<MhdTable TItem="TaskUnitGroup" Items="FallsList">
-    <HeaderTemplate>
-        <th style="width:200px;" class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-start text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-
-        </th>
-        <th class="border-b border-slate-200 bg-slate-50 px-3 py-2 text-start text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">@CalcResource.name</th>
-    </HeaderTemplate>
-    <ChildContent>
-        <MhdTableColumn>
-            <Template Context="status">
-                <div class="flex items-center gap-2">
-                    <button @onclick="() => UpdateForm(status)" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-amber-300 text-amber-700 transition hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30"
-                            title="@ResourceApp.update" aria-label="@ResourceApp.update">
-                        @Icons.Edit
-                    </button>
-
-                    <button @onclick="() => Remove(status)" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-300 text-red-700 transition hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30" title="@ResourceApp.delete"
-                            aria-label="@ResourceApp.delete">
-                        @Icons.Delete
-                    </button>
-                </div>
-            </Template>
-        </MhdTableColumn>
-        <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
-    </ChildContent>
-</MhdTable>
 @code {
     bool IsVisible = true;
     List<TaskUnitGroup>? FallsList;
     void UpdateForm() => UpdateForm(new TaskUnitGroup() { DisplayName = "" });
+
     void UpdateForm(TaskUnitGroup model)
     {
         TaskUnitGroup up = new() { DisplayName = "" };
@@ -60,8 +89,9 @@
                     }
                     , DialogSize.ExtraLarge);
     }
+
     void Remove(TaskUnitGroup model) =>
-    MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
+        MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
     async Task ConfirmRemoveAsync(TaskUnitGroup model)
     {
@@ -70,10 +100,11 @@
         {
             FallsList?.Remove(model);
         }
-        MHD.Notifications(ToastType.Delete, result);
 
+        MHD.Notifications(ToastType.Delete, result);
         StateHasChanged();
     }
+
     async Task BtnUpdate(bool IsSuccess)
     {
         if (IsSuccess)
@@ -82,6 +113,7 @@
             FallsList = await ExHandlers.RunCheckTokenAsync(() => UnitGroupsService.GetAllAsync());
             MHD.Modal.Close();
         }
+
         StateHasChanged();
     }
 

@@ -1,8 +1,7 @@
-﻿@page "/Account/Manage/TwoFactorAuthentication"
+@page "/Account/Manage/TwoFactorAuthentication"
 
 @using Microsoft.AspNetCore.Http.Features
 @using Microsoft.AspNetCore.Identity
-
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -10,137 +9,98 @@
 
 <PageTitle>Two-factor authentication (2FA)</PageTitle>
 
-<StatusMessage />
-<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-    Two-factor authentication (2FA)
-</h3>
+<div class="space-y-5">
+    <div>
+        <h2 class="pm-page-title text-xl">Two-factor authentication</h2>
+        <p class="pm-page-subtitle mt-1">Add an extra verification step to better protect your administrator account.</p>
+    </div>
 
-@if (canTrack)
-{
-    @if (is2faEnabled)
+    <StatusMessage />
+
+    @if (canTrack)
     {
-        @if (recoveryCodesLeft == 0)
+        @if (is2faEnabled)
         {
-            <div role="alert"
-                 class="mt-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900
-                                          dark:border-red-900/50 dark:bg-red-950 dark:text-red-100">
-                <strong class="block">You have no recovery codes left.</strong>
-                <p class="mt-1">
-                    You must
-                    <a href="/Account/Manage/GenerateRecoveryCodes"
-                       class="font-medium underline underline-offset-2 hover:no-underline text-red-800 dark:text-red-200">
-                        generate a new set of recovery codes
-                    </a>
-                    before you can log in with a recovery code.
-                </p>
-            </div>
-        }
-        else if (recoveryCodesLeft == 1)
-        {
-            <div role="alert"
-                 class="mt-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900
-                                          dark:border-red-900/50 dark:bg-red-950 dark:text-red-100">
-                <strong class="block">You have 1 recovery code left.</strong>
-                <p class="mt-1">
-                    You can
-                    <a href="/Account/Manage/GenerateRecoveryCodes"
-                       class="font-medium underline underline-offset-2 hover:no-underline text-red-800 dark:text-red-200">
-                        generate a new set of recovery codes
-                    </a>.
-                </p>
-            </div>
-        }
-        else if (recoveryCodesLeft <= 3)
-        {
-            <div role="alert"
-                 class="mt-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-900
-                                          dark:border-yellow-700/60 dark:bg-yellow-950 dark:text-yellow-100">
-                <strong class="block">You have @recoveryCodesLeft recovery codes left.</strong>
-                <p class="mt-1">
-                    You should
-                    <a href="/Account/Manage/GenerateRecoveryCodes"
-                       class="font-medium underline underline-offset-2 hover:no-underline text-yellow-800 dark:text-yellow-200">
-                        generate a new set of recovery codes
-                    </a>.
-                </p>
-            </div>
-        }
-
-        <div class="mt-4 flex flex-wrap items-center gap-3">
-            @if (isMachineRemembered)
+            @if (recoveryCodesLeft == 0)
             {
-                <form class="inline-block"
-                      @formname="forget-browser"
-                      @onsubmit="OnSubmitForgetBrowserAsync"
-                      method="post">
-                    <AntiforgeryToken />
-                    <button type="submit"
-                            class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
-                                                 transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                                                 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                        Forget this browser
-                    </button>
-                </form>
+                <div class="pm-alert pm-alert-danger" role="alert">
+                    <strong class="block">You have no recovery codes left.</strong>
+                    <p class="mt-2">You must <a href="/Account/Manage/GenerateRecoveryCodes" class="font-medium underline underline-offset-2 hover:no-underline">generate a new set of recovery codes</a> before you can sign in with a recovery code.</p>
+                </div>
             }
+            else if (recoveryCodesLeft == 1)
+            {
+                <div class="pm-alert pm-alert-danger" role="alert">
+                    <strong class="block">You have 1 recovery code left.</strong>
+                    <p class="mt-2">You can <a href="/Account/Manage/GenerateRecoveryCodes" class="font-medium underline underline-offset-2 hover:no-underline">generate a new set of recovery codes</a>.</p>
+                </div>
+            }
+            else if (recoveryCodesLeft <= 3)
+            {
+                <div class="pm-alert pm-alert-warning" role="alert">
+                    <strong class="block">You have @recoveryCodesLeft recovery codes left.</strong>
+                    <p class="mt-2">You should <a href="/Account/Manage/GenerateRecoveryCodes" class="font-medium underline underline-offset-2 hover:no-underline">generate a new set of recovery codes</a>.</p>
+                </div>
+            }
+        }
 
-            <a href="/Account/Manage/Disable2fa"
-               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
-                                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Disable 2FA
-            </a>
+        <div class="grid gap-4 xl:grid-cols-2">
+            <section class="pm-card-soft">
+                <div class="pm-card-title">Authenticator app</div>
+                <p class="pm-card-text mt-1">Use an authenticator app to generate one-time verification codes.</p>
 
-            <a href="/Account/Manage/GenerateRecoveryCodes"
-               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
-                                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Reset recovery codes
-            </a>
+                @if (!hasAuthenticator)
+                {
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <a href="/Account/Manage/EnableAuthenticator" class="pm-btn pm-btn-primary">Add authenticator app</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <a href="/Account/Manage/EnableAuthenticator" class="pm-btn pm-btn-secondary">Set up authenticator app</a>
+                        <a href="/Account/Manage/ResetAuthenticator" class="pm-btn pm-btn-secondary">Reset authenticator app</a>
+                    </div>
+                }
+            </section>
+
+            <section class="pm-card-soft">
+                <div class="pm-card-title">2FA status</div>
+                <p class="pm-card-text mt-1">@(is2faEnabled ? "Two-factor authentication is currently enabled." : "Two-factor authentication is currently disabled.")</p>
+
+                <div class="mt-4 flex flex-wrap gap-3">
+                    @if (is2faEnabled)
+                    {
+                        if (isMachineRemembered)
+                        {
+                            <form class="inline-block"
+                                  @formname="forget-browser"
+                                  @onsubmit="OnSubmitForgetBrowserAsync"
+                                  method="post">
+                                <AntiforgeryToken />
+                                <button type="submit" class="pm-btn pm-btn-secondary">Forget this browser</button>
+                            </form>
+                        }
+
+                        <a href="/Account/Manage/Disable2fa" class="pm-btn pm-btn-danger">Disable 2FA</a>
+                        <a href="/Account/Manage/GenerateRecoveryCodes" class="pm-btn pm-btn-secondary">Reset recovery codes</a>
+                    }
+                    else
+                    {
+                        <a href="/Account/Manage/EnableAuthenticator" class="pm-btn pm-btn-primary">Enable 2FA</a>
+                    }
+                </div>
+            </section>
         </div>
-    }
-
-    <h4 class="mt-6 text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Authenticator app
-    </h4>
-
-    @if (!hasAuthenticator)
-    {
-        <a href="/Account/Manage/EnableAuthenticator"
-           class="mt-2 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
-                              transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                              dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-            Add authenticator app
-        </a>
     }
     else
     {
-        <div class="mt-2 flex flex-wrap items-center gap-3">
-            <a href="/Account/Manage/EnableAuthenticator"
-               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
-                                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Set up authenticator app
-            </a>
-
-            <a href="/Account/Manage/ResetAuthenticator"
-               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
-                                transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                                dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
-                Reset authenticator app
-            </a>
+        <div class="pm-alert pm-alert-danger" role="alert">
+            <strong class="block">Privacy and cookie policy have not been accepted.</strong>
+            <p class="mt-2">You must accept the policy before you can enable two-factor authentication.</p>
         </div>
     }
-}
-else
-{
-    <div role="alert"
-         class="mt-3 rounded-lg border border-red-300 bg-red-50 p-4 text-red-900
-                      dark:border-red-900/50 dark:bg-red-950 dark:text-red-100">
-        <strong class="block">Privacy and cookie policy have not been accepted.</strong>
-        <p class="mt-1">You must accept the policy before you can enable two factor authentication.</p>
-    </div>
-}
-
+</div>
 
 @code {
     private bool canTrack;

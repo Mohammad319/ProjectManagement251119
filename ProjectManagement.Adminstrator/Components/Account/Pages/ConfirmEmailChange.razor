@@ -1,9 +1,8 @@
-﻿@page "/Account/ConfirmEmailChange"
+@page "/Account/ConfirmEmailChange"
 
 @using System.Text
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
-
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -11,11 +10,19 @@
 
 <PageTitle>Confirm email change</PageTitle>
 
-<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-    Confirm email change
-</h1>
-
-<StatusMessage Message="@message" />
+<main class="pm-auth-shell">
+    <section class="pm-state-card">
+        <div class="pm-state-icon pm-state-icon-success">✓</div>
+        <h1 class="pm-state-title">Confirm email change</h1>
+        <p class="pm-state-text">We are processing your email change confirmation.</p>
+        <div class="mt-4">
+            <StatusMessage Message="@message" />
+        </div>
+        <div class="pm-state-actions">
+            <a href="Account/Login" class="pm-btn pm-btn-secondary">Back to login</a>
+        </div>
+    </section>
+</main>
 
 @code {
     private string? message;
@@ -44,7 +51,7 @@
         var user = await UserManager.FindByIdAsync(UserId);
         if (user is null)
         {
-            message = "Unable to find user with Id '{userId}'";
+            message = "Error: Unable to find the requested user.";
             return;
         }
 
@@ -52,16 +59,14 @@
         var result = await UserManager.ChangeEmailAsync(user, Email, code);
         if (!result.Succeeded)
         {
-            message = "Error changing email.";
+            message = "Error: Error changing email.";
             return;
         }
 
-        // In our UI email and user name are one and the same, so when we Update the email
-        // we need to Update the user name.
         var setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
         if (!setUserNameResult.Succeeded)
         {
-            message = "Error changing user name.";
+            message = "Error: Error changing user name.";
             return;
         }
 

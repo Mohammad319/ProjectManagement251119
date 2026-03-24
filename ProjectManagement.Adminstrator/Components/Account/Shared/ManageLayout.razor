@@ -1,17 +1,23 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @layout ProjectManagement.Adminstrator.Components.Layout.MainLayout
 
-<h1>Manage your account</h1>
+<div class="pm-page-shell">
+    <div class="pm-manage-shell">
+        <header class="pm-page-header">
+            <h1 class="pm-page-title">Manage your account</h1>
+            <p class="pm-page-subtitle">
+                Update profile information, password, security settings, passkeys, and personal data from one place.
+            </p>
+        </header>
 
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div class="row">
-        <div class="col-lg-3">
-            <ManageNavMenu />
-        </div>
-        <div class="col-lg-9">
-            @Body
+        <div class="pm-manage-grid">
+            <aside class="pm-manage-sidebar">
+                <ManageNavMenu />
+            </aside>
+
+            <section class="pm-manage-content">
+                @Body
+            </section>
         </div>
     </div>
 </div>

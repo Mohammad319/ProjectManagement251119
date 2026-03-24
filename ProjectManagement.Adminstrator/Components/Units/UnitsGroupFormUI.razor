@@ -7,51 +7,57 @@
 
 @inject ITaskUnitGroupService UnitGroupsService
 
-<div class="space-y-6 p-1">
-
-    <!-- Form row -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+<div class="pm-form-shell">
+    <section class="pm-form-section">
         <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="group-name">@CalcResource.name</label>
-            <input id="group-name"
-                   class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                   @bind="_model.DisplayName"
-                   placeholder="Group 1" />
+            <h3 class="pm-form-section-title">Unit group</h3>
+            <p class="pm-form-section-text">Build reusable conversion groups by selecting source units that map to one target unit.</p>
         </div>
 
-        <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="to-unit">Convert to</label>
-            <select id="to-unit"
-                    class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                    @bind="_toUnit"
-                    @bind:after="OnTargetChanged">
-                @foreach (var t in _allTargets)
-                {
-                    <option value="@t">@t</option>
-                }
-            </select>
-        </div>
-    </div>
+        <div class="pm-form-grid-2">
+            <div class="pm-field">
+                <label class="pm-label" for="group-name">@CalcResource.name</label>
+                <input id="group-name"
+                       class="pm-input"
+                       @bind="_model.DisplayName"
+                       placeholder="Group 1" />
+            </div>
 
-    <!-- From units -->
-    <div class="mt-4">
-        <div class="mb-2 flex items-center">
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                Available units
-            </h3>
+            <div class="pm-field">
+                <label class="pm-label" for="to-unit">Convert to</label>
+                <select id="to-unit"
+                        class="pm-select"
+                        @bind="_toUnit"
+                        @bind:after="OnTargetChanged">
+                    @foreach (var t in _allTargets)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </section>
+
+    <section class="pm-form-section">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <h3 class="pm-form-section-title">Available units</h3>
+                <p class="pm-form-section-text">Choose which source units should belong to this group.</p>
+            </div>
+            <span class="pm-badge">Target: @_toUnit</span>
         </div>
 
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             @foreach (var u in _fromUnits)
             {
                 var selected = HasKey(u);
 
-                <div class="mb-1 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-900/60">
+                <div class="pm-selectable-card @(selected ? "ring-2 ring-blue-500/15 dark:ring-blue-400/20" : string.Empty)">
                     <span class="text-sm text-slate-700 dark:text-slate-300">@u</span>
 
                     @if (!selected)
                     {
-                        <button class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-green-300 text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30"
+                        <button class="pm-icon-btn border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30"
                                 disabled="@_isSaving"
                                 @onclick="() => Toggle(u)">
                             @((MarkupString)Icons.Plus)
@@ -59,7 +65,7 @@
                     }
                     else
                     {
-                        <button class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-red-300 text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/30"
+                        <button class="pm-icon-btn border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-950/30"
                                 disabled="@_isSaving"
                                 @onclick="() => Toggle(u)">
                             @Icons.Delete
@@ -68,24 +74,26 @@
                 </div>
             }
         </div>
-    </div>
+    </section>
 
-    <!-- Selected keys -->
-    <div class="mt-4">
-        <h3 class="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">Selected pairs (Keys)</h3>
+    <section class="pm-form-section">
+        <div>
+            <h3 class="pm-form-section-title">Selected keys</h3>
+            <p class="pm-form-section-text">These keys will be saved with the unit group.</p>
+        </div>
 
         @if (_model.Keys.Count == 0)
         {
-            <div class="text-xs text-slate-500 dark:text-slate-400">There are no specific keys yet.</div>
+            <div class="pm-empty mt-4">There are no specific keys yet.</div>
         }
         else
         {
-            <div class="flex flex-wrap">
+            <div class="mt-4 flex flex-wrap gap-2">
                 @foreach (var k in _model.Keys)
                 {
-                    <span class="mb-1 me-1 inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
+                    <span class="pm-badge">
                         @k
-                        <button class="ms-1 rounded-full px-1 transition hover:bg-blue-200 dark:hover:bg-blue-800/60"
+                        <button class="ms-2 rounded-full px-1 transition hover:bg-blue-200 dark:hover:bg-blue-800/60"
                                 title="Removal"
                                 disabled="@_isSaving"
                                 @onclick="() => RemoveKey(k)">
@@ -95,18 +103,18 @@
                 }
             </div>
         }
-    </div>
+    </section>
 
     @if (!string.IsNullOrWhiteSpace(_error))
     {
-        <div class="mt-2 text-sm text-red-600 dark:text-red-400">
+        <div class="pm-validation-summary">
             @_error
         </div>
     }
 
-    <div class="mt-6 flex items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
+    <div class="pm-toolbar">
         <button type="button"
-                class="rounded-lg border border-green-300 px-3 py-1.5 text-sm font-medium text-green-700 transition hover:bg-green-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30"
+                class="pm-btn-success"
                 disabled="@_isSaving"
                 @onclick="SaveAsync">
             @ResourceApp.save
@@ -115,7 +123,7 @@
         <button type="button"
                 disabled="@_isSaving"
                 @onclick="Close"
-                class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800">
+                class="pm-btn-secondary">
             @ResourceApp.cancel
         </button>
     </div>

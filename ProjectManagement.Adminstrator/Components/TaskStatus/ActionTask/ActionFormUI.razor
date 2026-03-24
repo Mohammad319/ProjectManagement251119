@@ -1,43 +1,51 @@
-@using TaskResourceBlueprints.Entities
+﻿@using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Lookups
 @using TaskResourceBlueprints.Services
 @using TaskResourceBlueprints.Services.Common
 @inherits AppComponentBase
 @inject IEntityService<ActionEntity> service
 
-<EditForm id="actionForm" Model="@Model" OnValidSubmit="HandleSubmitAsync" class="space-y-6 px-1 py-1">
+<EditForm id="actionForm" Model="@Model" OnValidSubmit="HandleSubmitAsync" class="pm-form">
     <DataAnnotationsValidator />
 
-    <div class="grid gap-4 md:grid-cols-3">
-        <div class="space-y-2 md:col-span-2">
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
-            <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                       @bind-Value="@Model.Name" />
-            <ValidationMessage For="@(() => Model.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
+    <div class="pm-card-soft">
+        <div class="mb-4">
+            <div class="pm-section-title">Action settings</div>
         </div>
-        <div class="space-y-2">
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.order</label>
-            <InputNumber class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                         @bind-Value="@Model.SortOrder" />
-            <ValidationMessage For="@(() => Model.SortOrder)" class="text-sm text-rose-600 dark:text-rose-400" />
-        </div>
-        <div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-900 md:col-span-3">
-            <InputCheckbox id="actionVisible" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" @bind-Value="@Model.IsVisible" />
-            <label class="text-sm font-medium text-slate-700 dark:text-slate-200" for="actionVisible">@ResourceApp.visible</label>
+
+        <div class="pm-form-grid">
+            <div class="pm-field-wide">
+                <label class="pm-label">@CalcResource.name</label>
+                <InputText class="pm-input" @bind-Value="@Model.Name" />
+                <ValidationMessage For="@(() => Model.Name)" class="pm-validation" />
+            </div>
+
+            <div class="pm-field">
+                <label class="pm-label">@ResourceApp.order</label>
+                <InputNumber class="pm-input" @bind-Value="@Model.SortOrder" />
+                <ValidationMessage For="@(() => Model.SortOrder)" class="pm-validation" />
+            </div>
+
+            <div class="pm-checkbox-row md:col-span-3">
+                <InputCheckbox id="actionVisible" class="pm-checkbox" @bind-Value="@Model.IsVisible" />
+                <label class="text-sm font-medium text-slate-700 dark:text-slate-200" for="actionVisible">@ResourceApp.visible</label>
+            </div>
         </div>
     </div>
 </EditForm>
-<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
-    <button type="submit" form="actionForm" class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/40" disabled="@IsLoading">
+
+<div class="pm-actions">
+    <button type="submit" form="actionForm" class="pm-btn-success" disabled="@IsLoading">
         @ResourceApp.save
     </button>
-    <button type="button" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync(false)">
+
+    <button type="button" class="pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync(false)">
         @ResourceApp.cancel
     </button>
 </div>
 
 @code {
-    [Parameter] public ActionEntity Model { get; set; } = new ActionEntity() { Name = "name" };
+    [Parameter] public ActionEntity Model { get; set; } = new() { Name = "" };
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
     bool IsLoading = false;
@@ -46,12 +54,16 @@
     {
         IsLoading = true;
         bool result = false;
+
         if (Model.Id == 0)
         {
             var obj = await ExHandlers.RunCheckTokenAsync(() => service.AddAsync(Model));
             result = obj != null && obj.Id > 0;
         }
-        else result = await service.UpdateAsync(Model);
+        else
+        {
+            result = await ExHandlers.RunCheckTokenAsync(() => service.UpdateAsync(Model));
+        }
 
         MHD.Notifications(Model.Id == 0 ? ToastType.Add : ToastType.Update, result);
         await Callback.InvokeAsync(result);

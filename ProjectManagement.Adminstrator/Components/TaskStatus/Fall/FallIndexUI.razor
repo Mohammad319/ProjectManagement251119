@@ -1,37 +1,42 @@
-@using BlazorMHD.UI.Components.Data.Table
+﻿@using BlazorMHD.UI.Components.Data.Table
 @using ProjectManagement.Adminstrator.Constants
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Lookups
 @using TaskResourceBlueprints.Services
 @using TaskResourceBlueprints.Services.Common
-@inject IEntityService<FallEntity> service
 @inherits AppComponentBase
+@inject IEntityService<FallEntity> service
 
-<div class="space-y-4">
-    <div class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 md:flex-row md:items-center md:justify-between">
-        <div>
-            <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Fall</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400">@FallsList.Count items</p>
-        </div>
+<div class="pm-page">
+    <div class="pm-card">
+        <div class="pm-card-header">
+            <div>
+                <h3 class="pm-title">Fall</h3>
+                <p class="pm-subtitle">@((FallsList?.Count ?? 0)) items</p>
+            </div>
 
-        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
-            <button @onclick="UpdateForm"
-                    class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700"
-                    title="@ResourceApp._new">
-                @((MarkupString)Icons.Plus)
-            </button>
-            <button @onclick="() => IsVisible = !IsVisible"
-                    class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900"
-                    title="@ResourceApp.visible">
-                @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-            </button>
+            <div class="pm-toolbar">
+                <button @onclick="UpdateForm"
+                        class="pm-btn-icon-success"
+                        title="@ResourceApp._new"
+                        aria-label="@ResourceApp._new">
+                    @((MarkupString)Icons.Plus)
+                </button>
+
+                <button @onclick="() => IsVisible = !IsVisible"
+                        class="pm-btn-icon"
+                        title="@ResourceApp.visible"
+                        aria-label="@ResourceApp.visible">
+                    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
+                </button>
+            </div>
         </div>
     </div>
 
-    @if (FallsList.Any(x => x.IsVisible == IsVisible))
+    @if (FallsList?.Any(x => x.IsVisible == IsVisible) == true)
     {
-        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-            <div class="overflow-x-auto p-4">
+        <div class="pm-card overflow-hidden">
+            <div class="overflow-x-auto">
                 <MhdTable TItem="FallEntity" Items="FallsList.Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder)" ShowFilter="false">
                     <HeaderTemplate>
                         <th class="w-36 p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
@@ -42,16 +47,22 @@
                             <Template Context="status">
                                 <div class="flex items-center gap-2">
                                     <button @onclick="() => UpdateForm(status)"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                                            class="pm-btn-icon-warning"
+                                            title="@ResourceApp.update"
+                                            aria-label="@ResourceApp.update">
                                         @Icons.Edit
                                     </button>
+
                                     <button @onclick="() => Remove(status)"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                                            class="pm-btn-icon-danger"
+                                            title="@ResourceApp.delete"
+                                            aria-label="@ResourceApp.delete">
                                         @Icons.Delete
                                     </button>
                                 </div>
                             </Template>
                         </MhdTableColumn>
+
                         <MhdTableColumn>
                             <Template Context="status">
                                 <div>
@@ -67,54 +78,58 @@
     }
     else
     {
-        <div class="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-10 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
-            @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
-        </div>
+        <div class="pm-empty">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
     }
 </div>
 
 @code {
     bool IsVisible = true;
-    List<FallEntity> FallsList = [];
+    List<FallEntity>? FallsList;
+
     void UpdateForm() => UpdateForm(new FallEntity() { Name = "" });
+
     void UpdateForm(FallEntity model)
     {
         FallEntity up = new() { Name = "" };
         PropertyCopier.CopyPropertiesTo(model, up);
+
         Modal.ShowComponent<FallFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
-                    AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>
-                        {
-                        [nameof(FallFormUI.Model)] = up,
-                            [nameof(FallFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-                        }
-                    , DialogSize.Medium);
+            AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>
+            {
+                [nameof(FallFormUI.Model)] = up,
+                [nameof(FallFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+            },
+            DialogSize.Medium);
     }
+
     void Remove(FallEntity model) =>
-    MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
+        MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
     async Task ConfirmRemoveAsync(FallEntity model)
     {
-        bool result = await ExHandlers.RunCheckTokenAsync(() => service.DeleteAsync( model.Id));
+        bool result = await ExHandlers.RunCheckTokenAsync(() => service.DeleteAsync(model.Id));
         if (result)
         {
-            FallsList.Remove(model);
+            FallsList?.Remove(model);
         }
-        MHD.Notifications(ToastType.Delete, result);
 
+        MHD.Notifications(ToastType.Delete, result);
         StateHasChanged();
     }
+
     async Task BtnUpdate(bool IsSuccess)
     {
         Modal.Close();
         if (IsSuccess)
         {
-            FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync()) ?? [];
+            FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync());
         }
+
         StateHasChanged();
     }
 
     protected async override Task OnInitializedAsync()
     {
-        FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync()) ?? [];
+        FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync());
     }
 }

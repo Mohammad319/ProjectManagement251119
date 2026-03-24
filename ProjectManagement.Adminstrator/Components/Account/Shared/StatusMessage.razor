@@ -1,7 +1,7 @@
-﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+@if (!string.IsNullOrEmpty(DisplayMessage))
 {
-    var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass" role="alert">
+    var isError = DisplayMessage.StartsWith("Error", StringComparison.OrdinalIgnoreCase);
+    <div class="pm-alert @(isError ? "pm-alert-danger" : "pm-alert-success")" role="alert">
         @DisplayMessage
     </div>
 }

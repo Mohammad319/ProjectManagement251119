@@ -1,61 +1,45 @@
-﻿@page "/legal"
-@using ProjectManagement.Adminstrator.Constants
-.AppControll
+@page "/legal"
 @using ProjectManagement.Adminstrator.Shared.ResourceFiles.AppControll
 @inject Microsoft.Extensions.Localization.IStringLocalizer<AppControll> L
 
-<div class="inline-flex mb-3" role="group" aria-label="Legal tabs">
-    <button class="btn @(activeTab == "impressum" ? "btn-primary" : "btn-outline-primary")"
-            @onclick="@(() => SelectTab("impressum"))">
-        Impressum
-    </button>
-    <button class="btn @(activeTab == "privacy" ? "btn-primary" : "btn-outline-primary")"
-            @onclick="@(() => SelectTab("privacy"))">
-        @AppControll.TabPrivacy
-    </button>
-    <button class="btn @(activeTab == "terms" ? "btn-primary" : "btn-outline-primary")"
-            @onclick="@(() => SelectTab("terms"))">
-        @AppControll.TabTerms
-    </button>
-    <button class="btn @(activeTab == "licenses" ? "btn-primary" : "btn-outline-primary")"
-            @onclick="@(() => SelectTab("licenses"))">
-        @AppControll.TabLicenses
-    </button>
+<div class="pm-page-header">
+    <div class="pm-eyebrow">Legal center</div>
+    <h1 class="pm-title">Legal information</h1>
+    <p class="pm-subtitle">Review legal notices, privacy content, usage terms, and third-party license information.</p>
 </div>
 
-<div>
-    @if (activeTab == "impressum")
-    {
-        <div>
-            <ImpressumUI></ImpressumUI>
-        </div>
-    }
-    else if (activeTab == "privacy")
-    {
-        <div>
-            <h2>@AppControll.TabPrivacy</h2>
-            <p>@AppControll.PrivacyContent</p>
-        </div>
-    }
-    else if (activeTab == "terms")
-    {
-        <div>
-            <p>@((MarkupString)AppControll.TermsContent.Replace("\n", "<br />"))</p>
-        </div>
-    }
-    else if (activeTab == "licenses")
-    {
-        <div>
-            <ThirdPartyLicenses></ThirdPartyLicenses>
-        </div>
-    }
+<div class="pm-toolbar mb-4" role="group" aria-label="Legal tabs">
+    <button type="button" class='@GetTabClass("impressum")' @onclick='() => SelectTab("impressum")'>Impressum</button>
+    <button type="button" class='@GetTabClass("privacy")' @onclick='() => SelectTab("privacy")'>@L["TabPrivacy"]</button>
+    <button type="button" class='@GetTabClass("terms")' @onclick='() => SelectTab("terms")'>@L["TabTerms"]</button>
+    <button type="button" class='@GetTabClass("licenses")' @onclick='() => SelectTab("licenses")'>@L["TabLicenses"]</button>
 </div>
+
+@if (activeTab == "impressum")
+{
+    <ImpressumUI />
+}
+else if (activeTab == "privacy")
+{
+    <PrivacyPolicy />
+}
+else if (activeTab == "terms")
+{
+    <TermsOfUse />
+}
+else if (activeTab == "licenses")
+{
+    <ThirdPartyLicenses />
+}
 
 @code {
     private string activeTab = "impressum";
 
-    void SelectTab(string tabName)
+    private void SelectTab(string tabName)
     {
         activeTab = tabName;
     }
+
+    private string GetTabClass(string tabName)
+        => $"pm-tab {(activeTab == tabName ? "pm-tab-active" : string.Empty)}";
 }
