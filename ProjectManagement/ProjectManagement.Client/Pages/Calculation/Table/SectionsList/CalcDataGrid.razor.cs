@@ -38,8 +38,10 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private bool _reloadPending;
     private bool _jsSyncPending = true;
     private bool _disposed;
+
     private static readonly IReadOnlyDictionary<NetColumnId, int> DefaultWidths =
         TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x.Width);
+
     private CalculationMVVM Calc => _observedCalculation ?? throw new InvalidOperationException("CalcDataGrid requires an active calculation.");
     private TemplateMVVM Template => _observedTemplate ?? throw new InvalidOperationException("CalcDataGrid requires an active template.");
 
@@ -67,8 +69,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         _lastRound = Template.MathRound;
         _lastColumnSignature = GetColumnSignature();
 
-        RefreshColumns();
-        Template.FreezCol();
         TH1ISvisible = true;
 
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
@@ -81,7 +81,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         ObserveCalculation();
     }
-
     private bool ObserveCalculation()
     {
         var currentCalculation = FolderState.Calculation;
@@ -100,11 +99,15 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         if (_observedCalculation is null || _observedTemplate is null)
             return false;
 
+        if (_observedTemplate.StartCol1 <= 0)
+            _observedTemplate.StartCol1 = _observedCalculation.MaxDepth > 0
+                ? (_observedCalculation.MaxDepth * 10) + 25
+                : 35;
+
         RefreshColumns();
         _observedTemplate.FreezCol();
         return true;
     }
-
     private void EnsureColumnsUpToDate()
     {
         var currentSignature = GetColumnSignature();
@@ -143,7 +146,11 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
                 Calc.FlatListDirty = false;
 
                 if (Calc.MaxDepth > 0)
-                    Template.StartCol1 = (Calc.MaxDepth * 10) + 25;
+                    Template.StartCol1 = (Calc.MaxDepth * 10) + 35;
+                else if (Template.StartCol1 <= 0)
+                    Template.StartCol1 = 45;
+                
+                Template.FreezCol();
             }
 
             if (refreshItems && virtualizeComponent != null)
@@ -253,6 +260,10 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         if (Calc.MaxDepth > 0)
             Template.StartCol1 = (Calc.MaxDepth * 10) + 25;
+        else if (Template.StartCol1 <= 0)
+            Template.StartCol1 = 35;
+
+        Template.FreezCol();
 
         if (virtualizeComponent != null)
             await virtualizeComponent.RefreshDataAsync();

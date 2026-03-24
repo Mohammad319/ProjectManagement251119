@@ -50,7 +50,6 @@ public partial class ResourceDetailRows
             }
         }
     }
-
     private void RenderDetailCells(RenderTreeBuilder builder, DetailLine line)
     {
         var seq = 0;
@@ -62,7 +61,7 @@ public partial class ResourceDetailRows
 
             builder.OpenElement(seq++, "td");
             builder.AddAttribute(seq++, "class", GetDetailCellClass(column.Id));
-
+            builder.AddAttribute(seq++, "style", "background-color: inherit;");
             if (column.Id == NetColumnId.Name)
             {
                 RenderNameCell(builder, ref seq, line);
@@ -87,7 +86,6 @@ public partial class ResourceDetailRows
             builder.CloseElement();
         }
     }
-
     private static void RenderNameCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
         var dotClass = line.Kind == DetailKind.Time
@@ -152,12 +150,18 @@ public partial class ResourceDetailRows
     {
         if (TryParseHexColor(color, out var r, out var g, out var b))
         {
+            var bgR = Math.Clamp(r + 20, 0, 255);
+            var bgG = Math.Clamp(g + 20, 0, 255);
+            var bgB = Math.Clamp(b + 20, 0, 255);
+
             return
-                $"background:linear-gradient(90deg, rgba({r},{g},{b},0.045) 0%, rgba({r},{g},{b},0.02) 24%, transparent 100%);" +
-                $"box-shadow: inset 2px 0 0 rgba({r},{g},{b},0.45);";
+                $"background-color: rgb({bgR},{bgG},{bgB});" +
+                $"box-shadow: inset 2px 0 0 rgba({r},{g},{b},0.55);";
         }
 
-        return "background:linear-gradient(90deg, rgba(148,163,184,0.06) 0%, rgba(148,163,184,0.02) 24%, transparent 100%); box-shadow: inset 2px 0 0 rgba(100,116,139,0.40);";
+        return
+            "background-color: rgb(248,250,252);" +
+            "box-shadow: inset 2px 0 0 rgba(100,116,139,0.45);";
     }
 
     private static bool TryParseHexColor(string? input, out int r, out int g, out int b)

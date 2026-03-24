@@ -23,10 +23,34 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         }
 
         public string StyleNetCalc { get; set; } = string.Empty;
-
         public int StartCol1 { get; set; }
-
         public string FreezCol()
+        {
+            StyleNetCalc = string.Empty;
+            int startCol = StartCol1 > 0 ? StartCol1 : 35;
+            var sb = new StringBuilder();
+
+            // العمود الأول دائمًا ثابت
+            sb.Append(SetFreezCol(1, 0));
+
+            // الأعمدة الأخرى حسب Frozen من القالب
+            for (int i = 0; i < NetCalc.Columns.Count; i++)
+            {
+                if (NetCalc.Columns[i].Frozen)
+                {
+                    NetCalc.Columns[i].StartPX = startCol;
+                    sb.Append(SetFreezCol(i + 2, NetCalc.Columns[i].StartPX));
+                    startCol += NetCalc.Columns[i].Width;
+                }
+
+                sb.Append($" .colH{i + 2}" + "{" +
+                          "white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}");
+            }
+
+            StyleNetCalc = sb.ToString();
+            return StyleNetCalc;
+        }
+        public string FreezColtodelete()
         {
             StyleNetCalc = string.Empty;
             int startCol = StartCol1;

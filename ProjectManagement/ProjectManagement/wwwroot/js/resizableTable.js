@@ -7,7 +7,11 @@ window.initializeResizableColumns = function (dotNetRef) {
     if (!table) return;
 
     createResizableTable(table);
-    window.requestAnimationFrame(() => syncFrozenColumns(table));
+
+    window.requestAnimationFrame(() => {
+        syncFrozenColumns(table);
+        window.setTimeout(() => syncFrozenColumns(table), 40);
+    });
 };
 
 const createResizableTable = (table) => {
@@ -31,7 +35,7 @@ const createResizableColumn = function (col, resizer) {
 
     const mouseDownHandler = function (e) {
         elementID = col.id.replace('h', '');
-        ResetNeetCalcTable(parseInt(elementID) + 1);
+        ResetNeetCalcTable(parseInt(elementID, 10) + 1);
         x = e.clientX;
         w = parseInt(window.getComputedStyle(col).width, 10);
         document.addEventListener('mousemove', mouseMoveHandler);
@@ -102,16 +106,47 @@ function clearFrozenColumns(table) {
     });
 }
 
+function isTransparent(color) {
+    return !color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)';
+}
+
+function getFrozenBackground(el, isHeader) {
+    if (isHeader) {
+        return 'var(--net-header-bg)';
+    }
+
+    const ownBg = window.getComputedStyle(el).backgroundColor;
+    if (!isTransparent(ownBg)) {
+        return ownBg;
+    }
+
+    const row = el.parentElement;
+    if (row) {
+        const rowBg = window.getComputedStyle(row).backgroundColor;
+        if (!isTransparent(rowBg)) {
+            return rowBg;
+        }
+    }
+
+    const table = el.closest('table');
+    if (table) {
+        const tableBg = window.getComputedStyle(table).backgroundColor;
+        if (!isTransparent(tableBg)) {
+            return tableBg;
+        }
+    }
+
+    return '#ffffff';
+}
+
 function applyFrozenColumn(el, left, isHeader, order) {
     el.classList.add('pm-frozen-col');
     if (isHeader) el.classList.add('pm-frozen-header');
+
     el.style.position = 'sticky';
     el.style.left = `${left}px`;
     el.style.zIndex = isHeader ? `${40 - order}` : `${20 - order}`;
-
-    if (!el.style.background) {
-        el.style.background = isHeader ? 'var(--net-header-bg)' : '#ffffff';
-    }
+    el.style.background = getFrozenBackground(el, isHeader);
 }
 
 function syncFrozenColumns(table) {

@@ -61,6 +61,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             ResourceUpdate.Data.Unit = Unit;
             ResourceUpdate.ResourceTypeId = resTypeId;
             ResourceUpdate.ResourceSortId = resTypeSortId;
+
+            //ResourceUpdate.ResType = ty;
             await SetNewAccountAsync(AccountId);
             StateHasChanged();
         }
