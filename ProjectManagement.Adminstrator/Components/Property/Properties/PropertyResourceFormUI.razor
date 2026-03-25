@@ -5,87 +5,123 @@
 @inherits AppComponentBase
 @inject IResourceAttributeService ResourcePropertiesService
 
-<section class="pm-page">
-    <div class="pm-card">
-        <div class="pm-card-header">
-            <div>
-                <h3 class="pm-card-title">Property attribute</h3>
-                <p class="pm-card-subtitle">Define how this property behaves and which default values it should use.</p>
+<section class="space-y-3 text-slate-900 dark:text-slate-100">
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
+        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-3 py-2 dark:border-slate-800">
+            <div class="min-w-0">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Property attribute</h3>
+                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                    Define how this property behaves and which default values it should use.
+                </p>
             </div>
-            <span class="pm-chip-soft">Group Id: @GroupId</span>
         </div>
 
-        <div class="pm-card-body">
-            <EditForm id="propertyResourceForm" Model="@ResourceProp" OnValidSubmit="HandleSubmitAsync" class="space-y-6 px-1 py-1">
+        <div class="px-3 py-2">
+            <EditForm id="propertyResourceForm" Model="@ResourceProp" OnValidSubmit="HandleSubmitAsync" class="space-y-3">
                 <DataAnnotationsValidator />
 
-                <div class="grid gap-4 md:grid-cols-3">
-                    <div class="space-y-2 md:col-span-3">
-                        <label class="pm-label" for="rp-name">@CalcResource.name</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2 min-w-0 space-y-1.5">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-300" for="rp-name">
+                            @CalcResource.name
+                        </label>
                         <InputText id="rp-name"
-                                   class="pm-input"
+                                   class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-400"
                                    @bind-Value="@ResourceProp.DisplayName"
                                    aria-invalid="@(EditContext?.GetValidationMessages(() => ResourceProp.DisplayName).Any() == true)" />
-                        <ValidationMessage For="@(() => ResourceProp.DisplayName)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <ValidationMessage For="@(() => ResourceProp.DisplayName)" class="text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="md:col-span-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/50">
-                        <label class="inline-flex items-center gap-3">
-                            <InputCheckbox id="rp-editable" class="pm-checkbox" @bind-Value="ResourceProp.IsUserEditable" />
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">Is editable by user</span>
+                    <div class="col-span-2 rounded-lg border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/70">
+                        <label class="inline-flex items-center gap-2.5">
+                            <InputCheckbox id="rp-editable"
+                                           class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500 dark:border-slate-600 dark:bg-slate-900 dark:text-sky-500"
+                                           @bind-Value="ResourceProp.IsUserEditable" />
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-200">
+                                Is editable by user
+                            </span>
                         </label>
                     </div>
 
-                    <div class="space-y-2">
-                        <label class="pm-label" for="rp-kind">Kind</label>
-                        <InputSelect id="rp-kind" class="pm-input" @bind-Value="@ResourceProp.DataType">
+                    <div class="min-w-0 space-y-1.5">
+                        <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-300" for="rp-kind">
+                            Kind
+                        </label>
+                        <InputSelect id="rp-kind"
+                                     class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-sky-400"
+                                     @bind-Value="@ResourceProp.DataType">
                             @foreach (var kind in Enum.GetValues<DataType>())
                             {
                                 <option value="@kind">@kind</option>
                             }
                         </InputSelect>
-                        <ValidationMessage For="@(() => ResourceProp.DataType)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <ValidationMessage For="@(() => ResourceProp.DataType)" class="text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
                     @if (ResourceProp.DataType == DataType.Number)
                     {
-                        <div class="space-y-2">
-                            <label class="pm-label" for="rp-min">Min value</label>
-                            <InputNumber id="rp-min" class="pm-input" @bind-Value="@ResourceProp.StepValue" />
-                            <ValidationMessage For="@(() => ResourceProp.StepValue)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0 space-y-1.5">
+                            <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-300" for="rp-numdef">
+                                Default numeric value
+                            </label>
+                            <InputNumber id="rp-numdef"
+                                         class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-400"
+                                         @bind-Value="@ResourceProp.DefaultNumericValue" />
+                            <ValidationMessage For="@(() => ResourceProp.DefaultNumericValue)" class="text-xs text-rose-600 dark:text-rose-400" />
                         </div>
 
-                        <div class="space-y-2">
-                            <label class="pm-label" for="rp-max">Max value</label>
-                            <InputNumber id="rp-max" class="pm-input" @bind-Value="@ResourceProp.MaxNumericValue" />
-                            <ValidationMessage For="@(() => ResourceProp.MaxNumericValue)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0 space-y-1.5">
+                            <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-300" for="rp-min">
+                                Min value
+                            </label>
+                            <InputNumber id="rp-min"
+                                         class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-400"
+                                         @bind-Value="@ResourceProp.StepValue" />
+                            <ValidationMessage For="@(() => ResourceProp.StepValue)" class="text-xs text-rose-600 dark:text-rose-400" />
                         </div>
 
-                        <div class="space-y-2 md:col-span-3">
-                            <label class="pm-label" for="rp-numdef">Default numeric value</label>
-                            <InputNumber id="rp-numdef" class="pm-input" @bind-Value="@ResourceProp.DefaultNumericValue" />
-                            <ValidationMessage For="@(() => ResourceProp.DefaultNumericValue)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0 space-y-1.5">
+                            <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-300" for="rp-max">
+                                Max value
+                            </label>
+                            <InputNumber id="rp-max"
+                                         class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-400"
+                                         @bind-Value="@ResourceProp.MaxNumericValue" />
+                            <ValidationMessage For="@(() => ResourceProp.MaxNumericValue)" class="text-xs text-rose-600 dark:text-rose-400" />
                         </div>
                     }
                     else
                     {
-                        <div class="space-y-2 md:col-span-3">
-                            <label class="pm-label" for="rp-textdef">Default text value</label>
-                            <InputText id="rp-textdef" class="pm-input" @bind-Value="@ResourceProp.DefaultTextValue" />
-                            <ValidationMessage For="@(() => ResourceProp.DefaultTextValue)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0 space-y-1.5">
+                            <label class="block text-[11px] font-medium text-slate-700 dark:text-slate-300" for="rp-textdef">
+                                Default text value
+                            </label>
+                            <InputText id="rp-textdef"
+                                       class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-400"
+                                       @bind-Value="@ResourceProp.DefaultTextValue" />
+                            <ValidationMessage For="@(() => ResourceProp.DefaultTextValue)" class="text-xs text-rose-600 dark:text-rose-400" />
                         </div>
+
+                        <div></div>
                     }
                 </div>
             </EditForm>
         </div>
     </div>
 
-    <div class="pm-divider pt-4">
-        <div class="pm-toolbar justify-end">
-            <button type="submit" class="pm-btn pm-btn-primary" form="propertyResourceForm" disabled="@IsLoading" aria-busy="@IsLoading">
+    <div class="border-t border-slate-200 pt-3 dark:border-slate-800">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-sky-600 bg-sky-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400"
+                    form="propertyResourceForm"
+                    disabled="@IsLoading"
+                    aria-busy="@IsLoading">
                 @ResourceApp.save
             </button>
-            <button type="button" class="pm-btn pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync(false)">
+
+            <button type="button"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="async () => await Callback.InvokeAsync(false)">
                 @ResourceApp.cancel
             </button>
         </div>
@@ -103,20 +139,27 @@
     private async Task HandleSubmitAsync()
     {
         IsLoading = true;
-        bool result;
-        ResourceProp.AttributeSetId = GroupId;
-        if (ResourceProp.Id == 0)
+        try
         {
-            await ResourcePropertiesService.CreateAsync(ResourceProp);
-            result = true;
-        }
-        else
-        {
-            await ResourcePropertiesService.UpdateAsync(ResourceProp);
-            result = true;
-        }
+            bool result;
+            ResourceProp.AttributeSetId = GroupId;
+            if (ResourceProp.Id == 0)
+            {
+                await ResourcePropertiesService.CreateAsync(ResourceProp);
+                result = true;
+            }
+            else
+            {
+                await ResourcePropertiesService.UpdateAsync(ResourceProp);
+                result = true;
+            }
 
-        MHD.Notifications(ResourceProp.Id == 0 ? ToastType.Add : ToastType.Update, result);
-        await Callback.InvokeAsync(result);
+            MHD.Notifications(ResourceProp.Id == 0 ? ToastType.Add : ToastType.Update, result);
+            await Callback.InvokeAsync(result);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 }

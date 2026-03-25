@@ -3,53 +3,56 @@
 @tailwind utilities;
 
 @layer base {
-  body {
+  html {
+    color-scheme: light;
+    @apply bg-slate-50 text-slate-900;
+  }
+
+  html.dark {
+    color-scheme: dark;
     @apply bg-slate-950 text-slate-100;
+  }
+
+  body {
+    @apply min-h-screen bg-inherit text-inherit antialiased;
+  }
+
+  input,
+  select,
+  textarea {
+    color-scheme: inherit;
+  }
+
+  html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  html.dark select,
+  html.dark textarea {
+    @apply border-slate-700 bg-slate-900 text-slate-100 placeholder:text-slate-500;
+    color-scheme: dark;
+  }
+
+  html.dark input::placeholder,
+  html.dark textarea::placeholder {
+    @apply text-slate-500;
+  }
+
+  html.dark input[type="date"],
+  html.dark input[type="datetime-local"],
+  html.dark input[type="time"],
+  html.dark input[type="month"] {
+    color-scheme: dark;
   }
 }
 
 @layer components {
-  .pm-dialog-surface,
-  .mhd-dialog,
-  .mhd-modal,
-  .mhd-modal-dialog,
-  .mhd-dialog-panel {
-    @apply rounded-[28px] border border-slate-800 bg-slate-950 text-slate-100 shadow-2xl;
+  .tw-field {
+    @apply block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500;
   }
 
-  .pm-dialog-header,
-  .mhd-dialog-header,
-  .mhd-modal-header,
-  .mhd-modal__header,
-  .mhd-dialog__header {
-    @apply border-b border-slate-800 bg-slate-900 text-slate-100;
+  .tw-surface {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80;
   }
 
-  .pm-dialog-body,
-  .mhd-dialog-body,
-  .mhd-modal-body,
-  .mhd-modal__body,
-  .mhd-dialog__body {
-    @apply bg-slate-950 text-slate-100;
-  }
-
-  .pm-dialog-footer,
-  .mhd-dialog-footer,
-  .mhd-modal-footer,
-  .mhd-modal__footer,
-  .mhd-dialog__footer {
-    @apply border-t border-slate-800 bg-slate-950;
-  }
-
-  .pm-input {
-    @apply w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
-  }
-
-  .pm-btn-primary {
-    @apply inline-flex items-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400;
-  }
-
-  .pm-btn-secondary {
-    @apply inline-flex items-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
+  .tw-muted-surface {
+    @apply rounded-2xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/60;
   }
 }

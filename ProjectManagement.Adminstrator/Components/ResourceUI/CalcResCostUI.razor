@@ -4,116 +4,120 @@
 @inject MhdServices MHD
 @inject TaskResourceBlueprints.Services.Resource.IResourceBlueprintsService ResourceService
 
-<div class="pm-page">
-    <section class="pm-card">
-        <div class="pm-card-header">
+<div class="space-y-4 text-slate-900 dark:text-slate-100">
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex items-start justify-between gap-4 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
             <div>
-                <h3 class="pm-card-title">Cost distribution</h3>
-                <p class="pm-card-subtitle">Split the selected resource quantity across morning, day, and evening periods.</p>
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Cost distribution</h3>
+                <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Split the selected resource quantity across morning, day, and evening periods.</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <span class="pm-chip-soft">Qty: @(Resource?.Data?.Quantity ?? 0)</span>
-                <span class="pm-chip">Cost: @(Resource?.Data?.Cost ?? 0)</span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Qty: @(Resource?.Data?.Quantity ?? 0)</span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Cost: @(Resource?.Data?.Cost ?? 0)</span>
             </div>
         </div>
 
-        <div class="pm-card-body">
+        <div class="px-4 py-3">
             <EditForm Model="CalcResCost" OnValidSubmit="HandleSubmit" class="space-y-5">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="text-sm text-rose-600 dark:text-rose-400" />
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div class="pm-stat">
-                        <div class="pm-stat-label">Morning %</div>
-                        <div class="pm-stat-value">@GetPercentage(CalcResCost.Morgen)%</div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Morning %</div>
+                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@GetPercentage(CalcResCost.Morgen)%</div>
                     </div>
-                    <div class="pm-stat">
-                        <div class="pm-stat-label">Day %</div>
-                        <div class="pm-stat-value">@GetPercentage(CalcResCost.Day)%</div>
+                    <div class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Day %</div>
+                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@GetPercentage(CalcResCost.Day)%</div>
                     </div>
-                    <div class="pm-stat">
-                        <div class="pm-stat-label">Evening %</div>
-                        <div class="pm-stat-value">@GetEveningPercentage()%</div>
+                    <div class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Evening %</div>
+                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@GetEveningPercentage()%</div>
                     </div>
                 </div>
 
                 <div class="space-y-3">
-                    <div class="hidden grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] gap-3 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:grid">
-                        <div>Period</div>
-                        <div>@Resource?.Data?.Quantity</div>
-                        <div>%</div>
-                        <div>@Resource?.Data?.Cost</div>
-                    </div>
-
                     <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] md:items-end">
+                        <div class="mb-3 flex items-center justify-between gap-3">
                             <div>
-                                <label class="pm-label">Period</label>
-                                <div class="pm-chip">Morning</div>
+                                <div class="text-xs font-medium text-slate-700 dark:text-slate-300">Period</div>
+                                <div class="mt-1 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Morning</div>
                             </div>
-                            <div>
-                                <label class="pm-label">Quantity</label>
-                                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Morgen" class="pm-input" />
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 items-end">
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Quantity</label>
+                                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Morgen" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                             </div>
-                            <div>
-                                <label class="pm-label">%</label>
-                                <input value="@($"{GetPercentage(CalcResCost.Morgen)}%")" class="pm-input pm-input-readonly" disabled />
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
+                                <input value="@($"{GetPercentage(CalcResCost.Morgen)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200" disabled />
                             </div>
-                            <div>
-                                <label class="pm-label">Cost</label>
-                                <InputNumber @bind-Value="CalcResCost.MorgenCost" class="pm-input" />
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
+                                <InputNumber @bind-Value="CalcResCost.MorgenCost" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                             </div>
                         </div>
                     </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] md:items-end">
+                        <div class="mb-3 flex items-center justify-between gap-3">
                             <div>
-                                <label class="pm-label">Period</label>
-                                <div class="pm-chip">Day</div>
+                                <div class="text-xs font-medium text-slate-700 dark:text-slate-300">Period</div>
+                                <div class="mt-1 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Day</div>
                             </div>
-                            <div>
-                                <label class="pm-label">Quantity</label>
-                                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Day" class="pm-input" />
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 items-end">
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Quantity</label>
+                                <InputNumber max="@Resource?.Data?.Quantity" @bind-Value="CalcResCost.Day" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                             </div>
-                            <div>
-                                <label class="pm-label">%</label>
-                                <input value="@($"{GetPercentage(CalcResCost.Day)}%")" class="pm-input pm-input-readonly" disabled />
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
+                                <input value="@($"{GetPercentage(CalcResCost.Day)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200" disabled />
                             </div>
-                            <div>
-                                <label class="pm-label">Cost</label>
-                                <InputNumber @bind-Value="CalcResCost.DayCost" class="pm-input" />
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
+                                <InputNumber @bind-Value="CalcResCost.DayCost" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                             </div>
                         </div>
                     </div>
 
-                    @{ var eveningQty = GetEveningQuantity(); }
+                    @{
+                        var eveningQty = GetEveningQuantity();
+                    }
                     <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
-                        <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_120px_minmax(0,1fr)] md:items-end">
+                        <div class="mb-3 flex items-center justify-between gap-3">
                             <div>
-                                <label class="pm-label">Period</label>
-                                <div class="pm-chip">Evening</div>
+                                <div class="text-xs font-medium text-slate-700 dark:text-slate-300">Period</div>
+                                <div class="mt-1 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Evening</div>
                             </div>
-                            <div>
-                                <label class="pm-label">Quantity</label>
-                                <input disabled value="@eveningQty" class="pm-input pm-input-readonly" />
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 items-end">
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Quantity</label>
+                                <input disabled value="@eveningQty" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200" />
                             </div>
-                            <div>
-                                <label class="pm-label">%</label>
-                                <input disabled value="@($"{GetEveningPercentage()}%")" class="pm-input pm-input-readonly" />
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
+                                <input disabled value="@($"{GetEveningPercentage()}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200" />
                             </div>
-                            <div>
-                                <label class="pm-label">Cost</label>
-                                <InputNumber @bind-Value="CalcResCost.EveningCost" class="pm-input" />
+                            <div class="min-w-0">
+                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
+                                <InputNumber @bind-Value="CalcResCost.EveningCost" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="pm-divider pt-4">
-                    <div class="pm-toolbar justify-end">
-                        <button type="submit" class="pm-btn pm-btn-primary">@ResourceApp.save</button>
+                <div class="border-t border-slate-200 pt-4 dark:border-slate-800">
+                    <div class="flex items-center justify-end gap-2">
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">@ResourceApp.save</button>
                     </div>
                 </div>
             </EditForm>

@@ -7,7 +7,7 @@
 @using ProjectManagement.Adminstrator.Shared.Error
 
 <div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-    <div class="mx-auto flex min-h-screen max-w-[1800px] flex-col">
+    <div class="mx-auto flex min-h-screen w-full max-w-[1800px] flex-col">
         <NavbarUI @rendermode="InteractiveServer" />
 
         <main class="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
@@ -16,8 +16,5 @@
     </div>
 </div>
 
-<MhdDialog @rendermode="InteractiveServer" />
-<MhdMessageBox @rendermode="InteractiveServer" />
-<MhdToastContainer @rendermode="InteractiveServer" />
-<BlazorMHD.UI.Components.Feedback.Loading.MhdLoadingOverlay @rendermode="InteractiveServer" />
+<BlazorMHD.UI.MHD @rendermode="InteractiveServer" />
 <ContextMenu @rendermode="InteractiveServer" />

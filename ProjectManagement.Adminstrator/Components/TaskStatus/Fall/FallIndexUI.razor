@@ -8,34 +8,34 @@
 @inject IEntityService<FallEntity> service
 
 <div class="space-y-4">
-    <div class="pm-toolbar">
+    <div class="flex flex-wrap items-center gap-2">
         <div>
-            <div class="pm-table-meta">Lookup list</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">Lookup list</div>
             <h3 class="mt-2 text-xl font-semibold text-slate-100">Fall</h3>
             <p class="mt-2 text-sm text-slate-400">Manage fall values used across the task status workspace.</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <span class="pm-pill">@(IsVisible ? "Visible" : "Hidden")</span>
-            <button @onclick="UpdateForm" class="pm-btn-primary">@((MarkupString)Icons.Plus)<span class="ml-2">@ResourceApp._new</span></button>
-            <button @onclick="() => IsVisible = !IsVisible" class="pm-btn-secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))<span class="ml-2">Toggle</span></button>
+            <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium">@(IsVisible ?"Visible" :"Hidden")</span>
+            <button @onclick="UpdateForm" class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">@((MarkupString)Icons.Plus)<span class="ml-2">@ResourceApp._new</span></button>
+            <button @onclick="() => IsVisible = !IsVisible" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">@((MarkupString)Icons.GetVisibleIcon(IsVisible))<span class="ml-2">Toggle</span></button>
         </div>
     </div>
 
     @if (FallsList?.Any(x => x.IsVisible == IsVisible) == true)
     {
-        <div class="pm-table-shell">
-            <div class="overflow-x-auto p-5">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="overflow-x-auto p-4">
                 <MhdTable TItem="FallEntity" Items="FallsList.Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder)" ShowFilter="false">
                     <HeaderTemplate>
-                        <th class="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Actions</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Entry</th>
+                        <th class="w-40 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Actions</th>
+                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Entry</th>
                     </HeaderTemplate>
                     <ChildContent>
                         <MhdTableColumn>
                             <Template Context="status">
                                 <div class="flex items-center gap-2">
-                                    <button @onclick="() => UpdateForm(status)" class="pm-btn-icon">@((MarkupString)Icons.Edit)</button>
-                                    <button @onclick="() => Remove(status)" class="pm-btn-icon-danger">@((MarkupString)Icons.Delete)</button>
+                                    <button @onclick="() => UpdateForm(status)" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">@((MarkupString)Icons.Edit)</button>
+                                    <button @onclick="() => Remove(status)" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60">@((MarkupString)Icons.Delete)</button>
                                 </div>
                             </Template>
                         </MhdTableColumn>
@@ -46,7 +46,7 @@
                                         <div class="font-medium text-slate-100">@status.Name</div>
                                         <div class="mt-1 text-xs text-slate-500">Order: @status.SortOrder</div>
                                     </div>
-                                    <span class="pm-pill">@(status.IsVisible ? "Visible" : "Hidden")</span>
+                                    <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium">@(status.IsVisible ?"Visible" :"Hidden")</span>
                                 </div>
                             </Template>
                         </MhdTableColumn>
@@ -57,9 +57,9 @@
     }
     else
     {
-        <div class="pm-empty">
-            <div class="pm-empty-title">There are no items to display</div>
-            <div class="pm-empty-text">Create a new fall value or switch the visibility filter.</div>
+        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">
+            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">There are no items to display</div>
+            <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">Create a new fall value or switch the visibility filter.</div>
         </div>
     }
 </div>
@@ -67,10 +67,10 @@
 @code {
     bool IsVisible = true;
     List<FallEntity> FallsList = [];
-    void UpdateForm() => UpdateForm(new FallEntity() { Name = "" });
+    void UpdateForm() => UpdateForm(new FallEntity() { Name ="" });
     void UpdateForm(FallEntity model)
     {
-        FallEntity up = new() { Name = "" };
+        FallEntity up = new() { Name ="" };
         PropertyCopier.CopyPropertiesTo(model, up);
         Modal.ShowComponent<FallFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
                     AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>

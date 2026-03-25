@@ -12,32 +12,44 @@
 
 @if (Put != null)
 {
-    <div class="pm-form-shell">
-        <div class="mb-1 flex flex-wrap items-start justify-between gap-3">
-            <div>
-                <h3 class="pm-section-title">Tenant configuration</h3>
-                <p class="pm-section-help">Manage tenant limits, expiry, address data, and contact information.</p>
+    <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Tenant configuration</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    Manage tenant limits, expiry, address data, and contact information.
+                </p>
             </div>
+
             @if (Id > 0)
             {
-                <span class="pm-badge">Tenant #@Id</span>
+                <span class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
+                    Tenant #@Id
+                </span>
             }
         </div>
 
         <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm">
             <DataAnnotationsValidator />
-            <ValidationSummary class="rounded-xl border border-rose-200 bg-rose-50 px-1 py-1 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300" />
 
-            <div class="space-y-1">
-                <section>
-                    <h4 class="pm-section-title">Access & limits</h4>
-                    <p class="pm-section-help">Core tenant settings, database target, and usage limits.</p>
-                    <div class="pm-form-grid mt-1">
+            <ValidationSummary class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300" />
+
+            <div class="space-y-3">
+                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                    <div class="mb-3">
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Access &amp; limits</h4>
+                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                            Core tenant settings, database target, and usage limits.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
                         @if (Id == 0)
                         {
-                            <div class="pm-field">
-                                <label class="pm-label">@AppControll.Db</label>
-                                <InputSelect @bind-Value="Put.TenantDBId" class="pm-select">
+                            <div class="min-w-0">
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.Db</label>
+                                <InputSelect @bind-Value="Put.TenantDBId"
+                                             class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20">
                                     @if (Databases != null)
                                     {
                                         foreach (var status in Databases)
@@ -49,115 +61,166 @@
                             </div>
                         }
 
-                        <div class="pm-field">
-                            <label class="pm-label">@CalcResource.name</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Name" />
-                            <ValidationMessage For="@(() => Put.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Name" />
+                            <ValidationMessage For="@(() => Put.Name)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                         </div>
 
-                        <div class="pm-field">
-                            <label class="pm-label">Url</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Website" />
-                            <ValidationMessage For="@(() => Put.Website)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Url</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Website" />
+                            <ValidationMessage For="@(() => Put.Website)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                         </div>
 
-                        <div class="pm-field">
-                            <label class="pm-label">@AppControll.expire</label>
-                            <InputDate class="pm-input" @bind-Value="@Put.DateExpire" />
-                            <ValidationMessage For="@(() => Put.DateExpire)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.expire</label>
+                            <InputDate class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.DateExpire" />
+                            <ValidationMessage For="@(() => Put.DateExpire)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                         </div>
 
-                        <div class="pm-field">
-                            <label class="pm-label">@AppControll.maxUsers</label>
-                            <InputNumber class="pm-input" @bind-Value="@Put.MaxUsers" />
-                            <ValidationMessage For="@(() => Put.MaxUsers)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxUsers</label>
+                            <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                         @bind-Value="@Put.MaxUsers" />
+                            <ValidationMessage For="@(() => Put.MaxUsers)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                         </div>
 
-                        <div class="pm-field">
-                            <label class="pm-label">@AppControll.maxCalculations</label>
-                            <InputNumber class="pm-input" @bind-Value="@Put.MaxCalculations" />
-                            <ValidationMessage For="@(() => Put.MaxCalculations)" class="text-sm text-rose-600 dark:text-rose-400" />
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxCalculations</label>
+                            <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                         @bind-Value="@Put.MaxCalculations" />
+                            <ValidationMessage For="@(() => Put.MaxCalculations)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                         </div>
                     </div>
                 </section>
 
-                <section>
-                    <h4 class="pm-section-title">Contact details</h4>
-                    <p class="pm-section-help">Communication and address information for the tenant.</p>
-                    <div class="pm-form-grid mt-4">
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.phone</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Phone" />
+                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                    <div class="mb-3">
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Contact details</h4>
+                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                            Communication and address information for the tenant.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.phone</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Phone" />
                         </div>
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.mobile</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Mobile" />
+
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.mobile</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Mobile" />
                         </div>
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.fax</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Fax" />
+
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.fax</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Fax" />
                         </div>
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.email</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Email" />
+
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.email</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Email" />
                         </div>
                     </div>
                 </section>
 
-                <section>
-                    <h4 class="pm-section-title">Address</h4>
-                    <p class="pm-section-help">Country, city, postal code, and street details.</p>
-                    <div class="pm-form-grid mt-4">
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.country</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Country" />
+                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                    <div class="mb-3">
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Address</h4>
+                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                            Country, city, postal code, and street details.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.country</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Country" />
                         </div>
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.city</label>
-                            <InputText class="pm-input" @bind-Value="@Put.City" />
+
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.city</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.City" />
                         </div>
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.zipCode</label>
-                            <InputText class="pm-input" @bind-Value="@Put.PostCode" />
+
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.zipCode</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.PostCode" />
                         </div>
-                        <div class="pm-field">
-                            <label class="pm-label">@AppControll.street</label>
-                            <InputText class="pm-input" @bind-Value="@Put.Street" />
+
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.street</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Street" />
                         </div>
-                        <div class="pm-field">
-                            <label class="pm-label">@ResourceIdentity.build</label>
-                            <InputText class="pm-input" @bind-Value="@Put.BuildNumber" />
+
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.build</label>
+                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.BuildNumber" />
                         </div>
                     </div>
                 </section>
 
-                <section>
-                    <h4 class="pm-section-title">Notes</h4>
-                    <div class="pm-form-grid mt-4">
-                        <div class="pm-field pm-field-span-2">
-                            <label class="pm-label">@CalcResource.note</label>
-                            <InputTextArea class="pm-textarea" @bind-Value="@Put.Note" />
+                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                    <div class="mb-3">
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Notes</h4>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-3 min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.note</label>
+                            <InputTextArea class="block min-h-[120px] w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                           @bind-Value="@Put.Note" />
                         </div>
                     </div>
                 </section>
             </div>
         </EditForm>
 
-        <div class="pm-actions">
-            <button type="button" class="pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync(false)">@ResourceApp.cancel</button>
-            <button type="submit" form="tenantForm" class="pm-btn-primary" disabled="@IsLoading">@ResourceApp.save</button>
+        <div class="mt-4 flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end dark:border-slate-800">
+            <button type="button"
+                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="async () => await Callback.InvokeAsync(false)">
+                @ResourceApp.cancel
+            </button>
+
+            <button type="submit"
+                    form="tenantForm"
+                    class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                    disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                }
+                @ResourceApp.save
+            </button>
         </div>
     </div>
 }
 
-@code{
+@code {
     [Parameter] public int Id { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
     bool IsLoading = false;
     public TenantEntity? Put;
+
     private async Task HandleSubmitAsync()
     {
         IsLoading = true;
+
         if (Id == 0)
         {
             TenantEntity post = new TenantEntity();
@@ -172,17 +235,22 @@
         {
             await Callback.InvokeAsync(false);
         }
+
         IsLoading = false;
     }
+
     List<TenantDatabaseEntity>? Databases;
+
     protected async override Task OnInitializedAsync()
     {
         if (Id == 0)
         {
             Put = new TenantEntity();
         }
+
         if (Id > 0)
             Put = await sersService.GetByIdAsync(Id);
+
         using var _appContext = ContextFactory.CreateDbContext();
         Databases = await _appContext.TenantDatabase.ToListAsync();
     }

@@ -3,14 +3,14 @@
 
 <PageTitle>Error</PageTitle>
 
-<div class="pm-page-header">
-    <div class="pm-eyebrow">System status</div>
-    <h1 class="pm-title">An unexpected error occurred</h1>
-    <p class="pm-subtitle">The request could not be completed. Review the details below and then return to the previous page or the admin home page.</p>
+<div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+    <div class="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">System status</div>
+    <h1 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">An unexpected error occurred</h1>
+    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">The request could not be completed. Review the details below and then return to the previous page or the admin home page.</p>
 </div>
 
 <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-    <section class="pm-error">
+    <section class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
         <div class="text-base font-semibold">Request processing failed.</div>
         <p class="mt-2 text-sm leading-6">
             The application encountered an exception while processing this request. In production, keep detailed diagnostics disabled for end users.
@@ -25,7 +25,7 @@
         }
     </section>
 
-    <aside class="pm-info">
+    <aside class="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">
         <div class="text-base font-semibold">Development mode note</div>
         <p class="mt-2 text-sm leading-6">
             Enable <strong>Development</strong> only for local debugging. On deployed systems it may reveal sensitive exception details to end users.

@@ -9,15 +9,15 @@
 @inject IUsersService UsersService
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
-<div class="pm-page">
-    <section class="pm-page-header">
+<div class="space-y-4 text-slate-900 dark:text-slate-100">
+    <section class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <div class="pm-page-kicker">Tenant details</div>
-                <h2 class="pm-page-title">@(TenantPut?.Name ?? "Tenant")</h2>
-                <p class="pm-page-subtitle">Inspect tenant metadata, limits, contact details, and linked users from one screen.</p>
+                <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Tenant details</div>
+                <h2 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@(TenantPut?.Name ??"Tenant")</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Inspect tenant metadata, limits, contact details, and linked users from one screen.</p>
             </div>
-            <button class="pm-btn pm-btn-secondary" @onclick="async () => await Callback.InvokeAsync()">
+            <button class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync()">
                 @ResourceApp.back
             </button>
         </div>
@@ -25,46 +25,46 @@
 
     @if (TenantPut is TenantEntity tenant)
     {
-        <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <section class="pm-card p-5">
-                <div class="pm-section-title">Tenant profile</div>
-                <div class="pm-section-subtitle">Core identifiers, limits, and contact information.</div>
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 p-4">
+                <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Tenant profile</div>
+                <div class="mt-1 text-xs text-slate-600 dark:text-slate-400">Core identifiers, limits, and contact information.</div>
 
-                <dl class="mt-5 grid gap-x-4 gap-y-4 sm:grid-cols-2">
-                    <div class="pm-card-soft p-4">
+                <dl class="mt-4 grid gap-x-4 gap-y-4 sm:grid-cols-2">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 p-4">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@CalcResource.name</dt>
                         <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.Name</dd>
                     </div>
-                    <div class="pm-card-soft p-4">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 p-4">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.Db</dt>
                         <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.TenantDB?.Name</dd>
                     </div>
-                    <div class="pm-card-soft p-4">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 p-4">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.expire</dt>
-                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : "—")</dd>
+                        <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") :"—")</dd>
                     </div>
-                    <div class="pm-card-soft p-4">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 p-4">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Ownership</dt>
                         <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">
                             @if (tenant.TenantDBId.HasValue)
                             {
-                                <span class="pm-pill pm-pill-success">Own database</span>
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">Own database</span>
                             }
                             else
                             {
-                                <span class="pm-pill pm-pill-muted">Shared database</span>
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Shared database</span>
                             }
                         </dd>
                     </div>
-                    <div class="pm-card-soft p-4">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 p-4">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.maxUsers</dt>
                         <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.MaxUsers</dd>
                     </div>
-                    <div class="pm-card-soft p-4">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 p-4">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">@AppControll.maxCalculations</dt>
                         <dd class="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">@tenant.MaxCalculations</dd>
                     </div>
-                    <div class="pm-card-soft p-4 sm:col-span-2">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60 p-4 sm:col-span-2">
                         <dt class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Contact</dt>
                         <dd class="mt-2 grid gap-2 text-sm text-slate-700 dark:text-slate-200 sm:grid-cols-2">
                             <div><span class="font-medium">@ResourceIdentity.email:</span> @tenant.Email</div>
@@ -78,77 +78,77 @@
                 </dl>
             </section>
 
-            <section class="pm-card p-5">
+            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 p-4">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <div class="pm-section-title">Tenant users</div>
-                        <div class="pm-section-subtitle">View linked users and apply administrative actions.</div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Tenant users</div>
+                        <div class="mt-1 text-xs text-slate-600 dark:text-slate-400">View linked users and apply administrative actions.</div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         @if (CanManageTenantUsers)
                         {
-                            <button class="pm-btn pm-btn-primary" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">New user</button>
+                            <button class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400" @onclick="() => UserRoleDialog(new ApplicationUser() { Id = string.Empty })">New user</button>
                         }
 
                         @if (Users == null || !Users.Any())
                         {
-                            <button class="pm-btn pm-btn-secondary" @onclick="async () => await GetUsersAsync()">@ResourceIdentity.users</button>
+                            <button class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await GetUsersAsync()">@ResourceIdentity.users</button>
                         }
                     </div>
                 </div>
 
                 @if (Users == null || !Users.Any())
                 {
-                    <div class="pm-empty mt-5 min-h-[220px]">
-                        <div class="pm-empty-title">No users loaded</div>
-                        <div class="pm-empty-copy">Load tenant users to inspect lockout status, department assignment, and add baseline company information.</div>
+                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40 mt-4 min-h-[220px]">
+                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">No users loaded</div>
+                        <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">Load tenant users to inspect lockout status, department assignment, and add baseline company information.</div>
                     </div>
                 }
                 else
                 {
-                    <div class="pm-table-wrap mt-5">
-                        <div class="pm-table-scroll">
-                            <table class="pm-table">
+                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 mt-4">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
                                 <thead>
                                     <tr>
-                                        <th>@ResourceIdentity.email</th>
-                                        <th>@CalcResource.code</th>
-                                        <th>@CalcResource.name</th>
-                                        <th>@ResourceIdentity.lockoutEnd</th>
-                                        <th>@ResourceIdentity.lockoutStart</th>
-                                        <th>@ResourceApp.department</th>
-                                        <th>Action</th>
+                                        <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.email</th>
+                                        <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.code</th>
+                                        <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                        <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutEnd</th>
+                                        <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutStart</th>
+                                        <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceApp.department</th>
+                                        <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var user in Users)
                                     {
                                         <tr @oncontextmenu:preventDefault @oncontextmenu="() => Context(user)">
-                                            <td>@user.Email</td>
-                                            <td>@user.UserName</td>
-                                            <td>@user.Firstname @user.Lastname</td>
-                                            <td>
+                                            <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@user.Email</td>
+                                            <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@user.UserName</td>
+                                            <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@user.Firstname @user.Lastname</td>
+                                            <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                                 <div class="flex items-center gap-2">
                                                     @if (user.LockoutEnabled)
                                                     {
-                                                        <span class="pm-pill pm-pill-warning">Locked</span>
+                                                        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">Locked</span>
                                                     }
                                                     else
                                                     {
-                                                        <span class="pm-pill pm-pill-muted">Open</span>
+                                                        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Open</span>
                                                     }
                                                 </div>
-                                                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") : "—")</div>
+                                                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@(user.LockoutEnd.HasValue ? user.LockoutEnd.Value.ToString("dd.MM.yyyy") :"—")</div>
                                             </td>
-                                            <td>@(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") : "—")</td>
-                                            <td>@user.DepartmentId</td>
-                                            <td>
+                                            <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@(user.LockoutStart.HasValue ? user.LockoutStart.Value.ToString("dd.MM.yyyy") :"—")</td>
+                                            <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@user.DepartmentId</td>
+                                            <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                                 @if (CanManageTenantUsers)
                                                 {
-                                                    <button class="pm-btn pm-btn-secondary px-3 py-2 text-xs"
+                                                    <button class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs"
                                                             @onclick="() => AddBasicCompanyInfoAsync(user)"
                                                             disabled="@IsAddingCompanyInfoFor(user)">
-                                                        @(IsAddingCompanyInfoFor(user) ? "Adding..." : "Add Basic Company Info")
+                                                        @(IsAddingCompanyInfoFor(user) ?"Adding..." :"Add Basic Company Info")
                                                     </button>
                                                 }
                                             </td>
@@ -176,7 +176,7 @@
 
         if (!user.UserId.HasValue || user.UserId.Value <= 0)
         {
-            MHD.MessageOk(ResourceApp.newItem, "Selected user does not have a linked tenant user id.", MhdState.Warning);
+            MHD.MessageOk(ResourceApp.newItem,"Selected user does not have a linked tenant user id.", MhdState.Warning);
             return;
         }
 
@@ -185,7 +185,7 @@
         {
             var result = await ExHandlers.RunCheckTokenAsync(() => UsersService.AddBasicCompanyInfoAsync(Id, user.UserId));
             MHD.MessageOk(ResourceApp.newItem,
-                result ? "Basic company info added/updated successfully." : "No changes were required.",
+                result ?"Basic company info added/updated successfully." :"No changes were required.",
                 result ? MhdState.Success : MhdState.Info);
         }
         finally

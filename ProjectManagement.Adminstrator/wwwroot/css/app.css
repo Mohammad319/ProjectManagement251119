@@ -97,3 +97,26 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* dark-mode support hotfix */
+html.dark #blazor-error-ui {
+    background: #3f0d0d;
+    color: #fff;
+}
+
+html.dark .validation-message {
+    color: #fda4af;
+}
+
+html.dark .valid.modified:not([type=checkbox]) {
+    outline-color: #4ade80;
+}
+
+html.dark .invalid {
+    outline-color: #fb7185;
+}
+
+html.dark .blazor-context-menu {
+    background-color: #0f172a !important;
+    color: #e5e7eb;
+}

@@ -191,7 +191,7 @@
     }
 
     private static string GetRevealKeys(QuestionOptionDefinition o)
-        => o?.RevealedSectionKeys is { Count: > 0 } ? string.Join(", ", o.RevealedSectionKeys) : string.Empty;
+        => o?.RevealedSectionKeys is { Count: > 0 } ? string.Join(",", o.RevealedSectionKeys) : string.Empty;
 
     private static void SetRevealKeys(QuestionOptionDefinition o, string? input)
     {
@@ -209,44 +209,44 @@
 
 @if (Task == null)
 {
-    <div class="pm-empty">@AppLoc["loading"]</div>
+    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["loading"]</div>
 }
 else
 {
     <EditForm Model="Task" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
 
-        <div class="pm-page">
-            <div class="pm-page-header">
+        <div class="space-y-4 text-slate-900 dark:text-slate-100">
+            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
                 <div class="min-w-0 flex-1">
-                    <h3 class="pm-page-title">@Task.Name</h3>
-                    <p class="pm-page-subtitle">@CalcResource.name</p>
+                    <h3 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@Task.Name</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">@CalcResource.name</p>
                 </div>
 
-                <div class="pm-action-stack">
-                    <button type="submit" class="pm-btn-success">@ResourceApp.save</button>
-                    <button type="button" class="pm-btn-neutral" @onclick="Close">@ResourceApp.cancel</button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400">@ResourceApp.save</button>
+                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="Close">@ResourceApp.cancel</button>
                 </div>
             </div>
 
-            <div class="pm-card-soft">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
                 <ValidationSummary class="text-sm text-rose-600 dark:text-rose-300" />
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                     <div>
-                        <label class="pm-label">@CalcResource.name</label>
-                        <input class="pm-input-readonly" value="@Task?.Name" readonly />
+                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
+                        <input class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200" value="@Task?.Name" readonly />
                     </div>
-                    <div class="pm-chip">@(Task.QuestionGroups.Count + Task.NumericQuestions.Count + Task.ResourceSelectors.Count) items</div>
+                    <div class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@(Task.QuestionGroups.Count + Task.NumericQuestions.Count + Task.ResourceSelectors.Count) items</div>
                 </div>
             </div>
 
-            <section class="pm-section">
-                <div class="pm-section-header">
+            <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+                <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h4 class="pm-section-title">@AppLoc["choiceGroups"]</h4>
-                        <p class="pm-section-subtitle">Configure selectable groups and reveal logic.</p>
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@AppLoc["choiceGroups"]</h4>
+                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Configure selectable groups and reveal logic.</p>
                     </div>
-                    <button type="button" class="pm-btn-success" @onclick="AddChoiceGroup">@AppLoc["addGroup"]</button>
+                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="AddChoiceGroup">@AppLoc["addGroup"]</button>
                 </div>
 
                 @if (Task.QuestionGroups is { Count: > 0 })
@@ -255,33 +255,33 @@ else
                         @foreach (var g in Task.QuestionGroups.OrderBy(x => x.SortOrder))
                         {
                             <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
-                                <div class="pm-grid-form">
+                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                     <div class="md:col-span-3">
-                                        <label class="pm-label">@CalcResource.name</label>
-                                        <input class="pm-input" @bind="g.DisplayName" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
+                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.DisplayName" />
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="pm-label">@CalcResource.sort</label>
-                                        <input type="number" class="pm-input" @bind="g.SortOrder" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.sort</label>
+                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.SortOrder" />
                                     </div>
 
                                     <div class="md:col-span-3">
-                                        <label class="pm-label">@AppLoc["sectionKey"]</label>
-                                        <input class="pm-input" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["sectionKey"]</label>
+                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="pm-label">@AppLoc["selection"]</label>
-                                        <select class="pm-input" @bind="g.SelectionMode">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["selection"]</label>
+                                        <select class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.SelectionMode">
                                             <option value="@SelectionMode.Multiple">@AppLoc["multiple"]</option>
                                             <option value="@SelectionMode.Single">@AppLoc["single"]</option>
                                         </select>
                                     </div>
 
                                     <div class="md:col-span-2 flex items-end justify-end gap-2">
-                                        <button type="button" class="pm-btn-danger !px-3 !py-2 !text-xs" @onclick="(() => RemoveChoiceGroup(g))">×</button>
-                                        <button type="button" class="pm-btn-primary !px-3 !py-2 !text-xs" @onclick="(() => AddChoiceOption(g))">@AppLoc["addOption"]</button>
+                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-2 text-xs" @onclick="(() => RemoveChoiceGroup(g))">×</button>
+                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400 px-3 py-2 text-xs" @onclick="(() => AddChoiceOption(g))">@AppLoc["addOption"]</button>
                                     </div>
                                 </div>
 
@@ -291,25 +291,25 @@ else
                                         @foreach (var o in g.Options.OrderBy(x => x.SortOrder))
                                         {
                                             <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-950/70">
-                                                <div class="pm-grid-form">
+                                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                                     <div class="md:col-span-4">
-                                                        <label class="pm-label">@AppLoc["optionLabel"]</label>
-                                                        <input class="pm-input" @bind="o.DisplayName" />
+                                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["optionLabel"]</label>
+                                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="o.DisplayName" />
                                                     </div>
 
                                                     <div class="md:col-span-6">
-                                                        <label class="pm-label">@AppLoc["revealSectionKeys"]</label>
-                                                        <input class="pm-input"
+                                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["revealSectionKeys"]</label>
+                                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                                                value="@GetRevealKeys(o)"
                                                                @onchange="e => SetRevealKeys(o, e.Value?.ToString())"
                                                                placeholder="@AppLoc["revealSectionKeysPlaceholder"]" />
                                                     </div>
 
                                                     <div class="md:col-span-2 flex items-end justify-end gap-2">
-                                                        <button type="button" class="pm-btn-neutral !px-3 !py-2 !text-xs" @onclick="(() => MoveChoiceOptionUp(g, o))">@AppLoc["setDefault"]</button>
-                                                        <button type="button" class="pm-btn-neutral !px-3 !py-2 !text-xs" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
-                                                        <button type="button" class="pm-btn-neutral !px-3 !py-2 !text-xs" @onclick="(() => MoveChoiceOptionDown(g, o))">↓</button>
-                                                        <button type="button" class="pm-btn-danger !px-3 !py-2 !text-xs" @onclick="(() => RemoveChoiceOption(g, o))">×</button>
+                                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs" @onclick="(() => MoveChoiceOptionUp(g, o))">@AppLoc["setDefault"]</button>
+                                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs" @onclick="(() => MoveChoiceOptionUp(g, o))">↑</button>
+                                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs" @onclick="(() => MoveChoiceOptionDown(g, o))">↓</button>
+                                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-2 text-xs" @onclick="(() => RemoveChoiceOption(g, o))">×</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -322,17 +322,17 @@ else
                 }
                 else
                 {
-                    <div class="pm-empty">@AppLoc["noChoiceGroups"]</div>
+                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noChoiceGroups"]</div>
                 }
             </section>
 
-            <section class="pm-section">
-                <div class="pm-section-header">
+            <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+                <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h4 class="pm-section-title">@AppLoc["numericGroups"]</h4>
-                        <p class="pm-section-subtitle">Add numeric questions with optional min/max limits.</p>
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@AppLoc["numericGroups"]</h4>
+                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Add numeric questions with optional min/max limits.</p>
                     </div>
-                    <button type="button" class="pm-btn-success" @onclick="AddNumericGroup">@AppLoc["addGroup"]</button>
+                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="AddNumericGroup">@AppLoc["addGroup"]</button>
                 </div>
 
                 @if (Task.NumericQuestions?.Count > 0)
@@ -341,34 +341,34 @@ else
                         @foreach (var g in Task.NumericQuestions.OrderBy(x => x.SortOrder))
                         {
                             <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
-                                <div class="pm-grid-form">
+                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                     <div class="md:col-span-3">
-                                        <label class="pm-label">@CalcResource.name</label>
-                                        <input class="pm-input" @bind="g.DisplayName" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
+                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.DisplayName" />
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="pm-label">@CalcResource.sort</label>
-                                        <input type="number" class="pm-input" @bind="g.SortOrder" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.sort</label>
+                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.SortOrder" />
                                     </div>
 
                                     <div class="md:col-span-3">
-                                        <label class="pm-label">@AppLoc["sectionKey"]</label>
-                                        <input class="pm-input" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["sectionKey"]</label>
+                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="pm-label">@AppControll.min</label>
-                                        <input type="number" class="pm-input" @bind="g.MinInputValue" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
+                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.MinInputValue" />
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="pm-label">@AppControll.max</label>
-                                        <input type="number" class="pm-input" @bind="g.MaxInputValue" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
+                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.MaxInputValue" />
                                     </div>
 
                                     <div class="md:col-span-12 flex justify-end">
-                                        <button type="button" class="pm-btn-danger !px-3 !py-2 !text-xs" @onclick="(() => RemoveNumericGroup(g))">×</button>
+                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-2 text-xs" @onclick="(() => RemoveNumericGroup(g))">×</button>
                                     </div>
                                 </div>
                             </div>
@@ -377,17 +377,17 @@ else
                 }
                 else
                 {
-                    <div class="pm-empty">@AppLoc["noNumericGroups"]</div>
+                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noNumericGroups"]</div>
                 }
             </section>
 
-            <section class="pm-section">
-                <div class="pm-section-header">
+            <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+                <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h4 class="pm-section-title">@AppLoc["resourceChoiceGroups"]</h4>
-                        <p class="pm-section-subtitle">Select resources and define their order inside the task.</p>
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@AppLoc["resourceChoiceGroups"]</h4>
+                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Select resources and define their order inside the task.</p>
                     </div>
-                    <button type="button" class="pm-btn-success" @onclick="AddResourceGroup">@AppLoc["addGroup"]</button>
+                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="AddResourceGroup">@AppLoc["addGroup"]</button>
                 </div>
 
                 @if (Task.ResourceSelectors?.Count > 0)
@@ -396,24 +396,24 @@ else
                         @foreach (var g in Task.ResourceSelectors.OrderBy(x => x.SortOrder))
                         {
                             <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
-                                <div class="pm-grid-form">
+                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                     <div class="md:col-span-4">
-                                        <label class="pm-label">@CalcResource.name</label>
-                                        <input class="pm-input" @bind="g.DisplayName" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
+                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.DisplayName" />
                                     </div>
 
                                     <div class="md:col-span-2">
-                                        <label class="pm-label">@CalcResource.sort</label>
-                                        <input type="number" class="pm-input" @bind="g.SortOrder" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.sort</label>
+                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.SortOrder" />
                                     </div>
 
                                     <div class="md:col-span-4">
-                                        <label class="pm-label">@AppLoc["sectionKey"]</label>
-                                        <input class="pm-input" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["sectionKey"]</label>
+                                        <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="g.SectionKey" placeholder="@AppLoc["optionalPlaceholder"]" />
                                     </div>
 
                                     <div class="md:col-span-2 flex items-end justify-end">
-                                        <button type="button" class="pm-btn-danger !px-3 !py-2 !text-xs" @onclick="(() => RemoveResourceGroup(g))">×</button>
+                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-2 text-xs" @onclick="(() => RemoveResourceGroup(g))">×</button>
                                     </div>
                                 </div>
 
@@ -429,9 +429,9 @@ else
                                         @foreach (var it in g.Items.OrderBy(x => x.SortOrder))
                                         {
                                             <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-950/70">
-                                                <div class="pm-grid-form">
+                                                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                                                     <div class="md:col-span-10">
-                                                        <label class="pm-label">@AppLoc["resource"]</label>
+                                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["resource"]</label>
                                                         <ResourceAutocomplete MinChars="2" PageSize="20"
                                                                               InitialName="@it.Resource?.Name"
                                                                               Value="it.ResourceId"
@@ -439,9 +439,9 @@ else
                                                     </div>
 
                                                     <div class="md:col-span-2 flex items-end justify-end gap-2">
-                                                        <button type="button" class="pm-btn-neutral !px-3 !py-2 !text-xs" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
-                                                        <button type="button" class="pm-btn-neutral !px-3 !py-2 !text-xs" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
-                                                        <button type="button" class="pm-btn-danger !px-3 !py-2 !text-xs" @onclick="(() => RemoveResourceItem(g, it))">×</button>
+                                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs" @onclick="(() => MoveResourceItemUp(g, it))">↑</button>
+                                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs" @onclick="(() => MoveResourceItemDown(g, it))">↓</button>
+                                                        <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-2 text-xs" @onclick="(() => RemoveResourceItem(g, it))">×</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -454,7 +454,7 @@ else
                 }
                 else
                 {
-                    <div class="pm-empty">@AppLoc["noResourceGroups"]</div>
+                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noResourceGroups"]</div>
                 }
             </section>
         </div>

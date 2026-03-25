@@ -179,19 +179,19 @@
     }
 }
 
-<section class="pm-card-muted overflow-hidden">
-    <div class="pm-card-header">
+<section class="rounded-2xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 overflow-hidden">
+    <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
         <div>
-            <h4 class="pm-title">@AppLoc["resourceAssignments"]</h4>
-            <p class="pm-subtitle mt-1">Attach resources, formulas, and conditional bindings to the active condition.</p>
+            <h4 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["resourceAssignments"]</h4>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Attach resources, formulas, and conditional bindings to the active condition.</p>
         </div>
-        <div class="pm-toolbar">
-            <span class="pm-chip">@Condition.Assignments.Count</span>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Condition.Assignments.Count</span>
         </div>
     </div>
 
-    <div class="pm-card-body space-y-4">
-        <div class="pm-subcard">
+    <div class="px-4 py-3 space-y-4">
+        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
             <FolderResourcesAddUI TaskId="Condition.TaskId"
                                   ResIds="Condition.Assignments.Select(x => x.ResourceId).ToList()"
                                   OnSave="ToggleAssignment" />
@@ -199,45 +199,45 @@
 
         @if (Condition.Assignments.Count == 0)
         {
-            <div class="pm-empty">@AppLoc["none"]</div>
+            <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
         }
         else
         {
             <div class="space-y-4">
                 @foreach (var a in Condition.Assignments)
                 {
-                    <section class="pm-card overflow-hidden">
-                        <div class="pm-card-header">
+                    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 overflow-hidden">
+                        <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                             <div>
-                                <h5 class="pm-title">@(a.Resource?.Name ?? $"{AppLoc["resource"]} #{a.ResourceId}")</h5>
-                                <p class="pm-subtitle mt-1">@(a.Resource?.ResType.ToString() ?? "Resource")</p>
+                                <h5 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@(a.Resource?.Name ?? $"{AppLoc["resource"]} #{a.ResourceId}")</h5>
+                                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">@(a.Resource?.ResType.ToString() ??"Resource")</p>
                             </div>
 
-                            <div class="pm-toolbar">
-                                <span class="@(a.IsActive ? "pm-status-on" : "pm-status-off")">@(a.IsActive ? "ON" : "OFF")</span>
-                                <button class="pm-btn-outline-danger" @onclick="() => RemoveAssignment(a)">@AppLoc["remove"]</button>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="@(a.IsActive ?"inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200" :"inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300")">@(a.IsActive ?"ON" :"OFF")</span>
+                                <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-transparent px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" @onclick="() => RemoveAssignment(a)">@AppLoc["remove"]</button>
                             </div>
                         </div>
 
-                        <div class="pm-card-body space-y-4">
+                        <div class="px-4 py-3 space-y-4">
                             <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-                                <div class="pm-field md:col-span-3">
-                                    <label class="pm-label">@AppLoc["resource"]</label>
+                                <div class="space-y-1.5 md:col-span-3">
+                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["resource"]</label>
                                     <ResourceAutocomplete MinChars="2" PageSize="20"
                                                           Value="a.ResourceId"
                                                           ValueChanged="@(v => a.ResourceId = v ?? 0)"
                                                           InitialName="@(a.Resource?.Name)" />
                                 </div>
-                                <div class="pm-field">
-                                    <label class="pm-label">@CalcResource.changeFactor1</label>
-                                    <input type="number" class="pm-input" @bind="a.ChangeFactor1" />
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor1</label>
+                                    <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor1" />
                                 </div>
-                                <div class="pm-field">
-                                    <label class="pm-label">@CalcResource.changeFactor2</label>
-                                    <input type="number" class="pm-input" @bind="a.ChangeFactor2" />
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor2</label>
+                                    <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor2" />
                                 </div>
-                                <div class="pm-field">
-                                    <label class="pm-label">
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
                                         @if (a.Resource?.ResType == ResourceTypesEnum.Materials)
                                         {
                                             <span>@CalcResource.waste</span>
@@ -247,43 +247,43 @@
                                             <span>@CalcResource.cap</span>
                                         }
                                     </label>
-                                    <input type="number" class="pm-input" @bind="a.CapWaste" />
+                                    <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.CapWaste" />
                                 </div>
-                                <div class="pm-field">
-                                    <label class="pm-label">@CalcResource.baseCost</label>
-                                    <input type="number" class="pm-input" @bind="a.BaseCost" />
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.baseCost</label>
+                                    <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.BaseCost" />
                                 </div>
-                                <div class="pm-field">
-                                    <label class="pm-label">@AppLoc["menuId"]</label>
-                                    <input type="number" class="pm-input" @bind="a.MenuId" />
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["menuId"]</label>
+                                    <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.MenuId" />
                                 </div>
-                                <div class="pm-field md:col-span-2">
-                                    <label class="pm-label">@CalcResource.active</label>
+                                <div class="space-y-1.5 md:col-span-2">
+                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.active</label>
                                     <div class="flex h-[42px] items-center rounded-xl border border-slate-300 bg-white px-3 dark:border-slate-700 dark:bg-slate-900">
                                         <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="a.IsActive" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="pm-toolbar">
+                            <div class="flex flex-wrap items-center gap-2">
                                 @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
                                      a.Resource?.ResType == ResourceTypesEnum.Worker)
                                 {
-                                    <button class="pm-btn-outline" @onclick="@(() => AddRole(a))">@($"{AppLoc["add"]} {AppControll.capRole}")</button>
+                                    <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-transparent px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="@(() => AddRole(a))">@($"{AppLoc["add"]} {AppControll.capRole}")</button>
                                 }
-                                <button class="pm-btn-outline" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">@AppLoc["addEquation"]</button>
+                                <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-transparent px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">@AppLoc["addEquation"]</button>
                             </div>
 
                             @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
                                  a.Resource?.ResType == ResourceTypesEnum.Worker)
                             {
-                                <div class="pm-subcard space-y-3">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
                                     <div class="flex items-center justify-between gap-2">
                                         <div>
-                                            <div class="pm-title">@AppControll.capRole</div>
-                                            <div class="pm-subtitle mt-1">Capacity breakpoints for workers and equipment.</div>
+                                            <div class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppControll.capRole</div>
+                                            <div class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Capacity breakpoints for workers and equipment.</div>
                                         </div>
-                                        <span class="pm-chip">@(a.CapacityRoles?.Count ?? 0)</span>
+                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@(a.CapacityRoles?.Count ?? 0)</span>
                                     </div>
 
                                     @if (a.CapacityRoles is not null && a.CapacityRoles.Count > 0)
@@ -297,24 +297,24 @@
                                                 <div class="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-[auto_repeat(3,minmax(0,1fr))_40px] dark:border-slate-700 dark:bg-slate-800/60">
                                                     <button type="button"
                                                             title="@AppLoc["remove"]"
-                                                            class="pm-btn-outline-danger md:w-12"
+                                                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-transparent px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30 md:w-12"
                                                             @onclick="() => a.CapacityRoles.Remove(role)">
                                                         ✕
                                                     </button>
 
-                                                    <div class="pm-field">
-                                                        <label class="pm-label">@AppControll.min</label>
-                                                        <input type="number" class="pm-input" @bind="role.Min" />
+                                                    <div class="space-y-1.5">
+                                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
+                                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Min" />
                                                     </div>
 
-                                                    <div class="pm-field">
-                                                        <label class="pm-label">@AppControll.max</label>
-                                                        <input type="number" class="pm-input" @bind="role.Max" />
+                                                    <div class="space-y-1.5">
+                                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
+                                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Max" />
                                                     </div>
 
-                                                    <div class="pm-field">
-                                                        <label class="pm-label">@CalcResource.cap</label>
-                                                        <input type="number" class="pm-input" @bind="role.Value" />
+                                                    <div class="space-y-1.5">
+                                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.cap</label>
+                                                        <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Value" />
                                                     </div>
 
                                                     <div class="flex items-end justify-center pb-2 text-xs font-medium text-slate-500 dark:text-slate-400">#@(index + 1)</div>
@@ -324,20 +324,20 @@
                                     }
                                     else
                                     {
-                                        <div class="pm-empty">@AppLoc["none"]</div>
+                                        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
                                     }
                                 </div>
                             }
 
                             @if (a.Expressions is not null && a.Expressions.Count > 0)
                             {
-                                <div class="pm-subcard space-y-3">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
                                     <div class="flex items-center justify-between gap-2">
                                         <div>
-                                            <div class="pm-title">@CalcResource.Formulas</div>
-                                            <div class="pm-subtitle mt-1">Expressions applied directly to this resource assignment.</div>
+                                            <div class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@CalcResource.Formulas</div>
+                                            <div class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Expressions applied directly to this resource assignment.</div>
                                         </div>
-                                        <span class="pm-chip">@a.Expressions.Count</span>
+                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@a.Expressions.Count</span>
                                     </div>
 
                                     <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
@@ -345,31 +345,31 @@
                                         {
                                             var index = i;
                                             <div class="flex items-center gap-2">
-                                                <button class="pm-btn-outline-danger" @onclick="() => a.Expressions.RemoveAt(index)">✕</button>
-                                                <input type="text" class="pm-input" @bind="a.Expressions[index]" />
+                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-transparent px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" @onclick="() => a.Expressions.RemoveAt(index)">✕</button>
+                                                <input type="text" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.Expressions[index]" />
                                             </div>
                                         }
                                     </div>
                                 </div>
                             }
 
-                            <div class="pm-subcard space-y-4">
+                            <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60 space-y-4">
                                 <div class="flex flex-wrap items-center justify-between gap-3">
                                     <div>
-                                        <div class="pm-title">@AppLoc["bindingsEquations"]</div>
-                                        <div class="pm-subtitle mt-1">Save the condition once to enable persisted bindings for this resource assignment.</div>
+                                        <div class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["bindingsEquations"]</div>
+                                        <div class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Save the condition once to enable persisted bindings for this resource assignment.</div>
                                     </div>
 
                                     @if (CanAddBindingsFor(a))
                                     {
-                                        <div class="pm-toolbar">
-                                            <button class="pm-btn-outline" @onclick="() => AddOptionBindingUI(a.Id)">@AppLoc["addChoiceBinding"]</button>
-                                            <button class="pm-btn-outline" @onclick="() => AddNumericBindingUI(a.Id)">@AppLoc["addNumericBinding"]</button>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-transparent px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => AddOptionBindingUI(a.Id)">@AppLoc["addChoiceBinding"]</button>
+                                            <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-transparent px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => AddNumericBindingUI(a.Id)">@AppLoc["addNumericBinding"]</button>
                                         </div>
                                     }
                                     else
                                     {
-                                        <span class="pm-chip-amber">@AppLoc["saveConditionFirstToEnableBindings"]</span>
+                                        <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">@AppLoc["saveConditionFirstToEnableBindings"]</span>
                                     }
                                 </div>
 
@@ -378,12 +378,12 @@
                                     <div class="space-y-3">
                                         @foreach (var b in obList)
                                         {
-                                            <section class="pm-subcard space-y-3">
+                                            <section class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
                                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                                     <div class="grid min-w-0 flex-1 grid-cols-1 gap-3 md:grid-cols-2">
-                                                        <div class="pm-field">
-                                                            <label class="pm-label">@AppLoc["choiceGroup"]</label>
-                                                            <select class="pm-select"
+                                                        <div class="space-y-1.5">
+                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceGroup"]</label>
+                                                            <select class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                                                     value="@b.ChoiceGroupId"
                                                                     aria-label="@AppLoc["choiceGroup"]"
                                                                     @onchange="e => OnOptionGroupChanged(b, e)">
@@ -395,9 +395,9 @@
                                                             </select>
                                                         </div>
 
-                                                        <div class="pm-field">
-                                                            <label class="pm-label">@AppLoc["choiceOption"]</label>
-                                                            <select class="pm-select" @bind="b.ChoiceOptionId" aria-label="@AppLoc["choiceOption"]">
+                                                        <div class="space-y-1.5">
+                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceOption"]</label>
+                                                            <select class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind="b.ChoiceOptionId" aria-label="@AppLoc["choiceOption"]">
                                                                 <option value="0">@AppLoc["selectPlaceholder"]</option>
                                                                 @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
                                                                 {
@@ -407,25 +407,25 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="pm-toolbar">
-                                                        <button class="pm-btn-success" title="@AppLoc["saveBinding"]" @onclick="async () => await OnSaveOption(a.Id, b)">@AppLoc["save"]</button>
-                                                        <button class="pm-btn-outline" title="@AppLoc["addEquation"]" @onclick="() => AddOptionEq(b)">@AppLoc["addEquation"]</button>
-                                                        <button class="pm-btn-outline-danger" title="@AppLoc["deleteBinding"]" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
+                                                    <div class="flex flex-wrap items-center gap-2">
+                                                        <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" title="@AppLoc["saveBinding"]" @onclick="async () => await OnSaveOption(a.Id, b)">@AppLoc["save"]</button>
+                                                        <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-transparent px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" title="@AppLoc["addEquation"]" @onclick="() => AddOptionEq(b)">@AppLoc["addEquation"]</button>
+                                                        <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-transparent px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["deleteBinding"]" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
                                                     </div>
                                                 </div>
 
                                                 @if (b.LastError is not null)
                                                 {
-                                                    <div class="pm-alert-error">⚠ @b.LastError</div>
+                                                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">⚠ @b.LastError</div>
                                                 }
                                                 @if (b.SavedOk)
                                                 {
-                                                    <div class="pm-chip-blue">✓ @AppLoc["saved"]</div>
+                                                    <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">✓ @AppLoc["saved"]</div>
                                                 }
 
                                                 @if (b.Formulas.Count == 0)
                                                 {
-                                                    <div class="pm-empty">@AppLoc["noFormulas"]</div>
+                                                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noFormulas"]</div>
                                                 }
                                                 else
                                                 {
@@ -434,8 +434,8 @@
                                                         {
                                                             var idx = i;
                                                             <div class="flex items-center gap-2">
-                                                                <input class="pm-input" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
-                                                                <button class="pm-btn-outline-danger" title="@AppLoc["removeEquation"]" @onclick="() => RemoveOptionEq(b, idx)">✕</button>
+                                                                <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
+                                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-transparent px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["removeEquation"]" @onclick="() => RemoveOptionEq(b, idx)">✕</button>
                                                             </div>
                                                         }
                                                     </div>
@@ -449,18 +449,18 @@
                                 {
                                     <div class="space-y-3 pt-2">
                                         <div class="flex items-center gap-2">
-                                            <div class="pm-title">@AppLoc["numericBindings"]</div>
-                                            <span class="pm-chip">@nbList.Count</span>
+                                            <div class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["numericBindings"]</div>
+                                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@nbList.Count</span>
                                         </div>
 
                                         @foreach (var b in nbList)
                                         {
-                                            <section class="pm-subcard space-y-3">
+                                            <section class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/60 space-y-3">
                                                 <div class="flex flex-wrap items-start justify-between gap-3">
                                                     <div class="grid min-w-0 flex-1 grid-cols-1 gap-3 md:grid-cols-3">
-                                                        <div class="pm-field">
-                                                            <label class="pm-label">@AppLoc["numericGroup"]</label>
-                                                            <select class="pm-select" @bind="b.NumericId" aria-label="@AppLoc["numericGroup"]">
+                                                        <div class="space-y-1.5">
+                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["numericGroup"]</label>
+                                                            <select class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind="b.NumericId" aria-label="@AppLoc["numericGroup"]">
                                                                 <option value="0">@AppLoc["selectPlaceholder"]</option>
                                                                 @foreach (var ng in TaskNumericGroups)
                                                                 {
@@ -468,26 +468,26 @@
                                                                 }
                                                             </select>
                                                         </div>
-                                                        <div class="pm-field">
-                                                            <label class="pm-label">@AppControll.min</label>
-                                                            <input type="number" class="pm-input" @bind="b.InputMinValue" placeholder="@AppControll.min" />
+                                                        <div class="space-y-1.5">
+                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
+                                                            <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMinValue" placeholder="@AppControll.min" />
                                                         </div>
-                                                        <div class="pm-field">
-                                                            <label class="pm-label">@AppControll.max</label>
-                                                            <input type="number" class="pm-input" @bind="b.InputMaxValue" placeholder="@AppControll.max" />
+                                                        <div class="space-y-1.5">
+                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
+                                                            <input type="number" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMaxValue" placeholder="@AppControll.max" />
                                                         </div>
                                                     </div>
 
-                                                    <div class="pm-toolbar">
-                                                        <button class="pm-btn-success" title="@AppLoc["saveNumericBinding"]" @onclick="async () => await OnSaveNumeric(a.Id, b)">@AppLoc["save"]</button>
-                                                        <button class="pm-btn-outline" title="@AppLoc["addEquation"]" @onclick="() => AddNumericEq(b)">@AppLoc["addEquation"]</button>
-                                                        <button class="pm-btn-outline-danger" title="@AppLoc["deleteNumericBinding"]" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
+                                                    <div class="flex flex-wrap items-center gap-2">
+                                                        <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" title="@AppLoc["saveNumericBinding"]" @onclick="async () => await OnSaveNumeric(a.Id, b)">@AppLoc["save"]</button>
+                                                        <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-transparent px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" title="@AppLoc["addEquation"]" @onclick="() => AddNumericEq(b)">@AppLoc["addEquation"]</button>
+                                                        <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-transparent px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["deleteNumericBinding"]" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
                                                     </div>
                                                 </div>
 
                                                 @if (b.Formulas.Count == 0)
                                                 {
-                                                    <div class="pm-empty">@AppLoc["none"]</div>
+                                                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
                                                 }
                                                 else
                                                 {
@@ -496,8 +496,8 @@
                                                         {
                                                             var idx = i;
                                                             <div class="flex items-center gap-2">
-                                                                <input class="pm-input" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
-                                                                <button class="pm-btn-outline-danger" title="@AppLoc["removeEquation"]" @onclick="() => RemoveNumericEq(b, idx)">✕</button>
+                                                                <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
+                                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300 bg-transparent px-3 py-2 text-xs font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["removeEquation"]" @onclick="() => RemoveNumericEq(b, idx)">✕</button>
                                                             </div>
                                                         }
                                                     </div>
@@ -505,11 +505,11 @@
 
                                                 @if (b.LastError is not null)
                                                 {
-                                                    <div class="pm-alert-error">⚠ @b.LastError</div>
+                                                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">⚠ @b.LastError</div>
                                                 }
                                                 @if (b.SavedOk)
                                                 {
-                                                    <div class="pm-chip-blue">✓ @AppLoc["saved"]</div>
+                                                    <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">✓ @AppLoc["saved"]</div>
                                                 }
                                             </section>
                                         }

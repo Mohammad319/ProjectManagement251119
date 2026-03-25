@@ -12,23 +12,26 @@
 @inject IResourceBlueprintsService ResourceService
 @inject IResourceCategoryService ResourceFolderService
 
-<div class="pm-page">
-    <div class="pm-page-header">
-        <div>
-            <h2 class="pm-page-title">Resources</h2>
-            <p class="pm-page-subtitle">Manage folders, resources, and related properties from one view.</p>
-        </div>
+<div class="space-y-4 text-slate-900 dark:text-slate-100">
+    <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="flex items-center gap-3">
+            <button type="button"
+                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400"
+                    @onclick="PropertyGroups">
+                @AppLoc["properties"]
+            </button>
 
-        <div class="pm-action-stack">
-            <button type="button" class="pm-btn-primary" @onclick="PropertyGroups">@AppLoc["properties"]</button>
+            <p class="m-0 text-sm text-slate-600 dark:text-slate-400">
+                Manage folders, resources, and related properties from one view.
+            </p>
         </div>
     </div>
 
     <ResourcesBrowser EnableFolderContext="true">
         <RowActions Context="r">
-            <button class="pm-btn-primary !px-3 !py-1.5 !text-xs" title="Property" @onclick="() => Property(r)">Property</button>
-            <button class="pm-btn-warning !px-3 !py-1.5 !text-xs" title="Update" @onclick="() => UpdateForm(r)">@Icons.Edit</button>
-            <button class="pm-btn-danger !px-3 !py-1.5 !text-xs" title="Remove" @onclick="() => Remove(r)">@Icons.Delete</button>
+            <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400 px-3 py-1.5 text-xs" title="Property" @onclick="() => Property(r)">Property</button>
+            <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-500 bg-amber-500 px-3 py-2 text-xs font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300 px-3 py-1.5 text-xs" title="Update" @onclick="() => UpdateForm(r)">@Icons.Edit</button>
+            <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-1.5 text-xs" title="Remove" @onclick="() => Remove(r)">@Icons.Delete</button>
         </RowActions>
     </ResourcesBrowser>
 </div>
@@ -52,7 +55,7 @@
         new Dictionary<string, object>
         {
             [nameof(ResourcePropertiesManager.ResourceId)] = model.Id,
-        });
+        }, DialogSize.Large);
     }
 
     void UpdateForm(ResourceDefinition model) => MHD.Modal.ShowComponent<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,

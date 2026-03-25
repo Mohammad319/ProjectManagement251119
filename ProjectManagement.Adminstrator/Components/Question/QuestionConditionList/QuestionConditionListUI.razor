@@ -211,31 +211,31 @@
     }
 }
 
-<div dir="ltr" class="pm-page">
+<div dir="ltr" class="space-y-4 text-slate-900 dark:text-slate-100">
     @if (isLoading)
     {
-        <div class="pm-alert-info">@AppLoc["loading"]</div>
+        <div class="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@AppLoc["loading"]</div>
     }
     else if (!string.IsNullOrEmpty(error))
     {
-        <div class="pm-alert-error">@AppLoc["error"]: @error</div>
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">@AppLoc["error"]: @error</div>
     }
     else if (editing is null)
     {
-        <section class="pm-card">
-            <div class="pm-card-header">
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <div>
-                    <h3 class="pm-title">Conditions</h3>
-                    <p class="pm-subtitle mt-1">Create and manage rules that drive resource assignments.</p>
+                    <h3 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Conditions</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Create and manage rules that drive resource assignments.</p>
                 </div>
 
-                <div class="pm-toolbar">
-                    <span class="pm-chip">@conditions.Count</span>
-                    <button class="pm-btn-primary" @onclick="NewCondition">@AppLoc["addCondition"]</button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@conditions.Count</span>
+                    <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400" @onclick="NewCondition">@AppLoc["addCondition"]</button>
                 </div>
             </div>
 
-            <div class="pm-card-body">
+            <div class="px-4 py-3">
                 <ConditionList Conditions="conditions"
                                ResourceGroups="resourceGroups"
                                ChoiceGroups="taskChoiceGroups"
@@ -247,20 +247,20 @@
     }
     else
     {
-        <section class="pm-card overflow-hidden">
-            <div class="pm-card-header">
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 overflow-hidden">
+            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <div>
-                    <h3 class="pm-title">Edit condition</h3>
-                    <p class="pm-subtitle mt-1">Adjust logic, requirements, and resource assignments in one place.</p>
+                    <h3 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Edit condition</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Adjust logic, requirements, and resource assignments in one place.</p>
                 </div>
 
-                <div class="pm-toolbar">
-                    <button class="pm-btn-success" @onclick="SaveConditionAsync">@AppLoc["save"]</button>
-                    <button class="pm-btn-secondary" @onclick="CancelEdit">@AppLoc["cancel"]</button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="SaveConditionAsync">@AppLoc["save"]</button>
+                    <button class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="CancelEdit">@AppLoc["cancel"]</button>
                 </div>
             </div>
 
-            <div class="pm-card-body">
+            <div class="px-4 py-3">
                 <ConditionEditor Condition="editing"
                                  ResourceGroups="resourceGroups"
                                  TaskChoiceGroups="taskChoiceGroups"

@@ -19,13 +19,22 @@ public static class MiddlewareExtensions
         // Respect X-Forwarded-* headers when running behind reverse proxies (IIS/Nginx).
         app.UseForwardedHeaders();
 
-        // Static file caching (important for Blazor WASM startup):
-        // - /_framework assets are fingerprinted -> cache aggressively
-        // - other static assets get a shorter cache
+        // Static files:
+        // - In Development: disable caching so CSS/JS/images update immediately.
+        // - In Production: keep aggressive caching for fingerprinted framework assets
+        //   and shorter caching for the rest.
         app.UseStaticFiles(new StaticFileOptions
         {
             OnPrepareResponse = ctx =>
             {
+                if (isDev)
+                {
+                    ctx.Context.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+                    ctx.Context.Response.Headers["Pragma"] = "no-cache";
+                    ctx.Context.Response.Headers["Expires"] = "0";
+                    return;
+                }
+
                 var path = ctx.Context.Request.Path;
 
                 if (path.StartsWithSegments("/_framework", StringComparison.OrdinalIgnoreCase))
@@ -42,6 +51,7 @@ public static class MiddlewareExtensions
         // CorrelationId early
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<SecurityHeadersMiddleware>();
+
         app.UseSerilogRequestLogging(options =>
         {
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
@@ -83,15 +93,15 @@ public static class MiddlewareExtensions
             app.MapPost("/internal/tenants/reload", async (
                 HttpRequest req,
                 ITenantConnectionStringStore store) =>
-                    {
-                        var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
+            {
+                var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
 
-                        if (header != tenantReloadSecret)
-                            return Results.Unauthorized();
+                if (header != tenantReloadSecret)
+                    return Results.Unauthorized();
 
-                        await store.ReloadAsync(req.HttpContext.RequestAborted);
-                        return Results.Ok(new { status = "reloaded" });
-                    })
+                await store.ReloadAsync(req.HttpContext.RequestAborted);
+                return Results.Ok(new { status = "reloaded" });
+            })
             .WithTags("Internal")
             .DisableAntiforgery();
 
@@ -99,15 +109,15 @@ public static class MiddlewareExtensions
                 int tenantId,
                 HttpRequest req,
                 ITenantConnectionStringStore store) =>
-                    {
-                        var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
+            {
+                var header = req.Headers["X-Tenant-Reload-Secret"].ToString();
 
-                        if (header != tenantReloadSecret)
-                            return Results.Unauthorized();
+                if (header != tenantReloadSecret)
+                    return Results.Unauthorized();
 
-                        await store.ReloadTenantAsync(tenantId, req.HttpContext.RequestAborted);
-                        return Results.Ok(new { status = "reloaded", tenantId });
-                    })
+                await store.ReloadTenantAsync(tenantId, req.HttpContext.RequestAborted);
+                return Results.Ok(new { status = "reloaded", tenantId });
+            })
             .WithTags("Internal")
             .DisableAntiforgery();
         }
@@ -139,7 +149,7 @@ public static class MiddlewareExtensions
 
         if (conn.DefaultConnection.Contains(@".\SQLEXPRESS", StringComparison.OrdinalIgnoreCase) ||
             conn.DefaultConnection.Contains("Encrypt=False", StringComparison.OrdinalIgnoreCase))
-            warnings.Add("Primary connection string still looks like a local/dev SQL configuration (.\"SQLEXPRESS or Encrypt=False).");
+            warnings.Add("Primary connection string still looks like a local/dev SQL configuration (.\\SQLEXPRESS or Encrypt=False).");
 
         if (string.IsNullOrWhiteSpace(config["DataProtection:KeysPath"]))
             warnings.Add("DataProtection:KeysPath is missing. Persist keys in production so sign-in cookies survive restarts.");

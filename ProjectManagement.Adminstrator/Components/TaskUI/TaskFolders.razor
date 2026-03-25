@@ -4,23 +4,23 @@
 @inject ITaskResourceService FoldersService
 @inject IResourceCategoryService ResourceCategoryService
 
-<div class="pm-page">
+<div class="space-y-4 text-slate-900 dark:text-slate-100">
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
-        <aside class="pm-card-soft">
-            <div class="pm-section-header !mb-3">
+        <aside class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between !mb-3">
                 <div>
-                    <h3 class="pm-section-title">Folders</h3>
-                    <p class="pm-section-subtitle">Choose a folder to assign or remove resources for this task.</p>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Folders</h3>
+                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Choose a folder to assign or remove resources for this task.</p>
                 </div>
             </div>
 
             @if (Folders is null)
             {
-                <div class="pm-empty !px-4 !py-6">Lädt Ordner …</div>
+                <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40 !px-4 !py-6">Lädt Ordner …</div>
             }
             else if (Folders.Count == 0)
             {
-                <div class="pm-empty !px-4 !py-6">Keine Ordner verfügbar.</div>
+                <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40 !px-4 !py-6">Keine Ordner verfügbar.</div>
             }
             else
             {
@@ -28,7 +28,7 @@
                     @foreach (var f in Folders)
                     {
                         var selected = SelectedFolderId == f.Id;
-                        <button class="w-full rounded-xl border px-3 py-2 text-left text-sm font-medium transition @(selected ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-300" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800")"
+                        <button class="w-full rounded-xl border px-3 py-2 text-left text-sm font-medium transition @(selected ?"border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-300" :"border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800")"
                                 @onclick="() => LoadResourcesAsync(f.Id, f.DisplayName)">
                             @f.DisplayName
                         </button>
@@ -37,12 +37,12 @@
             }
         </aside>
 
-        <section class="pm-table-shell">
-            <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 sm:px-5">
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 sm:px-4">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                        <h3 class="pm-section-title">Resources</h3>
-                        <p class="pm-section-subtitle">
+                        <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Resources</h3>
+                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
                             @if (string.IsNullOrWhiteSpace(SelectedFolderName))
                             {
                                 <span>Bitte wählen Sie einen Ordner.</span>
@@ -56,69 +56,69 @@
 
                     @if (Rows is not null)
                     {
-                        <span class="pm-chip">@Rows.Count items</span>
+                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Rows.Count items</span>
                     }
                 </div>
             </div>
 
             @if (SelectedFolderName is null)
             {
-                <div class="p-5">
-                    <div class="pm-empty">Bitte wählen Sie einen Ordner.</div>
+                <div class="p-4">
+                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">Bitte wählen Sie einen Ordner.</div>
                 </div>
             }
             else if (Rows is null)
             {
-                <div class="p-5">
-                    <div class="pm-empty">Lädt Ressourcen in „@SelectedFolderName“…</div>
+                <div class="p-4">
+                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">Lädt Ressourcen in „@SelectedFolderName“…</div>
                 </div>
             }
             else if (Rows.Count == 0)
             {
-                <div class="p-5">
-                    <div class="pm-empty">Keine Ressourcen in diesem Ordner.</div>
+                <div class="p-4">
+                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">Keine Ressourcen in diesem Ordner.</div>
                 </div>
             }
             else
             {
-                <div class="pm-table-scroll">
-                    <table class="pm-table">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
                         <thead>
                             <tr>
-                                <th>@CalcResource.name</th>
-                                <th>@CalcResource.active</th>
-                                <th>@CalcResource.resourceType</th>
-                                <th>@CalcResource.unit</th>
-                                <th>@CalcResource.quantity</th>
-                                <th>@CalcResource.changeFactor1 / 2</th>
-                                <th>@CalcResource.cap / @CalcResource.waste</th>
-                                <th>@CalcResource.baseCost</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.active</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.resourceType</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.quantity</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.changeFactor1 / 2</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.cap / @CalcResource.waste</th>
+                                <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.baseCost</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var r in Rows)
                             {
                                 <tr>
-                                    <td>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                         <div class="flex min-w-[260px] items-center gap-3">
-                                            <button class="@(r.IsAssigned ? "pm-btn-danger !h-8 !px-2 !py-1 !text-xs" : "pm-btn-success !h-8 !px-2 !py-1 !text-xs")"
+                                            <button class="@(r.IsAssigned ?"inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 !h-8 !px-2 !py-1 text-xs" :"inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 !h-8 !px-2 !py-1 text-xs")"
                                                     @onclick="() => ToggleAssignAsync(r)">
-                                                @(r.IsAssigned ? "-" : "+")
+                                                @(r.IsAssigned ?"-" :"+")
                                             </button>
                                             <div>
                                                 <div class="font-medium text-slate-800 dark:text-slate-100">@r.Name</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
-                                        <span class="@(r.IsAssigned ? "pm-badge-success" : "pm-chip")">@(r.IsAssigned ? CalcResource.active : "—")</span>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
+                                        <span class="@(r.IsAssigned ?"inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200" :"inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200")">@(r.IsAssigned ? CalcResource.active :"—")</span>
                                     </td>
-                                    <td>@r.ResourceType</td>
-                                    <td>@r.UnitCode</td>
-                                    <td>@r.Quantity</td>
-                                    <td>@r.ChangeFactor1 / @r.ChangeFactor2</td>
-                                    <td>@r.WasteFactor</td>
-                                    <td>@r.BaseCost</td>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@r.ResourceType</td>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@r.UnitCode</td>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@r.Quantity</td>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@r.ChangeFactor1 / @r.ChangeFactor2</td>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@r.WasteFactor</td>
+                                    <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@r.BaseCost</td>
                                 </tr>
                             }
                         </tbody>

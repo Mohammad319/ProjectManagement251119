@@ -8,21 +8,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="@Nav.BaseUri" />
 
-    <script src="js/theme-init.js"></script>
+    <script src="@Assets["js/theme-init.js"]"></script>
 
     <ResourcePreloader />
+
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["ProjectManagement.Adminstrator.styles.css"]" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="css/tailwind.css" />
-    <link rel="stylesheet" href="_content/BlazorMHD.UI/css/mhd.css" />
-    <link rel="stylesheet" href="_content/BlazorMHD.UI/css/animations.css" />
+    <link rel="stylesheet" href="@Assets["css/app.css"]" />
+    <link rel="stylesheet" href="@Assets["css/tailwind.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/BlazorMHD.UI/css/mhd.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/BlazorMHD.UI/css/animations.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/ContextMenuMHD/css/tailwind-contextmenu.css"]" />
 
-    <link href="_content/ContextMenuMHD/css/tailwind-contextmenu.css" rel="stylesheet" />
+    <link rel="shortcut icon" href="@Assets["Icons/favicon.ico"]" type="image/x-icon" />
+
     <ImportMap />
     <HeadOutlet />
-
-    <link rel="shortcut icon" href="Icons/favicon.ico" type="image/x-icon" />
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
@@ -31,20 +32,20 @@
 
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
-    <script src="_content/BlazorMHD.UI/js/BlazorMHDUI.js"></script>
-    <script src="_content/ContextMenuMHD/js/contextMenuMHD.js"></script>
+    <script src="@Assets["_content/BlazorMHD.UI/js/BlazorMHDUI.js"]"></script>
+    <script src="@Assets["_content/ContextMenuMHD/js/contextMenuMHD.js"]"></script>
 
     <script>
         (function () {
-            var culture = localStorage['BlazorCulture'];
-            if (culture) {
-                document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
-            }
+        var culture = localStorage['BlazorCulture'];
+        if (culture) {
+        document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
+        }
         })();
 
         window.blazorCulture = {
-            get: () => localStorage['BlazorCulture'],
-            set: (value) => { localStorage['BlazorCulture'] = value; }
+        get: () => localStorage['BlazorCulture'],
+        set: (value) => { localStorage['BlazorCulture'] = value; }
         };
     </script>
 </body>

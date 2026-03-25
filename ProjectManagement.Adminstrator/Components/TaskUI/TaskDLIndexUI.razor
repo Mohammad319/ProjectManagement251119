@@ -11,15 +11,15 @@
 
 @inject MhdServices MHD
 
-<div class="pm-page">
-    <section class="pm-page-header">
-        <div class="pm-page-kicker">Task definitions</div>
+<div class="space-y-4 text-slate-900 dark:text-slate-100">
+    <section class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Task definitions</div>
         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-                <h2 class="pm-page-title">Task &amp; question blueprint library</h2>
-                <p class="pm-page-subtitle">Manage task definitions, task conditions, question groups, and assigned resource blueprints from one table.</p>
+                <h2 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Task &amp; question blueprint library</h2>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Manage task definitions, task conditions, question groups, and assigned resource blueprints from one table.</p>
             </div>
-            <button @onclick="() => OpenEditor(0)" class="pm-btn pm-btn-primary">
+            <button @onclick="() => OpenEditor(0)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">
                 @((MarkupString)Icons.Plus)
                 <span>@ResourceApp.newItem</span>
             </button>
@@ -28,72 +28,72 @@
 
     @if (errorMessage is not null)
     {
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300">@errorMessage</div>
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300">@errorMessage</div>
     }
     else if (tasks is null)
     {
-        <div class="pm-empty">
-            <div class="pm-empty-title">Loading task definitions…</div>
-            <div class="pm-empty-copy">The admin workspace is fetching task definitions and linked resource assignments.</div>
+        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">
+            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Loading task definitions…</div>
+            <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">The admin workspace is fetching task definitions and linked resource assignments.</div>
         </div>
     }
     else if (tasks.Count == 0)
     {
-        <div class="pm-empty">
-            <div class="pm-empty-title">No task definitions yet</div>
-            <div class="pm-empty-copy">Create the first task definition to start building reusable task and question blueprints.</div>
-            <button @onclick="() => OpenEditor(0)" class="pm-btn pm-btn-primary">@ResourceApp.newItem</button>
+        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">
+            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">No task definitions yet</div>
+            <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">Create the first task definition to start building reusable task and question blueprints.</div>
+            <button @onclick="() => OpenEditor(0)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">@ResourceApp.newItem</button>
         </div>
     }
     else
     {
-        <div class="pm-table-wrap">
-            <div class="pm-table-scroll">
-                <table class="pm-table">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
                     <thead>
                         <tr>
-                            <th style="width: 390px;">Actions</th>
-                            <th>@CalcResource.code</th>
-                            <th>@CalcResource.name</th>
-                            <th>@CalcResource.unit</th>
-                            <th>@CalcResource.quantity</th>
-                            <th>Status</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400" style="width: 390px;">Actions</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.code</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.quantity</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in tasks)
                         {
                             <tr>
-                                <td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <button @onclick="() => OpenEditor(item.Id)" class="pm-btn pm-btn-soft px-3 py-2 text-xs" title="Edit">
+                                        <button @onclick="() => OpenEditor(item.Id)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs" title="Edit">
                                             @Icons.Edit <span>Edit</span>
                                         </button>
-                                        <button @onclick="() => ConfirmDelete(item.Id, item.DisplayName)" class="pm-btn pm-btn-danger px-3 py-2 text-xs" title="Delete">
+                                        <button @onclick="() => ConfirmDelete(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-2 text-xs" title="Delete">
                                             @Icons.Delete <span>Delete</span>
                                         </button>
-                                        <button @onclick="() => OpenConditions(item.Id, item.DisplayName)" class="pm-btn pm-btn-secondary px-3 py-2 text-xs">@ResourceLoc.Conditions</button>
-                                        <button @onclick="() => OpenGroups(item.Id, item.DisplayName)" class="pm-btn pm-btn-secondary px-3 py-2 text-xs">@ResourceLoc.group</button>
-                                        <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="pm-btn pm-btn-secondary px-3 py-2 text-xs">@ResourceLoc.resource</button>
-                                        <button @onclick="async () => await Collspan(item)" class="pm-btn pm-btn-soft px-3 py-2 text-xs">
-                                            @(ColspanTaskIDs.Any(x => x == item.Id) ? "Hide resources" : "Show resources")
+                                        <button @onclick="() => OpenConditions(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs">@ResourceLoc.Conditions</button>
+                                        <button @onclick="() => OpenGroups(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs">@ResourceLoc.group</button>
+                                        <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs">@ResourceLoc.resource</button>
+                                        <button @onclick="async () => await Collspan(item)" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs">
+                                            @(ColspanTaskIDs.Any(x => x == item.Id) ?"Hide resources" :"Show resources")
                                         </button>
                                     </div>
                                 </td>
-                                <td>@item.Code</td>
-                                <td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@item.Code</td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                     <div class="font-medium text-slate-900 dark:text-slate-100">@item.DisplayName</div>
                                 </td>
-                                <td>@item.UnitCode</td>
-                                <td>@item.Quantity</td>
-                                <td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@item.UnitCode</td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@item.Quantity</td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                     @if (item.IsActive)
                                     {
-                                        <span class="pm-pill pm-pill-success">Active</span>
+                                        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">Active</span>
                                     }
                                     else
                                     {
-                                        <span class="pm-pill pm-pill-muted">Inactive</span>
+                                        <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Inactive</span>
                                     }
                                 </td>
                             </tr>
@@ -102,31 +102,31 @@
                                 foreach (var res in item.ResourceTasks)
                                 {
                                     <tr class="bg-slate-50/60 dark:bg-slate-950/30">
-                                        <td>
+                                        <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <button class="pm-btn pm-btn-secondary px-3 py-2 text-xs" @onclick="() => TaskChoiceResourceBin(item, res)">
+                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-3 py-2 text-xs" @onclick="() => TaskChoiceResourceBin(item, res)">
                                                     @((MarkupString)Icons.Machines)
                                                     <span>Open resource</span>
                                                 </button>
-                                                <button class="pm-btn pm-btn-danger px-3 py-2 text-xs" @onclick="() => RemoveAsync(item, res)">
+                                                <button class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-3 py-2 text-xs" @onclick="() => RemoveAsync(item, res)">
                                                     @((MarkupString)Icons.Delete)
                                                     <span>Remove</span>
                                                 </button>
                                                 <span class="text-sm font-medium text-slate-800 dark:text-slate-100">@res.DisplayName</span>
                                             </div>
                                         </td>
-                                        <td>@res.Unit</td>
-                                        <td>@res.Chf1</td>
-                                        <td>@res.Chf2</td>
-                                        <td>@res.Unit</td>
-                                        <td>
+                                        <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@res.Unit</td>
+                                        <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@res.Chf1</td>
+                                        <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@res.Chf2</td>
+                                        <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">@res.Unit</td>
+                                        <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                             @if (res.IsActive)
                                             {
-                                                <span class="pm-pill pm-pill-success">Assigned</span>
+                                                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">Assigned</span>
                                             }
                                             else
                                             {
-                                                <span class="pm-pill pm-pill-muted">Disabled</span>
+                                                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Disabled</span>
                                             }
                                         </td>
                                     </tr>
@@ -142,7 +142,7 @@
 
 @code {
     void TaskChoiceResourceBin(ProjectTaskListItemDto model, ResourceTaskIndexDto resourceId) => MHD.Modal.ShowComponent<TaskResourceUI>
-    (model.DisplayName + " Resource",
+    (model.DisplayName +" Resource",
 new Dictionary<string, object>
 {
     [nameof(TaskResourceUI.Task)] = model,

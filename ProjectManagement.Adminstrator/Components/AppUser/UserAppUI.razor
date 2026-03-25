@@ -7,22 +7,22 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
-<div class="pm-page">
-    <div class="pm-page-header">
+<div class="space-y-4 text-slate-900 dark:text-slate-100">
+    <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
         <div>
-            <h3 class="pm-page-title">@ResourceIdentity.users</h3>
-            <p class="pm-page-subtitle">Manage site users, access state, and account details.</p>
+            <h3 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">@ResourceIdentity.users</h3>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Manage site users, access state, and account details.</p>
         </div>
 
-        <div class="pm-action-stack">
+        <div class="flex flex-wrap items-center gap-2">
             @if (Users is not null)
             {
-                <span class="pm-chip">@Users.Count @ResourceIdentity.users</span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Users.Count @ResourceIdentity.users</span>
             }
 
             @if (CanManageSiteUsers)
             {
-                <button type="button" class="pm-btn-success" @onclick="RegisterModal">
+                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="RegisterModal">
                     @ResourceIdentity.register
                 </button>
             }
@@ -31,22 +31,22 @@
 
     @if (Users is null)
     {
-        <div class="pm-card">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
             <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
         </div>
     }
     else if (Users.Count > 0)
     {
-        <div class="pm-table-shell">
-            <div class="pm-table-scroll">
-                <table class="pm-table">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
                     <thead>
                         <tr>
-                            <th>@ResourceIdentity.email</th>
-                            <th>@CalcResource.name</th>
-                            <th>@CalcResource.active</th>
-                            <th>@ResourceIdentity.lockoutStart</th>
-                            <th>@ResourceIdentity.lockoutEnd</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.email</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@CalcResource.active</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutStart</th>
+                            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">@ResourceIdentity.lockoutEnd</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,22 +55,22 @@
                             <tr class="cursor-context-menu"
                                 @oncontextmenu:preventDefault
                                 @oncontextmenu="() => ContextM(user)">
-                                <td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                     <div class="min-w-[220px]">
                                         <div class="font-medium text-slate-800 dark:text-slate-100">@user.Email</div>
                                         <div class="text-xs text-slate-500 dark:text-slate-400">@user.UserName</div>
                                     </div>
                                 </td>
-                                <td>
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
                                     <div class="font-medium">@user.Firstname @user.Lastname</div>
                                 </td>
-                                <td>
-                                    <span class="@(user.LockoutEnabled ? "pm-badge-warning" : "pm-badge-success")">
+                                <td class="px-3 py-2 align-top text-sm text-slate-700 dark:text-slate-200">
+                                    <span class="@(user.LockoutEnabled ?"inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200" :"inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200")">
                                         @(user.LockoutEnabled ? ResourceIdentity.logout : CalcResource.active)
                                     </span>
                                 </td>
-                                <td class="text-slate-600 dark:text-slate-300">@(user.LockoutStart?.ToString("dd.MM.yyyy") ?? "—")</td>
-                                <td class="text-slate-600 dark:text-slate-300">@(user.LockoutEnd?.ToString("dd.MM.yyyy") ?? "—")</td>
+                                <td class="text-slate-600 dark:text-slate-300">@(user.LockoutStart?.ToString("dd.MM.yyyy") ??"—")</td>
+                                <td class="text-slate-600 dark:text-slate-300">@(user.LockoutEnd?.ToString("dd.MM.yyyy") ??"—")</td>
                             </tr>
                         }
                     </tbody>
@@ -80,7 +80,7 @@
     }
     else
     {
-        <div class="pm-empty">
+        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">
             @ResourceApp.ThereAreNoItemsToDisplay
         </div>
     }

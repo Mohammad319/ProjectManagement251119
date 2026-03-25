@@ -7,43 +7,41 @@
 @inherits AppComponentBase
 @inject IResourceAttributeService ResourcePropertiesService
 
-<div class="pm-page">
-    <div class="pm-page-header">
-        <div>
-            <h3 class="pm-page-title">@AppLoc["properties"]</h3>
-            <p class="pm-page-subtitle">Review and manage the properties in the selected property group.</p>
-        </div>
+<div class="space-y-3 text-slate-900 dark:text-slate-100">
+    <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="min-w-0">
+                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="() => UpdateForm()" title="@AppLoc[nameof(ResourceApp.newItem)]" aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
+                    <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
+                    <span>@AppLoc[nameof(ResourceApp.newItem)]</span>
+                </button>
+            </div>
 
-        <div class="pm-action-stack">
-            <span class="pm-chip">@PropertiesList.Count items</span>
-            <button type="button" class="pm-btn-success" @onclick="() => UpdateForm()" title="@AppLoc[nameof(ResourceApp.newItem)]" aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
-                <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
-                <span>@AppLoc[nameof(ResourceApp.newItem)]</span>
-            </button>
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@PropertiesList.Count items</span>
         </div>
     </div>
 
     @if (PropertiesList.Count == 0)
     {
-        <div class="pm-empty">@ResourceApp.ThereAreNoItemsToDisplay</div>
+        <div class="flex min-h-[140px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">@ResourceApp.ThereAreNoItemsToDisplay</div>
     }
     else
     {
-        <div class="pm-card">
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
             <MhdTable TItem="ResourceAttribute" Items="PropertiesList.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
                 <HeaderTemplate>
-                    <th style="width:240px;" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"></th>
-                    <th style="width:200px;" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.code</th>
-                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
+                    <th style="width:90px;" class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"></th>
+                    <th style="width:140px;" class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.code</th>
+                    <th class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
                 </HeaderTemplate>
                 <ChildContent>
                     <MhdTableColumn>
                         <Template Context="status">
-                            <div class="pm-action-stack">
-                                <button @onclick="() => UpdateForm(status)" class="pm-btn-warning !px-3 !py-2 !text-xs" title="@ResourceApp.update" aria-label="@ResourceApp.update">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <button @onclick="() => UpdateForm(status)" class="inline-flex items-center justify-center gap-1 rounded-lg border border-amber-500 bg-amber-500 px-2 py-1 text-xs font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300" title="@ResourceApp.update" aria-label="@ResourceApp.update">
                                     @Icons.Edit
                                 </button>
-                                <button @onclick="() => Remove(status)" class="pm-btn-danger !px-3 !py-2 !text-xs" title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
+                                <button @onclick="() => Remove(status)" class="inline-flex items-center justify-center gap-1 rounded-lg border border-rose-600 bg-rose-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400" title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
                                     @Icons.Delete
                                 </button>
                             </div>
@@ -88,7 +86,7 @@
                         [nameof(PropertyResourceFormUI.GroupId)] = GroupId,
                         [nameof(PropertyResourceFormUI.ResourceProp)] = up,
                         [nameof(PropertyResourceFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-                    }, DialogSize.Medium);
+                    }, DialogSize.Large);
     }
 
     async Task BtnUpdate(bool IsSuccess)
@@ -107,5 +105,6 @@
     protected async override Task OnInitializedAsync()
     {
         PropertiesList = await ResourcePropertiesService.GetByAttributeSetIdAsync(GroupId);
+        StateHasChanged();
     }
 }

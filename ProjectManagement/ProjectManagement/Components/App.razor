@@ -1,4 +1,5 @@
 @using System.Globalization
+
 <!DOCTYPE html>
 <html lang="@CultureInfo.CurrentUICulture.Name">
 
@@ -6,15 +7,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
-    <script src="js/theme-init.js"></script>
-    <ResourcePreloader />
-    <link rel="stylesheet" href="@Assets["ProjectManagement.styles.css"]" />
-    <link rel="stylesheet" href="_content/BlazorMHD.UI/css/mhd.css" />
-    <link rel="stylesheet" href="_content/BlazorMHD.UI/css/animations.css" />
 
-    <link href="_content/ContextMenuMHD/css/tailwind-contextmenu.css" rel="stylesheet" />
-    <link href="css/app.css" rel="stylesheet" />
-    <link href="css/custom.css" rel="stylesheet" />
+    <script src="@Assets["js/theme-init.js"]"></script>
+
+    <ResourcePreloader />
+
+    <link rel="stylesheet" href="@Assets["ProjectManagement.styles.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/BlazorMHD.UI/css/mhd.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/BlazorMHD.UI/css/animations.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/ContextMenuMHD/css/tailwind-contextmenu.css"]" />
+    <link rel="stylesheet" href="@Assets["css/app.css"]" />
+    <link rel="stylesheet" href="@Assets["css/custom.css"]" />
+
     <ImportMap />
     <HeadOutlet />
 </head>
@@ -22,27 +26,26 @@
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
     <Routes />
     <ReconnectModal />
+
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
-    <script src="_content/BlazorMHD.UI/js/BlazorMHDUI.js"></script>
-
-    <script src="js/auth-session.js"></script>
-    <script src="js/resizableTable.js"></script>
-    <script src="_content/ContextMenuMHD/js/contextMenuMHD.js"></script>
-
-    <script src="js/reorderHelper.js"></script>
+    <script src="@Assets["_content/BlazorMHD.UI/js/BlazorMHDUI.js"]"></script>
+    <script src="@Assets["js/auth-session.js"]"></script>
+    <script src="@Assets["js/resizableTable.js"]"></script>
+    <script src="@Assets["_content/ContextMenuMHD/js/contextMenuMHD.js"]"></script>
+    <script src="@Assets["js/reorderHelper.js"]"></script>
 
     <script>
         (function () {
-            var culture = localStorage['BlazorCulture'];
-            if (culture) {
-                document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
-            }
+        var culture = localStorage['BlazorCulture'];
+        if (culture) {
+        document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
+        }
         })();
 
         window.blazorCulture = {
-            get: () => localStorage['BlazorCulture'],
-            set: (value) => { localStorage['BlazorCulture'] = value; }
+        get: () => localStorage['BlazorCulture'],
+        set: (value) => { localStorage['BlazorCulture'] = value; }
         };
     </script>
 </body>

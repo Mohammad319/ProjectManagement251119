@@ -32,7 +32,7 @@
                         <span>@s.Name</span>
                         @if (!string.IsNullOrWhiteSpace(s.Group))
                         {
-                            <span class="text-xs text-gray-500">@s.Group</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">@s.Group</span>
                         }
                     </div>
                 </li>
@@ -40,7 +40,7 @@
 
             @if (_hasMore)
             {
-                <li class="px-3 py-2 text-xs text-gray-400">
+                <li class="px-3 py-2 text-xs text-slate-400 dark:text-slate-500">
                     @AppLoc["moreResultsAvailable"]
                 </li>
             }
@@ -62,10 +62,10 @@
     [Parameter] public int SearchDelayMs { get; set; } = 250;
     [Parameter] public int PageSize { get; set; } = 10;
 
-    [Parameter] public string InputCss { get; set; } = "form-input w-full";
-    [Parameter] public string DropdownCss { get; set; } = "absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow";
-    [Parameter] public string ItemCss { get; set; } = "px-3 py-2 cursor-pointer text-sm";
-    [Parameter] public string ItemActiveCss { get; set; } = "bg-blue-600 text-white";
+    [Parameter] public string InputCss { get; set; } = "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500";
+    [Parameter] public string DropdownCss { get; set; } = "absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-950";
+    [Parameter] public string ItemCss { get; set; } = "cursor-pointer px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900";
+    [Parameter] public string ItemActiveCss { get; set; } = "bg-blue-600 text-white dark:bg-blue-500";
 
     private string _searchText = string.Empty;
     private bool _isOpen;
