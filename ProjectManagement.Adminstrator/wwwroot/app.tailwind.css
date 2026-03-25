@@ -3,301 +3,53 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    color-scheme: light;
-  }
-
-  html.dark {
-    color-scheme: dark;
-  }
-
   body {
-    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    @apply bg-slate-950 text-slate-100;
   }
 }
 
 @layer components {
-  .pm-app-shell {
-    @apply min-h-screen bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.06),_transparent_28%)] dark:bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.09),_transparent_26%)];
+  .pm-dialog-surface,
+  .mhd-dialog,
+  .mhd-modal,
+  .mhd-modal-dialog,
+  .mhd-dialog-panel {
+    @apply rounded-[28px] border border-slate-800 bg-slate-950 text-slate-100 shadow-2xl;
   }
 
-  .pm-layout-frame {
-    @apply min-w-0;
+  .pm-dialog-header,
+  .mhd-dialog-header,
+  .mhd-modal-header,
+  .mhd-modal__header,
+  .mhd-dialog__header {
+    @apply border-b border-slate-800 bg-slate-900 text-slate-100;
   }
 
-  .pm-content-wrap {
-    @apply mx-auto w-full max-w-[1600px] px-4 pb-8 pt-5 sm:px-6 lg:px-8 lg:pb-10;
+  .pm-dialog-body,
+  .mhd-dialog-body,
+  .mhd-modal-body,
+  .mhd-modal__body,
+  .mhd-dialog__body {
+    @apply bg-slate-950 text-slate-100;
   }
 
-  .pm-topbar {
-    @apply sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/85;
+  .pm-dialog-footer,
+  .mhd-dialog-footer,
+  .mhd-modal-footer,
+  .mhd-modal__footer,
+  .mhd-dialog__footer {
+    @apply border-t border-slate-800 bg-slate-950;
   }
 
-  .pm-topbar-inner {
-    @apply mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8;
-  }
-
-  .pm-brand {
-    @apply flex min-w-0 items-center gap-3;
-  }
-
-  .pm-brand-logo {
-    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
-  }
-
-  .pm-brand-title {
-    @apply block truncate text-sm font-semibold text-slate-950 dark:text-white;
-  }
-
-  .pm-brand-subtitle {
-    @apply block truncate text-xs text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-page {
-    @apply space-y-6;
-  }
-
-  .pm-page-header {
-    @apply rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:px-6;
-  }
-
-  .pm-page-kicker {
-    @apply text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-600 dark:text-sky-400;
-  }
-
-  .pm-page-title {
-    @apply text-[1.8rem] font-semibold tracking-tight text-slate-950 dark:text-white;
-  }
-
-  .pm-page-subtitle {
-    @apply mt-2 max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-400;
-  }
-
-  .pm-grid-shell {
-    @apply grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)];
-  }
-
-  .pm-card {
-    @apply rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
-  }
-
-  .pm-card-soft {
-    @apply rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/60;
-  }
-
-  .pm-section {
-    @apply rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60;
-  }
-
-  .pm-section-title {
-    @apply text-sm font-semibold text-slate-900 dark:text-slate-100;
-  }
-
-  .pm-section-subtitle {
-    @apply mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-sidebar {
-    @apply sticky top-[5.5rem] h-fit rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900;
-  }
-
-  .pm-sidebar-head {
-    @apply border-b border-slate-200 pb-4 dark:border-slate-800;
-  }
-
-  .pm-nav-group {
-    @apply mt-5 space-y-2;
-  }
-
-  .pm-nav-group:first-child {
-    @apply mt-0;
-  }
-
-  .pm-nav-caption {
-    @apply px-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500;
-  }
-
-  .pm-nav-link {
-    @apply flex w-full items-start gap-3 rounded-2xl border border-transparent px-3 py-3 text-left transition hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-800/70;
-  }
-
-  .pm-nav-link-active {
-    @apply border-sky-200 bg-sky-50 text-slate-900 dark:border-sky-900/70 dark:bg-sky-950/40 dark:text-slate-100;
-  }
-
-  .pm-nav-icon {
-    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200;
-  }
-
-  .pm-nav-link-active .pm-nav-icon {
-    @apply bg-sky-100 text-sky-700 dark:bg-sky-900/70 dark:text-sky-200;
-  }
-
-  .pm-nav-title {
-    @apply block text-sm font-semibold text-slate-900 dark:text-slate-100;
-  }
-
-  .pm-nav-copy {
-    @apply mt-0.5 block text-xs leading-5 text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-stat-grid {
-    @apply grid gap-4 sm:grid-cols-2 2xl:grid-cols-4;
-  }
-
-  .pm-stat-card {
-    @apply rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900;
-  }
-
-  .pm-stat-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-stat-value {
-    @apply mt-3 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white;
-  }
-
-  .pm-stat-note {
-    @apply mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-toolbar {
-    @apply flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60 lg:flex-row lg:items-end lg:justify-between;
-  }
-
-  .pm-toolbar-row {
-    @apply flex flex-wrap items-center gap-2;
-  }
-
-  .pm-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60;
+  .pm-input {
+    @apply w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
   }
 
   .pm-btn-primary {
-    @apply border-sky-600 bg-sky-600 text-white hover:border-sky-700 hover:bg-sky-700 dark:border-sky-500 dark:bg-sky-500 dark:hover:border-sky-400 dark:hover:bg-sky-400;
+    @apply inline-flex items-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400;
   }
 
   .pm-btn-secondary {
-    @apply border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
-  }
-
-  .pm-btn-danger {
-    @apply border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300 dark:hover:bg-rose-900/60;
-  }
-
-  .pm-btn-soft {
-    @apply border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
-  }
-
-  .pm-field {
-    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-500 dark:focus:ring-sky-500/20;
-  }
-
-  .pm-label {
-    @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-200;
-  }
-
-  .pm-help {
-    @apply mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-table-wrap {
-    @apply overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
-  }
-
-  .pm-table-scroll {
-    @apply overflow-x-auto;
-  }
-
-  .pm-table {
-    @apply min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800;
-  }
-
-  .pm-table thead {
-    @apply bg-slate-50 dark:bg-slate-950/60;
-  }
-
-  .pm-table th {
-    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-table td {
-    @apply px-4 py-3 align-top text-slate-700 dark:text-slate-200;
-  }
-
-  .pm-table tbody tr {
-    @apply border-t border-slate-100 transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50;
-  }
-
-  .pm-pill {
-    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
-  }
-
-  .pm-pill-success {
-    @apply bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300;
-  }
-
-  .pm-pill-muted {
-    @apply bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300;
-  }
-
-  .pm-pill-info {
-    @apply bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300;
-  }
-
-  .pm-pill-warning {
-    @apply bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300;
-  }
-
-  .pm-pill-danger {
-    @apply bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300;
-  }
-
-  .pm-empty {
-    @apply flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-[28px] border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900;
-  }
-
-  .pm-empty-title {
-    @apply text-lg font-semibold text-slate-900 dark:text-slate-100;
-  }
-
-  .pm-empty-copy {
-    @apply max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-kbd {
-    @apply inline-flex items-center rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300;
-  }
-
-  .pm-logo-card {
-    @apply flex shrink-0 items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-950/60;
-  }
-
-  .pm-quick-grid {
-    @apply grid gap-4 md:grid-cols-2 xl:grid-cols-3;
-  }
-
-  .pm-quick-card {
-    @apply flex min-h-[150px] flex-col rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-white hover:shadow-sm dark:border-slate-800 dark:bg-slate-950/60 dark:hover:border-sky-800 dark:hover:bg-slate-900;
-  }
-
-  .pm-quick-icon {
-    @apply flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-100;
-  }
-
-  .pm-quick-title {
-    @apply mt-4 block text-sm font-semibold text-slate-900 dark:text-slate-100;
-  }
-
-  .pm-quick-copy {
-    @apply mt-1 block text-sm leading-6 text-slate-500 dark:text-slate-400;
-  }
-
-  .pm-list {
-    @apply space-y-3;
-  }
-
-  .pm-list-item {
-    @apply rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-300;
+    @apply inline-flex items-center rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800;
   }
 }

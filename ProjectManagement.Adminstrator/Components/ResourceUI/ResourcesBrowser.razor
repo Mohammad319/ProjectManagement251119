@@ -10,128 +10,85 @@
 @using ProjectManagement.Shared.Enums
 @inject IResourceCategoryService ResourceFolderService
 
-<div class="pm-page">
-    <div class="grid grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-        <aside class="pm-card-soft">
-            <div class="pm-section-header !mb-3">
-                <div>
-                    <h3 class="pm-section-title">Folders</h3>
-                    <p class="pm-section-subtitle">Select a folder to show its resources.</p>
-                </div>
+<div class="flex flex-wrap gap-3">
+    <div class="w-[200px] rounded border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900/60">
+        @if (EnableFolderContext)
+        {
+            <div class="mb-2 flex items-center">
+                <button class="rounded border border-blue-600 px-2 py-1 text-sm text-blue-700 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-900/30" @onclick="() => AddFolder(null)">
+                    @((MarkupString)Icons.Plus)
+                </button>
+            </div>
+        }
+        @FolderTreeHelper.RenderFolderTreeRecursive(
+                this,
+                Folders,
+                expanded,
+                selectedFolderIds,
+                EventCallback.Factory.Create<ResourceCategory>(this, ToggleSelectionAsync),
+                EnableFolderContext
+                ? EventCallback.Factory.Create<ResourceCategory>(this, ContextF)
+                : EventCallback<ResourceCategory>.Empty)
+    </div>
 
-                @if (EnableFolderContext)
+    <div class="m-2 min-w-[350px] flex-1">
+        @if (!selectedFolderIds.Any())
                 {
-                    <button type="button" class="pm-btn-primary" @onclick="() => AddFolder(null)">
-                        <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
-                        <span>@ResourceApp.newItem</span>
-                    </button>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Select one or more folders to see resources.</p>
                 }
-            </div>
+                else if (!resourcesToShow.Any())
+        {
+            <p class="text-xs text-gray-500 dark:text-gray-400">No resources in the selected folders.</p>
+        }
+        else
+        {
+            <table class="min-w-full border-collapse overflow-hidden rounded border border-gray-200 text-sm dark:border-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-800/70">
+                    <tr>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.name</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.active</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.resourceType</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.unit</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.quantity</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.changeFactor1 / 2</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.cap / @CalcResource.waste</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.cap</th>
+                        <th class="border-b border-gray-200 px-3 py-2 text-start text-xs font-semibold text-gray-600 dark:border-gray-700 dark:text-gray-300">@CalcResource.cost</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    @foreach (var r in resourcesToShow)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">
+                                <div class="flex items-center gap-2">
 
-            <div class="max-h-[70vh] overflow-auto pr-1">
-                @FolderTreeHelper.RenderFolderTreeRecursive(
-                    this,
-                    Folders,
-                    expanded,
-                    selectedFolderIds,
-                    EventCallback.Factory.Create<ResourceCategory>(this, ToggleSelectionAsync),
-                    EnableFolderContext
-                        ? EventCallback.Factory.Create<ResourceCategory>(this, ContextF)
-                        : EventCallback<ResourceCategory>.Empty)
-            </div>
-        </aside>
-
-        <section class="pm-table-shell">
-            <div class="border-b border-slate-200 px-4 py-4 dark:border-slate-700 sm:px-5">
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                        <h3 class="pm-section-title">Resources</h3>
-                        <p class="pm-section-subtitle">
-                            @if (selectedFolderIds.Count == 0)
-                            {
-                                <span>Select one folder to review its resources.</span>
-                            }
-                            else
-                            {
-                                <span>@SelectedFolderLabel</span>
-                            }
-                        </p>
-                    </div>
-
-                    <div class="pm-action-stack">
-                        @if (selectedFolderIds.Count > 0)
-                        {
-                            <span class="pm-chip">@resourcesToShow.Count items</span>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            @if (!selectedFolderIds.Any())
-            {
-                <div class="p-5">
-                    <div class="pm-empty">Select one or more folders to see resources.</div>
-                </div>
-            }
-            else if (!resourcesToShow.Any())
-            {
-                <div class="p-5">
-                    <div class="pm-empty">No resources in the selected folders.</div>
-                </div>
-            }
-            else
-            {
-                <div class="pm-table-scroll">
-                    <table class="pm-table">
-                        <thead>
-                            <tr>
-                                <th>@CalcResource.name</th>
-                                <th>@CalcResource.active</th>
-                                <th>@CalcResource.resourceType</th>
-                                <th>@CalcResource.unit</th>
-                                <th>@CalcResource.quantity</th>
-                                <th>@CalcResource.changeFactor1 / 2</th>
-                                <th>@CalcResource.cap / @CalcResource.waste</th>
-                                <th>@CalcResource.cost</th>
-                                <th>@CalcResource.baseCost</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var r in resourcesToShow)
-                            {
-                                <tr>
-                                    <td>
-                                        <div class="flex min-w-[260px] items-center gap-2">
-                                            @if (RowActions is not null)
-                                            {
-                                                @if (r.ResType == ResourceTypesEnum.MachinesAndEquipments || r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.Managers)
-                                                {
-                                                    <button type="button" class="pm-btn-primary !px-2 !py-1 !text-xs" @onclick="() => CalcModeal(r)">Calc</button>
-                                                }
-                                                @RowActions(r)
-                                            }
-                                            <div class="min-w-0">
-                                                <div class="truncate font-medium text-slate-800 dark:text-slate-100">@r.Name</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" checked="@r.IsActive" disabled />
-                                    </td>
-                                    <td>@r.ResType</td>
-                                    <td>@r.Data.Unit</td>
-                                    <td>@r.Data.Quantity</td>
-                                    <td>@r.Data.ChangeFactor1 / @r.Data.ChangeFactor2</td>
-                                    <td>@r.Data.CapWaste</td>
-                                    <td>@r.Data.Cost</td>
-                                    <td>@r.Data.BaseCost</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-        </section>
+                                @if (RowActions is not null)
+                                {
+                                        @if (r.ResType == ResourceTypesEnum.MachinesAndEquipments || r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.Managers)
+                                        {
+                                            <button type="button" class="rounded border border-cyan-600 px-2 py-1 text-xs text-cyan-700 hover:bg-cyan-50 dark:border-cyan-500 dark:text-cyan-300 dark:hover:bg-cyan-900/30" @onclick="() => CalcModeal(r)">Calc</button>
+                                        }
+                                        @RowActions(r)
+                                }
+                                @r.Name
+                                    </div>
+                            </td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">
+                                <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800" checked="@r.IsActive" disabled />
+                            </td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.ResType</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.Unit</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.Quantity</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.ChangeFactor1 / @r.Data.ChangeFactor2</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.CapWaste</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.Cost</td>
+                            <td class="px-3 py-2 text-gray-700 dark:text-gray-200">@r.Data.BaseCost</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>
 
@@ -143,18 +100,12 @@
     private List<ResourceDefinition> resourcesToShow = new();
     private HashSet<int> expanded = new();
     private HashSet<int> selectedFolderIds = new();
-
-    private string SelectedFolderLabel => selectedFolderIds.Count == 1
-        ? Folders.FirstOrDefault(x => x.Id == selectedFolderIds.First())?.DisplayName ?? string.Empty
-        : string.Join(", ", Folders.Where(x => selectedFolderIds.Contains(x.Id)).Select(x => x.DisplayName));
-
     void CalcModeal(ResourceDefinition model) => MHD.Modal.ShowComponent<CalcResCostUI>(model.Name,
     new Dictionary<string, object>
     {
         [nameof(CalcResCostUI.Resource)] = model,
         [nameof(CalcResCostUI.CallBack)] = EventCallback.Factory.Create<bool>(this, StateHasChanged),
     });
-
     protected override async Task OnInitializedAsync()
     {
         if (Folders.Count == 0)
@@ -171,28 +122,26 @@
         StateHasChanged();
     }
 
-    private async Task UpdateResourcesAsync() =>
+    private async Task UpdateResourcesAsync()=>
         resourcesToShow = await ResourceFolderService.GetResourcesAsync(selectedFolderIds);
 
     async Task ContextF(ResourceCategory item)
     {
         var list = new List<MenuItem>()
-        {
-            new() { Label = $"➕ Resource", OnClickAsync = () => { UpdateForm(new ResourceDefinition(){ FolderId = item.Id }); return Task.CompletedTask; } },
-            new() { Label = $"➕ Subfolder", OnClickAsync = () => { AddFolder(item.Id); return Task.CompletedTask; } },
-            new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => { UpdateForm(item); return Task.CompletedTask; } },
-            new() { Label = $"🗑 {ResourceApp.delete}", OnClickAsync = () => { Remove(item); return Task.CompletedTask; } },
-        };
+            {
+                new() { Label = $"➕ Resource", OnClickAsync = () => {UpdateForm(new ResourceDefinition(){FolderId = item.Id}); return Task.CompletedTask; } },
+                new() { Label = $"➕ Subfolder", OnClickAsync = () => {AddFolder(item.Id); return Task.CompletedTask; } },
+                new() { Label = $"✏️ {ResourceApp.edit}", OnClickAsync = () => {UpdateForm(item); return Task.CompletedTask; } },
+                new() { Label = $"🗑 {ResourceApp.delete}", OnClickAsync = () => {Remove(item); return Task.CompletedTask; } },
+            };
         await ContextService.ShowMenuAsync(list);
     }
-
     void UpdateForm(ResourceDefinition model) => MHD.Modal.ShowComponent<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
-    new Dictionary<string, object>
-    {
-        [nameof(ResourceFormDLUI.model)] = model,
-        [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
-    });
-
+new Dictionary<string, object>
+{
+[nameof(ResourceFormDLUI.model)] = model,
+    [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshAsync),
+});
     async Task RefreshAsync()
     {
         await UpdateResourcesAsync();
@@ -200,26 +149,24 @@
     }
 
     private void AddFolder(int? parentID) => UpdateForm(new ResourceCategory() { DisplayName = "", ParentCategoryId = parentID });
-
     void UpdateForm(ResourceCategory model) =>
-        Modal.ShowComponent<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
-            AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
-            {
-                [nameof(FolderFormUI.Form)] = model,
-                [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-            }, DialogSize.Medium);
-
+    Modal.ShowComponent<FolderFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
+        AppLoc[LocalizerConst.Update, model.DisplayName], new Dictionary<string, object>
+        {
+            [nameof(FolderFormUI.Form)] = model,
+            [nameof(FolderFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+        }, DialogSize.Large);
     void Remove(ResourceCategory model) => MHD.DeleteMessage(model.DisplayName, EventCallback.Factory.Create(this, () => DeleteFolder(model.Id)));
-
     private async Task DeleteFolder(int id)
     {
         try
         {
-            if (!await ResourceFolderService.DeleteAsync(id)) return;
+            if(!await ResourceFolderService.DeleteAsync(id))return;
 
             var toRemove = Folders.FirstOrDefault(f => f.Id == id);
             if (toRemove is not null) Folders.Remove(toRemove);
 
+            // نظّف الاختيار إن كان المجلد المحذوف محددًا
             if (selectedFolderIds.Remove(id))
                 resourcesToShow.Clear();
 
@@ -227,6 +174,8 @@
         }
         catch (DbUpdateException)
         {
+            // هنا غالبًا المجلد لديه أبناء/موارد مرتبطة
+            // MHD.ToastMessage.Error("Delete folder", "Cannot delete: folder has children or linked resources.");
         }
     }
 
@@ -239,4 +188,5 @@
         }
         StateHasChanged();
     }
+
 }

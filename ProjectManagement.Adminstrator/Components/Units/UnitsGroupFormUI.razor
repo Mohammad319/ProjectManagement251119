@@ -1,4 +1,3 @@
-@using System.Globalization
 @using System.Linq
 @using TaskResourceBlueprints.Entities
 @inherits AppComponentBase
@@ -7,91 +6,76 @@
 
 @inject ITaskUnitGroupService UnitGroupsService
 
-<div class="pm-form-shell">
-    <section class="pm-form-section">
+<div class="space-y-5">
+    <div>
+        <h3 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Unit group</h3>
+        <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">Build reusable conversion groups by selecting source units that map to one target unit.</p>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_18rem]">
         <div>
-            <h3 class="pm-form-section-title">Unit group</h3>
-            <p class="pm-form-section-text">Build reusable conversion groups by selecting source units that map to one target unit.</p>
+            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200" for="group-name">@CalcResource.name</label>
+            <input id="group-name"
+                   class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                   @bind="_model.DisplayName"
+                   placeholder="Group 1" />
         </div>
 
-        <div class="pm-form-grid-2">
-            <div class="pm-field">
-                <label class="pm-label" for="group-name">@CalcResource.name</label>
-                <input id="group-name"
-                       class="pm-input"
-                       @bind="_model.DisplayName"
-                       placeholder="Group 1" />
-            </div>
-
-            <div class="pm-field">
-                <label class="pm-label" for="to-unit">Convert to</label>
-                <select id="to-unit"
-                        class="pm-select"
-                        @bind="_toUnit"
-                        @bind:after="OnTargetChanged">
-                    @foreach (var t in _allTargets)
-                    {
-                        <option value="@t">@t</option>
-                    }
-                </select>
-            </div>
+        <div>
+            <label class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200" for="to-unit">Convert to</label>
+            <select id="to-unit"
+                    class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                    @bind="_toUnit"
+                    @bind:after="OnTargetChanged">
+                @foreach (var t in _allTargets)
+                {
+                    <option value="@t">@t</option>
+                }
+            </select>
         </div>
-    </section>
+    </div>
 
-    <section class="pm-form-section">
-        <div class="flex items-center justify-between gap-3">
+    <div class="rounded-[24px] border border-slate-200/80 bg-white/80 p-5 dark:border-slate-800 dark:bg-slate-950/60">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
-                <h3 class="pm-form-section-title">Available units</h3>
-                <p class="pm-form-section-text">Choose which source units should belong to this group.</p>
+                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Available units</h4>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Choose which source units should belong to this group.</p>
             </div>
-            <span class="pm-badge">Target: @_toUnit</span>
+            <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Target: <span class="text-slate-900 dark:text-slate-100">@_toUnit</span></div>
         </div>
 
-        <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
             @foreach (var u in _fromUnits)
             {
                 var selected = HasKey(u);
 
-                <div class="pm-selectable-card @(selected ? "ring-2 ring-blue-500/15 dark:ring-blue-400/20" : string.Empty)">
-                    <span class="text-sm text-slate-700 dark:text-slate-300">@u</span>
-
-                    @if (!selected)
-                    {
-                        <button class="pm-icon-btn border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-300 dark:hover:bg-green-900/30"
-                                disabled="@_isSaving"
-                                @onclick="() => Toggle(u)">
-                            @((MarkupString)Icons.Plus)
-                        </button>
-                    }
-                    else
-                    {
-                        <button class="pm-icon-btn border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-950/30"
-                                disabled="@_isSaving"
-                                @onclick="() => Toggle(u)">
-                            @Icons.Delete
-                        </button>
-                    }
-                </div>
+                <button type="button"
+                        class="flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition @(selected
+                            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-200"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800")"
+                        disabled="@_isSaving"
+                        @onclick="() => Toggle(u)">
+                    <span class="text-sm font-medium">@u</span>
+                    <span class="text-lg leading-none">@(selected ? "×" : "+")</span>
+                </button>
             }
         </div>
-    </section>
+    </div>
 
-    <section class="pm-form-section">
-        <div>
-            <h3 class="pm-form-section-title">Selected keys</h3>
-            <p class="pm-form-section-text">These keys will be saved with the unit group.</p>
-        </div>
+    <div class="rounded-[24px] border border-slate-200/80 bg-white/80 p-5 dark:border-slate-800 dark:bg-slate-950/60">
+        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Selected keys</h4>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">These keys will be saved with the unit group.</p>
 
         @if (_model.Keys.Count == 0)
         {
-            <div class="pm-empty mt-4">There are no specific keys yet.</div>
+            <div class="mt-4 text-sm text-slate-500 dark:text-slate-400">There are no specific keys yet.</div>
         }
         else
         {
             <div class="mt-4 flex flex-wrap gap-2">
                 @foreach (var k in _model.Keys)
                 {
-                    <span class="pm-badge">
+                    <span class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-800 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-200">
                         @k
                         <button class="ms-2 rounded-full px-1 transition hover:bg-blue-200 dark:hover:bg-blue-800/60"
                                 title="Removal"
@@ -103,18 +87,18 @@
                 }
             </div>
         }
-    </section>
+    </div>
 
     @if (!string.IsNullOrWhiteSpace(_error))
     {
-        <div class="pm-validation-summary">
+        <div class="text-sm text-red-600 dark:text-red-400">
             @_error
         </div>
     }
 
-    <div class="pm-toolbar">
+    <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
         <button type="button"
-                class="pm-btn-success"
+                class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-400"
                 disabled="@_isSaving"
                 @onclick="SaveAsync">
             @ResourceApp.save
@@ -123,7 +107,7 @@
         <button type="button"
                 disabled="@_isSaving"
                 @onclick="Close"
-                class="pm-btn-secondary">
+                class="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
             @ResourceApp.cancel
         </button>
     </div>
@@ -131,10 +115,6 @@
 
 @code {
     [Parameter] public EventCallback<bool> Callback { get; set; }
-
-    /// <summary>
-    /// إن مررت Id سنحمّل المجموعة للتحرير، وإلا فسيتم إنشاء مجموعة جديدة.
-    /// </summary>
     [Parameter] public int? GroupId { get; set; }
 
     private TaskUnitGroup _model = new();
@@ -142,7 +122,6 @@
     private bool _isSaving;
     private string? _error;
 
-    // كل الوحدات الهدف المتوفرة في الكتالوج
     private readonly List<string> _allTargets = UnitRulesCatalog.Rules.Values
         .Select(r => r.ToUnit)
         .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -157,7 +136,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // لو عندنا GroupId نحمّل المجموعة من الخدمة
         if (GroupId is int id)
         {
             var group = await UnitGroupsService.GetByIdAsync(id);
@@ -167,30 +145,19 @@
             }
         }
 
-        // تأكد دائماً أن Keys ليست null
         _model.Keys ??= new List<string>();
 
-        // تأكد أن وحدة الهدف المختارة موجودة في القائمة
         if (!_allTargets.Contains(_toUnit, StringComparer.OrdinalIgnoreCase))
             _toUnit = _allTargets.FirstOrDefault() ?? "m3";
     }
 
-    private void Close()
-    {
-        MHD.Modal.Close();
-    }
-
-    private void OnTargetChanged()
-    {
-        // لا نُفرغ المفاتيح؛ لأن المجموعة قد تحتوي أزواجًا لهدف آخر
-        StateHasChanged();
-    }
+    private void Close() => MHD.Modal.Close();
+    private void OnTargetChanged() => StateHasChanged();
 
     private void Toggle(string fromUnit)
     {
         var key = UnitRulesCatalog.BuildKey(fromUnit);
-        var idx = _model.Keys.FindIndex(k =>
-            string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
+        var idx = _model.Keys.FindIndex(k => string.Equals(k, key, StringComparison.OrdinalIgnoreCase));
 
         if (idx >= 0)
             _model.Keys.RemoveAt(idx);
@@ -227,11 +194,7 @@
             else
                 await UnitGroupsService.UpdateAsync(_model);
 
-
-            // نبلغ الأب بنجاح الحفظ (مثلاً لتحديث القائمة)
             await Callback.InvokeAsync(true);
-
-            // إغلاق المودال بعد نجاح العملية
             Close();
         }
         catch (Exception ex)

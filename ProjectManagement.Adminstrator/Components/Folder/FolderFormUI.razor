@@ -1,51 +1,47 @@
-﻿@using TaskResourceBlueprints.Entities
+@using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Infrastructure
 @inject IResourceCategoryService IResourceFolderService
 @using TaskResourceBlueprints.Services.Resource
 
-<div class="pm-form-shell">
-    <EditForm Model="folder" OnValidSubmit="HandleValidSubmit" class="pm-form-shell">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="pm-validation-summary" />
+<EditForm Model="folder" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-red-700 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-red-300" />
 
-        <section class="pm-form-section">
-            <div>
-                <h3 class="pm-form-section-title">Folder details</h3>
-                <p class="pm-form-section-text">Organize resource categories and control visibility inside the admin catalog.</p>
-            </div>
-
-            <div class="pm-form-grid-2">
-                <div class="pm-field">
-                    <label class="pm-label">Name</label>
-                    <InputText class="pm-input" @bind-Value="folder.DisplayName" />
-                </div>
-
-                <div class="pm-field">
-                    <label class="pm-label">Order</label>
-                    <InputNumber class="pm-input" @bind-Value="folder.SortOrder" />
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="pm-inline-check">
-                        <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-950" @bind-Value="folder.IsVisible" />
-                        <span>Is Visible</span>
-                    </label>
-                </div>
-
-                <div class="pm-field md:col-span-2">
-                    <label class="pm-label">Note</label>
-                    <InputTextArea class="pm-textarea" @bind-Value="folder.Note" />
-                </div>
-            </div>
-        </section>
-
-        <div class="pm-toolbar">
-            <button type="submit" class="pm-btn-primary">💾 Save</button>
-            <button type="button" class="pm-btn-secondary" @onclick="Cancel">↩ Cancel</button>
+    <div class="space-y-5">
+        <div class="space-y-2">
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-slate-100">Folder details</h3>
+            <p class="text-sm leading-7 text-slate-500 dark:text-slate-400">Organize resource categories and control visibility inside the admin catalog.</p>
         </div>
-    </EditForm>
-</div>
+
+        <div class="@GridColumnsClass">
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Name</label>
+                <InputText class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="folder.DisplayName" />
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Order</label>
+                <InputNumber class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="folder.SortOrder" />
+            </div>
+
+            <label class="flex items-center gap-3 pt-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+                <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900" @bind-Value="folder.IsVisible" />
+                <span>Is visible</span>
+            </label>
+
+            <div class="md:col-span-full space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Note</label>
+                <InputTextArea class="min-h-32 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" @bind-Value="folder.Note" />
+            </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-5 dark:border-slate-800">
+            <button type="button" class="inline-flex items-center rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="Cancel">Cancel</button>
+            <button type="submit" class="inline-flex items-center rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">Save</button>
+        </div>
+    </div>
+</EditForm>
 
 @code {
     [Parameter] public int? FolderId { get; set; }
@@ -55,7 +51,7 @@
 
     private ResourceCategory folder = new() { DisplayName = "" };
 
-    private string GridColumnsClass => $"grid grid-cols-1 gap-2 {GetMdColsClass()}";
+    private string GridColumnsClass => $"grid grid-cols-1 gap-5 {GetMdColsClass()}";
 
     private string GetMdColsClass() => ColumnsMd switch
     {

@@ -1,4 +1,4 @@
-﻿@using BlazorMHD.UI.Components.Data.Table
+@using BlazorMHD.UI.Components.Data.Table
 @using ProjectManagement.Adminstrator.Constants
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Lookups
@@ -7,67 +7,46 @@
 @inherits AppComponentBase
 @inject IEntityService<ActionTypeEntity> service
 
-<div class="pm-page">
-    <div class="pm-card">
-        <div class="pm-card-header">
-            <div>
-                <h3 class="pm-title">Action type</h3>
-                <p class="pm-subtitle">@((ActionTypesList?.Count ?? 0)) items</p>
-            </div>
-
-            <div class="pm-toolbar">
-                <button @onclick="UpdateForm"
-                        class="pm-btn-icon-success"
-                        title="@ResourceApp._new"
-                        aria-label="@ResourceApp._new">
-                    @((MarkupString)Icons.Plus)
-                </button>
-
-                <button @onclick="() => IsVisible = !IsVisible"
-                        class="pm-btn-icon"
-                        title="@ResourceApp.visible"
-                        aria-label="@ResourceApp.visible">
-                    @((MarkupString)Icons.GetVisibleIcon(IsVisible))
-                </button>
-            </div>
+<div class="space-y-4">
+    <div class="pm-toolbar">
+        <div>
+            <div class="pm-table-meta">Lookup list</div>
+            <h3 class="mt-2 text-xl font-semibold text-slate-100">Action type</h3>
+            <p class="mt-2 text-sm text-slate-400">Manage action type values used by tasks and resources.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="pm-pill">@(IsVisible ? "Visible" : "Hidden")</span>
+            <button @onclick="UpdateForm" class="pm-btn-primary">@((MarkupString)Icons.Plus)<span class="ml-2">@ResourceApp._new</span></button>
+            <button @onclick="() => IsVisible = !IsVisible" class="pm-btn-secondary">@((MarkupString)Icons.GetVisibleIcon(IsVisible))<span class="ml-2">Toggle</span></button>
         </div>
     </div>
 
     @if (ActionTypesList?.Any(x => x.IsVisible == IsVisible) == true)
     {
-        <div class="pm-card overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="pm-table-shell">
+            <div class="overflow-x-auto p-5">
                 <MhdTable TItem="ActionTypeEntity" Items="ActionTypesList.Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder)" ShowFilter="false">
                     <HeaderTemplate>
-                        <th class="w-36 p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200"></th>
-                        <th class="p-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                        <th class="w-40 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Actions</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Entry</th>
                     </HeaderTemplate>
                     <ChildContent>
                         <MhdTableColumn>
                             <Template Context="status">
                                 <div class="flex items-center gap-2">
-                                    <button @onclick="() => UpdateForm(status)"
-                                            class="pm-btn-icon-warning"
-                                            title="@ResourceApp.update"
-                                            aria-label="@ResourceApp.update">
-                                        @Icons.Edit
-                                    </button>
-
-                                    <button @onclick="() => Remove(status)"
-                                            class="pm-btn-icon-danger"
-                                            title="@ResourceApp.delete"
-                                            aria-label="@ResourceApp.delete">
-                                        @Icons.Delete
-                                    </button>
+                                    <button @onclick="() => UpdateForm(status)" class="pm-btn-icon">@((MarkupString)Icons.Edit)</button>
+                                    <button @onclick="() => Remove(status)" class="pm-btn-icon-danger">@((MarkupString)Icons.Delete)</button>
                                 </div>
                             </Template>
                         </MhdTableColumn>
-
                         <MhdTableColumn>
                             <Template Context="status">
-                                <div>
-                                    <div class="font-medium text-slate-900 dark:text-slate-100">@status.Name</div>
-                                    <div class="text-xs text-slate-500 dark:text-slate-400">Order: @status.SortOrder</div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <div>
+                                        <div class="font-medium text-slate-100">@status.Name</div>
+                                        <div class="mt-1 text-xs text-slate-500">Order: @status.SortOrder</div>
+                                    </div>
+                                    <span class="pm-pill">@(status.IsVisible ? "Visible" : "Hidden")</span>
                                 </div>
                             </Template>
                         </MhdTableColumn>
@@ -78,16 +57,17 @@
     }
     else
     {
-        <div class="pm-empty">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
+        <div class="pm-empty">
+            <div class="pm-empty-title">There are no items to display</div>
+            <div class="pm-empty-text">Create a new action type or switch the visibility filter.</div>
+        </div>
     }
 </div>
 
 @code {
     bool IsVisible = true;
     List<ActionTypeEntity>? ActionTypesList;
-
     void UpdateForm() => UpdateForm(new ActionTypeEntity() { Name = "" });
-
     void UpdateForm(ActionTypeEntity model)
     {
         ActionTypeEntity up = new() { Name = "" };
@@ -95,13 +75,12 @@
 
         Modal.ShowComponent<ActionTypeFormUI>(model.Id == 0 ? AppLoc[LocalizerConst.New, CalcResource.projectCompensation] :
             AppLoc[LocalizerConst.Update, model.Name], new Dictionary<string, object>
-            {
-                [nameof(ActionTypeFormUI.Model)] = up,
-                [nameof(ActionTypeFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
-            },
-            DialogSize.Medium);
+                {
+                    [nameof(ActionTypeFormUI.Model)] = up,
+                    [nameof(ActionTypeFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, BtnUpdate)
+                }
+            , DialogSize.Medium);
     }
-
     void Remove(ActionTypeEntity model) =>
         MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveAsync(model)));
 
@@ -112,11 +91,9 @@
         {
             ActionTypesList?.Remove(model);
         }
-
         MHD.Notifications(ToastType.Delete, result);
         StateHasChanged();
     }
-
     async Task BtnUpdate(bool IsSuccess)
     {
         Modal.Close();
@@ -124,12 +101,11 @@
         {
             ActionTypesList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync());
         }
-
         StateHasChanged();
     }
 
     protected async override Task OnInitializedAsync()
     {
-        ActionTypesList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync());
+        ActionTypesList = await service.GetAllAsync();
     }
 }

@@ -11,62 +11,60 @@
 }
 else
 {
-    <div class="pm-page">
-        <section class="pm-page-header">
-            <div class="pm-page-kicker">Tenant administration</div>
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <h2 class="pm-page-title">Tenants</h2>
-                    <p class="pm-page-subtitle">Review tenant databases, expiry dates, and ownership model. Right-click rows for contextual actions and click any tenant to open details.</p>
-                </div>
-                @if (CanManageTenants)
-                {
-                    <button class="pm-btn pm-btn-primary" @onclick="() => UpdateForm(new())">
-                        @ResourceApp.newItem
-                    </button>
-                }
+    <div class="space-y-4">
+        <div class="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:flex-row lg:items-start lg:justify-between">
+            <div class="max-w-3xl">
+                <h2 class="text-[1.9rem] font-semibold tracking-tight text-slate-900 dark:text-slate-100">Tenant administration</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    Review tenant databases, expiry dates, and ownership model. Right-click rows for contextual actions and click any tenant to open details.
+                </p>
             </div>
-        </section>
 
-        <div class="pm-table-wrap">
-            <div class="pm-table-scroll">
-                <table class="pm-table">
-                    <thead>
+            @if (CanManageTenants)
+            {
+                <button class="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400" @onclick="() => UpdateForm(new())">
+                    @ResourceApp.newItem
+                </button>
+            }
+        </div>
+
+        <div class="overflow-hidden rounded-[22px] border border-slate-200/80 bg-white/95 shadow-sm dark:border-slate-800 dark:bg-slate-950/95">
+            <div class="overflow-x-auto p-4">
+                <table class="min-w-full overflow-hidden rounded-[18px] border border-slate-200/80 text-sm dark:border-slate-800">
+                    <thead class="bg-slate-100/80 dark:bg-slate-900/90">
                         <tr>
-                            <th>@CalcResource.name</th>
-                            <th>@AppControll.Db</th>
-                            <th>@AppControll.dateExpire</th>
-                            <th>@AppControll.hasOwnDb</th>
+                            <th class="px-4 py-3 text-start text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                            <th class="px-4 py-3 text-start text-sm font-semibold text-slate-700 dark:text-slate-200">@AppControll.Db</th>
+                            <th class="px-4 py-3 text-start text-sm font-semibold text-slate-700 dark:text-slate-200">@AppControll.dateExpire</th>
+                            <th class="px-4 py-3 text-start text-sm font-semibold text-slate-700 dark:text-slate-200">Model</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @if (Tenants != null && Tenants.Any())
+                    <tbody class="divide-y divide-slate-200/80 bg-white dark:divide-slate-800 dark:bg-slate-950">
+                        @if (Tenants?.Any() == true)
                         {
                             foreach (var tenant in Tenants)
                             {
-                                <tr class="cursor-pointer"
+                                <tr class="cursor-pointer align-top transition hover:bg-slate-50 dark:hover:bg-slate-900/40"
                                     @onclick="() => DetailsPage = tenant"
                                     @oncontextmenu:preventDefault
                                     @oncontextmenu="() => Context(tenant)">
-                                    <td>
-                                        <div class="font-medium text-slate-900 dark:text-slate-100">@tenant.Name</div>
+                                    <td class="px-4 py-3.5 text-[15px] font-medium text-slate-900 dark:text-slate-100">@tenant.Name</td>
+                                    <td class="px-4 py-3.5">
+                                        <div class="font-medium text-slate-900 dark:text-slate-100">@tenant.DB</div>
+                                        @if (!string.IsNullOrWhiteSpace(tenant.DatabaseInfoName))
+                                        {
+                                            <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">@tenant.DatabaseInfoName</div>
+                                        }
                                     </td>
-                                    <td>
-                                        <div>@tenant.DB</div>
-                                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">@tenant.DatabaseInfoName</div>
-                                    </td>
-                                    <td>
+                                    <td class="px-4 py-3.5 text-[15px] text-slate-700 dark:text-slate-200">
                                         @(tenant.DateExpire.HasValue ? tenant.DateExpire.Value.ToString("dd.MM.yyyy") : "—")
                                     </td>
-                                    <td>
-                                        @if (tenant.HasOwnDb)
-                                        {
-                                            <span class="pm-pill pm-pill-success">Dedicated</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="pm-pill pm-pill-muted">Shared</span>
-                                        }
+                                    <td class="px-4 py-3.5">
+                                        <span class="inline-flex rounded-full border px-3 py-1 text-xs font-medium @(tenant.HasOwnDb
+                                            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/40 dark:text-blue-200"
+                                            : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300")">
+                                            @(tenant.HasOwnDb ? "Dedicated" : "Shared")
+                                        </span>
                                     </td>
                                 </tr>
                             }
@@ -74,8 +72,8 @@ else
                         else
                         {
                             <tr>
-                                <td colspan="4">
-                                    <div class="py-10 text-center text-sm text-slate-500 dark:text-slate-400">No tenants found.</div>
+                                <td colspan="4" class="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                                    @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
                                 </td>
                             </tr>
                         }

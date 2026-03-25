@@ -1,3 +1,4 @@
+using BlazorMHD.UI.Components.Feedback.Dialog;
 ﻿using ContextMenuMHD;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -25,7 +26,7 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
             {
                 [nameof(FormUI.Id)] = model.Id,
                 [nameof(FormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack)
-            });
+            }, DialogSize.ExtraLarge);
 
         void Remove(GetTenantsDTO obj)
         {

@@ -1,4 +1,4 @@
-﻿@using TaskResourceBlueprints.Services
+@using TaskResourceBlueprints.Services
 @using Microsoft.EntityFrameworkCore
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Infrastructure
@@ -9,64 +9,29 @@
 @inject IResourceBlueprintsService ResourceService
 @inherits AppComponentBase
 
-<div class="pm-form-shell">
-    <EditForm Model="@model" OnValidSubmit="HandleValidSubmit" class="pm-form-shell">
+<div class="space-y-5">
+    <EditForm Model="@model" OnValidSubmit="HandleValidSubmit">
         <DataAnnotationsValidator />
-        <ValidationSummary class="pm-validation-summary" />
+        <ValidationSummary class="rounded-2xl border border-rose-900/60 bg-rose-950/40 px-4 py-3 text-sm text-rose-300" />
 
-        <section class="pm-form-section">
-            <div>
-                <h3 class="pm-form-section-title">Resource blueprint</h3>
-                <p class="pm-form-section-text">Define cost behavior, unit settings, and optional role-based pricing for this resource.</p>
-            </div>
+        <div class="pm-section">
+            <div class="pm-section-title">Resource details</div>
+            <div class="pm-section-subtitle">Name, unit, quantity, and resource type.</div>
 
-            <div class="pm-form-grid">
-                <div class="pm-field">
+            <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div>
                     <label class="pm-label" for="name">@CalcResource.name</label>
-                    <InputText id="name"
-                               @bind-Value="model.Name"
-                               class="pm-input"
-                               aria-invalid="@(EditContext?.GetValidationMessages(() => model.Name).Any() == true)" />
-                    <ValidationMessage For="@(() => model.Name)" class="pm-validation-message" />
+                    <InputText id="name" @bind-Value="model.Name" class="pm-input" aria-invalid="@(EditContext?.GetValidationMessages(() => model.Name).Any() == true)" />
+                    <ValidationMessage For="@(() => model.Name)" class="text-xs text-rose-400" />
                 </div>
 
-                <div class="pm-field">
+                <div>
                     <label class="pm-label" for="unit">@CalcResource.unit</label>
                     <InputText id="unit" @bind-Value="model.Data.Unit" class="pm-input" />
-                    <ValidationMessage For="@(() => model.Data.Unit)" class="pm-validation-message" />
+                    <ValidationMessage For="@(() => model.Data.Unit)" class="text-xs text-rose-400" />
                 </div>
 
-                <div class="pm-field">
-                    <label class="pm-label" for="cost">@CalcResource.cost</label>
-                    <InputNumber id="cost" @bind-Value="model.Data.Cost" class="pm-input" />
-                    <ValidationMessage For="@(() => model.Data.Cost)" class="pm-validation-message" />
-                </div>
-
-                <div class="pm-field">
-                    <label class="pm-label" for="cf1">@CalcResource.changeFactor1</label>
-                    <InputNumber id="cf1" @bind-Value="model.Data.ChangeFactor1" class="pm-input" />
-                    <ValidationMessage For="@(() => model.Data.ChangeFactor1)" class="pm-validation-message" />
-                </div>
-
-                <div class="pm-field">
-                    <label class="pm-label" for="cf2">@CalcResource.changeFactor2</label>
-                    <InputNumber id="cf2" @bind-Value="model.Data.ChangeFactor2" class="pm-input" />
-                    <ValidationMessage For="@(() => model.Data.ChangeFactor2)" class="pm-validation-message" />
-                </div>
-
-                <div class="pm-field">
-                    <label class="pm-label" for="co2">@CalcResource.co2</label>
-                    <InputNumber id="co2" @bind-Value="model.Data.CO2" class="pm-input" />
-                    <ValidationMessage For="@(() => model.Data.CO2)" class="pm-validation-message" />
-                </div>
-
-                <div class="pm-field">
-                    <label class="pm-label" for="baseCost">@CalcResource.baseCost</label>
-                    <InputNumber id="baseCost" @bind-Value="model.Data.BaseCost" class="pm-input" />
-                    <ValidationMessage For="@(() => model.Data.BaseCost)" class="pm-validation-message" />
-                </div>
-
-                <div class="pm-field">
+                <div>
                     <label class="pm-label" for="resType">@CalcResource.resourceType</label>
                     <InputSelect id="resType" @bind-Value="model.ResType" class="pm-select">
                         @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
@@ -74,52 +39,72 @@
                             <option value="@level">@ResourceLocalize.GetResourceType(level)</option>
                         }
                     </InputSelect>
-                    <ValidationMessage For="@(() => model.ResType)" class="pm-validation-message" />
+                    <ValidationMessage For="@(() => model.ResType)" class="text-xs text-rose-400" />
+                </div>
+
+                <div>
+                    <label class="pm-label" for="qty">@CalcResource.quantity</label>
+                    <InputNumber id="qty" @bind-Value="model.Data.Quantity" class="pm-input" />
+                    <ValidationMessage For="@(() => model.Data.Quantity)" class="text-xs text-rose-400" />
                 </div>
 
                 @if (model.ResType == ResourceTypesEnum.Materials || model.ResType == ResourceTypesEnum.Worker || model.ResType == ResourceTypesEnum.MachinesAndEquipments)
                 {
-                    <div class="pm-field">
+                    <div>
                         <label class="pm-label" for="waste">@(model.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
                         <InputNumber id="waste" @bind-Value="model.Data.CapWaste" class="pm-input" />
-                        <ValidationMessage For="@(() => model.Data.CapWaste)" class="pm-validation-message" />
+                        <ValidationMessage For="@(() => model.Data.CapWaste)" class="text-xs text-rose-400" />
                     </div>
                 }
+            </div>
+        </div>
 
-                <div class="pm-field">
-                    <label class="pm-label" for="qty">@CalcResource.quantity</label>
-                    <InputNumber id="qty" @bind-Value="model.Data.Quantity" class="pm-input" />
-                    <ValidationMessage For="@(() => model.Data.Quantity)" class="pm-validation-message" />
+        <div class="pm-section">
+            <div class="pm-section-title">Cost and factors</div>
+            <div class="pm-section-subtitle">Maintain price, base cost, CO₂, and calculation factors in one place.</div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div>
+                    <label class="pm-label" for="cost">@CalcResource.cost</label>
+                    <InputNumber id="cost" @bind-Value="model.Data.Cost" class="pm-input" />
+                    <ValidationMessage For="@(() => model.Data.Cost)" class="text-xs text-rose-400" />
                 </div>
-
-                <div class="flex items-end">
-                    <button type="button" class="pm-btn-primary" @onclick="@(() => AddRole())">Add Role</button>
+                <div>
+                    <label class="pm-label" for="baseCost">@CalcResource.baseCost</label>
+                    <InputNumber id="baseCost" @bind-Value="model.Data.BaseCost" class="pm-input" />
+                    <ValidationMessage For="@(() => model.Data.BaseCost)" class="text-xs text-rose-400" />
                 </div>
-
-                <div class="pm-field md:col-span-2 xl:col-span-2">
-                    <label class="pm-label" for="note">Note</label>
-                    <InputTextArea id="note" @bind-Value="model.Data.Note" class="pm-textarea" />
-                    <ValidationMessage For="@(() => model.Data.Note)" class="pm-validation-message" />
+                <div>
+                    <label class="pm-label" for="co2">@CalcResource.co2</label>
+                    <InputNumber id="co2" @bind-Value="model.Data.CO2" class="pm-input" />
+                    <ValidationMessage For="@(() => model.Data.CO2)" class="text-xs text-rose-400" />
                 </div>
-
-                <div class="pm-field md:col-span-2 xl:col-span-2">
-                    <label class="pm-label" for="admin-note">Admin Note</label>
-                    <InputTextArea id="admin-note" @bind-Value="model.AdminNote" class="pm-textarea" />
-                    <ValidationMessage For="@(() => model.AdminNote)" class="pm-validation-message" />
+                <div>
+                    <label class="pm-label" for="cf1">@CalcResource.changeFactor1</label>
+                    <InputNumber id="cf1" @bind-Value="model.Data.ChangeFactor1" class="pm-input" />
+                    <ValidationMessage For="@(() => model.Data.ChangeFactor1)" class="text-xs text-rose-400" />
+                </div>
+                <div>
+                    <label class="pm-label" for="cf2">@CalcResource.changeFactor2</label>
+                    <InputNumber id="cf2" @bind-Value="model.Data.ChangeFactor2" class="pm-input" />
+                    <ValidationMessage For="@(() => model.Data.ChangeFactor2)" class="text-xs text-rose-400" />
                 </div>
             </div>
-        </section>
+        </div>
 
-        @if (model.CostRoles != null && model.CostRoles.Any())
-        {
-            <section class="pm-form-section">
+        <div class="pm-section">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h3 class="pm-form-section-title">Role-based cost ranges</h3>
-                    <p class="pm-form-section-text">Fine-tune cost values based on min/max thresholds.</p>
+                    <div class="pm-section-title">Role based cost bands</div>
+                    <div class="pm-section-subtitle">Optional cost ranges for different role or quantity bands.</div>
                 </div>
+                <button type="button" class="pm-btn-secondary" @onclick="AddRole">Add Role</button>
+            </div>
 
-                <div class="mt-4 space-y-2 overflow-x-auto">
-                    <div class="pm-kv-grid text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            @if (model.CostRoles != null && model.CostRoles.Any())
+            {
+                <div class="mt-5 space-y-3">
+                    <div class="pm-role-grid-header">
                         <div></div>
                         <div>@AppControll.min</div>
                         <div>@AppControll.max</div>
@@ -131,29 +116,46 @@
                     {
                         int d = i;
                         var role = model.CostRoles[d];
-                        <div class="pm-kv-grid">
-                            <button type="button" title="Remove"
-                                    class="pm-btn-danger-soft h-9 w-9 px-0"
-                                    @onclick="() => model.CostRoles.Remove(role)">
-                                x
-                            </button>
-                            <input type="number" class="pm-input px-2 py-2" @bind="role.Min" />
-                            <input type="number" class="pm-input px-2 py-2" @bind="role.Max" />
-                            <input type="number" class="pm-input px-2 py-2" @bind="role.Value" />
-                            <div class="text-xs text-slate-500 dark:text-slate-400">@(d + 1)</div>
+                        <div class="pm-role-grid-row">
+                            <button type="button" title="Remove" class="pm-btn-icon-danger h-11 w-11" @onclick="() => model.CostRoles.Remove(role)">x</button>
+                            <input type="number" class="pm-input" @bind="role.Min" />
+                            <input type="number" class="pm-input" @bind="role.Max" />
+                            <input type="number" class="pm-input" @bind="role.Value" />
+                            <div class="text-center text-xs text-slate-500">@(d + 1)</div>
                         </div>
                     }
                 </div>
-            </section>
-        }
+            }
+            else
+            {
+                <div class="pm-empty mt-5">
+                    <div class="pm-empty-title">No role based cost bands</div>
+                    <div class="pm-empty-text">Add a role when you need different cost values for ranges.</div>
+                </div>
+            }
+        </div>
 
-        <div class="pm-toolbar">
-            <button type="submit" class="pm-btn-success">
-                @ResourceApp.save
-            </button>
-            <button type="button" class="pm-btn-secondary" @onclick="GoBack">
-                @ResourceApp.cancel
-            </button>
+        <div class="pm-section">
+            <div class="pm-section-title">Notes</div>
+            <div class="pm-section-subtitle">Internal notes and descriptive text for administrators.</div>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <label class="pm-label" for="note">Note</label>
+                    <InputTextArea id="note" @bind-Value="model.Data.Note" class="pm-textarea" />
+                    <ValidationMessage For="@(() => model.Data.Note)" class="text-xs text-rose-400" />
+                </div>
+                <div>
+                    <label class="pm-label" for="adminNote">Admin Note</label>
+                    <InputTextArea id="adminNote" @bind-Value="model.AdminNote" class="pm-textarea" />
+                    <ValidationMessage For="@(() => model.AdminNote)" class="text-xs text-rose-400" />
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-end gap-3 pt-1">
+            <button type="button" class="pm-btn-secondary" @onclick="GoBack">@ResourceApp.cancel</button>
+            <button type="submit" class="pm-btn-primary">@ResourceApp.save</button>
         </div>
     </EditForm>
 </div>
@@ -187,15 +189,17 @@
     }
     void RefreshCalcAsync(bool refre)
     {
-        
+
     }
     void AddRole()
     {
         if (model.CostRoles == null) model.CostRoles = [];
         if (model.CostRoles.Count != 0)
-            model.CostRoles.Add(new() { Min = model.CostRoles.Last().Max,
-                Max = model.CostRoles.Last().Max + 10, 
-                Value = model.CostRoles.Last().Value + 1 });
+            model.CostRoles.Add(new() {
+                Min = model.CostRoles.Last().Max,
+                Max = model.CostRoles.Last().Max + 10,
+                Value = model.CostRoles.Last().Value + 1
+            });
         else model.CostRoles.Add(new() { Min = 0, Max = 10, Value = 5 });
         StateHasChanged();
     }

@@ -12,67 +12,80 @@
 
 <PageTitle>@ResourceIdentity.login</PageTitle>
 
-<main class="pm-auth-shell">
-    <div class="pm-auth-card">
-        <div class="pm-auth-brand">
-            <img src="Icons/BigLogo.png" alt="Logo" class="pm-auth-logo" />
-        </div>
-
-        <div class="pm-auth-header">
-            <h1 class="pm-auth-title">@ResourceIdentity.login</h1>
-            <p class="pm-auth-subtitle">
-                Sign in to access the administration area, tenants, resources, tasks, and account settings.
-            </p>
-        </div>
-
-        <StatusMessage Message="@errorMessage" />
-
-        <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="pm-auth-form">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="pm-validation-summary" role="alert" />
-
-            <div class="pm-field">
-                <label for="email" class="pm-label">@ResourceIdentity.email</label>
-                <InputText id="email"
-                           type="email"
-                           @bind-Value="Input.Email"
-                           autocomplete="username"
-                           placeholder="@ResourceIdentity.email"
-                           class="pm-input" />
-                <ValidationMessage For="@(() => Input.Email)" class="pm-validation" />
+<main class="mx-auto flex min-h-[calc(100vh-6.5rem)] w-full max-w-5xl items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
+    <div class="grid w-full max-w-4xl gap-5 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <section class="hidden rounded-[24px] border border-slate-200/80 bg-white/85 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/85 lg:flex lg:flex-col lg:justify-between">
+            <div>
+                <div class="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500 dark:text-slate-400">Admin access</div>
+                <h1 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">ProjectManagement Admin</h1>
+                <p class="mt-3 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+                    Sign in to access tenant administration, resources, task status, units, logs, and shared configuration.
+                </p>
             </div>
 
-            <div class="pm-field">
-                <label for="floatingPassword" class="pm-label">@ResourceIdentity.password</label>
-                <InputText id="floatingPassword"
-                           type="password"
-                           @bind-Value="Input.Password"
-                           autocomplete="current-password"
-                           placeholder="@ResourceIdentity.password"
-                           class="pm-input" />
-                <ValidationMessage For="@(() => Input.Password)" class="pm-validation" />
+            <div class="mt-8 rounded-[20px] border border-slate-200/80 bg-slate-50/90 p-4 dark:border-slate-800 dark:bg-slate-950/70">
+                <img src="Icons/BigLogo.png" alt="Logo" class="w-full max-w-[320px] opacity-[0.18] dark:opacity-[0.12]" />
+            </div>
+        </section>
+
+        <section class="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/95 sm:p-6">
+            <StatusMessage Message="@errorMessage" />
+
+            <div class="mb-5">
+                <div class="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500 dark:text-slate-400">Login</div>
+                <h2 class="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Sign in</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Use your administrator account to continue.</p>
             </div>
 
-            <label class="pm-checkbox-row">
-                <InputCheckbox @bind-Value="Input.RememberMe" class="pm-checkbox" />
-                <span>Remember me</span>
-            </label>
+            <EditForm Model="Input" Method="post" OnValidSubmit="LoginUser" FormName="login" class="space-y-4">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-sm text-red-600 dark:text-red-400" role="alert" />
 
-            <button type="submit" class="pm-btn pm-btn-primary w-full">
-                @ResourceIdentity.login
-            </button>
+                <div>
+                    <label for="email" class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email</label>
+                    <InputText id="email" type="email" @bind-Value="Input.Email" placeholder="@ResourceIdentity.email"
+                               autocomplete="username"
+                               class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                    <ValidationMessage For="@(() => Input.Email)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+                </div>
 
-            <PasskeySubmit Operation="PasskeyOperation.Request"
-                           Name="Input.Passkey"
-                           EmailName="Input.Email"
-                           class="pm-btn pm-btn-secondary w-full">
-                Log in with a passkey
-            </PasskeySubmit>
+                <div>
+                    <label for="floatingPassword" class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.password</label>
+                    <InputText id="floatingPassword" type="password" @bind-Value="Input.Password"
+                               placeholder="@ResourceIdentity.password" autocomplete="current-password"
+                               class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                    <ValidationMessage For="@(() => Input.Password)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
+                </div>
 
-            <div class="pm-auth-footer">
-                <NavLink href="Account/ForgotPassword" class="pm-auth-link">@ResourceIdentity.passwordForget</NavLink>
-            </div>
-        </EditForm>
+                <label class="flex items-center gap-2.5 text-sm text-slate-700 dark:text-slate-300">
+                    <InputCheckbox @bind-Value="Input.RememberMe"
+                                   class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:focus:ring-blue-400" />
+                    <span>Remember me</span>
+                </label>
+
+                <button type="submit"
+                        class="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400">
+                    @ResourceIdentity.login
+                </button>
+
+                <PasskeySubmit Operation="PasskeyOperation.Request"
+                               Name="Input.Passkey"
+                               EmailName="Input.Email"
+                               class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 dark:focus-visible:outline-blue-400">
+                    Log in with a passkey
+                </PasskeySubmit>
+
+                <div class="border-t border-slate-200 pt-3 text-center dark:border-slate-800">
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <p class="text-sm text-red-500">@errorMessage</p>
+                    }
+                    <NavLink href="Account/ForgotPassword" class="inline-block text-sm text-blue-600 hover:underline dark:text-blue-400">
+                        @ResourceIdentity.passwordForget
+                    </NavLink>
+                </div>
+            </EditForm>
+        </section>
     </div>
 </main>
 
@@ -92,7 +105,6 @@
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();
-
         editContext = new EditContext(Input);
 
         if (HttpMethods.IsGet(HttpContext.Request.Method))

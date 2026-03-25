@@ -6,14 +6,14 @@
 @using ContextMenuMHD
 @using ProjectManagement.Adminstrator.Shared.Error
 
-<div class="pm-app-shell">
-    <NavbarUI @rendermode="InteractiveServer" />
+<div class="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div class="mx-auto flex min-h-screen max-w-[1800px] flex-col">
+        <NavbarUI @rendermode="InteractiveServer" />
 
-    <main class="pm-content-wrap">
-        <div class="pm-layout-frame">
+        <main class="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
             @Body
-        </div>
-    </main>
+        </main>
+    </div>
 </div>
 
 <MhdDialog @rendermode="InteractiveServer" />
