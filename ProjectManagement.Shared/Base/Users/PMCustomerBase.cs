@@ -8,24 +8,26 @@ namespace ProjectManagement.Shared.Base.Users
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [MaxLength(80, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Name { get; set; } = string.Empty;
+        public  string Name { get; set; } = string.Empty;
         [Phone(ErrorMessageResourceName = ErrorsMessages.Phone, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Phone { get; set; } = string.Empty;
+        public string? Phone { get; set; }
         [Phone(ErrorMessageResourceName = ErrorsMessages.Phone, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Mobile { get; set; } = string.Empty;
-        public string Fax { get; set; } = string.Empty;
+        public string? Mobile { get; set; }
+        public string? Fax { get; set; } 
         [EmailAddress(ErrorMessageResourceName = ErrorsMessages.EmailAddress, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public string Email { get; set; } = string.Empty;
+        public string? Email { get; set; } 
         [Url(ErrorMessage = ErrorsMessages.URL), DataType(DataType.Url, ErrorMessage = ErrorsMessages.URL)]
-        public string Website { get; set; } = string.Empty;
-        public string Note { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public string PostCode { get; set; } = string.Empty;
-        public string Street { get; set; } = string.Empty;
-        public string BuildNumber { get; set; } = string.Empty;
+        public string? Website { get; set; } 
+        public string? Note { get; set; }
+        public string? Country { get; set; } 
+        public string? City { get; set; } 
+        public string? PostCode { get; set; } 
+        public string? Street { get; set; } 
+        public string? BuildNumber { get; set; } 
         public DateTimeOffset? DateExpire { get; set; }
-        public int MaxUsers { get; set; } = 5;
-        public int MaxCalculations { get; set; } = int.MaxValue;
+        [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public  int MaxUsers { get; set; } = 5;
+        [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public  int MaxCalculations { get; set; } = int.MaxValue;
     }
 }

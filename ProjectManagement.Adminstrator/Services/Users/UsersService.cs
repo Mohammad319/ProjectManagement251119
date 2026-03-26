@@ -401,7 +401,6 @@ namespace ProjectManagement.Adminstrator.Services.Users
                     DateExpire = x.DateExpire,
                     DB = x.TenantDB != null ? x.TenantDB.Name : string.Empty,
                     Id = x.Id,
-                    HasOwnDb = x.TenantDBId.HasValue,
                     DatabaseInfoName = x.TenantDB != null ? x.TenantDB.Name : string.Empty,
                 })
                 .ToListAsync();
@@ -410,10 +409,10 @@ namespace ProjectManagement.Adminstrator.Services.Users
         public async Task<TenantEntity> GetByIdAsync(int id)
         {
             if (!await HasAnyRoleAsync(PMRolesConst.APP.AdminManger))
-                return new TenantEntity();
+                return new TenantEntity() { TenantDBId = 0 };
 
             using var appContext = ContextFactory.CreateDbContext();
-            return await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id) ?? new TenantEntity();
+            return await appContext.Tenants.FirstOrDefaultAsync(x => x.Id == id) ?? new TenantEntity() { TenantDBId = 0 };
         }
 
         public async Task<int> CreateAsync(TenantEntity tenant)

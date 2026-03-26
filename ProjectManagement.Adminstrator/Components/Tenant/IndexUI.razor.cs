@@ -13,6 +13,8 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
 {
     public partial class IndexUI : AppComponentBase
     {
+
+
         [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
 
         [Parameter] public EventCallback<bool> Callback { get; set; }
@@ -20,13 +22,16 @@ namespace ProjectManagement.Adminstrator.Components.Tenant
         GetTenantsDTO? DetailsPage;
         bool CanManageTenants;
 
-        void UpdateForm(GetTenantsDTO model) => Modal.ShowComponent<FormUI>(model.Id == 0 ?
-            AppLoc[LocalizerConst.New, AppControll.tenant] : ResourceApp.update,
-            new Dictionary<string, object>
-            {
-                [nameof(FormUI.Id)] = model.Id,
-                [nameof(FormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack)
-            }, DialogSize.ExtraLarge);
+        void UpdateForm(GetTenantsDTO model) {
+
+            Modal.ShowComponent<FormUI>(model.Id == 0 ?
+                AppLoc[LocalizerConst.New, AppControll.tenant] : ResourceApp.update,
+                new Dictionary<string, object>
+                {
+                    [nameof(FormUI.Id)] = model.Id,
+                    [nameof(FormUI.Callback)] = EventCallback.Factory.Create<bool>(this, CallBack)
+                }, DialogSize.ExtraLarge);
+        } 
 
         void Remove(GetTenantsDTO obj)
         {

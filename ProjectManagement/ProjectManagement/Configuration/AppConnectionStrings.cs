@@ -13,7 +13,6 @@ public static class AppConnectionStringsReader
 
         var defaultConnection =
             config.GetConnectionString("AuthPermissionsConnection")
-            ?? config.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'AuthPermissionsConnection' (or fallback 'DefaultConnection') not found.");
 
         return new AppConnectionStrings(defaultConnection, taskResourceBlueprintsConnection);

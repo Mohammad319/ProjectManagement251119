@@ -9,14 +9,20 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var connectionString = ResolveConnectionString();
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()).Options;
+
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure())
+            .Options;
+
         return new ApplicationDbContext(options);
     }
 
     private static string ResolveConnectionString()
     {
-        return FirstNonEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__AuthPermissionsConnection"),
-            TryReadConnectionStringFromSettings()) ?? throw new InvalidOperationException(
+        return FirstNonEmpty(
+                   Environment.GetEnvironmentVariable("ConnectionStrings__AuthPermissionsConnection"),
+                   TryReadConnectionStringFromSettings())
+               ?? throw new InvalidOperationException(
                    "No SQL Server connection string was found for ApplicationDbContext. " +
                    "Set 'ConnectionStrings__AuthPermissionsConnection', " +
                    "or define 'AuthPermissionsConnection' in an appsettings file.");
@@ -31,6 +37,7 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
             ?? "Development";
 
         string? connectionString = null;
+
         foreach (var settingsPath in EnumerateSettingsFiles(environmentName))
         {
             var value = TryReadConnectionString(settingsPath);
@@ -44,6 +51,7 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
     private static IEnumerable<string> EnumerateSettingsFiles(string environmentName)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var root in EnumerateSearchRoots())
         {
             foreach (var relativePath in new[]
@@ -92,7 +100,7 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
             CommentHandling = JsonCommentHandling.Skip
         });
 
-        if (!document.RootElement.TryGetProperty("AuthPermissionsConnection", out var connectionStrings))
+        if (!document.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings))
             return null;
 
         return ReadConnectionString(connectionStrings, "AuthPermissionsConnection");

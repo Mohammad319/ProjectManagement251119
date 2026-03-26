@@ -1,4 +1,5 @@
 ﻿@using System.Globalization
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
 @inject NavigationManager Nav
 
 <!DOCTYPE html>
@@ -23,11 +24,11 @@
     <link rel="shortcut icon" href="@Assets["Icons/favicon.ico"]" type="image/x-icon" />
 
     <ImportMap />
-    <HeadOutlet />
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
-    <Routes />
+    <Routes @rendermode="InteractiveServer" />
     <ReconnectModal />
 
     <script src="@Assets["_framework/blazor.web.js"]"></script>

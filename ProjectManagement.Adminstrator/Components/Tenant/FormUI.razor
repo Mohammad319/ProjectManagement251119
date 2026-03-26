@@ -14,185 +14,178 @@
 
 @if (Put != null)
 {
-    <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div class="min-w-0">
-                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Tenant configuration</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    Manage tenant limits, expiry, address data, and contact information.
-                </p>
-            </div>
+    <EditForm Model="Put"
+              OnValidSubmit="HandleSubmitAsync"
+              OnInvalidSubmit="HandleInvalidSubmit"
+              FormName="tenant-form">
+        <DataAnnotationsValidator />
 
-            @if (Id > 0)
-            {
-                <span class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300">
-                    Tenant #@Id
-                </span>
-            }
-        </div>
+        <ValidationSummary class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300" />
 
-        <EditForm EditContext="@FormEditContext" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm">
-            <DataAnnotationsValidator />
+        <div class="space-y-3">
+            <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                <div class="mb-3">
+                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Access &amp; limits</h4>
+                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                        Core tenant settings, database target, and usage limits.
+                    </p>
+                </div>
 
-            <ValidationSummary class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300" />
-
-            <div class="space-y-3">
-                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    <div class="mb-3">
-                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Access &amp; limits</h4>
-                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                            Core tenant settings, database target, and usage limits.
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-3">
-                        @if (Id == 0)
-                        {
-                            <div class="min-w-0">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.Db <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                                <InputSelect @bind-Value="Put.TenantDBId"
-                                             class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20">
-                                    <option value="">Select database</option>
-                                    @if (Databases != null)
+                <div class="grid grid-cols-3 gap-3">
+                    @if (Id == 0)
+                    {
+                        <div class="min-w-0">
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                @AppControll.Db <span class="text-rose-600 dark:text-rose-400">*</span>
+                            </label>
+                            <InputSelect @bind-Value="Put.TenantDBId"
+                                         class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20">
+                                <option value="0">Select database</option>
+                                @if (Databases != null)
+                                {
+                                    foreach (var status in Databases)
                                     {
-                                        foreach (var status in Databases)
-                                        {
-                                            <option value="@status.Id">@status.Name</option>
-                                        }
+                                        <option value="@status.Id">@status.Name</option>
                                     }
-                                </InputSelect>
-                                <ValidationMessage For="@(() => Put.TenantDBId)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
-                            </div>
-                        }
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.name <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Name" />
-                            <ValidationMessage For="@(() => Put.Name)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Put.TenantDBId)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                         </div>
+                    }
 
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Url</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Website" />
-                            <ValidationMessage For="@(() => Put.Website)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.expire</label>
-                            <InputDate class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.DateExpire" />
-                            <ValidationMessage For="@(() => Put.DateExpire)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxUsers <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                            <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                         @bind-Value="@Put.MaxUsers" />
-                            <ValidationMessage For="@(() => Put.MaxUsers)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxCalculations <span class="text-rose-600 dark:text-rose-400">*</span></label>
-                            <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                         @bind-Value="@Put.MaxCalculations" />
-                            <ValidationMessage For="@(() => Put.MaxCalculations)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
-                        </div>
-                    </div>
-                </section>
-
-                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    <div class="mb-3">
-                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Contact details</h4>
-                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                            Communication and address information for the tenant.
-                        </p>
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @CalcResource.name <span class="text-rose-600 dark:text-rose-400">*</span>
+                        </label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Name" />
+                        <ValidationMessage For="@(() => Put.Name)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.phone</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Phone" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.mobile</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Mobile" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.fax</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Fax" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.email</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Email" />
-                        </div>
-                    </div>
-                </section>
-
-                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    <div class="mb-3">
-                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Address</h4>
-                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                            Country, city, postal code, and street details.
-                        </p>
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Url</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Website" />
+                        <ValidationMessage For="@(() => Put.Website)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.country</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Country" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.city</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.City" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.zipCode</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.PostCode" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.street</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.Street" />
-                        </div>
-
-                        <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.build</label>
-                            <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                       @bind-Value="@Put.BuildNumber" />
-                        </div>
-                    </div>
-                </section>
-
-                <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    <div class="mb-3">
-                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Notes</h4>
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.expire</label>
+                        <InputDate class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.DateExpire" />
+                        <ValidationMessage For="@(() => Put.DateExpire)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="col-span-3 min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.note</label>
-                            <InputTextArea class="block min-h-[120px] w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                                           @bind-Value="@Put.Note" />
-                        </div>
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @AppControll.maxUsers <span class="text-rose-600 dark:text-rose-400">*</span>
+                        </label>
+                        <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                     @bind-Value="@Put.MaxUsers" />
+                        <ValidationMessage For="@(() => Put.MaxUsers)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                     </div>
-                </section>
-            </div>
-        </EditForm>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            @AppControll.maxCalculations <span class="text-rose-600 dark:text-rose-400">*</span>
+                        </label>
+                        <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                     @bind-Value="@Put.MaxCalculations" />
+                        <ValidationMessage For="@(() => Put.MaxCalculations)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                <div class="mb-3">
+                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Contact details</h4>
+                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                        Communication and address information for the tenant.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.phone</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Phone" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.mobile</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Mobile" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.fax</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Fax" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.email</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Email" />
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                <div class="mb-3">
+                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Address</h4>
+                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                        Country, city, postal code, and street details.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.country</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Country" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.city</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.City" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.zipCode</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.PostCode" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.street</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.Street" />
+                    </div>
+
+                    <div class="min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@ResourceIdentity.build</label>
+                        <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                   @bind-Value="@Put.BuildNumber" />
+                    </div>
+                </div>
+            </section>
+
+            <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+                <div class="mb-3">
+                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Notes</h4>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="col-span-3 min-w-0">
+                        <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.note</label>
+                        <InputTextArea class="block min-h-[120px] w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                                       @bind-Value="@Put.Note" />
+                    </div>
+                </div>
+            </section>
+        </div>
 
         <div class="mt-4 flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end dark:border-slate-800">
             <button type="button"
@@ -202,7 +195,6 @@
             </button>
 
             <button type="submit"
-                    form="tenantForm"
                     class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                     disabled="@IsLoading">
                 @if (IsLoading)
@@ -212,16 +204,19 @@
                 @ResourceApp.save
             </button>
         </div>
-    </div>
+    </EditForm>
 }
 
 @code {
     [Parameter] public int Id { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    private readonly string _formName = $"tenant-form-{Guid.NewGuid():N}";
+
     bool IsLoading = false;
     public TenantEntity? Put;
-    private EditContext? FormEditContext;
-    private ValidationMessageStore? ValidationMessageStore;
+
+    List<TenantDatabaseEntity>? Databases;
 
     private async Task HandleSubmitAsync()
     {
@@ -229,9 +224,7 @@
 
         if (Id == 0)
         {
-            TenantEntity post = new TenantEntity();
-            PropertyCopier.CopyPropertiesTo(Put, post);
-            await Callback.InvokeAsync(await ExHandlers.RunCheckTokenAsync(() => sersService.CreateAsync(post)) > 0);
+            await Callback.InvokeAsync(await sersService.CreateAsync(Put) > 0);
         }
         else if (Put is not null)
         {
@@ -244,14 +237,15 @@
 
         IsLoading = false;
     }
-
-    List<TenantDatabaseEntity>? Databases;
-
-    protected async override Task OnInitializedAsync()
+    private void HandleInvalidSubmit(EditContext editContext)
+    {
+        StateHasChanged();
+    }
+    protected override async Task OnInitializedAsync()
     {
         if (Id == 0)
         {
-            Put = new TenantEntity();
+            Put = new TenantEntity() { TenantDBId = 1 };
         }
 
         if (Id > 0)
@@ -267,61 +261,9 @@
     {
         if (Put is null)
             return;
-
-        FormEditContext = new EditContext(Put);
-        ValidationMessageStore = new ValidationMessageStore(FormEditContext);
-        FormEditContext.OnValidationRequested += HandleValidationRequested;
-        FormEditContext.OnFieldChanged += HandleFieldChanged;
-    }
-
-    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs e)
-    {
-        ApplyCustomValidation(clearAllMessages: true);
-    }
-
-    private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
-    {
-        ApplyCustomValidation(e.FieldIdentifier.FieldName);
-    }
-
-    private void ApplyCustomValidation(string? fieldName = null, bool clearAllMessages = false)
-    {
-        if (Put is null || FormEditContext is null || ValidationMessageStore is null)
-            return;
-
-        if (clearAllMessages)
-        {
-            ValidationMessageStore.Clear();
-        }
-        else if (!string.IsNullOrWhiteSpace(fieldName))
-        {
-            ValidationMessageStore.Clear(new FieldIdentifier(Put, fieldName));
-        }
-
-        if ((clearAllMessages || fieldName == nameof(TenantEntity.TenantDBId)) && Id == 0 && !Put.TenantDBId.HasValue)
-        {
-            ValidationMessageStore.Add(new FieldIdentifier(Put, nameof(TenantEntity.TenantDBId)), ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred);
-        }
-
-        if ((clearAllMessages || fieldName == nameof(TenantEntity.MaxUsers)) && Put.MaxUsers < 1)
-        {
-            ValidationMessageStore.Add(new FieldIdentifier(Put, nameof(TenantEntity.MaxUsers)), ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred);
-        }
-
-        if ((clearAllMessages || fieldName == nameof(TenantEntity.MaxCalculations)) && Put.MaxCalculations < 1)
-        {
-            ValidationMessageStore.Add(new FieldIdentifier(Put, nameof(TenantEntity.MaxCalculations)), ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred);
-        }
-
-        FormEditContext.NotifyValidationStateChanged();
     }
 
     public void Dispose()
     {
-        if (FormEditContext is null)
-            return;
-
-        FormEditContext.OnValidationRequested -= HandleValidationRequested;
-        FormEditContext.OnFieldChanged -= HandleFieldChanged;
     }
 }

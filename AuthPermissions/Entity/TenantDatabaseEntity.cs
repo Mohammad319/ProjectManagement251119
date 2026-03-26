@@ -7,8 +7,8 @@ namespace AuthPermissions.Entity
     {
         [Key]
         public int Id { get; set; }
-
-        public int? TenantDBId { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a database.")]
+        public required int TenantDBId { get; set; }
 
         public TenantDatabaseEntity? TenantDB { get; set; }
     }
