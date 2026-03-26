@@ -6,9 +6,8 @@
 @using ProjectManagement.Adminstrator.Constants
 @inherits AppComponentBase
 @inject IResourceAttributeService ResourcePropertiesService
-
 <div class="space-y-3 text-slate-900 dark:text-slate-100">
-    <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
+    <div class="rounded-xl border border-slate-200 px-1 py-1 shadow-sm dark:border-slate-800">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="min-w-0">
                 <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="() => UpdateForm()" title="@AppLoc[nameof(ResourceApp.newItem)]" aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
@@ -17,41 +16,39 @@
                 </button>
             </div>
 
-            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@PropertiesList.Count items</span>
+            <span class="inline-flex items-center rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold dark:border-slate-700">@PropertiesList.Count items</span>
         </div>
     </div>
 
     @if (PropertiesList.Count == 0)
     {
-        <div class="flex min-h-[140px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300">@ResourceApp.ThereAreNoItemsToDisplay</div>
+        <div class="flex min-h-[140px] items-center justify-center rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-700 dark:border-slate-700 dark:text-slate-300">@ResourceApp.ThereAreNoItemsToDisplay</div>
     }
     else
     {
-        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
-            <MhdTable TItem="ResourceAttribute" Items="PropertiesList.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
-                <HeaderTemplate>
-                    <th style="width:90px;" class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"></th>
-                    <th style="width:140px;" class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.code</th>
-                    <th class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
-                </HeaderTemplate>
-                <ChildContent>
-                    <MhdTableColumn>
-                        <Template Context="status">
-                            <div class="flex flex-wrap items-center gap-1.5">
-                                <button @onclick="() => UpdateForm(status)" class="inline-flex items-center justify-center gap-1 rounded-lg border border-amber-500 bg-amber-500 px-2 py-1 text-xs font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300" title="@ResourceApp.update" aria-label="@ResourceApp.update">
-                                    @Icons.Edit
-                                </button>
-                                <button @onclick="() => Remove(status)" class="inline-flex items-center justify-center gap-1 rounded-lg border border-rose-600 bg-rose-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400" title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
-                                    @Icons.Delete
-                                </button>
-                            </div>
-                        </Template>
-                    </MhdTableColumn>
-                    <MhdTableColumn Title="" ValueSelector="@(c => "p" + c.Id)"></MhdTableColumn>
-                    <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
-                </ChildContent>
-            </MhdTable>
-        </div>
+                <MhdTable TItem="ResourceAttribute" Items="PropertiesList.Where(x => SelectedGroupId == 0 || x.AttributeSetId == SelectedGroupId)">
+                    <HeaderTemplate>
+                        <th style="width:90px;" class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300"></th>
+                        <th style="width:140px;" class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.code</th>
+                        <th class="px-2.5 py-1.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">@CalcResource.name</th>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        <MhdTableColumn>
+                            <Template Context="status">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <button @onclick="() => UpdateForm(status)" class="inline-flex items-center justify-center gap-1 rounded-lg border border-amber-500 bg-amber-500 px-2 py-1 text-xs font-medium text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 dark:hover:bg-amber-300" title="@ResourceApp.update" aria-label="@ResourceApp.update">
+                                        @Icons.Edit
+                                    </button>
+                                    <button @onclick="() => Remove(status)" class="inline-flex items-center justify-center gap-1 rounded-lg border border-rose-600 bg-rose-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400" title="@ResourceApp.delete" aria-label="@ResourceApp.delete">
+                                        @Icons.Delete
+                                    </button>
+                                </div>
+                            </Template>
+                        </MhdTableColumn>
+                        <MhdTableColumn Title="" ValueSelector="@(c => "p" + c.Id)"></MhdTableColumn>
+                        <MhdTableColumn Title="" ValueSelector="c => c.DisplayName"></MhdTableColumn>
+                    </ChildContent>
+                </MhdTable>
     }
 </div>
 

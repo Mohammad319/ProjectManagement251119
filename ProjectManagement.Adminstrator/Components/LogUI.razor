@@ -11,11 +11,6 @@
 @inject IUsersService TenantRepo
 
 <div class="space-y-4 text-slate-900 dark:text-slate-100">
-    <section class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-        <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300">Operations</div>
-        <h2 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Application logs</h2>
-        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Filter operational logs by time, tenant, and severity. Clean up older records without leaving the admin workspace.</p>
-    </section>
 
     <EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
         <div class="flex flex-wrap items-center gap-2">
@@ -69,7 +64,6 @@
                             @Icons.Delete
                         </button>
                     </div>
-                    <div class="text-xs text-slate-500 dark:text-slate-400">Deletes records older than the selected month/day offset.</div>
                 </div>
             </div>
 

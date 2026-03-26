@@ -4,35 +4,41 @@
 @using TaskResourceBlueprints.Services.Resource
 @inject IResourceCategoryService ResourceCategoryService
 
-<div class="flex flex-wrap gap-3">
-    <div class="w-[190px] rounded-xl border border-slate-200 bg-white/90 p-2 dark:border-slate-700 dark:bg-slate-950/60">
-        @if (Folders != null) foreach (var r in Folders)
-            {
-                <div role="button">
-                    <button type="button" class="mb-2 inline-flex w-full items-center justify-between rounded-lg border border-blue-600 px-2.5 py-1.5 text-left text-sm text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white" style="width:100%; text-align:left;"
+<div class="grid grid-cols-1 gap-2 xl:grid-cols-[220px_minmax(0,1fr)]">
+    <div class="rounded-xl border border-slate-200 bg-white/90 p-2 dark:border-slate-700 dark:bg-slate-950/60">
+        @if (Folders != null)
+        {
+            <div class="grid grid-cols-2 gap-1.5">
+                @foreach (var r in Folders)
+                {
+                    <button type="button"
+                            class="inline-flex w-full items-center justify-between rounded-lg border border-blue-600 px-2 py-1.5 text-left text-[11px] text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white"
                             @onclick="async () => { await LoadResourcesAsync(r); }">
-                        @r.DisplayName
+                        <span class="truncate">@r.DisplayName</span>
                     </button>
-                </div>
-            }
+                }
+            </div>
+        }
     </div>
 
-    <div class="min-w-[320px] flex-1 rounded-xl border border-slate-200 bg-white/90 p-2 dark:border-slate-700 dark:bg-slate-950/60">
-        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-600">
-            <thead class="bg-slate-100 dark:bg-slate-700">
-                <tr><th class="px-2 py-1.5 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th></tr>
+    <div class="min-w-0 rounded-xl border border-slate-200 bg-white/90 p-2 dark:border-slate-700 dark:bg-slate-950/60">
+        <table class="min-w-full divide-y divide-slate-200 text-xs dark:divide-slate-600">
+            <thead class="bg-slate-100 dark:bg-slate-800/70">
+                <tr>
+                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 hover:divide-slate-200 dark:divide-slate-700">
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                 @if (Selected != null && Selected.Resources != null && Selected.Resources.Count > 0)
                 {
                     foreach (var r in Selected.Resources)
                     {
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/60">
-                            <td class="px-2 py-1.5 text-sm text-slate-800 dark:text-slate-200">
-                                <div class="flex items-center gap-2">
-
-                                    <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-blue-600 text-sm text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white"
-                                            @onclick="async ()=> await AddDelete(r)">
+                            <td class="px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200">
+                                <div class="flex flex-nowrap items-center gap-2 whitespace-nowrap">
+                                    <button type="button"
+                                            class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-600 text-[11px] text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white"
+                                            @onclick="async () => await AddDelete(r)">
                                         @(ResIds.Any(x => x == r.Id) ? "-" : "+")
                                     </button>
                                     <span class="truncate">@r.Name</span>
@@ -43,9 +49,9 @@
                 }
             </tbody>
         </table>
-
     </div>
 </div>
+
 @code {
     [Parameter] public int TaskId { get; set; }
     [Parameter] public EventCallback<ResourceDefinition> OnSave { get; set; }
@@ -56,9 +62,9 @@
     protected override async Task OnInitializedAsync()
     {
         Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(TaskId, CancellationToken.None))
-        .Select(f => new ResourceCategory(){Id = f.Id , DisplayName = f.DisplayName}).ToList();
+        .Select(f => new ResourceCategory() { Id = f.Id, DisplayName = f.DisplayName }).ToList();
     }
-    async Task AddDelete( ResourceDefinition res)
+    async Task AddDelete(ResourceDefinition res)
     {
         if (ResIds.Any(x => x == res.Id))
         {

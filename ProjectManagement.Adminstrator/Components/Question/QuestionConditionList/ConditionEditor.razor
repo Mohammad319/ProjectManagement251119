@@ -21,50 +21,51 @@
     [Parameter] public Func<int, NumericBindVM, Task> OnDeleteNumeric { get; set; } = (_, _) => Task.CompletedTask;
 }
 
-<section class="rounded-2xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-    <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+<section class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
+    <div class="border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
         <div>
-            <h3 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Condition logic</h3>
-            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400 mt-1">Choose how option, numeric, and resource requirements are combined.</p>
+            <h3 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">Condition logic</h3>
         </div>
     </div>
 
-    <div class="px-4 py-3">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <div class="space-y-1.5">
-                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceResourceLogic"]</label>
-                <InputSelect TValue="ConditionLogic"
-                             @bind-Value="Condition.OptionResourceLogic"
-                             class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                    <option value="And">@AppLoc["andText"]</option>
-                    <option value="Or">@AppLoc["orText"]</option>
-                </InputSelect>
-            </div>
+    <div class="px-2.5 py-2">
+        <div class="overflow-x-auto">
+            <div class="grid min-w-[720px] grid-cols-3 gap-2 items-end">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceResourceLogic"]</label>
+                    <InputSelect TValue="ConditionLogic"
+                                 @bind-Value="Condition.OptionResourceLogic"
+                                 class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="And">@AppLoc["andText"]</option>
+                        <option value="Or">@AppLoc["orText"]</option>
+                    </InputSelect>
+                </div>
 
-            <div class="space-y-1.5">
-                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceNumericLogic"]</label>
-                <InputSelect TValue="ConditionLogic"
-                             @bind-Value="Condition.OptionNumericLogic"
-                             class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                    <option value="And">@AppLoc["andText"]</option>
-                    <option value="Or">@AppLoc["orText"]</option>
-                </InputSelect>
-            </div>
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceNumericLogic"]</label>
+                    <InputSelect TValue="ConditionLogic"
+                                 @bind-Value="Condition.OptionNumericLogic"
+                                 class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="And">@AppLoc["andText"]</option>
+                        <option value="Or">@AppLoc["orText"]</option>
+                    </InputSelect>
+                </div>
 
-            <div class="space-y-1.5">
-                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["numericResourceLogic"]</label>
-                <InputSelect TValue="ConditionLogic"
-                             @bind-Value="Condition.NumericResourceLogic"
-                             class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                    <option value="And">@AppLoc["andText"]</option>
-                    <option value="Or">@AppLoc["orText"]</option>
-                </InputSelect>
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["numericResourceLogic"]</label>
+                    <InputSelect TValue="ConditionLogic"
+                                 @bind-Value="Condition.NumericResourceLogic"
+                                 class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                        <option value="And">@AppLoc["andText"]</option>
+                        <option value="Or">@AppLoc["orText"]</option>
+                    </InputSelect>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<div class="mt-4 space-y-4">
+<div class="mt-2 space-y-2">
     <RequirementsPanel Condition="Condition"
                        ChoiceGroups="TaskChoiceGroups"
                        NumericGroups="TaskNumericGroups"

@@ -1,11 +1,13 @@
 @using AuthPermissions.Entity
 @using Domain.Repository.AuthPermissions
 @using Domain.Settings
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.EntityFrameworkCore
 @using Persistence.Factory
 @using ProjectManagement.Adminstrator.Services.Users
 @using ProjectManagement.Shared.DTO.Tenant
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminSuperManger)]
+@implements IDisposable
 @inherits AppComponentBase
 @inject IUsersService sersService
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
@@ -29,7 +31,7 @@
             }
         </div>
 
-        <EditForm Model="@Put" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm">
+        <EditForm EditContext="@FormEditContext" OnValidSubmit="async () => await HandleSubmitAsync()" id="tenantForm">
             <DataAnnotationsValidator />
 
             <ValidationSummary class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300" />
@@ -47,9 +49,10 @@
                         @if (Id == 0)
                         {
                             <div class="min-w-0">
-                                <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.Db</label>
+                                <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.Db <span class="text-rose-600 dark:text-rose-400">*</span></label>
                                 <InputSelect @bind-Value="Put.TenantDBId"
                                              class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20">
+                                    <option value="">Select database</option>
                                     @if (Databases != null)
                                     {
                                         foreach (var status in Databases)
@@ -58,11 +61,12 @@
                                         }
                                     }
                                 </InputSelect>
+                                <ValidationMessage For="@(() => Put.TenantDBId)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                             </div>
                         }
 
                         <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.name <span class="text-rose-600 dark:text-rose-400">*</span></label>
                             <InputText class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
                                        @bind-Value="@Put.Name" />
                             <ValidationMessage For="@(() => Put.Name)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
@@ -83,14 +87,14 @@
                         </div>
 
                         <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxUsers</label>
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxUsers <span class="text-rose-600 dark:text-rose-400">*</span></label>
                             <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
                                          @bind-Value="@Put.MaxUsers" />
                             <ValidationMessage For="@(() => Put.MaxUsers)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
                         </div>
 
                         <div class="min-w-0">
-                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxCalculations</label>
+                            <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">@AppControll.maxCalculations <span class="text-rose-600 dark:text-rose-400">*</span></label>
                             <InputNumber class="block w-full rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
                                          @bind-Value="@Put.MaxCalculations" />
                             <ValidationMessage For="@(() => Put.MaxCalculations)" class="mt-1 block text-xs text-rose-600 dark:text-rose-400" />
@@ -216,6 +220,8 @@
     [Parameter] public EventCallback<bool> Callback { get; set; }
     bool IsLoading = false;
     public TenantEntity? Put;
+    private EditContext? FormEditContext;
+    private ValidationMessageStore? ValidationMessageStore;
 
     private async Task HandleSubmitAsync()
     {
@@ -251,7 +257,71 @@
         if (Id > 0)
             Put = await sersService.GetByIdAsync(Id);
 
+        InitializeForm();
+
         using var _appContext = ContextFactory.CreateDbContext();
         Databases = await _appContext.TenantDatabase.ToListAsync();
+    }
+
+    private void InitializeForm()
+    {
+        if (Put is null)
+            return;
+
+        FormEditContext = new EditContext(Put);
+        ValidationMessageStore = new ValidationMessageStore(FormEditContext);
+        FormEditContext.OnValidationRequested += HandleValidationRequested;
+        FormEditContext.OnFieldChanged += HandleFieldChanged;
+    }
+
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs e)
+    {
+        ApplyCustomValidation(clearAllMessages: true);
+    }
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        ApplyCustomValidation(e.FieldIdentifier.FieldName);
+    }
+
+    private void ApplyCustomValidation(string? fieldName = null, bool clearAllMessages = false)
+    {
+        if (Put is null || FormEditContext is null || ValidationMessageStore is null)
+            return;
+
+        if (clearAllMessages)
+        {
+            ValidationMessageStore.Clear();
+        }
+        else if (!string.IsNullOrWhiteSpace(fieldName))
+        {
+            ValidationMessageStore.Clear(new FieldIdentifier(Put, fieldName));
+        }
+
+        if ((clearAllMessages || fieldName == nameof(TenantEntity.TenantDBId)) && Id == 0 && !Put.TenantDBId.HasValue)
+        {
+            ValidationMessageStore.Add(new FieldIdentifier(Put, nameof(TenantEntity.TenantDBId)), ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred);
+        }
+
+        if ((clearAllMessages || fieldName == nameof(TenantEntity.MaxUsers)) && Put.MaxUsers < 1)
+        {
+            ValidationMessageStore.Add(new FieldIdentifier(Put, nameof(TenantEntity.MaxUsers)), ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred);
+        }
+
+        if ((clearAllMessages || fieldName == nameof(TenantEntity.MaxCalculations)) && Put.MaxCalculations < 1)
+        {
+            ValidationMessageStore.Add(new FieldIdentifier(Put, nameof(TenantEntity.MaxCalculations)), ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred);
+        }
+
+        FormEditContext.NotifyValidationStateChanged();
+    }
+
+    public void Dispose()
+    {
+        if (FormEditContext is null)
+            return;
+
+        FormEditContext.OnValidationRequested -= HandleValidationRequested;
+        FormEditContext.OnFieldChanged -= HandleFieldChanged;
     }
 }

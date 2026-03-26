@@ -9,7 +9,7 @@
 
 @inject IResourceBlueprintsService ResourceService
 
-<div class="relative">
+<div class="relative min-w-0">
     <input class="@InputCss"
            placeholder="@EffectivePlaceholder"
            value="@_searchText"
@@ -62,9 +62,9 @@
     [Parameter] public int SearchDelayMs { get; set; } = 250;
     [Parameter] public int PageSize { get; set; } = 10;
 
-    [Parameter] public string InputCss { get; set; } = "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500";
-    [Parameter] public string DropdownCss { get; set; } = "absolute z-20 mt-1.5 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-950";
-    [Parameter] public string ItemCss { get; set; } = "cursor-pointer px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900";
+    [Parameter] public string InputCss { get; set; } = "w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500";
+    [Parameter] public string DropdownCss { get; set; } = "absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-950";
+    [Parameter] public string ItemCss { get; set; } = "cursor-pointer px-2.5 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900";
     [Parameter] public string ItemActiveCss { get; set; } = "bg-blue-600 text-white dark:bg-blue-500";
 
     private string _searchText = string.Empty;

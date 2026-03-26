@@ -1,6 +1,7 @@
 ﻿using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
@@ -24,9 +25,10 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         }
         public async Task<int> CreateAsync(int calculationId, TenderAttributeListPostDTO post) =>
             await _httpRepository.PostAsync<int, TenderAttributeListPostDTO>(post, TenderURLBase + URLConst.Tender.Attribute + $"/{calculationId}");
-        public async Task<bool> UpdateBindAsync(int tenderID, int attrID, double val)
+        public async Task<bool> UpdateBindAsync(int tenderID, int attrID, decimal val)
         {
-            return await _httpRepository.GetAsync<bool>(TenderURLBase + URLConst.Tender.Attribute + $"/{tenderID}/{attrID}/{val}");
+            var routeValue = val.ToString(CultureInfo.InvariantCulture);
+            return await _httpRepository.GetAsync<bool>(TenderURLBase + URLConst.Tender.Attribute + $"/{tenderID}/{attrID}/{routeValue}");
         }
         public async Task<bool> UpdateAsync(int id, int calculationId, TenderPostDTO model)
         {

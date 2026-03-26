@@ -5,7 +5,7 @@
 namespace TaskResourceBlueprints.Migrations
 {
     /// <inheritdoc />
-    public partial class DB251207_6 : Migration
+    public partial class DB260326_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -130,9 +130,9 @@ namespace TaskResourceBlueprints.Migrations
                     IsUserEditable = table.Column<bool>(type: "bit", nullable: false),
                     DataType = table.Column<int>(type: "int", nullable: false),
                     DefaultTextValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    DefaultNumericValue = table.Column<double>(type: "float", nullable: true),
-                    StepValue = table.Column<double>(type: "float", nullable: true),
-                    MaxNumericValue = table.Column<double>(type: "float", nullable: true)
+                    DefaultNumericValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    StepValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    MaxNumericValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -184,8 +184,8 @@ namespace TaskResourceBlueprints.Migrations
                     FieldNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     UnitCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ChangeFactor1 = table.Column<double>(type: "float", nullable: false),
-                    ChangeFactor2 = table.Column<double>(type: "float", nullable: false),
+                    ChangeFactor1 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    ChangeFactor2 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     Uncontrollable = table.Column<bool>(type: "bit", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -241,7 +241,7 @@ namespace TaskResourceBlueprints.Migrations
                     ResourceId = table.Column<int>(type: "int", nullable: false),
                     AttributeId = table.Column<int>(type: "int", nullable: false),
                     TextValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NumericValue = table.Column<double>(type: "float", nullable: true)
+                    NumericValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -296,8 +296,8 @@ namespace TaskResourceBlueprints.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DisplayName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
-                    MinInputValue = table.Column<double>(type: "float", nullable: true),
-                    MaxInputValue = table.Column<double>(type: "float", nullable: true),
+                    MinInputValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    MaxInputValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     SectionKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
                     TaskId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -656,8 +656,8 @@ namespace TaskResourceBlueprints.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ConditionId = table.Column<int>(type: "int", nullable: false),
                     VariableName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    MinAllowedValue = table.Column<double>(type: "float", nullable: true),
-                    MaxAllowedValue = table.Column<double>(type: "float", nullable: true),
+                    MinAllowedValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    MaxAllowedValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     GroupKey = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

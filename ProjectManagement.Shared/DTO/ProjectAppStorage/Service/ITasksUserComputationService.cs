@@ -321,7 +321,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             && (!rule.MinAllowedValue.HasValue || variableValue.Value >= rule.MinAllowedValue.Value);
     }
 
-    private static double? GetVariableValue(ProjectTaskDto task, string? variableName)
+    private static decimal? GetVariableValue(ProjectTaskDto task, string? variableName)
     {
         if (string.IsNullOrWhiteSpace(variableName))
             return null;
@@ -330,32 +330,32 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         {
             case "thickness":
                 return task.ParameterValues.TryGetValue(ParamName.Thickness, out var thickness)
-                    ? (double)thickness
+                    ? thickness
                     : null;
 
             case "width":
                 return task.ParameterValues.TryGetValue(ParamName.Width, out var width)
-                    ? (double)width
+                    ? width
                     : null;
 
             case "length":
                 return task.ParameterValues.TryGetValue(ParamName.Length, out var length)
-                    ? (double)length
+                    ? length
                     : null;
 
             case "density":
                 return task.ParameterValues.TryGetValue(ParamName.Density, out var density)
-                    ? (double)density
+                    ? density
                     : null;
 
             case "quantity":
-                return task.Quantity.HasValue ? (double)task.Quantity.Value : null;
+                return task.Quantity;
 
             case "cost":
-                return (double)task.BaseResources.Sum(r => r.Data.Cost);
+                return task.BaseResources.Sum(r => r.Data.Cost);
 
             case "basecost":
-                return (double)task.BaseResources.Sum(r => r.Data.BaseCost.GetValueOrDefault());
+                return task.BaseResources.Sum(r => r.Data.BaseCost.GetValueOrDefault());
 
             default:
                 return null;

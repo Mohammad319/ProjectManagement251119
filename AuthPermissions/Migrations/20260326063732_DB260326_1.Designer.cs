@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AuthPermissions.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260321031105_db250830")]
-    partial class db250830
+    [Migration("20260326063732_DB260326_1")]
+    partial class DB260326_1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

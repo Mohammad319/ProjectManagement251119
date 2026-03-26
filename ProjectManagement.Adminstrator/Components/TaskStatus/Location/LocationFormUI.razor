@@ -5,11 +5,10 @@
 @inherits AppComponentBase
 @inject IEntityService<LocationEntity> service
 
-<EditForm id="locationForm" Model="@Model" OnValidSubmit="HandleSubmitAsync" class="space-y-4">
+<EditForm id="locationForm" Model="@Model" OnValidSubmit="HandleSubmitAsync" class="">
     <DataAnnotationsValidator />
 
-    <div class="rounded-2xl border border-slate-200 bg-slate-50/80 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
-        <div class="mb-4">
+        <div class="mb-1">
             <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Location settings</div>
         </div>
 
@@ -31,7 +30,6 @@
                 <label class="text-sm font-medium text-slate-700 dark:text-slate-200" for="locationVisible">@ResourceApp.visible</label>
             </div>
         </div>
-    </div>
 </EditForm>
 
 <div class="flex flex-wrap items-center gap-2">

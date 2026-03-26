@@ -1,4 +1,4 @@
-﻿using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Questions.Assignments;
 using TaskResourceBlueprints.Entities.Tasks;
 
 namespace TaskResourceBlueprints.Entities.Questions.Groups
@@ -23,12 +23,12 @@ namespace TaskResourceBlueprints.Entities.Questions.Groups
         /// <summary>
         /// Minimum value that the user is allowed (or expected) to enter.
         /// </summary>
-        public double? MinInputValue { get; set; }
+        public decimal? MinInputValue { get; set; }
 
         /// <summary>
         /// Maximum value that the user is allowed (or expected) to enter.
         /// </summary>
-        public double? MaxInputValue { get; set; }
+        public decimal? MaxInputValue { get; set; }
 
         /// <summary>
         /// Optional section key used to group or filter this question in the UI.

@@ -43,7 +43,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         public async Task<IActionResult> UpdateBind(
             int TenderId,
             int AttributeId,
-            [FromRoute(Name = "val")] double AttrValue)
+            [FromRoute(Name = "val")] decimal AttrValue)
         {
             return Ok(await MicroBus.Send(new UpdateTenderAttributeBindCommand(TenderId, AttributeId, AttrValue)));
         }

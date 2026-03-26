@@ -1,4 +1,4 @@
-﻿using TaskResourceBlueprints.Entities;
+using TaskResourceBlueprints.Entities;
 using TaskResourceBlueprints.Entities.Tasks;
 
 namespace TaskResourceBlueprints.Dto.ProjectTask
@@ -21,8 +21,8 @@ namespace TaskResourceBlueprints.Dto.ProjectTask
 
         public decimal? Quantity { get; set; }
 
-        public double ChangeFactor1 { get; set; } = 1;    // früher ChangeFactor1
-        public double ChangeFactor2 { get; set; } = 1;  // früher ChangeFactor2
+        public decimal ChangeFactor1 { get; set; } = 1m;    // früher ChangeFactor1
+        public decimal ChangeFactor2 { get; set; } = 1m;  // früher ChangeFactor2
         public bool Uncontrollable { get; set; }
 
         public bool IsActive { get; set; } = true;

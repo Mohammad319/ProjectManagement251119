@@ -1,4 +1,4 @@
-using ProjectManagement.Shared.Base.Calculation;
+﻿using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +24,10 @@ namespace ProjectManagement.Shared.Helper
             => new()
             {
                 Year = value?.Year ?? 0,
-                Q1 = value?.Q1 ?? 0,
-                Q2 = value?.Q2 ?? 0,
-                Q3 = value?.Q3 ?? 0,
-                Q4 = value?.Q4 ?? 0
+                Q1 = value?.Q1 ?? 0m,
+                Q2 = value?.Q2 ?? 0m,
+                Q3 = value?.Q3 ?? 0m,
+                Q4 = value?.Q4 ?? 0m
             };
 
         public static List<OHFactors> CloneFactors(IEnumerable<OHFactors>? values)

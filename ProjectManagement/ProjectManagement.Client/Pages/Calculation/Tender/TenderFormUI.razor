@@ -62,7 +62,7 @@
     private bool Loading = false;
     private List<ListDTO>? Companies;
     private TenderPostDTO? Income;
-    private Dictionary<int, double> AttributesValue { get; } = new();
+    private Dictionary<int, decimal> AttributesValue { get; } = new();
 
     private void OnChange(ChangeEventArgs ev, int i)
     {
@@ -74,7 +74,7 @@
             return;
         }
 
-        if (double.TryParse(raw, out var v))
+        if (decimal.TryParse(raw, out var v))
             AttributesValue[i] = v;
         else
             AttributesValue[i] = 0;

@@ -91,7 +91,7 @@ public static class ProjectTaskProjection
                             ChangeFactor1 = z.a.ChangeFactor1,
                             ChangeFactor2 = z.a.ChangeFactor2,
                             CapWaste = z.a.CapWaste,
-                            BaseCost = (decimal?)z.a.BaseCost,
+                            BaseCost = z.a.BaseCost,
                             CO2 = z.Link == null ? null : z.Link.Co2,
                             Cost = z.a.Resource == null ? default : z.a.Resource.Data.Cost,
                             Note = z.a.Resource == null ? string.Empty : z.a.Resource.Data.Note,
@@ -185,8 +185,8 @@ public static class ProjectTaskProjection
                     DisplayName = n.DisplayName,
                     SortOrder = n.SortOrder,
                     //ParentTaskId = n.ParentTaskId,
-                    MaxInputValue = (decimal?)n.MaxInputValue,
-                    MinInputValue = (decimal?)n.MinInputValue,
+                    MaxInputValue = n.MaxInputValue,
+                    MinInputValue = n.MinInputValue,
                     SectionKey = n.SectionKey,
                 }).ToList(),
                 Conditions = t.Conditions.Select(c => new TaskConditionDto
@@ -262,7 +262,7 @@ public static class ProjectTaskProjection
                                 {
                                     ChangeFactor1 = z.a.ChangeFactor1,
                                     ChangeFactor2 = z.a.ChangeFactor2,
-                                    BaseCost = (decimal?)z.a.BaseCost,
+                                    BaseCost = z.a.BaseCost,
                                     CapWaste = z.a.CapWaste,
                                     CO2 = z.Link == null ? null : z.Link.Co2,
                                     Cost = z.a.Resource == null ? default : z.a.Resource.Data.Cost,

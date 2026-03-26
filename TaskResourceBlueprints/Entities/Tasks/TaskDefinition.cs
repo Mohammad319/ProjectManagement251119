@@ -1,4 +1,4 @@
-﻿using TaskResourceBlueprints.Entities.Lookups;
+using TaskResourceBlueprints.Entities.Lookups;
 using TaskResourceBlueprints.Entities.Questions.Assignments;
 using TaskResourceBlueprints.Entities.Questions.Conditions;
 using TaskResourceBlueprints.Entities.Questions.Groups;
@@ -50,8 +50,8 @@ namespace TaskResourceBlueprints.Entities.Tasks
         public decimal? Quantity { get; set; }
         public string? UnitCode { get; set; }
 
-        public double ChangeFactor1 { get; set; } = 1;
-        public double ChangeFactor2 { get; set; } = 1;
+        public decimal ChangeFactor1 { get; set; } = 1m;
+        public decimal ChangeFactor2 { get; set; } = 1m;
 
         public bool IsActive { get; set; } = true;
         public bool Uncontrollable { get; set; }
@@ -63,7 +63,7 @@ namespace TaskResourceBlueprints.Entities.Tasks
         /// Workload thresholds, e.g. for Low / Medium / High.
         /// Always three values.
         /// </summary>
-        public List<decimal> WorkloadThresholds { get; set; } = new() { 0, 0, 0 };
+        public List<decimal> WorkloadThresholds { get; set; } = new() { 0m, 0m, 0m };
 
         // Lookups
         public int? ActionId { get; set; }

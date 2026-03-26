@@ -140,11 +140,11 @@
 </div>
 
 @code {
-    double GetTotalProbabilityValue() =>
-        Calc?.Opportunities?.Sum(GetProbabilityValue) ?? 0;
+    decimal GetTotalProbabilityValue() =>
+        Calc?.Opportunities?.Sum(GetProbabilityValue) ?? 0m;
 
-    static double GetProbabilityValue(OpportunityModel item) =>
-        ((item.Metadata.ProbabilityPercent ?? 0) * (item.Metadata.Value ?? 0)) / 100;
+    static decimal GetProbabilityValue(OpportunityModel item) =>
+        ((item.Metadata.ProbabilityPercent ?? 0m) * (item.Metadata.Value ?? 0m)) / 100m;
 
     async Task Context(OpportunityModel item)
     {

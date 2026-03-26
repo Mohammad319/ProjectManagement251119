@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaskResourceBlueprints.Entities.Questions.Groups;
 using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
@@ -48,6 +48,12 @@ public class NumericQuestionConfiguration : IEntityTypeConfiguration<NumericQues
     {
         b.Property(x => x.SectionKey).HasMaxLength(Lengths.SectionKey);
         b.Property(x => x.DisplayName).HasMaxLength(Lengths.DisplayName);
+
+        b.Property(x => x.MinInputValue)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        b.Property(x => x.MaxInputValue)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
 
         b.HasIndex(g => new { g.TaskId, g.SortOrder });
         b.HasIndex(g => new { g.TaskId, g.SectionKey, g.SortOrder });

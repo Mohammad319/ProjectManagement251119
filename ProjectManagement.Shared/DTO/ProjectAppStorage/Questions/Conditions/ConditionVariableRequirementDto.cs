@@ -6,7 +6,7 @@ public class ConditionVariableRequirementDto
     public int Id { get; set; }
     public int QuestionConditionId { get; set; }
     public string VariableName { get; set; } = string.Empty;
-    public double? MinAllowedValue { get; set; }
-    public double? MaxAllowedValue { get; set; }
+    public decimal? MinAllowedValue { get; set; }
+    public decimal? MaxAllowedValue { get; set; }
     public int SetKey { get; set; } = 1;
 }

@@ -201,6 +201,33 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             {
                 messageStore?.Add(() => ResourceUpdate.Data.CapWaste, ResourceApp.rangeErrors);
             }
+
+            ValidateTimesQuantity();
+        }
+
+        private void ValidateTimesQuantity()
+        {
+            if (ResourceUpdate.Data.Times is null || ResourceUpdate.Data.Times.Count == 0)
+            {
+                return;
+            }
+
+            var parentQuantity = RoundQuantityForValidation(ResourceUpdate.Data.Quantity);
+            var timesQuantitySum = RoundQuantityForValidation(ResourceUpdate.Data.Times.Sum(x => x.Quantity));
+
+            if (!parentQuantity.HasValue || timesQuantitySum != parentQuantity.Value)
+            {
+                messageStore?.Add(
+                    new FieldIdentifier(ResourceUpdate.Data, nameof(ResourceUpdate.Data.Quantity)),
+                    "The total Times quantity must equal the resource quantity.");
+            }
+        }
+
+        private static decimal? RoundQuantityForValidation(decimal? value)
+        {
+            return value.HasValue
+                ? Math.Round(value.Value, 3, MidpointRounding.AwayFromZero)
+                : null;
         }
 
         public void Dispose()

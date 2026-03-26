@@ -1,5 +1,3 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
 namespace TaskResourceBlueprints.Entities.Questions.Conditions
 {
     public class VariableConditionRule
@@ -8,8 +6,8 @@ namespace TaskResourceBlueprints.Entities.Questions.Conditions
         public int ConditionId { get; set; }
         public ConditionDefinition Condition { get; set; } = null!;
         public string? VariableName { get; set; }
-        public double? MinAllowedValue { get; set; }
-        public double? MaxAllowedValue { get; set; }
+        public decimal? MinAllowedValue { get; set; }
+        public decimal? MaxAllowedValue { get; set; }
         public int GroupKey { get; set; } = 1;
     }
 }

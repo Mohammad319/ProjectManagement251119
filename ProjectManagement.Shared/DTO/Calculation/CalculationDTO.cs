@@ -1,4 +1,4 @@
-using ProjectManagement.Shared.Base.Calculation;
+﻿using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
@@ -31,8 +31,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public List<QuanityListDTO> QuanityList { get; set; } = [];
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        [Range(0, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public double TimeMonth { get; set; } = 12;
+        [Range(typeof(decimal), "0", "999", ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public decimal TimeMonth { get; set; } = 12m;
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         [Range(-999, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
@@ -130,8 +130,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         }
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        [Range(0, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public double TimeMonth
+        [Range(typeof(decimal), "0", "999", ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public decimal TimeMonth
         {
             get => Data.TimeMonth;
             set => Data.TimeMonth = value;
@@ -298,8 +298,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         }
 
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        [Range(0, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public double TimeMonth
+        [Range(typeof(decimal), "0", "999", ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public decimal TimeMonth
         {
             get => Metadata.TimeMonth;
             set => Metadata.TimeMonth = value;
@@ -420,7 +420,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public List<OHFactors> Factors { get; set; } = [];
         public List<QuanityListDTO> QuanityList { get; set; } = [];
         public double Tax { get; set; }
-        public double TimeMonth { get; set; }
+        public decimal TimeMonth { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
         public string Company { get; set; } = string.Empty;

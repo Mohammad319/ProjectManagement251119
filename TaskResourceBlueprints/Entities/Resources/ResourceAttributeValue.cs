@@ -1,4 +1,4 @@
-﻿namespace TaskResourceBlueprints.Entities.Resources
+namespace TaskResourceBlueprints.Entities.Resources
 {
     public class ResourceAttributeValue
     {
@@ -8,6 +8,6 @@
         public int AttributeId { get; set; }
         public ResourceAttribute? Attribute { get; set; }
         public string? TextValue { get; set; }
-        public double? NumericValue { get; set; }
+        public decimal? NumericValue { get; set; }
     }
 }

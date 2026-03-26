@@ -53,7 +53,7 @@ namespace Application.Feature.Calculation.Tender.Commands
     public sealed record UpdateTenderAttributeBindCommand(
         int TenderId,
         int AttributeId,
-        double AttrValue
+        decimal AttrValue
     ) : IRequest<bool>;
 
     public sealed class UpdateTenderAttributeBindCommandHandler(ITenderCommandService service)

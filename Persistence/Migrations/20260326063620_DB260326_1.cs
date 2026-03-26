@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class db260115 : Migration
+    public partial class DB260326_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -1171,7 +1171,7 @@ namespace Persistence.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TenderId = table.Column<int>(type: "int", nullable: false),
                     TenderAttributeId = table.Column<int>(type: "int", nullable: false),
-                    Value = table.Column<double>(type: "float", nullable: false),
+                    Value = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

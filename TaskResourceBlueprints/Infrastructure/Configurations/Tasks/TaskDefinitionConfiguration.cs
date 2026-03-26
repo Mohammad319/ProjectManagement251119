@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
@@ -14,6 +14,12 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
             .HasMaxLength(Lengths.DisplayName);
 
         builder.Property(x => x.Quantity)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        builder.Property(x => x.ChangeFactor1)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        builder.Property(x => x.ChangeFactor2)
             .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
 
         builder.Property(x => x.RowNotes)

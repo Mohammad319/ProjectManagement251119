@@ -3,9 +3,9 @@
     public class IncomeBase
     {
         public int Year { get; set; }
-        public double Q1 { get; set; }
-        public double Q2 { get; set; }
-        public double Q3 { get; set; }
-        public double Q4 { get; set; }
+        public decimal Q1 { get; set; }
+        public decimal Q2 { get; set; }
+        public decimal Q3 { get; set; }
+        public decimal Q4 { get; set; }
     }
 }

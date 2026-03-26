@@ -25,7 +25,7 @@ namespace ProjectManagement.Shared.Base.Users
         public string Street { get; set; } = string.Empty;
         public string BuildNumber { get; set; } = string.Empty;
         public DateTimeOffset? DateExpire { get; set; }
-        public int MaxUsers { get; set; } = 3;
-        public int MaxCalculations { get; set; } = 100;
+        public int MaxUsers { get; set; } = 5;
+        public int MaxCalculations { get; set; } = int.MaxValue;
     }
 }

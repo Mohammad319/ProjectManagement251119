@@ -98,7 +98,7 @@ namespace Persistence.Service.CalculationItems.Tender
         public async Task<bool> UpdateTenderAttributeValueAsync(
             int tenderId,
             int attributeId,
-            double value,
+            decimal value,
             CancellationToken ct = default)
         {
             await using var context = await dbFactory.CreateDbContextAsync(ct);
@@ -138,7 +138,7 @@ namespace Persistence.Service.CalculationItems.Tender
         private static async global::System.Threading.Tasks.Task SyncAttributeValuesAsync(
             ShardingSingleDbContext context,
             int tenderId,
-            Dictionary<int, double>? attributes,
+            Dictionary<int, decimal>? attributes,
             CancellationToken ct)
         {
             attributes ??= [];

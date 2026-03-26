@@ -1155,8 +1155,8 @@ namespace Persistence.Migrations
                     b.Property<int>("TenderId")
                         .HasColumnType("int");
 
-                    b.Property<double>("Value")
-                        .HasColumnType("float");
+                    b.Property<decimal>("Value")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 

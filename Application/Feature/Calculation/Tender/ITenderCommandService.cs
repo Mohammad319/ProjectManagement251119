@@ -26,7 +26,7 @@
         Task<bool> UpdateTenderAttributeValueAsync(
             int tenderId,
             int attributeId,
-            double value,
+            decimal value,
             CancellationToken ct = default);
     }
 }

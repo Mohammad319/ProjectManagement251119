@@ -22,16 +22,16 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
-        public double Quantity { get; set; }
+        public decimal Quantity { get; set; }
         public decimal CostMarketPrices { get; set; }
         public decimal CostSubmittedPrices { get; set; }
 
         public string Comment { get; set; } = string.Empty;
 
         [JsonIgnore]
-        public decimal TotalMarketPrices => CostMarketPrices * (decimal)Quantity;
+        public decimal TotalMarketPrices => CostMarketPrices * Quantity;
         [JsonIgnore]
-        public decimal TotalSubmittedPrices => CostSubmittedPrices * (decimal)Quantity;
+        public decimal TotalSubmittedPrices => CostSubmittedPrices * Quantity;
         [JsonIgnore]
         public decimal Difference => TotalSubmittedPrices - TotalMarketPrices;
 

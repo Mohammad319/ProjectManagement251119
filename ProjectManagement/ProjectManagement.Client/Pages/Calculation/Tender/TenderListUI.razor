@@ -132,12 +132,12 @@ else
 }
 
 @code {
-    Dictionary<int, double> TendersValues = new Dictionary<int, double>();
+    Dictionary<int, decimal> TendersValues = new Dictionary<int, decimal>();
 
     async Task OnChangeAsync(int tenderID, int attrID, ChangeEventArgs e)
     {
-        if (!string.IsNullOrEmpty(e.Value?.ToString()))
-            await Repo.Tender.UpdateBindAsync(tenderID, attrID, Convert.ToDouble(e.Value.ToString()));
+        if (decimal.TryParse(e.Value?.ToString(), out var value))
+            await Repo.Tender.UpdateBindAsync(tenderID, attrID, value);
     }
 
     [Parameter] public EventCallback<bool> CallBack { get; set; }

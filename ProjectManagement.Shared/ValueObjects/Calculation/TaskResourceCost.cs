@@ -18,16 +18,16 @@ namespace ProjectManagement.Shared.ValueObjects.Calculation
         /// <summary>
         /// عوامل التعديل (اختيارية).
         /// </summary>
-        public double? ChangeFactor1 { get; private set; }
-        public double? ChangeFactor2 { get; private set; }
+        public decimal? ChangeFactor1 { get; private set; }
+        public decimal? ChangeFactor2 { get; private set; }
 
         private CostValue() { } // للـ EF
 
         public CostValue(
             decimal cost,
             decimal? baseCost = null,
-            double? changeFactor1 = null,
-            double? changeFactor2 = null)
+            decimal? changeFactor1 = null,
+            decimal? changeFactor2 = null)
         {
             Set(cost, baseCost, changeFactor1, changeFactor2);
         }
@@ -35,8 +35,8 @@ namespace ProjectManagement.Shared.ValueObjects.Calculation
         public void Set(
             decimal cost,
             decimal? baseCost,
-            double? changeFactor1,
-            double? changeFactor2)
+            decimal? changeFactor1,
+            decimal? changeFactor2)
         {
             if (cost < 0)
                 throw new ArgumentOutOfRangeException(nameof(cost), "Cost cannot be negative.");

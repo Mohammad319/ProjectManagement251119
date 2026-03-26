@@ -1,4 +1,4 @@
-﻿using ProjectManagement.Shared.Base.AppTenant;
+using ProjectManagement.Shared.Base.AppTenant;
 using System.Collections.Generic;
 
 namespace ProjectManagement.Shared.DTO.App.Dataloader
@@ -14,10 +14,10 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
         public int Id { get; set; }
         public string Name { get; set; } = null!;
         public string Note { get; set; } = string.Empty;
-        public double? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
         public string Unit { get; set; } = string.Empty;
-        public double ChangeFactor1 { get; set; } = 1;
-        public double ChangeFactor2 { get; set; } = 1;
+        public decimal ChangeFactor1 { get; set; } = 1m;
+        public decimal ChangeFactor2 { get; set; } = 1m;
         public string Code { get; set; } = string.Empty;
         public List<ResourceEXDto> Resources { get; set; } = [];
         public int? ResIdCap { get; set; }

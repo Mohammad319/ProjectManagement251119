@@ -9,7 +9,7 @@
 <div class="space-y-4">
     @if (Form is not null)
     {
-        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync2" class="space-y-4">
+        <EditForm Model="Form" OnValidSubmit="HandleSubmitAsync2" class="space-y-1">
             <DataAnnotationsValidator />
 
             @if (!string.IsNullOrWhiteSpace(FormError))
@@ -21,33 +21,23 @@
 
             <ValidationSummary class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300" />
 
-            @if (string.IsNullOrEmpty(UserForm?.Id))
-            {
-                <div class="rounded-2xl border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800 dark:border-sky-900/70 dark:bg-sky-950/40 dark:text-sky-200">
-                    User creation is being prepared for localized email notifications. In the next phase, welcome and password emails will follow the active language.
-                </div>
-            }
 
-            <section class="rounded-2xl border border-slate-200 bg-white p-4 dark:!border-slate-800 dark:!bg-slate-950/80">
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">User profile</h3>
-                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Basic contact details and role assignment for the selected account.</p>
-                </div>
+            <section class="rounded-2xl border border-slate-200 bg-white p-1 dark:!border-slate-800 dark:!bg-slate-950/80">
 
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div class="space-y-1.5">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="firstname">@ResourceIdentity.firstname</label>
                         <InputText id="firstname" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.Firstname" />
                         <ValidationMessage For="@(() => Form.Firstname)" class="text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="space-y-1.5">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="lastname">@ResourceIdentity.lastname</label>
                         <InputText id="lastname" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.Lastname" />
                         <ValidationMessage For="@(() => Form.Lastname)" class="text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="space-y-1.5 md:col-span-2">
+                    <div class="space-y-1 md:col-span-2">
                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="email">@ResourceIdentity.email</label>
                         <InputText id="email" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.Email" />
                         <ValidationMessage For="@(() => Form.Email)" class="text-xs text-rose-600 dark:text-rose-400" />
@@ -55,23 +45,23 @@
 
                     @if (string.IsNullOrEmpty(UserForm?.Id))
                     {
-                        <div class="space-y-1.5">
+                        <div class="space-y-1">
                             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="password">Password (optional)</label>
                             <InputText id="password" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.Password" />
                         </div>
-                        <div class="space-y-1.5">
+                        <div class="space-y-1">
                             <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="confirmPassword">Confirm password (optional)</label>
                             <InputText id="confirmPassword" type="password" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.ConfirmPassword" />
                         </div>
                     }
 
-                    <div class="space-y-1.5">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="phone">@ResourceIdentity.phone</label>
                         <InputText id="phone" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.PhoneNumber" />
                         <ValidationMessage For="@(() => Form.PhoneNumber)" class="text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="space-y-1.5">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="role">@ResourceIdentity.role</label>
                         @if (Roles is not null && !TenantId.HasValue)
                         {
@@ -95,14 +85,14 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-slate-200 bg-white p-4 dark:!border-slate-800 dark:!bg-slate-950/80">
+            <section class="rounded-2xl border border-slate-200 bg-white p-1 dark:!border-slate-800 dark:!bg-slate-950/80">
                 <div>
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Access control</h3>
                     <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Manage lockout windows and confirmation flags.</p>
                 </div>
 
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div class="space-y-1.5">
+                <div class="grid grid-cols-2 gap-1 md:grid-cols-2">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="lockoutStart">@ResourceIdentity.lockoutStart</label>
                         <div class="flex items-center gap-2">
                             <InputDate id="lockoutStart" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.LockoutStart" />
@@ -113,7 +103,7 @@
                         <ValidationMessage For="@(() => Form.LockoutStart)" class="text-xs text-rose-600 dark:text-rose-400" />
                     </div>
 
-                    <div class="space-y-1.5">
+                    <div class="space-y-1">
                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="lockoutEnd">@ResourceIdentity.lockoutEnd</label>
                         <div class="flex items-center gap-2">
                             <InputDate id="lockoutEnd" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind-Value="Form.LockoutEnd" />
@@ -125,20 +115,20 @@
                     </div>
                 </div>
 
-                <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div class="mt-4 grid grid-cols-2 gap-1 md:grid-cols-2">
                     <label class="inline-flex items-center gap-2">
                         <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.PhoneNumberConfirmed" id="phoneConfirmed" />
                         <span>@ResourceIdentity.phoneNumberConfirmed</span>
                     </label>
 
-                    <label class="inline-flex items-center gap-2">
+                    <label class="inline-flex items-center gap-1">
                         <InputCheckbox class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950" @bind-Value="Form.LockoutEnabled" id="lockoutEnabled" />
                         <span>@ResourceIdentity.logout</span>
                     </label>
                 </div>
             </section>
 
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1">
                 <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="async () => await Callback.InvokeAsync(false)">
                     @ResourceApp.cancel
                 </button>

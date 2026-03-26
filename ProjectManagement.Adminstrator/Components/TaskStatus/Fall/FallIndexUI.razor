@@ -7,59 +7,69 @@
 @inherits AppComponentBase
 @inject IEntityService<FallEntity> service
 
-<div class="space-y-4">
-    <div class="flex flex-wrap items-center gap-2">
+<div class="space-y-1">
+    <div class="flex flex-col gap-1 rounded-[12px] border border-slate-200/80 bg-white/90 p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">Lookup list</div>
             <h3 class="mt-2 text-xl font-semibold text-slate-100">Fall</h3>
             <p class="mt-2 text-sm text-slate-400">Manage fall values used across the task status workspace.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium">@(IsVisible ?"Visible" :"Hidden")</span>
-            <button @onclick="UpdateForm" class="inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">@((MarkupString)Icons.Plus)<span class="ml-2">@ResourceApp._new</span></button>
-            <button @onclick="() => IsVisible = !IsVisible" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">@((MarkupString)Icons.GetVisibleIcon(IsVisible))<span class="ml-2">Toggle</span></button>
+
+        <div class="flex flex-wrap items-center gap-1">
+            <button @onclick="UpdateForm"
+                    class="inline-flex items-center rounded-xl bg-blue-600 px-1.5 py-1 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+                    title="@ResourceApp._new">
+                <span class="mr-2">@((MarkupString)Icons.Plus)</span> New
+            </button>
+            <button @onclick="() => IsVisible = !IsVisible"
+                    class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    title="@ResourceApp.visible">
+                <span class="mr-2">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</span> @(IsVisible ? "Visible items" : "Hidden items")
+            </button>
         </div>
     </div>
 
     @if (FallsList?.Any(x => x.IsVisible == IsVisible) == true)
     {
-        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-            <div class="overflow-x-auto p-4">
-                <MhdTable TItem="FallEntity" Items="FallsList.Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder)" ShowFilter="false">
-                    <HeaderTemplate>
-                        <th class="w-40 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Actions</th>
-                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Entry</th>
-                    </HeaderTemplate>
-                    <ChildContent>
-                        <MhdTableColumn>
-                            <Template Context="status">
-                                <div class="flex items-center gap-2">
-                                    <button @onclick="() => UpdateForm(status)" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">@((MarkupString)Icons.Edit)</button>
-                                    <button @onclick="() => Remove(status)" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-500/20 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/60">@((MarkupString)Icons.Delete)</button>
-                                </div>
-                            </Template>
-                        </MhdTableColumn>
-                        <MhdTableColumn>
-                            <Template Context="status">
-                                <div class="flex items-center justify-between gap-4">
-                                    <div>
-                                        <div class="font-medium text-slate-100">@status.Name</div>
-                                        <div class="mt-1 text-xs text-slate-500">Order: @status.SortOrder</div>
+        <div class="overflow-hidden rounded-[12px] border border-slate-200/80 bg-white/95 shadow-sm dark:border-slate-800 dark:bg-slate-950/95">
+            <div class="overflow-x-auto p-1.5">
+                <table class="min-w-full overflow-hidden rounded-[12px] border border-slate-200/80 dark:border-slate-800">
+                    <thead class="bg-slate-100/80 dark:bg-slate-900/90">
+                        <tr>
+                            <th class="w-32 px-1.5 py-1 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">Actions</th>
+                            <th class="px-1.5 py-1 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200/80 bg-white dark:divide-slate-800 dark:bg-slate-950">
+                        @foreach (var status in FallsList.Where(x => x.IsVisible == IsVisible).OrderByDescending(x => x.SortOrder))
+                        {
+                            <tr class="align-top transition hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                                <td class="px-1.5 py-1">
+                                    <div class="flex items-center gap-1">
+                                        <button @onclick="() => UpdateForm(status)"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                                            @Icons.Edit
+                                        </button>
+                                        <button @onclick="() => Remove(status)"
+                                                class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                                            @Icons.Delete
+                                        </button>
                                     </div>
-                                    <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium">@(status.IsVisible ?"Visible" :"Hidden")</span>
-                                </div>
-                            </Template>
-                        </MhdTableColumn>
-                    </ChildContent>
-                </MhdTable>
+                                </td>
+                                <td class="px-1.5 py-1">
+                                    <div class="font-medium text-slate-900 dark:text-slate-100">@status.Name</div>
+                                    <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Order: @status.SortOrder</div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
     else
     {
-        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">
-            <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">There are no items to display</div>
-            <div class="mt-1 max-w-xl text-sm text-slate-600 dark:text-slate-400">Create a new fall value or switch the visibility filter.</div>
+        <div class="rounded-[12px] border border-dashed border-slate-200/80 bg-white/95 px-1.5 py-8 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-400">
+            @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
         </div>
     }
 </div>
@@ -107,5 +117,6 @@
     protected async override Task OnInitializedAsync()
     {
         FallsList = await ExHandlers.RunCheckTokenAsync(() => service.GetAllAsync()) ?? [];
+        StateHasChanged();
     }
 }

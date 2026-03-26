@@ -21,22 +21,19 @@ namespace Domain.Entities.Calculation
         [ForeignKey(nameof(TenderAttributeId))]
         public TenderAttributeDefinitionEntity TenderAttribute { get; private set; } = null!;
 
-        public double Value { get; private set; }
+        public decimal Value { get; private set; }
 
         private TenderAttributeBindEntity() { }
 
-        public TenderAttributeBindEntity(int tenderId, int attributeId, double value)
+        public TenderAttributeBindEntity(int tenderId, int attributeId, decimal value)
         {
             TenderId = tenderId;
             TenderAttributeId = attributeId;
             SetValue(value);
         }
 
-        public void SetValue(double value)
+        public void SetValue(decimal value)
         {
-            if (double.IsNaN(value) || double.IsInfinity(value))
-                throw new ValidationException("Tender attribute value must be finite.");
-
             Value = value;
         }
     }
@@ -82,7 +79,7 @@ namespace Domain.Entities.Calculation
             Attributes = NormalizeOptional(json);
         }
 
-        public void SetAttributeValue(int attributeId, double value)
+        public void SetAttributeValue(int attributeId, decimal value)
         {
             var existing = TendersAttributes.FirstOrDefault(x => x.TenderAttributeId == attributeId);
             if (existing is null)

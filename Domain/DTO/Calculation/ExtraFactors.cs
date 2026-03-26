@@ -17,7 +17,7 @@ namespace Domain.DTO.Calculation
         public bool ProfitRatio { get; set; }
         public int Quantity { get; set; } = 1;
         public string Unit { get; set; } = string.Empty;
-        public double Time { get; set; } = 1;
+        public decimal Time { get; set; } = 1m;
         public string TimeUnit { get; set; } = string.Empty;
         public decimal AMP1 { get; set; } = 1m;
         public decimal BaseCost { get; set; } = 1m;

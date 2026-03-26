@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
@@ -27,7 +27,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             ChangeFactor2 = x.ChangeFactor2,
             ResIdCap = x.CapacityResourceId,
             Note = x.FieldNotes ?? string.Empty,
-            Quantity = (double?)x.Quantity,
+            Quantity = x.Quantity,
             Unit = x.UnitCode ?? string.Empty,
             Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
             {

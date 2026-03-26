@@ -55,7 +55,7 @@
         new Dictionary<string, object>
         {
             [nameof(ResourcePropertiesManager.ResourceId)] = model.Id,
-        }, DialogSize.Large);
+        }, DialogSize.ExtraLarge);
     }
 
     void UpdateForm(ResourceDefinition model) => MHD.Modal.ShowComponent<ResourceFormDLUI>(model.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
@@ -63,7 +63,7 @@
         {
             [nameof(ResourceFormDLUI.model)] = model,
             [nameof(ResourceFormDLUI.CallBack)] = EventCallback.Factory.Create<bool>(this, Refreeh),
-        });
+        }, DialogSize.ExtraLarge);
 
     void Remove(ResourceDefinition model) => MHD.DeleteMessage(model.Name, EventCallback.Factory.Create(this, () => DeleteR(model.Id)));
 

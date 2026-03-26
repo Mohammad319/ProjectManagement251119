@@ -24,14 +24,13 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
         private const string TaskWidth = "w";
         private const string TaskLength = "l";
 
-        // signature القديمة (taskParameter double) — نُحوّل داخليًا
-        public static void ApplyAll(IList<ResourceDto> rows, Dictionary<ParamName, decimal> taskParameter)
+                public static void ApplyAll(IList<ResourceDto> rows, Dictionary<ParamName, decimal> taskParameter)
         {
             if (rows is null || rows.Count == 0) return;
 
             var tp = taskParameter is null
                 ? new Dictionary<ParamName, decimal>()
-                : taskParameter.ToDictionary(k => k.Key, v => (decimal)v.Value);
+                : taskParameter.ToDictionary(k => k.Key, v => v.Value);
 
             foreach (var r in rows)
                 ApplyRow(r, tp);
@@ -71,7 +70,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                 foreach (var item in numberProps)
                 {
                     var val = (item.NumberDefault.HasValue && item.NumberDefault.Value > 0)
-                        ? (decimal)item.NumberDefault.Value
+                        ? item.NumberDefault.Value
                         : 0m;
 
                     vars["p" + item.Id] = val;

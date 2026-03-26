@@ -9,7 +9,7 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<TenderAttributeValuesListDTO> GetAllAsync(int calculationId);
         Task<int> CreateAsync(int calculationId, int companyId, TenderPostDTO post);
         Task<int> CreateAsync(int calculationId, TenderAttributeListPostDTO post);
-        Task<bool> UpdateBindAsync(int tenderID, int attrID, double val);
+        Task<bool> UpdateBindAsync(int tenderID, int attrID, decimal val);
         Task<bool> UpdateAsync(int id, int calculationId, TenderPostDTO post);
         Task<bool> UpdateAsync(int id, int calculationId, TenderAttributeListPostDTO post);
         Task<bool> DeleteAsync(int id, int calculationId);

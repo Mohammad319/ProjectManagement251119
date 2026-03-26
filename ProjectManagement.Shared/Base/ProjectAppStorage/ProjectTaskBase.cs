@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace ProjectManagement.Shared.Base.ProjectAppStorage
 {
@@ -14,14 +14,14 @@ namespace ProjectManagement.Shared.Base.ProjectAppStorage
     {
         public string Note { get; set; } = string.Empty;
         public List<string> HeaderNotes { get; set; } = [];
-        public double? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
         public string UnitCode { get; set; } = string.Empty;
-        public double ChangeFactor1 { get; set; } = 1;
-        public double ChangeFactor2 { get; set; } = 1;
+        public decimal ChangeFactor1 { get; set; } = 1m;
+        public decimal ChangeFactor2 { get; set; } = 1m;
         public bool IsActive { get; set; } = true;
         public string Code { get; set; } = string.Empty;
         public List<string> Formulas { get; set; } = [];
-        public List<double> WorkloadThresholds { get; set; } = [0, 0, 0];
+        public List<decimal> WorkloadThresholds { get; set; } = [0m, 0m, 0m];
 
         public int? ActionId { get; set; }
         public int? LocationId { get; set; }

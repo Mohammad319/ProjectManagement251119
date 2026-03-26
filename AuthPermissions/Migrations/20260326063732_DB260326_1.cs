@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AuthPermissions.Migrations
 {
     /// <inheritdoc />
-    public partial class db250830 : Migration
+    public partial class DB260326_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

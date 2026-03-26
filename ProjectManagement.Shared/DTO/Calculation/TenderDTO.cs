@@ -6,7 +6,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
 
     public class TenderAttributeListPostDTO : AttributeNameTenderBase
     {
-        public Dictionary<int, double> TendersValues { get; set; } = [];
+        public Dictionary<int, decimal> TendersValues { get; set; } = [];
     }
     public class TenderAttributeListDTO : AttributeNameTenderBase
     {
@@ -20,7 +20,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
     }
     public class TenderPostDTO
     {
-        public Dictionary<int, double> AttributesValue { get; set; } = new();
+        public Dictionary<int, decimal> AttributesValue { get; set; } = new();
         public string Note { get; set; } = string.Empty;
         public int CompanyId { get; set; }
     }
@@ -44,7 +44,7 @@ namespace ProjectManagement.Shared.DTO.Calculation
     {
         //public int TenderID { get; set; }
         public int AttributeID { get; set; }
-        public double Values { get; set; }
+        public decimal Values { get; set; }
 
     }
     public class TenderDetailsDTO : TenderBase

@@ -1,4 +1,4 @@
-using ProjectManagement.Shared.Base.Calculation;
+﻿using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Helper;
 using System.ComponentModel.DataAnnotations;
@@ -8,13 +8,13 @@ namespace ProjectManagement.Shared.DTO.Calculation
 {
     public class OpportunityData
     {
-        public double? ProbabilityWorth { get; set; }
+        public decimal? ProbabilityWorth { get; set; }
 
-        [Range(-999, 999, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        public double? ProbabilityPercent { get; set; }
+        [Range(typeof(decimal), "-999", "999", ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public decimal? ProbabilityPercent { get; set; }
 
-        public double? ProbabilityBest { get; set; }
-        public double? Value { get; set; }
+        public decimal? ProbabilityBest { get; set; }
+        public decimal? Value { get; set; }
         public string Comment { get; set; } = string.Empty;
 
         public OpportunityData Clone()

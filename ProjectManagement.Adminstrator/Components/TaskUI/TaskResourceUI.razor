@@ -10,123 +10,129 @@
 @using TaskResourceBlueprints.Services.Resource
 @inject IStringLocalizer<CalcResource> L
 
-<div class="space-y-4 text-slate-900 dark:text-slate-100 p-2">
+<div class="space-y-1 p-1 text-slate-900 dark:text-slate-100">
     @if (TaskResource is null)
     {
-        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-            <div class="px-4 py-3 space-y-3 animate-pulse">
-                <div class="rounded-lg bg-slate-200/80 dark:bg-slate-800/80 w-1/3"></div>
-                <div class="rounded-lg bg-slate-200/80 dark:bg-slate-800/80 h-10 w-full"></div>
-                <div class="rounded-lg bg-slate-200/80 dark:bg-slate-800/80 h-10 w-full"></div>
-                <div class="rounded-lg bg-slate-200/80 dark:bg-slate-800/80 h-10 w-5/6"></div>
+        <div class="@SectionClass">
+            <div class="space-y-1 px-1 py-1 animate-pulse">
+                <div class="h-4 w-40 rounded bg-slate-200/80 dark:bg-slate-800/80"></div>
+                <div class="h-9 w-full rounded-lg bg-slate-200/80 dark:bg-slate-800/80"></div>
+                <div class="h-9 w-full rounded-lg bg-slate-200/80 dark:bg-slate-800/80"></div>
+                <div class="h-9 w-2/3 rounded-lg bg-slate-200/80 dark:bg-slate-800/80"></div>
             </div>
             <span class="sr-only">Loading...</span>
         </div>
     }
     else
     {
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Task resource setup</h3>
-                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Configure factors, caps, formulas, and role ranges for the selected task resource.</p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Task: @Task.DisplayName</span>
-                    <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Resource: @Resource.DisplayName</span>
-                    @if (!string.IsNullOrWhiteSpace(Resource.Unit))
-                    {
-                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">@Resource.Unit</span>
-                    }
-                </div>
+        <section class="@SectionClass">
+            <div class="@HeaderClass">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Task resource setup</h3>
             </div>
 
-            <div class="px-4 py-3">
-                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Roles</div>
-                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@(TaskResource.CapRole?.Count ?? 0)</div>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Formulas</div>
-                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@(TaskResource.Formulas?.Count ?? 0)</div>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
-                        <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Resource type</div>
-                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100 text-base">@TaskResource.ResType</div>
+            <div class="@BodyClass">
+                <div class="overflow-x-auto">
+                    <div class="flex min-w-max flex-nowrap items-stretch gap-1">
+                        <div class="shrink-0">
+                            <span class="@BadgeClass">Task: @Task.DisplayName</span>
+                        </div>
+
+                        <div class="shrink-0">
+                            <span class="@BadgeClass">Resource: @Resource.DisplayName</span>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(Resource.Unit))
+                        {
+                            <div class="shrink-0">
+                                <span class="@BadgeMutedClass">@Resource.Unit</span>
+                            </div>
+                        }
+
+                        <div class="@StatCardClass w-[140px] shrink-0">
+                            <div class="@StatLabelClass">Roles</div>
+                            <div class="@StatValueClass">@(TaskResource.CapRole?.Count ?? 0)</div>
+                        </div>
+
+                        <div class="@StatCardClass w-[140px] shrink-0">
+                            <div class="@StatLabelClass">Formulas</div>
+                            <div class="@StatValueClass">@(TaskResource.Formulas?.Count ?? 0)</div>
+                        </div>
+
+                        <div class="@StatCardClass w-[180px] shrink-0">
+                            <div class="@StatLabelClass">Type</div>
+                            <div class="@StatValueClass">@TaskResource.ResType</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                <div>
-                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Settings</h4>
-                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Base values used while the task calculates this resource assignment.</p>
-                </div>
+        <section class="@SectionClass">
+            <div class="@HeaderClass">
+                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Settings</h4>
             </div>
 
-            <div class="px-4 py-3">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    <div>
-                        <label for="menu-id" class="block text-xs font-medium text-slate-700 dark:text-slate-300">Menu Id</label>
-                        <input id="menu-id"
-                               type="number"
-                               step="1"
-                               min="0"
-                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                               @bind-value="TaskResource.MenuId"
-                               @bind-value:event="oninput" />
-                    </div>
+            <div class="@BodyClass">
+                <div class="overflow-x-auto">
+                    <div class="flex min-w-max flex-nowrap items-start gap-1">
+                        <div class="w-[180px] shrink-0">
+                            <label for="menu-id" class="@LabelClass">Menu Id</label>
+                            <input id="menu-id"
+                                   type="number"
+                                   step="1"
+                                   min="0"
+                                   class="@InputClass"
+                                   @bind-value="TaskResource.MenuId"
+                                   @bind-value:event="oninput" />
+                        </div>
 
-                    <div>
-                        <label for="cf1" class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor1</label>
-                        <input id="cf1"
-                               type="number"
-                               step="0.01"
-                               inputmode="decimal"
-                               min="0"
-                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                               @bind-value="TaskResource.ChangeFactor1"
-                               @bind-value:event="oninput" />
-                    </div>
+                        <div class="w-[180px] shrink-0">
+                            <label for="cf1" class="@LabelClass">@CalcResource.changeFactor1</label>
+                            <input id="cf1"
+                                   type="number"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   min="0"
+                                   class="@InputClass"
+                                   @bind-value="TaskResource.ChangeFactor1"
+                                   @bind-value:event="oninput" />
+                        </div>
 
-                    <div>
-                        <label for="cf2" class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor2</label>
-                        <input id="cf2"
-                               type="number"
-                               step="0.01"
-                               inputmode="decimal"
-                               min="0"
-                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                               @bind-value="TaskResource.ChangeFactor2"
-                               @bind-value:event="oninput" />
-                    </div>
+                        <div class="w-[180px] shrink-0">
+                            <label for="cf2" class="@LabelClass">@CalcResource.changeFactor2</label>
+                            <input id="cf2"
+                                   type="number"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   min="0"
+                                   class="@InputClass"
+                                   @bind-value="TaskResource.ChangeFactor2"
+                                   @bind-value:event="oninput" />
+                        </div>
 
-                    <div>
-                        <label for="cap" class="block text-xs font-medium text-slate-700 dark:text-slate-300">@(TaskResource.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
-                        <input id="cap"
-                               type="number"
-                               step="0.01"
-                               inputmode="decimal"
-                               min="0"
-                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                               @bind-value="TaskResource.CapWaste"
-                               @bind-value:event="oninput" />
-                    </div>
+                        <div class="w-[180px] shrink-0">
+                            <label for="cap" class="@LabelClass">@(TaskResource.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
+                            <input id="cap"
+                                   type="number"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   min="0"
+                                   class="@InputClass"
+                                   @bind-value="TaskResource.CapWaste"
+                                   @bind-value:event="oninput" />
+                        </div>
 
-                    <div>
-                        <label for="baseCost" class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.baseCost</label>
-                        <input id="baseCost"
-                               type="number"
-                               step="0.01"
-                               inputmode="decimal"
-                               min="0"
-                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                               @bind-value="TaskResource.BaseCost"
-                               @bind-value:event="oninput" />
+                        <div class="w-[180px] shrink-0">
+                            <label for="baseCost" class="@LabelClass">@CalcResource.baseCost</label>
+                            <input id="baseCost"
+                                   type="number"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   min="0"
+                                   class="@InputClass"
+                                   @bind-value="TaskResource.BaseCost"
+                                   @bind-value:event="oninput" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -134,143 +140,152 @@
 
         @if (TaskResource.ResType == ResourceTypesEnum.MachinesAndEquipments || TaskResource.ResType == ResourceTypesEnum.Worker)
         {
-            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-                <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                    <div>
-                        <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Roles</h4>
-                        <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Define quantity ranges and cap values for role-based assignments.</p>
-                    </div>
+            <section class="@SectionClass">
+                <div class="@HeaderClass">
+                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Roles</h4>
 
-                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="AddRole">
+                    <button type="button"
+                            class="@SecondaryButtonClass"
+                            @onclick="AddRole">
                         <span>+</span>
                         <span>Role</span>
                     </button>
                 </div>
 
-                <div class="px-4 py-3 space-y-3">
+                <div class="@BodyClass">
                     @if (TaskResource.CapRole is not null && TaskResource.CapRole.Count > 0)
                     {
-                        <div class="hidden grid-cols-[80px_repeat(3,minmax(0,1fr))] gap-3 px-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 md:grid">
-                            <div>Action</div>
-                            <div>@AppControll.min</div>
-                            <div>@AppControll.max</div>
-                            <div>@CalcResource.cap</div>
-                        </div>
-
-                        @for (int i = 0; i < TaskResource.CapRole.Count; i++)
-                        {
-                            var role = TaskResource.CapRole[i];
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
-                                <div class="grid grid-cols-1 gap-3 md:grid-cols-[80px_repeat(3,minmax(0,1fr))] md:items-end">
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 md:sr-only">Action</label>
-                                        <button type="button"
-                                                title="@ResourceApp.delete"
-                                                class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 w-full md:w-auto"
-                                                @onclick="@(() => TaskResource.CapRole.Remove(role))">
-                                            <span>×</span>
-                                            <span>@ResourceApp.delete</span>
-                                        </button>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
-                                        <input type="number"
-                                               step="1"
-                                               min="0"
-                                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                                               @bind-value="role.Min"
-                                               @bind-value:event="oninput"
-                                               aria-label="Min" />
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
-                                        <input type="number"
-                                               step="1"
-                                               min="0"
-                                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                                               @bind-value="role.Max"
-                                               @bind-value:event="oninput"
-                                               aria-label="Max" />
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.cap</label>
-                                        <input type="number"
-                                               step="0.01"
-                                               min="0"
-                                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                                               @bind-value="role.Value"
-                                               @bind-value:event="oninput"
-                                               aria-label="Cap" />
-                                    </div>
+                        <div class="overflow-x-auto">
+                            <div class="min-w-[760px] space-y-2">
+                                <div class="grid grid-cols-[56px_1fr_1fr_1fr] gap-1 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                    <div></div>
+                                    <div>@AppControll.min</div>
+                                    <div>@AppControll.max</div>
+                                    <div>@CalcResource.cap</div>
                                 </div>
+
+                                @for (int i = 0; i < TaskResource.CapRole.Count; i++)
+                                {
+                                    var role = TaskResource.CapRole[i];
+
+                                    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
+                                        <div class="grid grid-cols-[56px_1fr_1fr_1fr] items-end gap-1">
+                                            <div class="shrink-0">
+                                                <button type="button"
+                                                        title="@ResourceApp.delete"
+                                                        class="inline-flex h-9 w-full items-center justify-center rounded-lg border border-rose-600 bg-rose-600 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400"
+                                                        @onclick="@(() => TaskResource.CapRole.Remove(role))">
+                                                    ×
+                                                </button>
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <input type="number"
+                                                       step="1"
+                                                       min="0"
+                                                       class="@InputClass"
+                                                       @bind-value="role.Min"
+                                                       @bind-value:event="oninput"
+                                                       aria-label="Min" />
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <input type="number"
+                                                       step="1"
+                                                       min="0"
+                                                       class="@InputClass"
+                                                       @bind-value="role.Max"
+                                                       @bind-value:event="oninput"
+                                                       aria-label="Max" />
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <input type="number"
+                                                       step="0.01"
+                                                       min="0"
+                                                       class="@InputClass"
+                                                       @bind-value="role.Value"
+                                                       @bind-value:event="oninput"
+                                                       aria-label="Cap" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
-                        }
+                        </div>
                     }
                     else
                     {
-                        <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">No roles defined yet.</div>
+                        <div class="flex min-h-[96px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1 py-5 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                            No roles
+                        </div>
                     }
                 </div>
             </section>
         }
 
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
-            <div class="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-                <div>
-                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@CalcResource.Formulas</h4>
-                    <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Add one or more formulas that will be used for this task-resource assignment.</p>
-                </div>
+        <section class="@SectionClass">
+            <div class="@HeaderClass">
+                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@CalcResource.Formulas</h4>
 
-                <button class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800"
-                        type="button"
+                <button type="button"
+                        class="@SecondaryButtonClass"
                         @onclick="@(() => TaskResource.Formulas.Add(string.Empty))">
                     <span>+</span>
-                    <span>Add formula</span>
+                    <span>Add</span>
                 </button>
             </div>
 
-            <div class="px-4 py-3 space-y-3">
+            <div class="@BodyClass">
                 @if (TaskResource.Formulas is null || TaskResource.Formulas.Count == 0)
                 {
-                    <div class="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-900/40">No formulas added yet.</div>
+                    <div class="flex min-h-[96px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1 py-5 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                        No formulas
+                    </div>
                 }
                 else
                 {
-                    @foreach (var eq in TaskResource.Formulas.Select((value, index) => new { value, index }))
-                    {
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
-                            <div class="flex flex-col gap-3 md:flex-row md:items-end">
-                                <div class="flex-1">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Formula @(eq.index + 1)</label>
-                                    <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
-                                           placeholder="Formula"
-                                           value="@TaskResource.Formulas[eq.index]"
-                                           @oninput="e => TaskResource.Formulas[eq.index] = e.Value?.ToString() ?? string.Empty" />
-                                </div>
+                    <div class="space-y-1">
+                        @foreach (var eq in TaskResource.Formulas.Select((value, index) => new { value, index }))
+                        {
+                            <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/50">
+                                <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-1">
+                                    <div class="min-w-0">
+                                        <label class="@LabelClass">Formula @(eq.index + 1)</label>
+                                        <input class="@InputClass"
+                                               placeholder="Formula"
+                                               value="@TaskResource.Formulas[eq.index]"
+                                               @oninput="e => TaskResource.Formulas[eq.index] = e.Value?.ToString() ?? string.Empty" />
+                                    </div>
 
-                                <button type="button"
-                                        class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400"
-                                        title="@ResourceApp.delete"
-                                        @onclick="@(() => RemoveFormula(eq.index))">
-                                    @ResourceApp.delete
-                                </button>
+                                    <div class="shrink-0">
+                                        <button type="button"
+                                                class="@DangerButtonClass"
+                                                title="@ResourceApp.delete"
+                                                @onclick="@(() => RemoveFormula(eq.index))">
+                                            @ResourceApp.delete
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    }
+                        }
+                    </div>
                 }
             </div>
         </section>
     }
 
-    <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
-        <div class="flex flex-wrap items-center gap-2 justify-end">
-            <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400" @onclick="SaveAsync">
+    <div class="border-t border-slate-200 pt-1 dark:border-slate-800">
+        <div class="flex flex-wrap items-center justify-end gap-1">
+            <button type="button"
+                    class="@PrimaryButtonClass"
+                    @onclick="SaveAsync">
                 @ResourceApp.save
             </button>
-            <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="MHD.Modal.Close">
+
+            <button type="button"
+                    class="@NeutralButtonClass"
+                    @onclick="MHD.Modal.Close">
                 @ResourceApp.cancel
             </button>
         </div>
@@ -282,6 +297,48 @@
     [Parameter, EditorRequired] public ResourceTaskIndexDto Resource { get; set; } = default!;
 
     private TaskResourceDto? TaskResource;
+
+    private const string SectionClass =
+        "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80";
+
+    private const string HeaderClass =
+        "flex flex-wrap items-center justify-between gap-1 border-b border-slate-200 px-1 py-1 dark:border-slate-800";
+
+    private const string BodyClass =
+        "px-1 py-1 space-y-1";
+
+    private const string LabelClass =
+        "mb-1 block text-[11px] font-medium text-slate-700 dark:text-slate-300";
+
+    private const string InputClass =
+        "block h-9 w-full rounded-lg border border-slate-300 bg-white px-1.5 py-1 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
+
+    private const string BadgeClass =
+        "inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
+
+    private const string BadgeMutedClass =
+        "inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300";
+
+    private const string StatCardClass =
+        "rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/60";
+
+    private const string StatLabelClass =
+        "text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400";
+
+    private const string StatValueClass =
+        "mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100";
+
+    private const string PrimaryButtonClass =
+        "inline-flex items-center justify-center gap-1 rounded-lg border border-sky-600 bg-sky-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400";
+
+    private const string NeutralButtonClass =
+        "inline-flex items-center justify-center gap-1 rounded-lg border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+
+    private const string SecondaryButtonClass =
+        "inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800";
+
+    private const string DangerButtonClass =
+        "inline-flex items-center justify-center gap-1 rounded-lg border border-rose-600 bg-rose-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400";
 
     private void RemoveFormula(int i)
     {
@@ -335,7 +392,7 @@
         }
         else
         {
-            MHD.MessageOk("Error","There was an error saving the resource.", MhdState.Danger);
+            MHD.MessageOk("Error", "There was an error saving the resource.", MhdState.Danger);
         }
     }
 }

@@ -30,7 +30,7 @@
     }
 
     <EditForm id="@DialogFormId"
-              Model="ResourceUpdate"
+              EditContext="editContext!"
               OnValidSubmit="HandleSubmitAsync">
 
         <DataAnnotationsValidator />
@@ -110,6 +110,8 @@
                                     <InputNumber @bind-Value="ResourceUpdate.Data.Quantity" class="@InputClass" />
                                 }
                             </div>
+
+                            <ValidationMessage For="@(() => ResourceUpdate.Data.Quantity)" />
                         </div>
 
                         <div class="min-w-0">

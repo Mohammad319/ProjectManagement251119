@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace ProjectManagement.Shared.DTO.App.TasksResource
 {
@@ -8,10 +8,10 @@ namespace ProjectManagement.Shared.DTO.App.TasksResource
         public string Name { get; set; } = null!;
         public string Note { get; set; } = string.Empty;
         public List<string> UpperNote { get; set; } = [];
-        public double? Quantity { get; set; }
+        public decimal? Quantity { get; set; }
         public string Unit { get; set; } = string.Empty;
-        public double ChangeFactor1 { get; set; } = 1;
-        public double ChangeFactor2 { get; set; } = 1;
+        public decimal ChangeFactor1 { get; set; } = 1m;
+        public decimal ChangeFactor2 { get; set; } = 1m;
         public bool Active { get; set; } = true;
         public string Code { get; set; } = string.Empty;
         public bool IsOH { get; set; }

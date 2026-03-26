@@ -443,11 +443,13 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<int>("GroupKey")
                         .HasColumnType("int");
 
-                    b.Property<double?>("MaxAllowedValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MaxAllowedValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double?>("MinAllowedValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MinAllowedValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("VariableName")
                         .HasColumnType("nvarchar(max)");
@@ -472,11 +474,13 @@ namespace TaskResourceBlueprints.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<double?>("MaxInputValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MaxInputValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double?>("MinInputValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MinInputValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("SectionKey")
                         .HasMaxLength(128)
@@ -689,8 +693,9 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<int>("DataType")
                         .HasColumnType("int");
 
-                    b.Property<double?>("DefaultNumericValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("DefaultNumericValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("DefaultTextValue")
                         .HasColumnType("nvarchar(max)");
@@ -702,11 +707,13 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<bool>("IsUserEditable")
                         .HasColumnType("bit");
 
-                    b.Property<double?>("MaxNumericValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("MaxNumericValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double?>("StepValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("StepValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.HasKey("Id");
 
@@ -743,8 +750,9 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<int>("AttributeId")
                         .HasColumnType("int");
 
-                    b.Property<double?>("NumericValue")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("NumericValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<int>("ResourceId")
                         .HasColumnType("int");
@@ -884,11 +892,13 @@ namespace TaskResourceBlueprints.Migrations
                     b.Property<int?>("CapacityResourceId")
                         .HasColumnType("int");
 
-                    b.Property<double>("ChangeFactor1")
-                        .HasColumnType("float");
+                    b.Property<decimal>("ChangeFactor1")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
-                    b.Property<double>("ChangeFactor2")
-                        .HasColumnType("float");
+                    b.Property<decimal>("ChangeFactor2")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
 
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
