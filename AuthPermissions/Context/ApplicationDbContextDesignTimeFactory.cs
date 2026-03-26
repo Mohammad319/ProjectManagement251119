@@ -9,25 +9,17 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var connectionString = ResolveConnectionString();
-
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure())
-            .Options;
-
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()).Options;
         return new ApplicationDbContext(options);
     }
 
     private static string ResolveConnectionString()
     {
-        return FirstNonEmpty(
-                   Environment.GetEnvironmentVariable("ConnectionStrings__PMTConnection"),
-                   Environment.GetEnvironmentVariable("ConnectionStrings__PMPConnection"),
-                   Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection"),
-                   TryReadConnectionStringFromSettings())
-               ?? throw new InvalidOperationException(
+        return FirstNonEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__AuthPermissionsConnection"),
+            TryReadConnectionStringFromSettings()) ?? throw new InvalidOperationException(
                    "No SQL Server connection string was found for ApplicationDbContext. " +
-                   "Set 'ConnectionStrings__PMTConnection', 'ConnectionStrings__PMPConnection', or fallback 'ConnectionStrings__DefaultConnection', " +
-                   "or define 'PMTConnection', 'PMPConnection', or 'DefaultConnection' in an appsettings file.");
+                   "Set 'ConnectionStrings__AuthPermissionsConnection', " +
+                   "or define 'AuthPermissionsConnection' in an appsettings file.");
     }
 
     private static string? TryReadConnectionStringFromSettings()
@@ -100,12 +92,10 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
             CommentHandling = JsonCommentHandling.Skip
         });
 
-        if (!document.RootElement.TryGetProperty("ConnectionStrings", out var connectionStrings))
+        if (!document.RootElement.TryGetProperty("AuthPermissionsConnection", out var connectionStrings))
             return null;
 
-        return ReadConnectionString(connectionStrings, "PMTConnection")
-               ?? ReadConnectionString(connectionStrings, "PMPConnection")
-               ?? ReadConnectionString(connectionStrings, "DefaultConnection");
+        return ReadConnectionString(connectionStrings, "AuthPermissionsConnection");
     }
 
     private static string? ReadConnectionString(JsonElement connectionStrings, string key)

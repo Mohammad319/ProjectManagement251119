@@ -49,8 +49,8 @@ public static class DeploymentSafetyExtensions
         }
 
         ValidateAllowedHosts(configuration, warnings);
-        ValidateConnectionString(configuration, "ConnectionStrings:PMTConnection", "PMTConnection", warnings, failures);
-        ValidateConnectionString(configuration, "ConnectionStrings:TaskResourceBlueprintsConnection", "TaskResourceBlueprintsConnection", warnings, failures);
+        ValidateConnectionString(configuration, "ConnectionStrings:AuthPermissionsConnection", "AuthPermissionsConnection", warnings, failures);
+        ValidateConnectionString(configuration, "ConnectionStrings:BlueprintsConnection", "BlueprintsConnection", warnings, failures);
         ValidateMailSettings(configuration, warnings);
 
         if (failures.Count > 0)

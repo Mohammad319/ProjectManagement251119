@@ -20,8 +20,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var taskResourceBlueprintsDb =
-    builder.Configuration.GetConnectionString("TaskResourceBlueprintsDb")
-    ?? throw new InvalidOperationException("Connection string 'TaskResourceBlueprintsConnection' (or 'TaskResourceBlueprintsDb') not found.");
+    builder.Configuration.GetConnectionString("BlueprintsConnection")
+    ?? throw new InvalidOperationException("Connection string 'BlueprintsConnection' (or 'BlueprintsConnection') not found.");
 
 builder.Services.AddTaskResourceBlueprints();
 builder.Services.AddDbContextFactory<TaskResourceBlueprintsContext>(options =>
@@ -38,9 +38,8 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 builder.Services.AddApplicationServices();
 
 var connectionString =
-    builder.Configuration.GetConnectionString("PMPConnection")
-    ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'PMPConnection' (or fallback 'DefaultConnection') not found.");
+    builder.Configuration.GetConnectionString("AuthPermissionsConnection")
+    ?? throw new InvalidOperationException("Connection string 'AuthPermissionsConnection' (or fallback 'AuthPermissionsConnection') not found.");
 
 builder.Services.AddCustomAuthentication(connectionString);
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>

@@ -22,16 +22,16 @@ public static class AuthPermissionsBootstrapExtensions
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
         await AuthPermissionsMigrationBootstrapper.BaselineExistingSchemaAsync(authDbContext, app.Logger);
-        //await authDbContext.Database.MigrateAsync();
+        await authDbContext.Database.MigrateAsync();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
         if (!await IdentityUserSyncHelper.EnsureRolesExistAsync(roleManager, IdentityUserSyncHelper.GetAllRoles()))
             throw new InvalidOperationException("Failed to initialize application roles.");
 
 
-var bootstrapEnabled = configuration.GetValue<bool?>("Bootstrap:EnableConfiguredAdmin") ?? false;
-if (!bootstrapEnabled)
-    return;
+//var bootstrapEnabled = configuration.GetValue<bool?>("Bootstrap:EnableConfiguredAdmin") ?? false;
+//if (!bootstrapEnabled)
+//    return;
 
 var email = configuration["User:Email"]?.Trim();
 var password = configuration["User:Password"];
