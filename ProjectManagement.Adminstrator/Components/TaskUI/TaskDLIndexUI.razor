@@ -1,4 +1,5 @@
 @using TaskResourceBlueprints.Dto.ProjectTask
+@using TaskResourceBlueprints.Services.Demo
 @using TaskResourceBlueprints.Services.ProjectTask
 @using TaskResourceBlueprints.Services.Resource
 @using ProjectManagement.Adminstrator.Components.Question
@@ -18,14 +19,21 @@
                 <h2 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Task &amp; question blueprint library</h2>
                 <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Manage task definitions, task conditions, question groups, and assigned resource blueprints from one table.</p>
             </div>
-            <button @onclick="() => OpenEditor(0)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">
-                @((MarkupString)Icons.Plus)
-                <span>@ResourceApp.newItem</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+           
+                <button @onclick="() => OpenEditor(0)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-sky-600 bg-sky-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400">
+                    @((MarkupString)Icons.Plus)
+                    <span>@ResourceApp.newItem</span>
+                </button>
+            </div>
         </div>
     </section>
 
-    @if (errorMessage is not null)
+    @if (infoMessage is not null)
+    {
+        <div class="rounded-2xl border border-sky-200 bg-sky-50 px-1 py-1 text-sm text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@infoMessage</div>
+    }
+    else if (errorMessage is not null)
     {
         <div class="rounded-2xl border border-rose-200 bg-rose-50 px-1 py-1 text-sm text-rose-700 dark:border-rose-900/70 dark:bg-rose-950/50 dark:text-rose-300">@errorMessage</div>
     }
@@ -147,6 +155,7 @@ new Dictionary<string, object>
 }, DialogSize.ExtraLarge);
     private List<ProjectTaskListItemDto>? tasks;
     private string? errorMessage;
+    private string? infoMessage;
     List<int> ColspanTaskIDs = [];
     private void ConfirmDelete(ProjectTaskListItemDto task, ResourceTaskIndexDto res)
     => MHD.DeleteMessage(res.DisplayName, EventCallback.Factory.Create(this, () => RemoveAsync(task, res)));
@@ -188,8 +197,12 @@ new Dictionary<string, object>
         catch (Exception ex)
         {
             errorMessage = ex.Message;
+            infoMessage = null;
         }
     }
+
+
+
 
     private void OpenEditor(int id)
     {
@@ -198,7 +211,7 @@ new Dictionary<string, object>
         {
             [nameof(TaskDLFormUI.TaskId)] = id,
             [nameof(TaskDLFormUI.Saved)] = EventCallback.Factory.Create<bool>(this, ReloadAsync),
-        });
+        } , DialogSize.ExtraLarge);
     }
 
     private void OpenConditions(int id, string name)

@@ -41,7 +41,7 @@ namespace ProjectManagement.Adminstrator.Helper
 
             // div الخارجي لكل مجلد
             builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "style", $"margin-left:{level * 16}px");
+            builder.AddAttribute(1, "style", $"margin-left:{level * 15}px");
 
             // أيقونة المجلد أو الملف
             builder.OpenElement(2, "span");
@@ -58,7 +58,7 @@ namespace ProjectManagement.Adminstrator.Helper
             builder.CloseElement(); // span الأيقونة
 
             // اسم المجلد
-            string classList = $"cursor-pointer px-1 py-0.5 rounded {GetClass(selectedFolderIds.Contains(folder.Id))} hover:bg-gray-200 dark:hover:bg-gray-700";
+            string classList = $"cursor-pointer px-0.5 py-0.5 rounded {GetClass(selectedFolderIds.Contains(folder.Id))} hover:bg-gray-200 dark:hover:bg-gray-700";
             builder.OpenElement(6, "span");
             builder.AddAttribute(7, "class", classList);
 
@@ -71,7 +71,7 @@ namespace ProjectManagement.Adminstrator.Helper
                 builder.AddEventPreventDefaultAttribute(10, "oncontextmenu", true);
             }
 
-            builder.AddContent(11, folder.DisplayName + folder.Id);
+            builder.AddContent(11, folder.DisplayName);
             builder.CloseElement(); // span اسم المجلد
 
             builder.CloseElement(); // div الخارجي

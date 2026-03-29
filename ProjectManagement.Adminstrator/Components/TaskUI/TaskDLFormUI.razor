@@ -4,24 +4,31 @@
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Entities.Tasks
 @using TaskResourceBlueprints.Services.ProjectTask
+@using System.Globalization
 @inject ITaskDefinitionService TaskService
 @inherits AppComponentBase
 
-<div class="space-y-3 text-slate-900 dark:text-slate-100">
-    <EditForm Model="UpdateForm" OnValidSubmit="HandleSubmit" class="space-y-3">
+<div class="space-y-1.5 text-slate-900 dark:text-slate-100">
+    <EditForm Model="UpdateForm" OnValidSubmit="HandleSubmit" class="space-y-1.5">
         <DataAnnotationsValidator />
-        <ValidationSummary class="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-sm text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300" />
+        @if (!string.IsNullOrWhiteSpace(FormErrorMessage))
+        {
+            <div class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-sm text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                @FormErrorMessage
+            </div>
+        }
+        <ValidationSummary class="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-sm text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300" />
 
-        <section class="overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
-            <div class="border-b border-slate-200 px-3.5 py-2 dark:border-slate-800">
-                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Task definition</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Configure the action, catalog grouping, quantities, and visibility of this task blueprint.</p>
+        <section class="overflow-hidden rounded-lg border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="border-b border-slate-200 px-2.5 py-1.5 dark:border-slate-800">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Task definition</h3>
+                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Configure the action, catalog grouping, quantities, and visibility of this task blueprint.</p>
             </div>
 
-            <div class="grid grid-cols-1 gap-3.5 px-3.5 py-2 md:grid-cols-2 xl:grid-cols-3">
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Action</label>
-                    <InputSelect @bind-Value="UpdateForm.ActionId" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+            <div class="grid grid-cols-1 gap-2 px-2.5 py-1.5 md:grid-cols-2 xl:grid-cols-3">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Action</label>
+                    <InputSelect @bind-Value="UpdateForm.ActionId" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                         <option value="">Select Action</option>
                         @if (ActionsTasks != null)
                         {
@@ -33,9 +40,9 @@
                     </InputSelect>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Location</label>
-                    <InputSelect @bind-Value="UpdateForm.LocationId" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Location</label>
+                    <InputSelect @bind-Value="UpdateForm.LocationId" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                         <option value="">Select Location</option>
                         @if (LocationsList != null)
                         {
@@ -47,9 +54,9 @@
                     </InputSelect>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Fall</label>
-                    <InputSelect @bind-Value="UpdateForm.FallId" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Fall</label>
+                    <InputSelect @bind-Value="UpdateForm.FallId" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                         <option value="">Select Fall</option>
                         @if (FallsList != null)
                         {
@@ -61,9 +68,9 @@
                     </InputSelect>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">ActionType</label>
-                    <InputSelect @bind-Value="UpdateForm.ActionTypeId" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">ActionType</label>
+                    <InputSelect @bind-Value="UpdateForm.ActionTypeId" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                         <option value="">Select ActionType</option>
                         @if (ActionTypesList != null)
                         {
@@ -75,24 +82,24 @@
                     </InputSelect>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.code</label>
-                    <InputText @bind-Value="UpdateForm.Code" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.code</label>
+                    <InputText @bind-Value="UpdateForm.Code" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
-                    <InputText @bind-Value="UpdateForm.DisplayName" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.name</label>
+                    <InputText @bind-Value="UpdateForm.DisplayName" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.responsible</label>
-                    <InputText @bind-Value="UpdateForm.Responsible" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.responsible</label>
+                    <InputText @bind-Value="UpdateForm.Responsible" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Groups</label>
-                    <select class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Groups</label>
+                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                             @onchange="ChangeGroup">
                         <option value="">Select Group</option>
                         @if (Groups != null)
@@ -107,9 +114,9 @@
 
                 @if (SelectedGroup != null && UpdateForm.UnitGroupId.HasValue)
                 {
-                    <div class="space-y-1.5">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Units</label>
-                        <InputSelect @bind-Value="UpdateForm.UnitCode" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                    <div class="space-y-1">
+                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Units</label>
+                        <InputSelect @bind-Value="UpdateForm.UnitCode" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                             <option value="">Select Unit</option>
                             @foreach (var item in SelectedGroup.Keys)
                             {
@@ -119,9 +126,9 @@
                     </div>
                 }
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Status</label>
-                    <InputSelect @bind-Value="UpdateForm.Status" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Status</label>
+                    <InputSelect @bind-Value="UpdateForm.Status" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                         <option value="@TaskStatusEnum.ToPlan" selected="@(UpdateForm.Status == TaskStatusEnum.ToPlan)">@TaskStatusEnum.ToPlan</option>
                         <option value="@TaskStatusEnum.ToDo" selected="@(UpdateForm.Status == TaskStatusEnum.ToDo)">@TaskStatusEnum.ToDo</option>
                         <option value="@TaskStatusEnum.UnderWorking" selected="@(UpdateForm.Status == TaskStatusEnum.UnderWorking)">@TaskStatusEnum.UnderWorking</option>
@@ -129,77 +136,89 @@
                     </InputSelect>
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.quantity</label>
-                    <InputNumber @bind-Value="UpdateForm.Quantity" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.quantity</label>
+                    <input type="text"
+                           inputmode="decimal"
+                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                           value="@QuantityText"
+                           @oninput="OnQuantityInput" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor1</label>
-                    <InputNumber @bind-Value="UpdateForm.ChangeFactor1" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor1</label>
+                    <input type="text"
+                           inputmode="decimal"
+                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                           value="@ChangeFactor1Text"
+                           @oninput="OnChangeFactor1Input" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor2</label>
-                    <InputNumber @bind-Value="UpdateForm.ChangeFactor2" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor2</label>
+                    <input type="text"
+                           inputmode="decimal"
+                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                           value="@ChangeFactor2Text"
+                           @oninput="OnChangeFactor2Input" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Thickness</label>
-                    <InputNumber @bind-Value="UpdateForm.Thickness" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Thickness</label>
+                    <InputNumber @bind-Value="UpdateForm.Thickness" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Width</label>
-                    <InputNumber @bind-Value="UpdateForm.Width" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Width</label>
+                    <InputNumber @bind-Value="UpdateForm.Width" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
 
-                <div class="space-y-1.5">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Length</label>
-                    <InputNumber @bind-Value="UpdateForm.Length" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Length</label>
+                    <InputNumber @bind-Value="UpdateForm.Length" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
 
                 <div class="md:col-span-2 xl:col-span-3">
-                    <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-slate-700">
-                        <InputCheckbox @bind-Value="UpdateForm.IsActive" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500/40 dark:border-slate-600 dark:bg-slate-950" />
+                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-slate-700">
+                        <InputCheckbox @bind-Value="UpdateForm.IsActive" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500/40 dark:border-slate-600 dark:bg-slate-950" />
                         <span>@CalcResource.active</span>
                     </label>
                 </div>
 
                 <div class="md:col-span-2 xl:col-span-3">
-                    <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-slate-700">
-                        <InputCheckbox @bind-Value="UpdateForm.Uncontrollable" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500/40 dark:border-slate-600 dark:bg-slate-950" />
+                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-slate-700">
+                        <InputCheckbox @bind-Value="UpdateForm.Uncontrollable" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500/40 dark:border-slate-600 dark:bg-slate-950" />
                         <span>Hide the resource and show the total cost only (UE).</span>
                     </label>
                 </div>
 
-                <div class="space-y-1.5 md:col-span-2 xl:col-span-3">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">@CalcResource.note</label>
-                    <InputTextArea @bind-Value="UpdateForm.Note" class="block min-h-28 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1 md:col-span-2 xl:col-span-3">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.note</label>
+                    <InputTextArea @bind-Value="UpdateForm.Note" class="block min-h-20 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
 
-                <div class="space-y-1.5 md:col-span-2 xl:col-span-3">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Admin @CalcResource.note</label>
-                    <InputTextArea @bind-Value="UpdateForm.AdminNote" class="block min-h-28 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
+                <div class="space-y-1 md:col-span-2 xl:col-span-3">
+                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Admin @CalcResource.note</label>
+                    <InputTextArea @bind-Value="UpdateForm.AdminNote" class="block min-h-20 w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                 </div>
             </div>
         </section>
 
-        <section class="overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
-            <div class="border-b border-slate-200 px-3.5 py-2 dark:border-slate-800">
-                <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Visible folders</h3>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Select the catalog folders where this task definition should appear.</p>
+        <section class="overflow-hidden rounded-lg border border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
+            <div class="border-b border-slate-200 px-2.5 py-1.5 dark:border-slate-800">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Visible folders</h3>
+                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Select the catalog folders where this task definition should appear.</p>
             </div>
 
-            <div class="flex flex-wrap gap-3 px-3.5 py-2">
+            <div class="flex flex-wrap gap-1.5 px-2.5 py-1.5">
                 @if (Folders != null)
                 {
                     foreach (var folder in Folders)
                     {
-                        <label class="inline-flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-slate-700">
+                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-sm text-slate-700 transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-slate-700">
                             <input type="checkbox"
                                    @onchange="() => ToggleFolder(folder.Id)"
-                                   class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500/40 dark:border-slate-600 dark:bg-slate-950"
+                                   class="h-3.5 w-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500/40 dark:border-slate-600 dark:bg-slate-950"
                                    checked="@(UpdateForm.VisibleFolderIds.Any(x => x == folder.Id))" />
                             <span>@folder.DisplayName</span>
                         </label>
@@ -208,14 +227,14 @@
             </div>
         </section>
 
-        <div class="flex flex-wrap items-center justify-end gap-3">
+        <div class="flex flex-wrap items-center justify-end gap-2">
             <button type="submit"
-                    class="inline-flex items-center justify-center rounded-xl border border-emerald-600 bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/30 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400">
+                    class="inline-flex items-center justify-center rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400">
                 @ResourceApp.save
             </button>
             <button type="button"
                     @onclick="Close"
-                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-300/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800">
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800">
                 @ResourceApp.cancel
             </button>
         </div>
@@ -250,6 +269,10 @@
     private List<LocationEntity> LocationsList = new();
     private List<TaskUnitGroup> Groups = new();
     private List<ResourceCategory> Folders = new();
+    private string QuantityText { get; set; } = string.Empty;
+    private string ChangeFactor1Text { get; set; } = "1";
+    private string ChangeFactor2Text { get; set; } = "1";
+    private string? FormErrorMessage { get; set; }
 
     private TaskUnitGroup? SelectedGroup => Groups.FirstOrDefault(g => g.Id == UpdateForm.UnitGroupId);
     [Inject] private ITaskDefinitionQueryService TaskQueries { get; set; } = default!;
@@ -268,6 +291,8 @@
         Folders = folders.ToList();
         if (TaskId is > 0)
             UpdateForm = await TaskQueries.GetForEditAsync(TaskId.Value, CancellationToken.None);
+
+        SyncNumericInputs();
     }
 
     private void ToggleFolder(int folderId)
@@ -280,6 +305,19 @@
 
     private async Task HandleSubmit()
     {
+        if (!TryParseNullableDecimalInput(QuantityText, out var quantity) ||
+            !TryParseDecimalInput(ChangeFactor1Text, out var factor1) ||
+            !TryParseDecimalInput(ChangeFactor2Text, out var factor2))
+        {
+            FormErrorMessage = "Quantity, Change Factor1 and Change Factor2 must be valid numbers.";
+            return;
+        }
+
+        FormErrorMessage = null;
+        UpdateForm.Quantity = quantity;
+        UpdateForm.ChangeFactor1 = factor1;
+        UpdateForm.ChangeFactor2 = factor2;
+
         if (UpdateForm.Id > 0)
             await TaskService.UpdateAsync(UpdateForm, CancellationToken.None);
         else
@@ -292,5 +330,75 @@
     private void Close()
     {
         MHD.Modal.Close();
+    }
+
+    private void OnChangeFactor1Input(ChangeEventArgs e)
+    {
+        ChangeFactor1Text = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimalInput(ChangeFactor1Text, out var value))
+        {
+            UpdateForm.ChangeFactor1 = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnQuantityInput(ChangeEventArgs e)
+    {
+        QuantityText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableDecimalInput(QuantityText, out var value))
+        {
+            UpdateForm.Quantity = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnChangeFactor2Input(ChangeEventArgs e)
+    {
+        ChangeFactor2Text = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimalInput(ChangeFactor2Text, out var value))
+        {
+            UpdateForm.ChangeFactor2 = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void SyncNumericInputs()
+    {
+        QuantityText = FormatNullableDecimal(UpdateForm.Quantity);
+        ChangeFactor1Text = FormatDecimal(UpdateForm.ChangeFactor1);
+        ChangeFactor2Text = FormatDecimal(UpdateForm.ChangeFactor2);
+    }
+
+    private static string FormatDecimal(decimal value)
+        => value.ToString("0.######", CultureInfo.CurrentCulture);
+
+    private static string FormatNullableDecimal(decimal? value)
+        => value?.ToString("0.######", CultureInfo.CurrentCulture) ?? string.Empty;
+
+    private static bool TryParseDecimalInput(string? text, out decimal value)
+    {
+        if (decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out value))
+            return true;
+
+        var normalized = text?.Replace(',', '.');
+        return decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static bool TryParseNullableDecimalInput(string? text, out decimal? value)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            value = null;
+            return true;
+        }
+
+        if (TryParseDecimalInput(text, out var parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = null;
+        return false;
     }
 }

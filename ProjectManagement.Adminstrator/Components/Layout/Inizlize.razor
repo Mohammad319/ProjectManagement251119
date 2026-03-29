@@ -1,0 +1,74 @@
+﻿@page "/newset"
+@using TaskResourceBlueprints.Services.Demo
+@inject IConstructionDemoDataService DemoDataService
+@inject MhdServices MHD
+
+<button type="button"
+        @onclick="PromptSeedDemoData"
+        disabled="@isSeedingDemoData"
+        class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+    <span>@(isSeedingDemoData ? "Loading demo..." : "Load demo data")</span>
+</button>
+
+@code {
+    private bool isSeedingDemoData;
+    private string? errorMessage;
+    private string? infoMessage;
+
+    private void PromptSeedDemoData()
+    {
+        if (isSeedingDemoData)
+        {
+            return;
+        }
+
+        MHD.MessageYesNo(
+            "Load demo construction data",
+            "This will add sample folders, resources, property groups, lookups, unit groups, and tasks without deleting your existing data.",
+            MhdState.Info,
+            EventCallback.Factory.Create(this, SeedDemoDataAsync));
+    }
+    private async Task SeedDemoDataAsync()
+    {
+        if (isSeedingDemoData)
+        {
+            return;
+        }
+
+        isSeedingDemoData = true;
+        errorMessage = null;
+        infoMessage = null;
+        MHD.Modal.Close();
+        StateHasChanged();
+
+        try
+        {
+            var result = await DemoDataService.SeedAsync(CancellationToken.None);
+            infoMessage = BuildSeedSummary(result);
+
+            MHD.Notifications(ToastType.Info, true, "Demo data");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            infoMessage = null;
+            MHD.MessageOk("Demo data error", ex.Message, MhdState.Danger);
+        }
+        finally
+        {
+            isSeedingDemoData = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string BuildSeedSummary(ConstructionDemoSeedResult result)
+    {
+        if (!result.HasChanges)
+        {
+            return "Demo data is already available. No new records were needed.";
+        }
+
+        return $"Demo data ready. Added {result.FoldersCreated} folders, {result.ResourcesCreated} resources, {result.PropertyGroupsCreated} property groups, {result.PropertiesCreated} properties, {result.LookupsCreated} lookup items, {result.UnitGroupsCreated} unit groups, {result.TasksCreated} tasks, and {result.AssignmentsCreated} task-resource assignments.";
+    }
+
+}

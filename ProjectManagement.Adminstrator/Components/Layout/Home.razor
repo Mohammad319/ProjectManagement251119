@@ -11,39 +11,27 @@
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = PMRolesConst.APP.AdminManger)]
 
-<div class="grid gap-4 xl:grid-cols-12">
-    <aside class="xl:col-span-3 2xl:col-span-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="mb-4 border-b border-slate-200 pb-4 dark:border-slate-800">
-            <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-                Admin
-            </div>
+<div class="grid gap-1 grid-cols-[200px_minmax(0,1fr)]">
+    <aside class="w-[200px] rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
 
-            <h1 class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                Control Center
-            </h1>
-
-            <p class="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-400">
-                Global structures, tenants, users, logs, units, and blueprint data.
-            </p>
-        </div>
-
-        <nav class="space-y-2">
+        <nav class="space-y-1">
             <button type="button" class="@NavButtonClass(null)" @onclick="() => Component = null">Overview</button>
             <button type="button" class="@NavButtonClass(typeof(FolderTree2UI))" @onclick="() => Component = typeof(FolderTree2UI)">Folders</button>
-            <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">Site Administrators</button>
-            <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
-            <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
             <button type="button" class="@NavButtonClass(typeof(ControlTaskStatusUI))" @onclick="() => Component = typeof(ControlTaskStatusUI)">Actions</button>
             <button type="button" class="@NavButtonClass(typeof(TaskDLIndexUI))" @onclick="() => Component = typeof(TaskDLIndexUI)">Task &amp; Question</button>
             <button type="button" class="@NavButtonClass(typeof(UnitsGroupIndexUI))" @onclick="() => Component = typeof(UnitsGroupIndexUI)">Units</button>
             <button type="button" class="@NavButtonClass(typeof(PropertyGroupsUI))" @onclick="() => Component = typeof(PropertyGroupsUI)">Properties</button>
+            <button type="button" class="@NavButtonClass(typeof(UserAppUI))" @onclick="() => Component = typeof(AppUser.UserAppUI)">Site Administrators</button>
+            <button type="button" class="@NavButtonClass(typeof(Tenant.IndexUI))" @onclick="() => Component = typeof(Tenant.IndexUI)">@AppControll.tenant</button>
+            <button type="button" class="@NavButtonClass(typeof(LogUI))" @onclick="() => Component = typeof(LogUI)">Logs</button>
+
         </nav>
     </aside>
 
-    <section class="min-w-0 xl:col-span-9 2xl:col-span-10 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section class="min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         @if (Component is not null)
         {
-            <div class="min-w-0 overflow-x-auto p-4 lg:p-5">
+            <div class="min-w-0 overflow-x-auto p-1 lg:p-2">
                 <DynamicComponent Type="Component" />
             </div>
         }
@@ -67,12 +55,10 @@
 </div>
 
 @code {
-
-
     private Type? Component;
 
     private string NavButtonClass(Type? cmp)
         => Component == cmp
-            ? "flex w-full items-center rounded-xl bg-blue-600 px-4 py-2.5 text-left text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
-            : "flex w-full items-center rounded-xl px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white";
+            ? "flex w-full items-center rounded-xl bg-blue-600 px-3 py-2.5 text-left text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+            : "flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white";
 }

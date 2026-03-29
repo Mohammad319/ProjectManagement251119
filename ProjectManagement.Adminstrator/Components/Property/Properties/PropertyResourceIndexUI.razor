@@ -6,17 +6,17 @@
 @using ProjectManagement.Adminstrator.Constants
 @inherits AppComponentBase
 @inject IResourceAttributeService ResourcePropertiesService
-<div class="space-y-3 text-slate-900 dark:text-slate-100">
+<div class="space-y-1 text-slate-900 dark:text-slate-100">
     <div class="rounded-xl border border-slate-200 px-1 py-1 shadow-sm dark:border-slate-800">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-1">
             <div class="min-w-0">
-                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="() => UpdateForm()" title="@AppLoc[nameof(ResourceApp.newItem)]" aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
+                <button type="button" class="inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" @onclick="() => UpdateForm()" title="@AppLoc[nameof(ResourceApp.newItem)]" aria-label="@AppLoc[nameof(ResourceApp.newItem)]">
                     <span aria-hidden="true">@((MarkupString)Icons.Plus)</span>
                     <span>@AppLoc[nameof(ResourceApp.newItem)]</span>
                 </button>
             </div>
 
-            <span class="inline-flex items-center rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold dark:border-slate-700">@PropertiesList.Count items</span>
+            <span class="inline-flex items-center rounded-full border border-slate-200 px-1 py-0.5 text-[11px] font-semibold dark:border-slate-700">@PropertiesList.Count items</span>
         </div>
     </div>
 

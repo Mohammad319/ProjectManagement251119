@@ -7,11 +7,9 @@
 @inherits AppComponentBase
 @inject IEntityService<ActionTypeEntity> service
 
-<div class="space-y-1">
-    <div class="flex flex-col gap-1 rounded-[12px] border border-slate-200/80 bg-white/90 p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-            <h3 class="mt-2 text-xl font-semibold text-slate-100">Action type</h3>
-            <p class="mt-2 text-sm text-slate-400">Manage action type values used by tasks and resources.</p>
+<div class="flex flex-col gap-1 rounded-[12px] border border-slate-200/80 bg-white/90 px-3 py-1 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:flex-row lg:items-center lg:justify-between">
+    <div>
+        <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">Manage action type values used by tasks and resources.</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-1">
@@ -72,7 +70,6 @@
             @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
         </div>
     }
-</div>
 
 @code {
     bool IsVisible = true;

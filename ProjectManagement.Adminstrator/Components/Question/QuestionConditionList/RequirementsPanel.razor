@@ -78,43 +78,43 @@
     };
 }
 
-<div class="space-y-2">
+<div class="space-y-0.5">
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-        <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-1 border-b border-slate-200 px-1.5 py-0.5 dark:border-slate-800">
             <div>
                 <h4 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["choiceRequirements"]</h4>
             </div>
 
-            <div class="flex items-center gap-1.5">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <div class="flex items-center gap-0.5">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                     @(Condition?.OptionRules?.Count ?? 0)
                 </span>
 
-                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
                         @onclick="AddChoiceReq">
                     @AppLoc["add"]
                 </button>
             </div>
         </div>
 
-        <div class="px-2.5 py-2">
+        <div class="px-1.5 py-0.5">
             @if (Condition?.OptionRules == null || Condition.OptionRules.Count == 0)
             {
-                <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">
+                <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">
                     @AppLoc["none"]
                 </div>
             }
             else
             {
-                <div class="space-y-2">
+                <div class="space-y-0.5">
                     @foreach (var r in Condition.OptionRules)
                     {
-                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
-                            <div class="flex min-w-[1080px] flex-nowrap items-end gap-2">
-                                <div class="w-[260px] shrink-0 space-y-1">
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60" @key="@(r.Id != 0 ? "dg" + r.Id : r)">
+                            <div class="flex min-w-[1080px] flex-nowrap items-end gap-1">
+                                <div class="w-[260px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["group"]</label>
-                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             value="@r.QuestionGroupId"
                                             @onchange="e => OnChoiceGroupChanged(r, e)">
                                         <option value="0">@AppLoc["selectPlaceholder"]</option>
@@ -125,9 +125,9 @@
                                     </select>
                                 </div>
 
-                                <div class="w-[320px] shrink-0 space-y-1">
+                                <div class="w-[320px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceOption"]</label>
-                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             @bind="r.OptionId">
                                         <option value="0">@AppLoc["selectPlaceholder"]</option>
                                         @foreach (var opt in GetLocalChoiceOptions(r.QuestionGroupId))
@@ -137,15 +137,15 @@
                                     </select>
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["groupKey"]</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.GroupKey" />
                                 </div>
 
                                 <div class="shrink-0">
-                                    <button class="inline-flex h-[31px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-2.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                                    <button class="inline-flex h-[28px] items-center justify-center gap-0.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
                                             title="@AppLoc["remove"]"
                                             @onclick="() => RemoveChoiceReq(r)">
                                         @AppLoc["remove"]
@@ -160,40 +160,40 @@
     </section>
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-        <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-1 border-b border-slate-200 px-1.5 py-0.5 dark:border-slate-800">
             <div>
                 <h4 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["resourceRequirements"]</h4>
             </div>
 
-            <div class="flex items-center gap-1.5">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <div class="flex items-center gap-0.5">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                     @(Condition?.ResourceRules?.Count ?? 0)
                 </span>
 
-                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
                         @onclick="AddResReq">
                     @AppLoc["add"]
                 </button>
             </div>
         </div>
 
-        <div class="px-2.5 py-2">
+        <div class="px-1.5 py-0.5">
             @if (Condition?.ResourceRules == null || Condition.ResourceRules.Count == 0)
             {
-                <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">
+                <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">
                     @AppLoc["none"]
                 </div>
             }
             else
             {
-                <div class="space-y-2">
+                <div class="space-y-0.5">
                     @foreach (var r in Condition.ResourceRules)
                     {
-                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
-                            <div class="flex min-w-[1080px] flex-nowrap items-end gap-2">
-                                <div class="w-[260px] shrink-0 space-y-1">
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60">
+                            <div class="flex min-w-[1080px] flex-nowrap items-end gap-1">
+                                <div class="w-[260px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["group"]</label>
-                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             value="@r.SelectorId"
                                             @onchange="e => OnResGroupChanged(r, e)">
                                         <option value="0">@AppLoc["selectPlaceholder"]</option>
@@ -204,9 +204,9 @@
                                     </select>
                                 </div>
 
-                                <div class="w-[320px] shrink-0 space-y-1">
+                                <div class="w-[320px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["item"]</label>
-                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             @bind="r.SelectorItemId">
                                         <option value="0">@AppLoc["selectPlaceholder"]</option>
                                         @foreach (var it in GetResourceItems(r.SelectorId))
@@ -216,15 +216,15 @@
                                     </select>
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["groupKey"]</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.GroupKey" />
                                 </div>
 
                                 <div class="shrink-0">
-                                    <button class="inline-flex h-[31px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-2.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                                    <button class="inline-flex h-[28px] items-center justify-center gap-0.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
                                             title="@AppLoc["remove"]"
                                             @onclick="() => RemoveResReq(r)">
                                         @AppLoc["remove"]
@@ -239,40 +239,40 @@
     </section>
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-        <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-1 border-b border-slate-200 px-1.5 py-0.5 dark:border-slate-800">
             <div>
                 <h4 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["numericRequirements"]</h4>
             </div>
 
-            <div class="flex items-center gap-1.5">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <div class="flex items-center gap-0.5">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                     @(Condition?.NumericRules?.Count ?? 0)
                 </span>
 
-                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
                         @onclick="AddNumReq">
                     @AppLoc["add"]
                 </button>
             </div>
         </div>
 
-        <div class="px-2.5 py-2">
+        <div class="px-1.5 py-0.5">
             @if (Condition?.NumericRules == null || Condition.NumericRules.Count == 0)
             {
-                <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">
+                <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">
                     @AppLoc["none"]
                 </div>
             }
             else
             {
-                <div class="space-y-2">
+                <div class="space-y-0.5">
                     @foreach (var r in Condition.NumericRules)
                     {
-                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
-                            <div class="flex min-w-[980px] flex-nowrap items-end gap-2">
-                                <div class="w-[300px] shrink-0 space-y-1">
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60">
+                            <div class="flex min-w-[980px] flex-nowrap items-end gap-1">
+                                <div class="w-[300px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["group"]</label>
-                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             value="@r.NumericQuestionId"
                                             @onchange="e => OnNumericGroupChanged(r, e)">
                                         <option value="0">@AppLoc["selectPlaceholder"]</option>
@@ -283,29 +283,29 @@
                                     </select>
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.MinAllowedValue" />
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.MaxAllowedValue" />
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["groupKey"]</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.GroupKey" />
                                 </div>
 
                                 <div class="shrink-0">
-                                    <button class="inline-flex h-[31px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-2.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                                    <button class="inline-flex h-[28px] items-center justify-center gap-0.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
                                             title="@AppLoc["remove"]"
                                             @onclick="() => RemoveNumReq(r)">
                                         @AppLoc["remove"]
@@ -320,40 +320,40 @@
     </section>
 
     <section class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-        <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-1 border-b border-slate-200 px-1.5 py-0.5 dark:border-slate-800">
             <div>
                 <h4 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["variableRequirements"]</h4>
             </div>
 
-            <div class="flex items-center gap-1.5">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <div class="flex items-center gap-0.5">
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                     @(Condition?.VariableRules?.Count ?? 0)
                 </span>
 
-                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
                         @onclick="AddVarReq">
                     @AppLoc["add"]
                 </button>
             </div>
         </div>
 
-        <div class="px-2.5 py-2">
+        <div class="px-1.5 py-0.5">
             @if (Condition?.VariableRules == null || Condition.VariableRules.Count == 0)
             {
-                <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">
+                <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">
                     @AppLoc["none"]
                 </div>
             }
             else
             {
-                <div class="space-y-2">
+                <div class="space-y-0.5">
                     @foreach (var r in Condition.VariableRules)
                     {
-                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
-                            <div class="flex min-w-[980px] flex-nowrap items-end gap-2">
-                                <div class="w-[300px] shrink-0 space-y-1">
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60" @key="@(r.Id != 0 ? "vr" + r.Id : r)">
+                            <div class="flex min-w-[980px] flex-nowrap items-end gap-1">
+                                <div class="w-[300px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["variable"]</label>
-                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                    <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             value="@r.VariableName"
                                             @onchange="e => r.VariableName = Convert.ToString(e.Value) ?? string.Empty">
                                         <option value="">@AppLoc["selectPlaceholder"]</option>
@@ -367,29 +367,29 @@
                                     </select>
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.MinAllowedValue" />
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.MaxAllowedValue" />
                                 </div>
 
-                                <div class="w-[120px] shrink-0 space-y-1">
+                                <div class="w-[120px] shrink-0 space-y-0.5">
                                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["groupKey"]</label>
                                     <input type="number"
-                                           class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                           class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                            @bind="r.GroupKey" />
                                 </div>
 
                                 <div class="shrink-0">
-                                    <button class="inline-flex h-[31px] items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-2.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                                    <button class="inline-flex h-[28px] items-center justify-center gap-0.5 whitespace-nowrap rounded-lg border border-rose-300 bg-transparent px-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
                                             title="@AppLoc["remove"]"
                                             @onclick="() => RemoveVarReq(r)">
                                         @AppLoc["remove"]

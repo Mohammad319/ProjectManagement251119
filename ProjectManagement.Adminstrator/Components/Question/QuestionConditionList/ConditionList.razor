@@ -40,42 +40,42 @@
 
 @if (Conditions.Count == 0)
 {
-    <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noConditionsYet"]</div>
+    <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noConditionsYet"]</div>
 }
 else
 {
-    <div class="grid grid-cols-1 gap-2 xl:grid-cols-2">
+    <div class="grid grid-cols-1 gap-1 xl:grid-cols-2">
         @foreach (var c in Conditions)
         {
             <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 h-full overflow-hidden">
-                <div class="border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
-                    <div class="space-y-2">
+                <div class="border-b border-slate-200 px-1.5 py-0.5 dark:border-slate-800">
+                    <div class="space-y-0.5">
                         <div class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["logic"]</div>
-                        <div class="flex flex-wrap gap-1.5">
-                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@AppLoc["choiceResourceLogic"]: @FormatLogic(c.OptionResourceLogic)</span>
-                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@AppLoc["choiceNumericLogic"]: @FormatLogic(c.OptionNumericLogic)</span>
-                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@AppLoc["numericResourceLogic"]: @FormatLogic(c.NumericResourceLogic)</span>
+                        <div class="flex flex-wrap gap-0.5">
+                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@AppLoc["choiceResourceLogic"]: @FormatLogic(c.OptionResourceLogic)</span>
+                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@AppLoc["choiceNumericLogic"]: @FormatLogic(c.OptionNumericLogic)</span>
+                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@AppLoc["numericResourceLogic"]: @FormatLogic(c.NumericResourceLogic)</span>
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-1.5">
+                    <div class="flex flex-wrap items-center gap-0.5">
                         @if (c.Assignments.Count > 0)
                         {
-                            <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => ToggleResourceAssignments(c.Id)">
+                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => ToggleResourceAssignments(c.Id)">
                                 @AppLoc["resourceAssignments"]
                             </button>
                         }
-                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => OnEdit.InvokeAsync(c.Id)">@ResourceApp.edit</button>
-                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" @onclick="() => OnDelete.InvokeAsync(c.Id)">@ResourceApp.delete</button>
+                        <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => OnEdit.InvokeAsync(c.Id)">@ResourceApp.edit</button>
+                        <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" @onclick="() => OnDelete.InvokeAsync(c.Id)">@ResourceApp.delete</button>
                     </div>
                 </div>
 
-                <div class="px-2.5 py-2">
-                    <div class="grid grid-cols-1 gap-2 xl:grid-cols-3">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 p-2.5">
-                            <div class="mb-2 flex items-center justify-between gap-1.5">
+                <div class="px-1.5 py-0.5">
+                    <div class="grid grid-cols-1 gap-1 xl:grid-cols-3">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 p-1">
+                            <div class="mb-0.5 flex items-center justify-between gap-0.5">
                                 <div class="font-semibold text-slate-900 dark:text-slate-100">@AppLoc["choiceRequirements"]</div>
-                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.OptionRules.Count</span>
+                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.OptionRules.Count</span>
                             </div>
 
                             @if (c.OptionRules.Count == 0)
@@ -86,11 +86,11 @@ else
                             {
                                 @foreach (var set in GroupBySetKey(c.OptionRules, r => r.GroupKey))
                                 {
-                                    <div class="mb-3 last:mb-0">
-                                        <div class="mb-1">
-                                            <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@AppLoc["groupKey"] = @set.Key (@AppLoc["orText"])</span>
+                                    <div class="mb-0.5 last:mb-0">
+                                        <div class="mb-0.5">
+                                            <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@AppLoc["groupKey"] = @set.Key (@AppLoc["orText"])</span>
                                         </div>
-                                        <div class="space-y-1 text-xs">
+                                        <div class="space-y-0.5 text-xs">
                                             @foreach (var r in set)
                                             {
                                                 var g = ChoiceGroups.FirstOrDefault(x => x.Id == r.QuestionGroupId);
@@ -103,10 +103,10 @@ else
                             }
                         </div>
 
-                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 p-2.5">
-                            <div class="mb-2 flex items-center justify-between gap-1.5">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 p-1">
+                            <div class="mb-0.5 flex items-center justify-between gap-0.5">
                                 <div class="font-semibold text-slate-900 dark:text-slate-100">@AppLoc["resourceRequirements"]</div>
-                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.ResourceRules.Count</span>
+                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.ResourceRules.Count</span>
                             </div>
 
                             @if (c.ResourceRules.Count == 0)
@@ -117,11 +117,11 @@ else
                             {
                                 @foreach (var set in GroupBySetKey(c.ResourceRules, r => r.GroupKey))
                                 {
-                                    <div class="mb-3 last:mb-0">
-                                        <div class="mb-1">
-                                            <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@AppLoc["groupKey"] = @set.Key (@AppLoc["orText"])</span>
+                                    <div class="mb-0.5 last:mb-0">
+                                        <div class="mb-0.5">
+                                            <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@AppLoc["groupKey"] = @set.Key (@AppLoc["orText"])</span>
                                         </div>
-                                        <div class="space-y-1 text-xs">
+                                        <div class="space-y-0.5 text-xs">
                                             @foreach (var r in set)
                                             {
                                                 var g = ResourceGroups.FirstOrDefault(x => x.Id == r.SelectorId);
@@ -134,10 +134,10 @@ else
                             }
                         </div>
 
-                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 p-2.5">
-                            <div class="mb-2 flex items-center justify-between gap-1.5">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 p-1">
+                            <div class="mb-0.5 flex items-center justify-between gap-0.5">
                                 <div class="font-semibold text-slate-900 dark:text-slate-100">@AppLoc["numericRequirements"]</div>
-                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.NumericRules.Count</span>
+                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.NumericRules.Count</span>
                             </div>
 
                             @if (c.NumericRules.Count == 0)
@@ -148,11 +148,11 @@ else
                             {
                                 @foreach (var set in GroupBySetKey(c.NumericRules, r => r.GroupKey))
                                 {
-                                    <div class="mb-3 last:mb-0">
-                                        <div class="mb-1">
-                                            <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@AppLoc["groupKey"] = @set.Key (@AppLoc["orText"])</span>
+                                    <div class="mb-0.5 last:mb-0">
+                                        <div class="mb-0.5">
+                                            <span class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">@AppLoc["groupKey"] = @set.Key (@AppLoc["orText"])</span>
                                         </div>
-                                        <div class="space-y-1 text-xs">
+                                        <div class="space-y-0.5 text-xs">
                                             @foreach (var r in set)
                                             {
                                                 var g = NumericGroups.FirstOrDefault(x => x.Id == r.NumericQuestionId);
@@ -167,10 +167,10 @@ else
 
                     @if (ExpandedAssignmentConditionIds.Contains(c.Id))
                     {
-                        <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/70">
-                            <div class="mb-2 flex items-center justify-between gap-1.5">
+                        <div class="mt-0.5 rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/70">
+                            <div class="mb-0.5 flex items-center justify-between gap-0.5">
                                 <div class="font-semibold text-slate-900 dark:text-slate-100">@AppLoc["resourceAssignments"]</div>
-                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.Assignments.Count</span>
+                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@c.Assignments.Count</span>
                             </div>
 
                             @if (c.Assignments.Count == 0)
@@ -179,16 +179,16 @@ else
                             }
                             else
                             {
-                                <div class="space-y-2 text-xs">
+                                <div class="space-y-0.5 text-xs">
                                     @foreach (var a in c.Assignments)
                                     {
-                                        <div class="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900">
+                                        <div class="rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
                                             <div class="font-medium text-slate-900 dark:text-slate-100">@a.Resource?.Name</div>
-                                            <div class="mt-2 flex flex-wrap gap-1.5">
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor1 = @a.ChangeFactor1</span>
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor2 = @a.ChangeFactor2</span>
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.cap / @CalcResource.waste = @a.CapWaste</span>
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.baseCost = @a.BaseCost</span>
+                                            <div class="mt-0.5 flex flex-wrap gap-0.5">
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor1 = @a.ChangeFactor1</span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor2 = @a.ChangeFactor2</span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.cap / @CalcResource.waste = @a.CapWaste</span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.baseCost = @a.BaseCost</span>
                                             </div>
                                         </div>
                                     }

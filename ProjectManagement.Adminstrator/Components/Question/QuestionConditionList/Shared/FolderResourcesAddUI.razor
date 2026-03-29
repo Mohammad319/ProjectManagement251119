@@ -4,15 +4,19 @@
 @using TaskResourceBlueprints.Services.Resource
 @inject IResourceCategoryService ResourceCategoryService
 
-<div class="grid grid-cols-1 gap-2 xl:grid-cols-[220px_minmax(0,1fr)]">
+<div class="space-y-2">
     <div class="rounded-xl border border-slate-200 bg-white/90 p-2 dark:border-slate-700 dark:bg-slate-950/60">
-        @if (Folders != null)
+        @if (Folders != null && Folders.Count > 0)
         {
-            <div class="grid grid-cols-2 gap-1.5">
+            <div class="grid grid-cols-2 gap-1.5 xl:grid-cols-4">
                 @foreach (var r in Folders)
                 {
+                    var isSelected = Selected?.Id == r.Id;
+
                     <button type="button"
-                            class="inline-flex w-full items-center justify-between rounded-lg border border-blue-600 px-2 py-1.5 text-left text-[11px] text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white"
+                            class="@(isSelected
+                                                                                    ? "inline-flex min-h-[38px] w-full items-center justify-between rounded-lg border border-blue-600 bg-blue-600 px-2.5 py-1.5 text-left text-[11px] font-medium text-white shadow-sm transition hover:bg-blue-700 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400"
+                                                                                    : "inline-flex min-h-[38px] w-full items-center justify-between rounded-lg border border-blue-300 bg-white px-2.5 py-1.5 text-left text-[11px] font-medium text-blue-700 transition hover:border-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:bg-slate-950/60 dark:text-blue-300 dark:hover:border-blue-500 dark:hover:bg-slate-900")"
                             @onclick="async () => { await LoadResourcesAsync(r); }">
                         <span class="truncate">@r.DisplayName</span>
                     </button>
@@ -47,6 +51,14 @@
                         </tr>
                     }
                 }
+                else
+                {
+                    <tr>
+                        <td class="px-2 py-3 text-center text-[11px] text-slate-500 dark:text-slate-400">
+                            Select a category to show its resources.
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
@@ -59,11 +71,14 @@
 
     List<ResourceCategory> Folders { get; set; } = [];
     ResourceCategory? Selected;
+
     protected override async Task OnInitializedAsync()
     {
         Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(TaskId, CancellationToken.None))
-        .Select(f => new ResourceCategory() { Id = f.Id, DisplayName = f.DisplayName }).ToList();
+            .Select(f => new ResourceCategory() { Id = f.Id, DisplayName = f.DisplayName })
+            .ToList();
     }
+
     async Task AddDelete(ResourceDefinition res)
     {
         if (ResIds.Any(x => x == res.Id))
@@ -74,14 +89,17 @@
         {
             ResIds.Add(res.Id);
         }
+
         await OnSave.InvokeAsync(res);
     }
+
     async Task LoadResourcesAsync(ResourceCategory folders)
     {
         if (folders.Resources == null || folders.Resources.Count == 0)
         {
             folders.Resources = (await ResourceCategoryService.GetFolderResourcesAsync(folders.Id, CancellationToken.None)).ToList();
         }
+
         Selected = folders;
         StateHasChanged();
     }

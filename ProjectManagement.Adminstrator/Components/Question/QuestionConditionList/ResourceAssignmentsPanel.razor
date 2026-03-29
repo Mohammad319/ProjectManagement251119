@@ -180,17 +180,17 @@
 }
 
 <section class="rounded-xl border border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50 overflow-hidden">
-    <div class="border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
+    <div class="border-b border-slate-200 px-1.5 py-0.5 dark:border-slate-800">
         <div>
             <h4 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["resourceAssignments"]</h4>
         </div>
-        <div class="flex flex-wrap items-center gap-1.5">
-            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Condition.Assignments.Count</span>
+        <div class="flex flex-wrap items-center gap-0.5">
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@Condition.Assignments.Count</span>
         </div>
     </div>
 
-    <div class="px-2.5 py-2 space-y-2">
-        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
+    <div class="px-1.5 py-0.5 space-y-0.5">
+        <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60">
             <FolderResourcesAddUI TaskId="Condition.TaskId"
                                   ResIds="Condition.Assignments.Select(x => x.ResourceId).ToList()"
                                   OnSave="ToggleAssignment" />
@@ -198,243 +198,244 @@
 
         @if (Condition.Assignments.Count == 0)
         {
-            <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
+            <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
         }
         else
         {
-            <div class="space-y-2">
+            <div class="space-y-0.5">
                 @foreach (var a in Condition.Assignments)
                 {
                     <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80 overflow-hidden">
-                        <div class="border-b border-slate-200 px-2.5 py-2 dark:border-slate-800">
-                            <div>
-                                <h5 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@(a.Resource?.Name ?? $"{AppLoc["resource"]} #{a.ResourceId}")</h5>
+                        <div class="border-b border-slate-200 px-1.5 py-1 dark:border-slate-800">
+                            <div class="flex flex-wrap items-start justify-between gap-1">
+                                <div class="min-w-0">
+                                    <h5 class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@(a.Resource?.Name ?? $"{AppLoc["resource"]} #{a.ResourceId}")</h5>
+                                </div>
+
+                                <div class="flex flex-wrap items-center justify-end gap-1">
+                                    <span class="@(a.IsActive ? "inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200" : "inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300")">@(a.IsActive ? "ON" : "OFF")</span>
+
+                                    @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
+                                                                                                                 a.Resource?.ResType == ResourceTypesEnum.Worker)
+                                    {
+                                        <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/70"
+                                                @onclick="@(() => AddRole(a))">
+                                            @($"{AppLoc["add"]} {AppControll.capRole}")
+                                        </button>
+                                    }
+
+                                    <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/70"
+                                            @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">
+                                        @AppLoc["addEquation"]
+                                    </button>
+
+                                    <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                                            @onclick="() => RemoveAssignment(a)">
+                                        @AppLoc["remove"]
+                                    </button>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="flex flex-wrap items-center gap-1.5">
-                                <span class="@(a.IsActive ?"inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200" :"inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300")">@(a.IsActive ?"ON" :"OFF")</span>
-                                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" @onclick="() => RemoveAssignment(a)">@AppLoc["remove"]</button>
-                            </div>
-
-                        <div class="px-2.5 py-2 space-y-2">
+                        <div class="px-1.5 py-1 space-y-1">
                             <div class="overflow-x-auto">
-                                <div class="grid min-w-[1280px] grid-cols-12 items-end gap-2">
-                                <div class="space-y-1 col-span-3">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["resource"]</label>
-                                    <ResourceAutocomplete MinChars="2" PageSize="20"
-                                                          Value="a.ResourceId"
-                                                          ValueChanged="@(v => a.ResourceId = v ?? 0)"
-                                                          InitialName="@(a.Resource?.Name)" />
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor1</label>
-                                    <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor1" />
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor2</label>
-                                    <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor2" />
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
-                                        @if (a.Resource?.ResType == ResourceTypesEnum.Materials)
-                                        {
-                                            <span>@CalcResource.waste</span>
-                                        }
-                                        else
-                                        {
-                                            <span>@CalcResource.cap</span>
-                                        }
-                                    </label>
-                                    <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.CapWaste" />
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.baseCost</label>
-                                    <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.BaseCost" />
-                                </div>
-                                <div class="space-y-1">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["menuId"]</label>
-                                    <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.MenuId" />
-                                </div>
-                                <div class="space-y-1 col-span-2">
-                                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.active</label>
-                                    <div class="flex h-[34px] items-center rounded-lg border border-slate-300 bg-white px-2.5 dark:border-slate-700 dark:bg-slate-900">
-                                        <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="a.IsActive" />
+                                <div class="grid min-w-[1280px] grid-cols-[minmax(240px,2.2fr)_repeat(6,minmax(120px,1fr))] items-end gap-1.5">
+                                    <div class="space-y-0.5">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["resource"]</label>
+                                        <ResourceAutocomplete MinChars="2" PageSize="20"
+                                                              Value="a.ResourceId"
+                                                              ValueChanged="@(v => a.ResourceId = v ?? 0)"
+                                                              InitialName="@(a.Resource?.Name)" />
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor1</label>
+                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor1" />
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor2</label>
+                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor2" />
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                                            @if (a.Resource?.ResType == ResourceTypesEnum.Materials)
+                                            {
+                                                <span>@CalcResource.waste</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@CalcResource.cap</span>
+                                            }
+                                        </label>
+                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.CapWaste" />
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.baseCost</label>
+                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.BaseCost" />
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["menuId"]</label>
+                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.MenuId" />
+                                    </div>
+                                    <div class="space-y-0.5">
+                                        <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.active</label>
+                                        <div class="flex h-[31px] items-center rounded-lg border border-slate-300 bg-white px-1.5 dark:border-slate-700 dark:bg-slate-900">
+                                            <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800" @bind="a.IsActive" />
+                                        </div>
                                     </div>
                                 </div>
-                                </div>
-                            </div>
-
-                            <div class="flex flex-wrap items-center gap-1.5">
-                                @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
-                                     a.Resource?.ResType == ResourceTypesEnum.Worker)
-                                {
-                                    <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="@(() => AddRole(a))">@($"{AppLoc["add"]} {AppControll.capRole}")</button>
-                                }
-                                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="@(() => (a.Expressions ??= new()).Add(string.Empty))">@AppLoc["addEquation"]</button>
                             </div>
 
                             @if (a.Resource?.ResType == ResourceTypesEnum.MachinesAndEquipments ||
-                                 a.Resource?.ResType == ResourceTypesEnum.Worker)
+                                                                                                                     a.Resource?.ResType == ResourceTypesEnum.Worker)
                             {
-                                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2">
-                                    <div class="flex items-center justify-between gap-1.5">
-                                        <div>
-                                            <div class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppControll.capRole</div>
-                                        </div>
-                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@(a.CapacityRoles?.Count ?? 0)</span>
-                                    </div>
-
+                                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60 space-y-0.5">
+                           
                                     @if (a.CapacityRoles is not null && a.CapacityRoles.Count > 0)
                                     {
-                                        <div class="space-y-2">
+                                        <div class="space-y-0.5">
                                             @for (int i = 0; i < a.CapacityRoles.Count; i++)
                                             {
                                                 var index = i;
                                                 var role = a.CapacityRoles[index];
 
-                                                <div class="grid min-w-[760px] grid-cols-[56px_repeat(3,minmax(0,1fr))] items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800/60">
+                                                <div class="grid min-w-[760px] grid-cols-[56px_repeat(3,minmax(0,1fr))] items-end gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800/60">
                                                     <button type="button"
                                                             title="@AppLoc["remove"]"
-                                                            class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30 w-12"
+                                                            class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30 w-12"
                                                             @onclick="() => a.CapacityRoles.Remove(role)">
                                                         ✕
                                                     </button>
 
-                                                    <div class="space-y-1">
+                                                    <div class="space-y-0.5">
                                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
-                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Min" />
+                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Min" />
                                                     </div>
 
-                                                    <div class="space-y-1">
+                                                    <div class="space-y-0.5">
                                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
-                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Max" />
+                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Max" />
                                                     </div>
 
-                                                    <div class="space-y-1">
+                                                    <div class="space-y-0.5">
                                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.cap</label>
-                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Value" />
+                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Value" />
                                                     </div>
 
-                                                    <div class="flex items-end justify-center pb-2 text-xs font-medium text-slate-500 dark:text-slate-400">#@(index + 1)</div>
                                                 </div>
                                             }
                                         </div>
                                     }
-                                    else
-                                    {
-                                        <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
-                                    }
+
                                 </div>
                             }
 
                             @if (a.Expressions is not null && a.Expressions.Count > 0)
                             {
-                                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2">
-                                    <div class="flex items-center justify-between gap-1.5">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60 space-y-0.5">
+                                    <div class="flex items-center justify-between gap-0.5">
                                         <div>
                                             <div class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@CalcResource.Formulas</div>
                                         </div>
-                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@a.Expressions.Count</span>
+                                        <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@a.Expressions.Count</span>
                                     </div>
 
-                                    <div class="space-y-1.5">
+                                    <div class="space-y-0.5">
                                         @for (int i = 0; i < a.Expressions.Count; i++)
                                         {
                                             var index = i;
-                                            <div class="flex items-center gap-1.5">
-                                                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" @onclick="() => a.Expressions.RemoveAt(index)">✕</button>
-                                                <input type="text" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.Expressions[index]" />
+                                            <div class="flex items-center gap-0.5">
+                                                <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" @onclick="() => a.Expressions.RemoveAt(index)">✕</button>
+                                                <input type="text" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.Expressions[index]" />
                                             </div>
                                         }
                                     </div>
                                 </div>
                             }
 
-                            <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2">
-                                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                            <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60 space-y-0.5">
+                                <div class="flex flex-wrap items-center justify-between gap-0.5">
                                     <div>
                                         <div class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["bindingsEquations"]</div>
                                     </div>
 
                                     @if (CanAddBindingsFor(a))
                                     {
-                                        <div class="flex flex-wrap items-center gap-1.5">
-                                            <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => AddOptionBindingUI(a.Id)">@AppLoc["addChoiceBinding"]</button>
-                                            <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => AddNumericBindingUI(a.Id)">@AppLoc["addNumericBinding"]</button>
+                                        <div class="flex flex-wrap items-center gap-0.5">
+                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => AddOptionBindingUI(a.Id)">@AppLoc["addChoiceBinding"]</button>
+                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" @onclick="() => AddNumericBindingUI(a.Id)">@AppLoc["addNumericBinding"]</button>
                                         </div>
                                     }
                                     else
                                     {
-                                        <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">@AppLoc["saveConditionFirstToEnableBindings"]</span>
+                                        <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">@AppLoc["saveConditionFirstToEnableBindings"]</span>
                                     }
                                 </div>
 
                                 @if (OptBindsByRA.TryGetValue(a.Id, out var obList) && obList.Count > 0)
                                 {
-                                    <div class="space-y-2">
+                                    <div class="space-y-0.5">
                                         @foreach (var b in obList)
                                         {
-                                            <section class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2">
+                                            <section class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60 space-y-0.5">
                                                 <div class="overflow-x-auto">
-                                                    <div class="flex min-w-[980px] items-end justify-between gap-2">
-                                                        <div class="grid min-w-[760px] flex-1 grid-cols-2 items-end gap-2">
-                                                        <div class="space-y-1">
-                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceGroup"]</label>
-                                                            <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                                                                    value="@b.ChoiceGroupId"
-                                                                    aria-label="@AppLoc["choiceGroup"]"
-                                                                    @onchange="e => OnOptionGroupChanged(b, e)">
-                                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
-                                                                @foreach (var g in TaskChoiceGroups)
-                                                                {
-                                                                    <option value="@g.Id">@g.DisplayName</option>
-                                                                }
-                                                            </select>
+                                                    <div class="flex min-w-[980px] items-end justify-between gap-1">
+                                                        <div class="grid min-w-[760px] flex-1 grid-cols-2 items-end gap-1">
+                                                            <div class="space-y-0.5">
+                                                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceGroup"]</label>
+                                                                <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                                                                        value="@b.ChoiceGroupId"
+                                                                        aria-label="@AppLoc["choiceGroup"]"
+                                                                        @onchange="e => OnOptionGroupChanged(b, e)">
+                                                                    <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                                                    @foreach (var g in TaskChoiceGroups)
+                                                                    {
+                                                                        <option value="@g.Id">@g.DisplayName</option>
+                                                                    }
+                                                                </select>
+                                                            </div>
+
+                                                            <div class="space-y-0.5">
+                                                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceOption"]</label>
+                                                                <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind="b.ChoiceOptionId" aria-label="@AppLoc["choiceOption"]">
+                                                                    <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                                                    @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
+                                                                    {
+                                                                        <option value="@o.Id">@o.DisplayName</option>
+                                                                    }
+                                                                </select>
+                                                            </div>
                                                         </div>
 
-                                                        <div class="space-y-1">
-                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["choiceOption"]</label>
-                                                            <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind="b.ChoiceOptionId" aria-label="@AppLoc["choiceOption"]">
-                                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
-                                                                @foreach (var o in TaskChoiceGroups.FirstOrDefault(x => x.Id == b.ChoiceGroupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>())
-                                                                {
-                                                                    <option value="@o.Id">@o.DisplayName</option>
-                                                                }
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
-                                                        <div class="flex shrink-0 items-center gap-1.5">
-                                                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" title="@AppLoc["saveBinding"]" @onclick="async () => await OnSaveOption(a.Id, b)">@AppLoc["save"]</button>
-                                                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" title="@AppLoc["addEquation"]" @onclick="() => AddOptionEq(b)">@AppLoc["addEquation"]</button>
-                                                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["deleteBinding"]" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
+                                                        <div class="flex shrink-0 items-center gap-0.5">
+                                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-emerald-600 bg-emerald-600 px-1.5 py-0.5 text-[11px] font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" title="@AppLoc["saveBinding"]" @onclick="async () => await OnSaveOption(a.Id, b)">@AppLoc["save"]</button>
+                                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" title="@AppLoc["addEquation"]" @onclick="() => AddOptionEq(b)">@AppLoc["addEquation"]</button>
+                                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["deleteBinding"]" @onclick="async () => await RemoveOptionBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 @if (b.LastError is not null)
                                                 {
-                                                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">⚠ @b.LastError</div>
+                                                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">⚠ @b.LastError</div>
                                                 }
                                                 @if (b.SavedOk)
                                                 {
-                                                    <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">✓ @AppLoc["saved"]</div>
+                                                    <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">✓ @AppLoc["saved"]</div>
                                                 }
 
                                                 @if (b.Formulas.Count == 0)
                                                 {
-                                                    <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noFormulas"]</div>
+                                                    <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["noFormulas"]</div>
                                                 }
                                                 else
                                                 {
-                                                    <div class="space-y-1.5">
+                                                    <div class="space-y-0.5">
                                                         @for (int i = 0; i < b.Formulas.Count; i++)
                                                         {
                                                             var idx = i;
-                                                            <div class="flex items-center gap-1.5">
-                                                                <input class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
-                                                                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["removeEquation"]" @onclick="() => RemoveOptionEq(b, idx)">✕</button>
+                                                            <div class="flex items-center gap-0.5">
+                                                                <input class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
+                                                                <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["removeEquation"]" @onclick="() => RemoveOptionEq(b, idx)">✕</button>
                                                             </div>
                                                         }
                                                     </div>
@@ -446,59 +447,59 @@
 
                                 @if (NumBindsByRA.TryGetValue(a.Id, out var nbList) && nbList.Count > 0)
                                 {
-                                    <div class="space-y-2 pt-2">
-                                        <div class="flex items-center gap-1.5">
+                                    <div class="space-y-0.5 pt-1">
+                                        <div class="flex items-center gap-0.5">
                                             <div class="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">@AppLoc["numericBindings"]</div>
-                                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@nbList.Count</span>
+                                            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@nbList.Count</span>
                                         </div>
 
                                         @foreach (var b in nbList)
                                         {
-                                            <section class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-2">
+                                            <section class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/60 space-y-0.5">
                                                 <div class="overflow-x-auto">
-                                                    <div class="flex min-w-[1220px] items-end justify-between gap-2">
-                                                        <div class="grid min-w-[980px] flex-1 grid-cols-3 items-end gap-2">
-                                                        <div class="space-y-1">
-                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["numericGroup"]</label>
-                                                            <select class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind="b.NumericId" aria-label="@AppLoc["numericGroup"]">
-                                                                <option value="0">@AppLoc["selectPlaceholder"]</option>
-                                                                @foreach (var ng in TaskNumericGroups)
-                                                                {
-                                                                    <option value="@ng.Id">@ng.DisplayName</option>
-                                                                }
-                                                            </select>
+                                                    <div class="flex min-w-[1220px] items-end justify-between gap-1">
+                                                        <div class="grid min-w-[980px] flex-1 grid-cols-3 items-end gap-1">
+                                                            <div class="space-y-0.5">
+                                                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["numericGroup"]</label>
+                                                                <select class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" @bind="b.NumericId" aria-label="@AppLoc["numericGroup"]">
+                                                                    <option value="0">@AppLoc["selectPlaceholder"]</option>
+                                                                    @foreach (var ng in TaskNumericGroups)
+                                                                    {
+                                                                        <option value="@ng.Id">@ng.DisplayName</option>
+                                                                    }
+                                                                </select>
+                                                            </div>
+                                                            <div class="space-y-0.5">
+                                                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
+                                                                <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMinValue" placeholder="@AppControll.min" />
+                                                            </div>
+                                                            <div class="space-y-0.5">
+                                                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
+                                                                <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMaxValue" placeholder="@AppControll.max" />
+                                                            </div>
                                                         </div>
-                                                        <div class="space-y-1">
-                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
-                                                            <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMinValue" placeholder="@AppControll.min" />
-                                                        </div>
-                                                        <div class="space-y-1">
-                                                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
-                                                            <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMaxValue" placeholder="@AppControll.max" />
-                                                        </div>
-                                                    </div>
 
-                                                    <div class="flex flex-wrap items-center gap-1.5">
-                                                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" title="@AppLoc["saveNumericBinding"]" @onclick="async () => await OnSaveNumeric(a.Id, b)">@AppLoc["save"]</button>
-                                                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" title="@AppLoc["addEquation"]" @onclick="() => AddNumericEq(b)">@AppLoc["addEquation"]</button>
-                                                        <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["deleteNumericBinding"]" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
+                                                        <div class="flex flex-wrap items-center gap-0.5">
+                                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-emerald-600 bg-emerald-600 px-1.5 py-0.5 text-[11px] font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400" title="@AppLoc["saveNumericBinding"]" @onclick="async () => await OnSaveNumeric(a.Id, b)">@AppLoc["save"]</button>
+                                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-slate-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900" title="@AppLoc["addEquation"]" @onclick="() => AddNumericEq(b)">@AppLoc["addEquation"]</button>
+                                                            <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["deleteNumericBinding"]" @onclick="async () => await RemoveNumericBindingUIAsync(a.Id, b)">@ResourceApp.delete</button>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 @if (b.Formulas.Count == 0)
                                                 {
-                                                    <div class="flex min-h-[96px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
+                                                    <div class="flex min-h-[72px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1.5 py-0.5 text-center dark:border-slate-700 dark:bg-slate-900/40">@AppLoc["none"]</div>
                                                 }
                                                 else
                                                 {
-                                                    <div class="space-y-1.5">
+                                                    <div class="space-y-0.5">
                                                         @for (int i = 0; i < b.Formulas.Count; i++)
                                                         {
                                                             var idx = i;
-                                                            <div class="flex items-center gap-1.5">
-                                                                <input class="block w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
-                                                                <button class="inline-flex items-center justify-center gap-1.5 rounded-lg border border-rose-300 bg-transparent px-2.5 py-1.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["removeEquation"]" @onclick="() => RemoveNumericEq(b, idx)">✕</button>
+                                                            <div class="flex items-center gap-0.5">
+                                                                <input class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="@AppLoc["equationExpressionPlaceholder"]" aria-label="@AppLoc["equation"]" @bind="b.Formulas[idx]" />
+                                                                <button class="inline-flex items-center justify-center gap-0.5 rounded-lg border border-rose-300 bg-transparent px-1.5 py-0.5 text-[11px] font-medium text-rose-700 transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-800 dark:text-rose-300 dark:hover:bg-rose-950/30" title="@AppLoc["removeEquation"]" @onclick="() => RemoveNumericEq(b, idx)">✕</button>
                                                             </div>
                                                         }
                                                     </div>
@@ -506,11 +507,11 @@
 
                                                 @if (b.LastError is not null)
                                                 {
-                                                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">⚠ @b.LastError</div>
+                                                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">⚠ @b.LastError</div>
                                                 }
                                                 @if (b.SavedOk)
                                                 {
-                                                    <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">✓ @AppLoc["saved"]</div>
+                                                    <div class="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-1.5 py-0.5 text-[11px] font-semibold text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-200">✓ @AppLoc["saved"]</div>
                                                 }
                                             </section>
                                         }

@@ -5,12 +5,20 @@
 @using TaskResourceBlueprints.Dto.ProjectTask
 @using TaskResourceBlueprints.Services.ProjectTask
 @using ProjectManagement.Adminstrator.Components.ResourceUI
+@using ProjectManagement.Shared.Base.AppTenant
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @using ProjectManagement.Shared.Enums
 @using TaskResourceBlueprints.Services.Resource
+@using System.Globalization
 @inject IStringLocalizer<CalcResource> L
 
 <div class="space-y-1 p-1 text-slate-900 dark:text-slate-100">
+    @if (!string.IsNullOrWhiteSpace(FormErrorMessage))
+    {
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+            @FormErrorMessage
+        </div>
+    }
     @if (TaskResource is null)
     {
         <div class="@SectionClass">
@@ -78,60 +86,51 @@
                         <div class="w-[180px] shrink-0">
                             <label for="menu-id" class="@LabelClass">Menu Id</label>
                             <input id="menu-id"
-                                   type="number"
-                                   step="1"
-                                   min="0"
+                                   type="text"
+                                   inputmode="numeric"
                                    class="@InputClass"
-                                   @bind-value="TaskResource.MenuId"
-                                   @bind-value:event="oninput" />
+                                   value="@MenuIdText"
+                                   @oninput="OnMenuIdInput" />
                         </div>
 
                         <div class="w-[180px] shrink-0">
                             <label for="cf1" class="@LabelClass">@CalcResource.changeFactor1</label>
                             <input id="cf1"
-                                   type="number"
-                                   step="0.01"
+                                   type="text"
                                    inputmode="decimal"
-                                   min="0"
                                    class="@InputClass"
-                                   @bind-value="TaskResource.ChangeFactor1"
-                                   @bind-value:event="oninput" />
+                                   value="@ChangeFactor1Text"
+                                   @oninput="OnChangeFactor1Input" />
                         </div>
 
                         <div class="w-[180px] shrink-0">
                             <label for="cf2" class="@LabelClass">@CalcResource.changeFactor2</label>
                             <input id="cf2"
-                                   type="number"
-                                   step="0.01"
+                                   type="text"
                                    inputmode="decimal"
-                                   min="0"
                                    class="@InputClass"
-                                   @bind-value="TaskResource.ChangeFactor2"
-                                   @bind-value:event="oninput" />
+                                   value="@ChangeFactor2Text"
+                                   @oninput="OnChangeFactor2Input" />
                         </div>
 
                         <div class="w-[180px] shrink-0">
                             <label for="cap" class="@LabelClass">@(TaskResource.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
                             <input id="cap"
-                                   type="number"
-                                   step="0.01"
+                                   type="text"
                                    inputmode="decimal"
-                                   min="0"
                                    class="@InputClass"
-                                   @bind-value="TaskResource.CapWaste"
-                                   @bind-value:event="oninput" />
+                                   value="@CapWasteText"
+                                   @oninput="OnCapWasteInput" />
                         </div>
 
                         <div class="w-[180px] shrink-0">
                             <label for="baseCost" class="@LabelClass">@CalcResource.baseCost</label>
                             <input id="baseCost"
-                                   type="number"
-                                   step="0.01"
+                                   type="text"
                                    inputmode="decimal"
-                                   min="0"
                                    class="@InputClass"
-                                   @bind-value="TaskResource.BaseCost"
-                                   @bind-value:event="oninput" />
+                                   value="@BaseCostText"
+                                   @oninput="OnBaseCostInput" />
                         </div>
                     </div>
                 </div>
@@ -180,32 +179,29 @@
                                             </div>
 
                                             <div class="min-w-0">
-                                                <input type="number"
-                                                       step="1"
-                                                       min="0"
+                                                <input type="text"
+                                                       inputmode="decimal"
                                                        class="@InputClass"
-                                                       @bind-value="role.Min"
-                                                       @bind-value:event="oninput"
+                                                       value="@FormatDecimal(role.Min)"
+                                                       @oninput="e => OnRoleMinInput(role, e)"
                                                        aria-label="Min" />
                                             </div>
 
                                             <div class="min-w-0">
-                                                <input type="number"
-                                                       step="1"
-                                                       min="0"
+                                                <input type="text"
+                                                       inputmode="decimal"
                                                        class="@InputClass"
-                                                       @bind-value="role.Max"
-                                                       @bind-value:event="oninput"
+                                                       value="@FormatDecimal(role.Max)"
+                                                       @oninput="e => OnRoleMaxInput(role, e)"
                                                        aria-label="Max" />
                                             </div>
 
                                             <div class="min-w-0">
-                                                <input type="number"
-                                                       step="0.01"
-                                                       min="0"
+                                                <input type="text"
+                                                       inputmode="decimal"
                                                        class="@InputClass"
-                                                       @bind-value="role.Value"
-                                                       @bind-value:event="oninput"
+                                                       value="@FormatNullableDecimal(role.Value)"
+                                                       @oninput="e => OnRoleValueInput(role, e)"
                                                        aria-label="Cap" />
                                             </div>
                                         </div>
@@ -297,6 +293,12 @@
     [Parameter, EditorRequired] public ResourceTaskIndexDto Resource { get; set; } = default!;
 
     private TaskResourceDto? TaskResource;
+    private string? FormErrorMessage;
+    private string MenuIdText { get; set; } = string.Empty;
+    private string ChangeFactor1Text { get; set; } = string.Empty;
+    private string ChangeFactor2Text { get; set; } = string.Empty;
+    private string CapWasteText { get; set; } = string.Empty;
+    private string BaseCostText { get; set; } = string.Empty;
 
     private const string SectionClass =
         "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80";
@@ -377,6 +379,7 @@
         TaskResource = await TaskResourceService.GetTaskResourceAsync(Task.Id, Resource.ResourceId, CancellationToken.None) ?? new TaskResourceDto();
         TaskResource.CapRole ??= [];
         TaskResource.Formulas ??= [];
+        SyncNumericInputs();
     }
 
     private async Task SaveAsync()
@@ -386,6 +389,23 @@
             return;
         }
 
+        if (!TryParseNullableInt(MenuIdText, out var menuId) ||
+            !TryParseDecimal(ChangeFactor1Text, out var changeFactor1) ||
+            !TryParseDecimal(ChangeFactor2Text, out var changeFactor2) ||
+            !TryParseDecimal(CapWasteText, out var capWaste) ||
+            !TryParseNullableDecimal(BaseCostText, out var baseCost))
+        {
+            FormErrorMessage = "Please enter valid numeric values before saving.";
+            return;
+        }
+
+        FormErrorMessage = null;
+        TaskResource.MenuId = menuId;
+        TaskResource.ChangeFactor1 = changeFactor1;
+        TaskResource.ChangeFactor2 = changeFactor2;
+        TaskResource.CapWaste = capWaste;
+        TaskResource.BaseCost = baseCost;
+
         if (await TaskResourceService.UpdateAssignmentAsync(Task.Id, Resource.ResourceId, TaskResource, CancellationToken.None))
         {
             MHD.Modal.Close();
@@ -394,5 +414,150 @@
         {
             MHD.MessageOk("Error", "There was an error saving the resource.", MhdState.Danger);
         }
+    }
+
+    private void SyncNumericInputs()
+    {
+        if (TaskResource is null)
+        {
+            return;
+        }
+
+        MenuIdText = TaskResource.MenuId?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
+        ChangeFactor1Text = FormatDecimal(TaskResource.ChangeFactor1);
+        ChangeFactor2Text = FormatDecimal(TaskResource.ChangeFactor2);
+        CapWasteText = FormatDecimal(TaskResource.CapWaste);
+        BaseCostText = FormatNullableDecimal(TaskResource.BaseCost);
+    }
+
+    private void OnMenuIdInput(ChangeEventArgs e)
+    {
+        MenuIdText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableInt(MenuIdText, out var value) && TaskResource is not null)
+        {
+            TaskResource.MenuId = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnChangeFactor1Input(ChangeEventArgs e)
+    {
+        ChangeFactor1Text = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimal(ChangeFactor1Text, out var value) && TaskResource is not null)
+        {
+            TaskResource.ChangeFactor1 = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnChangeFactor2Input(ChangeEventArgs e)
+    {
+        ChangeFactor2Text = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimal(ChangeFactor2Text, out var value) && TaskResource is not null)
+        {
+            TaskResource.ChangeFactor2 = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnCapWasteInput(ChangeEventArgs e)
+    {
+        CapWasteText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimal(CapWasteText, out var value) && TaskResource is not null)
+        {
+            TaskResource.CapWaste = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnBaseCostInput(ChangeEventArgs e)
+    {
+        BaseCostText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableDecimal(BaseCostText, out var value) && TaskResource is not null)
+        {
+            TaskResource.BaseCost = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnRoleMinInput(RoleDTO role, ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimal(text, out var value))
+        {
+            role.Min = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnRoleMaxInput(RoleDTO role, ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimal(text, out var value))
+        {
+            role.Max = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnRoleValueInput(RoleDTO role, ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableDecimal(text, out var value))
+        {
+            role.Value = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private static string FormatDecimal(decimal value)
+        => value.ToString("0.######", CultureInfo.CurrentCulture);
+
+    private static string FormatNullableDecimal(decimal? value)
+        => value?.ToString("0.######", CultureInfo.CurrentCulture) ?? string.Empty;
+
+    private static bool TryParseDecimal(string? text, out decimal value)
+    {
+        if (decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out value))
+            return true;
+
+        var normalized = text?.Replace(',', '.');
+        return decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static bool TryParseNullableDecimal(string? text, out decimal? value)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            value = null;
+            return true;
+        }
+
+        if (TryParseDecimal(text, out var parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+
+    private static bool TryParseNullableInt(string? text, out int? value)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            value = null;
+            return true;
+        }
+
+        if (int.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out var parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = null;
+        return false;
     }
 }

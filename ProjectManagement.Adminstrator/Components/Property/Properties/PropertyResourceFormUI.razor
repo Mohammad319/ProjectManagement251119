@@ -2,6 +2,7 @@
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Services.ResourceProperties
+@using System.Globalization
 @inherits AppComponentBase
 @inject IResourceAttributeService ResourcePropertiesService
 
@@ -19,6 +20,12 @@
         <div class="px-2 py-1">
             <EditForm id="propertyResourceForm" Model="@ResourceProp" OnValidSubmit="HandleSubmitAsync" class="space-y-3">
                 <DataAnnotationsValidator />
+                @if (!string.IsNullOrWhiteSpace(FormErrorMessage))
+                {
+                    <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                        @FormErrorMessage
+                    </div>
+                }
 
                 <div class="grid grid-cols-2 gap-1">
                     <div class="col-span-2 min-w-0 space-y-1.5">
@@ -64,9 +71,12 @@
                             <label class="@LabelClass" for="rp-numdef">
                                 Default numeric value
                             </label>
-                            <InputNumber id="rp-numdef"
-                                         class="@InputClass"
-                                         @bind-Value="@ResourceProp.DefaultNumericValue" />
+                            <input id="rp-numdef"
+                                   type="text"
+                                   inputmode="decimal"
+                                   class="@InputClass"
+                                   value="@DefaultNumericValueText"
+                                   @oninput="OnDefaultNumericValueInput" />
                             <ValidationMessage For="@(() => ResourceProp.DefaultNumericValue)" class="@ValidationClass" />
                         </div>
 
@@ -74,9 +84,12 @@
                             <label class="@LabelClass" for="rp-min">
                                 Min value
                             </label>
-                            <InputNumber id="rp-min"
-                                         class="@InputClass"
-                                         @bind-Value="@ResourceProp.StepValue" />
+                            <input id="rp-min"
+                                   type="text"
+                                   inputmode="decimal"
+                                   class="@InputClass"
+                                   value="@StepValueText"
+                                   @oninput="OnStepValueInput" />
                             <ValidationMessage For="@(() => ResourceProp.StepValue)" class="@ValidationClass" />
                         </div>
 
@@ -84,9 +97,12 @@
                             <label class="@LabelClass" for="rp-max">
                                 Max value
                             </label>
-                            <InputNumber id="rp-max"
-                                         class="@InputClass"
-                                         @bind-Value="@ResourceProp.MaxNumericValue" />
+                            <input id="rp-max"
+                                   type="text"
+                                   inputmode="decimal"
+                                   class="@InputClass"
+                                   value="@MaxNumericValueText"
+                                   @oninput="OnMaxNumericValueInput" />
                             <ValidationMessage For="@(() => ResourceProp.MaxNumericValue)" class="@ValidationClass" />
                         </div>
                     }
@@ -139,9 +155,34 @@
     private const string InputClass = "block w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-400 dark:focus:ring-sky-400/20 dark:[color-scheme:dark]";
 
     private bool IsLoading = false;
+    private string DefaultNumericValueText { get; set; } = string.Empty;
+    private string StepValueText { get; set; } = string.Empty;
+    private string MaxNumericValueText { get; set; } = string.Empty;
+    private string? FormErrorMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        SyncNumericInputs();
+    }
 
     private async Task HandleSubmitAsync()
     {
+        if (ResourceProp.DataType == DataType.Number)
+        {
+            if (!TryParseNullableDecimalInput(DefaultNumericValueText, out var defaultNumericValue) ||
+                !TryParseNullableDecimalInput(StepValueText, out var stepValue) ||
+                !TryParseNullableDecimalInput(MaxNumericValueText, out var maxNumericValue))
+            {
+                FormErrorMessage = "Numeric values must be valid numbers.";
+                return;
+            }
+
+            ResourceProp.DefaultNumericValue = defaultNumericValue;
+            ResourceProp.StepValue = stepValue;
+            ResourceProp.MaxNumericValue = maxNumericValue;
+        }
+
+        FormErrorMessage = null;
         IsLoading = true;
         try
         {
@@ -165,5 +206,70 @@
         {
             IsLoading = false;
         }
+    }
+
+    private void OnDefaultNumericValueInput(ChangeEventArgs e)
+    {
+        DefaultNumericValueText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableDecimalInput(DefaultNumericValueText, out var value))
+        {
+            ResourceProp.DefaultNumericValue = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnStepValueInput(ChangeEventArgs e)
+    {
+        StepValueText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableDecimalInput(StepValueText, out var value))
+        {
+            ResourceProp.StepValue = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void OnMaxNumericValueInput(ChangeEventArgs e)
+    {
+        MaxNumericValueText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableDecimalInput(MaxNumericValueText, out var value))
+        {
+            ResourceProp.MaxNumericValue = value;
+            FormErrorMessage = null;
+        }
+    }
+
+    private void SyncNumericInputs()
+    {
+        DefaultNumericValueText = FormatNullableDecimal(ResourceProp.DefaultNumericValue);
+        StepValueText = FormatNullableDecimal(ResourceProp.StepValue);
+        MaxNumericValueText = FormatNullableDecimal(ResourceProp.MaxNumericValue);
+    }
+
+    private static string FormatNullableDecimal(decimal? value)
+        => value?.ToString("0.######", CultureInfo.CurrentCulture) ?? string.Empty;
+
+    private static bool TryParseNullableDecimalInput(string? text, out decimal? value)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            value = null;
+            return true;
+        }
+
+        if (decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out var parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        var normalized = text.Replace(',', '.');
+        if (decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = null;
+        return false;
     }
 }

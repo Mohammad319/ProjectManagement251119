@@ -4,24 +4,24 @@
 @inject ITaskUnitGroupService UnitGroupsService
 @inherits AppComponentBase
 
-<div class="space-y-3">
-    <div class="flex flex-col gap-3 rounded-[12px] border border-slate-200/80 bg-white/90 p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:flex-row lg:items-center lg:justify-between">
+<div class="space-y-2">
+    <div class="flex flex-col gap-2 rounded-[12px] border border-slate-200/80 bg-white/90 p-2.5 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <h3 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Unit groups</h3>
-            <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">Build reusable conversion groups by mapping source units to one target unit.</p>
+            <h3 class="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">Unit groups</h3>
+            <p class="mt-0.5 text-xs leading-5 text-slate-500 dark:text-slate-400">Build reusable conversion groups by mapping source units to one target unit.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex flex-wrap items-center gap-2">
             <button @onclick="() => UpdateForm()"
-                    class="inline-flex items-center rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400">
-                <span class="mr-2">@((MarkupString)Icons.Plus)</span> New
+                    class="inline-flex items-center rounded-xl bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400">
+                <span class="mr-1.5">@((MarkupString)Icons.Plus)</span> New
             </button>
 
             <button @onclick="() => IsVisible = !IsVisible"
-                    class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                     title="@ResourceApp.hiddenItems / @ResourceApp.visibleItems"
                     aria-label="@ResourceApp.hiddenItems / @ResourceApp.visibleItems">
-                <span class="mr-2">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</span> @(IsVisible ? "Visible items" : "Hidden items")
+                <span class="mr-1.5">@((MarkupString)Icons.GetVisibleIcon(IsVisible))</span> @(IsVisible ? "Visible items" : "Hidden items")
             </button>
         </div>
     </div>
@@ -29,33 +29,33 @@
     <div class="overflow-hidden rounded-[12px] border border-slate-200/80 bg-white/95 shadow-sm dark:border-slate-800 dark:bg-slate-950/95">
         @if (FallsList?.Any() == true)
         {
-            <div class="overflow-x-auto p-3.5">
+            <div class="overflow-x-auto p-2.5">
                 <table class="min-w-full overflow-hidden rounded-[12px] border border-slate-200/80 dark:border-slate-800">
                     <thead class="bg-slate-100/80 dark:bg-slate-900/90">
                         <tr>
-                            <th class="w-32 px-3.5 py-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">Actions</th>
-                            <th class="px-3.5 py-2 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                            <th class="w-28 px-3 py-1.5 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">Actions</th>
+                            <th class="px-3 py-1.5 text-left text-sm font-semibold text-slate-700 dark:text-slate-200">@CalcResource.name</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200/80 bg-white dark:divide-slate-800 dark:bg-slate-950">
                         @foreach (var status in FallsList)
                         {
                             <tr class="align-top transition hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                                <td class="px-3.5 py-2">
-                                    <div class="flex items-center gap-2">
-                                        <button @onclick="() => UpdateForm(status)" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300"
+                                <td class="px-3 py-1.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <button @onclick="() => UpdateForm(status)" class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300"
                                                 title="@ResourceApp.update" aria-label="@ResourceApp.update">
                                             @Icons.Edit
                                         </button>
 
-                                        <button @onclick="() => Remove(status)" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300" title="@ResourceApp.delete"
+                                        <button @onclick="() => Remove(status)" class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300" title="@ResourceApp.delete"
                                                 aria-label="@ResourceApp.delete">
                                             @Icons.Delete
                                         </button>
                                     </div>
                                 </td>
-                                <td class="px-3.5 py-2">
-                                    <div class="font-medium text-slate-900 dark:text-slate-100">@status.DisplayName</div>
+                                <td class="px-3 py-1.5">
+                                    <div class="font-medium leading-5 text-slate-900 dark:text-slate-100">@status.DisplayName</div>
                                     <div class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">@((status.Keys?.Count ?? 0)) keys mapped</div>
                                 </td>
                             </tr>
@@ -66,7 +66,7 @@
         }
         else
         {
-            <div class="px-3.5 py-8 text-center text-sm text-slate-500 dark:text-slate-400">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
+            <div class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">@AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]</div>
         }
     </div>
 </div>
