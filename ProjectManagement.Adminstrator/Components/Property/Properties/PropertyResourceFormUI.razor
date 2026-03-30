@@ -246,7 +246,7 @@
     }
 
     private static string FormatNullableDecimal(decimal? value)
-        => value?.ToString("0.######", CultureInfo.CurrentCulture) ?? string.Empty;
+        => NumericDisplayHelper.Format(value);
 
     private static bool TryParseNullableDecimalInput(string? text, out decimal? value)
     {

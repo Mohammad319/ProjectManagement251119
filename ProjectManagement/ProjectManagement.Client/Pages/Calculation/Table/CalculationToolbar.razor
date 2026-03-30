@@ -2,7 +2,7 @@
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 
-<div id="tit" class="flex flex-nowrap items-center gap-1 px-2 whitespace-nowrap shrink-0">
+<div id="tit" class="flex flex-nowrap items-center gap-0.5 px-1 whitespace-nowrap shrink-0 text-[13px] leading-none">
     <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
           @onclick="() => TableCoordinator.ShowTaskForm(new TaskListMVVM())"
           title="@AppLoc[LocalizerConst.New, ResourceLoc.task]">

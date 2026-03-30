@@ -1,7 +1,7 @@
-﻿using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Client.Shared.Constants;
 using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.Repositories.ResourceType;
-using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.DTO.ResourceType;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,22 +11,49 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
 {
     public class ResourceTypeRepository(HTTPRepository _httpRepository) : IResourceTypeRepository
     {
-        static string ResourceTypeURLBase => PMAPIConst.ResourceType;
+        static string ResourceURLBase => PMAPIConst.Resource;
         private List<ListResourceTypeDTO>? _resourceTypes;
+
         public async Task<List<ListResourceTypeDTO>> GetLocalAsync()
         {
-            if (_resourceTypes == null)
-                await GetVisualResourcesAsync();
+            await EnsureLoadedAsync();
             return _resourceTypes ?? [];
         }
+
         public async Task<List<ListResourceTypeDTO>> GetVisualResourcesAsync()
         {
-            _resourceTypes = [.. (await _httpRepository.GetAsync<List<ListResourceTypeDTO>>(ResourceTypeURLBase + URLConst.GetAll)).OrderBy(x => x.Order)];
-            return _resourceTypes;
+            await EnsureLoadedAsync();
+            return _resourceTypes ?? [];
         }
+
         public async Task<List<ResourceSortModel>> GetResourceSortAsync(int resourceId)
         {
-            return await _httpRepository.GetAsync<List<ResourceSortModel>>(ResourceTypeURLBase + URLConst.ResourceType.Sort + $"/{resourceId}");
+            await EnsureLoadedAsync();
+
+            return _resourceTypes?
+                .FirstOrDefault(x => x.Id == resourceId)?
+                .ResourcesSort?
+                .OrderBy(x => x.Order)
+                .Select(x => new ResourceSortModel
+                {
+                    Id = x.Id,
+                    ResourceTypeId = resourceId,
+                    AccountId = x.AccountId,
+                    Name = x.Name,
+                    Order = x.Order,
+                    IsVisible = x.IsVisible,
+                    Data = x.Data
+                })
+                .ToList() ?? [];
+        }
+
+        private async Task EnsureLoadedAsync()
+        {
+            if (_resourceTypes != null)
+                return;
+
+            var config = await _httpRepository.GetAsync<ResourceFormDTO>(ResourceURLBase);
+            _resourceTypes = [.. (config.ResourceTypes ?? []).OrderBy(x => x.Order)];
         }
     }
 }

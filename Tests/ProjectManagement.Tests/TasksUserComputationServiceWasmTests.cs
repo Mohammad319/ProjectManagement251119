@@ -57,6 +57,46 @@ public class TasksUserComputationServiceWasmTests
         Assert.Equal(1m, resource.Data.Cost);
     }
 
+    [Fact]
+    public void BuildFinalRows_DeduplicatesDerivedResourcesWithSameIdAndMenu()
+    {
+        var service = new TasksUserComputationServiceWasm();
+        var sourceResource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        var task = new ProjectTaskDto
+        {
+            Id = 2,
+            Quantity = 5m,
+            Conditions =
+            [
+                new TaskConditionDto
+                {
+                    ConditionResourceAssignments =
+                    [
+                        new ResourceAssignmentDto
+                        {
+                            Resource = sourceResource
+                        }
+                    ]
+                },
+                new TaskConditionDto
+                {
+                    ConditionResourceAssignments =
+                    [
+                        new ResourceAssignmentDto
+                        {
+                            Resource = sourceResource
+                        }
+                    ]
+                }
+            ]
+        };
+
+        var result = service.BuildFinalRows(task);
+
+        Assert.True(result);
+        Assert.Single(task.ResultResources);
+    }
+
     private static ResourceDto CreateResource(
         IReadOnlyList<decimal> parameters,
         IReadOnlyList<(decimal Quantity, decimal Cost)> times,

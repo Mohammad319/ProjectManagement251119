@@ -88,6 +88,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     t.Resource != null ? t.Resource.Name : string.Empty,
                     t.ChangeFactor1,
                     t.ChangeFactor2,
+                    t.CapWaste,
+                    t.BaseCost,
                     t.Resource != null && t.Resource.Data != null ? t.Resource.Data.Unit : string.Empty,
                     t.IsActive && (t.Resource == null || t.Resource.IsActive)
                 ))

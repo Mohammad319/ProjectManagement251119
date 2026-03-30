@@ -17,10 +17,13 @@
 
     private readonly HashSet<int> ExpandedAssignmentConditionIds = new();
 
+    private static string FormatNumber(decimal? value)
+        => NumericDisplayHelper.Format(value);
+
     private string RangeLabel(decimal? min, decimal? max)
-        => min.HasValue && max.HasValue ? $"[{min}..{max}]"
-           : min.HasValue ? $">= {min}"
-           : max.HasValue ? $"<= {max}"
+        => min.HasValue && max.HasValue ? $"[{FormatNumber(min)}..{FormatNumber(max)}]"
+           : min.HasValue ? $">= {FormatNumber(min)}"
+           : max.HasValue ? $"<= {FormatNumber(max)}"
            : AppLoc["any"];
 
     private string FormatLogic(ConditionLogic logic)
@@ -185,10 +188,10 @@ else
                                         <div class="rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
                                             <div class="font-medium text-slate-900 dark:text-slate-100">@a.Resource?.Name</div>
                                             <div class="mt-0.5 flex flex-wrap gap-0.5">
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor1 = @a.ChangeFactor1</span>
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor2 = @a.ChangeFactor2</span>
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.cap / @CalcResource.waste = @a.CapWaste</span>
-                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.baseCost = @a.BaseCost</span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor1 = @FormatNumber(a.ChangeFactor1)</span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.changeFactor2 = @FormatNumber(a.ChangeFactor2)</span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.cap / @CalcResource.waste = @FormatNumber(a.CapWaste)</span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">@CalcResource.baseCost = @FormatNumber(a.BaseCost)</span>
                                             </div>
                                         </div>
                                     }

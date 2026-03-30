@@ -3,12 +3,14 @@ using System.Linq.Expressions;
 using Bunit;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Helper;
+using ProjectManagement.Client.Pages.Project.Storage.App;
 using ProjectManagement.Client.Pages.Calculation.Table.SectionsList;
 using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows;
 using ProjectManagement.Client.Shared.Components;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
+using ProjectManagement.Shared.Helper;
 using Xunit;
 
 namespace ProjectManagement.Tests;
@@ -37,6 +39,50 @@ public class NumericFormattingTests : BunitContext
         var actual = NumericFormatHelper.Format(value, 2, CultureInfo.InvariantCulture);
 
         Assert.Equal("15.65", actual);
+    }
+
+    [Theory]
+    [InlineData("5", "5")]
+    [InlineData("5.5", "5.5")]
+    [InlineData("5.55", "5.55")]
+    [InlineData("1.000000", "1")]
+    [InlineData("120.000000", "120")]
+    [InlineData("0.123456789", "0.123456789")]
+    public void NumericDisplayHelper_KeepsExistingFractionDigitsWithoutTrailingZeros(string rawValue, string expected)
+    {
+        var value = decimal.Parse(rawValue, CultureInfo.InvariantCulture);
+
+        var actual = NumericDisplayHelper.Format(value, CultureInfo.InvariantCulture);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void NumericDisplayHelper_UsesCurrentCultureDecimalSeparator()
+    {
+        using var _ = new CultureScope("sv-SE");
+
+        var actual = NumericDisplayHelper.Format(5.55m);
+
+        Assert.Equal("5,55", actual);
+    }
+
+    [Fact]
+    public void GroupTreeHelpersWasm_RangeLabel_TruncatesToTwoDigitsWithoutTrailingZeros()
+    {
+        var label = GroupTreeHelpersWasm.RangeLabel(15.657m, 20.1000m);
+        var expected = $"[{NumericFormatHelper.Format(15.657m, 2)} .. {NumericFormatHelper.Format(20.1000m, 2)}]";
+
+        Assert.Equal(expected, label);
+    }
+
+    [Fact]
+    public void GroupTreeHelpersWasm_RangeLabel_KeepsWholeNumbersCompact()
+    {
+        var label = GroupTreeHelpersWasm.RangeLabel(15m, 20m);
+        var expected = $"[{NumericFormatHelper.Format(15m, 2)} .. {NumericFormatHelper.Format(20m, 2)}]";
+
+        Assert.Equal(expected, label);
     }
 
     [Fact]

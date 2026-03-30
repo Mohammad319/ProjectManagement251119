@@ -1,4 +1,5 @@
-﻿using ProjectManagement.Shared.DTO.ProjectAppStorage;
+using ProjectManagement.Client.Helper;
+using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 
 namespace ProjectManagement.Client.Pages.Project.Storage.App
@@ -77,16 +78,19 @@ namespace ProjectManagement.Client.Pages.Project.Storage.App
             }
         }
 
-        public static string RangeLabel(decimal? min, decimal? max)
+        public static string RangeLabel(decimal? min, decimal? max, int maxFractionDigits = 2)
         {
-            if (min.HasValue && max.HasValue) return $"[{min} .. {max}]";
-            if (min.HasValue) return $">= {min}";
-            if (max.HasValue) return $"<= {max}";
+            if (min.HasValue && max.HasValue) return $"[{Format(min.Value, maxFractionDigits)} .. {Format(max.Value, maxFractionDigits)}]";
+            if (min.HasValue) return $">= {Format(min.Value, maxFractionDigits)}";
+            if (max.HasValue) return $"<= {Format(max.Value, maxFractionDigits)}";
             return "(any)";
         }
 
         public static GroupCardWasm ToCard(OptionGroupDto g) => new() { Kind = GroupKind.Choice, Order = g.SortOrder, Choice = g };
         public static GroupCardWasm ToCard(ResourceOptionGroupDto g) => new() { Kind = GroupKind.Resource, Order = g.SortOrder, Resource = g };
         public static GroupCardWasm ToCard(NumericInputDto g) => new() { Kind = GroupKind.Numeric, Order = g.SortOrder, Numeric = g };
+
+        private static string Format(decimal value, int maxFractionDigits)
+            => NumericFormatHelper.Format(value, maxFractionDigits);
     }
 }

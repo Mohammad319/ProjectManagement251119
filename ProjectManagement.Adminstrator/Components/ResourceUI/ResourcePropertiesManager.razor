@@ -70,7 +70,7 @@
                         {
                             var bind = GetBind(p.Id);
                             var isLinked = bind is not null;
-                            var shown = bind?.NumericValue?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+                            var shown = FormatInputNumber(bind?.NumericValue);
                          
                             <div class="rounded-xl border border-slate-200/80 bg-white/40 px-1 dark:border-slate-800/60 dark:bg-slate-950/30">
                                 <div class="grid grid-cols-[minmax(180px,220px)_max-content_minmax(260px,1fr)] items-center gap-1">
@@ -129,8 +129,8 @@
                                             else
                                             {
                                                 var numAttrs = new Dictionary<string, object>();
-                                                if (p.StepValue.HasValue) numAttrs["min"] = p.StepValue.Value.ToString(CultureInfo.InvariantCulture);
-                                                if (p.MaxNumericValue.HasValue) numAttrs["max"] = p.MaxNumericValue.Value.ToString(CultureInfo.InvariantCulture);
+                                                if (p.StepValue.HasValue) numAttrs["min"] = FormatInputNumber(p.StepValue.Value);
+                                                if (p.MaxNumericValue.HasValue) numAttrs["max"] = FormatInputNumber(p.MaxNumericValue.Value);
 
                                                 <input class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                                                        type="number"
@@ -203,11 +203,17 @@
     private ResourceAttributeValue? GetBind(int propertyId)
         => bindsByPropId.TryGetValue(propertyId, out var b) ? b : null;
 
+    private static string FormatDisplayNumber(decimal? value)
+        => NumericDisplayHelper.Format(value);
+
+    private static string FormatInputNumber(decimal? value)
+        => NumericDisplayHelper.Format(value, CultureInfo.InvariantCulture);
+
     private static string FormatRange(decimal? min, decimal? max)
     {
         if (min is null && max is null) return string.Empty;
-        if (min is not null && max is not null) return $"[{min} - {max}]";
-        return min is not null ? $">= {min}" : $"<= {max}";
+        if (min is not null && max is not null) return $"[{FormatDisplayNumber(min)} - {FormatDisplayNumber(max)}]";
+        return min is not null ? $">= {FormatDisplayNumber(min)}" : $"<= {FormatDisplayNumber(max)}";
     }
 
     private static decimal? Clamp(decimal? v, decimal? min, decimal? max)
@@ -341,14 +347,14 @@
         {
             if (p.StepValue.HasValue && value < p.StepValue)
             {
-                loadError = string.Format(CultureInfo.CurrentCulture, AppLoc["valueMustBeAtLeast"], p.StepValue);
+                loadError = string.Format(CultureInfo.CurrentCulture, AppLoc["valueMustBeAtLeast"], FormatDisplayNumber(p.StepValue));
                 StateHasChanged();
                 return;
             }
 
             if (p.MaxNumericValue.HasValue && value > p.MaxNumericValue)
             {
-                loadError = string.Format(CultureInfo.CurrentCulture, AppLoc["valueMustBeAtMost"], p.MaxNumericValue);
+                loadError = string.Format(CultureInfo.CurrentCulture, AppLoc["valueMustBeAtMost"], FormatDisplayNumber(p.MaxNumericValue));
                 StateHasChanged();
                 return;
             }

@@ -511,10 +511,10 @@
     }
 
     private static string FormatDecimal(decimal value)
-        => value.ToString("0.######", CultureInfo.CurrentCulture);
+        => NumericDisplayHelper.Format(value);
 
     private static string FormatNullableDecimal(decimal? value)
-        => value?.ToString("0.######", CultureInfo.CurrentCulture) ?? string.Empty;
+        => NumericDisplayHelper.Format(value);
 
     private static bool TryParseDecimal(string? text, out decimal value)
     {

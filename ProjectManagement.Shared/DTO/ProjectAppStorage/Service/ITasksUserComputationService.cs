@@ -198,7 +198,22 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     Properties = ra.Resource.Properties,
                 };
 
-                task.ResultResources.Add(res);
+                var existingIndex = task.ResultResources.FindIndex(x => x.Id == res.Id && x.MenuId == res.MenuId);
+                if (existingIndex < 0)
+                {
+                    task.ResultResources.Add(res);
+                    continue;
+                }
+
+                var existing = task.ResultResources[existingIndex];
+                res.IsAdded = existing.IsAdded;
+                res.Formulas = existing.Formulas
+                    .Concat(res.Formulas ?? Enumerable.Empty<string>())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToList();
+
+                task.ResultResources[existingIndex] = res;
             }
         }
 

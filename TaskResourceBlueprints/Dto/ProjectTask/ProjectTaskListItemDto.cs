@@ -18,6 +18,8 @@
         string DisplayName,
         decimal Chf1,
         decimal Chf2,
+        decimal CapWaste,
+        decimal? BaseCost,
         string Unit,
         bool IsActive)
     {

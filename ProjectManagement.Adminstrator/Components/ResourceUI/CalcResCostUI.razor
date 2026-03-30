@@ -13,8 +13,8 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Qty: @(Resource?.Data?.Quantity ?? 0)</span>
-                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Cost: @(Resource?.Data?.Cost ?? 0)</span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Qty: @FormatNumber(Resource?.Data?.Quantity)</span>
+                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Cost: @FormatNumber(Resource?.Data?.Cost)</span>
             </div>
         </div>
 
@@ -26,15 +26,15 @@
                 <div class="grid grid-cols-3 gap-1">
                     <div class="min-w-0 rounded-2xl border border-slate-200 p-1 dark:border-slate-800">
                         <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Morning %</div>
-                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@GetPercentage(CalcResCost.Morgen)%</div>
+                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@FormatNumber(GetPercentage(CalcResCost.Morgen))%</div>
                     </div>
                     <div class="min-w-0 rounded-2xl border border-slate-200 p-1 dark:border-slate-800">
                         <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Day %</div>
-                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@GetPercentage(CalcResCost.Day)%</div>
+                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@FormatNumber(GetPercentage(CalcResCost.Day))%</div>
                     </div>
                     <div class="min-w-0 rounded-2xl border border-slate-200 p-1 dark:border-slate-800">
                         <div class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">Evening %</div>
-                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@GetEveningPercentage()%</div>
+                        <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">@FormatNumber(GetEveningPercentage())%</div>
                     </div>
                 </div>
 
@@ -51,7 +51,7 @@
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
-                                <input value="@($"{GetPercentage(CalcResCost.Morgen)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" disabled />
+                                <input value="@($"{FormatNumber(GetPercentage(CalcResCost.Morgen))}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" disabled />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
@@ -73,7 +73,7 @@
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
-                                <input value="@($"{GetPercentage(CalcResCost.Day)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" disabled />
+                                <input value="@($"{FormatNumber(GetPercentage(CalcResCost.Day))}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" disabled />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
@@ -93,11 +93,11 @@
                         <div class="grid grid-cols-3 gap-3 items-end">
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Quantity</label>
-                                <input disabled value="@eveningQty" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" />
+                                <input disabled value="@FormatNumber(eveningQty)" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
-                                <input disabled value="@($"{GetEveningPercentage()}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" />
+                                <input disabled value="@($"{FormatNumber(GetEveningPercentage())}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
@@ -122,6 +122,9 @@
 
     private CalcResCost CalcResCost = new();
     [Parameter] public EventCallback<bool> CallBack { get; set; }
+
+    private static string FormatNumber(decimal? value)
+        => NumericDisplayHelper.Format(value);
 
     protected override void OnInitialized()
     {

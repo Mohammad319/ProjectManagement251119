@@ -80,11 +80,11 @@
                             </td>
                             <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@r.ResType</td>
                             <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@r.Data.Unit</td>
-                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@r.Data.Quantity</td>
-                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@r.Data.ChangeFactor1 / @r.Data.ChangeFactor2</td>
-                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@r.Data.CapWaste</td>
-                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@r.Data.Cost</td>
-                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@r.Data.BaseCost</td>
+                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@FormatNumber(r.Data.Quantity)</td>
+                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@FormatNumber(r.Data.ChangeFactor1) / @FormatNumber(r.Data.ChangeFactor2)</td>
+                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@FormatNumber(r.Data.CapWaste)</td>
+                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@FormatNumber(r.Data.Cost)</td>
+                            <td class="px-0.5 py-0.5 text-slate-700 dark:text-slate-200">@FormatNumber(r.Data.BaseCost)</td>
                         </tr>
                     }
                 </tbody>
@@ -101,6 +101,10 @@
     private List<ResourceDefinition> resourcesToShow = new();
     private HashSet<int> expanded = new();
     private HashSet<int> selectedFolderIds = new();
+
+    private static string FormatNumber(decimal? value)
+        => NumericDisplayHelper.Format(value);
+
     void CalcModeal(ResourceDefinition model) => MHD.Modal.ShowComponent<CalcResCostUI>(model.Name,
     new Dictionary<string, object>
     {

@@ -114,10 +114,10 @@
 
                                     <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@r.ResourceType</td>
                                     <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@r.UnitCode</td>
-                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@r.Quantity</td>
-                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@r.ChangeFactor1 / @r.ChangeFactor2</td>
-                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@r.WasteFactor</td>
-                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@r.BaseCost</td>
+                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@FormatNumber(r.Quantity)</td>
+                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@FormatNumber(r.ChangeFactor1) / @FormatNumber(r.ChangeFactor2)</td>
+                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@FormatNumber(r.WasteFactor)</td>
+                                    <td class="whitespace-nowrap px-2 py-1.5 align-middle text-xs text-slate-700 dark:text-slate-200">@FormatNumber(r.BaseCost)</td>
                                 </tr>
                             }
                         </tbody>
@@ -134,6 +134,9 @@
     private List<ResourceRowDto>? Rows;
     private string? SelectedFolderName;
     private int? SelectedFolderId;
+
+    private static string FormatNumber(decimal? value)
+        => NumericDisplayHelper.Format(value);
 
     protected override async Task OnInitializedAsync()
     {

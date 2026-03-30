@@ -121,10 +121,25 @@
                                                 <span class="text-sm font-medium text-slate-800 dark:text-slate-100">@res.DisplayName</span>
                                             </div>
                                         </td>
-                                        <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@res.Unit</td>
-                                        <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@res.Chf1</td>
-                                        <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@res.Chf2</td>
-                                        <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">@res.Unit</td>
+                                        <td colspan="4" class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
+                                            <div class="flex flex-wrap items-center gap-1">
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                                    @CalcResource.unit: @res.Unit
+                                                </span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                                    @CalcResource.changeFactor1: @FormatNumber(res.Chf1)
+                                                </span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                                    @CalcResource.changeFactor2: @FormatNumber(res.Chf2)
+                                                </span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                                    @CalcResource.cap / @CalcResource.waste: @FormatNumber(res.CapWaste)
+                                                </span>
+                                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                                                    @CalcResource.baseCost: @FormatNullableDecimal(res.BaseCost)
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td class="px-1 py-1 align-top text-sm text-slate-700 dark:text-slate-200">
                                             @if (res.IsActive)
                                             {
@@ -244,6 +259,9 @@ new Dictionary<string, object>
         await ReloadAsync();
     }
 
+    private static string FormatNumber(decimal value)
+        => NumericDisplayHelper.Format(value);
+
     private static string FormatNullableDecimal(decimal? value)
-        => value?.ToString("0.######", CultureInfo.CurrentCulture) ?? string.Empty;
+        => NumericDisplayHelper.Format(value);
 }
