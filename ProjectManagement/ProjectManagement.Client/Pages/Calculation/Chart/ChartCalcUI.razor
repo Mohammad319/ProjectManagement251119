@@ -68,9 +68,9 @@
         GenerateRandomColors();
 
         var factors = Container.Calculation?.Factors?.ToList() ?? new List<Factors>();
-        var netCostTotaly = factors.Select(x => (float)(Template?.Format(x.NetCostTotaly) ?? 0d)).ToList();
-        var netCostTotalyOH = factors.Select(x => (float)(Template?.Format(x.NetCostTotalyOH) ?? 0d)).ToList();
-        var earningsValue = factors.Select(x => (float)(Template?.Format(x.EarningsValue) ?? 0d)).ToList();
+        var netCostTotaly = factors.Select(x => Template?.Format(x.NetCostTotaly) ?? 0m).ToList();
+        var netCostTotalyOH = factors.Select(x => Template?.Format(x.NetCostTotalyOH) ?? 0m).ToList();
+        var earningsValue = factors.Select(x => Template?.Format(x.EarningsValue) ?? 0m).ToList();
 
         NetCostTotalyPieCfg = CreatePieConfig(netCostTotaly, CalcResource.totalNetCost);
         NetCostTotalyOHPieCfg = CreatePieConfig(netCostTotalyOH, CalcResource.netCalOH);
@@ -97,7 +97,7 @@
             .Select(f => f.ResName + (string.IsNullOrWhiteSpace(f.Sort) ? "" : $" ({f.Sort})"))
             .ToList();
 
-    private ChartJsConfig CreatePieConfig(IReadOnlyList<float> data, string title)
+    private ChartJsConfig CreatePieConfig(IReadOnlyList<decimal> data, string title)
     {
         return new ChartJsConfig
         {
@@ -129,9 +129,9 @@
     private ChartJsConfig CreateSumPieConfig()
     {
         var factors = Container.Calculation?.Factors ?? Enumerable.Empty<Factors>();
-        var sumNet = (float)(Template?.Format(factors.Sum(x => x.NetCostTotaly)) ?? 0d);
-        var sumOH = (float)(Template?.Format(factors.Sum(x => x.NetCostTotalyOH)) ?? 0d);
-        var sumEV = (float)(Template?.Format(factors.Sum(x => x.EarningsValue)) ?? 0d);
+        var sumNet = Template?.Format(factors.Sum(x => x.NetCostTotaly)) ?? 0m;
+        var sumOH = Template?.Format(factors.Sum(x => x.NetCostTotalyOH)) ?? 0m;
+        var sumEV = Template?.Format(factors.Sum(x => x.EarningsValue)) ?? 0m;
 
         return new ChartJsConfig
         {
@@ -160,9 +160,9 @@
     }
 
     private ChartJsConfig CreateBarConfig(
-        IReadOnlyList<float> netCostTotaly,
-        IReadOnlyList<float> netCostTotalyOH,
-        IReadOnlyList<float> earningsValue)
+        IReadOnlyList<decimal> netCostTotaly,
+        IReadOnlyList<decimal> netCostTotalyOH,
+        IReadOnlyList<decimal> earningsValue)
     {
         var labels = new List<string>(FactorLabels())
         {

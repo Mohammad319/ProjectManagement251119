@@ -20,7 +20,7 @@
                     </h2>
                     <p class="text-sm text-gray-500">@CalcResource.code: @task.Code | @CalcResource.quantity: @FormatNumber(task.Quantity) @task.Unit</p>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="app-storage-conditions-wrap">
                     @if ((task.ConditionEffect == null || task.ConditionEffect?.Any() != true))
                     {
                         <p class="text-gray-600 dark:text-gray-300 italic">@AppLoc["storageNoConditions"]</p>

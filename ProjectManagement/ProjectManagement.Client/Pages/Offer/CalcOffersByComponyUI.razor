@@ -314,7 +314,7 @@
         }
     }
 
-    private double Format(decimal? x) => Template.Format(x ?? 0);
+    private decimal Format(decimal? x) => Template.Format(x ?? 0m);
 
     async Task SetDefaultAsync(ResourceListMVVM res, ListOfferMVVM offer)
     {

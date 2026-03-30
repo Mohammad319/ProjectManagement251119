@@ -183,7 +183,7 @@
     HashSet<int> ExpandedCompanies { get; set; } = new();
     private bool IsLoading { get; set; } = true;
 
-    private double Format(decimal? x) => Template.Format(x ?? 0m);
+    private decimal Format(decimal? x) => Template.Format(x ?? 0m);
 
     void ToggleCompany(int id)
     {

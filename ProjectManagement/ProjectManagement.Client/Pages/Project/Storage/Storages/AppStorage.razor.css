@@ -1,13 +1,18 @@
 .app-storage-task-layout {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
-    align-items: start;
+}
+
+.app-storage-conditions-wrap {
+    width: 100%;
 }
 
 .condition-cards-grid {
     display: grid;
     gap: 0.9rem;
     width: 100%;
+    grid-template-columns: 1fr;
 }
 
 .condition-card {
@@ -17,7 +22,7 @@
 .condition-options-grid {
     display: grid;
     gap: 0.65rem;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: 1fr;
 }
 
 .condition-choice {
@@ -30,14 +35,24 @@
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
-@media (min-width: 1024px) {
-    .app-storage-task-layout {
-        grid-template-columns: minmax(0, 1fr) minmax(320px, 42%);
+@media (min-width: 640px) {
+    .condition-options-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .condition-cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1100px) {
     .condition-cards-grid {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1500px) {
+    .condition-cards-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
