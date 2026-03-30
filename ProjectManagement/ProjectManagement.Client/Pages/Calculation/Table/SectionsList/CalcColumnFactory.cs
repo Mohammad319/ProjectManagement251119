@@ -45,7 +45,7 @@ public static class CalcColumnFactory
         return result;
     }
 
-    private static string BuildFormat(int digits) => "0." + new string('#', digits);
+    private static string BuildFormat(int digits) => NumericFormatHelper.BuildOptionalFractionFormat(digits);
 
     private static string BuildSignature(IReadOnlyList<NetColumnState>? visibleColumns) =>
         visibleColumns is not { Count: > 0 }

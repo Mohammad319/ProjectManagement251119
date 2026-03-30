@@ -26,6 +26,8 @@ public static class ProjectTaskProjection
                 UnitCode = t.UnitCode,
                 WorkloadThresholds = t.WorkloadThresholds,
                 Quantity = t.Quantity,
+                ChangeFactor1 = t.ChangeFactor1,
+                ChangeFactor2 = t.ChangeFactor2,
                 Uncontrollable = t.Uncontrollable,
                 UnitGroup = t.TaskUnitGroup == null ? null : new UnitGroupDto
                 {
@@ -125,6 +127,8 @@ public static class ProjectTaskProjection
                 UnitCode = t.UnitCode,
                 WorkloadThresholds = t.WorkloadThresholds,
                 Quantity = t.Quantity,
+                ChangeFactor1 = t.ChangeFactor1,
+                ChangeFactor2 = t.ChangeFactor2,
                 Uncontrollable = t.Uncontrollable,
                 UpperNote = t.RowNotes,
                

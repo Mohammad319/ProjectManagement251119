@@ -364,6 +364,9 @@ public class CalculationComponentRenderTests : BunitContext
             Assert.Equal(3, cut.FindAll("thead th").Count);
             Assert.Contains("name", cut.Markup);
             Assert.Contains("status", cut.Markup);
+            Assert.Equal("true", cut.Find("#h1").GetAttribute("data-pm-frozen"));
+            Assert.Equal("true", cut.Find("#h2").GetAttribute("data-pm-frozen"));
+            Assert.Equal("false", cut.Find("#h3").GetAttribute("data-pm-frozen"));
             Assert.Single(cut.FindComponents<TaskRowComponent>());
             Assert.Single(cut.FindComponents<ResourceRowComponent>());
         });
@@ -371,6 +374,35 @@ public class CalculationComponentRenderTests : BunitContext
         Assert.NotNull(calc.Tasks[0].Ui.ContextClick);
         Assert.NotNull(calc.Tasks[0].Resources[0].Ui.ContextClick);
         Assert.NotNull(calc.Tasks[0].Resources[0].Ui.OfferClick);
+    }
+
+    [Fact]
+    public void CalcDataGrid_AlwaysFreezes_AccountAndNameColumns()
+    {
+        JSInterop.SetupVoid("initializeResizableColumns", _ => true);
+
+        var calc = CreateGridCalculationWithAccountAndNameColumns();
+        var interactionState = new CalculationInteractionState();
+        var folderState = CreateFolderState(calc);
+        var templateRepository = new FakeTemplateRepository();
+        var calcService = CreateGridCalculationService(folderState, interactionState, templateRepository);
+
+        RegisterGridComponentServices(
+            calcService,
+            interactionState,
+            folderState,
+            templateRepository,
+            CreateTaskService(),
+            CreateResourceService());
+
+        var cut = Render<CalcDataGrid>();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal("true", cut.Find("#h2").GetAttribute("data-pm-frozen"));
+            Assert.Equal("true", cut.Find("#h3").GetAttribute("data-pm-frozen"));
+            Assert.Equal("false", cut.Find("#h4").GetAttribute("data-pm-frozen"));
+        });
     }
 
     [Fact]
@@ -784,7 +816,29 @@ public class CalculationComponentRenderTests : BunitContext
             }
         };
 
-        calc.Template.FreezCol();
+        calc.RebuildHierarchyAndIndexes();
+        calc.AllFlatItems = calc.BuildFlatList();
+        calc.FlatListDirty = false;
+        return calc;
+    }
+
+    private static CalculationMVVM CreateGridCalculationWithAccountAndNameColumns()
+    {
+        var calc = CreateGridCalculation();
+        calc.Template = new TemplateMVVM
+        {
+            StartCol1 = 40,
+            NetCalc = new NetCalc
+            {
+                Columns =
+                [
+                    new NetColumnState { Id = NetColumnId.Account, Width = 70, Frozen = false },
+                    new NetColumnState { Id = NetColumnId.Name, Width = 120, Frozen = false },
+                    new NetColumnState { Id = NetColumnId.Status, Width = 90, Frozen = false }
+                ]
+            }
+        };
+
         calc.RebuildHierarchyAndIndexes();
         calc.AllFlatItems = calc.BuildFlatList();
         calc.FlatListDirty = false;
@@ -811,7 +865,6 @@ public class CalculationComponentRenderTests : BunitContext
             }
         };
 
-        calc.Template.FreezCol();
         calc.RebuildHierarchyAndIndexes();
         calc.AllFlatItems = [];
         calc.FlatListDirty = false;

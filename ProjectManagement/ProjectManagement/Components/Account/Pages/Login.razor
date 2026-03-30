@@ -1,5 +1,4 @@
 ﻿@page "/Account/Login"
-
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
@@ -11,7 +10,6 @@
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-
 
 <PageTitle>@PMResourceIdentity.login</PageTitle>
 
@@ -56,11 +54,33 @@
                         <label for="floatingPassword" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                             @PMResourceIdentity.password
                         </label>
-                        <InputText id="floatingPassword" type="password" @bind-Value="Input.Password"
-                                   placeholder="@PMResourceIdentity.password" autocomplete="current-password"
-                                   class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm
+                        <div class="relative">
+                            <InputText id="floatingPassword" type="password" @bind-Value="Input.Password"
+                                       placeholder="@PMResourceIdentity.password" autocomplete="current-password"
+                                       class="block w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-12 text-gray-900 shadow-sm
                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none
                           dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
+                            <button type="button"
+                                    class="absolute inset-y-0 right-0 inline-flex items-center px-3 text-gray-500 transition hover:text-gray-700 focus:outline-none focus-visible:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200 dark:focus-visible:text-blue-400"
+                                    onclick="window.pmTogglePasswordVisibility && window.pmTogglePasswordVisibility('floatingPassword', this)"
+                                    data-show-label="Show password"
+                                    data-hide-label="Hide password"
+                                    aria-label="Show password"
+                                    aria-pressed="false"
+                                    title="Show password">
+                                <svg class="h-5 w-5" data-password-icon="show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M1.5 12S5.4 4.8 12 4.8 22.5 12 22.5 12 18.6 19.2 12 19.2 1.5 12 1.5 12Z" />
+                                    <circle cx="12" cy="12" r="3.2" />
+                                </svg>
+                                <svg class="hidden h-5 w-5" data-password-icon="hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M3 3l18 18" />
+                                    <path d="M10.58 10.58a2 2 0 0 0 2.84 2.84" />
+                                    <path d="M9.88 5.09A9.77 9.77 0 0 1 12 4.8c5.05 0 9.27 3.11 10.5 7.2a10.77 10.77 0 0 1-4.04 5.34" />
+                                    <path d="M6.61 6.61A10.75 10.75 0 0 0 1.5 12c.9 3 3.45 5.45 6.69 6.48" />
+                                </svg>
+                                <span class="sr-only">Show password</span>
+                            </button>
+                        </div>
                         <ValidationMessage For="@(() => Input.Password)" class="mt-1 text-sm text-red-600 dark:text-red-400" />
                     </div>
 

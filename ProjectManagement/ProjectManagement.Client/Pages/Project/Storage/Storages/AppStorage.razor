@@ -9,16 +9,16 @@
 @if (tasks != null) foreach (var task in tasks)
     {
         <div class="bg-white dark:bg-gray-800 shadow rounded-2xl px-4 mb-1 border border-gray-200 dark:border-gray-700">
-            <div class="flex justify-between items-center mb-0 text-gray-900 dark:text-gray-100">
+            <div class="app-storage-task-layout mb-0 text-gray-900 dark:text-gray-100">
                 <div>
-                    <h2 class="text-xl font-semibold text-blue-700">
+                    <h2 class="flex flex-wrap items-center gap-2 text-xl font-semibold text-blue-700">
                         @task.Name
                         <button @onclick="() => CalcFunk(task)" class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white">@AppLoc["Button_Apply"]</button>
                         <span role="button" @onclick="() => AddRemoveTask(task)" class="@(TaskResSelecteds.Any(x => x.Id == task.Id) ? "text-danger" : "text-primary")">
                             @((MarkupString)(TaskResSelecteds.Any(x => x.Id == task.Id) ? Icons.Minus : Icons.Plus2))
                         </span>
                     </h2>
-                    <p class="text-sm text-gray-500">@CalcResource.code: @task.Code | @CalcResource.quantity: @task.Quantity @task.Unit</p>
+                    <p class="text-sm text-gray-500">@CalcResource.code: @task.Code | @CalcResource.quantity: @FormatNumber(task.Quantity) @task.Unit</p>
                 </div>
                 <div class="flex justify-between items-center">
                     @if ((task.ConditionEffect == null || task.ConditionEffect?.Any() != true))
@@ -27,95 +27,93 @@
                     }
                     else
                     {
-                        @if (task.ConditionEffect != null) foreach (var condition in task.ConditionEffect)
-                                if (condition.ExternalVariables.Any() || condition.Items.Count > 1)
+                        @if (task.ConditionEffect != null)
+                        {
+                            <div class="condition-cards-grid">
+                                @foreach (var condition in task.ConditionEffect)
                                 {
-                                    <div class="border border-gray-300 dark:border-gray-700 rounded-xl p-1 shadow-sm bg-white dark:bg-gray-800">
-                                        <div class="flex justify-between items-center mb-1">
-                                            <div>
+                                    @if (condition.ExternalVariables.Any() || condition.Items.Count > 1)
+                                    {
+                                        <div class="condition-card border border-gray-300 dark:border-gray-700 rounded-xl p-3 shadow-sm bg-white dark:bg-gray-800">
+                                            <div class="mb-2">
                                                 <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">@condition.Name</h2>
-                                                @if (condition.Items.Count > 1)
-                                                {
-                                                    <div class="flex justify-between items-center">
-
-                                                        @if (condition.IsMultiSelect)
-                                                        {
-                                                            <div class="w-60 h-30 overflow-auto border rounded px-1">
-                                                                <select class="w-full h-full p-2 text-sm" @onchange="(ev) => OnMultiSelectionChanged(ev, condition)">
-
-                                                                    @foreach (var item in condition.Items)
-                                                                    {
-                                                                        <option value="@(item.Id)">
-                                                                            @item.Name
-                                                                        </option>
-                                                                    }
-                                                                </select>
-                                                            </div>
-                                                        }
-                                                        else
-                                                        {
-                                                            <div class="px-1">
-                                                                <select class="w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white" @onchange="(e) => OnSingleSelectionChanged(e.Value?.ToString(), condition)">
-                                                                    <option></option>
-
-                                                                    @foreach (var item in condition.Items)
-                                                                    {
-                                                                        <option value="@( item.Id)">@item.Name</option>
-                                                                    }
-                                                                </select>
-                                                            </div>
-                                                        }
-
-                                                    </div>
-                                                }
                                             </div>
 
-                                        </div>
-
-                                        @if (condition.ExternalVariables.Any())
-                                        {
-                                            <div class="mb-1">
-                                                <h3 class="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-1">
-                                                    <span class="text-xs px-2 py-0 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded-full">
-                                                        @AppLoc["storageVariables"]: @condition.ExternalVariables.Count
-                                                    </span>
-                                                    @AppLoc["storageEnterVariables"]
-                                                </h3>
-                                                <div class="grid">
-                                                    @foreach (var variable in condition.ExternalVariables)
-                                                    {
-                                                        <div>
-                                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-0">
-                                                                @variable.DisplayName
+                                            @if (condition.Items.Count > 1)
+                                            {
+                                                <div class="mb-3">
+                                                    <div class="condition-options-grid">
+                                                        @foreach (var item in condition.Items)
+                                                        {
+                                                            <label class="condition-choice flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700">
+                                                                @if (condition.IsMultiSelect)
+                                                                {
+                                                                    <input type="checkbox"
+                                                                           class="h-4 w-4 accent-blue-600"
+                                                                           @bind="item.IsSelected" />
+                                                                }
+                                                                else
+                                                                {
+                                                                    <input type="radio"
+                                                                           name="@GetConditionGroupName("task", task.Id, condition)"
+                                                                           class="h-4 w-4 accent-blue-600"
+                                                                           checked="@item.IsSelected"
+                                                                           @onchange="() => OnSingleSelectionChanged(item.Id.ToString(), condition)" />
+                                                                }
+                                                                <span>@item.Name</span>
                                                             </label>
-
-                                                            @if (variable.AllowedValues is { Count: > 0 })
-                                                            {
-                                                                <select class="w-full bg-white dark:bg-gray-700 text-sm rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                                                                        @bind="variable.Value">
-                                                                    @foreach (var val in variable.AllowedValues)
-                                                                    {
-                                                                        <option value="@val">@val</option>
-                                                                    }
-                                                                </select>
-                                                            }
-                                                            else
-                                                            {
-                                                                <input type="number" style="width:90px;"
-                                                                       class="w-full bg-white dark:bg-gray-700 text-sm rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 px-2"
-                                                                       @bind="variable.Value"
-                                                                       step="any"
-                                                                       min="@variable.Min"
-                                                                       max="@variable.Max" />
-                                                            }
-                                                        </div>
-                                                    }
+                                                        }
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        }
+                                            }
 
-                                    </div>
+                                            @if (condition.ExternalVariables.Any())
+                                            {
+                                                <div class="mb-1">
+                                                    <h3 class="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                                        <span class="text-xs px-2 py-0 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded-full">
+                                                            @AppLoc["storageVariables"]: @condition.ExternalVariables.Count
+                                                        </span>
+                                                        @AppLoc["storageEnterVariables"]
+                                                    </h3>
+                                                    <div class="condition-variables-grid">
+                                                        @foreach (var variable in condition.ExternalVariables)
+                                                        {
+                                                            <div>
+                                                                <label class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                                                                    @variable.DisplayName
+                                                                </label>
+
+                                                                @if (variable.AllowedValues is { Count: > 0 })
+                                                                {
+                                                                    <select class="w-full bg-white dark:bg-gray-700 text-sm rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+                                                                            @bind="variable.Value">
+                                                                        @foreach (var val in variable.AllowedValues)
+                                                                        {
+                                                                            <option value="@val">@FormatNumber(val)</option>
+                                                                        }
+                                                                    </select>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <TrimmedNumberInput TValue="decimal?"
+                                                                                        class="w-full bg-white dark:bg-gray-700 text-sm rounded border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 px-2"
+                                                                                        @bind-Value="variable.Value"
+                                                                                        MaxFractionDigits="@MaxFractionDigits"
+                                                                                        step="any"
+                                                                                        min="@variable.Min"
+                                                                                        max="@variable.Max" />
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
                                 }
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -151,52 +149,54 @@
                                         <span>  @res.Name</span>
                                       
                                     </td>
-                                    <td class="px-4 py-2">@res.Data?.Quantity</td>
+                                    <td class="px-4 py-2">@FormatNumber(res.Data?.Quantity)</td>
                                     <td class="px-4 py-2">@res.Data?.Unit</td>
-                                    <td class="px-4 py-2 text-green-600 font-semibold">@res.Data?.Cost</td>
-                                    <td class="px-4 py-2">@res.Data?.BaseCost</td>
-                                    <td class="px-4 py-2">@res.Data?.CapWaste</td>
-                                    <td class="px-4 py-2">@res.Data?.ChangeFactor1 / @res.Data?.ChangeFactor2</td>
+                                    <td class="px-4 py-2 text-green-600 font-semibold">@FormatNumber(res.Data?.Cost)</td>
+                                    <td class="px-4 py-2">@FormatNumber(res.Data?.BaseCost)</td>
+                                    <td class="px-4 py-2">@FormatNumber(res.Data?.CapWaste)</td>
+                                    <td class="px-4 py-2">@FormatNumber(res.Data?.ChangeFactor1) / @FormatNumber(res.Data?.ChangeFactor2)</td>
                                 </tr>
                                 @if (IsConditionRowVisible(res.Id))
                                 {
                                     <tr class="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
                                         <td colspan="7" class="px-4 py-2">
-                                            <div class="flex flex-wrap gap-4 text-gray-800 dark:text-gray-200">
+                                            <div class="condition-cards-grid text-gray-800 dark:text-gray-200">
                                                 @foreach (var condition in res.ConditionEffect)
-                                                    if (condition.ExternalVariables.Any() || condition.Items.Count > 1)
+                                                {
+                                                    @if (condition.ExternalVariables.Any() || condition.Items.Count > 1)
                                                     {
-                                                        <div class="border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-900 text-xs w-60 shadow-sm">
+                                                        <div class="condition-card border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-900 text-xs shadow-sm">
                                                             <h2 class="font-semibold text-gray-800 dark:text-gray-100 mb-2">@condition.Name</h2>
                                                             @if (condition.Items.Count > 1)
                                                             {
-                                                                @if (condition.IsMultiSelect)
-                                                                {
-                                                                    <select multiple
-                                                                            class="w-full h-20 p-1 border text-xs rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                                                            @onchange="(ev) => OnMultiSelectionChanged(ev, condition)">
+                                                                <div class="mb-3">
+                                                                    <div class="condition-options-grid">
                                                                         @foreach (var item in condition.Items)
                                                                         {
-                                                                            <option value="@item.Id">@item.Name</option>
+                                                                            <label class="condition-choice flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700">
+                                                                                @if (condition.IsMultiSelect)
+                                                                                {
+                                                                                    <input type="checkbox"
+                                                                                           class="h-4 w-4 accent-blue-600"
+                                                                                           @bind="item.IsSelected" />
+                                                                                }
+                                                                                else
+                                                                                {
+                                                                                    <input type="radio"
+                                                                                           name="@GetConditionGroupName("resource", res.Id, condition)"
+                                                                                           class="h-4 w-4 accent-blue-600"
+                                                                                           checked="@item.IsSelected"
+                                                                                           @onchange="() => OnSingleSelectionChanged(item.Id.ToString(), condition)" />
+                                                                                }
+                                                                                <span>@item.Name</span>
+                                                                            </label>
                                                                         }
-                                                                    </select>
-                                                                }
-                                                                else
-                                                                {
-                                                                    <select class="w-full p-1 border text-xs rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                                                            @onchange="(e) => OnSingleSelectionChanged(e.Value?.ToString(), condition)">
-                                                                        <option></option>
-
-                                                                        @foreach (var item in condition.Items)
-                                                                        {
-                                                                            <option value="@item.Id">@item.Name</option>
-                                                                        }
-                                                                    </select>
-                                                                }
+                                                                    </div>
+                                                                </div>
                                                             }
                                                             @if (condition.ExternalVariables.Any())
                                                             {
-                                                                <div class="flex flex-wrap gap-2 mt-2">
+                                                                <div class="condition-variables-grid mt-2">
                                                                     @foreach (var variable in condition.ExternalVariables)
                                                                     {
                                                                         <div class="flex flex-col w-full">
@@ -209,18 +209,19 @@
                                                                                     <option value="">-- @AppLoc["select"] --</option>
                                                                                     @foreach (var val in variable.AllowedValues)
                                                                                     {
-                                                                                        <option value="@val">@val</option>
+                                                                                        <option value="@val">@FormatNumber(val)</option>
                                                                                     }
                                                                                 </select>
                                                                             }
                                                                             else
                                                                             {
-                                                                                <input type="number"
-                                                                                       class="p-1 border text-xs rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                                                                       @bind="variable.Value"
-                                                                                       step="any"
-                                                                                       min="@variable.Min"
-                                                                                       max="@variable.Max" />
+                                                                                <TrimmedNumberInput TValue="decimal?"
+                                                                                                    class="p-1 border text-xs rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                                                                                    @bind-Value="variable.Value"
+                                                                                                    MaxFractionDigits="@MaxFractionDigits"
+                                                                                                    step="any"
+                                                                                                    min="@variable.Min"
+                                                                                                    max="@variable.Max" />
                                                                             }
                                                                         </div>
                                                                     }
@@ -228,6 +229,7 @@
                                                             }
                                                         </div>
                                                     }
+                                                }
                                             </div>
                                         </td>
                                     </tr>
@@ -327,16 +329,6 @@
             }
         }
     }
-    private void OnMultiSelectionChanged(ChangeEventArgs e, ConditionDto cat)
-    {
-        var selectedValues = e.Value as string[];
-        if (selectedValues == null) return;
-
-        foreach (var item in cat.Items)
-        {
-            item.IsSelected = selectedValues.Contains(item.Id.ToString());
-        }
-    }
     private void OnSingleSelectionChanged(string? e, ConditionDto cat)
     {
         foreach (var item in cat.Items)
@@ -403,4 +395,15 @@
         public int Id { get; set; }
         public List<int>? Resoueces { get; set; }
     }
+
+    private static string GetConditionGroupName(string scope, int ownerId, ConditionDto condition)
+        => $"{scope}-{ownerId}-condition-{condition.Id}";
+
+    private int MaxFractionDigits => Math.Clamp(Template?.MathRound ?? NumericFormatHelper.DefaultMaxFractionDigits, 0, 15);
+
+    private string FormatNumber(decimal value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits);
+
+    private string FormatNumber(decimal? value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits);
 }

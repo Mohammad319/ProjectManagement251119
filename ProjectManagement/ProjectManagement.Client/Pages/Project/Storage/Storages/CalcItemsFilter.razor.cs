@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Components;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Folder;
@@ -19,6 +20,7 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
         [Parameter] public CalculationItemType ItemType { get; set; }
         [Parameter] public EventCallback Callback { get; set; }
         [Parameter] public int ParentID { get; set; }
+        [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
 
         object? List;
         FilterCalculationItemsDto Filter = new() { Page = -1 };
@@ -143,5 +145,14 @@ namespace ProjectManagement.Client.Pages.Project.Storage.Storages
             };
             FoldersList = await Repo.Folder.GetAllVisibleAsync();
         }
+
+        private string FormatNumber(decimal value)
+            => NumericFormatHelper.Format(value, MaxFractionDigits);
+
+        private string FormatNumber(decimal? value)
+            => NumericFormatHelper.Format(value, MaxFractionDigits);
+
+        private string FormatNumber(double? value)
+            => NumericFormatHelper.Format(value, MaxFractionDigits);
     }
 }

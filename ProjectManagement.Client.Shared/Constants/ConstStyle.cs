@@ -40,4 +40,8 @@ public static class UiStyles
     {
         return Math.Round(value, round);
     }
+    public static decimal Format(decimal value, int round)
+    {
+        return Math.Round(value, round);
+    }
 }

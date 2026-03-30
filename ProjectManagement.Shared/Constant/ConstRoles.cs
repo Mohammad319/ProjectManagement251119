@@ -302,7 +302,7 @@ namespace ProjectManagement.Shared.Constants
             [
                 new() { Id = NetColumnId.Code, Width = 50, Frozen = false },
         new() { Id = NetColumnId.Active, Width = 50, Frozen = false },
-        new() { Id = NetColumnId.Account, Width = 70, Frozen = false },
+        new() { Id = NetColumnId.Account, Width = 70, Frozen = true },
         new() { Id = NetColumnId.Name,Width = 120, Frozen = true },
         new() { Id = NetColumnId.Status, Width = 100, Frozen = false },
         new() { Id = NetColumnId.ResourceTypeSystem, Width = 180, Frozen = false },

@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
@@ -11,6 +12,7 @@ public partial class ResourceDetailRows
     [Parameter] public ResourceListMVVM Resource { get; set; } = default!;
     [Parameter] public IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = Array.Empty<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>();
     [Parameter] public int Left { get; set; }
+    [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
     [Parameter] public string Color { get; set; } = string.Empty;
 
     private string DetailRowStyle => BuildDetailRowStyle(Color);
@@ -53,7 +55,7 @@ public partial class ResourceDetailRows
     private void RenderDetailCells(RenderTreeBuilder builder, DetailLine line)
     {
         var seq = 0;
-        var count = Colmuns?.Count ?? 0;
+        var count = Colmuns.Count;
 
         for (int i = 0; i < count; i++)
         {
@@ -200,8 +202,8 @@ public partial class ResourceDetailRows
         return true;
     }
 
-    private static string FormatDecimal(decimal value)
-        => value.ToString("0.##", CultureInfo.CurrentCulture);
+    private string FormatDecimal(decimal value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits, CultureInfo.CurrentCulture);
 
     private enum DetailKind
     {

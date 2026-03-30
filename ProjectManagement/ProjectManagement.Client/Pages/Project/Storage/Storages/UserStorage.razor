@@ -8,7 +8,9 @@
 {
     @if (Tasks != null) foreach (var Storage in Tasks)
         {
-            <TaskStorage Task="Storage.StorageValue" WithContent="true">
+            <TaskStorage Task="Storage.StorageValue"
+                         MaxFractionDigits="MaxFractionDigits"
+                         WithContent="true">
                 <span role="button" @onclick="() => AddRemoveAsync(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
                     @((MarkupString)(IDs.Any(x => x == Storage.Id) ? Icons.Minus : Icons.Plus))
                 </span>
@@ -19,7 +21,8 @@ else
 {
     if (Resources != null) foreach (var Storage in Resources)
         {
-            <ResourcesStorage Resource="Storage.StorageValue">
+            <ResourcesStorage Resource="Storage.StorageValue"
+                              MaxFractionDigits="MaxFractionDigits">
                 <span role="button" @onclick="() => AddRemoveAsync(Storage.Id)" class="@(IDs.Any(x => x == Storage.Id) ? "text-danger" : "text-primary")">
                     @((MarkupString)(IDs.Any(x => x == Storage.Id) ? Icons.Minus : Icons.Plus))
                 </span>
@@ -31,6 +34,7 @@ else
     List<StorageDTO<ResourcePostDTO>>? Resources;
     [Parameter] public CalculationItemType Type { get; set; }
     [Parameter] public int ParentID { get; set; }
+    [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
     [Parameter] public EventCallback Callback { get; set; }
     List<int> IDs = [];
     public bool SaveBtnVisible() => (IDs != null && IDs.Count != 0);

@@ -41,16 +41,16 @@ namespace ProjectManagement.Client.Helper
             RenderTd(builder, value?.ToString() ?? string.Empty);
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, double value) =>
-            RenderTd(builder, value.ToString(format, Inv), cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, double? value) =>
-            RenderTd(builder, value.HasValue ? value.Value.ToString(format, Inv) : string.Empty, cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, decimal value) =>
-            RenderTd(builder, value.ToString(format, Inv), cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, decimal? value) =>
-            RenderTd(builder, value.HasValue ? value.Value.ToString(format, Inv) : string.Empty, cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
 
         public static void RenderCheckboxTd(RenderTreeBuilder builder, bool isChecked)
         {

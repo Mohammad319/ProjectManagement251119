@@ -73,14 +73,21 @@ else
 
     @if (Post.AuthoritySelected == AuthorityStorage.ImportFromOtherCalc)
     {
-        <CalcItemsFilter @ref="ImportOtherCalc" ItemType="Post.Type" Callback="StateHasChanged"></CalcItemsFilter>
+        <CalcItemsFilter @ref="ImportOtherCalc"
+                         ItemType="Post.Type"
+                         MaxFractionDigits="MaxFractionDigits"
+                         Callback="StateHasChanged"></CalcItemsFilter>
     }
     else
     {
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <HeaderStorageUI></HeaderStorageUI>
                 <tbody class="divide-y divide-gray-100 hover:divide-gray-200 dark:divide-gray-700">
-                    <UserStorage Type="Post.Type" ParentID="ParentID" @ref="UserStorage" Callback="StateHasChanged"></UserStorage>
+                    <UserStorage Type="Post.Type"
+                                 ParentID="ParentID"
+                                 MaxFractionDigits="MaxFractionDigits"
+                                 @ref="UserStorage"
+                                 Callback="StateHasChanged"></UserStorage>
                 </tbody>
             </table>
     }
@@ -96,6 +103,7 @@ else
     UserStorage? UserStorage;
     bool BtnMore = false;
     GetFilterDTO Post = new GetFilterDTO();
+    private int MaxFractionDigits => Math.Clamp(Template?.MathRound ?? NumericFormatHelper.DefaultMaxFractionDigits, 0, 15);
     protected override void OnInitialized() => Post.Type = CalcType;
 
     bool SaveBtnVisivble()

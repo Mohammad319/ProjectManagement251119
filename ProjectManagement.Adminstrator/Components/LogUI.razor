@@ -10,7 +10,7 @@
 @inject ApplicationDbContext context
 @inject IUsersService TenantRepo
 
-<div class="space-y-4 text-slate-900 dark:text-slate-100">
+<div class="space-y-3 text-slate-900 dark:text-slate-100">
 
     <EditForm id="versionForm" Model="@Filter" OnValidSubmit="async () => await GetTaskAsync(true)">
         <div class="flex flex-wrap items-center gap-2">

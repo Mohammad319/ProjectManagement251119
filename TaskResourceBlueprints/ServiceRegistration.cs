@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 using TaskResourceBlueprints.Services.Common;
+using TaskResourceBlueprints.Services.Demo;
 using TaskResourceBlueprints.Services.ProjectTask;
 using TaskResourceBlueprints.Services.QuestionConditions;
 using TaskResourceBlueprints.Services.Resource;
@@ -16,6 +17,7 @@ namespace TaskResourceBlueprints
         {
             services.AddScoped(typeof(IEntityService<>), typeof(EntityService<>));
 
+            services.AddScoped<IConstructionDemoDataService, ConstructionDemoDataService>();
             services.AddScoped<ITaskDefinitionQueryService, ProjectTaskQueryService>();
             services.AddScoped<ITaskDefinitionService, ProjectTaskService>();
             services.AddScoped<ITaskResourceService, TaskResourceService>();

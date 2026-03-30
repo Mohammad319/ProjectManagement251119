@@ -8,6 +8,7 @@
 
 @code {
     [Parameter] public TaskPostDTO Task { get; set; } = default!;
+    [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public bool WithContent { get; set; }
 
@@ -28,11 +29,11 @@
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Code</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300"><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Name</td>
-            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Quantity</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@FormatNumber(task.Metadata.Quantity)</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300"></td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Unit</td>
-            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.ChangeFactor1 / @task.Metadata.ChangeFactor2</td>
-            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Cap</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@FormatNumber(task.Metadata.ChangeFactor1) / @FormatNumber(task.Metadata.ChangeFactor2)</td>
+            <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@FormatNumber(task.Metadata.Cap)</td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300"></td>
             <td class="p-1 text-sm text-gray-800 dark:text-gray-300">@task.Metadata.Note</td>
         </tr>
@@ -40,7 +41,8 @@
         {
             if (task.Resources != null) foreach (var resource in task.Resources)
             {
-                 <ResourcesStorage Resource="resource">
+                 <ResourcesStorage Resource="resource"
+                                   MaxFractionDigits="MaxFractionDigits">
                      <ChildContent></ChildContent>
                  </ResourcesStorage>
             }
@@ -52,4 +54,10 @@
         }
 
     };
+
+    private string FormatNumber(decimal value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits);
+
+    private string FormatNumber(decimal? value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits);
 }

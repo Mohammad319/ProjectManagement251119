@@ -147,11 +147,11 @@
                                 <td>@task.Metadata.Code</td>
                                 <td><input type="checkbox" disabled checked="@task.Metadata.IsActive" /></td>
                                 <td>@task.Name</td>
-                                <td>@task.Metadata.Quantity / @task.BaseCost</td>
+                                <td>@FormatNumber(task.Metadata.Quantity) / @FormatNumber(task.BaseCost)</td>
                                 <td>@task.Metadata.Unit</td>
-                                <td>@task.Metadata.ChangeFactor1</td>
-                                <td>@task.Metadata.ChangeFactor2</td>
-                                <td>@task.Metadata.Cap</td>
+                                <td>@FormatNumber(task.Metadata.ChangeFactor1)</td>
+                                <td>@FormatNumber(task.Metadata.ChangeFactor2)</td>
+                                <td>@FormatNumber(task.Metadata.Cap)</td>
                                 <td></td>
                             </tr>
                                     }
@@ -166,12 +166,12 @@
                                 <td></td>
                                 <td><input type="checkbox" disabled checked="@Resource.Active" /></td>
                                 <td>@Resource.Name</td>
-                                <td>@String.Format("{0:0.##}", Resource.BaseCost)</td>
-                                <td>@Resource.Cost / @Resource.Unit</td>
-                                <td>@Resource.ChangeFactor1</td>
-                                <td>@Resource.ChangeFactor2</td>
-                                <td>@Resource.CapWaste</td>
-                                <td>@Resource.CO2</td>
+                                <td>@FormatNumber(Resource.BaseCost)</td>
+                                <td>@FormatNumber(Resource.Cost) / @Resource.Unit</td>
+                                <td>@FormatNumber(Resource.ChangeFactor1)</td>
+                                <td>@FormatNumber(Resource.ChangeFactor2)</td>
+                                <td>@FormatNumber(Resource.CapWaste)</td>
+                                <td>@FormatNumber(Resource.CO2)</td>
                             </tr>
                         }
                 }

@@ -150,7 +150,6 @@ else
         var tempNew = await Repo.Template.SetDefaultAsync(Calc.Id, newTemplate.Id);
         Calc.Template = tempNew != null ? tempNew : new TemplateMVVM();
         Calc.TemplateId = newTemplate.Id;
-        Template.FreezCol();
         Refresh();
         Modal.Close();
     }

@@ -225,74 +225,126 @@ else
                             <input type="text" @bind="current.Data.Unit" class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <input type="number" @bind="current.Data.BaseCost" class="@St" />
+                            <TrimmedNumberInput TValue="decimal?"
+                                                @bind-Value="current.Data.BaseCost"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <input type="number" @bind="current.Data.Cost" class="@St" />
+                            <TrimmedNumberInput TValue="decimal"
+                                                @bind-Value="current.Data.Cost"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.Id < 0)
                             {
                                 <span>*</span>
-                                <input type="number" value="@TotalCost" class="@St" disabled />
+                                <input type="text" value="@FormatNumber(TotalCost)" class="@St" disabled />
                             }
                             else
                             {
-                                <input type="number" value="@current.TotalCost" class="@St" disabled />
+                                <input type="text" value="@FormatNumber(current.TotalCost)" class="@St" disabled />
                             }
                         </td>
 
                         <!-- CO2 / ChangeFactors / Quantity / CapWaste -->
                         <td class="px-1 py-0.5">
-                            <input type="number" @bind="current.Data.CO2" class="@St" />
+                            <TrimmedNumberInput TValue="double?"
+                                                @bind-Value="current.Data.CO2"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <input type="number" @bind="current.Data.ChangeFactor1" class="@St" />
+                            <TrimmedNumberInput TValue="decimal"
+                                                @bind-Value="current.Data.ChangeFactor1"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <input type="number" @bind="current.Data.ChangeFactor2" class="@St" />
+                            <TrimmedNumberInput TValue="decimal"
+                                                @bind-Value="current.Data.ChangeFactor2"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <input type="number" @bind="current.Data.Quantity" class="@St" />
+                            <TrimmedNumberInput TValue="decimal?"
+                                                @bind-Value="current.Data.Quantity"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <input type="number" @bind="current.Data.CapWaste" class="@St" />
+                            <TrimmedNumberInput TValue="decimal"
+                                                @bind-Value="current.Data.CapWaste"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
                         </td>
 
                         <td class="px-1 py-0.5">
                             @if (current.HasCap && current.CalcResCost != null)
                             {
-                                <input type="number" @bind="current.CalcResCost.Morgen" class="@St" />
+                                <TrimmedNumberInput TValue="int"
+                                                    @bind-Value="current.CalcResCost.Morgen"
+                                                    MaxFractionDigits="@MaxFractionDigits"
+                                                    step="1"
+                                                    class="@St" />
                             }
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.HasCap && current.CalcResCost != null)
                             {
-                                <input type="number" @bind="current.CalcResCost.MorgenCost" class="@St" />
+                                <TrimmedNumberInput TValue="decimal"
+                                                    @bind-Value="current.CalcResCost.MorgenCost"
+                                                    MaxFractionDigits="@MaxFractionDigits"
+                                                    step="any"
+                                                    class="@St" />
                             }
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.HasCap && current.CalcResCost != null)
                             {
-                                <input type="number" @bind="current.CalcResCost.Day" class="@St" />
+                                <TrimmedNumberInput TValue="int"
+                                                    @bind-Value="current.CalcResCost.Day"
+                                                    MaxFractionDigits="@MaxFractionDigits"
+                                                    step="1"
+                                                    class="@St" />
                             }
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.HasCap && current.CalcResCost != null)
                             {
-                                <input type="number" @bind="current.CalcResCost.DayCost" class="@St" />
+                                <TrimmedNumberInput TValue="decimal"
+                                                    @bind-Value="current.CalcResCost.DayCost"
+                                                    MaxFractionDigits="@MaxFractionDigits"
+                                                    step="any"
+                                                    class="@St" />
                             }
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.HasCap && current.CalcResCost != null)
                             {
-                                <input type="number" @bind="current.CalcResCost.Evening" class="@St" />
+                                <TrimmedNumberInput TValue="int"
+                                                    @bind-Value="current.CalcResCost.Evening"
+                                                    MaxFractionDigits="@MaxFractionDigits"
+                                                    step="1"
+                                                    class="@St" />
                             }
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.HasCap && current.CalcResCost != null)
                             {
-                                <input type="number" @bind="current.CalcResCost.EveningCost" class="@St" />
+                                <TrimmedNumberInput TValue="decimal"
+                                                    @bind-Value="current.CalcResCost.EveningCost"
+                                                    MaxFractionDigits="@MaxFractionDigits"
+                                                    step="any"
+                                                    class="@St" />
                             }
                         </td>
 
@@ -309,11 +361,13 @@ else
                                     }
                                     else if (p.DataType == DataType.Number)
                                     {
-                                        <input type="number"
-                                               @bind="p.NumberDefault"
-                                               max="@p.MaxNumericValue"
-                                               class="@St"
-                                               disabled="@(!p.IsUserEditable)" />
+                                        <TrimmedNumberInput TValue="decimal?"
+                                                            @bind-Value="p.NumberDefault"
+                                                            MaxFractionDigits="@MaxFractionDigits"
+                                                            max="@p.MaxNumericValue"
+                                                            step="any"
+                                                            class="@St"
+                                                            disabled="@(!p.IsUserEditable)" />
                                     }
                                     else
                                     {
@@ -375,6 +429,7 @@ else
     [Parameter] public bool NameConfig { get; set; }
     [Parameter] public bool CostConfig { get; set; }
     [Parameter] public decimal TotalCost { get; set; }
+    [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
 
     // يُستدعى عند تغيير Dropdown أو أي تغيّر نريد أن نبلّغ به الأب (TaskCard مثلاً)
     [Parameter] public EventCallback OnChanged { get; set; }
@@ -470,4 +525,7 @@ else
         if (OnChanged.HasDelegate)
             await OnChanged.InvokeAsync();
     }
+
+    private string FormatNumber(decimal value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits);
 }

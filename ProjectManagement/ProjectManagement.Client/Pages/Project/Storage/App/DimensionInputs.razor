@@ -1,16 +1,22 @@
-﻿@using ProjectManagement.Shared.DTO.ProjectAppStorage
+@using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
+@using System.Linq.Expressions
+@inherits AppComponentBase
 
 <div class="flex flex-wrap items-end gap-1 md:gap-1.5 text-[11px]"
      @key="@($"{Task.Id}:{Task.NewUnitCode ?? "-"}")">
 
     <!-- Quantity -->
     <div class="flex flex-col gap-0.5 w-[90px]">
-        <input id="@($"quantity-{Task.Id}")" placeholder="@CalcResource.quantity"
-               type="number" min="0" step="any"
-               class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-               @bind="Task.Quantity" />
+        <TrimmedNumberInput TValue="decimal?"
+                            id="@($"quantity-{Task.Id}")"
+                            placeholder="@CalcResource.quantity"
+                            min="0"
+                            step="any"
+                            MaxFractionDigits="MaxFractionDigits"
+                            class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            @bind-Value="Task.Quantity" />
     </div>
 
     <!-- Unit -->
@@ -37,9 +43,9 @@
     @{
         var inputs = new (string Label, ParamName Name, int Index)[]
         {
-        ("Thickness (mm)", ParamName.Thickness, 0),
-        ("Width (mm)",     ParamName.Width,     1),
-        ("Length (mm)",    ParamName.Length,    2)
+            ("Thickness (mm)", ParamName.Thickness, 0),
+            ("Width (mm)",     ParamName.Width,     1),
+            ("Length (mm)",    ParamName.Length,    2)
         };
     }
 
@@ -51,14 +57,17 @@
 
         if (show)
         {
-            var has = Task.ParameterValues.TryGetValue(inp.Name, out var v);
             <div class="flex flex-col gap-0.5 w-[120px]">
-                <input type="number" placeholder=" @inp.Label"
-                       min="0" step="any"
-                       class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                       value="@(has? v.ToString() : string.Empty)"
-                       @oninput="e => OnParamChangedInternal(inp.Name, e.Value)"
-                       @attributes="@((maxVal > 0 ? new Dictionary<string, object> { { "max", maxVal } } : null))" />
+                <TrimmedNumberInput TValue="decimal?"
+                                    placeholder="@inp.Label"
+                                    min="0"
+                                    step="any"
+                                    MaxFractionDigits="MaxFractionDigits"
+                                    class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    Value="GetParameterValue(inp.Name)"
+                                    ValueChanged="value => OnParamChangedInternal(inp.Name, value)"
+                                    ValueExpression="GetValueExpression(inp.Name)"
+                                    @attributes="@((maxVal > 0 ? new Dictionary<string, object> { { "max", maxVal } } : null))" />
             </div>
         }
     }
@@ -75,8 +84,18 @@
 
 @code {
     [Parameter] public ProjectTaskDto Task { get; set; } = default!;
+    [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
     [Parameter] public EventCallback OnChanged { get; set; }
     [Parameter] public EventCallback OnApply { get; set; }
+
+    private readonly DimensionValueModel _dimensionValues = new();
+
+    protected override void OnParametersSet()
+    {
+        _dimensionValues.Thickness = ReadParameterValue(ParamName.Thickness);
+        _dimensionValues.Width = ReadParameterValue(ParamName.Width);
+        _dimensionValues.Length = ReadParameterValue(ParamName.Length);
+    }
 
     // ========== تغيّر الوحدة ==========
     private void OnUnitChanged(ChangeEventArgs e)
@@ -88,10 +107,44 @@
     }
 
     // ========== تحديث بارامتر ==========
-    private void OnParamChangedInternal(ParamName name, object? raw)
+    private decimal? ReadParameterValue(ParamName name)
+        => Task.ParameterValues.TryGetValue(name, out var value) ? value : null;
+
+    private decimal? GetParameterValue(ParamName name)
+        => name switch
+        {
+            ParamName.Thickness => _dimensionValues.Thickness,
+            ParamName.Width => _dimensionValues.Width,
+            ParamName.Length => _dimensionValues.Length,
+            _ => ReadParameterValue(name)
+        };
+
+    private Expression<Func<decimal?>> GetValueExpression(ParamName name)
+        => name switch
+        {
+            ParamName.Thickness => () => _dimensionValues.Thickness,
+            ParamName.Width => () => _dimensionValues.Width,
+            ParamName.Length => () => _dimensionValues.Length,
+            _ => () => _dimensionValues.Thickness
+        };
+
+    private void OnParamChangedInternal(ParamName name, decimal? value)
     {
-        if (decimal.TryParse(Convert.ToString(raw), out var val))
-            Task.ParameterValues[name] = val;
+        switch (name)
+        {
+            case ParamName.Thickness:
+                _dimensionValues.Thickness = value;
+                break;
+            case ParamName.Width:
+                _dimensionValues.Width = value;
+                break;
+            case ParamName.Length:
+                _dimensionValues.Length = value;
+                break;
+        }
+
+        if (value.HasValue)
+            Task.ParameterValues[name] = value.Value;
         else
             Task.ParameterValues.Remove(name);
 
@@ -121,5 +174,12 @@
                       || Needs(t, ParamName.Width)
                       || Needs(t, ParamName.Length);
         return thresholds.Any(x => x > 0) || needsDims;
+    }
+
+    private sealed class DimensionValueModel
+    {
+        public decimal? Thickness { get; set; }
+        public decimal? Width { get; set; }
+        public decimal? Length { get; set; }
     }
 }

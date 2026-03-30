@@ -2,11 +2,11 @@
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
-<div class="space-y-4">
-    <EditForm Model="@Put" OnValidSubmit="HandleSubmitAsync" id="tenantForm" class="space-y-4">
+<div class="space-y-3">
+    <EditForm Model="@Put" OnValidSubmit="HandleSubmitAsync" id="tenantForm" class="space-y-3">
         <DataAnnotationsValidator />
 
-        <section class="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/80">
+        <section class="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950/80">
             <div>
                 <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Tenant database</h3>
                 <p class="mt-1 text-xs text-slate-600 dark:text-slate-400">Define the display name and connection string used by the tenant shard.</p>

@@ -7,11 +7,8 @@ window.initializeResizableColumns = function (dotNetRef) {
     if (!table) return;
 
     createResizableTable(table);
-
-    window.requestAnimationFrame(() => {
-        syncFrozenColumns(table);
-        window.setTimeout(() => syncFrozenColumns(table), 40);
-    });
+    observeFrozenColumns(table);
+    queueFrozenSync(table);
 };
 
 const createResizableTable = (table) => {
@@ -35,7 +32,6 @@ const createResizableColumn = function (col, resizer) {
 
     const mouseDownHandler = function (e) {
         elementID = col.id.replace('h', '');
-        ResetNeetCalcTable(parseInt(elementID, 10) + 1);
         x = e.clientX;
         w = parseInt(window.getComputedStyle(col).width, 10);
         document.addEventListener('mousemove', mouseMoveHandler);
@@ -51,92 +47,68 @@ const createResizableColumn = function (col, resizer) {
         resizer.classList.remove('resizing');
         const newWidth = parseInt(window.getComputedStyle(col).width, 10);
         SaveTemplateJs(`${elementID}||${newWidth}`);
-        SetNewNTHChild(+elementID + 1, newWidth - w);
-        syncFrozenColumns(document.getElementById('resizeMe'));
+        queueFrozenSync(col.closest('table'));
         document.removeEventListener('mousemove', mouseMoveHandler);
     };
 
     resizer.addEventListener('mousedown', mouseDownHandler);
 };
 
-var lefts = [];
+function getFrozenWidth(el) {
+    const layoutWidth = el.getBoundingClientRect().width;
+    if (Number.isFinite(layoutWidth) && layoutWidth > 0) {
+        return layoutWidth;
+    }
 
-const ResetNeetCalcTable = (index) => {
-    const table = document.getElementById('resizeMe');
+    const computedWidth = parseFloat(window.getComputedStyle(el).width);
+    return Number.isNaN(computedWidth) ? 0 : computedWidth;
+}
+
+function queueFrozenSync(table) {
     if (!table) return;
 
-    const headers = table.querySelectorAll('thead th');
-
-    for (let i = index; i < headers.length; i++) {
-        const prevLeft = parseInt(window.getComputedStyle(headers[i - 1]).left, 10);
-        lefts.push(Number.isNaN(prevLeft) ? NaN : prevLeft);
-        headers[i - 1].style.left = 'auto';
-
-        table.querySelectorAll(`tbody tr.calc-data-row > td:nth-child(${i})`).forEach(td => {
-            td.style.left = 'auto';
-        });
+    if (table._pmFrozenFrame) {
+        window.cancelAnimationFrame(table._pmFrozenFrame);
     }
-};
 
-const SetNewNTHChild = (index, plusLeft) => {
-    const table = document.getElementById('resizeMe');
-    if (!table) return;
-
-    const headers = table.querySelectorAll('thead th');
-    for (let i = index; i < headers.length; i++) {
-        let left = lefts[i - index];
-        if (!Number.isNaN(left) && left >= 0) {
-            left += plusLeft;
-            headers[i - 1].style.left = `${left}px`;
-
-            table.querySelectorAll(`tbody tr.calc-data-row > td:nth-child(${i})`).forEach(td => {
-                td.style.left = `${left}px`;
-            });
-        }
+    if (table._pmFrozenTimer) {
+        window.clearTimeout(table._pmFrozenTimer);
     }
-    lefts = [];
-};
+
+    table._pmFrozenFrame = window.requestAnimationFrame(() => syncFrozenColumns(table));
+    table._pmFrozenTimer = window.setTimeout(() => syncFrozenColumns(table), 40);
+}
+
+function observeFrozenColumns(table) {
+    if (!table || table._pmFrozenObserver) {
+        return;
+    }
+
+    const tbody = table.tBodies?.[0];
+    if (!tbody) {
+        return;
+    }
+
+    const mutationObserver = new MutationObserver(() => queueFrozenSync(table));
+    mutationObserver.observe(tbody, { childList: true, subtree: true });
+    table._pmFrozenObserver = mutationObserver;
+
+    if (window.ResizeObserver && !table._pmFrozenResizeObserver) {
+        const resizeObserver = new ResizeObserver(() => queueFrozenSync(table));
+        resizeObserver.observe(table);
+        resizeObserver.observe(table.tHead ?? table);
+        table._pmFrozenResizeObserver = resizeObserver;
+    }
+}
 
 function clearFrozenColumns(table) {
     table.querySelectorAll('.pm-frozen-col').forEach(el => {
         el.classList.remove('pm-frozen-col', 'pm-frozen-header');
         el.style.position = '';
+        el.style.left = '';
         el.style.zIndex = '';
         el.style.background = '';
     });
-}
-
-function isTransparent(color) {
-    return !color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)';
-}
-
-function getFrozenBackground(el, isHeader) {
-    if (isHeader) {
-        return 'var(--net-header-bg)';
-    }
-
-    const ownBg = window.getComputedStyle(el).backgroundColor;
-    if (!isTransparent(ownBg)) {
-        return ownBg;
-    }
-
-    const row = el.parentElement;
-    if (row) {
-        const rowBg = window.getComputedStyle(row).backgroundColor;
-        if (!isTransparent(rowBg)) {
-            return rowBg;
-        }
-    }
-
-    const table = el.closest('table');
-    if (table) {
-        const tableBg = window.getComputedStyle(table).backgroundColor;
-        if (!isTransparent(tableBg)) {
-            return tableBg;
-        }
-    }
-
-    return '#ffffff';
 }
 
 function applyFrozenColumn(el, left, isHeader, order) {
@@ -146,7 +118,12 @@ function applyFrozenColumn(el, left, isHeader, order) {
     el.style.position = 'sticky';
     el.style.left = `${left}px`;
     el.style.zIndex = isHeader ? `${40 - order}` : `${20 - order}`;
-    el.style.background = getFrozenBackground(el, isHeader);
+}
+
+function getFrozenHeaders(table) {
+    return Array.from(table.querySelectorAll('thead th'))
+        .map((th, index) => ({ th, index }))
+        .filter(({ th }) => th.dataset.pmFrozen === 'true');
 }
 
 function syncFrozenColumns(table) {
@@ -154,19 +131,23 @@ function syncFrozenColumns(table) {
 
     clearFrozenColumns(table);
 
-    const headers = Array.from(table.querySelectorAll('thead th'));
-    headers.forEach((th, index) => {
-        const rawLeft = window.getComputedStyle(th).left;
-        const left = parseInt(rawLeft, 10);
+    const frozenHeaders = getFrozenHeaders(table);
+    const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+    let frozenLeft = 0;
 
-        if (Number.isNaN(left))
-            return;
+    frozenHeaders.forEach(({ th, index }, order) => {
+        applyFrozenColumn(th, frozenLeft, true, order);
 
-        applyFrozenColumn(th, left, true, index);
+        bodyRows.forEach(row => {
+            const cell = row.children[index];
+            if (!cell) {
+                return;
+            }
 
-        table.querySelectorAll(`tbody tr.calc-data-row > td:nth-child(${index + 1})`).forEach(td => {
-            applyFrozenColumn(td, left, false, index);
+            applyFrozenColumn(cell, frozenLeft, false, order);
         });
+
+        frozenLeft += getFrozenWidth(th);
     });
 }
 

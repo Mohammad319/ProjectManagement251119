@@ -1,5 +1,6 @@
-﻿using AuthPermissions.Context;
+using AuthPermissions.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace ProjectManagement.Services
@@ -11,7 +12,9 @@ namespace ProjectManagement.Services
         Task ReloadTenantAsync(int tenantId, CancellationToken ct = default);
     }
 
-    public sealed class TenantConnectionStringStore(IServiceScopeFactory scopeFactory) : ITenantConnectionStringStore
+    public sealed class TenantConnectionStringStore(
+        IServiceScopeFactory scopeFactory,
+        ILogger<TenantConnectionStringStore> logger) : ITenantConnectionStringStore
     {
         private readonly ConcurrentDictionary<int, string> _map = new();
 
@@ -32,8 +35,12 @@ namespace ProjectManagement.Services
             _map.Clear();
             foreach (var row in rows)
             {
-                _map[row.Id] = row.ConnectionString;
+                _map[row.Id] = row.ConnectionString.Trim();
             }
+
+            logger.LogInformation(
+                "Tenant connection string cache reloaded. Loaded {TenantCount} tenant mappings.",
+                _map.Count);
         }
 
         public async Task ReloadTenantAsync(int tenantId, CancellationToken ct = default)
@@ -50,10 +57,16 @@ namespace ProjectManagement.Services
             if (string.IsNullOrWhiteSpace(row))
             {
                 _map.TryRemove(tenantId, out _);
+                logger.LogWarning(
+                    "Tenant connection string reload removed TenantId={TenantId} because no valid mapping was found in AuthPermissions.",
+                    tenantId);
                 return;
             }
 
-            _map[tenantId] = row;
+            _map[tenantId] = row.Trim();
+            logger.LogInformation(
+                "Tenant connection string cache reloaded for TenantId={TenantId}.",
+                tenantId);
         }
     }
 }

@@ -7,10 +7,6 @@
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inject IStringLocalizer<CalcResource> CalcLoc
 
-<style>
-    @Template.StyleNetCalc
-</style>
-
 <div class="divNetCalc">
     <table tabindex="0"
            @onkeydown="HandleKeyDown"
@@ -24,6 +20,7 @@
                     <th @key="Template.StartCol1"
                         id="h1"
                         class="draggable-table"
+                        data-pm-frozen="true"
                         style="width:@(Template.StartCol1 + "px;")">
                         <span role="button" @onclick="ShFilter" class="text-outline-info">
                             @((MarkupString)Icons.Filter)
@@ -32,13 +29,14 @@
                 }
                 else
                 {
-                    <th id="h1" class="draggable-table"></th>
+                    <th id="h1" class="draggable-table" data-pm-frozen="true"></th>
                 }
 
                 @for (int i = 0; i < HeaderColumns.Count; i++)
                 {
                     <th id="@("h" + (i + 2))"
-                        class="@("colH" + (i + 2)) draggable-table"
+                        class="@GetHeaderCssClass(i)"
+                        data-pm-frozen="@GetFrozenHeaderAttribute(HeaderColumns[i].Id)"
                         style="width:@(HeaderColumns[i].Width)px;">
                         @CalcLoc[NetColumnLoc.Key[HeaderColumns[i].Id]]
                     </th>
@@ -77,6 +75,7 @@
                                               TaskBranchActive="item.ParentActive"
                                               Color="@(Template.NetCalc?.Color?.Resource ?? string.Empty)"
                                               Left="@(item.Depth * 10)"
+                                              MaxFractionDigits="Template.MathRound"
                                               Colmuns="Columns" />
                     }
                 </ItemContent>

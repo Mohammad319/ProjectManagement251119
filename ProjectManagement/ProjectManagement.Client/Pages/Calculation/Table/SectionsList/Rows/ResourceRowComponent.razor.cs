@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 
@@ -17,6 +18,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     [Parameter] public bool TaskBranchActive { get; set; } = true;
     [Parameter] public string Color { get; set; } = string.Empty;
     [Parameter] public int Left { get; set; }
+    [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
     [Parameter] public IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = Array.Empty<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>();
 
     protected override CalculationItemType SelectionItemType => CalculationItemType.resource;

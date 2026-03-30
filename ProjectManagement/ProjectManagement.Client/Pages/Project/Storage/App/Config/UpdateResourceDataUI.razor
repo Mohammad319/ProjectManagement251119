@@ -1,4 +1,5 @@
 @using ProjectManagement.Client.Shared.Repositories.Calculation
+@using ProjectManagement.Client.Helper
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ResourceType
 @inject IStorageRepository IStorageRepository
@@ -32,12 +33,22 @@ else
 
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-cost">@CalcResource.cost</label>
-                    <InputNumber id="res-cost" @bind-Value="ResourceUpdate!.Cost" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                    <TrimmedNumberInput TValue="decimal?"
+                                        id="res-cost"
+                                        @bind-Value="ResourceUpdate!.Cost"
+                                        MaxFractionDigits="@MaxFractionDigits"
+                                        step="any"
+                                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
                 </div>
 
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200" for="res-co2">@CalcResource.co2</label>
-                    <InputNumber id="res-co2" @bind-Value="ResourceUpdate!.Co2" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                    <TrimmedNumberInput TValue="double?"
+                                        id="res-co2"
+                                        @bind-Value="ResourceUpdate!.Co2"
+                                        MaxFractionDigits="@MaxFractionDigits"
+                                        step="any"
+                                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
                 </div>
             </div>
 
@@ -108,6 +119,7 @@ else
     private bool isSubmitting = false;
     private string? error;
     private ListResourceTypeDTO? ResTypeSelected;
+    private int MaxFractionDigits => Math.Clamp(Template?.MathRound ?? NumericFormatHelper.DefaultMaxFractionDigits, 0, 15);
 
     protected override async Task OnParametersSetAsync()
     {

@@ -16,6 +16,12 @@ namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList;
 
 public partial class CalcDataGrid : ComponentBase, IDisposable
 {
+    private static readonly HashSet<NetColumnId> AlwaysFrozenColumns =
+    [
+        NetColumnId.Account,
+        NetColumnId.Name
+    ];
+
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private CalculationService CalcService { get; set; } = default!;
     [Inject] private CalculationInteractionState InteractionState { get; set; } = default!;
@@ -105,7 +111,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
                 : 35;
 
         RefreshColumns();
-        _observedTemplate.FreezCol();
         return true;
     }
     private void EnsureColumnsUpToDate()
@@ -149,8 +154,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
                     Template.StartCol1 = (Calc.MaxDepth * 10) + 35;
                 else if (Template.StartCol1 <= 0)
                     Template.StartCol1 = 45;
-                
-                Template.FreezCol();
             }
 
             if (refreshItems && virtualizeComponent != null)
@@ -210,7 +213,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             templateColumn.Width = newWidth;
         }
 
-        Template.FreezCol();
         RefreshColumns();
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.View);
         _jsSyncPending = true;
@@ -263,8 +265,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         else if (Template.StartCol1 <= 0)
             Template.StartCol1 = 35;
 
-        Template.FreezCol();
-
         if (virtualizeComponent != null)
             await virtualizeComponent.RefreshDataAsync();
 
@@ -286,6 +286,21 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         HeaderColumns = BuildHeaderColumns(Columns, templateColumns);
         _jsSyncPending = true;
     }
+
+    private string GetHeaderCssClass(int index)
+    {
+        var baseClass = $"colH{index + 2} draggable-table";
+        return IsFrozenHeader(HeaderColumns[index].Id)
+            ? $"{baseClass} pm-frozen-candidate"
+            : baseClass;
+    }
+
+    private string GetFrozenHeaderAttribute(NetColumnId id) =>
+        IsFrozenHeader(id) ? "true" : "false";
+
+    private bool IsFrozenHeader(NetColumnId id) =>
+        AlwaysFrozenColumns.Contains(id) ||
+        Template?.NetCalc?.Columns?.FirstOrDefault(x => x.Id == id)?.Frozen == true;
 
     private static IReadOnlyList<ColumnHeader> BuildHeaderColumns(
         IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> columns,

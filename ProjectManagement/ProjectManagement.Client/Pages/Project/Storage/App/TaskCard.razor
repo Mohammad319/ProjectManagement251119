@@ -28,7 +28,7 @@
                 </button>
             }
             <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
-                @Task.DisplayName  @Task.TotalCost<span class="opacity-70">/ Unit: @Task.UnitCode</span>
+                @Task.DisplayName @FormatNumber(Task.TotalCost)<span class="opacity-70">/ Unit: @Task.UnitCode</span>
             </h3>
             <div class="w-[160px]">
                 <select @bind="Task.StatusId" class="w-full border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600 px-0.5 py-0 text-sm">
@@ -47,7 +47,10 @@
             @if (Task.Collspanded)
             {
                 <div class="flex items-center gap-2">
-                    <DimensionInputs Task="Task" OnChanged="OnAnswersChanged" OnApply="Apply" />
+                    <DimensionInputs Task="Task"
+                                     MaxFractionDigits="MaxFractionDigits"
+                                     OnChanged="OnAnswersChanged"
+                                     OnApply="Apply" />
                     @if (!string.IsNullOrEmpty(_computeError))
                     {
                         <div class="inline-flex items-center rounded px-2 py-[2px] text-[11px] bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
@@ -76,6 +79,7 @@
         <div class="mt-2 min-w-0">
            
             <FinalResourcesTable2 Rows="GetVisibleRows()"
+                                  MaxFractionDigits="MaxFractionDigits"
                                   AddBtnIsVisible="Task.Added"
                                   Config="Config"
                                   OnEdit="GetResourceTEnant"
@@ -101,6 +105,7 @@
                  "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400";
     private bool _showResources = true;
     private int SummaryId => -Task.Id;
+    private int MaxFractionDigits => Math.Clamp(Template?.MathRound ?? NumericFormatHelper.DefaultMaxFractionDigits, 0, 15);
     private string? _computeError;
     private string? _resultText;
     private UserAnswers _answers = default!;
@@ -277,4 +282,6 @@
             Task.BaseResources.Insert(0, summary);
         }
     }
+    private string FormatNumber(decimal value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits);
 }

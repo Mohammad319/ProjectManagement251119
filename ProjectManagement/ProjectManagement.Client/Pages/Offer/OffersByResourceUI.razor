@@ -124,7 +124,7 @@
                                             <!-- الكمية -->
                                             <td class="px-2 py-1 text-right text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200">
                                                 <span title="@CalcResource.netCostQ: @Calc.Template.Format(res.NetCostQ)">
-                                                    @Calc.Template.Format(res.Quantity)
+                                                    @Calc.Template.Format(res.Quantity ?? 0m)
                                                 </span>
                                             </td>
 

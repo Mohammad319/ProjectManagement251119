@@ -19,7 +19,7 @@
         </div>
 
         <div class="px-1 py-1">
-            <EditForm Model="CalcResCost" OnValidSubmit="HandleSubmit" class="space-y-5">
+            <EditForm Model="CalcResCost" OnValidSubmit="HandleSubmit" class="space-y-3">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="text-sm text-rose-600 dark:text-rose-400" />
 
@@ -51,7 +51,7 @@
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
-                                <input value="@($"{GetPercentage(CalcResCost.Morgen)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:text-slate-200" disabled />
+                                <input value="@($"{GetPercentage(CalcResCost.Morgen)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" disabled />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
@@ -73,7 +73,7 @@
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
-                                <input value="@($"{GetPercentage(CalcResCost.Day)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:text-slate-200" disabled />
+                                <input value="@($"{GetPercentage(CalcResCost.Day)}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" disabled />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>
@@ -93,11 +93,11 @@
                         <div class="grid grid-cols-3 gap-3 items-end">
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Quantity</label>
-                                <input disabled value="@eveningQty" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:text-slate-200" />
+                                <input disabled value="@eveningQty" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">%</label>
-                                <input disabled value="@($"{GetEveningPercentage()}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:text-slate-200" />
+                                <input disabled value="@($"{GetEveningPercentage()}%")" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-sm text-slate-700 shadow-sm outline-none dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-200" />
                             </div>
                             <div class="min-w-0">
                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">Cost</label>

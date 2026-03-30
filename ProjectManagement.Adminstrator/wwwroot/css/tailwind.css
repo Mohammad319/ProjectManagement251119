@@ -924,6 +924,10 @@ html.dark input[type="date"],
   height: 100%;
 }
 
+.h-5 {
+  height: 1.25rem;
+}
+
 .max-h-32 {
   max-height: 8rem;
 }
@@ -964,6 +968,10 @@ html.dark input[type="date"],
   min-height: 360px;
 }
 
+.min-h-\[38px\] {
+  min-height: 38px;
+}
+
 .min-h-\[60vh\] {
   min-height: 60vh;
 }
@@ -982,10 +990,6 @@ html.dark input[type="date"],
 
 .min-h-screen {
   min-height: 100vh;
-}
-
-.min-h-\[38px\] {
-  min-height: 38px;
 }
 
 .w-10 {
@@ -1074,6 +1078,10 @@ html.dark input[type="date"],
 
 .w-full {
   width: 100%;
+}
+
+.w-5 {
+  width: 1.25rem;
 }
 
 .min-w-0 {
@@ -1939,10 +1947,6 @@ html.dark input[type="date"],
   padding-bottom: 2rem;
 }
 
-.pb-1 {
-  padding-bottom: 0.25rem;
-}
-
 .pt-1 {
   padding-top: 0.25rem;
 }
@@ -1957,6 +1961,10 @@ html.dark input[type="date"],
 
 .pt-4 {
   padding-top: 1rem;
+}
+
+.pr-12 {
+  padding-right: 3rem;
 }
 
 .text-left {
@@ -2338,6 +2346,11 @@ html.dark input[type="date"],
   margin-bottom: 0px;
 }
 
+.hover\:border-blue-600:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(37 99 235 / var(--tw-border-opacity, 1));
+}
+
 .hover\:border-red-300:hover {
   --tw-border-opacity: 1;
   border-color: rgb(252 165 165 / var(--tw-border-opacity, 1));
@@ -2356,11 +2369,6 @@ html.dark input[type="date"],
 .hover\:border-slate-400:hover {
   --tw-border-opacity: 1;
   border-color: rgb(148 163 184 / var(--tw-border-opacity, 1));
-}
-
-.hover\:border-blue-600:hover {
-  --tw-border-opacity: 1;
-  border-color: rgb(37 99 235 / var(--tw-border-opacity, 1));
 }
 
 .hover\:bg-amber-100:hover {
@@ -2480,6 +2488,11 @@ html.dark input[type="date"],
 .hover\:text-white:hover {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-slate-700:hover {
+  --tw-text-opacity: 1;
+  color: rgb(51 65 85 / var(--tw-text-opacity, 1));
 }
 
 .hover\:underline:hover {
@@ -2617,6 +2630,11 @@ html.dark input[type="date"],
   --tw-ring-color: rgb(148 163 184 / 0.3);
 }
 
+.focus-visible\:text-blue-600:focus-visible {
+  --tw-text-opacity: 1;
+  color: rgb(37 99 235 / var(--tw-text-opacity, 1));
+}
+
 .focus-visible\:outline:focus-visible {
   outline-style: solid;
 }
@@ -2682,6 +2700,11 @@ html.dark input[type="date"],
 .dark\:border-blue-500:is(.dark *) {
   --tw-border-opacity: 1;
   border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
+}
+
+.dark\:border-blue-700:is(.dark *) {
+  --tw-border-opacity: 1;
+  border-color: rgb(29 78 216 / var(--tw-border-opacity, 1));
 }
 
 .dark\:border-blue-800:is(.dark *) {
@@ -2783,11 +2806,6 @@ html.dark input[type="date"],
 
 .dark\:border-slate-800\/80:is(.dark *) {
   border-color: rgb(30 41 59 / 0.8);
-}
-
-.dark\:border-blue-700:is(.dark *) {
-  --tw-border-opacity: 1;
-  border-color: rgb(29 78 216 / var(--tw-border-opacity, 1));
 }
 
 .dark\:\!bg-slate-950\/80:is(.dark *) {
@@ -3135,6 +3153,11 @@ html.dark input[type="date"],
   color: rgb(100 116 139 / var(--tw-text-opacity, 1));
 }
 
+.dark\:hover\:border-blue-500:hover:is(.dark *) {
+  --tw-border-opacity: 1;
+  border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
+}
+
 .dark\:hover\:border-red-800:hover:is(.dark *) {
   --tw-border-opacity: 1;
   border-color: rgb(153 27 27 / var(--tw-border-opacity, 1));
@@ -3153,11 +3176,6 @@ html.dark input[type="date"],
 .dark\:hover\:border-slate-800:hover:is(.dark *) {
   --tw-border-opacity: 1;
   border-color: rgb(30 41 59 / var(--tw-border-opacity, 1));
-}
-
-.dark\:hover\:border-blue-500:hover:is(.dark *) {
-  --tw-border-opacity: 1;
-  border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
 }
 
 .dark\:hover\:bg-amber-300:hover:is(.dark *) {
@@ -3281,6 +3299,11 @@ html.dark input[type="date"],
   color: rgb(255 255 255 / var(--tw-text-opacity, 1));
 }
 
+.dark\:hover\:text-slate-200:hover:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(226 232 240 / var(--tw-text-opacity, 1));
+}
+
 .dark\:focus\:border-indigo-400:focus:is(.dark *) {
   --tw-border-opacity: 1;
   border-color: rgb(129 140 248 / var(--tw-border-opacity, 1));
@@ -3302,6 +3325,11 @@ html.dark input[type="date"],
 
 .dark\:focus\:ring-sky-400\/20:focus:is(.dark *) {
   --tw-ring-color: rgb(56 189 248 / 0.2);
+}
+
+.dark\:focus-visible\:text-blue-400:focus-visible:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(96 165 250 / var(--tw-text-opacity, 1));
 }
 
 .dark\:focus-visible\:outline-blue-400:focus-visible:is(.dark *) {

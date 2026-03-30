@@ -1,0 +1,43 @@
+.app-storage-task-layout {
+    display: grid;
+    gap: 1rem;
+    align-items: start;
+}
+
+.condition-cards-grid {
+    display: grid;
+    gap: 0.9rem;
+    width: 100%;
+}
+
+.condition-card {
+    min-width: 0;
+}
+
+.condition-options-grid {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.condition-choice {
+    min-height: 44px;
+}
+
+.condition-variables-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+@media (min-width: 1024px) {
+    .app-storage-task-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 42%);
+    }
+}
+
+@media (min-width: 768px) {
+    .condition-cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
