@@ -83,20 +83,20 @@ else
 
         @if (ShowEmptyState)
         {
-            <section class="calc-state-panel" data-testid="calculation-page-empty">
+      @*       <section class="calc-state-panel" data-testid="calculation-page-empty">
                 <div class="calc-state-copy">
                     <p class="calc-state-title">@AppLoc["calculationTableEmptyState"]</p>
                     <p class="calc-state-hint">@AppLoc["calculationTableEmptyStateHint"]</p>
                 </div>
-            </section>
+            </section> *@
         }
         else if (ShowNoVisibleRowsState)
         {
             <section class="calc-state-panel calc-state-panel-muted" data-testid="calculation-page-no-visible-rows">
-            <div class="calc-state-copy p-5">
+          @*   <div class="calc-state-copy p-5">
                     <p class="calc-state-title">@AppLoc["calculationTableNoVisibleRows"]</p>
                     <p class="calc-state-hint">@NoVisibleRowsHint</p>
-                </div>
+                </div> *@
 
                 @if (HasActiveFilters)
                 {

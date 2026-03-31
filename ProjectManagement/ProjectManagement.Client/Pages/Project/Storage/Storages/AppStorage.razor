@@ -254,28 +254,7 @@
     List<ConditionDto>? Conditions;
     List<TaskWithResourcesMDto>? tasks;
     List<TaskResSelected> TaskResSelecteds = new();
-    public async Task<bool> SaveAsync()
-    {
-        if (Type == CalculationItemType.task)
-        {
-            List<TaskWithResourcesMDto>? taskspost = [];
-@* 
-            foreach (var ts in tasks)
-            {
-                if (TaskResSelecteds.Any(x=> x.Id == ts.Id))
-                {
-                    
-                }
-            } *@
-        }
-        else
-        {
-            @* List<ResourcePostDTO> resources = StorageAppExtension.Convert(Groups, IDs); *@
-            @* if (resources.Any()) return await Repo.Resource.CreateAsync(resources, ParentID); *@
-        }
-        return false;
-    }
-
+ 
     void AddRemoveTask(TaskWithResourcesMDto ts)
     {
         var o = TaskResSelecteds.FirstOrDefault(x => x.Id == ts.Id);

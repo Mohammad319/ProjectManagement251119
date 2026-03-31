@@ -168,13 +168,18 @@ else if (_tasks != null)
             if (ts.StatusId == 0) ts.StatusId = null;
         }
 
-        await Repo.Task.CreateAsync(Tasks, Calc.Id);
+        var created = await Repo.Task.CreateAsync(Tasks, Calc.Id);
+        if (!created)
+            return false;
+
+        if (Calc is not null && Calc.Id > 0)
+            await CalcService.SetCalc(Calc.Id);
 
         foreach (var ts in _tasks)
         {
             ts.Added = false;
             foreach (var res in ts.Resources)
-                ts.Added = false;
+                res.IsAdded = false;
         }
         return true;
     }
