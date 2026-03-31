@@ -4,9 +4,6 @@ using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.General;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
 {

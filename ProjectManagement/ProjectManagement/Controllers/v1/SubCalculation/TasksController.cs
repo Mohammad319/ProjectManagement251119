@@ -40,7 +40,7 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
 
         [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
         [HttpPost(URLConst.Filter)]
-        public async Task<IActionResult> Post([FromBody] FilterCalculationItemsDto obj)
+        public async Task<IActionResult> Filter([FromBody] FilterCalculationItemsDto obj)
         {
             var result = await MicroBus.Send(new GetTasksByFilterQuery(obj));
             TrySetETag(result);

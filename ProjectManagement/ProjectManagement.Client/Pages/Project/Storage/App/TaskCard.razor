@@ -13,12 +13,17 @@
     <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
         <div class="flex items-center gap-0.5 flex-shrink-0">
             <button @onclick="CollspanTask"
-                    class="inline-flex items-center justify-center w-[26px] h-[26px] rounded-full border px-0 text-[12px] leading-none transition-all duration-150 hover:scale-105 active:scale-95 border-green-300 text-green-600 hover:bg-green-100 hover:ring-1 hover:ring-green-300 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500">
-                @((MarkupString)Icons.TopBottom(Task.Collspanded))
+                    class="shrink-0 text-slate-500 dark:text-slate-400 group-hover:text-slate-600 transition-transform duration-200">
+                    @* class="inline-flex items-center justify-center w-[26px] h-[26px] rounded-full border px-0 text-[12px] leading-none transition-all duration-150 hover:scale-105 active:scale-95 border-green-300 text-green-600 hover:bg-green-100 hover:ring-1 hover:ring-green-300 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500"> *@
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="@($"w-4 h-4 transform transition-transform duration-200 {(Task.Collspanded ? "rotate-90" : "rotate-0")}")"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
             </button>
             <button @onclick="OnClick"
-                    class="@((Task.Added ? "inline-flex items-center justify-center w-[26px] h-[26px] rounded-full border px-0 text-[12px] leading-none transition-all duration-150 hover:scale-105 active:scale-95 border-red-300 text-red-600 hover:bg-red-100 hover:ring-1 hover:ring-red-300 dark:border-red-400 dark:text-red-300 dark:hover:bg-red-900/40 dark:hover:ring-red-500" : "inline-flex items-center justify-center w-[26px] h-[26px] rounded-full border px-0 text-[12px] leading-none transition-all duration-150 hover:scale-105 active:scale-95 border-green-300 text-green-600 hover:bg-green-100 hover:ring-1 hover:ring-green-300 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500") )">
-                @((MarkupString)Icons.AddDelete(Task.Added))
+                    class="@ToggleClass">
+                @(Task.Added ? "−" : "+")
             </button>
             @if (Task.Uncontrollable)
             {
@@ -100,7 +105,13 @@
     [Parameter] public bool NameConfig { get; set; }
     [Parameter] public bool CostConfig { get; set; }
     [Parameter] public bool CO2Config { get; set; }
-
+    private const string ToggleClass =
+            //"inline-flex items-center justify-center rounded-full " +
+            "inline-flex h-5 w-5 items-center justify-center rounded-md  " +
+    "border border-slate-400 dark:border-slate-600 " +
+    "bg-transparent dark:bg-transparent " +
+    "w-5 h-5 cursor-pointer transition-all duration-200 ease-out " +
+    "hover:opacity-70 hover:scale-110 hover:shadow-sm";
     string St => "w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-[13px] " +
                  "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400";
     private bool _showResources = true;

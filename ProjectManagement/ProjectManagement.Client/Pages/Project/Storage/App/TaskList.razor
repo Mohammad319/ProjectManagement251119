@@ -124,9 +124,9 @@ else if (_tasks != null)
                 Metadata = new ProjectManagement.Shared.Base.Calculation.TaskMetadata
                 {
                     QuantityParam = ConstValues.FixedQ,
-                    Quantity = (decimal)(Task.Quantity ?? 0),
-                    ChangeFactor1 = (decimal)Task.ChangeFactor1,
-                    ChangeFactor2 = (decimal)Task.ChangeFactor2,
+                    Quantity = (Task.Quantity ?? 0),
+                    ChangeFactor1 = Task.ChangeFactor1,
+                    ChangeFactor2 = Task.ChangeFactor2,
                     IsActive = Task.IsActive,
                     Type = ProjectManagement.Shared.Base.Calculation.TaskType.Task,
                     Code = Task.Code,
