@@ -117,12 +117,27 @@ namespace Persistence.Service.CalculationItems.Task
             context.Tasks.AddRange(entities);
             await context.SaveChangesAsync(ct);
 
-            var entityIds = entities.Select(e => e.Id).ToList();
+            var createdTaskIds = TaskExtention
+                .FlattenTasks(entities)
+                .Select(e => e.Id)
+                .Distinct()
+                .ToList();
+
             var tasksWithNav = await context.Tasks
                 .AsNoTracking()
-                .Where(t => entityIds.Contains(t.Id))
+                .Where(t => createdTaskIds.Contains(t.Id))
                 .Include(t => t.Status)
                 .Include(t => t.Opportunity)
+                .Include(t => t.Resources)
+                    .ThenInclude(r => r.Account)
+                .Include(t => t.Resources)
+                    .ThenInclude(r => r.Status)
+                .Include(t => t.Resources)
+                    .ThenInclude(r => r.Opportunity)
+                .Include(t => t.Resources)
+                    .ThenInclude(r => r.ResourceSort)
+                .Include(t => t.Resources)
+                    .ThenInclude(r => r.ResourceType)
                 .ToListAsync(ct);
 
             tasksWithNav = TaskExtention.FlattenTasks(tasksWithNav);
