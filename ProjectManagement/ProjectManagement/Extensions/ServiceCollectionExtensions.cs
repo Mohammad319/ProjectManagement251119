@@ -4,6 +4,7 @@ using AuthPermissions.Context;
 using BlazorMHD.UI.Core.Services;
 using Domain.Settings;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.DataProtection;
@@ -16,6 +17,7 @@ using TaskResourceBlueprints;
 using TaskResourceBlueprints.Infrastructure;
 using Persistence.Factory;
 using System.IO;
+using System.Globalization;
 using System.Threading.RateLimiting;
 
 namespace ProjectManagement.Extensions;
@@ -52,6 +54,15 @@ public static class ServiceCollectionExtensions
 
         // UI/tenant/services
         services.AddProjectServices();
+
+        services.Configure<RequestLocalizationOptions>(options =>
+        {
+            var supportedCultures = new[] { "sv-SE", "en-US" };
+            options.DefaultRequestCulture = new RequestCulture("sv-SE", "en-US");
+            options.SupportedCultures = [.. supportedCultures.Select(CultureInfo.GetCultureInfo)];
+            options.SupportedUICultures = [.. supportedCultures.Select(CultureInfo.GetCultureInfo)];
+            options.ApplyCurrentCultureToResponseHeaders = true;
+        });
 
         // Response compression
         services.AddResponseCompression(opts =>

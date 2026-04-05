@@ -53,14 +53,12 @@ var host = builder.Build();
 try
 {
     var js = host.Services.GetRequiredService<IJSRuntime>();
-    var cultureName = await js.InvokeAsync<string>("blazorCulture.get");
+    var uiCultureName = await js.InvokeAsync<string>("blazorCulture.get");
 
-    var culture = !string.IsNullOrWhiteSpace(cultureName)
-        ? new CultureInfo(cultureName)
+    CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("sv-SE");
+    CultureInfo.DefaultThreadCurrentUICulture = !string.IsNullOrWhiteSpace(uiCultureName)
+        ? new CultureInfo(uiCultureName)
         : new CultureInfo("en-US");
-
-    CultureInfo.DefaultThreadCurrentCulture = culture;
-    CultureInfo.DefaultThreadCurrentUICulture = culture;
 }
 catch
 {

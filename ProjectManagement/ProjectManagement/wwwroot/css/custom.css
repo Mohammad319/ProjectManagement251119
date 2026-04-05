@@ -61,3 +61,52 @@ h1:focus {
         transform: rotate(360deg);
     }
 }
+
+:root {
+    --pm-scrollbar-size: 9px;
+    --pm-scrollbar-track: rgba(148, 163, 184, 0.14);
+    --pm-scrollbar-thumb: rgba(100, 116, 139, 0.78);
+    --pm-scrollbar-thumb-hover: rgba(129, 140, 248, 0.82);
+    --pm-scrollbar-thumb-active: rgba(165, 180, 252, 0.92);
+}
+
+html.dark {
+    --pm-scrollbar-track: rgba(148, 163, 184, 0.12);
+    --pm-scrollbar-thumb: rgba(148, 163, 184, 0.56);
+    --pm-scrollbar-thumb-hover: rgba(129, 140, 248, 0.78);
+    --pm-scrollbar-thumb-active: rgba(165, 180, 252, 0.9);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--pm-scrollbar-thumb) var(--pm-scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+    width: var(--pm-scrollbar-size);
+    height: var(--pm-scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--pm-scrollbar-track);
+    border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--pm-scrollbar-thumb);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--pm-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-thumb:active {
+    background-color: var(--pm-scrollbar-thumb-active);
+}
+
+*::-webkit-scrollbar-corner {
+    background: transparent;
+}

@@ -31,6 +31,7 @@ public interface ITasksUserComputationServiceWasm
     void ReCalcCostResources(List<ResourceDto> resources);
     void ReCalcCapResources(List<ResourceDto> resources);
     void CalcQuantityResource(List<ResourceDto> resource, decimal? taskQuantity);
+    void RefreshResources(List<ResourceDto> resources, decimal? taskQuantity, IReadOnlyDictionary<ParamName, decimal>? taskParameters);
     bool BuildFinalRows(ProjectTaskDto task);
     bool Combine(bool a, bool b, ConditionLogic op);
     decimal ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters);
@@ -93,6 +94,15 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     break;
                 }
         }
+    }
+
+    public void RefreshResources(List<ResourceDto> resources, decimal? taskQuantity, IReadOnlyDictionary<ParamName, decimal>? taskParameters)
+    {
+        if (resources is null || resources.Count == 0)
+            return;
+
+        RefreshDerivedValues(resources, taskQuantity);
+        ApplyFormulaDrivenRecalculation(resources, taskQuantity, taskParameters);
     }
 
     public UserAnswers A(int taskId)
@@ -217,12 +227,58 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             }
         }
 
-        ReCalcCostResources(task.ResultResources);
-        ReCalcCapResources(task.ResultResources);
-        CalcQuantityResource(task.ResultResources, task.Quantity);
-
-        ResourceFormulaApplier.ApplyAll(task.ResultResources, task.ParameterValues);
+        RefreshResources(task.ResultResources, task.Quantity, task.ParameterValues);
         return true;
+    }
+
+    private void RefreshDerivedValues(List<ResourceDto> resources, decimal? taskQuantity)
+    {
+        CalcQuantityResource(resources, taskQuantity);
+        ReCalcCapResources(resources);
+        CalcQuantityResource(resources, taskQuantity);
+        ReCalcCostResources(resources);
+    }
+
+    private void ApplyFormulaDrivenRecalculation(List<ResourceDto> resources, decimal? taskQuantity, IReadOnlyDictionary<ParamName, decimal>? taskParameters)
+    {
+        if (resources.All(r => r.Formulas is null || r.Formulas.Count == 0))
+            return;
+
+        ResourceFormulaApplier.ApplyAll(resources, taskParameters);
+
+        foreach (var resource in resources)
+        {
+            var targets = ResourceFormulaApplier.GetAssignedTargets(resource.Formulas);
+            if (targets.Count == 0)
+                continue;
+
+            RefreshFormulaDrivenResource(resource, taskQuantity, targets);
+        }
+
+        ResourceFormulaApplier.ApplyAll(resources, taskParameters);
+    }
+
+    private void RefreshFormulaDrivenResource(ResourceDto resource, decimal? taskQuantity, IReadOnlySet<string> targets)
+    {
+        var singleResource = new List<ResourceDto> { resource };
+        var assignsQuantity = targets.Contains("quantity");
+        var assignsCost = targets.Contains("cost");
+        var assignsCapWaste = targets.Contains("cap") || targets.Contains("waste") || targets.Contains("capwaste");
+        var assignsChangeFactor = targets.Contains("ch1") || targets.Contains("ch2");
+
+        if (!assignsQuantity && (assignsChangeFactor || assignsCapWaste))
+            CalcQuantityResource(singleResource, taskQuantity);
+
+        if (!assignsCapWaste && (assignsQuantity || assignsChangeFactor))
+        {
+            ReCalcCapResources(singleResource);
+
+            if (!assignsQuantity)
+                CalcQuantityResource(singleResource, taskQuantity);
+        }
+
+        if (!assignsCost && (assignsQuantity || assignsChangeFactor || assignsCapWaste))
+            ReCalcCostResources(singleResource);
     }
 
     private static void ApplyResourceParameterFactor(ResourceMetadata data)

@@ -1,7 +1,9 @@
+using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.DTO.ProjectAppStorage.Service;
 using ProjectManagement.Shared.Enums;
+using ProjectManagement.Shared.Helper.ProjectAppStorage;
 using Xunit;
 
 namespace ProjectManagement.Tests;
@@ -95,6 +97,50 @@ public class TasksUserComputationServiceWasmTests
 
         Assert.True(result);
         Assert.Single(task.ResultResources);
+    }
+
+    [Fact]
+    public void RefreshResources_RecalculatesQuantityAndCostAfterFormulaChangesChangeFactor()
+    {
+        var service = new TasksUserComputationServiceWasm();
+        var resource = new ResourceDto
+        {
+            Id = 11,
+            Name = "Formula Resource",
+            ResType = ResourceTypesEnum.Materials,
+            Formulas = ["ch1=P1"],
+            Properties =
+            [
+                new ResourcePropertyBindDto
+                {
+                    Id = 7,
+                    DisplayName = "P1",
+                    DataType = DataType.Number,
+                    NumberDefault = 2m
+                }
+            ],
+            CostRole =
+            [
+                new RoleDTO
+                {
+                    Min = 50m,
+                    Max = 100m,
+                    Value = 99m
+                }
+            ],
+            Data = new ResourceMetadata
+            {
+                ChangeFactor1 = 1m,
+                ChangeFactor2 = 3m,
+                Cost = 10m
+            }
+        };
+
+        service.RefreshResources([resource], 10m, new Dictionary<ParamName, decimal>());
+
+        Assert.Equal(2m, resource.Data.ChangeFactor1);
+        Assert.Equal(60m, resource.Data.Quantity);
+        Assert.Equal(99m, resource.Data.Cost);
     }
 
     private static ResourceDto CreateResource(

@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -6,8 +5,6 @@ namespace ProjectManagement.Client.Helper
 {
     public static class TableRenderHelpers
     {
-        private static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
-
         private static void RenderTd(RenderTreeBuilder builder, string? content, string? cssClass = null)
         {
             int seq = 0;
@@ -41,16 +38,16 @@ namespace ProjectManagement.Client.Helper
             RenderTd(builder, value?.ToString() ?? string.Empty);
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, double value) =>
-            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format)), cssClass: "num-cell");
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, double? value) =>
-            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format)), cssClass: "num-cell");
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, decimal value) =>
-            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format)), cssClass: "num-cell");
 
         public static void RenderFormattedTd(RenderTreeBuilder builder, string format, decimal? value) =>
-            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format), Inv), cssClass: "num-cell");
+            RenderTd(builder, NumericFormatHelper.Format(value, NumericFormatHelper.ExtractMaxFractionDigits(format)), cssClass: "num-cell");
 
         public static void RenderCheckboxTd(RenderTreeBuilder builder, bool isChecked)
         {

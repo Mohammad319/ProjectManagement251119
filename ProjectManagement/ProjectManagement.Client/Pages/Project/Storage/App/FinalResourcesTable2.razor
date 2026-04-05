@@ -5,6 +5,8 @@
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
 @using ProjectManagement.Shared.DTO.ResourceType
+@using ProjectManagement.Shared.Helper
+@using ProjectManagement.Shared.Helper.ProjectAppStorage
 
 @if (Rows is null || !Rows.Any())
 {
@@ -225,18 +227,20 @@ else
                             <input type="text" @bind="current.Data.Unit" class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="decimal?"
-                                                @bind-Value="current.Data.BaseCost"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldBaseCost)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldBaseCost, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldBaseCost)"
+                                   class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="decimal"
-                                                @bind-Value="current.Data.Cost"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldCost)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldCost, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldCost)"
+                                   class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.Id < 0)
@@ -259,32 +263,36 @@ else
                                                 class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="decimal"
-                                                @bind-Value="current.Data.ChangeFactor1"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldChangeFactor1)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldChangeFactor1, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldChangeFactor1)"
+                                   class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="decimal"
-                                                @bind-Value="current.Data.ChangeFactor2"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldChangeFactor2)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldChangeFactor2, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldChangeFactor2)"
+                                   class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="decimal?"
-                                                @bind-Value="current.Data.Quantity"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldQuantity)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldQuantity, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldQuantity)"
+                                   class="@St" />
                         </td>
                         <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="decimal"
-                                                @bind-Value="current.Data.CapWaste"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldCapWaste)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldCapWaste, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldCapWaste)"
+                                   class="@St" />
                         </td>
 
                         <td class="px-1 py-0.5">
@@ -361,18 +369,21 @@ else
                                     }
                                     else if (p.DataType == DataType.Number)
                                     {
-                                        <TrimmedNumberInput TValue="decimal?"
-                                                            @bind-Value="p.NumberDefault"
-                                                            MaxFractionDigits="@MaxFractionDigits"
-                                                            max="@p.MaxNumericValue"
-                                                            step="any"
-                                                            class="@St"
-                                                            disabled="@(!p.IsUserEditable)" />
+                                       <input type="text"
+                                               inputmode="decimal"
+                                               value="@GetPropertyInputValue(current, p)"
+                                               @oninput="e => OnPropertyNumberChanged(current, p, e)"
+                                               @onblur="() => OnPropertyNumberBlur(current, p)"
+                                               max="@p.MaxNumericValue"
+                                               class="@St"
+                                               disabled="@(!p.IsUserEditable)" />
                                     }
                                     else
                                     {
                                         <input type="text"
-                                               @bind="p.TextDefault"
+                                               value="@GetPropertyInputValue(current, p)"
+                                               @oninput="e => OnPropertyTextChanged(current, p, e)"
+                                               @onblur="() => OnPropertyBlur(current, p)"
                                                class="@St"
                                                disabled="@(!p.IsUserEditable)" />
                                     }
@@ -430,6 +441,7 @@ else
     [Parameter] public bool CostConfig { get; set; }
     [Parameter] public decimal TotalCost { get; set; }
     [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
+    [Parameter] public IReadOnlyDictionary<ParamName, decimal>? TaskParameters { get; set; }
 
     // يُستدعى عند تغيير Dropdown أو أي تغيّر نريد أن نبلّغ به الأب (TaskCard مثلاً)
     [Parameter] public EventCallback OnChanged { get; set; }
@@ -451,6 +463,14 @@ else
                       "focus:outline-none focus:ring-1 focus:ring-blue-500";
 
     private HashSet<int> _expanded = new();
+    private const string ResourceFieldBaseCost = "basecost";
+    private const string ResourceFieldCost = "cost";
+    private const string ResourceFieldChangeFactor1 = "chf1";
+    private const string ResourceFieldChangeFactor2 = "chf2";
+    private const string ResourceFieldQuantity = "quantity";
+    private const string ResourceFieldCapWaste = "capwaste";
+    private readonly Dictionary<string, string> _propertyInputDrafts = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, string> _resourceInputDrafts = new(StringComparer.Ordinal);
 
     private sealed class PropColumn
     {
@@ -531,6 +551,125 @@ else
         if (OnChanged.HasDelegate)
             await OnChanged.InvokeAsync();
     }
+
+    private async Task NotifyRowsChanged()
+    {
+        if (OnChanged.HasDelegate)
+            await OnChanged.InvokeAsync();
+    }
+
+    private async Task OnResourceNumberChanged(ResourceDto resource, string field, ChangeEventArgs e)
+    {
+        var rawValue = e.Value?.ToString() ?? string.Empty;
+        _resourceInputDrafts[GetResourceInputKey(resource, field)] = rawValue;
+
+        if (!NumericInputHelper.TryParseNullableDecimal(rawValue, out var parsed))
+            return;
+
+        if (!TrySetResourceFieldValue(resource, field, parsed))
+            return;
+
+        ResourceFormulaApplier.ApplyRow(resource, TaskParameters ?? new Dictionary<ParamName, decimal>());
+        await NotifyRowsChanged();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task OnResourceNumberBlur(ResourceDto resource, string field)
+    {
+        _resourceInputDrafts.Remove(GetResourceInputKey(resource, field));
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnPropertyNumberChanged(ResourceDto resource, ResourcePropertyBindDto property, ChangeEventArgs e)
+    {
+        var rawValue = e.Value?.ToString() ?? string.Empty;
+        _propertyInputDrafts[GetPropertyInputKey(resource, property)] = rawValue;
+
+        if (!NumericInputHelper.TryParseNullableDecimal(rawValue, out var parsed))
+            return;
+
+        property.NumberDefault = parsed;
+        ResourceFormulaApplier.ApplyRow(resource, TaskParameters ?? new Dictionary<ParamName, decimal>());
+        await NotifyRowsChanged();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnPropertyTextChanged(ResourceDto resource, ResourcePropertyBindDto property, ChangeEventArgs e)
+    {
+        var rawValue = e.Value?.ToString() ?? string.Empty;
+        _propertyInputDrafts[GetPropertyInputKey(resource, property)] = rawValue;
+        property.TextDefault = rawValue;
+
+        ResourceFormulaApplier.ApplyRow(resource, TaskParameters ?? new Dictionary<ParamName, decimal>());
+        await NotifyRowsChanged();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task OnPropertyNumberBlur(ResourceDto resource, ResourcePropertyBindDto property)
+        => OnPropertyBlur(resource, property);
+
+    private Task OnPropertyBlur(ResourceDto resource, ResourcePropertyBindDto property)
+    {
+        _propertyInputDrafts.Remove(GetPropertyInputKey(resource, property));
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private string GetPropertyInputValue(ResourceDto resource, ResourcePropertyBindDto property)
+        => _propertyInputDrafts.TryGetValue(GetPropertyInputKey(resource, property), out var draft)
+            ? draft
+            : property.DataType == DataType.Number
+                ? FormatNullableNumber(property.NumberDefault)
+                : property.TextDefault ?? string.Empty;
+
+    private string GetResourceInputValue(ResourceDto resource, string field)
+        => _resourceInputDrafts.TryGetValue(GetResourceInputKey(resource, field), out var draft)
+            ? draft
+            : field switch
+            {
+                ResourceFieldBaseCost => FormatNullableNumber(resource.Data.BaseCost),
+                ResourceFieldQuantity => FormatNullableNumber(resource.Data.Quantity),
+                ResourceFieldCost => FormatNumber(resource.Data.Cost),
+                ResourceFieldChangeFactor1 => FormatNumber(resource.Data.ChangeFactor1),
+                ResourceFieldChangeFactor2 => FormatNumber(resource.Data.ChangeFactor2),
+                ResourceFieldCapWaste => FormatNumber(resource.Data.CapWaste),
+                _ => string.Empty
+            };
+
+    private bool TrySetResourceFieldValue(ResourceDto resource, string field, decimal? value)
+    {
+        switch (field)
+        {
+            case ResourceFieldBaseCost:
+                resource.Data.BaseCost = value;
+                return true;
+            case ResourceFieldQuantity:
+                resource.Data.Quantity = value;
+                return true;
+            case ResourceFieldCost when value.HasValue:
+                resource.Data.Cost = value.Value;
+                return true;
+            case ResourceFieldChangeFactor1 when value.HasValue:
+                resource.Data.ChangeFactor1 = value.Value;
+                return true;
+            case ResourceFieldChangeFactor2 when value.HasValue:
+                resource.Data.ChangeFactor2 = value.Value;
+                return true;
+            case ResourceFieldCapWaste when value.HasValue:
+                resource.Data.CapWaste = value.Value;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static string GetPropertyInputKey(ResourceDto resource, ResourcePropertyBindDto property)
+        => $"{resource.ResourceSource}:{resource.Id}:{resource.MenuId ?? 0}:{property.Id}";
+
+    private static string GetResourceInputKey(ResourceDto resource, string field)
+        => $"{resource.ResourceSource}:{resource.Id}:{resource.MenuId ?? 0}:{field}";
+
+    private string FormatNullableNumber(decimal? value)
+        => NumericFormatHelper.Format(value, MaxFractionDigits);
 
     private string FormatNumber(decimal value)
         => NumericFormatHelper.Format(value, MaxFractionDigits);

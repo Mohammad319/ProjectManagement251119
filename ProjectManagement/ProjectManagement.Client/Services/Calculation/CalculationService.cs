@@ -1,8 +1,6 @@
-﻿using ProjectManagement.Client.Helper;
-using ProjectManagement.Client.Services.Folder;
+﻿using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.Calculation;
 using ProjectManagement.Client.Shared.Mapping;
-using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
@@ -161,7 +159,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 var neuF = folderState.Calculation.Factors
                     .FirstOrDefault(x => x.ResourceType == item.ResourceType &&
                     x.ResId == item.ResId && x.SortId == item.SortId);
-                if(neuF != null)
+                if (neuF != null)
                 {
                     neuF.Factor = item.Factor;
                     //neuF.NetCostTotaly = item.NetCostTotaly;

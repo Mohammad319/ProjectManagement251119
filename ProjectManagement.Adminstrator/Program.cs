@@ -55,10 +55,11 @@ builder.Services.AddServerSideBlazor()
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
-    var supportedCultures = new[] { "en-US", "sv-SE" };
-    options.DefaultRequestCulture = new RequestCulture("en-US");
-    options.SupportedCultures = [.. supportedCultures.Select(c => new CultureInfo(c))];
-    options.SupportedUICultures = [.. supportedCultures.Select(c => new CultureInfo(c))];
+    var supportedCultures = new[] { "sv-SE", "en-US" };
+    options.DefaultRequestCulture = new RequestCulture("sv-SE", "en-US");
+    options.SupportedCultures = [.. supportedCultures.Select(CultureInfo.GetCultureInfo)];
+    options.SupportedUICultures = [.. supportedCultures.Select(CultureInfo.GetCultureInfo)];
+    options.ApplyCurrentCultureToResponseHeaders = true;
 });
 
 try
@@ -122,6 +123,11 @@ app.UseHsts();
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 app.UseRequestLocalization();
+app.Use(async (context, next) =>
+{
+    CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("sv-SE");
+    await next();
+});
 app.UseAuthentication();
 app.UseAuthorization();
 

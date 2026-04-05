@@ -6,6 +6,7 @@
 @using ProjectManagement.Shared.DTO.Offer
 @using ProjectManagement.Shared.DTO.Organisation
 @using ProjectManagement.Shared.Base.Calculation
+@using ProjectManagement.Shared.Helper
 @using System.Text.Json
 @inherits AppComponentBase
 
@@ -74,7 +75,7 @@
             return;
         }
 
-        if (decimal.TryParse(raw, out var v))
+        if (NumericInputHelper.TryParseDecimal(raw, out var v))
             AttributesValue[i] = v;
         else
             AttributesValue[i] = 0;

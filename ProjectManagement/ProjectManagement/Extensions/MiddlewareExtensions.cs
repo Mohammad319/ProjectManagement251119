@@ -5,6 +5,7 @@ using ProjectManagement.Configuration;
 using ProjectManagement.Middleware;
 using ProjectManagement.Services;
 using Serilog;
+using System.Globalization;
 
 namespace ProjectManagement.Extensions;
 
@@ -76,6 +77,12 @@ public static class MiddlewareExtensions
         }
 
         app.UseHttpsRedirection();
+        app.UseRequestLocalization();
+        app.Use(async (context, next) =>
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("sv-SE");
+            await next();
+        });
         app.UseRouting();
         app.UseRateLimiter();
 

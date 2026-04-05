@@ -11,12 +11,12 @@ namespace ProjectManagement.Client.Extensions
         public static async Task SetDefaultCulture(this WebAssemblyHost host)
         {
             var jsInterop = host.Services.GetRequiredService<IJSRuntime>();
-            var cultureCode = await jsInterop.InvokeAsync<string>("blazorCulture.get");
+            var uiCultureCode = await jsInterop.InvokeAsync<string>("blazorCulture.get");
 
-            var culture = string.IsNullOrWhiteSpace(cultureCode) ? new CultureInfo("en-US") : new CultureInfo(cultureCode);
-
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("sv-SE");
+            CultureInfo.DefaultThreadCurrentUICulture = string.IsNullOrWhiteSpace(uiCultureCode)
+                ? new CultureInfo("en-US")
+                : new CultureInfo(uiCultureCode);
         }
     }
 }

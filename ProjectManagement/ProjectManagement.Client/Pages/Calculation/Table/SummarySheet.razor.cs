@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml.Office.Word;
 using Microsoft.AspNetCore.Components;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles;
+using ProjectManagement.Shared.Helper;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +16,9 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         CalculationMVVM Calculation => Calc;
         private decimal TaxMultiplier => 1m + ((decimal)Calculation.Tax / 100m);
         private static decimal ParseDecimal(ChangeEventArgs e) =>
-            decimal.TryParse(e.Value?.ToString(), out var value) ? value : 0m;
+            NumericInputHelper.TryParseDecimal(e.Value?.ToString(), out var value) ? value : 0m;
+        private static string FactorRowKey(Factors factor) =>
+            $"{(int)factor.ResourceType}:{factor.ResId}:{factor.SortId}";
 
         void SomeHasChanged()
         {
@@ -59,6 +62,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table
         }
         private double Format(double x) => Template.Format(x);
         private decimal Format(decimal x) => Template.Format(x);
+        private static string FormatInput(decimal x) => NumericDisplayHelper.Format(x);
         public string SelectedFactor(string res)
         {
             var res45 = Calculation.Factors.FirstOrDefault(x => x.ResId + "," + x.SortId == res);

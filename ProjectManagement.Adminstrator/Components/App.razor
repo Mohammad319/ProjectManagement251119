@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="@Assets["_content/BlazorMHD.UI/css/mhd.css"]" />
     <link rel="stylesheet" href="@Assets["_content/BlazorMHD.UI/css/animations.css"]" />
     <link rel="stylesheet" href="@Assets["_content/ContextMenuMHD/css/tailwind-contextmenu.css"]" />
+    <link rel="stylesheet" href="@Assets["css/custom.css"]" />
 
     <link rel="shortcut icon" href="@Assets["Icons/favicon.ico"]" type="image/x-icon" />
 
@@ -38,16 +39,35 @@
 
     <script>
         (function () {
-        var culture = localStorage['BlazorCulture'];
-        if (culture) {
-        document.cookie = ".AspNetCore.Culture=c=" + culture + "|uic=" + culture + "; path=/";
+        function resolveUiCulture() {
+        var stored = localStorage['BlazorUICulture'] || localStorage['BlazorCulture'];
+        if (stored) {
+        return stored;
         }
-        })();
+
+        var browserCulture = (navigator.languages && navigator.languages.length ? navigator.languages[0] : navigator.language) || 'sv-SE';
+        var resolved = browserCulture.toLowerCase().startsWith('sv') ? 'sv-SE' : 'en-US';
+        localStorage['BlazorUICulture'] = resolved;
+        localStorage['BlazorCulture'] = resolved;
+        return resolved;
+        }
+
+        function applyCultureCookie(uiCulture) {
+        document.cookie = ".AspNetCore.Culture=c=sv-SE|uic=" + uiCulture + "; path=/; max-age=31536000; samesite=lax";
+        }
+
+        var uiCulture = resolveUiCulture();
+        applyCultureCookie(uiCulture);
 
         window.blazorCulture = {
-        get: () => localStorage['BlazorCulture'],
-        set: (value) => { localStorage['BlazorCulture'] = value; }
+        get: () => resolveUiCulture(),
+        set: (value) => {
+        localStorage['BlazorUICulture'] = value;
+        localStorage['BlazorCulture'] = value;
+        applyCultureCookie(value);
+        }
         };
+        })();
     </script>
 </body>
 </html>

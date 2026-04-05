@@ -1,11 +1,9 @@
 ﻿using AuthPermissions;
 using AuthPermissions.Context;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using ProjectManagement.Configuration;
 using ProjectManagement.Extensions;
 using ProjectManagement.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);

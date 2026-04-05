@@ -133,9 +133,25 @@ public class NumericFormattingTests : BunitContext
         Assert.Equal("5,55", cut.Find("input").GetAttribute("value"));
     }
 
+    [Theory]
+    [InlineData("5.55", 5.55)]
+    [InlineData("5,55", 5.55)]
+    [InlineData("1 234,5", 1234.5)]
+    public void NumericInputHelper_AcceptsEnglishAndSwedishSeparators(string rawValue, decimal expected)
+    {
+        using var _ = new CultureScope("sv-SE");
+
+        var success = NumericInputHelper.TryParseDecimal(rawValue, out var actual);
+
+        Assert.True(success);
+        Assert.Equal(expected, actual);
+    }
+
     [Fact]
     public void TableRenderHelpers_TruncateFormattedTableValue()
     {
+        using var _ = new CultureScope("en-US");
+
         var cut = Render(builder =>
         {
             builder.OpenElement(0, "table");
@@ -149,6 +165,25 @@ public class NumericFormattingTests : BunitContext
 
         Assert.Contains("15.65", cut.Markup);
         Assert.DoesNotContain("15.66", cut.Markup);
+    }
+
+    [Fact]
+    public void TableRenderHelpers_UsesCurrentCultureSeparator()
+    {
+        using var _ = new CultureScope("sv-SE");
+
+        var cut = Render(builder =>
+        {
+            builder.OpenElement(0, "table");
+            builder.OpenElement(1, "tbody");
+            builder.OpenElement(2, "tr");
+            TableRenderHelpers.RenderFormattedTd(builder, "0.##", decimal.Parse("15.657", CultureInfo.InvariantCulture));
+            builder.CloseElement();
+            builder.CloseElement();
+            builder.CloseElement();
+        });
+
+        Assert.Contains("15,65", cut.Markup);
     }
 
     [Fact]

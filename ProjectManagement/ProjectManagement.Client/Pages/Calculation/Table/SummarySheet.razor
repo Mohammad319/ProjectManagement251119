@@ -10,6 +10,7 @@
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @using ProjectManagement.Shared.DTO.Project
+@using ProjectManagement.Shared.Helper
 
 @implements IDisposable
 @inherits BaseFactors
@@ -109,7 +110,7 @@
                             {
                                 @foreach (var factors in Calc.Factors)
                                 {
-                                    <tr @key="factors.ResId"
+                                    <tr @key="FactorRowKey(factors)"
                                         style="background-color:@(Template?.SummarySheet?.Color?.Factor);"
                                         class="h-5 align-middle hover:bg-slate-50/70 dark:hover:bg-slate-800/70 transition-colors">
                                         <!-- اسم المورد -->
@@ -151,8 +152,9 @@
                                                         </span>
                                                     </button>
 
-                                                    <input type="number"
-                                                           value="@Format(factors.Earnings)"
+                                                    <input type="text"
+                                                           inputmode="decimal"
+                                                           value="@FormatInput(Format(factors.Earnings))"
                                                            class="h-4 w-20 border border-slate-300 dark:border-slate-600 rounded
                                                                               bg-transparent dark:bg-transparent
                                                                               px-1 text-[11px] leading-none
@@ -160,7 +162,7 @@
                                                            style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                            @onchange="(e) =>
                                                            {
-                                                               if (decimal.TryParse(e.Value?.ToString(), out var v))
+                                                               if (NumericInputHelper.TryParseDecimal(e.Value?.ToString(), out var v))
                                                                {
                                                                    factors.Earnings = v;
                                                                    SomeHasChanged();
@@ -205,8 +207,9 @@
 
                                             <!-- Key -->
                                             <td class="px-2 py-0 align-middle">
-                                                <input type="number"
-                                                       value="@factors.Key"
+                                                <input type="text"
+                                                       inputmode="decimal"
+                                                       value="@FormatInput(factors.Key)"
                                                        class="h-4 w-20 border border-slate-300 dark:border-slate-600 rounded
                                                                           bg-transparent dark:bg-transparent
                                                                           px-1 text-[11px] leading-none
@@ -214,7 +217,7 @@
                                                        style="color:@(Template?.SummarySheet?.Color?.Text);"
                                                        @onchange="(e) =>
                                                        {
-                                                           if (decimal.TryParse(e.Value?.ToString(), out var v))
+                                                           if (NumericInputHelper.TryParseDecimal(e.Value?.ToString(), out var v))
                                                            {
                                                                factors.Key = v;
                                                                SomeHasChanged();
@@ -340,16 +343,17 @@
                                     <td class="px-2 py-0 align-middle tabular-nums whitespace-nowrap">
                                         @if (Calc.Factors.Any(x => !x.IsLocked && x.EarningsValue > 0))
                                         {
-                                            <input type="number"
+                                            <input type="text"
+                                                   inputmode="decimal"
                                                    class="h-4 w-28 border border-slate-300 dark:border-slate-600 rounded
                                                                   bg-transparent dark:bg-transparent
                                                                   px-1 text-[11px] leading-none
                                                                   focus:outline-none focus:ring-[0.5px] focus:ring-blue-400"
                                                    style="color:@(Template?.SummarySheet?.Color?.Text);"
-                                                   value="@Format(Calc.ProfitDecision)"
+                                                   value="@FormatInput(Format(Calc.ProfitDecision))"
                                                    @onchange="(e) =>
                                                    {
-                                                       if (decimal.TryParse(e.Value?.ToString(), out var v))
+                                                       if (NumericInputHelper.TryParseDecimal(e.Value?.ToString(), out var v))
                                                        {
                                                            ChangeProfit(v);
                                                        }
@@ -414,8 +418,9 @@
             @CalcResource.tenderSumExclTax
         </span>
 
-        <input type="number"
-               value="@Format(Calc.TenderExcelTax)"
+        <input type="text"
+               inputmode="decimal"
+               value="@FormatInput(Format(Calc.TenderExcelTax))"
                @onchange="TenderExcelTaxChanged"
                class="w-32 h-7 border border-slate-300 dark:border-slate-600 rounded
                       bg-white dark:bg-slate-900
@@ -433,8 +438,9 @@
             @CalcResource.tenderSumInclTax:
         </span>
 
-        <input type="number"
-               value="@Format(Calc.TenderInclTax)"
+        <input type="text"
+               inputmode="decimal"
+               value="@FormatInput(Format(Calc.TenderInclTax))"
                @onchange="TenderInclTaxChanged"
                class="w-32 h-7 border border-slate-300 dark:border-slate-600 rounded
                       bg-white dark:bg-slate-900

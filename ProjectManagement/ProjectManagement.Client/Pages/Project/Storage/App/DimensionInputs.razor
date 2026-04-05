@@ -9,14 +9,14 @@
 
     <!-- Quantity -->
     <div class="flex flex-col gap-0.5 w-[90px]">
-        <TrimmedNumberInput TValue="decimal?"
-                            id="@($"quantity-{Task.Id}")"
-                            placeholder="@CalcResource.quantity"
-                            min="0"
-                            step="any"
-                            MaxFractionDigits="MaxFractionDigits"
-                            class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            @bind-Value="Task.Quantity" />
+        <input type="text"
+               id="@($"quantity-{Task.Id}")"
+               inputmode="decimal"
+               placeholder="@CalcResource.quantity"
+               value="@GetTaskQuantityInputValue()"
+               @oninput="OnTaskQuantityInputChanged"
+               @onblur="OnTaskQuantityBlur"
+               class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
     </div>
 
     <!-- Unit -->
@@ -58,16 +58,14 @@
         if (show)
         {
             <div class="flex flex-col gap-0.5 w-[120px]">
-                <TrimmedNumberInput TValue="decimal?"
-                                    placeholder="@inp.Label"
-                                    min="0"
-                                    step="any"
-                                    MaxFractionDigits="MaxFractionDigits"
-                                    class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                    Value="GetParameterValue(inp.Name)"
-                                    ValueChanged="value => OnParamChangedInternal(inp.Name, value)"
-                                    ValueExpression="GetValueExpression(inp.Name)"
-                                    @attributes="@((maxVal > 0 ? new Dictionary<string, object> { { "max", maxVal } } : null))" />
+                <input type="text"
+                       inputmode="decimal"
+                       placeholder="@inp.Label"
+                       value="@GetParameterInputValue(inp.Name)"
+                       @oninput="e => OnParamInputChanged(inp.Name, e)"
+                       @onblur="() => OnParamBlur(inp.Name)"
+                       class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                       @attributes="@((maxVal > 0 ? new Dictionary<string, object> { { "max", maxVal } } : null))" />
             </div>
         }
     }
@@ -89,6 +87,8 @@
     [Parameter] public EventCallback OnApply { get; set; }
 
     private readonly DimensionValueModel _dimensionValues = new();
+    private string? _taskQuantityDraft;
+    private readonly Dictionary<ParamName, string> _parameterDrafts = new();
 
     protected override void OnParametersSet()
     {
@@ -128,6 +128,54 @@
             _ => () => _dimensionValues.Thickness
         };
 
+    private string GetTaskQuantityInputValue()
+        => _taskQuantityDraft ?? NumericFormatHelper.Format(Task.Quantity, MaxFractionDigits);
+
+    private async Task OnTaskQuantityInputChanged(ChangeEventArgs e)
+    {
+        var rawValue = e.Value?.ToString() ?? string.Empty;
+        _taskQuantityDraft = rawValue;
+
+        if (!NumericInputHelper.TryParseNullableDecimal(rawValue, out var parsed))
+            return;
+
+        Task.Quantity = parsed;
+
+        if (OnChanged.HasDelegate)
+            await OnChanged.InvokeAsync();
+    }
+
+    private Task OnTaskQuantityBlur()
+    {
+        _taskQuantityDraft = null;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private string GetParameterInputValue(ParamName name)
+        => _parameterDrafts.TryGetValue(name, out var draft)
+            ? draft
+            : NumericFormatHelper.Format(GetParameterValue(name), MaxFractionDigits);
+
+    private async Task OnParamInputChanged(ParamName name, ChangeEventArgs e)
+    {
+        var rawValue = e.Value?.ToString() ?? string.Empty;
+        _parameterDrafts[name] = rawValue;
+
+        if (!NumericInputHelper.TryParseNullableDecimal(rawValue, out var parsed))
+            return;
+
+        OnParamChangedInternal(name, parsed);
+
+        if (OnChanged.HasDelegate)
+            await OnChanged.InvokeAsync();
+    }
+
+    private Task OnParamBlur(ParamName name)
+    {
+        _parameterDrafts.Remove(name);
+        return InvokeAsync(StateHasChanged);
+    }
+
     private void OnParamChangedInternal(ParamName name, decimal? value)
     {
         switch (name)
@@ -147,9 +195,6 @@
             Task.ParameterValues[name] = value.Value;
         else
             Task.ParameterValues.Remove(name);
-
-        if (OnChanged.HasDelegate)
-            OnChanged.InvokeAsync();
     }
 
     // ========== منطق العرض ==========

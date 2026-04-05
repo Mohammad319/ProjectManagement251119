@@ -24,12 +24,12 @@ public static class UiStyles
     {
         return round switch
         {
-            1 => string.Format(CultureInfo.InvariantCulture, "{0:0.#}", value),
-            2 => string.Format(CultureInfo.InvariantCulture, "{0:0.##}", value),
-            3 => string.Format(CultureInfo.InvariantCulture, "{0:0.###}", value),
-            4 => string.Format(CultureInfo.InvariantCulture, "{0:0.####}", value),
-            5 => string.Format(CultureInfo.InvariantCulture, "{0:0.#####}", value),
-            _ => string.Format(CultureInfo.InvariantCulture, "{0:0.##}", value),
+            1 => string.Format(CultureInfo.CurrentCulture, "{0:0.#}", value),
+            2 => string.Format(CultureInfo.CurrentCulture, "{0:0.##}", value),
+            3 => string.Format(CultureInfo.CurrentCulture, "{0:0.###}", value),
+            4 => string.Format(CultureInfo.CurrentCulture, "{0:0.####}", value),
+            5 => string.Format(CultureInfo.CurrentCulture, "{0:0.#####}", value),
+            _ => string.Format(CultureInfo.CurrentCulture, "{0:0.##}", value),
         };
     }
 

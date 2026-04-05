@@ -4,6 +4,7 @@
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
 @using ProjectManagement.Shared.Enums
+@using ProjectManagement.Shared.Helper.ProjectAppStorage
 @inject ITasksUserComputationServiceWasm Compute
 @inject IStorageRepository TaskService
 @inherits AppComponentBase
@@ -91,6 +92,7 @@
                                   OnChanged="OnAnswersChanged"
                                   CostConfig="CostConfig"
                                   NameConfig="NameConfig"
+                                  TaskParameters="Task.ParameterValues"
                                   TotalCost="Task.TotalCost" />
 
         </div>
@@ -196,11 +198,12 @@
     }
     protected override void OnInitialized()
     {
-        Compute.ReCalcCostResources(Task.BaseResources);
-        Compute.CalcQuantityResource(Task.BaseResources, Task.Quantity);
+        RefreshBaseResources();
     }
     private void OnAnswersChanged()
     {
+        RefreshBaseResources();
+
         Compute.BuildFinalRows(Task);
         EnsureUncontrollableSummary();   // بعد أي تغيير
 
@@ -220,9 +223,7 @@
                 parameters: Task.ParameterValues);
             _resultText = value.ToString("G");
 
-            Compute.ReCalcCostResources(Task.BaseResources);
-            Compute.ReCalcCapResources(Task.BaseResources);
-            Compute.CalcQuantityResource(Task.BaseResources, Task.Quantity);
+            RefreshBaseResources();
 
             // Always rebuild derived rows from scratch so Apply refreshes
             // the existing resources instead of carrying old result rows forward.
@@ -235,6 +236,9 @@
             _computeError = ex.Message;
         }
     }
+
+    private void RefreshBaseResources()
+        => Compute.RefreshResources(Task.BaseResources, Task.Quantity, Task.ParameterValues);
 
     /// <summary>
     /// إنشاء/تحديث مورد ملخص:

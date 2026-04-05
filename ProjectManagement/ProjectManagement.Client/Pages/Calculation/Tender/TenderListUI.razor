@@ -1,6 +1,7 @@
 ﻿@using ProjectManagement.Client.Pages.Calculation.Tender.Attribute
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.Helper
 @inherits AppComponentBase
 
 @if (FormAttr != null && result != null)
@@ -107,10 +108,9 @@ else
                                                 var value = zz?.Values ?? 0;
                                             }
 
-                                            <input type="number"
-                                                   value="@value"
-                                                   min="0"
-                                                   step="0.01"
+                                            <input type="text"
+                                                   inputmode="decimal"
+                                                   value="@NumericDisplayHelper.Format(value)"
                                                    class="h-9 w-24 rounded-lg border border-slate-300 bg-white px-2.5 text-right text-sm text-slate-800 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                                                    @onchange="async (e) => await OnChangeAsync(tender.Id, attr.Id, e)" />
                                         </td>
@@ -136,7 +136,7 @@ else
 
     async Task OnChangeAsync(int tenderID, int attrID, ChangeEventArgs e)
     {
-        if (decimal.TryParse(e.Value?.ToString(), out var value))
+        if (NumericInputHelper.TryParseDecimal(e.Value?.ToString(), out var value))
             await Repo.Tender.UpdateBindAsync(tenderID, attrID, value);
     }
 

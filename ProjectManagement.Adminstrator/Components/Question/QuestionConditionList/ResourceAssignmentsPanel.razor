@@ -249,11 +249,15 @@
                                     </div>
                                     <div class="space-y-0.5">
                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor1</label>
-                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor1" />
+                                        <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                               Value="a.ChangeFactor1"
+                                                               ValueChanged="@(v => { if (v.HasValue) a.ChangeFactor1 = v.Value; })" />
                                     </div>
                                     <div class="space-y-0.5">
                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.changeFactor2</label>
-                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.ChangeFactor2" />
+                                        <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                               Value="a.ChangeFactor2"
+                                                               ValueChanged="@(v => { if (v.HasValue) a.ChangeFactor2 = v.Value; })" />
                                     </div>
                                     <div class="space-y-0.5">
                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -266,11 +270,15 @@
                                                 <span>@CalcResource.cap</span>
                                             }
                                         </label>
-                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.CapWaste" />
+                                        <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                               Value="a.CapWaste"
+                                                               ValueChanged="@(v => { if (v.HasValue) a.CapWaste = v.Value; })" />
                                     </div>
                                     <div class="space-y-0.5">
                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.baseCost</label>
-                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="a.BaseCost" />
+                                        <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                               Value="a.BaseCost"
+                                                               ValueChanged="@(v => a.BaseCost = v)" />
                                     </div>
                                     <div class="space-y-0.5">
                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppLoc["menuId"]</label>
@@ -308,17 +316,23 @@
 
                                                     <div class="space-y-0.5">
                                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
-                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Min" />
+                                                        <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                                               Value="role.Min"
+                                                                               ValueChanged="@(v => { if (v.HasValue) role.Min = v.Value; })" />
                                                     </div>
 
                                                     <div class="space-y-0.5">
                                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
-                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Max" />
+                                                        <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                                               Value="role.Max"
+                                                                               ValueChanged="@(v => { if (v.HasValue) role.Max = v.Value; })" />
                                                     </div>
 
                                                     <div class="space-y-0.5">
                                                         <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@CalcResource.cap</label>
-                                                        <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="role.Value" />
+                                                        <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                                               Value="role.Value"
+                                                                               ValueChanged="@(v => role.Value = v)" />
                                                     </div>
 
                                                 </div>
@@ -471,11 +485,17 @@
                                                             </div>
                                                             <div class="space-y-0.5">
                                                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.min</label>
-                                                                <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMinValue" placeholder="@AppControll.min" />
+                                                                <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                                                       Value="b.InputMinValue"
+                                                                                       ValueChanged="@(v => b.InputMinValue = v)"
+                                                                                       placeholder="@AppControll.min" />
                                                             </div>
                                                             <div class="space-y-0.5">
                                                                 <label class="block text-xs font-medium text-slate-700 dark:text-slate-300">@AppControll.max</label>
-                                                                <input type="number" class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" @bind="b.InputMaxValue" placeholder="@AppControll.max" />
+                                                                <InvariantDecimalInput class="block w-full rounded-lg border border-slate-300 bg-white px-1.5 py-0.5 text-xs text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                                                                       Value="b.InputMaxValue"
+                                                                                       ValueChanged="@(v => b.InputMaxValue = v)"
+                                                                                       placeholder="@AppControll.max" />
                                                             </div>
                                                         </div>
 

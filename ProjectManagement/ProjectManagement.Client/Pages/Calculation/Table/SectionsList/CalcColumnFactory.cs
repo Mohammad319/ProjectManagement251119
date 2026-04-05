@@ -127,7 +127,7 @@ public static class CalcColumnFactory
                 TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ChangeFactor2),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.ChangeFactor2)
             },
-            [NetColumnId.Waste] = new()
+            [NetColumnId.Cap] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderTextTd(b, t.Cap),
                 ResRender = (b, r) =>
@@ -138,7 +138,7 @@ public static class CalcColumnFactory
                         TableRenderHelpers.EmptyTd(b);
                 }
             },
-            [NetColumnId.Cap] = new()
+            [NetColumnId.Waste] = new()
             {
                 TaskRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
                 ResRender = (b, r) =>

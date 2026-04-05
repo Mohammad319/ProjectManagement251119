@@ -18,6 +18,9 @@ namespace ProjectManagement.Client.Shared.Repositories
             if (typeof(T) == typeof(bool))
                 return (T)(object)true;
 
+            if (!typeof(T).IsValueType || Nullable.GetUnderlyingType(typeof(T)) is not null)
+                return default!;
+
             throw new InvalidOperationException("Empty response body.");
         }
 

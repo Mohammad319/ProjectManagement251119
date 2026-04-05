@@ -1,5 +1,4 @@
 using Application.Mapping.Calculation;
-using Microsoft.EntityFrameworkCore;
 using Persistence.Factory;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
@@ -17,7 +16,7 @@ namespace Application.Services.CalculationItems.TemplateTable
             var template = await context.Templates
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
-                            (!departmentId.HasValue || x.DepartmentId == departmentId))
+                            (!x.DepartmentId.HasValue || x.DepartmentId == departmentId || !departmentId.HasValue))
                 .FirstOrDefaultAsync(ct);
 
             return template?.ToModel();
@@ -31,7 +30,7 @@ namespace Application.Services.CalculationItems.TemplateTable
 
             return await context.Templates
                 .AsNoTracking()
-                .Where(x => x.DepartmentId == departmentId)
+                .Where(x => x.DepartmentId == departmentId || !x.DepartmentId.HasValue)
                 .OrderByDescending(x => x.Id)
                 .Select(x => new TemplateListDTO
                 {

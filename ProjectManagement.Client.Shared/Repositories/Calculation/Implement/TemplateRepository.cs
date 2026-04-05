@@ -27,13 +27,13 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         }
         public async Task<TemplateMVVM> GetByIdAsync(int id)
         {
-            var dto = await _httpRepository.GetAsync<TemplateModelDTO>(TemplateURLBase + URLConst.Template.GetById + $"/{id}");
-            return dto.ToTemplateMVVM();
+            var dto = await _httpRepository.GetAsync<TemplateModelDTO?>(TemplateURLBase + URLConst.Template.GetById + $"/{id}");
+            return dto?.ToTemplateMVVM() ?? new TemplateMVVM();
         }
         public async Task<TemplateMVVM> SetDefaultAsync(int id, int? newTemplate)
         {
-            var dto = await _httpRepository.GetAsync<TemplateModelDTO>(TemplateURLBase + URLConst.Template.Set + $"/{id}/{newTemplate}");
-            return dto.ToTemplateMVVM();
+            var dto = await _httpRepository.GetAsync<TemplateModelDTO?>(TemplateURLBase + URLConst.Template.Set + $"/{id}/{newTemplate}");
+            return dto?.ToTemplateMVVM() ?? new TemplateMVVM();
            
         }
         public async Task<TemplateMVVM> CreateAsync(TemplateListPostDTO model)

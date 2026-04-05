@@ -12,21 +12,22 @@
 @using System.Globalization
 @inject IStringLocalizer<CalcResource> L
 
-<div class="space-y-1 p-1 text-slate-900 dark:text-slate-100">
+<div class="space-y-2 rounded-2xl bg-white p-2 text-slate-900 dark:!bg-slate-950 dark:text-slate-100">
     @if (!string.IsNullOrWhiteSpace(FormErrorMessage))
     {
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
             @FormErrorMessage
         </div>
     }
+
     @if (TaskResource is null)
     {
         <div class="@SectionClass">
-            <div class="space-y-1 px-1 py-1 animate-pulse">
-                <div class="h-4 w-40 rounded bg-slate-200/80 dark:bg-slate-800/80"></div>
-                <div class="h-9 w-full rounded-lg bg-slate-200/80 dark:bg-slate-800/80"></div>
-                <div class="h-9 w-full rounded-lg bg-slate-200/80 dark:bg-slate-800/80"></div>
-                <div class="h-9 w-2/3 rounded-lg bg-slate-200/80 dark:bg-slate-800/80"></div>
+            <div class="space-y-2 px-3 py-3 animate-pulse">
+                <div class="h-4 w-40 rounded bg-slate-200/80 dark:bg-slate-700/70"></div>
+                <div class="h-11 w-full rounded-xl bg-slate-200/80 dark:bg-slate-800/80"></div>
+                <div class="h-11 w-full rounded-xl bg-slate-200/80 dark:bg-slate-800/80"></div>
+                <div class="h-11 w-2/3 rounded-xl bg-slate-200/80 dark:bg-slate-800/80"></div>
             </div>
             <span class="sr-only">Loading...</span>
         </div>
@@ -40,7 +41,7 @@
 
             <div class="@BodyClass">
                 <div class="overflow-x-auto">
-                    <div class="flex min-w-max flex-nowrap items-stretch gap-1">
+                    <div class="flex min-w-max flex-nowrap items-stretch gap-2">
                         <div class="shrink-0">
                             <span class="@BadgeClass">Task: @Task.DisplayName</span>
                         </div>
@@ -56,17 +57,17 @@
                             </div>
                         }
 
-                        <div class="@StatCardClass w-[140px] shrink-0">
+                        <div class="@StatCardClass w-[150px] shrink-0">
                             <div class="@StatLabelClass">Roles</div>
                             <div class="@StatValueClass">@(TaskResource.CapRole?.Count ?? 0)</div>
                         </div>
 
-                        <div class="@StatCardClass w-[140px] shrink-0">
+                        <div class="@StatCardClass w-[150px] shrink-0">
                             <div class="@StatLabelClass">Formulas</div>
                             <div class="@StatValueClass">@(TaskResource.Formulas?.Count ?? 0)</div>
                         </div>
 
-                        <div class="@StatCardClass w-[180px] shrink-0">
+                        <div class="@StatCardClass w-[220px] shrink-0">
                             <div class="@StatLabelClass">Type</div>
                             <div class="@StatValueClass">@TaskResource.ResType</div>
                         </div>
@@ -82,7 +83,7 @@
 
             <div class="@BodyClass">
                 <div class="overflow-x-auto">
-                    <div class="flex min-w-max flex-nowrap items-start gap-1">
+                    <div class="flex min-w-max flex-nowrap items-start gap-2">
                         <div class="w-[180px] shrink-0">
                             <label for="menu-id" class="@LabelClass">Menu Id</label>
                             <input id="menu-id"
@@ -156,7 +157,7 @@
                     {
                         <div class="overflow-x-auto">
                             <div class="min-w-[760px] space-y-2">
-                                <div class="grid grid-cols-[56px_1fr_1fr_1fr] gap-1 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                <div class="grid grid-cols-[56px_1fr_1fr_1fr] gap-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                                     <div></div>
                                     <div>@AppControll.min</div>
                                     <div>@AppControll.max</div>
@@ -167,12 +168,12 @@
                                 {
                                     var role = TaskResource.CapRole[i];
 
-                                    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 dark:border-slate-800 dark:bg-slate-900/50">
-                                        <div class="grid grid-cols-[56px_1fr_1fr_1fr] items-end gap-1">
+                                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:!bg-slate-900/70">
+                                        <div class="grid grid-cols-[56px_1fr_1fr_1fr] items-end gap-2">
                                             <div class="shrink-0">
                                                 <button type="button"
                                                         title="@ResourceApp.delete"
-                                                        class="inline-flex h-9 w-full items-center justify-center rounded-lg border border-rose-600 bg-rose-600 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400"
+                                                        class="inline-flex h-11 w-full items-center justify-center rounded-xl border border-rose-600 bg-rose-600 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400"
                                                         @onclick="@(() => TaskResource.CapRole.Remove(role))">
                                                     ×
                                                 </button>
@@ -212,7 +213,7 @@
                     }
                     else
                     {
-                        <div class="flex min-h-[96px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1 py-5 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                        <div class="flex min-h-[110px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 px-3 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:!bg-slate-900/70 dark:text-slate-300">
                             No roles
                         </div>
                     }
@@ -235,17 +236,17 @@
             <div class="@BodyClass">
                 @if (TaskResource.Formulas is null || TaskResource.Formulas.Count == 0)
                 {
-                    <div class="flex min-h-[96px] items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-1 py-5 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                    <div class="flex min-h-[110px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 px-3 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:!bg-slate-900/70 dark:text-slate-300">
                         No formulas
                     </div>
                 }
                 else
                 {
-                    <div class="space-y-1">
+                    <div class="space-y-2">
                         @foreach (var eq in TaskResource.Formulas.Select((value, index) => new { value, index }))
                         {
-                            <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-900/50">
-                                <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-1">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:!bg-slate-900/70">
+                                <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
                                     <div class="min-w-0">
                                         <label class="@LabelClass">Formula @(eq.index + 1)</label>
                                         <input class="@InputClass"
@@ -271,8 +272,8 @@
         </section>
     }
 
-    <div class="border-t border-slate-200 pt-1 dark:border-slate-800">
-        <div class="flex flex-wrap items-center justify-end gap-1">
+    <div class="border-t border-slate-200 pt-2 dark:border-slate-700">
+        <div class="flex flex-wrap items-center justify-end gap-2">
             <button type="button"
                     class="@PrimaryButtonClass"
                     @onclick="SaveAsync">
@@ -301,46 +302,46 @@
     private string BaseCostText { get; set; } = string.Empty;
 
     private const string SectionClass =
-        "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950/80";
+        "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:!bg-slate-950";
 
     private const string HeaderClass =
-        "flex flex-wrap items-center justify-between gap-1 border-b border-slate-200 px-1 py-1 dark:border-slate-800";
+        "flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:!bg-slate-900";
 
     private const string BodyClass =
-        "px-1 py-1 space-y-1";
+        "space-y-2 bg-white px-3 py-3 dark:!bg-slate-950";
 
     private const string LabelClass =
-        "mb-1 block text-[11px] font-medium text-slate-700 dark:text-slate-300";
+        "mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300";
 
     private const string InputClass =
-        "block h-9 w-full rounded-lg border border-slate-300 bg-white px-1.5 py-1 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
+        "block h-11 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:!bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-sky-400 dark:focus:ring-sky-400/20";
 
     private const string BadgeClass =
-        "inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-1 py-1 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
+        "inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1.5 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:!bg-slate-900 dark:text-slate-200";
 
     private const string BadgeMutedClass =
-        "inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300";
+        "inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-3 py-1.5 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:!bg-slate-900 dark:text-slate-300";
 
     private const string StatCardClass =
-        "rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/60";
+        "rounded-2xl border border-slate-300 bg-slate-100 p-3 dark:border-slate-700 dark:!bg-slate-800";
 
     private const string StatLabelClass =
-        "text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400";
+        "text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400";
 
     private const string StatValueClass =
-        "mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100";
+        "mt-1 break-words text-base font-semibold text-slate-900 dark:text-slate-100";
 
     private const string PrimaryButtonClass =
-        "inline-flex items-center justify-center gap-1 rounded-lg border border-sky-600 bg-sky-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400";
+        "inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-sky-600 bg-sky-600 px-4 text-sm font-medium text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400";
 
     private const string NeutralButtonClass =
-        "inline-flex items-center justify-center gap-1 rounded-lg border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+        "inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:!bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
 
     private const string SecondaryButtonClass =
-        "inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800";
+        "inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:!bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700";
 
     private const string DangerButtonClass =
-        "inline-flex items-center justify-center gap-1 rounded-lg border border-rose-600 bg-rose-600 px-2.5 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400";
+        "inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-rose-600 bg-rose-600 px-3 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400";
 
     private void RemoveFormula(int i)
     {

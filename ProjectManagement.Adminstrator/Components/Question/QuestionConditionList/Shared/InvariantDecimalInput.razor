@@ -1,0 +1,57 @@
+@using System.Globalization
+@using ProjectManagement.Shared.Helper
+
+<input type="text"
+       inputmode="decimal"
+       value="@_text"
+       @oninput="HandleInputAsync"
+       @attributes="AdditionalAttributes" />
+
+@code {
+    [Parameter] public decimal? Value { get; set; }
+    [Parameter] public EventCallback<decimal?> ValueChanged { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private decimal? _lastAppliedValue;
+    private bool _hasAppliedValue;
+    private string _text = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (!_hasAppliedValue || Value != _lastAppliedValue)
+        {
+            _hasAppliedValue = true;
+            _lastAppliedValue = Value;
+            _text = NumericDisplayHelper.Format(Value);
+        }
+    }
+
+    private async Task HandleInputAsync(ChangeEventArgs e)
+    {
+        _text = e.Value?.ToString() ?? string.Empty;
+
+        if (TryParseNullableDecimal(_text, out var parsed))
+        {
+            _lastAppliedValue = parsed;
+            await ValueChanged.InvokeAsync(parsed);
+        }
+    }
+
+    private static bool TryParseNullableDecimal(string? text, out decimal? value)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            value = null;
+            return true;
+        }
+
+        if (NumericInputHelper.TryParseNullableDecimal(text, out var parsed))
+        {
+            value = parsed;
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
+}

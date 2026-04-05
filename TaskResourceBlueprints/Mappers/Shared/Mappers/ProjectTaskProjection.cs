@@ -74,6 +74,7 @@ public static class ProjectTaskProjection
                         ResourceSortId = z.Link == null ? (int?)null : z.Link.ResourceSortId,
                         StatusId = z.Link == null ? (int?)null : z.Link.StatusId,
                         MenuId = z.a.MenuId,
+                        Formulas = z.a.Expressions,
                         Properties = z.a.Resource == null
                             ? new List<ResourcePropertyBindDto>()
                             : z.a.Resource.AttributeValues

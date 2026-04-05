@@ -13,20 +13,13 @@ namespace Application.Feature.Calculation.TemplateTable.Queries
         int? DepartmentId
     ) : IRequest<TemplateModelDTO?>;
 
-    public sealed class GetTemplateByIdQueryHandler
-        : IRequestHandler<GetTemplateByIdQuery, TemplateModelDTO?>
+    public sealed class GetTemplateByIdQueryHandler(ITemplateQueryService service)
+                : IRequestHandler<GetTemplateByIdQuery, TemplateModelDTO?>
     {
-        private readonly ITemplateQueryService _service;
-
-        public GetTemplateByIdQueryHandler(ITemplateQueryService service)
-        {
-            _service = service;
-        }
-
         public Task<TemplateModelDTO?> Handle(
             GetTemplateByIdQuery request,
             CancellationToken cancellationToken)
-            => _service.GetByIdAsync(request.Id, request.DepartmentId, cancellationToken);
+            => service.GetByIdAsync(request.Id, request.DepartmentId, cancellationToken);
     }
 
     // ============================================

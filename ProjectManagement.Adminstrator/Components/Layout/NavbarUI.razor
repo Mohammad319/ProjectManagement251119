@@ -37,10 +37,10 @@
                     aria-label="Switch language"
                     class="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white">
                 <span class="text-base leading-none" aria-hidden="true">
-                    @((MarkupString)(CultureInfo.CurrentCulture.Name == "en-US" ? Icons.SE : Icons.EN))
+                    @((MarkupString)(CultureInfo.CurrentUICulture.Name == "en-US" ? Icons.SE : Icons.EN))
                 </span>
                 <span class="hidden sm:inline">
-                    @(CultureInfo.CurrentCulture.Name == "en-US" ? "Svenska" : "English")
+                    @(CultureInfo.CurrentUICulture.Name == "en-US" ? "Svenska" : "English")
                 </span>
             </button>
 
@@ -177,7 +177,7 @@
 
     private async Task ChangeLanguage()
     {
-        var newCulture = CultureInfo.CurrentCulture.Name == "sv-SE" || string.IsNullOrEmpty(CultureInfo.CurrentCulture.Name)
+        var newCulture = CultureInfo.CurrentUICulture.Name == "sv-SE" || string.IsNullOrEmpty(CultureInfo.CurrentUICulture.Name)
             ? "en-US"
             : "sv-SE";
 

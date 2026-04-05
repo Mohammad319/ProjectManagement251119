@@ -17,10 +17,10 @@ namespace ProjectManagement.Adminstrator.Shared.Culture
 
         CultureInfo Culture
         {
-            get => CultureInfo.CurrentCulture;
+            get => CultureInfo.CurrentUICulture;
             set
             {
-                if (CultureInfo.CurrentCulture != value)
+                if (CultureInfo.CurrentUICulture != value)
                 {
                     var js = (IJSInProcessRuntime)JSRuntime;
                     js.InvokeVoid("blazorCulture.set", value.Name);

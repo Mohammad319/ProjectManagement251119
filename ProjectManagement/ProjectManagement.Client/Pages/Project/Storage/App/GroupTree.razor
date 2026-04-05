@@ -2,6 +2,7 @@
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
 @using ProjectManagement.Shared.Enums
+@using ProjectManagement.Shared.Helper
 
 <div class="mt-1 min-w-0">
     @RenderGroupList(Task, Groups, 0)
@@ -137,12 +138,13 @@
                 builder.CloseElement();
 
                 builder.OpenElement(seq++, "input");
-                builder.AddAttribute(seq++, "type", "number");
+                builder.AddAttribute(seq++, "type", "text");
+                builder.AddAttribute(seq++, "inputmode", "decimal");
                 builder.AddAttribute(seq++, "class",
                     "h-7 w-full rounded border border-slate-300 bg-white px-1.5 text-[12px] " +
                     "text-slate-900 focus:border-indigo-400 focus:outline-none focus:ring-1 focus:ring-indigo-200 " +
                     "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100");
-                builder.AddAttribute(seq++, "value", Answers.NumericValuesByGroupId.TryGetValue(ng.Id, out var v) ? v?.ToString() : null);
+                builder.AddAttribute(seq++, "value", Answers.NumericValuesByGroupId.TryGetValue(ng.Id, out var v) ? NumericDisplayHelper.Format(v) : null);
                 builder.AddAttribute(seq++, "oninput", EventCallback.Factory.Create<ChangeEventArgs>(this, e => SetNumeric(ng.Id, e)));
                 builder.CloseElement();
             }
@@ -187,7 +189,7 @@
 
     private async Task SetNumeric(int numericId, ChangeEventArgs e)
     {
-        if (decimal.TryParse(Convert.ToString(e.Value), out var v))
+        if (NumericInputHelper.TryParseDecimal(Convert.ToString(e.Value), out var v))
             Answers.NumericValuesByGroupId[numericId] = v;
         else
             Answers.NumericValuesByGroupId[numericId] = null;

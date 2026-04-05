@@ -162,7 +162,8 @@
 </div>
 
 @code {
-    void TaskChoiceResourceBin(ProjectTaskListItemDto model, ResourceTaskIndexDto resourceId) => MHD.Modal.ShowComponent<TaskResourceUI>
+    void TaskChoiceResourceBin(ProjectTaskListItemDto model, ResourceTaskIndexDto resourceId) =>
+    MHD.Modal.ShowComponent<TaskResourceUI>
     (model.DisplayName +" Resource",
 new Dictionary<string, object>
 {
