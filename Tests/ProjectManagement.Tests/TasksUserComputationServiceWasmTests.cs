@@ -100,6 +100,68 @@ public class TasksUserComputationServiceWasmTests
     }
 
     [Fact]
+    public void BuildFinalRows_PreservesUserEditedDerivedResourceValuesAcrossRebuilds()
+    {
+        var service = new TasksUserComputationServiceWasm();
+        var sourceResource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        sourceResource.Data.BaseCost = 10m;
+        sourceResource.Data.Cost = 5m;
+        sourceResource.Properties =
+        [
+            new ResourcePropertyBindDto
+            {
+                Id = 100,
+                DisplayName = "P1",
+                DataType = DataType.Number,
+                NumberDefault = 3m
+            }
+        ];
+
+        var task = new ProjectTaskDto
+        {
+            Id = 3,
+            Quantity = 5m,
+            Conditions =
+            [
+                new TaskConditionDto
+                {
+                    ConditionResourceAssignments =
+                    [
+                        new ResourceAssignmentDto
+                        {
+                            Resource = sourceResource
+                        }
+                    ]
+                }
+            ]
+        };
+
+        Assert.True(service.BuildFinalRows(task));
+
+        var edited = Assert.Single(task.ResultResources);
+        edited.IsAdded = true;
+        edited.Name = "Edited Resource";
+        edited.Data.ChangeFactor1 = 7m;
+        edited.Data.ChangeFactor2 = 8m;
+        edited.Data.BaseCost = 99m;
+        edited.Data.Cost = 123m;
+        edited.Data.CO2 = 42d;
+        edited.Properties[0].NumberDefault = 77m;
+
+        Assert.True(service.BuildFinalRows(task));
+
+        var rebuilt = Assert.Single(task.ResultResources);
+        Assert.True(rebuilt.IsAdded);
+        Assert.Equal("Edited Resource", rebuilt.Name);
+        Assert.Equal(7m, rebuilt.Data.ChangeFactor1);
+        Assert.Equal(8m, rebuilt.Data.ChangeFactor2);
+        Assert.Equal(99m, rebuilt.Data.BaseCost);
+        Assert.Equal(123m, rebuilt.Data.Cost);
+        Assert.Equal(42d, rebuilt.Data.CO2);
+        Assert.Equal(77m, rebuilt.Properties[0].NumberDefault);
+    }
+
+    [Fact]
     public void RefreshResources_RecalculatesQuantityAndCostAfterFormulaChangesChangeFactor()
     {
         var service = new TasksUserComputationServiceWasm();

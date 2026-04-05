@@ -65,6 +65,11 @@ else
             </thead>
 
             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                @{
+                    var renderedMenuKeys = new HashSet<string>(StringComparer.Ordinal);
+                    var renderedRowKeyCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+                }
+
                 @foreach (var r in Rows)
                 {
                     if (r is null)
@@ -77,16 +82,15 @@ else
 
                     if (menuGroup is not null)
                     {
-                        // إذا سبق ورسمنا صف لهذه المجموعة فلا نعيد رسمها
-                        if (menuGroup.Rendered)
+                        // إذا سبق ورسمنا صف لهذه المجموعة في نفس دورة الرسم فلا نعيد رسمها
+                        if (!renderedMenuKeys.Add(menuGroup.Key))
                         {
                             continue;
                         }
 
-                        menuGroup.Rendered = true;
-                        // المورد الحالي = أول IsAdded = true, وإلا أول واحد في المجموعة
-                        current = menuGroup.Resources.FirstOrDefault(x => x.IsAdded)
-                        ?? menuGroup.Resources.First();
+                        current = menuGroup.Resources.FirstOrDefault(x => x.Id == menuGroup.SelectedResourceId)
+                            ?? menuGroup.Resources.FirstOrDefault(x => x.IsAdded)
+                            ?? menuGroup.Resources.First();
                         menuGroup.SelectedResourceId = current.Id;
                         isMenuRow = true;
                     }
@@ -94,6 +98,9 @@ else
                     current.Data ??= new ProjectManagement.Shared.Base.Calculation.ResourceMetadata();
 
                     var hasFormulas = current.Formulas is { Count: > 0 };
+                    var assignedTargets = hasFormulas ? ResourceFormulaApplier.GetAssignedTargets(current.Formulas) : null;
+                    var baseCostIsDerived = assignedTargets?.Contains(ResourceFieldBaseCost) == true;
+                    var costIsDerived = assignedTargets?.Contains(ResourceFieldCost) == true;
                     var expanded = _expanded.Contains(current.Id);
 
                     var group = (current.GroupId is int gid && gid > 0)
@@ -104,7 +111,18 @@ else
                     ? Config?.ResourceTypes?.FirstOrDefault(x => x.Id == tid)
                     : null;
 
-                    <tr class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
+                    var baseRowKey = isMenuRow && menuGroup is not null
+                        ? $"menu:{menuGroup.Key}"
+                        : BuildResourceRowKey(current);
+                    var duplicateCount = renderedRowKeyCounts.TryGetValue(baseRowKey, out var seenCount)
+                        ? seenCount + 1
+                        : 0;
+                    renderedRowKeyCounts[baseRowKey] = duplicateCount;
+                    var rowKey = duplicateCount == 0
+                        ? baseRowKey
+                        : $"{baseRowKey}#{duplicateCount}";
+
+                    <tr @key="rowKey" class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
                         <!-- Active / Add -->
                         <td class="px-1 py-0.5 text-[11px] text-gray-800 dark:text-gray-300">
                             @if (AddBtnIsVisible)
@@ -232,7 +250,8 @@ else
                                    value="@GetResourceInputValue(current, ResourceFieldBaseCost)"
                                    @oninput="e => OnResourceNumberChanged(current, ResourceFieldBaseCost, e)"
                                    @onblur="() => OnResourceNumberBlur(current, ResourceFieldBaseCost)"
-                                   class="@St" />
+                                   class="@St"
+                                   disabled="@baseCostIsDerived" />
                         </td>
                         <td class="px-1 py-0.5">
                             <input type="text"
@@ -240,7 +259,8 @@ else
                                    value="@GetResourceInputValue(current, ResourceFieldCost)"
                                    @oninput="e => OnResourceNumberChanged(current, ResourceFieldCost, e)"
                                    @onblur="() => OnResourceNumberBlur(current, ResourceFieldCost)"
-                                   class="@St" />
+                                   class="@St"
+                                   disabled="@costIsDerived" />
                         </td>
                         <td class="px-1 py-0.5">
                             @if (current.Id < 0)
@@ -280,7 +300,7 @@ else
                         </td>
                         <td class="px-1 py-0.5">
                             <input type="text"
-                                   inputmode="decimal"
+                                   inputmode="decimal" disabled
                                    value="@GetResourceInputValue(current, ResourceFieldQuantity)"
                                    @oninput="e => OnResourceNumberChanged(current, ResourceFieldQuantity, e)"
                                    @onblur="() => OnResourceNumberBlur(current, ResourceFieldQuantity)"
@@ -480,10 +500,10 @@ else
 
     private sealed class ResourceMenuGroup
     {
+        public string Key { get; set; } = string.Empty;
         public int MenuId { get; set; }
         public List<ResourceDto> Resources { get; set; } = new();
         public int SelectedResourceId { get; set; }
-        public bool Rendered { get; set; }
     }
 
     private List<PropColumn> _propColumns = new();
@@ -493,6 +513,8 @@ else
 
     protected override void OnParametersSet()
     {
+        var previousSelections = _menuGroups.ToDictionary(g => g.Key, g => g.SelectedResourceId, StringComparer.Ordinal);
+
         // أعمدة الخصائص الديناميكية
         _propColumns = Rows?
             .SelectMany(r => r.Properties ?? Enumerable.Empty<ResourcePropertyBindDto>())
@@ -510,14 +532,22 @@ else
         // تجميع الموارد حسب MenuId (فقط التي تحتوي على عنصرين أو أكثر)
         _menuGroups = Rows?
             .Where(r => r?.MenuId.HasValue == true)
-            .GroupBy(r => r!.MenuId!.Value)
+            .GroupBy(r => GetMenuGroupKey(r!))
             .Where(g => g.Count() >= 2)
-            .Select(g => new ResourceMenuGroup
+            .Select(g =>
             {
-                MenuId = g.Key,
-                Resources = g.ToList(),
-                SelectedResourceId = g.First().Id,
-                Rendered = false
+                var resources = g.ToList();
+                var sample = resources[0];
+                var selectedResourceId = GetSelectedResourceId(resources, g.Key, previousSelections);
+                SyncGroupSelection(resources, selectedResourceId);
+
+                return new ResourceMenuGroup
+                {
+                    Key = g.Key,
+                    MenuId = sample.MenuId!.Value,
+                    Resources = resources,
+                    SelectedResourceId = selectedResourceId
+                };
             })
             .ToList()
             ?? [];
@@ -525,6 +555,32 @@ else
 
     private static string NormalizeName(string name)
         => (name ?? string.Empty).Trim().ToLowerInvariant();
+
+    private static string GetMenuGroupKey(ResourceDto resource)
+        => $"{resource.ResourceSource}:{resource.MenuId!.Value}";
+
+    private static int GetSelectedResourceId(
+        IReadOnlyList<ResourceDto> resources,
+        string menuKey,
+        IReadOnlyDictionary<string, int> previousSelections)
+    {
+        if (previousSelections.TryGetValue(menuKey, out var previousId)
+            && resources.Any(r => r.Id == previousId))
+        {
+            return previousId;
+        }
+
+        return resources.FirstOrDefault(r => r.IsAdded)?.Id
+            ?? resources.First().Id;
+    }
+
+    private static void SyncGroupSelection(IEnumerable<ResourceDto> resources, int selectedResourceId)
+    {
+        foreach (var resource in resources)
+        {
+            resource.IsAdded = resource.Id == selectedResourceId;
+        }
+    }
 
     private void Toggle(int resourceId)
     {
@@ -534,8 +590,11 @@ else
 
     private ResourceMenuGroup? FindGroup(ResourceDto r)
         => r.MenuId.HasValue
-            ? _menuGroups.FirstOrDefault(g => g.MenuId == r.MenuId.Value)
+            ? _menuGroups.FirstOrDefault(g => g.Key == GetMenuGroupKey(r))
             : null;
+
+    private static string BuildResourceRowKey(ResourceDto resource)
+        => $"resource:{resource.ResourceSource}:{resource.MenuId ?? 0}:{resource.Id}";
 
     private async Task OnMenuChanged(ResourceMenuGroup group, ChangeEventArgs e)
     {
@@ -543,10 +602,7 @@ else
             return;
 
         group.SelectedResourceId = id;
-        foreach (var res in group.Resources)
-        {
-            res.IsAdded = (res.Id == id);
-        }
+        SyncGroupSelection(group.Resources, id);
 
         if (OnChanged.HasDelegate)
             await OnChanged.InvokeAsync();

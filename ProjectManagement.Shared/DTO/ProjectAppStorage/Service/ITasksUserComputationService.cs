@@ -1,6 +1,7 @@
 using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Base.ProjectAppStorage;
+using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Helper.ProjectAppStorage;
@@ -141,6 +142,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
     public bool BuildFinalRows(ProjectTaskDto task)
     {
+        var previousResultResources = task.ResultResources?.ToList() ?? [];
         task.ResultResources = [];
 
         var ans = A(task.Id);
@@ -205,8 +207,12 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                     ResType = ra.Resource.ResType,
                     Active = ra.Resource.Active,
                     Formulas = ra.Formulas,
-                    Properties = ra.Resource.Properties,
+                    Properties = CloneProperties(ra.Resource.Properties),
                 };
+
+                var previous = previousResultResources.FirstOrDefault(x => x.Id == res.Id && x.MenuId == res.MenuId);
+                if (previous is not null)
+                    ApplyUserEdits(previous, res);
 
                 var existingIndex = task.ResultResources.FindIndex(x => x.Id == res.Id && x.MenuId == res.MenuId);
                 if (existingIndex < 0)
@@ -230,6 +236,92 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         RefreshResources(task.ResultResources, task.Quantity, task.ParameterValues);
         return true;
     }
+
+    private static void ApplyUserEdits(ResourceDto source, ResourceDto target)
+    {
+        target.IsAdded = source.IsAdded;
+        target.Name = source.Name;
+        target.NameUserValue = source.NameUserValue;
+        target.ResourceSortId = source.ResourceSortId;
+        target.ResourceTypeId = source.ResourceTypeId;
+        target.AccountId = source.AccountId;
+        target.StatusId = source.StatusId;
+        target.Active = source.Active;
+        target.CalcResCost = CloneCalcResCost(source.CalcResCost);
+
+        target.Data.Unit = source.Data.Unit;
+        target.Data.Note = source.Data.Note;
+        target.Data.UpperNote = source.Data.UpperNote is null ? [] : [.. source.Data.UpperNote];
+        target.Data.PriceSub = source.Data.PriceSub;
+        target.Data.ChangeFactor1 = source.Data.ChangeFactor1;
+        target.Data.ChangeFactor2 = source.Data.ChangeFactor2;
+        target.Data.CapWaste = source.Data.CapWaste;
+        target.Data.Cap = source.Data.Cap;
+        target.Data.Waste = source.Data.Waste;
+        target.Data.Cost = source.Data.Cost;
+        target.Data.BaseCost = source.Data.BaseCost;
+        target.Data.CO2 = source.Data.CO2;
+
+        target.Properties = MergeProperties(target.Properties, source.Properties);
+    }
+
+    private static CalcResCost CloneCalcResCost(CalcResCost? source)
+    {
+        if (source is null)
+            return new CalcResCost();
+
+        return new CalcResCost
+        {
+            IsPercent = source.IsPercent,
+            Morgen = source.Morgen,
+            MorgenCost = source.MorgenCost,
+            Day = source.Day,
+            DayCost = source.DayCost,
+            Evening = source.Evening,
+            EveningCost = source.EveningCost,
+            Quantity = source.Quantity
+        };
+    }
+
+    private static List<ResourcePropertyBindDto> MergeProperties(
+        IEnumerable<ResourcePropertyBindDto>? templateProperties,
+        IEnumerable<ResourcePropertyBindDto>? editedProperties)
+    {
+        var editedById = (editedProperties ?? Enumerable.Empty<ResourcePropertyBindDto>())
+            .ToDictionary(p => p.Id);
+
+        var merged = new List<ResourcePropertyBindDto>();
+        foreach (var property in templateProperties ?? Enumerable.Empty<ResourcePropertyBindDto>())
+        {
+            var clone = CloneProperty(property);
+            if (editedById.TryGetValue(property.Id, out var edited))
+            {
+                clone.TextDefault = edited.TextDefault;
+                clone.NumberDefault = edited.NumberDefault;
+            }
+
+            merged.Add(clone);
+        }
+
+        return merged;
+    }
+
+    private static List<ResourcePropertyBindDto> CloneProperties(IEnumerable<ResourcePropertyBindDto>? properties)
+        => (properties ?? Enumerable.Empty<ResourcePropertyBindDto>())
+            .Select(CloneProperty)
+            .ToList();
+
+    private static ResourcePropertyBindDto CloneProperty(ResourcePropertyBindDto property)
+        => new()
+        {
+            Id = property.Id,
+            DisplayName = property.DisplayName,
+            IsUserEditable = property.IsUserEditable,
+            DataType = property.DataType,
+            MaxNumericValue = property.MaxNumericValue,
+            TextDefault = property.TextDefault,
+            NumberDefault = property.NumberDefault
+        };
 
     private void RefreshDerivedValues(List<ResourceDto> resources, decimal? taskQuantity)
     {
