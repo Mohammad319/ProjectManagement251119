@@ -1,4 +1,5 @@
-﻿using ProjectManagement.Shared.Base.Calculation;
+﻿
+using ProjectManagement.Shared.Base.Calculation;
 using System.Linq;
 using System.Threading.Tasks;
 namespace ProjectManagement.Client.Pages.Project.Component.Calculation.Table

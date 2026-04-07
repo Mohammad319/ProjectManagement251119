@@ -68,7 +68,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal WorkedQ => Metadata.WorkedQ;
 
         // ⚠️ تجنب قسمة على صفر
-        public decimal WorkedQPercent => (Metadata.ActuallyQuantity == 0) ? 0 : (Metadata.WorkedQ / Metadata.ActuallyQuantity);
+        public decimal WorkedQPercent => (Metadata.ActuallyQuantity == 0) ? 0 : (Metadata.WorkedQ / Metadata.ActuallyQuantity) * 100;
 
         public decimal? Cap => Metadata.Cap;
         public bool Active => Metadata.IsActive;

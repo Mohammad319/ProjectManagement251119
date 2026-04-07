@@ -1,4 +1,3 @@
-@using System.Globalization
 @using Microsoft.Extensions.Localization
 @using Calculation.Table.Header
 @using ProjectManagement.Client.Helper
@@ -45,6 +44,19 @@
         </thead>
 
         <tbody>
+            @if (TryBuildSummaryTotals(out var summaryTotals))
+            {
+                <tr class="calc-summary-row">
+                    <td class="calc-summary-label">@CalcLoc["sum"]</td>
+
+                    @for (int i = 0; i < HeaderColumns.Count; i++)
+                    {
+                        <td class="@GetSummaryCellCssClass(HeaderColumns[i].Id)">
+                            @GetSummaryCellValue(HeaderColumns[i].Id, summaryTotals)
+                        </td>
+                    }
+                </tr>
+            }
             @if (Calc.FilterVM != null)
             {
                 <ProjectManagement.Client.Pages.Calculation.Table.Header.TableHeaderFilterDiv />
@@ -64,7 +76,7 @@
                                           Task="item.Task"
                                           ActiveParent="item.ParentActive"
                                           OnCollapseToggle="ToggleCollSpan"
-                                          Color="@TemplateConstBase.Task"
+                                          Color="@(Template.NetCalc?.Color?.Task ?? TemplateConstBase.Task)"
                                           Left="@(item.Depth * 10)"
                                           Colmuns="Columns" />
                     }
@@ -80,6 +92,8 @@
                     }
                 </ItemContent>
             </Virtualize>
+
+ 
         </tbody>
     </table>
 </div>

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.JSInterop;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Services.Calculation;
@@ -11,6 +12,7 @@ using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
+using System.Globalization;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList;
 
@@ -353,6 +355,98 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         }
     }
 
+    private bool TryBuildSummaryTotals(out SummaryTotals totals)
+    {
+        if (!Calc.ShowTasks)
+        {
+            totals = default;
+            return false;
+        }
+
+        var flatItems = Calc.AllFlatItems;
+        if (flatItems is { Count: > 0 })
+            return TryBuildSummaryTotals(flatItems, out totals);
+
+        if (Calc.RootTasks.Count == 0)
+        {
+            totals = default;
+            return false;
+        }
+
+        decimal netCostQ = 0m;
+        decimal totalNetCost = 0m;
+        decimal priceTotally = 0m;
+        decimal priceTotallyTax = 0m;
+        bool hasTasks = false;
+
+        for (int i = 0; i < Calc.RootTasks.Count; i++)
+        {
+            var task = Calc.RootTasks[i];
+            if (!ShouldIncludeSummaryTask(task))
+                continue;
+
+            hasTasks = true;
+            netCostQ += task.GetComputedNetCostQ();
+            totalNetCost += task.GetComputedNetCostTotaly();
+            priceTotally += task.GetComputedApriceTotally();
+            priceTotallyTax += task.ApriceTotallyTax(Calc.Tax);
+        }
+
+        totals = new SummaryTotals(netCostQ, totalNetCost, priceTotally, priceTotallyTax);
+        return hasTasks;
+    }
+
+    private bool TryBuildSummaryTotals(IReadOnlyList<FlatItem> flatItems, out SummaryTotals totals)
+    {
+        decimal netCostQ = 0m;
+        decimal totalNetCost = 0m;
+        decimal priceTotally = 0m;
+        decimal priceTotallyTax = 0m;
+        bool hasTasks = false;
+
+        for (int i = 0; i < flatItems.Count; i++)
+        {
+            var item = flatItems[i];
+            if (!item.IsTask || item.Depth != 0 || item.Task is null)
+                continue;
+
+            var task = item.Task;
+            hasTasks = true;
+            netCostQ += task.GetComputedNetCostQ();
+            totalNetCost += task.GetComputedNetCostTotaly();
+            priceTotally += task.GetComputedApriceTotally();
+            priceTotallyTax += task.ApriceTotallyTax(Calc.Tax);
+        }
+
+        totals = new SummaryTotals(netCostQ, totalNetCost, priceTotally, priceTotallyTax);
+        return hasTasks;
+    }
+
+    private bool ShouldIncludeSummaryTask(TaskListMVVM task) =>
+        task.Ui.FilterVisible &&
+        task.IsOH == Calc.OHFactors &&
+        (!Calc.OnlyActive || task.Active);
+
+    private string GetSummaryCellValue(NetColumnId columnId, SummaryTotals totals) =>
+        columnId switch
+        {
+            NetColumnId.NetCostQ => FormatSummaryValue(totals.NetCostQ),
+            NetColumnId.TotalNetCost => FormatSummaryValue(totals.TotalNetCost),
+            NetColumnId.PriceTotaly => FormatSummaryValue(totals.PriceTotally),
+            NetColumnId.PriceTotallyTax => FormatSummaryValue(totals.PriceTotallyTax),
+            _ => string.Empty
+        };
+
+    private static string GetSummaryCellCssClass(NetColumnId columnId) =>
+        columnId switch
+        {
+            NetColumnId.NetCostQ or NetColumnId.TotalNetCost or NetColumnId.PriceTotaly or NetColumnId.PriceTotallyTax => "num-cell",
+            _ => string.Empty
+        };
+
+    private string FormatSummaryValue(decimal value) =>
+        NumericFormatHelper.Format(value, Template.MathRound, CultureInfo.CurrentCulture);
+
     public void Dispose()
     {
         _disposed = true;
@@ -381,4 +475,5 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     }
 
     private readonly record struct ColumnHeader(NetColumnId Id, int Width);
+    private readonly record struct SummaryTotals(decimal NetCostQ, decimal TotalNetCost, decimal PriceTotally, decimal PriceTotallyTax);
 }

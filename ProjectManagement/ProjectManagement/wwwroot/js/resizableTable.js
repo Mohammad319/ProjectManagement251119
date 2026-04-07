@@ -149,6 +149,29 @@ function syncFrozenColumns(table) {
 
         frozenLeft += getFrozenWidth(th);
     });
+
+    syncOverflowTitles(table);
+}
+
+function syncOverflowTitles(table) {
+    const cells = table.querySelectorAll('[data-pm-overflow-title]');
+    cells.forEach(syncOverflowTitle);
+}
+
+function syncOverflowTitle(cell) {
+    const fullText = cell.dataset.pmOverflowTitle;
+    if (!fullText) {
+        cell.removeAttribute('title');
+        return;
+    }
+
+    const isOverflowing = Math.ceil(cell.scrollWidth) > Math.ceil(cell.clientWidth) + 1;
+    if (isOverflowing) {
+        cell.setAttribute('title', fullText);
+        return;
+    }
+
+    cell.removeAttribute('title');
 }
 
 function SaveTemplateJs(event) {

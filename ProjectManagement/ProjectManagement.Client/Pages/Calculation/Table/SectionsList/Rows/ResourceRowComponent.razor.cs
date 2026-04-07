@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using ProjectManagement.Client.Helper;
+using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 
@@ -12,6 +13,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
 
     public ResourceRowComponent() => _resourceCells = RenderResourceCells;
 
+    [Inject] private CalculationService CalcService { get; set; } = default!;
     [Inject] private ResourceService ResourceService { get; set; } = default!;
 
     [Parameter] public ResourceListMVVM Resource { get; set; } = default!;
@@ -32,10 +34,12 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     private bool HasParameters => Resource?.Data?.Parameters?.Count > 0;
     private bool HasTimes => Resource?.Data?.Times?.Count > 0;
     private bool HasDetails => HasParameters || HasTimes;
+    private bool CanShowDetails => CalcService.ShowResourceVariables && HasDetails;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
+        CalcService.ResourceVariablesVisibilityChanged += HandleResourceVariablesVisibilityChanged;
         ResourceService.OfferStateChanged += HandleOfferStateChanged;
     }
 
@@ -45,7 +49,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
 
     private void ToggleDetails()
     {
-        if (!HasDetails)
+        if (!CanShowDetails)
             return;
 
         IsDetailsOpen = !IsDetailsOpen;
@@ -59,12 +63,18 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
         _ = InvokeAsync(StateHasChanged);
     }
 
+    private void HandleResourceVariablesVisibilityChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
     private void RenderResourceCells(RenderTreeBuilder builder)
         => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource);
 
     public override void Dispose()
     {
         base.Dispose();
+        CalcService.ResourceVariablesVisibilityChanged -= HandleResourceVariablesVisibilityChanged;
         ResourceService.OfferStateChanged -= HandleOfferStateChanged;
     }
 }

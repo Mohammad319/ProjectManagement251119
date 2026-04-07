@@ -55,6 +55,27 @@
         box-shadow: 1px 0 0 rgba(148, 163, 184, 0.35);
     }
 
+    .divNetCalc ::deep tbody tr.calc-summary-row {
+        background: var(--net-summary-bg, #eef2f7);
+    }
+
+    .divNetCalc ::deep tbody tr.calc-summary-row > td {
+        position: sticky;
+        bottom: 0;
+        z-index: 12;
+        background: inherit;
+        font-weight: 700;
+        box-shadow: 0 -1px 0 rgba(148, 163, 184, 0.55);
+    }
+
+    .divNetCalc ::deep tbody tr.calc-summary-row > td.num-cell {
+        text-align: end;
+    }
+
+    .divNetCalc ::deep tbody tr.calc-summary-row > td.calc-summary-label {
+        color: var(--net-summary-label, #0f172a);
+    }
+
     .divNetCalc ::deep .resizer {
         position: absolute;
         top: 0;

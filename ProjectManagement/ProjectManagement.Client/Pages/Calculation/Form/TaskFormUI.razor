@@ -85,7 +85,7 @@
                     </div>
                 }
 
-                @if (TaskUpdate.ParentTaskId.HasValue)
+                @if (TaskUpdate.ParentTaskId.HasValue && TaskUpdate.ParentTaskId > 0)
                 {
                     <div class="w-[130px]">
                         <label class="block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300">@CalcResource.changeFactor1</label>

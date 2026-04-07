@@ -4,7 +4,7 @@
 
 <CalculationDataRow RowStyle="@RowStyle"
                     Left="Left"
-                    CanToggle="HasDetails"
+                    CanToggle="CanShowDetails"
                     IsExpanded="IsDetailsOpen"
                     OnToggle="ToggleDetails"
                     ShowHierarchyPlaceholder="Left > 0"
@@ -14,7 +14,7 @@
                     Notes="Resource.Data?.UpperNote"
                     ValueColumns="Colmuns.Count" />
 
-@if (HasDetails && IsDetailsOpen)
+@if (CanShowDetails && IsDetailsOpen)
 {
     <ResourceDetailRows Resource="Resource"
                         Colmuns="Colmuns"

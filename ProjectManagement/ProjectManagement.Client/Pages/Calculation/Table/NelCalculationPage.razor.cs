@@ -19,6 +19,7 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     private Action? _onFolderChanged;
     private Action? _onInteractionChanged;
     private Action? _onCommentsVisibilityChanged;
+    private Action? _onResourceVariablesVisibilityChanged;
     private Action? _onGridViewMaterialized;
     private Action? _onCalculationChanged;
     private CalculationMVVM? _observedCalculation;
@@ -52,6 +53,9 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
 
         _onCommentsVisibilityChanged = () => _ = InvokeAsync(StateHasChanged);
         CalcService.CommentsVisibilityChanged += _onCommentsVisibilityChanged;
+
+        _onResourceVariablesVisibilityChanged = () => _ = InvokeAsync(StateHasChanged);
+        CalcService.ResourceVariablesVisibilityChanged += _onResourceVariablesVisibilityChanged;
 
         _onGridViewMaterialized = () => _ = InvokeAsync(StateHasChanged);
         CalcService.GridViewMaterialized += _onGridViewMaterialized;
@@ -112,6 +116,8 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
 
     private void ToggleComments() => CalcService.ShowComments = !CalcService.ShowComments;
 
+    private void ToggleResourceVariables() => CalcService.ShowResourceVariables = !CalcService.ShowResourceVariables;
+
     private void ToggleOnlyActive()
     {
         if (Calc is null)
@@ -134,6 +140,9 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
 
         if (_onCommentsVisibilityChanged is not null)
             CalcService.CommentsVisibilityChanged -= _onCommentsVisibilityChanged;
+
+        if (_onResourceVariablesVisibilityChanged is not null)
+            CalcService.ResourceVariablesVisibilityChanged -= _onResourceVariablesVisibilityChanged;
 
         if (_onGridViewMaterialized is not null)
             CalcService.GridViewMaterialized -= _onGridViewMaterialized;

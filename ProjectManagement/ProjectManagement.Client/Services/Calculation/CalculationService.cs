@@ -18,8 +18,10 @@ namespace ProjectManagement.Client.Services.Calculation
         CalculationInteractionState interactionState)
     {
         private bool showComments = true;
+        private bool showResourceVariables = true;
 
         public event Action? CommentsVisibilityChanged;
+        public event Action? ResourceVariablesVisibilityChanged;
         public event Action? GridViewMaterialized;
 
         public bool ShowComments
@@ -32,6 +34,19 @@ namespace ProjectManagement.Client.Services.Calculation
 
                 showComments = value;
                 CommentsVisibilityChanged?.Invoke();
+            }
+        }
+
+        public bool ShowResourceVariables
+        {
+            get => showResourceVariables;
+            set
+            {
+                if (showResourceVariables == value)
+                    return;
+
+                showResourceVariables = value;
+                ResourceVariablesVisibilityChanged?.Invoke();
             }
         }
 

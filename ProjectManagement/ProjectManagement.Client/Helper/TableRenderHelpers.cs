@@ -24,7 +24,7 @@ namespace ProjectManagement.Client.Helper
             builder.OpenElement(seq++, "td");
             if (!string.IsNullOrEmpty(content))
             {
-                builder.AddAttribute(seq++, "title", content);
+                builder.AddAttribute(seq++, "data-pm-overflow-title", content);
                 builder.AddContent(seq++, content);
             }
 
@@ -81,18 +81,24 @@ namespace ProjectManagement.Client.Helper
 
         public static void EmptyTd(RenderTreeBuilder builder) => RenderTd(builder, string.Empty);
 
-        public static void RenderStatusTd(
-            RenderTreeBuilder builder,
-            string color,
-            string status,
-            int i,
-            Func<System.Threading.Tasks.Task>? onDetailsClick)
+       public static void RenderStatusTd(
+         RenderTreeBuilder builder,
+         string color,
+         string status,
+         int i,
+         Func<Task>? onDetailsClick)
         {
             int seq = 0;
+
             builder.OpenElement(seq++, "td");
 
             builder.OpenElement(seq++, "span");
             builder.AddAttribute(seq++, "style", "position:static");
+
+            // الأيقونة فقط هي القابلة للنقر
+            builder.OpenElement(seq++, "span");
+            builder.AddAttribute(seq++, "class",
+                $"inline-block w-5 text-center [&>svg]:w-3 [&>svg]:h-3{(onDetailsClick != null ? " cursor-pointer" : "")}");
 
             if (onDetailsClick != null)
             {
@@ -101,16 +107,17 @@ namespace ProjectManagement.Client.Helper
             }
 
             builder.AddMarkupContent(seq++,
-                $"<span class='inline-block w-5 text-center [&>svg]:w-3 [&>svg]:h-3'>" +
-                $"{(i == 0 ? Icons.Chain : i == 1 ? Icons.ChinUnLink : Icons.Plus)}</span>");
+                i == 0 ? Icons.Chain : i == 1 ? Icons.ChinUnLink : Icons.Plus);
+
+            builder.CloseElement(); // span icon
 
             builder.AddMarkupContent(seq++,
                 $"<span style='margin-top:6px;width:12px;height:12px;background-color:{color};display:inline-block;border-radius:50%;'></span> ");
 
             builder.AddContent(seq++, status);
 
-            builder.CloseElement();
-            builder.CloseElement();
+            builder.CloseElement(); // outer span
+            builder.CloseElement(); // td
         }
     }
 }

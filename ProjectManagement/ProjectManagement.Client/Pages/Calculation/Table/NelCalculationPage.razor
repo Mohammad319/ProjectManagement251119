@@ -49,6 +49,14 @@ else
                     </button>
 
                     <button type="button"
+                            data-testid="status-toggle-resource-variables"
+                            class="@GetToggleChipClass(CalcService.ShowResourceVariables)"
+                            aria-pressed="@(CalcService.ShowResourceVariables ? "true" : "false")"
+                            @onclick="ToggleResourceVariables">
+                        <span class="calc-status-chip-label">@AppLoc["storageVariables"]</span>
+                    </button>
+
+                    <button type="button"
                             data-testid="status-toggle-only-active"
                             class="@GetToggleChipClass(Calc!.OnlyActive)"
                             aria-pressed="@(Calc.OnlyActive ? "true" : "false")"
