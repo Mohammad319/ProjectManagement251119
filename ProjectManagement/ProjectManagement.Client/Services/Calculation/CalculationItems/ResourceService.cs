@@ -44,7 +44,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (oldR.Data?.ChangeFactor1 != newR.Data?.ChangeFactor1) return true;
             if (oldR.Data?.ChangeFactor2 != newR.Data?.ChangeFactor2) return true;
             if (HasEffectiveChangeFactor1Changed(oldR.Data, newR.Data)) return true;
-            if (HasEffectiveCostChanged(oldR.Data, newR.Data)) return true;
+            if (HasEffectiveBaseCostChanged(oldR.Data, newR.Data)) return true;
+            if (HasEffectiveCostChanged(oldR, newR)) return true;
 
             return false;
         }
@@ -60,15 +61,28 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             return GetEffectiveChangeFactor1(oldData) != GetEffectiveChangeFactor1(newData);
         }
 
-        private static bool HasEffectiveCostChanged(ResourceMetadata? oldData, ResourceMetadata? newData)
+        private static bool HasEffectiveBaseCostChanged(ResourceMetadata? oldData, ResourceMetadata? newData)
         {
-            bool oldHasTimes = oldData?.Times is { Count: > 0 };
-            bool newHasTimes = newData?.Times is { Count: > 0 };
+            bool oldHasAddOns = oldData?.AddOns is { Count: > 0 };
+            bool newHasAddOns = newData?.AddOns is { Count: > 0 };
 
-            if (!oldHasTimes && !newHasTimes)
+            if (!oldHasAddOns && !newHasAddOns)
                 return false;
 
-            return GetEffectiveCost(oldData) != GetEffectiveCost(newData);
+            return GetEffectiveBaseCost(oldData) != GetEffectiveBaseCost(newData);
+        }
+
+        private static bool HasEffectiveCostChanged(ResourceListMVVM oldR, ResourceListMVVM newR)
+        {
+            bool oldHasTimes = oldR.Data?.Times is { Count: > 0 };
+            bool newHasTimes = newR.Data?.Times is { Count: > 0 };
+            bool oldHasAddOns = oldR.Data?.AddOns is { Count: > 0 };
+            bool newHasAddOns = newR.Data?.AddOns is { Count: > 0 };
+
+            if (!oldHasTimes && !newHasTimes && !oldHasAddOns && !newHasAddOns)
+                return false;
+
+            return GetEffectiveCost(oldR) != GetEffectiveCost(newR);
         }
 
         private static decimal GetEffectiveChangeFactor1(ResourceMetadata? data)
@@ -87,7 +101,28 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             return Math.Round(product, 4, MidpointRounding.AwayFromZero);
         }
 
-        private static decimal GetEffectiveCost(ResourceMetadata? data)
+        private static decimal GetEffectiveCost(ResourceListMVVM resource)
+        {
+            if (resource.Data is null)
+                return 0m;
+
+            var quantity = resource.Quantity ?? 0m;
+            if (quantity <= 0m)
+                return GetEffectiveBaseUnitCost(resource.Data);
+
+            decimal totalVariable = quantity * GetEffectiveBaseUnitCost(resource.Data);
+            var addOns = resource.Data.AddOns;
+
+            if (addOns is not null)
+            {
+                for (int i = 0; i < addOns.Count; i++)
+                    totalVariable += addOns[i].Quantity * addOns[i].Cost;
+            }
+
+            return totalVariable / quantity;
+        }
+
+        private static decimal GetEffectiveBaseUnitCost(ResourceMetadata? data)
         {
             if (data is null)
                 return 0m;
@@ -107,6 +142,23 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             return Math.Round(total / quantity, 2, MidpointRounding.AwayFromZero);
         }
 
+        private static decimal GetEffectiveBaseCost(ResourceMetadata? data)
+        {
+            if (data is null)
+                return 0m;
+
+            decimal total = data.BaseCost ?? 0m;
+            var addOns = data.AddOns;
+
+            if (addOns is not null)
+            {
+                for (int i = 0; i < addOns.Count; i++)
+                    total += addOns[i].BaseCost;
+            }
+
+            return total;
+        }
+
         public async Task HandleOfferAsync(ResourceListMVVM res)
         {
             if (res.HasOfferSelected())
@@ -115,8 +167,8 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             {
                 _ = await Offer.AddAsync(new PostOfferDTO()
                 {
-                    BaseCost = res.BaseCost ?? 0,
-                    Cost = res.Cost,
+                    BaseCost = res.GetComputedBaseCost() ?? 0,
+                    Cost = res.GetComputedCost(),
                     ResourceId = res.Id,
                 });
             }

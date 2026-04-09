@@ -42,6 +42,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     public sealed class ResourceComputedState
     {
         public decimal Factor { get; set; } = 1;
+        public decimal? CostCache { get; set; }
+        public decimal? BaseCostCache { get; set; }
         public decimal? NetCostQCache { get; set; }
         public decimal? NetCostTotalyCache { get; set; }
         public decimal? ApriceTotallyCache { get; set; }
@@ -49,6 +51,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public void Reset()
         {
+            CostCache = null;
+            BaseCostCache = null;
             NetCostQCache = null;
             NetCostTotalyCache = null;
             ApriceTotallyCache = null;

@@ -390,6 +390,12 @@
   <data name="resourceParametersHint" xml:space="preserve">
     <value>Definiera ateranvandbara variabler for den har resursen.</value>
   </data>
+  <data name="resourceAddOnsTitle" xml:space="preserve">
+    <value>Tillägg/Tillbehör, Add-ons / Attachments</value>
+  </data>
+  <data name="resourceAddOnsHint" xml:space="preserve">
+    <value>Första raden speglar själva resursen. Lägg till extra rader för tillbehör och tillägg.</value>
+  </data>
   <data name="times" xml:space="preserve">
     <value>Tider</value>
   </data>

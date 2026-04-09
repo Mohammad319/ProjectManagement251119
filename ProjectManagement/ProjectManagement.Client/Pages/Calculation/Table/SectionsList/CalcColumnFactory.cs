@@ -115,7 +115,7 @@ public static class CalcColumnFactory
             [NetColumnId.Cost] = new()
             {
                 TaskRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
-                ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.Cost)
+                ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.GetComputedCost())
             },
             [NetColumnId.ChangeFactor1] = new()
             {
@@ -152,7 +152,7 @@ public static class CalcColumnFactory
             [NetColumnId.BaseCost] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.GetComputedBaseCost()),
-                ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.BaseCost)
+                ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.GetComputedBaseCost())
             },
             [NetColumnId.Opportunity] = new()
             {

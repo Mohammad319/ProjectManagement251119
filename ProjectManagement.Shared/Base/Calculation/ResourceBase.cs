@@ -13,8 +13,17 @@ namespace ProjectManagement.Shared.Base.Calculation
         public string Name { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
         public decimal Value { get; set; } = 1;
-
     }
+
+    public class ResourceAddon()
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
+        public decimal Quantity { get; set; }
+        public decimal Cost { get; set; }
+        public decimal BaseCost { get; set; }
+    }
+
     public class ResourceTime()
     {
         public string Name { get; set; } = string.Empty;
@@ -25,6 +34,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class ResourceMetadata
     {
         public List<ResourceParameter> Parameters { get; set; } = [];
+        public List<ResourceAddon> AddOns { get; set; } = [];
         public List<ResourceTime> Times { get; set; } = [];
         public decimal? PriceSub { get; set; }
 
@@ -46,7 +56,6 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal? BaseCost { get; set; }
         public double? CO2 { get; set; }
 
-        
         /// <summary>
         /// توحيد القيم الرقمية لتفادي أرقام طويلة جدًا (خصوصًا بعد الصيغ) + منع قيم سالبة في المال.
         /// </summary>
@@ -73,6 +82,22 @@ namespace ProjectManagement.Shared.Base.Calculation
             if (PriceSub.HasValue && PriceSub.Value < 0m) PriceSub = 0m;
             if (Quantity.HasValue && Quantity.Value < 0m) Quantity = 0m;
 
+            if (AddOns is not null)
+            {
+                foreach (var addOn in AddOns)
+                {
+                    addOn.Name = NormalizeText(addOn.Name);
+                    addOn.Unit = NormalizeText(addOn.Unit);
+                    addOn.Quantity = RoundQuantity(addOn.Quantity);
+                    addOn.Cost = RoundMoney(addOn.Cost);
+                    addOn.BaseCost = RoundMoney(addOn.BaseCost);
+
+                    if (addOn.Quantity < 0m) addOn.Quantity = 0m;
+                    if (addOn.Cost < 0m) addOn.Cost = 0m;
+                    if (addOn.BaseCost < 0m) addOn.BaseCost = 0m;
+                }
+            }
+
             // normalize times
             if (Times is not null)
             {
@@ -87,8 +112,9 @@ namespace ProjectManagement.Shared.Base.Calculation
         private static decimal RoundMoney(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
         private static decimal RoundQuantity(decimal v) => Math.Round(v, 3, MidpointRounding.AwayFromZero);
         private static decimal RoundFactor(decimal v) => Math.Round(v, 4, MidpointRounding.AwayFromZero);
+        private static string NormalizeText(string? value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 
-public ResourceMetadata Clone()
+        public ResourceMetadata Clone()
         {
             return new ResourceMetadata
             {
@@ -102,11 +128,23 @@ public ResourceMetadata Clone()
                         Value = p.Value,
                     })],
 
+                AddOns = AddOns is null
+                    ? []
+                    : [.. AddOns.Select(a => new ResourceAddon
+                    {
+                        Name = a.Name,
+                        Unit = a.Unit,
+                        Quantity = a.Quantity,
+                        Cost = a.Cost,
+                        BaseCost = a.BaseCost,
+                    })],
+
                 Times = Times is null
                     ? []
                     : [.. Times.Select(t => new ResourceTime
                     {
                         Name = t.Name,
+                        Unit = t.Unit,
                         Quantity = t.Quantity,
                         Cost = t.Cost,
                     })],
@@ -131,7 +169,6 @@ public ResourceMetadata Clone()
                 CO2 = CO2,
             };
         }
-
     }
 
     public class ResourceBase

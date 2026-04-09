@@ -16,11 +16,31 @@ public partial class ResourceDetailRows
     [Parameter] public string Color { get; set; } = string.Empty;
 
     private string DetailRowStyle => BuildDetailRowStyle(Color);
+    private bool HasChangeFactor1Column => Colmuns.Any(x => x.Id == NetColumnId.ChangeFactor1);
 
     private IEnumerable<DetailLine> DetailLines
     {
         get
         {
+            if (Resource?.Data?.AddOns is { Count: > 0 } addOns)
+            {
+                yield return BuildPrimaryAddOnLine();
+
+                foreach (var addOn in addOns)
+                {
+                    yield return new DetailLine
+                    {
+                        Kind = DetailKind.Attachment,
+                        Name = addOn.Name,
+                        Unit = addOn.Unit,
+                        QuantityText = FormatDecimal(addOn.Quantity),
+                        CostText = FormatDecimal(addOn.Cost),
+                        BaseCostText = FormatDecimal(addOn.BaseCost),
+                        TotalCostText = FormatDecimal((addOn.Quantity * addOn.Cost) + addOn.BaseCost)
+                    };
+                }
+            }
+
             if (Resource?.Data?.Parameters != null)
             {
                 foreach (var p in Resource.Data.Parameters)
@@ -68,6 +88,30 @@ public partial class ResourceDetailRows
             {
                 RenderNameCell(builder, ref seq, line);
             }
+            else if (line.Kind == DetailKind.Attachment && column.Id == NetColumnId.Quantity)
+            {
+                RenderQuantityCell(builder, ref seq, line);
+            }
+            else if (line.Kind == DetailKind.Attachment && column.Id == NetColumnId.Unit)
+            {
+                RenderUnitCell(builder, ref seq, line);
+            }
+            else if (line.Kind == DetailKind.Attachment && column.Id == NetColumnId.Cost)
+            {
+                RenderCostCell(builder, ref seq, line);
+            }
+            else if (line.Kind == DetailKind.Attachment && column.Id == NetColumnId.BaseCost)
+            {
+                RenderBaseCostCell(builder, ref seq, line);
+            }
+            else if (line.Kind == DetailKind.Attachment && column.Id == NetColumnId.TotalNetCost)
+            {
+                RenderTotalCostCell(builder, ref seq, line);
+            }
+            else if (line.Kind == DetailKind.Parameter && column.Id == NetColumnId.Quantity && !HasChangeFactor1Column)
+            {
+                RenderChangeFactor1Cell(builder, ref seq, line);
+            }
             else if (line.Kind == DetailKind.Time && column.Id == NetColumnId.Quantity)
             {
                 RenderQuantityCell(builder, ref seq, line);
@@ -98,9 +142,12 @@ public partial class ResourceDetailRows
     }
     private static void RenderNameCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
-        var dotClass = line.Kind == DetailKind.Time
-            ? "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-500"
-            : "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400";
+        var dotClass = line.Kind switch
+        {
+            DetailKind.Attachment => "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500",
+            DetailKind.Time => "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-500",
+            _ => "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400"
+        };
 
         builder.OpenElement(seq++, "div");
         builder.AddAttribute(seq++, "class", "flex min-w-0 items-start gap-2");
@@ -149,6 +196,22 @@ public partial class ResourceDetailRows
         builder.CloseElement();
     }
 
+    private static void RenderBaseCostCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
+    {
+        builder.OpenElement(seq++, "span");
+        builder.AddAttribute(seq++, "class", "text-[11px] font-medium text-slate-700 ");
+        builder.AddContent(seq++, line.BaseCostText ?? string.Empty);
+        builder.CloseElement();
+    }
+
+    private static void RenderTotalCostCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
+    {
+        builder.OpenElement(seq++, "span");
+        builder.AddAttribute(seq++, "class", "text-[11px] font-semibold text-slate-700 ");
+        builder.AddContent(seq++, line.TotalCostText ?? string.Empty);
+        builder.CloseElement();
+    }
+
     private static string GetDetailCellClass(NetColumnId columnId)
     {
         var baseClass = "border-t border-slate-200/60 px-2 py-1.5 align-middle";
@@ -159,7 +222,9 @@ public partial class ResourceDetailRows
         if (columnId == NetColumnId.Unit ||
             columnId == NetColumnId.Quantity ||
             columnId == NetColumnId.ChangeFactor1 ||
-            columnId == NetColumnId.Cost)
+            columnId == NetColumnId.Cost ||
+            columnId == NetColumnId.BaseCost ||
+            columnId == NetColumnId.TotalNetCost)
             return baseClass + " whitespace-nowrap";
 
         return baseClass;
@@ -222,8 +287,27 @@ public partial class ResourceDetailRows
     private string FormatDecimal(decimal value)
         => NumericFormatHelper.Format(value, MaxFractionDigits, CultureInfo.CurrentCulture);
 
+    private DetailLine BuildPrimaryAddOnLine()
+    {
+        var quantity = Resource.Quantity ?? 0m;
+        var baseCost = Resource.BaseCost ?? 0m;
+        var totalCost = (quantity * Resource.Cost) + baseCost;
+
+        return new DetailLine
+        {
+            Kind = DetailKind.Attachment,
+            Name = Resource.Name,
+            Unit = Resource.Unit,
+            QuantityText = FormatDecimal(quantity),
+            CostText = FormatDecimal(Resource.Cost),
+            BaseCostText = FormatDecimal(baseCost),
+            TotalCostText = FormatDecimal(totalCost)
+        };
+    }
+
     private enum DetailKind
     {
+        Attachment,
         Parameter,
         Time
     }
@@ -236,5 +320,7 @@ public partial class ResourceDetailRows
         public string QuantityText { get; set; } = string.Empty;
         public string ChangeFactor1Text { get; set; } = string.Empty;
         public string? CostText { get; set; }
+        public string? BaseCostText { get; set; }
+        public string? TotalCostText { get; set; }
     }
 }

@@ -59,6 +59,31 @@ public class CalcultationExtensionsTests
     }
 
     [Fact]
+    public void ExecuteCalculation_IncludesAddOnsInEffectiveCostAndBaseCost()
+    {
+        var resource = CreateResource(
+            parameters: [],
+            times: [],
+            changeFactor2: 1m,
+            addOns:
+            [
+                (4m, 3m, 1m),
+                (2m, 2m, 0.5m)
+            ]);
+
+        resource.Data.Cost = 5m;
+        resource.Data.BaseCost = 2m;
+
+        var calc = CreateCalculation(resource, 10m);
+
+        calc.ExecuteCalculation();
+
+        Assert.Equal(6.6m, resource.GetComputedCost());
+        Assert.Equal(3.5m, resource.GetComputedBaseCost());
+        Assert.Equal(69.5m, resource.GetComputedNetCostTotaly());
+    }
+
+    [Fact]
     public void ResourceService_AffectsCalculation_DetectsParameterDrivenChange()
     {
         var oldResource = CreateResource(parameters: [2m, 3m], times: [], changeFactor2: 4m);
@@ -92,6 +117,36 @@ public class CalcultationExtensionsTests
             ],
             changeFactor2: 1m);
         newResource.Data.Quantity = 240m;
+
+        Assert.True(ResourceService.AffectsCalculation(oldResource, newResource));
+    }
+
+    [Fact]
+    public void ResourceService_AffectsCalculation_DetectsAddOnDrivenCostChange()
+    {
+        var oldResource = CreateResource(
+            parameters: [],
+            times: [],
+            changeFactor2: 1m,
+            addOns:
+            [
+                (4m, 3m, 1m)
+            ]);
+        oldResource.Data.Quantity = 10m;
+        oldResource.Data.Cost = 5m;
+        oldResource.Data.BaseCost = 2m;
+
+        var newResource = CreateResource(
+            parameters: [],
+            times: [],
+            changeFactor2: 1m,
+            addOns:
+            [
+                (4m, 4m, 1m)
+            ]);
+        newResource.Data.Quantity = 10m;
+        newResource.Data.Cost = 5m;
+        newResource.Data.BaseCost = 2m;
 
         Assert.True(ResourceService.AffectsCalculation(oldResource, newResource));
     }
@@ -131,7 +186,8 @@ public class CalcultationExtensionsTests
     private static ResourceListMVVM CreateResource(
         IReadOnlyList<decimal> parameters,
         IReadOnlyList<(decimal Quantity, decimal Cost)> times,
-        decimal changeFactor2)
+        decimal changeFactor2,
+        IReadOnlyList<(decimal Quantity, decimal Cost, decimal BaseCost)>? addOns = null)
     {
         var resource = new ResourceListMVVM
         {
@@ -150,12 +206,22 @@ public class CalcultationExtensionsTests
                     Unit = "u",
                     Value = value
                 })],
+                AddOns = addOns is null
+                    ? []
+                    : [.. addOns.Select((item, index) => new ResourceAddon
+                    {
+                        Name = $"A{index + 1}",
+                        Unit = "u",
+                        Quantity = item.Quantity,
+                        Cost = item.Cost,
+                        BaseCost = item.BaseCost
+                    })],
                 Times = [.. times.Select((item, index) => new ResourceTime
                 {
                     Name = $"T{index + 1}",
                     Quantity = item.Quantity,
                     Cost = item.Cost
-                })]
+                })],
             }
         };
 

@@ -96,9 +96,10 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                             hasCo2 = true;
                         }
 
-                        if (r.BaseCost.HasValue)
+                        var resourceBaseCost = r.GetComputedBaseCost();
+                        if (resourceBaseCost.HasValue)
                         {
-                            baseCost += r.BaseCost.Value;
+                            baseCost += resourceBaseCost.Value;
                             hasBaseCost = true;
                         }
                     }

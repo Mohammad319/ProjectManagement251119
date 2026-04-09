@@ -11,10 +11,49 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
     {
         public const string DialogFormId = "resForm";
         private ResourceMetadata ResourceData => ResourceUpdate.Data;
+        private int AddOnRowCount => (ResourceUpdate.Data.AddOns?.Count ?? 0) + 1;
+        private decimal PrimaryAddOnQuantity => ResourceUpdate.Data.Quantity ?? 0m;
+        private decimal PrimaryAddOnBaseCost => ResourceUpdate.Data.BaseCost ?? 0m;
+        private decimal PrimaryAddOnTotalCost => RoundMoney((PrimaryAddOnQuantity * ResourceUpdate.Data.Cost) + PrimaryAddOnBaseCost);
+        private decimal EffectiveAddOnBaseCost => RoundMoney(PrimaryAddOnBaseCost + (ResourceUpdate.Data.AddOns?.Sum(x => x.BaseCost) ?? 0m));
+        private decimal EffectiveAddOnTotalCost => RoundMoney(PrimaryAddOnTotalCost + (ResourceUpdate.Data.AddOns?.Sum(GetAddOnTotalCost) ?? 0m));
+        private decimal EffectiveAddOnCost
+        {
+            get
+            {
+                if (PrimaryAddOnQuantity <= 0m)
+                    return ResourceUpdate.Data.Cost;
+
+                decimal addOnVariableCost = ResourceUpdate.Data.AddOns?.Sum(x => x.Quantity * x.Cost) ?? 0m;
+                return RoundMoney(((PrimaryAddOnQuantity * ResourceUpdate.Data.Cost) + addOnVariableCost) / PrimaryAddOnQuantity);
+            }
+        }
 
         private void AddUpperNote() => ResourceData.UpperNote.Add(string.Empty);
 
         private void RemoveUpperNoteAt(int index) => ResourceData.UpperNote.RemoveAt(index);
+
+        private decimal GetAddOnTotalCost(ResourceAddon addOn) => RoundMoney((addOn.Quantity * addOn.Cost) + addOn.BaseCost);
+
+        private void AddAddOn()
+        {
+            ResourceUpdate.Data.AddOns.Add(new ResourceAddon
+            {
+                Name = string.Empty,
+                Unit = ResourceUpdate.Data.Unit,
+                Quantity = 0m,
+                Cost = 0m,
+                BaseCost = 0m
+            });
+        }
+
+        private void RemoveAddOn(int index)
+        {
+            if (index < 0 || index >= ResourceUpdate.Data.AddOns.Count)
+                return;
+
+            ResourceUpdate.Data.AddOns.RemoveAt(index);
+        }
 
         private void ChangeQuantityParam(string qp)
         {
@@ -229,6 +268,8 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                 ? Math.Round(value.Value, 3, MidpointRounding.AwayFromZero)
                 : null;
         }
+
+        private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 
         public void Dispose()
         {
