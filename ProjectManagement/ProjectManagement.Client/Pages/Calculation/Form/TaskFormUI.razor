@@ -14,7 +14,7 @@
     @if (Task.Id == 0 && PostList.Count > 1)
     {
         <div>
-            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <ul class="nav nav-pills mb-2" id="pills-tab" role="tablist">
                 @for (int i = 0; i < PostList.Count; i++)
                 {
                     int x = i;
@@ -28,8 +28,8 @@
 
     <DataAnnotationsValidator />
 
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)]">
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[180px_minmax(0,1fr)]">
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.code</label>
                 <InputText @bind-Value="TaskUpdate.Metadata.Code" class="@InputClass" />
@@ -44,15 +44,15 @@
         </div>
     </MhdCard>
 
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
             @if (!TaskUpdate.OnlyCodeText)
             {
-                <div class="min-w-0 md:col-span-2 @(ShowExpandedTaskQuantity ? "xl:col-span-2" : "xl:col-span-1")">
+                <div class="min-w-0 md:col-span-12 xl:col-span-5">
                     <label class="@LabelClass">@CalcResource.quantity</label>
                     @if (HasTaskAbove)
                     {
-                        <div class="grid items-start gap-2 @(TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ ? "grid-cols-[minmax(0,1fr)_160px]" : "grid-cols-1")">
+                        <div class="grid items-start gap-1.5 @(TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ ? "grid-cols-[minmax(0,1fr)_7.25rem]" : "grid-cols-1")">
                             <InputSelect class="@InputClass"
                                          @bind-Value:get="TaskUpdate.Metadata.QuantityParam"
                                          @bind-Value:set="(value) => ChangeQuantityParam(value)">
@@ -75,7 +75,7 @@
                     }
                     else
                     {
-                        <div class="grid items-start gap-2 grid-cols-[160px_minmax(0,1fr)]">
+                        <div class="grid items-start gap-1.5 grid-cols-[7.25rem_minmax(0,1fr)]">
                             <input class="@DisabledInputClass" value="@CalcResource.fixedQ" disabled />
                             <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="@InputClass" />
                         </div>
@@ -83,7 +83,7 @@
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Quantity)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-4 xl:col-span-3">
                     <label class="@LabelClass">@CalcResource.unit</label>
                     <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Unit)" />
@@ -91,7 +91,7 @@
 
                 @if (ShowTaskCapInput)
                 {
-                    <div class="min-w-0">
+                    <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.cap </label>
                         <InputNumber @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.Cap)" />
@@ -100,44 +100,44 @@
 
                 @if (HasTaskAbove)
                 {
-                    <div class="min-w-0">
+                    <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.changeFactor1</label>
                         <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@InputClass" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor1)" />
                     </div>
 
-                    <div class="min-w-0">
+                    <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.changeFactor2 </label>
                         <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
                     </div>
                 }
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["actuallyQuantity"]</label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.ActuallyQuantity)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["workedQuantity"]</label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.WorkedQ)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.priceSub </label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceSubDB)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.minPrice </label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.MinPrice)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.ceilingPrice </label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.CeilingPrice)" />
@@ -147,7 +147,7 @@
             @if (Task.Resources == null || Task.Resources.Count == 0 || Task.Type == TaskType.CodeName)
             {
                
-                <div class="min-w-0 flex items-end md:col-span-2 xl:col-span-1">
+                <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-3">
                     <label class="@CheckboxCardClass">
                         <InputCheckbox @bind-Value="TaskUpdate.IsActive"
                                        class="@CheckboxClass" />
@@ -160,9 +160,9 @@
 
     @if (!TaskUpdate.OnlyCodeText)
     {
-        <MhdCard Elevated="true" Compact="true" Class="mb-2">
-            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div class="min-w-0">
+        <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+            <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
+                <div class="min-w-0 md:col-span-4 xl:col-span-3">
                     <label class="@LabelClass">@CalcResource.status</label>
                     <InputSelect @bind-Value="TaskUpdate.StatusId" class="@InputClass">
                         <option></option>
@@ -177,7 +177,7 @@
                     <ValidationMessage For="@(() => TaskUpdate.StatusId)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-8 xl:col-span-5">
                     <label class="@LabelClass">@CalcResource.opportunity</label>
                     <InputSelect @bind-Value="TaskUpdate.OpportunityId" class="@InputClass">
                         <option></option>
@@ -192,20 +192,20 @@
                     <ValidationMessage For="@(() => TaskUpdate.OpportunityId)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-6 xl:col-span-4">
                     <label class="@LabelClass">@CalcResource.responsible</label>
                     <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Responsible)" />
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@CheckboxCardClass">
                         <InputCheckbox class="@CheckboxClass" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
                         <span>@ResourceLoc.inprecent</span>
                     </label>
                 </div>
 
-                <div class="min-w-0">
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@CheckboxCardClass">
                         <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@CheckboxClass" />
                         <span>@CalcResource.active</span>
@@ -215,8 +215,8 @@
         </MhdCard>
     }
 
-    <MhdCard Elevated="true" Compact="true" Class="mb-2">
-        <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.note </label>
                 <InputTextArea @bind-Value="TaskUpdate.Metadata.Note" class="@TextAreaClass" />
@@ -235,7 +235,7 @@
         @for (int i = 0; i < TaskUpdate.Metadata.UpperNote.Count; i++)
         {
             int d = i;
-            <div class="mt-3 grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+            <div class="mt-2 grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-slate-700 dark:bg-slate-800/60 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
                 <div class="min-w-0">
                     <textarea rows="3" @bind="TaskUpdate.Metadata.UpperNote[d]" class="@TextAreaClass"></textarea>
                 </div>
@@ -266,16 +266,16 @@
 
 
 @code {
-    private string LabelClass => "mb-0.5 block text-[12px] font-medium leading-tight text-slate-700 dark:text-slate-200";
-    private string InputClass => "h-8 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[13px] leading-tight text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-blue-400";
-    private string TextAreaClass => "min-h-[4.5rem] w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-[13px] leading-tight text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-blue-400";
-    private string DisabledInputClass => "h-8 w-full rounded-md border border-slate-200 bg-slate-100 px-2 py-1 text-[13px] leading-tight text-slate-500 shadow-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300";
-    private string CheckboxCardClass => "inline-flex min-h-8 w-full cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[13px] font-medium leading-tight text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-slate-500";
+    private string LabelClass => "mb-0.5 block text-[11px] font-medium leading-tight text-slate-700 dark:text-slate-200";
+    private string InputClass => "h-6 w-full rounded-md border border-slate-300 bg-white px-1 py-0.5 text-[13px] leading-tight text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-blue-400";
+    private string DisabledInputClass => "h-6 w-full rounded-md border border-slate-200 bg-slate-100 px-1 py-0.5 text-[13px] leading-tight text-slate-500 shadow-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300";
+    private string TextAreaClass => "min-h-[4rem] w-full rounded-md border border-slate-300 bg-white px-1 py-0.5 text-[13px] leading-tight text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-blue-400";
+    private string CheckboxCardClass => "inline-flex min-h-6 max-w-full cursor-pointer items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[13px] font-medium leading-tight text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-slate-500";
     private string CheckboxClass => "h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-500 dark:bg-slate-900 dark:text-blue-400";
-    private string PrimaryBlueButtonClass => "inline-flex min-h-[2.5rem] items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500";
-    private string OutlineBlueButtonClass => "inline-flex min-h-[2.5rem] items-center justify-center rounded-lg border border-blue-600 px-3 py-2 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300";
-    private string OutlineRedButtonClass => "inline-flex min-h-[2.5rem] items-center justify-center rounded-lg border border-red-600 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300";
-    private string DeleteButtonClass => "inline-flex min-h-[2.5rem] items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500";
+    private string PrimaryBlueButtonClass => "inline-flex h-6 items-center justify-center rounded-md bg-blue-600 px-1 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500";
+    private string OutlineBlueButtonClass => "inline-flex h-6 items-center justify-center rounded-md border border-blue-600 px-1 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300";
+    private string OutlineRedButtonClass => "inline-flex h-6 items-center justify-center rounded-md border border-red-600 px-1 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300";
+    private string DeleteButtonClass => "inline-flex h-6 items-center justify-center rounded-md bg-red-600 px-3 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500";
 
     public const string DialogFormId = "taskForm";
     List<TaskPostDTO> PostList = new();
