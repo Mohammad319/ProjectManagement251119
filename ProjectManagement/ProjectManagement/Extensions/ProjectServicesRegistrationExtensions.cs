@@ -21,7 +21,8 @@ public static class ProjectServicesRegistrationExtensions
             .AddInteractiveWebAssemblyComponents()
             .AddAuthenticationStateSerialization(options =>
             {
-                options.SerializeAllClaims = false;
+                // Interactive WASM components read tenant/user/department claims from AuthenticationStateProvider.
+                options.SerializeAllClaims = true;
             });
 
         services.AddRazorPages();

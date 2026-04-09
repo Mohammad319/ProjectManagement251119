@@ -18,6 +18,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class ResourceTime()
     {
         public string Name { get; set; } = string.Empty;
+        public string Unit { get; set; } = string.Empty;
         public decimal Quantity { get; set; } = 1;
         public decimal Cost { get; set; } = 1;
     }

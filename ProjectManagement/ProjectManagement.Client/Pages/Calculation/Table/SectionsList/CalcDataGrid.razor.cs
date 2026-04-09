@@ -444,6 +444,32 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             _ => string.Empty
         };
 
+    private bool TryBuildSummaryItems(out IReadOnlyList<SummaryItem> items)
+    {
+        items = Array.Empty<SummaryItem>();
+
+        if (!TryBuildSummaryTotals(out var totals))
+            return false;
+
+        var summaryItems = new List<SummaryItem>(4);
+
+        for (int i = 0; i < HeaderColumns.Count; i++)
+        {
+            var columnId = HeaderColumns[i].Id;
+            var value = GetSummaryCellValue(columnId, totals);
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
+
+            summaryItems.Add(new SummaryItem(CalcLoc[NetColumnLoc.Key[columnId]], value));
+        }
+
+        if (summaryItems.Count == 0)
+            return false;
+
+        items = summaryItems;
+        return true;
+    }
+
     private string FormatSummaryValue(decimal value) =>
         NumericFormatHelper.Format(value, Template.MathRound, CultureInfo.CurrentCulture);
 
@@ -476,4 +502,5 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private readonly record struct ColumnHeader(NetColumnId Id, int Width);
     private readonly record struct SummaryTotals(decimal NetCostQ, decimal TotalNetCost, decimal PriceTotally, decimal PriceTotallyTax);
+    private readonly record struct SummaryItem(string Label, string Value);
 }

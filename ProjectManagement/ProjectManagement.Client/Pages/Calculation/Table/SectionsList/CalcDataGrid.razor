@@ -6,94 +6,96 @@
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inject IStringLocalizer<CalcResource> CalcLoc
 
-<div class="divNetCalc">
-    <table tabindex="0"
-           @onkeydown="HandleKeyDown"
-           @onkeyup="HandleKeyUp"
-           id="resizeMe"
-           class="resizable-table">
-        <thead>
-            <tr id="header-row">
-                @if (TH1ISvisible)
-                {
-                    <th @key="Template.StartCol1"
-                        id="h1"
-                        class="draggable-table"
-                        data-pm-frozen="true"
-                        style="width:@(Template.StartCol1 + "px;")">
-                        <span role="button" @onclick="ShFilter" class="text-outline-info">
-                            @((MarkupString)Icons.Filter)
-                        </span>
-                    </th>
-                }
-                else
-                {
-                    <th id="h1" class="draggable-table" data-pm-frozen="true"></th>
-                }
+<div class="calc-grid-shell">
+    @if (TryBuildSummaryItems(out var summaryItems))
+    {
+        <div class="calc-summary-strip">
+            <div class="calc-summary-strip-title">@CalcLoc["sum"]</div>
 
-                @for (int i = 0; i < HeaderColumns.Count; i++)
-                {
-                    <th id="@("h" + (i + 2))"
-                        class="@GetHeaderCssClass(i)"
-                        data-pm-frozen="@GetFrozenHeaderAttribute(HeaderColumns[i].Id)"
-                        style="width:@(HeaderColumns[i].Width)px;">
-                        @CalcLoc[NetColumnLoc.Key[HeaderColumns[i].Id]]
-                    </th>
-                }
-            </tr>
-        </thead>
-
-        <tbody>
-            @if (TryBuildSummaryTotals(out var summaryTotals))
+            @foreach (var item in summaryItems)
             {
-                <tr class="calc-summary-row">
-                    <td class="calc-summary-label">@CalcLoc["sum"]</td>
+                <div class="calc-summary-strip-item">
+                    <span class="calc-summary-strip-key">@item.Label</span>
+                    <span class="calc-summary-strip-value">@item.Value</span>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="divNetCalc">
+        <table tabindex="0"
+               @onkeydown="HandleKeyDown"
+               @onkeyup="HandleKeyUp"
+               id="resizeMe"
+               class="resizable-table">
+            <thead>
+                <tr id="header-row">
+                    @if (TH1ISvisible)
+                    {
+                        <th @key="Template.StartCol1"
+                            id="h1"
+                            class="draggable-table"
+                            data-pm-frozen="true"
+                            style="width:@(Template.StartCol1 + "px;")">
+                            <span role="button" @onclick="ShFilter" class="text-outline-info">
+                                @((MarkupString)Icons.Filter)
+                            </span>
+                        </th>
+                    }
+                    else
+                    {
+                        <th id="h1" class="draggable-table" data-pm-frozen="true"></th>
+                    }
 
                     @for (int i = 0; i < HeaderColumns.Count; i++)
                     {
-                        <td class="@GetSummaryCellCssClass(HeaderColumns[i].Id)">
-                            @GetSummaryCellValue(HeaderColumns[i].Id, summaryTotals)
-                        </td>
+                        <th id="@("h" + (i + 2))"
+                            class="@GetHeaderCssClass(i)"
+                            data-pm-frozen="@GetFrozenHeaderAttribute(HeaderColumns[i].Id)"
+                            style="width:@(HeaderColumns[i].Width)px;">
+                            @CalcLoc[NetColumnLoc.Key[HeaderColumns[i].Id]]
+                        </th>
                     }
                 </tr>
-            }
-            @if (Calc.FilterVM != null)
-            {
-                <ProjectManagement.Client.Pages.Calculation.Table.Header.TableHeaderFilterDiv />
-            }
+            </thead>
 
-            <Virtualize @ref="virtualizeComponent"
-                        SpacerElement="tr"
-                        TItem="FlatItem"
-                        Context="item"
-                        ItemsProvider="LoadItems"
-                        ItemSize="22"
-                        OverscanCount="6">
-                <ItemContent>
-                    @if (item.IsTask && Calc.ShowTasks)
-                    {
-                        <TaskRowComponent @key="item.Key"
-                                          Task="item.Task"
-                                          ActiveParent="item.ParentActive"
-                                          OnCollapseToggle="ToggleCollSpan"
-                                          Color="@(Template.NetCalc?.Color?.Task ?? TemplateConstBase.Task)"
-                                          Left="@(item.Depth * 10)"
-                                          Colmuns="Columns" />
-                    }
-                    else if (item.IsResource && Calc.ShowResources)
-                    {
-                        <ResourceRowComponent @key="item.Key"
-                                              Resource="item.Resource"
-                                              TaskBranchActive="item.ParentActive"
-                                              Color="@(Template.NetCalc?.Color?.Resource ?? string.Empty)"
+            <tbody>
+                @if (Calc.FilterVM != null)
+                {
+                    <ProjectManagement.Client.Pages.Calculation.Table.Header.TableHeaderFilterDiv />
+                }
+
+                <Virtualize @ref="virtualizeComponent"
+                            SpacerElement="tr"
+                            TItem="FlatItem"
+                            Context="item"
+                            ItemsProvider="LoadItems"
+                            ItemSize="22"
+                            OverscanCount="6">
+                    <ItemContent>
+                        @if (item.IsTask && Calc.ShowTasks)
+                        {
+                            <TaskRowComponent @key="item.Key"
+                                              Task="item.Task"
+                                              ActiveParent="item.ParentActive"
+                                              OnCollapseToggle="ToggleCollSpan"
+                                              Color="@(Template.NetCalc?.Color?.Task ?? TemplateConstBase.Task)"
                                               Left="@(item.Depth * 10)"
-                                              MaxFractionDigits="Template.MathRound"
                                               Colmuns="Columns" />
-                    }
-                </ItemContent>
-            </Virtualize>
-
- 
-        </tbody>
-    </table>
+                        }
+                        else if (item.IsResource && Calc.ShowResources)
+                        {
+                            <ResourceRowComponent @key="item.Key"
+                                                  Resource="item.Resource"
+                                                  TaskBranchActive="item.ParentActive"
+                                                  Color="@(Template.NetCalc?.Color?.Resource ?? string.Empty)"
+                                                  Left="@(item.Depth * 10)"
+                                                  MaxFractionDigits="Template.MathRound"
+                                                  Colmuns="Columns" />
+                        }
+                    </ItemContent>
+                </Virtualize>
+            </tbody>
+        </table>
+    </div>
 </div>

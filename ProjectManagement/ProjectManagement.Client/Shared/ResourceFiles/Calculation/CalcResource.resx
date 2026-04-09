@@ -244,7 +244,7 @@
     <value>Price OG</value>
   </data>
   <data name="priceQ" xml:space="preserve">
-    <value>Price Q</value>
+    <value>Price production</value>
   </data>
   <data name="priceQTax" xml:space="preserve">
     <value>Price Q Tax</value>
@@ -257,6 +257,9 @@
   </data>
   <data name="priceTotalSub" xml:space="preserve">
     <value>Price Total Sub</value>
+  </data>
+  <data name="priceTotalSubTax" xml:space="preserve">
+    <value>Price total Sub tax</value>
   </data>
   <data name="priceTotaly" xml:space="preserve">
     <value>Price Totally</value>

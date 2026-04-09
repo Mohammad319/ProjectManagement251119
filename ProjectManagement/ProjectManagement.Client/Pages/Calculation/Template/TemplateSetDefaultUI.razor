@@ -1,9 +1,11 @@
 @using BlazorMHD.UI.Core.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @using ProjectManagement.Client.Services.Calculation
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inherits AppComponentBase
 @inject DialogService dialogService
+@inject AuthenticationStateProvider AuthStateProvider
 
 @if (Form != null)
 {
@@ -125,10 +127,23 @@ else
     bool btnSubmitDisabled = false;
     bool Loading = true;
 
+    async Task<int?> GetUserDepartmentIdAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.Claims.FirstOrDefault(x => x.Type == PMClaimsConst.DepartmentId);
+
+        if (claim == null || !int.TryParse(claim.Value, out int departmentId) || departmentId <= 0)
+            return null;
+
+        return departmentId;
+    }
+
     void Refresh() => CalcService.RequestGridRefresh(CalculationGridRefreshKind.View);
 
     protected async override Task OnInitializedAsync()
     {
+        Console.WriteLine("TemplateSetDefaultUI OnInitializedAsync");
+
         List = await Repo.Template.GetAsync() ?? [];
         if ((List == null || !List.Any()))
         {
@@ -136,9 +151,14 @@ else
         }
         else if (Calc.TemplateId > 0)
         {
-            TemplateListPostDTO zzz = new();
-            Calc.Template.CopyPropertiesTo(zzz);
-            Form = zzz;
+            int? userDepartmentId = await GetUserDepartmentIdAsync();
+            Console.WriteLine(userDepartmentId + "--" + Calc.Template?.DepartmentId);
+            if (Calc.Template?.DepartmentId == userDepartmentId)
+            {
+                TemplateListPostDTO zzz = new();
+                Calc.Template.CopyPropertiesTo(zzz);
+                Form = zzz;
+            }
         }
         Loading = false;
     }

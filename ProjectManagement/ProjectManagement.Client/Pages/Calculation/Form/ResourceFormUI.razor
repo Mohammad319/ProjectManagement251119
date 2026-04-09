@@ -38,7 +38,7 @@
 
             <!-- PANEL 1 -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                    <div class="grid grid-cols-3 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                         <div class="min-w-0">
                             <label class="@LabelClass">@CalcResource.name</label>
                             <InputText @bind-Value="ResourceUpdate.Name" class="@InputClass" />
@@ -85,12 +85,12 @@
 
             <!-- PANEL 2 -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                    <div class="grid grid-cols-2 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
 
                         <div class="min-w-0">
                             <label class="@LabelClass">@CalcResource.quantity</label>
 
-                            <div class="grid gap-2 @(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? "grid-cols-1 lg:grid-cols-[minmax(0,1fr)_120px]" : "grid-cols-1")">
+                            <div class="grid items-start gap-2 @(ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ ? "grid-cols-[minmax(0,1fr)_140px]" : "grid-cols-1")">
                                 <InputSelect class="@InputClass"
                                              @bind-Value:get="ResourceUpdate.Data.QuantityParam"
                                              @bind-Value:set="(value) => ChangeQuantityParam(value)">
@@ -119,21 +119,22 @@
                             <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@InputClass" />
                             <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
                         </div>
-
-                        <div class="min-w-0">
-                            <label class="@LabelClass">@CalcResource.cost</label>
-                            @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
-                            {
-                                <input class="@DisabledInputClass" type="number" disabled value="@Resource.Data.Cost" />
-                            }
-                            else
-                            {
-                                <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="@InputClass" />
-                                <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
-                            }
-                        </div>
-
-                        <div class="min-w-0">
+            @if (!ResourceUpdate.Data.Times.Any() || (Resource?.OfferId.HasValue == true && Resource.OfferId > 0))
+            {
+                <div class="min-w-0">
+                    <label class="@LabelClass">@AppLoc["resourceUnitCostLabel"]</label>
+                    @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
+                    {
+                        <input class="@DisabledInputClass" type="number" disabled value="@Resource.Data.Cost" />
+                    }
+                    else
+                    {
+                        <InputNumber @bind-Value="ResourceUpdate.Data.Cost" class="@InputClass" />
+                        <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
+                    }
+                </div>
+            }
+            <div class="min-w-0">
                             <label class="@LabelClass">@CalcResource.baseCost</label>
                             @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                             {
@@ -145,15 +146,16 @@
                                 <ValidationMessage For="@(() => ResourceUpdate.Data.BaseCost)" />
                             }
                         </div>
-
+                             @if (!ResourceUpdate.Data.Parameters.Any())
+                    {
                         <div class="min-w-0">
                             <label class="@LabelClass">@CalcResource.changeFactor1</label>
                             <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor1" class="@InputClass" />
                             <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
                         </div>
-
+                    }
                         <div class="min-w-0">
-                            <label class="@LabelClass">@CalcResource.changeFactor2</label>
+                            <label class="@LabelClass">@AppLoc["resourceChangeFactor2Label"]</label>
                             <InputNumber @bind-Value="ResourceUpdate.Data.ChangeFactor2" class="@InputClass" />
                             <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
                         </div>
@@ -173,10 +175,10 @@
                             </div>
                         }
 
-                        <div class="min-w-0 flex items-end">
-                            <label class="inline-flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <div class="min-w-0 flex items-end md:col-span-2 xl:col-span-1">
+                            <label class="@CheckboxCardClass">
                                 <InputCheckbox @bind-Value="ResourceUpdate.IsActive"
-                                               class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-blue-400" />
+                                               class="@CheckboxClass" />
                                 <span>@CalcResource.active</span>
                             </label>
                         </div>
@@ -185,7 +187,7 @@
 
             <!-- PANEL 3 -->
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
-                    <div class="grid grid-cols-3 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
 
                         @if (Config.ResourceTypes != null)
                         {
@@ -275,7 +277,7 @@
             <MhdCard Elevated="true" Compact="true" Class="mb-2">
                         <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["parameters"]</label>
+                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["resourceParametersTitle"]</label>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["itemsCount", ResourceUpdate.Data.Parameters.Count]</p>
                                 <p class="text-xs text-slate-400 dark:text-slate-500">@AppLoc["resourceParametersHint"]</p>
                             </div>
@@ -339,9 +341,10 @@
                 <MhdCard Elevated="true" Compact="true" Class="mb-2">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["times"]</label>
+                                <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@AppLoc["resourceTimesTitle"]</label>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["itemsCount", ResourceUpdate.Data.Times.Count]</p>
                                 <p class="text-xs text-slate-400 dark:text-slate-500">@AppLoc["resourceTimesHint"]</p>
+                                <p class="text-xs text-slate-400 dark:text-slate-500">Resource Q: @ResourceQuantityReference</p>
                             </div>
 
                             <button type="button"
@@ -370,15 +373,20 @@
                                 <InputText class="@InputClass"
                                            @bind-Value="ResourceUpdate.Data.Times[idx].Name" />
                             </div>
-
+                            <div class="min-w-0 w-[150px] shrink-0">
+                                <label class="@LabelClass">@CalcResource.unit</label>
+                                <InputText class="@InputClass"
+                                           @bind-Value="ResourceUpdate.Data.Times[idx].Unit" />
+                            </div>
                             <div class="min-w-0 w-[180px] shrink-0">
                                 <label class="@LabelClass">@CalcResource.quantity</label>
+                                <p class="mb-1 text-[11px] leading-tight text-slate-400 dark:text-slate-500">Resource Q: @ResourceQuantityReference</p>
                                 <InputNumber class="@InputClass"
                                              @bind-Value="ResourceUpdate.Data.Times[idx].Quantity" />
                             </div>
 
                             <div class="min-w-0 w-[220px] shrink-0">
-                                <label class="@LabelClass">@CalcResource.cost</label>
+                                <label class="@LabelClass">@AppLoc["resourceUnitCostLabel"]</label>
                                 <InputNumber class="@InputClass"
                                              @bind-Value="ResourceUpdate.Data.Times[idx].Cost" />
                             </div>
@@ -467,10 +475,12 @@
 
 @code {
     private string PanelBodyClass => "rounded border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900";
-    private string LabelClass => "block mb-0 font-normal text-sm text-gray-700 dark:text-gray-300";
-    private string InputClass => "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
-    private string DisabledInputClass => "w-full border border-gray-200 rounded px-1 py-0.5 bg-gray-100 text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300";
-    private string TextAreaClass => "w-full border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
+    private string LabelClass => "mb-0.5 block text-[12px] font-medium leading-tight text-slate-700 dark:text-slate-200";
+    private string InputClass => "h-8 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[13px] leading-tight text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-blue-400";
+    private string DisabledInputClass => "h-8 w-full rounded-md border border-slate-200 bg-slate-100 px-2 py-1 text-[13px] leading-tight text-slate-500 shadow-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300";
+    private string TextAreaClass => "min-h-[4.5rem] w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-[13px] leading-tight text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:focus:border-blue-400";
+    private string CheckboxCardClass => "inline-flex min-h-8 w-full cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[13px] font-medium leading-tight text-slate-700 shadow-sm transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:border-slate-500";
+    private string CheckboxClass => "h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-500 dark:bg-slate-900 dark:text-blue-400";
     private string PrimaryBlueButtonClass => "inline-flex items-center justify-center rounded bg-blue-600 px-2 py-1 text-sm font-medium text-white transition hover:bg-blue-700 dark:bg-blue-500";
     private string OutlineBlueButtonClass => "inline-flex items-center justify-center rounded border border-blue-600 px-2 py-1 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300";
     private string OutlineRedButtonClass => "inline-flex items-center justify-center rounded border border-red-600 px-2 py-1 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300";
@@ -478,6 +488,22 @@
     private string OutlineGrayButtonClass => "inline-flex items-center justify-center rounded border border-slate-300 px-2 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200";
     private string DeleteButtonClass => "inline-flex items-center justify-center rounded bg-red-600 px-2 py-1 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500";
     private string DeleteIconButtonClass => "inline-flex h-[30px] w-full items-center justify-center rounded bg-red-600 px-2 py-1 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500";
+    private string ResourceQuantityReference
+    {
+        get
+        {
+            var quantity = ResourceUpdate?.Data?.Quantity;
+            var unit = ResourceUpdate?.Data?.Unit;
+
+            if (!quantity.HasValue)
+                return "-";
+
+            var formattedQuantity = quantity.Value.ToString("0.###");
+            return string.IsNullOrWhiteSpace(unit)
+                ? formattedQuantity
+                : $"{formattedQuantity} {unit}";
+        }
+    }
 
     private string GetStepButtonClass(int index)
     {

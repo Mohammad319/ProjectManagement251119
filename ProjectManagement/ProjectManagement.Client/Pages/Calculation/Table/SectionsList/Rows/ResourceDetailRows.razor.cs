@@ -30,7 +30,7 @@ public partial class ResourceDetailRows
                         Kind = DetailKind.Parameter,
                         Name = p.Name,
                         Unit = p.Unit,
-                        QuantityText = FormatDecimal(p.Value),
+                        ChangeFactor1Text = FormatDecimal(p.Value),
                         CostText = null
                     };
                 }
@@ -44,7 +44,7 @@ public partial class ResourceDetailRows
                     {
                         Kind = DetailKind.Time,
                         Name = t.Name,
-                        Unit = null,
+                        Unit = t.Unit,
                         QuantityText = FormatDecimal(t.Quantity),
                         CostText = FormatDecimal(t.Cost)
                     };
@@ -68,11 +68,19 @@ public partial class ResourceDetailRows
             {
                 RenderNameCell(builder, ref seq, line);
             }
-            else if (column.Id == NetColumnId.Quantity)
+            else if (line.Kind == DetailKind.Time && column.Id == NetColumnId.Quantity)
             {
                 RenderQuantityCell(builder, ref seq, line);
             }
+            else if (line.Kind == DetailKind.Parameter && column.Id == NetColumnId.ChangeFactor1)
+            {
+                RenderChangeFactor1Cell(builder, ref seq, line);
+            }
             else if (line.Kind == DetailKind.Parameter && column.Id == NetColumnId.Unit)
+            {
+                RenderUnitCell(builder, ref seq, line);
+            }
+            else if (line.Kind == DetailKind.Time && column.Id == NetColumnId.BaseCost)
             {
                 RenderUnitCell(builder, ref seq, line);
             }
@@ -117,6 +125,14 @@ public partial class ResourceDetailRows
         builder.CloseElement();
     }
 
+    private static void RenderChangeFactor1Cell(RenderTreeBuilder builder, ref int seq, DetailLine line)
+    {
+        builder.OpenElement(seq++, "span");
+        builder.AddAttribute(seq++, "class", "text-[11px] font-medium text-slate-700 ");
+        builder.AddContent(seq++, line.ChangeFactor1Text);
+        builder.CloseElement();
+    }
+
     private static void RenderUnitCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
         builder.OpenElement(seq++, "span");
@@ -142,6 +158,7 @@ public partial class ResourceDetailRows
 
         if (columnId == NetColumnId.Unit ||
             columnId == NetColumnId.Quantity ||
+            columnId == NetColumnId.ChangeFactor1 ||
             columnId == NetColumnId.Cost)
             return baseClass + " whitespace-nowrap";
 
@@ -217,6 +234,7 @@ public partial class ResourceDetailRows
         public string Name { get; set; } = string.Empty;
         public string? Unit { get; set; }
         public string QuantityText { get; set; } = string.Empty;
+        public string ChangeFactor1Text { get; set; } = string.Empty;
         public string? CostText { get; set; }
     }
 }

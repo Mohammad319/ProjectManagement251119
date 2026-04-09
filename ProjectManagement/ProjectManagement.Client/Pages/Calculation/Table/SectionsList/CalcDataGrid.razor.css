@@ -1,7 +1,56 @@
-.divNetCalc {
-    display: block;
+.calc-grid-shell {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: 100%;
+    min-height: 0;
+    background-color: var(--net-surface, #fafafa);
+}
+
+.calc-summary-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    flex: 0 0 auto;
+    padding: 6px 8px;
+    border-bottom: 1px var(--net-border-style) var(--net-border-color);
+    background: var(--net-summary-bg, #eef2f7);
+    box-shadow: 0 1px 0 rgba(148, 163, 184, 0.4);
+}
+
+.calc-summary-strip-title {
+    font-weight: 700;
+    color: var(--net-summary-label, #0f172a);
+    margin-inline-end: 6px;
+}
+
+.calc-summary-strip-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.calc-summary-strip-key {
+    font-size: 11px;
+    color: #475569;
+}
+
+.calc-summary-strip-value {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.divNetCalc {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
     overflow: auto;
     background-color: var(--net-surface, #fafafa);
 }
@@ -16,6 +65,7 @@
         border-spacing: 0;
         background-color: var(--net-table-bg, #ffffff);
     }
+
     .divNetCalc ::deep td,
     .divNetCalc ::deep th {
         border-bottom: 1px var(--net-border-style) var(--net-border-color) !important;
@@ -53,27 +103,6 @@
 
     .divNetCalc ::deep tbody tr.calc-data-row > td.pm-frozen-col {
         box-shadow: 1px 0 0 rgba(148, 163, 184, 0.35);
-    }
-
-    .divNetCalc ::deep tbody tr.calc-summary-row {
-        background: var(--net-summary-bg, #eef2f7);
-    }
-
-    .divNetCalc ::deep tbody tr.calc-summary-row > td {
-        position: sticky;
-        bottom: 0;
-        z-index: 12;
-        background: inherit;
-        font-weight: 700;
-        box-shadow: 0 -1px 0 rgba(148, 163, 184, 0.55);
-    }
-
-    .divNetCalc ::deep tbody tr.calc-summary-row > td.num-cell {
-        text-align: end;
-    }
-
-    .divNetCalc ::deep tbody tr.calc-summary-row > td.calc-summary-label {
-        color: var(--net-summary-label, #0f172a);
     }
 
     .divNetCalc ::deep .resizer {

@@ -195,12 +195,14 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     public class TemplateModelDTO : TemplateBaseData
     {
         public int Id { get; set; }
+        public int? DepartmentId { get; set; }
     }
 
     public class TemplateListDTO
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public int? DepartmentId { get; set; }
         public int? TemplateId { get; set; }
     }
 }

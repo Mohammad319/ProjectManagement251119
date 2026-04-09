@@ -191,6 +191,7 @@ namespace ProjectManagement.Client.Shared.Mapping
             return new TemplateMVVM
             {
                 Id = dto.Id,
+                DepartmentId = dto.DepartmentId,
                 Name = dto.Name ?? string.Empty,
                 MathRound = dto.MathRound,
                 Currency = string.IsNullOrWhiteSpace(dto.Currency) ? defaults.Currency : dto.Currency,
@@ -207,6 +208,7 @@ namespace ProjectManagement.Client.Shared.Mapping
             return new TemplateMVVM
             {
                 Id = dto.Id,
+                DepartmentId = dto.DepartmentId,
                 Name = dto.Name ?? string.Empty,
             };
         }

@@ -105,8 +105,10 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal PriceQTax(decimal taxPercent) => PriceQ * TaxFactor(taxPercent);
         public decimal ApriceTotallyTax(decimal taxPercent) => this.GetComputedApriceTotally() * TaxFactor(taxPercent);
 
-        public decimal PriceActuallyQuantity => ActuallyQuantity * PriceSub;
-        public decimal PriceWorkedQ => WorkedQ * PriceSub;
+        [JsonIgnore] public decimal PriceProduction => PriceQ;
+
+        public decimal PriceActuallyQuantity => ActuallyQuantity * PriceProduction;
+        public decimal PriceWorkedQ => WorkedQ * PriceProduction;
 
         // taxPercent مثال: 25 يعني 25%
         public decimal PriceSubTax(decimal taxPercent) => PriceSub * TaxFactor(taxPercent);

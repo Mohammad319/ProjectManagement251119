@@ -19,6 +19,7 @@ namespace Application.Mapping.Calculation
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                DepartmentId = entity.DepartmentId,
                 Data = entity.GetMetadataSnapshot()
             };
         }

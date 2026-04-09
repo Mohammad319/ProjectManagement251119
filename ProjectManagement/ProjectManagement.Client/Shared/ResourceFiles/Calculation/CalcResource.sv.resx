@@ -244,7 +244,7 @@
     <value>Pris OG</value>
   </data>
   <data name="priceQ" xml:space="preserve">
-    <value>Pris Q</value>
+    <value>Produktionspris</value>
   </data>
   <data name="priceQTax" xml:space="preserve">
     <value>Pris Q Tax</value>
@@ -257,6 +257,9 @@
   </data>
   <data name="priceTotalSub" xml:space="preserve">
     <value>Pris Totalt Delpris</value>
+  </data>
+  <data name="priceTotalSubTax" xml:space="preserve">
+    <value>Pris totalt delpris moms</value>
   </data>
   <data name="priceTotaly" xml:space="preserve">
     <value>Pris totalt</value>

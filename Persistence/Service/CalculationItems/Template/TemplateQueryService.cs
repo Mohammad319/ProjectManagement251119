@@ -35,7 +35,8 @@ namespace Application.Services.CalculationItems.TemplateTable
                 .Select(x => new TemplateListDTO
                 {
                     Id = x.Id,
-                    Name = x.Name
+                    Name = x.Name,
+                    DepartmentId = x.DepartmentId
                 })
                 .ToListAsync(ct);
         }

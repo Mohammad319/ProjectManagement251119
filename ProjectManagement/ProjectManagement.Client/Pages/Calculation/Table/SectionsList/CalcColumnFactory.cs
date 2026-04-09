@@ -214,6 +214,11 @@ public static class CalcColumnFactory
                 TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceSubTotal),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.PriceSubTotal)
             },
+            [NetColumnId.PriceTotalSubTax] = new()
+            {
+                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceTotalSubTax(tax)),
+                ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
+            },
             [NetColumnId.Diff] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Diff),

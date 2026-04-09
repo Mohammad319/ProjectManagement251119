@@ -381,6 +381,9 @@
   <data name="parameters" xml:space="preserve">
     <value>Parametrar</value>
   </data>
+  <data name="resourceParametersTitle" xml:space="preserve">
+    <value>Mängdpåverkande faktor</value>
+  </data>
   <data name="itemsCount" xml:space="preserve">
     <value>{0} objekt</value>
   </data>
@@ -389,6 +392,15 @@
   </data>
   <data name="times" xml:space="preserve">
     <value>Tider</value>
+  </data>
+  <data name="resourceTimesTitle" xml:space="preserve">
+    <value>Tidsfördelning</value>
+  </data>
+  <data name="resourceChangeFactor2Label" xml:space="preserve">
+    <value>Enhetsomräkningsfaktor</value>
+  </data>
+  <data name="resourceUnitCostLabel" xml:space="preserve">
+    <value>Enhetskostnad</value>
   </data>
   <data name="resourceTimesHint" xml:space="preserve">
     <value>Spara arbets- och tidsintervall som anvands i kalkyler.</value>

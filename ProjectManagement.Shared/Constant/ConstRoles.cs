@@ -131,7 +131,10 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         PriceWorkedQTax = 39,
 
         [Display(Name = "note")]
-        Note = 40
+        Note = 40,
+
+        [Display(Name = "priceTotalSubTax")]
+        PriceTotalSubTax = 41
     }
 
     public enum SummarySheetColumnId
@@ -227,6 +230,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     { NetColumnId.PriceActuallyQuantityTax, "Price Actually quantity Tax" },
     { NetColumnId.PriceWorkedQTax, "Price Worked Q Tax" },
     { NetColumnId.Note, "note" },
+    { NetColumnId.PriceTotalSubTax, "priceTotalSubTax" },
 };
         public static readonly Dictionary<SummarySheetColumnId, string> SummaryLoc = new()
 {
@@ -328,6 +332,7 @@ namespace ProjectManagement.Shared.Constants
         new() { Id = NetColumnId.CeilingPrice, Width = 100, Frozen = false },
         new() { Id = NetColumnId.PriceSub, Width = 80, Frozen = false },
         new() { Id = NetColumnId.PriceTotalSub, Width = 110, Frozen = false },
+        new() { Id = NetColumnId.PriceTotalSubTax, Width = 130, Frozen = false },
         new() { Id = NetColumnId.Diff, Width = 85, Frozen = false },
         new() { Id = NetColumnId.Responsible, Width = 100, Frozen = false },
         new() { Id = NetColumnId.Co2, Width = 60, Frozen = false },
