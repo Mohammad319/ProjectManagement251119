@@ -18,6 +18,7 @@ using TaskResourceBlueprints.Infrastructure;
 using Persistence.Factory;
 using System.IO;
 using System.Globalization;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 
 namespace ProjectManagement.Extensions;
@@ -94,12 +95,41 @@ public static class ServiceCollectionExtensions
             {
                 var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
                 var path = httpContext.Request.Path.Value ?? string.Empty;
+                var isAuthenticated = httpContext.User.Identity?.IsAuthenticated == true;
+                var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                             ?? httpContext.User.FindFirst("UserId")?.Value
+                             ?? remoteIp;
 
                 if (path.StartsWith("/api/client-logs", StringComparison.OrdinalIgnoreCase))
                 {
                     return RateLimitPartition.GetFixedWindowLimiter($"client-logs:{remoteIp}", _ => new FixedWindowRateLimiterOptions
                     {
                         PermitLimit = 20,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    });
+                }
+
+                if (path.StartsWith("/Account/Manage", StringComparison.OrdinalIgnoreCase))
+                {
+                    var managePartition = isAuthenticated ? $"account-manage:user:{userId}" : $"account-manage:ip:{remoteIp}";
+                    return RateLimitPartition.GetFixedWindowLimiter(managePartition, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 60,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    });
+                }
+
+                if (path.Equals("/Account/PasskeyCreationOptions", StringComparison.OrdinalIgnoreCase) ||
+                    path.Equals("/Account/PasskeyRequestOptions", StringComparison.OrdinalIgnoreCase))
+                {
+                    var passkeyPartition = isAuthenticated ? $"passkey:user:{userId}" : $"passkey:ip:{remoteIp}";
+                    return RateLimitPartition.GetFixedWindowLimiter(passkeyPartition, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0,
                         AutoReplenishment = true

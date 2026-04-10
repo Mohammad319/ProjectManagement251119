@@ -2,13 +2,11 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
-@using System.Security.Claims
 @using ProjectManagement.Shared
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
-@inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>@PMResourceIdentity.login</PageTitle>
@@ -102,6 +100,15 @@
                         </button>
                     </div>
 
+                    <PasskeySubmit Operation="PasskeyOperation.Request"
+                                   Name="Input.Passkey"
+                                   EmailName="Input.Email"
+                                   class="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base font-medium text-gray-700 shadow-sm
+                          transition-colors hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
+                          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700 dark:focus-visible:outline-blue-400">
+                        @PMIdentityText.LoginWithPasskeyAction
+                    </PasskeySubmit>
+
                     <!-- Error & Forgot Password -->
                     <div class="mt-4 text-center">
                         @if (!string.IsNullOrEmpty(errorMessage))
@@ -147,27 +154,54 @@
 
     public async Task LoginUser()
     {
-        if (!editContext.Validate())
+        if (!string.IsNullOrEmpty(Input.Passkey?.Error))
         {
+            Logger.LogWarning("Passkey sign-in could not be completed for {EmailHint}. Error={Error}", Input.Email, Input.Passkey.Error);
+            errorMessage = $"{PMIdentityText.ErrorPrefix} {Input.Passkey.Error}";
             return;
         }
 
-        // Count failed attempts to activate Identity lockout policy
-        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+        SignInResult result;
+        var signInMethod = "passkey";
+        ApplicationUser? passwordUser = null;
+
+        if (!string.IsNullOrEmpty(Input.Passkey?.CredentialJson))
+        {
+            result = await SignInManager.PasskeySignInAsync(Input.Passkey.CredentialJson);
+        }
+        else
+        {
+            if (!editContext.Validate())
+            {
+                return;
+            }
+
+            signInMethod = "password";
+            passwordUser = await UserManager.FindByEmailAsync(Input.Email.Trim());
+            if (passwordUser is null)
+            {
+                Logger.LogWarning("Invalid login attempt for unknown email {Email}.", Input.Email);
+                errorMessage = PMResourceIdentity.Error_InvalidLoginAttempt;
+                return;
+            }
+
+            // Count failed attempts to activate Identity lockout policy.
+            result = await SignInManager.PasswordSignInAsync(passwordUser, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+        }
 
         if (result.Succeeded)
         {
-            var user = await UserManager.FindByEmailAsync(Input.Email);
             Logger.LogInformation(
-                "Login succeeded for {Email}. UserId={UserId} RemoteIp={RemoteIp}",
-                Input.Email,
-                user?.Id ?? "(unknown)",
+                "Login succeeded. Method={Method} EmailHint={EmailHint} UserId={UserId} RemoteIp={RemoteIp}",
+                signInMethod,
+                string.IsNullOrWhiteSpace(Input.Email) ? "(not provided)" : Input.Email.Trim(),
+                passwordUser?.Id ?? "(unknown)",
                 HttpContext.Connection.RemoteIpAddress?.ToString() ?? "(unknown)");
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
         {
-            Logger.LogInformation("Login requires two-factor authentication for {Email}.", Input.Email);
+            Logger.LogInformation("Login requires two-factor authentication. Method={Method} EmailHint={EmailHint}.", signInMethod, Input.Email);
             RedirectManager.RedirectTo(
                 "Account/LoginWith2fa",
                 new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
@@ -196,6 +230,8 @@
 
         [Display(Name = "Remember me?")]
         public bool RememberMe { get; set; }
+
+        public PasskeyInputModel? Passkey { get; set; }
 
     }
 }

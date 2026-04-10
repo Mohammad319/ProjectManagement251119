@@ -62,11 +62,14 @@ namespace Microsoft.AspNetCore.Routing
                 [FromServices] UserManager<ApplicationUser> userManager,
                 [FromServices] SignInManager<ApplicationUser> signInManager,
                 [FromServices] IAntiforgery antiforgery,
-                [FromQuery] string? username) =>
+                [FromQuery] string? email) =>
             {
                 await antiforgery.ValidateRequestAsync(context);
 
-                var user = string.IsNullOrEmpty(username) ? null : await userManager.FindByNameAsync(username);
+                var user = string.IsNullOrWhiteSpace(email)
+                    ? null
+                    : await userManager.FindByEmailAsync(email.Trim());
+
                 var optionsJson = await signInManager.MakePasskeyRequestOptionsAsync(user);
                 return TypedResults.Content(optionsJson, contentType: "application/json");
             });

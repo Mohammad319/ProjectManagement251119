@@ -38,6 +38,7 @@ public static class PMIdentityText
     public static string RecoveryCodeLabel => GetString(nameof(RecoveryCodeLabel), "Recovery code");
     public static string InvalidRecoveryCode => GetString(nameof(InvalidRecoveryCode), "Invalid recovery code entered.");
     public static string RememberThisMachine => GetString(nameof(RememberThisMachine), "Remember this machine");
+    public static string LoginWithPasskeyAction => GetString(nameof(LoginWithPasskeyAction), "Log in with a passkey");
     public static string RecoveryDeviceUnavailable => GetString(nameof(RecoveryDeviceUnavailable), "Do not have access to your authenticator device? You can");
     public static string LoginWithRecoveryCodeAction => GetString(nameof(LoginWithRecoveryCodeAction), "log in with a recovery code");
     public static string ChangePasswordTitle => GetString(nameof(ChangePasswordTitle), "Change password");
@@ -87,6 +88,7 @@ public static class PMIdentityText
     public static string FailedToSetPhoneNumber => GetString(nameof(FailedToSetPhoneNumber), "Failed to set phone number.");
     public static string ProfileUpdated => GetString(nameof(ProfileUpdated), "Your profile has been updated.");
     public static string ManagePasskeysTitle => GetString(nameof(ManagePasskeysTitle), "Manage your passkeys");
+    public static string PasskeysLabel => GetString(nameof(PasskeysLabel), "Passkeys");
     public static string UnnamedPasskey => GetString(nameof(UnnamedPasskey), "Unnamed passkey");
     public static string RenamePasskeyHint => GetString(nameof(RenamePasskeyHint), "Rename this passkey");
     public static string RenameAction => GetString(nameof(RenameAction), "Rename");

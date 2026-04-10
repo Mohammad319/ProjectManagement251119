@@ -47,6 +47,7 @@ public static class AuthRegistration
         services.Configure<IdentityOptions>(options =>
         {
             options.User.RequireUniqueEmail = true;
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
 
             options.Lockout.AllowedForNewUsers = true;
             options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);

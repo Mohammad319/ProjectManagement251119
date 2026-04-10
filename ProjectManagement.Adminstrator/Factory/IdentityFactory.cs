@@ -13,6 +13,7 @@ namespace ProjectManagement.Adminstrator.Factory
             services.Configure<IdentityOptions>(options =>
             {
                 options.User.RequireUniqueEmail = true;
+                options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
                 options.Lockout.AllowedForNewUsers = false;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                 options.Lockout.MaxFailedAccessAttempts = 5;

@@ -1,6 +1,8 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AuthPermissions.Context;
 
@@ -9,8 +11,16 @@ public sealed class ApplicationDbContextDesignTimeFactory : IDesignTimeDbContext
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var connectionString = ResolveConnectionString();
+        var services = new ServiceCollection();
+        services.Configure<IdentityOptions>(options =>
+        {
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
+        });
+
+        var applicationServices = services.BuildServiceProvider();
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseApplicationServiceProvider(applicationServices)
             .UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure())
             .Options;
 

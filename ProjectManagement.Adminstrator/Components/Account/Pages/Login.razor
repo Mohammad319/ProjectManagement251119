@@ -7,7 +7,6 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
-@inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
 <PageTitle>@ResourceIdentity.login</PageTitle>
@@ -139,11 +138,15 @@
     {
         if (!string.IsNullOrEmpty(Input.Passkey?.Error))
         {
+            Logger.LogWarning("Passkey sign-in could not be completed for {EmailHint}. Error={Error}", Input.Email, Input.Passkey.Error);
             errorMessage = $"Error: {Input.Passkey.Error}";
             return;
         }
 
         SignInResult result;
+        ApplicationUser? passwordUser = null;
+        var signInMethod = "passkey";
+
         if (!string.IsNullOrEmpty(Input.Passkey?.CredentialJson))
         {
             result = await SignInManager.PasskeySignInAsync(Input.Passkey.CredentialJson);
@@ -155,16 +158,31 @@
                 return;
             }
 
-            result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+            signInMethod = "password";
+            passwordUser = await UserManager.FindByEmailAsync(Input.Email.Trim());
+            if (passwordUser is null)
+            {
+                Logger.LogWarning("Invalid login attempt for unknown email {Email}.", Input.Email);
+                errorMessage = "Error: Invalid login attempt.";
+                return;
+            }
+
+            result = await SignInManager.PasswordSignInAsync(passwordUser, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         }
 
         if (result.Succeeded)
         {
-            Logger.LogInformation("User logged in.");
+            Logger.LogInformation(
+                "User logged in. Method={Method} EmailHint={EmailHint} UserId={UserId} RemoteIp={RemoteIp}",
+                signInMethod,
+                string.IsNullOrWhiteSpace(Input.Email) ? "(not provided)" : Input.Email.Trim(),
+                passwordUser?.Id ?? "(unknown)",
+                HttpContext.Connection.RemoteIpAddress?.ToString() ?? "(unknown)");
             RedirectManager.RedirectTo(ReturnUrl);
         }
         else if (result.RequiresTwoFactor)
         {
+            Logger.LogInformation("Login requires two-factor authentication. Method={Method} EmailHint={EmailHint}.", signInMethod, Input.Email);
             RedirectManager.RedirectTo(
                 "Account/LoginWith2fa",
                 new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });

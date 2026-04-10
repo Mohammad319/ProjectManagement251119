@@ -1,4 +1,5 @@
 using AuthPermissions.Entity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,8 @@ namespace AuthPermissions.Context
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : IdentityDbContext<ApplicationUser>(options)
     {
+        protected override Version SchemaVersion => IdentitySchemaVersions.Version3;
+
         public DbSet<TenantEntity> Tenants => Set<TenantEntity>();
         public DbSet<LogEntity> Logs => Set<LogEntity>();
         public DbSet<TenantDatabaseEntity> TenantDatabase => Set<TenantDatabaseEntity>();
