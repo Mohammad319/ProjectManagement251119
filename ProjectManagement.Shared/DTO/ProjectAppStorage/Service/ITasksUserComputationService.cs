@@ -388,6 +388,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
     private static void ApplyResourceTimedCost(ResourceMetadata data)
     {
+        data.SyncTimesWithQuantity();
         var times = data.Times;
         if (times is null || times.Count == 0)
             return;

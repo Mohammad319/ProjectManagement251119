@@ -9,6 +9,8 @@ using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Shared.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
+using ProjectManagement.Client.Shared.ViewModel;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
@@ -26,6 +28,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private CalculationService CalcService { get; set; } = default!;
+    [Inject] private CalculationFilterPresetStorage FilterPresetStorage { get; set; } = default!;
     [Inject] private CalculationInteractionState InteractionState { get; set; } = default!;
     [Inject] private FolderState FolderState { get; set; } = default!;
     [Inject] private ITemplateRepository TemplateRepository { get; set; } = default!;
@@ -46,6 +49,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private bool _reloadPending;
     private bool _jsSyncPending = true;
     private bool _disposed;
+    private int? _pendingFilterRestoreCalculationId;
 
     private static readonly IReadOnlyDictionary<NetColumnId, int> DefaultWidths =
         TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x.Width);
@@ -57,6 +61,13 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     {
         if (_disposed)
             return;
+
+        if (_observedCalculation is not null &&
+            _pendingFilterRestoreCalculationId == _observedCalculation.Id)
+        {
+            _pendingFilterRestoreCalculationId = null;
+            await RestoreSavedFilterPresetAsync();
+        }
 
         if (!firstRender && !_jsSyncPending)
             return;
@@ -93,28 +104,65 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     {
         var currentCalculation = FolderState.Calculation;
         if (ReferenceEquals(_observedCalculation, currentCalculation))
-            return currentCalculation is not null && _observedTemplate is not null;
+            return SyncObservedTemplate();
 
         if (_observedCalculation is not null && _onChangeHandler is not null)
             _observedCalculation.OnChangeInCalculation -= _onChangeHandler;
 
         _observedCalculation = currentCalculation;
         _observedTemplate = currentCalculation?.Template;
+        _pendingFilterRestoreCalculationId = currentCalculation?.Id;
 
         if (_observedCalculation is not null && _onChangeHandler is not null)
             _observedCalculation.OnChangeInCalculation += _onChangeHandler;
 
-        if (_observedCalculation is null || _observedTemplate is null)
+        return SyncObservedTemplate();
+    }
+
+    private bool SyncObservedTemplate()
+    {
+        if (_observedCalculation is null)
+        {
+            _observedTemplate = null;
             return false;
+        }
+
+        var currentTemplate = _observedCalculation.Template;
+        if (currentTemplate is null)
+        {
+            _observedTemplate = null;
+            return false;
+        }
+
+        var templateChanged = !ReferenceEquals(_observedTemplate, currentTemplate);
+        _observedTemplate = currentTemplate;
 
         if (_observedTemplate.StartCol1 <= 0)
-            _observedTemplate.StartCol1 = _observedCalculation.MaxDepth > 0
-                ? (_observedCalculation.MaxDepth * 10) + 25
-                : 35;
+            _observedTemplate.StartCol1 = GetStartColumnWidth(_observedCalculation.MaxDepth);
 
-        RefreshColumns();
+        if (templateChanged || Columns.Count == 0)
+        {
+            RefreshColumns();
+            _lastRound = _observedTemplate.MathRound;
+            _lastColumnSignature = GetColumnSignature();
+        }
+
         return true;
     }
+
+    private async Task RestoreSavedFilterPresetAsync()
+    {
+        if (_observedCalculation is null)
+            return;
+
+        var savedFilters = await FilterPresetStorage.LoadAsync(_observedCalculation.Id);
+        var activePreset = CalculationFilterPresetState.GetActivePreset(savedFilters);
+        if (activePreset is null)
+            return;
+
+        CalcService.GetFilter(CalculationFilterPresetState.CloneFilter(activePreset.Filter));
+    }
+
     private void EnsureColumnsUpToDate()
     {
         var currentSignature = GetColumnSignature();
@@ -129,7 +177,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private async Task ForceReload()
     {
-        if (_disposed || _observedCalculation is null || _observedTemplate is null)
+        if (_disposed || !SyncObservedTemplate())
             return;
 
         if (_reloadPending)
@@ -141,7 +189,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         {
             await Task.Yield();
 
-            if (_disposed || _observedCalculation is null || _observedTemplate is null)
+            if (_disposed || !SyncObservedTemplate())
                 return;
 
             EnsureColumnsUpToDate();
@@ -151,11 +199,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             {
                 Calc.AllFlatItems = Calc.BuildFlatList();
                 Calc.FlatListDirty = false;
-
-                if (Calc.MaxDepth > 0)
-                    Template.StartCol1 = (Calc.MaxDepth * 10) + 35;
-                else if (Template.StartCol1 <= 0)
-                    Template.StartCol1 = 45;
+                Template.StartCol1 = GetStartColumnWidth(Calc.MaxDepth);
             }
 
             if (refreshItems && virtualizeComponent != null)
@@ -261,11 +305,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         Calc.AllFlatItems = Calc.BuildFlatList();
         Calc.FlatListDirty = false;
-
-        if (Calc.MaxDepth > 0)
-            Template.StartCol1 = (Calc.MaxDepth * 10) + 25;
-        else if (Template.StartCol1 <= 0)
-            Template.StartCol1 = 35;
+        Template.StartCol1 = GetStartColumnWidth(Calc.MaxDepth);
 
         if (virtualizeComponent != null)
             await virtualizeComponent.RefreshDataAsync();
@@ -279,6 +319,9 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         Template?.NetCalc?.Columns is { Count: > 0 } columns
             ? string.Join(',', columns.Select(x => $"{(int)x.Id}:{x.Width}"))
             : string.Empty;
+
+    private static int GetStartColumnWidth(int maxDepth) =>
+        (Math.Max(maxDepth, 0) * 10) + PMValuesConst.MinWidthCol;
 
     private void RefreshColumns()
     {
@@ -437,37 +480,39 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             _ => string.Empty
         };
 
-    private static string GetSummaryCellCssClass(NetColumnId columnId) =>
-        columnId switch
-        {
-            NetColumnId.NetCostQ or NetColumnId.TotalNetCost or NetColumnId.PriceTotaly or NetColumnId.PriceTotallyTax => "num-cell",
-            _ => string.Empty
-        };
+    private static bool IsSummaryValueColumn(NetColumnId columnId) =>
+        columnId is NetColumnId.NetCostQ or NetColumnId.TotalNetCost or NetColumnId.PriceTotaly or NetColumnId.PriceTotallyTax;
 
-    private bool TryBuildSummaryItems(out IReadOnlyList<SummaryItem> items)
+    private NetColumnId? GetSummaryLabelColumnId()
     {
-        items = Array.Empty<SummaryItem>();
+        for (int i = 0; i < HeaderColumns.Count; i++)
+        {
+            if (HeaderColumns[i].Id == NetColumnId.Name)
+                return NetColumnId.Name;
+        }
 
-        if (!TryBuildSummaryTotals(out var totals))
-            return false;
-
-        var summaryItems = new List<SummaryItem>(4);
+        for (int i = 0; i < HeaderColumns.Count; i++)
+        {
+            if (HeaderColumns[i].Id == NetColumnId.Account)
+                return NetColumnId.Account;
+        }
 
         for (int i = 0; i < HeaderColumns.Count; i++)
         {
             var columnId = HeaderColumns[i].Id;
-            var value = GetSummaryCellValue(columnId, totals);
-            if (string.IsNullOrWhiteSpace(value))
-                continue;
-
-            summaryItems.Add(new SummaryItem(CalcLoc[NetColumnLoc.Key[columnId]], value));
+            if (!IsSummaryValueColumn(columnId))
+                return columnId;
         }
 
-        if (summaryItems.Count == 0)
-            return false;
+        return null;
+    }
 
-        items = summaryItems;
-        return true;
+    private static string GetSummaryCellCssClass(NetColumnId columnId, NetColumnId? labelColumnId)
+    {
+        if (columnId == labelColumnId)
+            return "calc-summary-label-cell";
+
+        return IsSummaryValueColumn(columnId) ? "num-cell" : string.Empty;
     }
 
     private string FormatSummaryValue(decimal value) =>
@@ -502,5 +547,4 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private readonly record struct ColumnHeader(NetColumnId Id, int Width);
     private readonly record struct SummaryTotals(decimal NetCostQ, decimal TotalNetCost, decimal PriceTotally, decimal PriceTotallyTax);
-    private readonly record struct SummaryItem(string Label, string Value);
 }

@@ -119,7 +119,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 return total;
 
             for (int i = 0; i < addOns.Count; i++)
-                total += addOns[i].Quantity * addOns[i].Cost;
+                total += addOns[i].Quantity(resource.Quantity.HasValue? resource.Quantity.Value: 0m) * addOns[i].Cost;
 
             return total;
         }

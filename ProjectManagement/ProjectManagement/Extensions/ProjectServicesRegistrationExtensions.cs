@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Persistence.Factory;
 using Persistence.Interceptors;
 using ProjectManagement.Client.DependencyInjection;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.BlazorServer;
 using ProjectManagement.Services;
 using ProjectManagement.SignalR;
@@ -28,6 +29,7 @@ public static class ProjectServicesRegistrationExtensions
         services.AddRazorPages();
         services.AddHttpClient();
         services.AddApiVersioning();
+        services.AddScoped<IClientLogger, ClientLogger>();
 
         // Register client-side services for interactive components rendered on the server.
         services.AddProjectRepositories();

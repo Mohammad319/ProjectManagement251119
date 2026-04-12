@@ -3,7 +3,7 @@
     public static class PMValuesConst
     {
         public const string FixedQ = "FQ";
-        public const int MinWidthCol = 20;
+        public const int MinWidthCol = 30;
     }
     public static class TemplateConstBase
     {

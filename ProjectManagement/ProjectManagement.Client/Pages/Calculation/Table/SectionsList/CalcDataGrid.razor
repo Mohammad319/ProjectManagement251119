@@ -7,21 +7,6 @@
 @inject IStringLocalizer<CalcResource> CalcLoc
 
 <div class="calc-grid-shell">
-    @if (TryBuildSummaryItems(out var summaryItems))
-    {
-        <div class="calc-summary-strip">
-            <div class="calc-summary-strip-title">@CalcLoc["sum"]</div>
-
-            @foreach (var item in summaryItems)
-            {
-                <div class="calc-summary-strip-item">
-                    <span class="calc-summary-strip-key">@item.Label</span>
-                    <span class="calc-summary-strip-value">@item.Value</span>
-                </div>
-            }
-        </div>
-    }
-
     <div class="divNetCalc">
         <table tabindex="0"
                @onkeydown="HandleKeyDown"
@@ -57,12 +42,37 @@
                         </th>
                     }
                 </tr>
-            </thead>
-
-            <tbody>
                 @if (Calc.FilterVM != null)
                 {
                     <ProjectManagement.Client.Pages.Calculation.Table.Header.TableHeaderFilterDiv />
+                }
+            </thead>
+
+            <tbody>
+               
+
+                @if (TryBuildSummaryTotals(out var summaryTotals))
+                {
+                    var summaryLabelColumnId = GetSummaryLabelColumnId();
+
+                    <tr class="calc-summary-row">
+                        <td class="calc-summary-row-leading"
+                            data-pm-frozen="true">
+                            @(summaryLabelColumnId is null ? CalcLoc["sum"] : string.Empty)
+                        </td>
+
+                        @for (int i = 0; i < HeaderColumns.Count; i++)
+                        {
+                            var columnId = HeaderColumns[i].Id;
+                            var value = GetSummaryCellValue(columnId, summaryTotals);
+                            var label = summaryLabelColumnId == columnId ? CalcLoc["sum"] : string.Empty;
+
+                            <td class="@GetSummaryCellCssClass(columnId, summaryLabelColumnId)"
+                                data-pm-frozen="@GetFrozenHeaderAttribute(columnId)">
+                                @(string.IsNullOrWhiteSpace(value) ? label : value)
+                            </td>
+                        }
+                    </tr>
                 }
 
                 <Virtualize @ref="virtualizeComponent"

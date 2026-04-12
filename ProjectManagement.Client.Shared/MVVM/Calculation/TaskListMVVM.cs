@@ -76,9 +76,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public TaskType Type => Metadata.Type;
 
         public bool IsOH => Metadata.IsOH;
-        public bool PriceSubInPrecent => Metadata.PriceSubInPrecent;
-        public decimal? PriceSubDB => Metadata.PriceSubDB;
-        public decimal? PriceSubTaxDB => Metadata.PriceSubTaxDB;
+
         public decimal? MinPrice => Metadata.MinPrice;
         public decimal? CeilingPrice => Metadata.CeilingPrice;
 
@@ -111,8 +109,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal PriceWorkedQ => WorkedQ * PriceProduction;
 
         // taxPercent مثال: 25 يعني 25%
-        public decimal PriceSubTax(decimal taxPercent) => PriceSub * TaxFactor(taxPercent);
-        public decimal PriceTotalSubTax(decimal taxPercent) => PriceSubTotal * TaxFactor(taxPercent);
+        public decimal PriceSubTax(decimal taxPercent) => PriceSubTotal +( PriceSub * TaxFactor(taxPercent));//
+        public decimal PriceTotalSubTax(decimal taxPercent) => PriceSubTotal * TaxFactor(taxPercent);//PriceSubTotal
         public decimal PriceActuallyQuantityTax(decimal taxPercent) => PriceActuallyQuantity * TaxFactor(taxPercent);
         public decimal PriceWorkedQTax(decimal taxPercent) => PriceWorkedQ * TaxFactor(taxPercent);
 

@@ -133,7 +133,7 @@ public static class CalcColumnFactory
                 ResRender = (b, r) =>
                 {
                     if (r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.MachinesAndEquipments)
-                        TableRenderHelpers.RenderTextTd(b, r.CapWaste);
+                        TableRenderHelpers.RenderTextTd(b, r.DisplayCapWaste);
                     else
                         TableRenderHelpers.EmptyTd(b);
                 }
@@ -144,7 +144,7 @@ public static class CalcColumnFactory
                 ResRender = (b, r) =>
                 {
                     if (r.ResType == ResourceTypesEnum.Materials)
-                        TableRenderHelpers.RenderTextTd(b, r.CapWaste);
+                        TableRenderHelpers.RenderTextTd(b, r.DisplayCapWaste);
                     else
                         TableRenderHelpers.EmptyTd(b);
                 }

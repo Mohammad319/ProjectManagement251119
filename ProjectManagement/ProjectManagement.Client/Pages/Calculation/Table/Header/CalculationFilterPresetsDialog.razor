@@ -1,0 +1,272 @@
+@inherits AppComponentBase
+@using ProjectManagement.Client.Services.Calculation
+@using ProjectManagement.Client.Shared.ViewModel
+@inject CalculationFilterPresetStorage FilterPresetStorage
+
+<div class="w-full max-w-xl space-y-4 p-3 text-slate-800 dark:text-slate-100">
+    <div class="rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="space-y-1">
+                <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Current Selection
+                </div>
+                <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    @(SelectedPreset?.Name ?? ActivePreset?.Name ?? "No preset selected")
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Save the current filter, load a saved one, or clear the active preset.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                @if (ActivePreset is not null)
+                {
+                    <span class="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        Active
+                    </span>
+                }
+                @if (SelectedPreset is not null)
+                {
+                    <span class="rounded-full bg-sky-100 px-2 py-1 text-[11px] font-semibold text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                        Selected
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+            <InputText id="filterPresetName"
+                       class="h-10 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                       @bind-Value="PresetName"
+                       placeholder="Preset name" />
+            <button type="button"
+                    class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700"
+                    @onclick="SavePresetAsync">
+                Save
+            </button>
+        </div>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-700 dark:bg-slate-900/60">
+        <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Saved Presets
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+                @SavedFilters.Presets.Count total
+            </div>
+        </div>
+
+        @if (SavedFilters.Presets.Count == 0)
+        {
+            <div class="px-3 py-5 text-sm text-slate-500 dark:text-slate-400">
+                No saved presets yet.
+            </div>
+        }
+        else
+        {
+            <div class="max-h-72 overflow-auto p-2">
+                @foreach (var preset in SavedFilters.Presets)
+                {
+                    var isSelected = string.Equals(SelectedPresetId, preset.Id, StringComparison.Ordinal);
+                    var isActive = string.Equals(SavedFilters.ActivePresetId, preset.Id, StringComparison.Ordinal);
+
+                    <button type="button"
+                            class="@GetPresetRowClass(isSelected, isActive)"
+                            @onclick="() => SelectPreset(preset)">
+                        <span class="min-w-0 flex-1 text-left">
+                            <span class="block truncate text-sm font-medium">@preset.Name</span>
+                            <span class="block text-xs text-slate-500 dark:text-slate-400">@FormatSavedAt(preset.SavedAtUtc)</span>
+                        </span>
+                        <span class="flex shrink-0 gap-2">
+                            @if (isActive)
+                            {
+                                <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                    active
+                                </span>
+                            }
+                            @if (isSelected)
+                            {
+                                <span class="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-semibold text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
+                                    selected
+                                </span>
+                            }
+                        </span>
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="flex flex-col gap-3 border-t border-slate-200 pt-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex flex-wrap gap-2">
+            <button type="button"
+                    class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="ClearCurrentFilterAsync">
+                Clear Filter
+            </button>
+            <button type="button"
+                    class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    disabled="@string.IsNullOrWhiteSpace(SavedFilters.ActivePresetId)"
+                    @onclick="ClearActivePresetAsync">
+                Unselect Active
+            </button>
+        </div>
+
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button"
+                    class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="CloseDialog">
+                Close
+            </button>
+            <button type="button"
+                    class="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+                    disabled="@(SelectedPreset is null)"
+                    @onclick="ConfirmDeletePreset">
+                Delete
+            </button>
+            <button type="button"
+                    class="rounded-lg border border-amber-300 px-3 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                    disabled="@(LoadPresetCandidate is null)"
+                    @onclick="LoadSelectedPresetAsync">
+                Load
+            </button>
+            <button type="button"
+                    class="rounded-lg border border-emerald-300 px-3 py-2 text-sm font-medium text-emerald-800 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                    disabled="@(LoadPresetCandidate is null)"
+                    @onclick="LoadAndCloseAsync">
+                Load &amp; Close
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CalculationFilterPresetStore SavedFilters = new();
+    private string? SelectedPresetId;
+    private string PresetName = string.Empty;
+
+    private FilterVM CurrentFilter => Calc.FilterVM ??= new();
+    private CalculationFilterPreset? SelectedPreset => CalculationFilterPresetState.GetPreset(SavedFilters, SelectedPresetId);
+    private CalculationFilterPreset? ActivePreset => CalculationFilterPresetState.GetActivePreset(SavedFilters);
+    private CalculationFilterPreset? LoadPresetCandidate => SelectedPreset ?? CalculationFilterPresetState.GetActivePreset(SavedFilters);
+
+    protected override async Task OnInitializedAsync()
+    {
+        SavedFilters = await FilterPresetStorage.LoadAsync(Calc.Id);
+
+        var activePreset = CalculationFilterPresetState.GetActivePreset(SavedFilters);
+        if (activePreset is not null)
+        {
+            SelectedPresetId = activePreset.Id;
+            PresetName = activePreset.Name;
+        }
+    }
+
+    private void SelectPreset(CalculationFilterPreset preset)
+    {
+        SelectedPresetId = preset.Id;
+        PresetName = preset.Name;
+    }
+
+    private async Task SavePresetAsync()
+    {
+        string? targetPresetId = null;
+        if (SelectedPreset is not null &&
+            string.Equals(SelectedPreset.Name, PresetName.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            targetPresetId = SelectedPreset.Id;
+        }
+
+        var preset = CalculationFilterPresetState.SavePreset(SavedFilters, PresetName, CurrentFilter, targetPresetId);
+        SelectedPresetId = preset.Id;
+        PresetName = preset.Name;
+
+        await FilterPresetStorage.SaveAsync(Calc.Id, SavedFilters);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadSelectedPresetAsync()
+    {
+        var preset = SelectedPreset ?? CalculationFilterPresetState.GetActivePreset(SavedFilters);
+        if (preset is null)
+            return;
+
+        SelectedPresetId = preset.Id;
+        PresetName = preset.Name;
+        CalculationFilterPresetState.SetActivePreset(SavedFilters, preset.Id);
+        await FilterPresetStorage.SaveAsync(Calc.Id, SavedFilters);
+
+        CalcService.GetFilter(CalculationFilterPresetState.CloneFilter(preset.Filter));
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadAndCloseAsync()
+    {
+        if (LoadPresetCandidate is null)
+            return;
+
+        await LoadSelectedPresetAsync();
+        CloseDialog();
+    }
+
+    private void ConfirmDeletePreset()
+    {
+        var preset = SelectedPreset;
+        if (preset is null)
+            return;
+
+        MHD.MessageYesNo(
+            "Delete filter preset",
+            $"Delete '{preset.Name}'?",
+            BlazorMHD.UI.Core.DesignSystem.MhdState.Danger,
+            EventCallback.Factory.Create(this, DeleteSelectedPresetAsync));
+    }
+
+    private async Task DeleteSelectedPresetAsync()
+    {
+        var preset = SelectedPreset;
+        if (preset is null)
+            return;
+
+        if (!CalculationFilterPresetState.RemovePreset(SavedFilters, preset.Id))
+            return;
+
+        SelectedPresetId = SavedFilters.ActivePresetId;
+        PresetName = CalculationFilterPresetState.GetActivePreset(SavedFilters)?.Name ?? string.Empty;
+        await FilterPresetStorage.SaveAsync(Calc.Id, SavedFilters);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ClearCurrentFilterAsync()
+    {
+        Calc.FilterVM = new FilterVM();
+        CalcService.GetFilter(Calc.FilterVM);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ClearActivePresetAsync()
+    {
+        CalculationFilterPresetState.SetActivePreset(SavedFilters, null);
+        SelectedPresetId = null;
+        PresetName = string.Empty;
+        await FilterPresetStorage.SaveAsync(Calc.Id, SavedFilters);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void CloseDialog() => Modal.Close();
+
+    private static string GetPresetRowClass(bool isSelected, bool isActive)
+    {
+        if (isSelected)
+            return "mb-2 flex w-full items-center gap-3 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-left shadow-sm dark:border-sky-700 dark:bg-sky-950/40";
+
+        if (isActive)
+            return "mb-2 flex w-full items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-left shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/20 dark:hover:border-emerald-700";
+
+        return "mb-2 flex w-full items-center gap-3 rounded-lg border border-transparent bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-700/60";
+    }
+
+    private static string FormatSavedAt(DateTime savedAtUtc) =>
+        savedAtUtc.ToLocalTime().ToString("g");
+}

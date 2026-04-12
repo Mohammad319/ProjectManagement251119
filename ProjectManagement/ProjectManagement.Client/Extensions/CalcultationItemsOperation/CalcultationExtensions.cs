@@ -474,9 +474,8 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
             var data = resource.Data;
             ApplyResourceParameterFactor(data);
-
-            if (resource.HasCap && cap.HasValue)
-                data.CapWaste = cap.Value;
+            var effectiveCapWaste = ResolveEffectiveCapWaste(resource, cap);
+            resource.Computed.EffectiveCapWaste = effectiveCapWaste;
 
             var effectiveTaskQuantity = taskQuantity ?? 0m;
 
@@ -494,7 +493,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             else
             {
                 var baseCalc = effectiveTaskQuantity * data.ChangeFactor1 * data.ChangeFactor2;
-                var capWaste = data.CapWaste;
+                var capWaste = effectiveCapWaste;
 
                 if (resource.HasWast && capWaste != 0)
                     data.Quantity = baseCalc * (1 + capWaste / 100);
@@ -505,6 +504,14 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             }
 
             ApplyResourceTimedCost(data);
+        }
+
+        private static decimal ResolveEffectiveCapWaste(ResourceListMVVM resource, decimal? taskCap)
+        {
+            if (resource.HasCap && resource.Data.CapFromTask && taskCap.HasValue)
+                return taskCap.Value;
+
+            return resource.Data.CapWaste;
         }
 
         private static void ApplyResourceParameterFactor(ResourceMetadata data)
@@ -522,6 +529,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
         private static void ApplyResourceTimedCost(ResourceMetadata data)
         {
+            data.SyncTimesWithQuantity();
             var times = data.Times;
             if (times is null || times.Count == 0)
                 return;

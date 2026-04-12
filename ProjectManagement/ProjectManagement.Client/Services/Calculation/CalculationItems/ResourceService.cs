@@ -40,6 +40,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (oldR.Data?.Cost != newR.Data?.Cost) return true;
             if (oldR.Data?.BaseCost != newR.Data?.BaseCost) return true;
             if (oldR.Data?.CapWaste != newR.Data?.CapWaste) return true;
+            if (oldR.Data?.CapFromTask != newR.Data?.CapFromTask) return true;
             if (oldR.Data?.CO2 != newR.Data?.CO2) return true;
             if (oldR.Data?.ChangeFactor1 != newR.Data?.ChangeFactor1) return true;
             if (oldR.Data?.ChangeFactor2 != newR.Data?.ChangeFactor2) return true;
@@ -116,7 +117,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (addOns is not null)
             {
                 for (int i = 0; i < addOns.Count; i++)
-                    totalVariable += addOns[i].Quantity * addOns[i].Cost;
+                    totalVariable += addOns[i].Quantity(quantity) * addOns[i].Cost;
             }
 
             return totalVariable / quantity;
@@ -127,6 +128,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (data is null)
                 return 0m;
 
+            data.SyncTimesWithQuantity();
             var times = data.Times;
             if (times is null || times.Count == 0)
                 return data.Cost;

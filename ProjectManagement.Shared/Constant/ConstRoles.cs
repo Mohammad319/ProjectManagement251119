@@ -277,14 +277,6 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
 
 namespace ProjectManagement.Shared.Constants
 {
-    public sealed class NetColumnState2
-    {
-        public NetColumnId Id { get; set; }   // يُحفظ رقمياً تلقائياً
-        public int Width { get; set; }
-        public bool Frozen { get; set; }
-
-
-    }
     public sealed class NetColumnState
     {
         public NetColumnId Id { get; set; }

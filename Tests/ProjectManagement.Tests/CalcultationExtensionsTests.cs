@@ -54,8 +54,28 @@ public class CalcultationExtensionsTests
 
         Assert.Equal(15m, resource.Data.ChangeFactor1);
         Assert.Equal(600m, resource.Quantity);
-        Assert.Equal(0.4m, resource.Cost);
-        Assert.Equal(0.4m, resource.NetCostQ);
+        Assert.Equal(1m, resource.Cost);
+        Assert.Equal(1m, resource.NetCostQ);
+    }
+
+    [Fact]
+    public void ExecuteCalculation_RecalculatesTimeQuantitiesFromPercentages()
+    {
+        var resource = CreateResource(parameters: [], times: [], changeFactor2: 4m);
+        resource.Data.Times =
+        [
+            new ResourceTime { Name = "Morning", Percentage = 75m, Cost = 60m },
+            new ResourceTime { Name = "Evening", Percentage = 25m, Cost = 120m }
+        ];
+
+        var calc = CreateCalculation(resource, 10m);
+
+        calc.ExecuteCalculation();
+
+        Assert.Equal(40m, resource.Quantity);
+        Assert.Equal(30m, resource.Data.Times[0].Quantity);
+        Assert.Equal(10m, resource.Data.Times[1].Quantity);
+        Assert.Equal(75m, resource.Cost);
     }
 
     [Fact]
@@ -78,9 +98,9 @@ public class CalcultationExtensionsTests
 
         calc.ExecuteCalculation();
 
-        Assert.Equal(6.6m, resource.GetComputedCost());
+        Assert.Equal(21m, resource.GetComputedCost());
         Assert.Equal(3.5m, resource.GetComputedBaseCost());
-        Assert.Equal(69.5m, resource.GetComputedNetCostTotaly());
+        Assert.Equal(213.5m, resource.GetComputedNetCostTotaly());
     }
 
     [Fact]
@@ -212,16 +232,15 @@ public class CalcultationExtensionsTests
                     {
                         Name = $"A{index + 1}",
                         Unit = "u",
-                        Quantity = item.Quantity,
+                        Factor = item.Quantity,
                         Cost = item.Cost,
                         BaseCost = item.BaseCost
                     })],
                 Times = [.. times.Select((item, index) => new ResourceTime
                 {
                     Name = $"T{index + 1}",
-                    Quantity = item.Quantity,
                     Cost = item.Cost
-                })],
+                }.SetResolvedQuantity(item.Quantity))],
             }
         };
 

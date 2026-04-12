@@ -209,9 +209,8 @@ public class NumericFormattingTests : BunitContext
                     new ResourceTime
                     {
                         Name = "Labor",
-                        Quantity = decimal.Parse("15.5000", CultureInfo.InvariantCulture),
                         Cost = decimal.Parse("15.4400", CultureInfo.InvariantCulture)
-                    }
+                    }.SetResolvedQuantity(decimal.Parse("15.5000", CultureInfo.InvariantCulture))
                 ]
             }
         };

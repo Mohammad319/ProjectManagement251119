@@ -56,6 +56,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public int? ResourceTypeId { get; set; }
         public string? ResName { get; set; }
         public string? Sort { get; set; }
+        [JsonIgnore] public decimal DisplayCapWaste => Computed.EffectiveCapWaste ?? Data.CapWaste;
 
         [JsonIgnore]
         public decimal Factor

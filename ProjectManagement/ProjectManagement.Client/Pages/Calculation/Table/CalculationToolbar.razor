@@ -19,11 +19,27 @@
                     @((MarkupString)Icons.ImportFromFile)
                 </span>
 
-                <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-                      title="@ResourceLoc.template"
-                      @onclick="TableCoordinator.ShowTemplateDialog">
-                    @((MarkupString)Icons.Template)
-                </span>
+                <div class="inline-flex min-w-0 items-center gap-1 rounded px-1 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <span class="pointer-events-none inline-flex items-center"
+                          title="@ResourceLoc.template">
+                        @((MarkupString)Icons.Template)
+                    </span>
+
+                    <select class="min-w-[4rem] max-w-[9rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none disabled:cursor-wait dark:bg-transparent"
+                            title="@ResourceLoc.templates"
+                            aria-label="@ResourceLoc.templates"
+                            data-testid="toolbar-template-select"
+                            value="@SelectedTemplateValue"
+                            @onchange="OnTemplateChangedAsync"
+                            disabled="@IsTemplateSelectionDisabled">
+                        <option value="">@ResourceApp._default</option>
+
+                        @foreach (var template in TemplateOptions)
+                        {
+                            <option value="@template.Id">@template.Name</option>
+                        }
+                    </select>
+                </div>
 
                 <span title="@ResourceApp.reOrder"
                       class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"

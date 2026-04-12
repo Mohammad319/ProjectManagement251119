@@ -7,44 +7,6 @@
     background-color: var(--net-surface, #fafafa);
 }
 
-.calc-summary-strip {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 10px;
-    flex: 0 0 auto;
-    padding: 6px 8px;
-    border-bottom: 1px var(--net-border-style) var(--net-border-color);
-    background: var(--net-summary-bg, #eef2f7);
-    box-shadow: 0 1px 0 rgba(148, 163, 184, 0.4);
-}
-
-.calc-summary-strip-title {
-    font-weight: 700;
-    color: var(--net-summary-label, #0f172a);
-    margin-inline-end: 6px;
-}
-
-.calc-summary-strip-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.85);
-}
-
-.calc-summary-strip-key {
-    font-size: 11px;
-    color: #475569;
-}
-
-.calc-summary-strip-value {
-    font-size: 11px;
-    font-weight: 700;
-    color: #0f172a;
-}
-
 .divNetCalc {
     display: block;
     flex: 1 1 auto;
@@ -102,6 +64,27 @@
     }
 
     .divNetCalc ::deep tbody tr.calc-data-row > td.pm-frozen-col {
+        box-shadow: 1px 0 0 rgba(148, 163, 184, 0.35);
+    }
+
+    .divNetCalc ::deep tbody tr.calc-summary-row > td {
+        background: var(--net-summary-row-bg, #eef2f7);
+        color: #0f172a;
+        font-weight: 600;
+    }
+
+    .divNetCalc ::deep tbody tr.calc-summary-row > td.num-cell {
+        text-align: end;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .divNetCalc ::deep tbody tr.calc-summary-row > td.calc-summary-label-cell,
+    .divNetCalc ::deep tbody tr.calc-summary-row > td.calc-summary-row-leading {
+        font-weight: 700;
+    }
+
+    .divNetCalc ::deep tbody tr.calc-summary-row > td.pm-frozen-col {
+        background: var(--net-summary-row-bg, #eef2f7);
         box-shadow: 1px 0 0 rgba(148, 163, 184, 0.35);
     }
 

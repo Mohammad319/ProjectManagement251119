@@ -4,6 +4,7 @@ using ProjectManagement.Shared.Base.Application;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.Calculation;
+using System.Text.Json;
 using Xunit;
 
 namespace ProjectManagement.Tests;
@@ -54,7 +55,7 @@ public class CloneAndMappingTests
             ],
             Times =
             [
-                new ResourceTime { Name = "install", Quantity = 2m, Cost = 7m }
+                new ResourceTime { Name = "install", Percentage = 50m, Cost = 7m }.SetResolvedQuantity(2m)
             ]
         };
 
@@ -74,7 +75,27 @@ public class CloneAndMappingTests
         Assert.Equal("resource-note", dto.Data.Note);
         Assert.Equal("upper-1", dto.Data.UpperNote[0]);
         Assert.Equal("length", dto.Data.Parameters[0].Name);
+        Assert.Equal(50m, dto.Data.Times[0].Percentage);
         Assert.Equal(7m, dto.Data.Times[0].Cost);
+    }
+
+    [Fact]
+    public void ResourceTime_JsonRoundTrip_PreservesQuantityWithPrivateSetter()
+    {
+        var source = new ResourceTime
+        {
+            Name = "install",
+            Percentage = 50m,
+            Cost = 7m
+        }.SetResolvedQuantity(2m);
+
+        var json = JsonSerializer.Serialize(source);
+        var restored = JsonSerializer.Deserialize<ResourceTime>(json);
+
+        Assert.NotNull(restored);
+        Assert.Equal(2m, restored!.Quantity);
+        Assert.Equal(50m, restored.Percentage);
+        Assert.Equal(7m, restored.Cost);
     }
 
     [Fact]

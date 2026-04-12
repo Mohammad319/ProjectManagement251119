@@ -18,6 +18,11 @@ public partial class ResourceDetailRows
     private string DetailRowStyle => BuildDetailRowStyle(Color);
     private bool HasChangeFactor1Column => Colmuns.Any(x => x.Id == NetColumnId.ChangeFactor1);
 
+    protected override void OnParametersSet()
+    {
+        Resource?.Data?.SyncTimesWithQuantity();
+    }
+
     private IEnumerable<DetailLine> DetailLines
     {
         get
@@ -33,10 +38,10 @@ public partial class ResourceDetailRows
                         Kind = DetailKind.Attachment,
                         Name = addOn.Name,
                         Unit = addOn.Unit,
-                        QuantityText = FormatDecimal(addOn.Quantity),
+                        QuantityText = FormatDecimal(addOn.Quantity(Resource.Quantity.HasValue?Resource.Quantity.Value:0m)),
                         CostText = FormatDecimal(addOn.Cost),
                         BaseCostText = FormatDecimal(addOn.BaseCost),
-                        TotalCostText = FormatDecimal((addOn.Quantity * addOn.Cost) + addOn.BaseCost)
+                        TotalCostText = FormatDecimal((addOn.Quantity(Resource.Quantity.HasValue ? Resource.Quantity.Value : 0m) * addOn.Cost) + addOn.BaseCost)
                     };
                 }
             }

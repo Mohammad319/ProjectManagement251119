@@ -14,12 +14,20 @@ namespace ProjectManagement.Shared.Base.Calculation
         public string Unit { get; set; } = string.Empty;
         public decimal Value { get; set; } = 1;
     }
-
+    public enum QuantityResourceAddon
+    {
+        Multiplication = 1,
+        Division = 2,
+    }
     public class ResourceAddon()
     {
         public string Name { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
-        public decimal Quantity { get; set; }
+        public QuantityResourceAddon Type { get; set; } = QuantityResourceAddon.Multiplication;
+        public decimal Factor { get; set; } = 1;
+
+        public decimal Quantity(decimal resourceQ) => Type == QuantityResourceAddon.Multiplication ?
+            resourceQ * Factor: resourceQ / Factor;
         public decimal Cost { get; set; }
         public decimal BaseCost { get; set; }
     }
@@ -28,8 +36,16 @@ namespace ProjectManagement.Shared.Base.Calculation
     {
         public string Name { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
-        public decimal Quantity { get; set; } = 1;
+        public decimal? Percentage { get; set; }
+        [JsonInclude]
+        public decimal Quantity { get; private set; } = 1;
         public decimal Cost { get; set; } = 1;
+
+        public ResourceTime SetResolvedQuantity(decimal quantity)
+        {
+            Quantity = quantity;
+            return this;
+        }
     }
     public class ResourceMetadata
     {
@@ -48,6 +64,7 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal ChangeFactor2 { get; set; } = 1;
 
         public decimal CapWaste { get; set; }
+        public bool CapFromTask { get; set; }
         public decimal Cap { get; set; } = 0;
         public decimal Waste { get; set; } = 0;
 
@@ -88,24 +105,103 @@ namespace ProjectManagement.Shared.Base.Calculation
                 {
                     addOn.Name = NormalizeText(addOn.Name);
                     addOn.Unit = NormalizeText(addOn.Unit);
-                    addOn.Quantity = RoundQuantity(addOn.Quantity);
+                    //addOn.Quantity = RoundQuantity(addOn.Quantity);
+                    addOn.Factor = addOn.Factor;
+                    addOn.Type = addOn.Type;
                     addOn.Cost = RoundMoney(addOn.Cost);
                     addOn.BaseCost = RoundMoney(addOn.BaseCost);
 
-                    if (addOn.Quantity < 0m) addOn.Quantity = 0m;
+                    //if (addOn.Quantity < 0m) addOn.Quantity = 0m;
                     if (addOn.Cost < 0m) addOn.Cost = 0m;
                     if (addOn.BaseCost < 0m) addOn.BaseCost = 0m;
                 }
             }
 
-            // normalize times
-            if (Times is not null)
+            SyncTimesWithQuantity();
+        }
+
+        public void SyncTimesWithQuantity()
+        {
+            if (Times is null)
+                return;
+
+            var resourceQuantity = Quantity ?? 0m;
+
+            for (int i = 0; i < Times.Count; i++)
             {
-                foreach (var t in Times)
-                {
-                    t.Quantity = RoundQuantity(t.Quantity);
-                    t.Cost = RoundMoney(t.Cost);
-                }
+                var t = Times[i];
+                t.Name = NormalizeText(t.Name);
+                t.Unit = NormalizeText(Unit);
+                t.Cost = RoundMoney(t.Cost);
+                t.Percentage = t.Percentage.HasValue ? RoundFactor(t.Percentage.Value) : null;
+
+                if (t.Percentage.HasValue && t.Percentage.Value < 0m)
+                    t.Percentage = 0m;
+
+                var normalizedQuantity = RoundQuantity(t.Quantity);
+                if (normalizedQuantity < 0m)
+                    normalizedQuantity = 0m;
+
+                t.SetResolvedQuantity(normalizedQuantity);
+            }
+
+            if (Times.Count == 0)
+                return;
+
+            if (resourceQuantity > 0m)
+            {
+                InitializeMissingTimePercentages(resourceQuantity);
+
+                if (Times.Any(x => x.Percentage.HasValue))
+                    ApplyTimePercentages(resourceQuantity);
+
+                return;
+            }
+
+            if (Times.Any(x => x.Percentage.HasValue))
+            {
+                for (int i = 0; i < Times.Count; i++)
+                    Times[i].SetResolvedQuantity(0m);
+            }
+        }
+
+        private void InitializeMissingTimePercentages(decimal resourceQuantity)
+        {
+            if (resourceQuantity <= 0m || Times is null)
+                return;
+
+            for (int i = 0; i < Times.Count; i++)
+            {
+                var time = Times[i];
+                if (time.Percentage.HasValue)
+                    continue;
+
+                time.Percentage = RoundFactor((time.Quantity / resourceQuantity) * 100m);
+            }
+        }
+
+        private void ApplyTimePercentages(decimal resourceQuantity)
+        {
+            if (Times is null || Times.Count == 0)
+                return;
+
+            var totalPercentage = RoundFactor(Times.Sum(x => x.Percentage ?? 0m));
+            var balanceLastItem = totalPercentage == 100m;
+            decimal assignedQuantity = 0m;
+
+            for (int i = 0; i < Times.Count; i++)
+            {
+                var percentage = Times[i].Percentage ?? 0m;
+                var resolvedQuantity = RoundQuantity((resourceQuantity * percentage) / 100m);
+
+                if (balanceLastItem && i == Times.Count - 1)
+                    resolvedQuantity = RoundQuantity(resourceQuantity - assignedQuantity);
+
+                if (resolvedQuantity < 0m)
+                    resolvedQuantity = 0m;
+
+                Times[i].SetResolvedQuantity(resolvedQuantity);
+                assignedQuantity += resolvedQuantity;
             }
         }
 
@@ -134,8 +230,10 @@ namespace ProjectManagement.Shared.Base.Calculation
                     {
                         Name = a.Name,
                         Unit = a.Unit,
-                        Quantity = a.Quantity,
                         Cost = a.Cost,
+                        Factor = a.Factor,
+                        Type = a.Type,
+
                         BaseCost = a.BaseCost,
                     })],
 
@@ -145,9 +243,9 @@ namespace ProjectManagement.Shared.Base.Calculation
                     {
                         Name = t.Name,
                         Unit = t.Unit,
-                        Quantity = t.Quantity,
+                        Percentage = t.Percentage,
                         Cost = t.Cost,
-                    })],
+                    }.SetResolvedQuantity(t.Quantity))],
                 PriceSub = PriceSub,
 
                 Note = Note ?? string.Empty,
@@ -161,6 +259,7 @@ namespace ProjectManagement.Shared.Base.Calculation
                 ChangeFactor2 = ChangeFactor2,
 
                 CapWaste = CapWaste,
+                CapFromTask = CapFromTask,
                 Cap = Cap,
                 Waste = Waste,
 

@@ -5,6 +5,7 @@ using Bunit.TestDoubles;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
+using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Pages.Calculation.Table;
 using ProjectManagement.Client.Pages.Calculation.Table.SectionsList;
 using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows;
@@ -192,6 +193,67 @@ public class CalculationComponentRenderTests : BunitContext
 
         FindSpansByTitle(cut, ResourceApp.paste).Single().Click();
         cut.WaitForAssertion(() => Assert.Equal(1, coordinator.PasteCalls));
+    }
+
+    [Fact]
+    public void CalculationToolbar_SelectingTemplateFromDropdown_UpdatesCalculation()
+    {
+        var auth = AddAuthorization();
+        auth.SetAuthorized("tester");
+        auth.SetRoles(
+            PMRolesConst.Tenant.Admin,
+            PMRolesConst.Tenant.SuperManger,
+            PMRolesConst.Tenant.Manger);
+
+        var coordinator = new FakeCalculationTableCoordinator();
+        var interactionState = new CalculationInteractionState();
+        var calc = new CalculationMVVM
+        {
+            Id = 10,
+            Tap1 = true,
+            TemplateId = 1,
+            Template = new TemplateMVVM
+            {
+                Id = 1,
+                Name = "Template A"
+            }
+        };
+        var folderState = CreateFolderState(calc);
+        var calcService = CreateCalculationService();
+        var templateRepository = new FakeTemplateRepository
+        {
+            Templates =
+            [
+                new TemplateMVVM { Id = 1, Name = "Template A" },
+                new TemplateMVVM { Id = 2, Name = "Template B" }
+            ],
+            SetDefaultResult = new TemplateMVVM
+            {
+                Id = 2,
+                Name = "Template B"
+            }
+        };
+        var refreshRaised = false;
+        calc.OnChangeInCalculation += () => refreshRaised = true;
+
+        RegisterCalculationComponentServices(coordinator, calcService, folderState, interactionState, templateRepository);
+
+        var cut = Render<CalculationToolbar>();
+
+        cut.WaitForAssertion(() =>
+            Assert.Equal(3, cut.FindAll("[data-testid='toolbar-template-select'] option").Count));
+
+        cut.Find("[data-testid='toolbar-template-select']").Change("2");
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(1, templateRepository.SetDefaultCalls);
+            Assert.Equal(10, templateRepository.LastSetDefaultCalcId);
+            Assert.Equal(2, templateRepository.LastSetDefaultTemplateId);
+            Assert.Equal(2, calc.TemplateId);
+            Assert.Equal("Template B", calc.Template.Name);
+            Assert.True(refreshRaised);
+        });
     }
 
     [Fact]
@@ -402,6 +464,56 @@ public class CalculationComponentRenderTests : BunitContext
             Assert.Equal("true", cut.Find("#h2").GetAttribute("data-pm-frozen"));
             Assert.Equal("true", cut.Find("#h3").GetAttribute("data-pm-frozen"));
             Assert.Equal("false", cut.Find("#h4").GetAttribute("data-pm-frozen"));
+        });
+    }
+
+    [Fact]
+    public void CalcDataGrid_WhenTemplateReferenceChanges_UsesNewTemplateImmediately()
+    {
+        JSInterop.SetupVoid("initializeResizableColumns", _ => true);
+
+        var calc = CreateGridCalculation();
+        var interactionState = new CalculationInteractionState();
+        var folderState = CreateFolderState(calc);
+        var templateRepository = new FakeTemplateRepository();
+        var calcService = CreateGridCalculationService(folderState, interactionState, templateRepository);
+
+        RegisterGridComponentServices(
+            calcService,
+            interactionState,
+            folderState,
+            templateRepository,
+            CreateTaskService(),
+            CreateResourceService());
+
+        var cut = Render<CalcDataGrid>();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(3, cut.FindAll("thead th").Count);
+            Assert.Contains("width:120px", cut.Find("#h2").GetAttribute("style"));
+        });
+
+        calc.Template = new TemplateMVVM
+        {
+            StartCol1 = 80,
+            MathRound = 3,
+            NetCalc = new NetCalc
+            {
+                Columns =
+                [
+                    new NetColumnState { Id = NetColumnId.Name, Width = 210, Frozen = true }
+                ]
+            }
+        };
+
+        calc.NotifyGridRefresh();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal(2, cut.FindAll("thead th").Count);
+            Assert.Contains("width:80px", cut.Find("#h1").GetAttribute("style"));
+            Assert.Contains("width:210px", cut.Find("#h2").GetAttribute("style"));
         });
     }
 
@@ -663,13 +775,15 @@ public class CalculationComponentRenderTests : BunitContext
         FakeCalculationTableCoordinator coordinator,
         CalculationService calcService,
         FolderState folderState,
-        CalculationInteractionState interactionState)
+        CalculationInteractionState interactionState,
+        ITemplateRepository? templateRepository = null)
     {
         Services.AddSingleton<ICalculationTableCoordinator>(coordinator);
         Services.AddSingleton<IStringLocalizer<ResourceApp>>(new FakeStringLocalizer<ResourceApp>());
         Services.AddSingleton(calcService);
         Services.AddSingleton(folderState);
         Services.AddSingleton(interactionState);
+        Services.AddSingleton<ITemplateRepository>(templateRepository ?? new FakeTemplateRepository());
     }
 
     private void RegisterPageComponentServices(
@@ -710,6 +824,12 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton<IStringLocalizer<CalcResource>>(new FakeStringLocalizer<CalcResource>());
         Services.AddSingleton<ITaskRepository>(new FakeTaskRepository());
         Services.AddSingleton<IResourceTypeRepository>(new FakeResourceTypeRepository());
+        var clientLogger = new FakeClientLogger();
+        Services.AddSingleton<IClientLogger>(clientLogger);
+        Services.AddSingleton(new CalculationFilterPresetStorage(JSInterop.JSRuntime, clientLogger));
+        JSInterop.Setup<string?>("localStorage.getItem", _ => true).SetResult(null);
+        JSInterop.SetupVoid("localStorage.removeItem", _ => true);
+        JSInterop.SetupVoid("localStorage.setItem", _ => true);
     }
 
     private static FolderState CreateFolderState(CalculationMVVM calculation)
@@ -943,13 +1063,30 @@ public class CalculationComponentRenderTests : BunitContext
             Enumerable.Empty<LocalizedString>();
     }
 
+    private sealed class FakeClientLogger : IClientLogger
+    {
+        public Task ErrorAsync(string message, string? traceId = null, Exception? ex = null) => Task.CompletedTask;
+    }
+
     private sealed class FakeTemplateRepository : ITemplateRepository
     {
         public int UpdateCalls { get; private set; }
+        public int SetDefaultCalls { get; private set; }
+        public int? LastSetDefaultCalcId { get; private set; }
+        public int? LastSetDefaultTemplateId { get; private set; }
+        public List<TemplateMVVM> Templates { get; set; } = [];
+        public TemplateMVVM SetDefaultResult { get; set; } = new();
 
-        public Task<List<TemplateMVVM>> GetAsync(int? department = null) => Task.FromResult(new List<TemplateMVVM>());
+        public Task<List<TemplateMVVM>> GetAsync(int? department = null) => Task.FromResult(Templates.ToList());
         public Task<TemplateMVVM> GetByIdAsync(int id) => Task.FromResult(new TemplateMVVM());
-        public Task<TemplateMVVM> SetDefaultAsync(int calcID, int? newTmplateId) => Task.FromResult(new TemplateMVVM());
+        public Task<TemplateMVVM> SetDefaultAsync(int calcID, int? newTmplateId)
+        {
+            SetDefaultCalls++;
+            LastSetDefaultCalcId = calcID;
+            LastSetDefaultTemplateId = newTmplateId;
+
+            return Task.FromResult(SetDefaultResult);
+        }
         public Task<TemplateMVVM> CreateAsync(TemplateListPostDTO template) => Task.FromResult(new TemplateMVVM());
         public Task<TemplateMVVM> CreateAsync(int? departmentId, TemplateListPostDTO template) => Task.FromResult(new TemplateMVVM());
         public Task<bool> UpdateAsync(TemplateListPostDTO temp, int id)

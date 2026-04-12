@@ -25,6 +25,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
             if (oldT.Metadata?.Quantity != newT.Metadata?.Quantity) return true;
             if (oldT.Metadata?.ChangeFactor1 != newT.Metadata?.ChangeFactor1) return true;
             if (oldT.Metadata?.ChangeFactor2 != newT.Metadata?.ChangeFactor2) return true;
+            if (oldT.Metadata?.Cap != newT.Metadata?.Cap) return true;
             return false;
         }
 

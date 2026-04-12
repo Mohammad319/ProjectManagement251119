@@ -89,7 +89,7 @@
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.Unit)" />
                 </div>
 
-                @if (ShowTaskCapInput)
+                @if (ShowTaskCapInput || true)
                 {
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.cap </label>
@@ -373,11 +373,12 @@
     {
         if (resources is null)
             return false;
+        return resources.Any(resource => resource.HasCap) ;
 
-        return resources
-            .Where(resource => resource.HasCap && resource.Data.CapWaste != 0)
-            .GroupBy(resource => resource.Data.CapWaste)
-            .Any(group => group.Count() >= 2);
+        // return resources
+        //     .Where(resource => resource.HasCap && resource.Data.CapWaste != 0)
+        //     .GroupBy(resource => resource.Data.CapWaste)
+        //     .Any(group => group.Count() >= 2);
     }
 
     async Task HandleSubmitAsync()

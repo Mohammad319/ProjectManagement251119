@@ -60,6 +60,25 @@ public class TasksUserComputationServiceWasmTests
     }
 
     [Fact]
+    public void CalcQuantityResource_RecalculatesTimeQuantitiesFromPercentages()
+    {
+        var service = new TasksUserComputationServiceWasm();
+        var resource = CreateResource(parameters: [], times: [], changeFactor2: 4m);
+        resource.Data.Times =
+        [
+            new ResourceTime { Name = "Morning", Percentage = 75m, Cost = 60m },
+            new ResourceTime { Name = "Evening", Percentage = 25m, Cost = 120m }
+        ];
+
+        service.CalcQuantityResource([resource], 10m);
+
+        Assert.Equal(40m, resource.Data.Quantity);
+        Assert.Equal(30m, resource.Data.Times[0].Quantity);
+        Assert.Equal(10m, resource.Data.Times[1].Quantity);
+        Assert.Equal(75m, resource.Data.Cost);
+    }
+
+    [Fact]
     public void BuildFinalRows_DeduplicatesDerivedResourcesWithSameIdAndMenu()
     {
         var service = new TasksUserComputationServiceWasm();
@@ -229,9 +248,8 @@ public class TasksUserComputationServiceWasmTests
                 Times = [.. times.Select((item, index) => new ResourceTime
                 {
                     Name = $"T{index + 1}",
-                    Quantity = item.Quantity,
                     Cost = item.Cost
-                })]
+                }.SetResolvedQuantity(item.Quantity))]
             }
         };
     }

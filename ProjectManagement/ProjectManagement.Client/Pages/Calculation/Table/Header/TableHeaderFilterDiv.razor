@@ -1,4 +1,5 @@
 ﻿@using ProjectManagement.Client.Constant;
+@using BlazorMHD.UI.Core.Services
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.Repositories.Calculation;
 @using ProjectManagement.Client.Shared.Repositories.ResourceType;
@@ -18,7 +19,7 @@
         border: 1px solid #d1d5db;
         min-width: 220px;
         width: 260px;
-        height: 260px;
+        min-height: 260px;
         background-color: #f9fafb;
         padding: 8px;
         text-align: left;
@@ -166,6 +167,27 @@
             </select>
         </div>
 
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button type="button"
+                    class="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="ClearAllFiltersAsync">
+                Clear filter
+            </button>
+            <button type="button"
+                    class="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    @onclick="ClearCurrentColumnFilterAsync">
+                Clear column
+            </button>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+            <button type="button"
+                    class="rounded border border-sky-300 bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-900/50"
+                    @onclick="ApplyAndCloseAsync">
+                Apply &amp; close
+            </button>
+        </div>
+
         <div style="overflow:auto;height:130px">
             @if (FilterAttrStr == "resourceTypeSystem")
             {
@@ -175,7 +197,7 @@
                         @item2
                         <span role="button"
                               class="closebtn"
-                              @onclick="() => Filter.ResourceTypeSystem.Remove(item2)">
+                              @onclick="() => RemoveResourceTypeSystemFilterValue(item2)">
                             &times;
                         </span>
                     </div>
@@ -189,7 +211,7 @@
                         @item2
                         <span role="button"
                               class="closebtn"
-                              @onclick="() => Filter.Status.Remove(item2)">
+                              @onclick="() => RemoveStatusFilterValue(item2)">
                             &times;
                         </span>
                     </div>
@@ -203,7 +225,7 @@
                         @item2
                         <span role="button"
                               class="closebtn"
-                              @onclick="() => Filter.Resource.Remove(item2)">
+                              @onclick="() => RemoveResourceFilterValue(item2)">
                             &times;
                         </span>
                     </div>
@@ -217,7 +239,7 @@
                         @item1
                         <span role="button"
                               class="closebtn"
-                              @onclick="() => FilterValues.Remove(item1)">
+                              @onclick="() => RemoveCurrentStringFilterValue(item1)">
                             &times;
                         </span>
                     </div>
@@ -232,12 +254,22 @@
     @if (TemplateConst.Col0 > PMValuesConst.MinWidthCol)
     {
         <td>
-            <span role="button"
-                  class="text-outline-success"
-                  style="font-size:20px;top:6px;"
-                  @onclick=" ()=> CalcService.GetFilter(Filter)">
-                @((MarkupString)Icons.SaveCloud)
-            </span>
+            <div style="display:flex;align-items:center;gap:2px;">
+                <span role="button"
+                      title="Open filter presets"
+                      class="text-outline-primary"
+                      style="font-size:18px;top:6px;"
+                      @onclick="OpenPresetsDialog">
+                    @((MarkupString)Icons.Storage)
+                </span>
+                <span role="button"
+                      title="Apply filter"
+                      class="text-outline-success"
+                      style="font-size:20px;top:6px;"
+                      @onclick=" ()=> CalcService.GetFilter(Filter)">
+                    @((MarkupString)Icons.SaveCloud)
+                </span>
+            </div>
         </td>
     }
 
@@ -306,6 +338,7 @@
 
 @code {
     [Inject] private ProjectManagement.Client.Services.Calculation.CalculationService CalcService { get; set; } = default!;
+    [Inject] private DialogService DialogService { get; set; } = default!;
     [Inject] private ProjectManagement.Client.Services.Folder.FolderState FolderState { get; set; } = default!;
     [Inject] private ITaskRepository TaskRepository { get; set; } = default!;
     [Inject] private IResourceTypeRepository ResourceTypeRepository { get; set; } = default!;
@@ -322,16 +355,16 @@
     MouseEventArgs MouseEvent = new MouseEventArgs();
     private ProjectManagement.Client.Shared.MVVM.Calculation.CalculationMVVM Calc => FolderState.Calculation ?? throw new InvalidOperationException("TableHeaderFilterDiv requires an active calculation.");
     private ProjectManagement.Client.Shared.MVVM.Calculation.TemplateMVVM Template => Calc.Template;
-
     private FilterVM Filter => Calc.FilterVM ??= new();
 
-    public void EnterFilter(KeyboardEventArgs e)
+    public async Task EnterFilter(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
         {
             if (string.IsNullOrEmpty(fff)) return;
-            FilterValues.Add(fff);
+            FilterValues.Add(fff.Trim());
             fff = "";
+            await ApplyCurrentFilterAsync();
         }
         else if (e.Code == "Esc")
         {
@@ -339,7 +372,7 @@
         }
     }
 
-    void EnterResource(ChangeEventArgs e)
+    async Task EnterResource(ChangeEventArgs e)
     {
         if (string.IsNullOrEmpty(e?.Value?.ToString())) return;
 
@@ -355,6 +388,8 @@
 
             Filter.ResourceTypeSystem.Add(f);
         }
+
+        await ApplyCurrentFilterAsync();
     }
 
     protected async override Task OnInitializedAsync()
@@ -395,32 +430,7 @@
             };
 
             fff = string.Empty;
-
-            if (FilterAttrStr == "code")
-            {
-                FilterValues = Filter.Code;
-                FilterType = Filter.CodeFilterType;
-            }
-            else if (FilterAttrStr == "account")
-            {
-                FilterValues = Filter.Account;
-                FilterType = Filter.AccountFilterType;
-            }
-            else if (FilterAttrStr == "name")
-            {
-                FilterValues = Filter.Name;
-                FilterType = Filter.NameFilterType;
-            }
-            else if (FilterAttrStr == "resourceSort")
-            {
-                FilterValues = Filter.ResourceSort;
-                FilterType = Filter.ResourceSortFilterType;
-            }
-            else if (FilterAttrStr == "unit")
-            {
-                FilterValues = Filter.Unit;
-                FilterType = Filter.UnitFilterType;
-            }
+            SyncCurrentFilterSelection();
 
             await Fixed(e1);
         }
@@ -440,7 +450,7 @@
         display = "block";
     }
 
-    public void FilterTypesFilter(ChangeEventArgs e)
+    public async Task FilterTypesFilter(ChangeEventArgs e)
     {
         var value = e?.Value?.ToString();
         if (string.IsNullOrWhiteSpace(value) || !Enum.TryParse<FilterType>(value, out var f))
@@ -462,5 +472,169 @@
             Filter.ResourceSortFilterType = f;
         if (FilterAttrStr == "unit")
             Filter.UnitFilterType = f;
+
+        FilterType = f;
+        await ApplyCurrentFilterAsync();
     }
+
+    private void SyncCurrentFilterSelection()
+    {
+        switch (FilterAttrStr)
+        {
+            case "code":
+                FilterValues = Filter.Code;
+                FilterType = Filter.CodeFilterType;
+                break;
+            case "account":
+                FilterValues = Filter.Account;
+                FilterType = Filter.AccountFilterType;
+                break;
+            case "name":
+                FilterValues = Filter.Name;
+                FilterType = Filter.NameFilterType;
+                break;
+            case "status":
+                FilterValues = Filter.Status;
+                FilterType = Filter.StatusFilterType;
+                break;
+            case "resourceType":
+                FilterValues = Filter.Resource;
+                FilterType = Filter.ResourceFilterType;
+                break;
+            case "resourceTypeSystem":
+                FilterValues = [];
+                FilterType = Filter.ResourceTypeFilterTypeSystem;
+                break;
+            case "resourceSort":
+                FilterValues = Filter.ResourceSort;
+                FilterType = Filter.ResourceSortFilterType;
+                break;
+            case "unit":
+                FilterValues = Filter.Unit;
+                FilterType = Filter.UnitFilterType;
+                break;
+            default:
+                FilterValues = [];
+                FilterType = FilterType.equals;
+                break;
+        }
+    }
+
+    private async Task ApplyCurrentFilterAsync()
+    {
+        CalcService.GetFilter(Filter);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ApplyAndCloseAsync()
+    {
+        CommitPendingTextFilterValue();
+        await ApplyCurrentFilterAsync();
+        display = none;
+    }
+
+    private async Task ClearAllFiltersAsync()
+    {
+        Calc.FilterVM = new FilterVM();
+        SyncCurrentFilterSelection();
+        fff = string.Empty;
+        await ApplyCurrentFilterAsync();
+    }
+
+    private async Task ClearCurrentColumnFilterAsync()
+    {
+        switch (FilterAttrStr)
+        {
+            case "code":
+                Filter.Code.Clear();
+                Filter.CodeFilterType = FilterType.equals;
+                break;
+            case "account":
+                Filter.Account.Clear();
+                Filter.AccountFilterType = FilterType.equals;
+                break;
+            case "name":
+                Filter.Name.Clear();
+                Filter.NameFilterType = FilterType.equals;
+                break;
+            case "status":
+                Filter.Status.Clear();
+                Filter.StatusFilterType = FilterType.equals;
+                break;
+            case "resourceType":
+                Filter.Resource.Clear();
+                Filter.ResourceFilterType = FilterType.equals;
+                break;
+            case "resourceTypeSystem":
+                Filter.ResourceTypeSystem.Clear();
+                Filter.ResourceTypeFilterTypeSystem = FilterType.equals;
+                break;
+            case "resourceSort":
+                Filter.ResourceSort.Clear();
+                Filter.ResourceSortFilterType = FilterType.equals;
+                break;
+            case "unit":
+                Filter.Unit.Clear();
+                Filter.UnitFilterType = FilterType.equals;
+                break;
+        }
+
+        SyncCurrentFilterSelection();
+        fff = string.Empty;
+        await ApplyCurrentFilterAsync();
+    }
+
+    private async Task RemoveCurrentStringFilterValue(string value)
+    {
+        FilterValues.Remove(value);
+        await ApplyCurrentFilterAsync();
+    }
+
+    private async Task RemoveStatusFilterValue(string value)
+    {
+        Filter.Status.Remove(value);
+        await ApplyCurrentFilterAsync();
+    }
+
+    private async Task RemoveResourceFilterValue(string value)
+    {
+        Filter.Resource.Remove(value);
+        await ApplyCurrentFilterAsync();
+    }
+
+    private async Task RemoveResourceTypeSystemFilterValue(ResourceTypesEnum value)
+    {
+        Filter.ResourceTypeSystem.Remove(value);
+        await ApplyCurrentFilterAsync();
+    }
+
+    private void CommitPendingTextFilterValue()
+    {
+        if (FilterAttrStr is "status" or "resourceType" or "resourceTypeSystem")
+            return;
+
+        if (string.IsNullOrWhiteSpace(fff))
+            return;
+
+        var trimmedValue = fff.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedValue))
+            return;
+
+        if (!FilterValues.Any(x => string.Equals(x, trimmedValue, StringComparison.CurrentCultureIgnoreCase)))
+            FilterValues.Add(trimmedValue);
+
+        fff = string.Empty;
+    }
+
+    private void OpenPresetsDialog() =>
+        DialogService.ShowComponent<CalculationFilterPresetsDialog>(
+            "Filter Presets",
+            Icons.Storage,
+            null,
+            DialogSize.Medium,
+            btns: [],
+            onClosed: null,
+            closeOnOverlayClick: true,
+            isDraggable: true,
+            useOverlay: false);
 }
