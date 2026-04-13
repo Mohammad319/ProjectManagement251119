@@ -52,6 +52,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 UnitGroupId = e.TaskUnitGroupId,
                 UnitCode = e.UnitCode,
                 Quantity = e.Quantity,
+                PriceProduction = e.PriceProduction,
                 ChangeFactor1 = e.ChangeFactor1,
                 ChangeFactor2 = e.ChangeFactor2,
                 IsActive = e.IsActive,

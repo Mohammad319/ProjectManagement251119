@@ -134,7 +134,10 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         Note = 40,
 
         [Display(Name = "priceTotalSubTax")]
-        PriceTotalSubTax = 41
+        PriceTotalSubTax = 41,
+
+        [Display(Name = "priceProduction")]
+        PriceProduction = 42
     }
 
     public enum SummarySheetColumnId
@@ -210,6 +213,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
     { NetColumnId.TotalNetCost, "totalNetCost" },
     { NetColumnId.PriceQTax, "priceQTax" },
     { NetColumnId.PriceQ, "priceQ" },
+    { NetColumnId.PriceProduction, "priceProduction" },
     { NetColumnId.PriceTotaly, "priceTotaly" },
     { NetColumnId.PriceTotallyTax, "priceTotallyTax" },
     { NetColumnId.Factor, "factor" },
@@ -317,6 +321,7 @@ namespace ProjectManagement.Shared.Constants
         new() { Id = NetColumnId.TotalNetCost, Width = 100, Frozen = false },
         new() { Id = NetColumnId.PriceQTax,  Width = 90, Frozen = false },
         new() { Id = NetColumnId.PriceQ, Width = 60, Frozen = false },
+        new() { Id = NetColumnId.PriceProduction, Width = 110, Frozen = false },
         new() { Id = NetColumnId.PriceTotaly, Width = 90, Frozen = false },
         new() { Id = NetColumnId.PriceTotallyTax, Width = 120, Frozen = false },
         new() { Id = NetColumnId.Factor, Width = 130, Frozen = false },
@@ -340,6 +345,50 @@ namespace ProjectManagement.Shared.Constants
         new() { Id = NetColumnId.Note, Width = 80, Frozen = false },
     ];
         }
+
+        public static List<NetColumnState> EnsureNetCalcColumns(IEnumerable<NetColumnState>? columns)
+        {
+            var normalized = columns?.Select(CloneNetColumn).ToList() ?? NetCalc();
+            if (normalized.Count == 0)
+                return NetCalc();
+
+            EnsureMissingNetColumn(
+                normalized,
+                new NetColumnState { Id = NetColumnId.PriceProduction, Width = 110, Frozen = false },
+                NetColumnId.PriceQ);
+
+            return normalized;
+        }
+
+        private static void EnsureMissingNetColumn(
+            List<NetColumnState> columns,
+            NetColumnState column,
+            NetColumnId? afterId = null)
+        {
+            if (columns.Any(x => x.Id == column.Id))
+                return;
+
+            if (afterId.HasValue)
+            {
+                var afterIndex = columns.FindIndex(x => x.Id == afterId.Value);
+                if (afterIndex >= 0)
+                {
+                    columns.Insert(afterIndex + 1, column);
+                    return;
+                }
+            }
+
+            columns.Add(column);
+        }
+
+        private static NetColumnState CloneNetColumn(NetColumnState value)
+            => new()
+            {
+                Id = value.Id,
+                Width = value.Width,
+                Frozen = value.Frozen,
+                StartPX = value.StartPX
+            };
 
         public static List<SummarySheetColumnState> SummarySheet()
         {

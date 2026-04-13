@@ -20,6 +20,7 @@ namespace TaskResourceBlueprints.Dto.ProjectTask
         public string? UnitCode { get; set; }     // früher Unit
 
         public decimal? Quantity { get; set; }
+        public decimal? PriceProduction { get; set; }
 
         public decimal ChangeFactor1 { get; set; } = 1m;    // früher ChangeFactor1
         public decimal ChangeFactor2 { get; set; } = 1m;  // früher ChangeFactor2

@@ -48,6 +48,7 @@ namespace TaskResourceBlueprints.Entities.Tasks
         public string? FieldNotes { get; set; }  // أو Notes / Description حسب ما تفضّل
 
         public decimal? Quantity { get; set; }
+        public decimal? PriceProduction { get; set; }
         public string? UnitCode { get; set; }
 
         public decimal ChangeFactor1 { get; set; } = 1m;

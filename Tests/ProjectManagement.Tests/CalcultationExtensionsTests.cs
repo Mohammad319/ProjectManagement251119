@@ -79,6 +79,56 @@ public class CalcultationExtensionsTests
     }
 
     [Fact]
+    public void TaskListPriceProduction_UsesStoredMetadataValue_NotPriceQ()
+    {
+        var resource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        resource.Data.Cost = 50m;
+
+        var calc = CreateCalculation(resource, 10m);
+        var task = Assert.Single(calc.Tasks);
+        task.Metadata.PriceProductionDB = 12.5m;
+
+        calc.ExecuteCalculation();
+
+        Assert.NotEqual(task.PriceQ, task.PriceProduction);
+        Assert.Equal(12.5m, task.PriceProduction);
+    }
+
+    [Fact]
+    public void ExecuteCalculation_TaskNetCostQ_UsesTotalNetCostDividedByTaskQuantity()
+    {
+        var resource1 = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        resource1.Data.Cost = 10m;
+
+        var resource2 = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        resource2.Data.Cost = 20m;
+
+        var calc = CreateCalculation(resource1, 10m);
+        var task = Assert.Single(calc.Tasks);
+        task.Resources.Add(resource2);
+
+        calc.ExecuteCalculation();
+
+        Assert.Equal(300m, task.NetCostTotaly);
+        Assert.Equal(30m, task.NetCostQ);
+    }
+
+    [Fact]
+    public void PriceSubTax_ReturnsPerUnitPriceIncludingTax()
+    {
+        var task = new TaskListMVVM
+        {
+            Metadata = new TaskMetadata
+            {
+                Quantity = 10m,
+                PriceSubDB = 100m
+            }
+        };
+
+        Assert.Equal(125m, task.PriceSubTax(25m));
+    }
+
+    [Fact]
     public void ExecuteCalculation_IncludesAddOnsInEffectiveCostAndBaseCost()
     {
         var resource = CreateResource(

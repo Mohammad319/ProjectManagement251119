@@ -36,7 +36,6 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             {
                 var t = s2.Pop();
 
-                decimal netQ = 0;
                 decimal netTot = 0;
                 decimal apriceTot = 0;
 
@@ -56,7 +55,6 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                         var c = children[i];
                         if (!c.Active) continue;
 
-                        netQ += c.GetComputedNetCostQ();
                         netTot += c.GetComputedNetCostTotaly();
                         apriceTot += c.GetComputedApriceTotally();
 
@@ -85,7 +83,6 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                         var r = res[i];
                         if (!r.Active) continue;
 
-                        netQ += r.GetComputedNetCostQ();
                         netTot += r.GetComputedNetCostTotaly();
                         apriceTot += r.GetComputedApriceTotally();
 
@@ -104,6 +101,11 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                         }
                     }
                 }
+
+                var quantity = t.Metadata?.Quantity;
+                decimal netQ = quantity.HasValue && quantity.Value > 0
+                    ? netTot / quantity.Value
+                    : 0;
 
                 t.SetComputedAggregates(
                     netQ,

@@ -70,18 +70,9 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
             return new NetCalc
             {
                 Color = (Color ?? new NetColor()).Clone(),
-                Columns = Columns?.Select(CloneNetColumn).ToList() ?? TemplateDefaults.NetCalc()
+                Columns = TemplateDefaults.EnsureNetCalcColumns(Columns)
             };
         }
-
-        private static NetColumnState CloneNetColumn(NetColumnState value)
-            => new()
-            {
-                Id = value.Id,
-                Width = value.Width,
-                Frozen = value.Frozen,
-                StartPX = value.StartPX
-            };
     }
 
     public class SummarySheet

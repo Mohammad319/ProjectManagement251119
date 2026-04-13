@@ -126,6 +126,12 @@
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
+                    <label class="@LabelClass">@CalcResource.priceProduction</label>
+                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceProductionDB" class="@InputClass" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceProductionDB)" />
+                </div>
+
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.priceSub </label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
                     <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceSubDB)" />

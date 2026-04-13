@@ -142,6 +142,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 throw new ArgumentException("Name ist erforderlich.");
             if (d.Quantity is < 0)
                 throw new ArgumentException("Quantity darf nicht negativ sein.");
+            if (d.PriceProduction is < 0)
+                throw new ArgumentException("Price production darf nicht negativ sein.");
             if (d.ChangeFactor1 <= 0 || d.ChangeFactor2 <= 0)
                 throw new ArgumentException("Faktoren müssen > 0 sein.");
         }
@@ -167,6 +169,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 TaskUnitGroupId = d.UnitGroupId,
                 UnitCode = d.UnitCode,
                 Quantity = d.Quantity,
+                PriceProduction = d.PriceProduction,
                 ChangeFactor1 = d.ChangeFactor1,
                 ChangeFactor2 = d.ChangeFactor2,
                 IsActive = d.IsActive,
@@ -210,6 +213,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             e.TaskUnitGroupId = d.UnitGroupId;
             e.UnitCode = d.UnitCode;
             e.Quantity = d.Quantity;
+            e.PriceProduction = d.PriceProduction;
             e.ChangeFactor1 = d.ChangeFactor1;
             e.ChangeFactor2 = d.ChangeFactor2;
             e.IsActive = d.IsActive;

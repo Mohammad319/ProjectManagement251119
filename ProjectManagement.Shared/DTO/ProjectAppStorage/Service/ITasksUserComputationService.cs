@@ -521,6 +521,10 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             case "basecost":
                 return task.BaseResources.Sum(r => r.Data.BaseCost.GetValueOrDefault());
 
+            case "priceproduction":
+            case "price production":
+                return task.PriceProduction;
+
             default:
                 return null;
         }

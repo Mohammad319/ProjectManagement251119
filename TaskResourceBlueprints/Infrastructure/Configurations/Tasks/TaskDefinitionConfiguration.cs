@@ -16,6 +16,9 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
         builder.Property(x => x.Quantity)
             .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
 
+        builder.Property(x => x.PriceProduction)
+            .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
         builder.Property(x => x.ChangeFactor1)
             .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
 

@@ -1,10 +1,5 @@
-﻿using ProjectManagement.Client.Shared.MVVM.Offer;
-using ProjectManagement.Shared.Base.Calculation;
+﻿using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
-using ProjectManagement.Shared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
@@ -103,15 +98,15 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal PriceQTax(decimal taxPercent) => PriceQ * TaxFactor(taxPercent);
         public decimal ApriceTotallyTax(decimal taxPercent) => this.GetComputedApriceTotally() * TaxFactor(taxPercent);
 
-        [JsonIgnore] public decimal PriceProduction => PriceQ;
+        [JsonIgnore] public decimal PriceProduction => Metadata.PriceProductionDB.GetValueOrDefault();
 
         public decimal PriceActuallyQuantity => ActuallyQuantity * PriceProduction;
         public decimal PriceWorkedQ => WorkedQ * PriceProduction;
+        public decimal PriceActuallyQuantityTax(decimal taxPercent) => PriceActuallyQuantity * TaxFactor(taxPercent);
 
         // taxPercent مثال: 25 يعني 25%
-        public decimal PriceSubTax(decimal taxPercent) => PriceSubTotal +( PriceSub * TaxFactor(taxPercent));//
+        public decimal PriceSubTax(decimal taxPercent) => PriceSub * TaxFactor(taxPercent);
         public decimal PriceTotalSubTax(decimal taxPercent) => PriceSubTotal * TaxFactor(taxPercent);//PriceSubTotal
-        public decimal PriceActuallyQuantityTax(decimal taxPercent) => PriceActuallyQuantity * TaxFactor(taxPercent);
         public decimal PriceWorkedQTax(decimal taxPercent) => PriceWorkedQ * TaxFactor(taxPercent);
 
         public bool HasVoice => Metadata.HasVoice;

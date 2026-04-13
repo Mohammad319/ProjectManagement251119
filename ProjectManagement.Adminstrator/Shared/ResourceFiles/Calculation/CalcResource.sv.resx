@@ -255,6 +255,9 @@
   <data name="priceQ" xml:space="preserve">
     <value>Pris Q</value>
   </data>
+  <data name="priceProduction" xml:space="preserve">
+    <value>Produktionspris</value>
+  </data>
   <data name="priceQTax" xml:space="preserve">
     <value>Pris Q Tax</value>
   </data>

@@ -37,7 +37,17 @@ public static class CalcColumnFactory
         }
         else
         {
-            cols.AddRange(allColumns.OrderBy(x => (int)x.Key).Select(x => x.Value));
+            var defaultOrder = TemplateDefaults.NetCalc().Select(x => x.Id).ToList();
+            for (int i = 0; i < defaultOrder.Count; i++)
+            {
+                if (allColumns.TryGetValue(defaultOrder[i], out var column))
+                    cols.Add(column);
+            }
+
+            cols.AddRange(allColumns
+                .Where(x => !defaultOrder.Contains(x.Key))
+                .OrderBy(x => (int)x.Key)
+                .Select(x => x.Value));
         }
 
         IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> result = cols;
@@ -177,6 +187,11 @@ public static class CalcColumnFactory
             [NetColumnId.PriceQ] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceQ),
+                ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
+            },
+            [NetColumnId.PriceProduction] = new()
+            {
+                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.PriceProduction),
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b)
             },
             [NetColumnId.PriceTotaly] = new()

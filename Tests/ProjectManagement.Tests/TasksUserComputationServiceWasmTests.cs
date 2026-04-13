@@ -181,6 +181,47 @@ public class TasksUserComputationServiceWasmTests
     }
 
     [Fact]
+    public void EvaluateVariables_UsesPriceProductionVariable()
+    {
+        var service = new TasksUserComputationServiceWasm();
+        var task = new ProjectTaskDto
+        {
+            Quantity = 4m,
+            PriceProduction = 40m,
+            BaseResources =
+            [
+                new ResourceDto
+                {
+                    Id = 50,
+                    Name = "Base",
+                    ResType = ResourceTypesEnum.Materials,
+                    Data = new ResourceMetadata
+                    {
+                        Cost = 25m,
+                        Quantity = 4m
+                    }
+                }
+            ]
+        };
+
+        var condition = new TaskConditionDto
+        {
+            VariableRequirements =
+            [
+                new ConditionVariableRequirementDto
+                {
+                    VariableName = "priceproduction",
+                    MinAllowedValue = 39m,
+                    MaxAllowedValue = 41m,
+                    SetKey = 1
+                }
+            ]
+        };
+
+        Assert.True(service.EvaluateVariables(task, condition));
+    }
+
+    [Fact]
     public void RefreshResources_RecalculatesQuantityAndCostAfterFormulaChangesChangeFactor()
     {
         var service = new TasksUserComputationServiceWasm();

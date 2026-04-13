@@ -475,6 +475,15 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Price production.
+        /// </summary>
+        public static string priceProduction {
+            get {
+                return ResourceManager.GetString("priceProduction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Price Q Tax.
         /// </summary>
         public static string priceQTax {

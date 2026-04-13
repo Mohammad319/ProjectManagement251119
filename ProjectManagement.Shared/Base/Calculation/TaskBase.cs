@@ -32,6 +32,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 
         public bool IsOH { get; set; }
         public bool PriceSubInPrecent { get; set; }
+        public decimal? PriceProductionDB { get; set; }
         public decimal? PriceSubDB { get; set; }
         public decimal? PriceSubTaxDB { get; set; }
         public decimal? MinPrice { get; set; }
@@ -49,6 +50,7 @@ namespace ProjectManagement.Shared.Base.Calculation
             Quantity = Quantity.HasValue ? RoundQuantity(Quantity.Value) : null;
 
             // money-like fields
+            PriceProductionDB = PriceProductionDB.HasValue ? RoundMoney(PriceProductionDB.Value) : null;
             PriceSubDB = PriceSubDB.HasValue ? RoundMoney(PriceSubDB.Value) : null;
             PriceSubTaxDB = PriceSubTaxDB.HasValue ? RoundMoney(PriceSubTaxDB.Value) : null;
             MinPrice = MinPrice.HasValue ? RoundMoney(MinPrice.Value) : null;
@@ -57,6 +59,7 @@ namespace ProjectManagement.Shared.Base.Calculation
             // clamp negatives where it doesn't make sense
             if (WorkedQ < 0m) WorkedQ = 0m;
             if (Quantity.HasValue && Quantity.Value < 0m) Quantity = 0m;
+            if (PriceProductionDB.HasValue && PriceProductionDB.Value < 0m) PriceProductionDB = 0m;
             if (PriceSubDB.HasValue && PriceSubDB.Value < 0m) PriceSubDB = 0m;
             if (PriceSubTaxDB.HasValue && PriceSubTaxDB.Value < 0m) PriceSubTaxDB = 0m;
             if (MinPrice.HasValue && MinPrice.Value < 0m) MinPrice = 0m;
@@ -90,6 +93,7 @@ public TaskMetadata Clone()
 
                 IsOH = IsOH,
                 PriceSubInPrecent = PriceSubInPrecent,
+                PriceProductionDB = PriceProductionDB,
                 PriceSubDB = PriceSubDB,
                 PriceSubTaxDB = PriceSubTaxDB,
                 MinPrice = MinPrice,

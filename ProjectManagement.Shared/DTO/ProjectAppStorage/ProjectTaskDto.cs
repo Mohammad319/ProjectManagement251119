@@ -34,6 +34,7 @@ public class ProjectTaskDto
     public List<string> UpperNote { get; set; } = [];
 
     public decimal? Quantity { get; set; }
+    public decimal PriceProduction { get; set; }
 
     public string UnitCode { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;

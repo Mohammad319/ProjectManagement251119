@@ -244,6 +244,9 @@
     <value>Price OG</value>
   </data>
   <data name="priceQ" xml:space="preserve">
+    <value>Price Q</value>
+  </data>
+  <data name="priceProduction" xml:space="preserve">
     <value>Price production</value>
   </data>
   <data name="priceQTax" xml:space="preserve">

@@ -16,7 +16,7 @@ namespace ProjectManagement.Client.Constant
 
         public static List<string> NetTitle { get; set; } = ["code","active","account","name","status",
             "resourceTypeSystem","resourceType","resourceSort","quantity","unit","cost","changeFactor1","changeFactor2",
-            "waste","cap","baseCost","opportunity","netCostQ","totalNetCost","priceQTax","priceQ",
+            "waste","cap","baseCost","opportunity","netCostQ","totalNetCost","priceQTax","priceQ","priceProduction",
             "priceTotaly","priceTotallyTax","factor","minPrice","ceilingPrice","priceSub","priceTotalSub","diff","responsible","Co2","totalCo2","note"];
 
     }

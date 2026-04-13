@@ -27,7 +27,7 @@ namespace Domain.Entities.Calculation
             return new NetCalc
             {
                 Color = CloneNetColor(value.Color),
-                Columns = value.Columns?.Select(CloneNetColumn).ToList() ?? TemplateDefaults.NetCalc()
+                Columns = TemplateDefaults.EnsureNetCalcColumns(value.Columns)
             };
         }
 
@@ -74,15 +74,6 @@ namespace Domain.Entities.Calculation
                 Factor = value.Factor ?? "#c4c7fe"
             };
         }
-
-        private static NetColumnState CloneNetColumn(NetColumnState value)
-            => new()
-            {
-                Id = value.Id,
-                Width = value.Width,
-                Frozen = value.Frozen,
-                StartPX = value.StartPX
-            };
 
         private static SummarySheetColumnState CloneSummaryColumn(SummarySheetColumnState value)
             => new()

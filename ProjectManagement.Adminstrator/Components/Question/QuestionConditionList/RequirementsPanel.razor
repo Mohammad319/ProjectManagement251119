@@ -2,8 +2,10 @@
 @using System.Collections.Generic
 @using System.Linq
 @using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Localization
 @using ProjectManagement.Adminstrator.Components
 @using ProjectManagement.Adminstrator.Components.Question.QuestionConditionList.Shared
+@using ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation
 @using TaskResourceBlueprints.Entities.Questions.Conditions
 @using TaskResourceBlueprints.Entities.Questions.Groups
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
@@ -14,6 +16,7 @@
     [Parameter] public IEnumerable<QuestionGroupDefinition> ChoiceGroups { get; set; } = Enumerable.Empty<QuestionGroupDefinition>();
     [Parameter] public IEnumerable<ResourceSelectorDefinition> ResourceGroups { get; set; } = Enumerable.Empty<ResourceSelectorDefinition>();
     [Parameter] public IEnumerable<NumericQuestionDefinition> NumericGroups { get; set; } = Enumerable.Empty<NumericQuestionDefinition>();
+    [Inject] private IStringLocalizer<CalcResource> CalcLoc { get; set; } = default!;
 
     private IEnumerable<QuestionOptionDefinition> GetLocalChoiceOptions(int groupId)
         => ChoiceGroups.FirstOrDefault(g => g.Id == groupId)?.Options ?? Enumerable.Empty<QuestionOptionDefinition>();
@@ -66,17 +69,22 @@
     private void RemoveVarReq(VariableConditionRule r)
         => Condition?.VariableRules.Remove(r);
 
-    private string GetVarLabel(string variableName) => variableName switch
+    private string GetVarLabel(string variableName)
     {
-        "Thickness" => AppLoc["thickness"],
-        "Width" => AppLoc["width"],
-        "Length" => AppLoc["length"],
-        "Density" => AppLoc["density"],
-        "quantity" => CalcResource.quantity,
-        "cost" => CalcResource.cost,
-        "basecost" => CalcResource.baseCost,
-        _ => variableName
-    };
+        var normalized = variableName.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "thickness" => AppLoc["thickness"],
+            "width" => AppLoc["width"],
+            "length" => AppLoc["length"],
+            "density" => AppLoc["density"],
+            "quantity" => CalcLoc["quantity"],
+            "cost" => CalcLoc["cost"],
+            "basecost" => CalcLoc["baseCost"],
+            "priceproduction" => CalcLoc["priceProduction"],
+            _ => variableName
+        };
+    }
 }
 
 <div class="space-y-0.5">
@@ -365,6 +373,7 @@
                                         <option value="quantity">@GetVarLabel("quantity")</option>
                                         <option value="cost">@GetVarLabel("cost")</option>
                                         <option value="basecost">@GetVarLabel("basecost")</option>
+                                        <option value="priceproduction">@GetVarLabel("priceproduction")</option>
                                     </select>
                                 </div>
 

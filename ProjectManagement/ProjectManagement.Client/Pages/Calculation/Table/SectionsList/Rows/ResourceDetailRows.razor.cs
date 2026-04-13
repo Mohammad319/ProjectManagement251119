@@ -129,7 +129,7 @@ public partial class ResourceDetailRows
             {
                 RenderUnitCell(builder, ref seq, line);
             }
-            else if (line.Kind == DetailKind.Time && column.Id == NetColumnId.BaseCost)
+            else if (line.Kind == DetailKind.Time && column.Id == NetColumnId.Unit)
             {
                 RenderUnitCell(builder, ref seq, line);
             }

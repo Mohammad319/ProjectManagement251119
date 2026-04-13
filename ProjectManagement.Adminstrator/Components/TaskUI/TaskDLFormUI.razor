@@ -148,6 +148,15 @@
                 </div>
 
                 <div class="space-y-1">
+                    <label class="@LabelClass">@CalcResource.priceProduction</label>
+                    <input type="text"
+                           inputmode="decimal"
+                           class="@InputClass"
+                           value="@PriceProductionText"
+                           @oninput="OnPriceProductionInput" />
+                </div>
+
+                <div class="space-y-1">
                     <label class="@LabelClass">@CalcResource.changeFactor1</label>
                     <input type="text"
                            inputmode="decimal"
@@ -310,6 +319,7 @@
     private List<TaskUnitGroup> Groups = new();
     private List<ResourceCategory> Folders = new();
     private string QuantityText { get; set; } = string.Empty;
+    private string PriceProductionText { get; set; } = string.Empty;
     private string ChangeFactor1Text { get; set; } = "1";
     private string ChangeFactor2Text { get; set; } = "1";
     private string? FormErrorMessage { get; set; }
@@ -345,15 +355,17 @@
     private async Task HandleSubmit()
     {
         if (!TryParseNullableDecimalInput(QuantityText, out var quantity) ||
+            !TryParseNullableDecimalInput(PriceProductionText, out var priceProduction) ||
             !TryParseDecimalInput(ChangeFactor1Text, out var factor1) ||
             !TryParseDecimalInput(ChangeFactor2Text, out var factor2))
         {
-            FormErrorMessage = "Quantity, Change Factor1 and Change Factor2 must be valid numbers.";
+            FormErrorMessage = "Quantity, Price production, Change Factor1 and Change Factor2 must be valid numbers.";
             return;
         }
 
         FormErrorMessage = null;
         UpdateForm.Quantity = quantity;
+        UpdateForm.PriceProduction = priceProduction;
         UpdateForm.ChangeFactor1 = factor1;
         UpdateForm.ChangeFactor2 = factor2;
 
@@ -391,6 +403,16 @@
         }
     }
 
+    private void OnPriceProductionInput(ChangeEventArgs e)
+    {
+        PriceProductionText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseNullableDecimalInput(PriceProductionText, out var value))
+        {
+            UpdateForm.PriceProduction = value;
+            FormErrorMessage = null;
+        }
+    }
+
     private void OnChangeFactor2Input(ChangeEventArgs e)
     {
         ChangeFactor2Text = e.Value?.ToString() ?? string.Empty;
@@ -404,6 +426,7 @@
     private void SyncNumericInputs()
     {
         QuantityText = FormatNullableDecimal(UpdateForm.Quantity);
+        PriceProductionText = FormatNullableDecimal(UpdateForm.PriceProduction);
         ChangeFactor1Text = FormatDecimal(UpdateForm.ChangeFactor1);
         ChangeFactor2Text = FormatDecimal(UpdateForm.ChangeFactor2);
     }

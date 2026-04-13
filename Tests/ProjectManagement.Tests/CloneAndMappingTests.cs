@@ -20,6 +20,7 @@ public class CloneAndMappingTests
             Unit = "m",
             Code = "T-01",
             Quantity = 2.5m,
+            PriceProductionDB = 12.34m,
             UpperNote = ["line-1"]
         };
 
@@ -36,6 +37,7 @@ public class CloneAndMappingTests
         Assert.NotSame(source, dto.Metadata);
         Assert.Equal("task-note", dto.Metadata.Note);
         Assert.Equal("T-01", dto.Metadata.Code);
+        Assert.Equal(12.34m, dto.Metadata.PriceProductionDB);
         Assert.Single(dto.Metadata.UpperNote);
         Assert.Equal("line-1", dto.Metadata.UpperNote[0]);
     }
