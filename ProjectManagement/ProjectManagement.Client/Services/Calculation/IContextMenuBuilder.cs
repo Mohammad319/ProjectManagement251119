@@ -93,7 +93,7 @@ namespace ProjectManagement.Client.Services.Calculation
                 tableCoordinator.ToggleOnlyActive));
 
             list.Add(NewMenuItem(
-                calculation?.OHFactors == true ? Icons.Active : Icons.NotActive,
+                calculation?.FactorDisplayMode == CalculationFactorDisplayMode.OH ? Icons.Active : Icons.NotActive,
                 "OH",
                 tableCoordinator.ToggleOH));
 

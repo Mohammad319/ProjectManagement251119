@@ -1,0 +1,41 @@
+@typeparam TItem
+
+@code {
+    [CascadingParameter] public MhdTable<TItem>? ParentGrid { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public Func<TItem, object?>? ValueSelector { get; set; }
+    [Parameter] public RenderFragment<TItem>? Template { get; set; }
+
+    [Parameter] public bool Sortable { get; set; }
+    [Parameter] public Func<TItem, object?>? SortKeySelector { get; set; }
+
+    [Parameter] public bool Visible { get; set; } = true;
+    [Parameter] public bool Searchable { get; set; } = true;
+    [Parameter] public int Order { get; set; } = int.MaxValue;
+
+    [Parameter] public string? HeaderClass { get; set; }
+    [Parameter] public string? CellClass { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (ParentGrid == null)
+        {
+            throw new InvalidOperationException("MhdTableColumn must be used inside MhdTable.");
+        }
+
+        ParentGrid.RegisterColumn(new MhdTable<TItem>.ColumnDefinition<TItem>
+        {
+            Title = Title,
+            ValueSelector = ValueSelector,
+            Template = Template,
+            Sortable = Sortable,
+            SortKeySelector = SortKeySelector,
+            Visible = Visible,
+            Searchable = Searchable,
+            Order = Order,
+            HeaderClass = HeaderClass,
+            CellClass = CellClass
+        });
+    }
+}

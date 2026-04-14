@@ -1,0 +1,266 @@
+@using BlazorMHD.UI.Core.Data
+@using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
+@typeparam TItem
+
+<div class="mhd-tree-root" dir="@EffectiveDirection">
+    @if (Nodes != null)
+    {
+        <ul class="space-y-0.5" role="tree" aria-label="@AriaLabel">
+            @foreach (var node in Nodes)
+            {
+                @RenderNode(node, 0)
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<TreeNode<TItem>> Nodes { get; set; } = Array.Empty<TreeNode<TItem>>();
+    [Parameter] public RenderFragment<TreeNode<TItem>>? NodeTemplate { get; set; }
+    [Parameter] public EventCallback<TreeNode<TItem>> OnNodeSelected { get; set; }
+    [Parameter] public string AriaLabel { get; set; } = "Tree";
+    [Parameter] public bool UseCurrentCultureDirection { get; set; } = true;
+
+    private string? _focusedKey;
+
+    private string EffectiveDirection =>
+        UseCurrentCultureDirection && CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+
+    protected override void OnParametersSet()
+    {
+        if (_focusedKey is not null)
+            return;
+
+        var selected = GetVisibleNodes().FirstOrDefault(n => n.IsSelected);
+        _focusedKey = selected?.Key ?? GetVisibleNodes().FirstOrDefault()?.Key;
+    }
+
+    private RenderFragment RenderNode(TreeNode<TItem> node, int level) => builder =>
+    {
+        var seq = 0;
+        var isFocused = _focusedKey == node.Key || (_focusedKey is null && node.IsSelected);
+
+        builder.OpenElement(seq++, "li");
+        builder.AddAttribute(seq++, "role", "none");
+        builder.AddAttribute(seq++, "class", "flex flex-col");
+
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", BuildRowClass(node));
+        builder.AddAttribute(seq++, "style", $"padding-inline-start:{level * 0.75}rem");
+        builder.AddAttribute(seq++, "role", "treeitem");
+        builder.AddAttribute(seq++, "tabindex", isFocused ? "0" : "-1");
+        builder.AddAttribute(seq++, "aria-selected", node.IsSelected ? "true" : "false");
+        builder.AddAttribute(seq++, "aria-level", (level + 1).ToString(CultureInfo.InvariantCulture));
+
+        if (node.HasChildren)
+        {
+            builder.AddAttribute(seq++, "aria-expanded", node.IsExpanded ? "true" : "false");
+        }
+
+        builder.AddAttribute(seq++, "onclick",
+            EventCallback.Factory.Create<MouseEventArgs>(this, () => SelectNode(node)));
+
+        builder.AddAttribute(seq++, "onfocus",
+            EventCallback.Factory.Create<FocusEventArgs>(this, () => _focusedKey = node.Key));
+
+        builder.AddAttribute(seq++, "onkeydown",
+            EventCallback.Factory.Create<KeyboardEventArgs>(this, (KeyboardEventArgs e) => OnNodeKeyDown(node, e)));
+
+        builder.OpenElement(seq++, "button");
+        builder.AddAttribute(seq++, "type", "button");
+        builder.AddAttribute(seq++, "class", "mhd-tree-toggle");
+        builder.AddAttribute(seq++, "aria-label", node.HasChildren ? (node.IsExpanded ? "Collapse" : "Expand") : "Leaf");
+
+        builder.AddAttribute(seq++, "onclick",
+            EventCallback.Factory.Create<MouseEventArgs>(this, () => ToggleNode(node)));
+
+        builder.AddEventPreventDefaultAttribute(seq++, "onclick", true);
+        builder.AddEventStopPropagationAttribute(seq++, "onclick", true);
+
+        if (node.HasChildren)
+        {
+            builder.AddContent(seq++, node.IsExpanded ? "▾" : "▸");
+        }
+        else
+        {
+            builder.AddContent(seq++, "•");
+        }
+
+        builder.CloseElement();
+
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", "flex-1 truncate");
+
+        if (NodeTemplate != null)
+        {
+            builder.AddContent(seq++, NodeTemplate(node));
+        }
+        else
+        {
+            builder.AddContent(seq++, node.Text);
+        }
+
+        builder.CloseElement();
+        builder.CloseElement();
+
+        if (node.IsExpanded && node.HasChildren)
+        {
+            builder.OpenElement(seq++, "ul");
+            builder.AddAttribute(seq++, "class", "mt-0.5 space-y-0.5");
+            builder.AddAttribute(seq++, "role", "group");
+
+            foreach (var child in node.Children)
+            {
+                builder.AddContent(seq++, RenderNode(child, level + 1));
+            }
+
+            builder.CloseElement();
+        }
+
+        builder.CloseElement();
+    };
+
+    private string BuildRowClass(TreeNode<TItem> node)
+    {
+        var baseCls = "flex items-center rounded-md px-1 py-0.5 cursor-pointer select-none transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
+        if (node.IsSelected)
+            return $"{baseCls} bg-blue-50 text-blue-700 dark:bg-slate-700 dark:text-slate-100";
+
+        return $"{baseCls} hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-100";
+    }
+
+    private void ToggleNode(TreeNode<TItem> node)
+    {
+        if (!node.HasChildren)
+            return;
+
+        node.IsExpanded = !node.IsExpanded;
+        _focusedKey = node.Key;
+        StateHasChanged();
+    }
+
+    private async Task SelectNode(TreeNode<TItem> node)
+    {
+        ClearSelection(Nodes);
+        node.IsSelected = true;
+        _focusedKey = node.Key;
+        await OnNodeSelected.InvokeAsync(node);
+        StateHasChanged();
+    }
+
+    private async Task OnNodeKeyDown(TreeNode<TItem> node, KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Enter":
+            case " ":
+                await SelectNode(node);
+                break;
+
+            case "ArrowRight":
+                if (node.HasChildren && !node.IsExpanded)
+                {
+                    node.IsExpanded = true;
+                    StateHasChanged();
+                }
+                else if (node.HasChildren && node.IsExpanded)
+                {
+                    var firstChild = node.Children.FirstOrDefault();
+                    if (firstChild != null)
+                        await SelectNode(firstChild);
+                }
+                break;
+
+            case "ArrowLeft":
+                if (node.HasChildren && node.IsExpanded)
+                {
+                    node.IsExpanded = false;
+                    StateHasChanged();
+                    break;
+                }
+
+                var parent = FindParent(Nodes, node.Key);
+                if (parent != null)
+                    await SelectNode(parent);
+                break;
+
+            case "ArrowDown":
+                await SelectRelative(node, +1);
+                break;
+
+            case "ArrowUp":
+                await SelectRelative(node, -1);
+                break;
+        }
+    }
+
+    private async Task SelectRelative(TreeNode<TItem> node, int delta)
+    {
+        var visible = GetVisibleNodes().ToList();
+        if (!visible.Any())
+            return;
+
+        var idx = visible.FindIndex(n => n.Key == node.Key);
+        if (idx < 0)
+            return;
+
+        var target = idx + delta;
+        if (target < 0 || target >= visible.Count)
+            return;
+
+        await SelectNode(visible[target]);
+    }
+
+    private IEnumerable<TreeNode<TItem>> GetVisibleNodes()
+    {
+        foreach (var root in Nodes)
+        {
+            foreach (var n in TraverseVisible(root))
+                yield return n;
+        }
+    }
+
+    private IEnumerable<TreeNode<TItem>> TraverseVisible(TreeNode<TItem> node)
+    {
+        yield return node;
+
+        if (!node.IsExpanded || !node.HasChildren)
+            yield break;
+
+        foreach (var child in node.Children)
+        {
+            foreach (var n in TraverseVisible(child))
+                yield return n;
+        }
+    }
+
+    private TreeNode<TItem>? FindParent(IEnumerable<TreeNode<TItem>> roots, string childKey)
+    {
+        foreach (var root in roots)
+        {
+            if (!root.HasChildren)
+                continue;
+
+            if (root.Children.Any(c => c.Key == childKey))
+                return root;
+
+            var parent = FindParent(root.Children, childKey);
+            if (parent != null)
+                return parent;
+        }
+
+        return null;
+    }
+
+    private void ClearSelection(IEnumerable<TreeNode<TItem>> nodes)
+    {
+        foreach (var n in nodes)
+        {
+            n.IsSelected = false;
+            if (n.HasChildren)
+                ClearSelection(n.Children);
+        }
+    }
+}

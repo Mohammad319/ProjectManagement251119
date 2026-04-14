@@ -467,7 +467,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private bool ShouldIncludeSummaryTask(TaskListMVVM task) =>
         task.Ui.FilterVisible &&
-        task.IsOH == Calc.OHFactors &&
+        Calc.MatchesFactorDisplay(task.IsOH) &&
         (!Calc.OnlyActive || task.Active);
 
     private string GetSummaryCellValue(NetColumnId columnId, SummaryTotals totals) =>

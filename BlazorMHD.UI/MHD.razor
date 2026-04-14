@@ -1,0 +1,51 @@
+@using BlazorMHD.UI.Components.Feedback.Dialog
+@using BlazorMHD.UI.Components.Feedback.Loading
+@using BlazorMHD.UI.Components.Feedback.MessageBox
+@using BlazorMHD.UI.Components.Feedback.Toast
+
+<div class="@HostClass"
+     dir="auto"
+     data-mhd-theme="@ResolvedThemeMode"
+     @attributes="AdditionalAttributesWithoutClass">
+    <MhdMessageBox />
+    <MhdToastContainer />
+    <MhdLoadingOverlay />
+    <MhdDialog />
+</div>
+
+@code {
+    [Parameter] public string? ThemeMode { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string ResolvedThemeMode
+        => string.Equals(ThemeMode, "dark", StringComparison.OrdinalIgnoreCase) ? "dark" : "light";
+
+    private string HostClass
+    {
+        get
+        {
+            var classes = new List<string> { "mhd-scope" };
+
+            if (string.Equals(ResolvedThemeMode, "dark", StringComparison.OrdinalIgnoreCase))
+                classes.Add("dark");
+
+            if (!string.IsNullOrWhiteSpace(Class))
+                classes.Add(Class!);
+
+            if (AdditionalAttributes is not null &&
+                AdditionalAttributes.TryGetValue("class", out var classObj) &&
+                classObj is not null)
+            {
+                classes.Add(classObj.ToString()!);
+            }
+
+            return string.Join(" ", classes.Where(static x => !string.IsNullOrWhiteSpace(x)));
+        }
+    }
+
+    private IReadOnlyDictionary<string, object>? AdditionalAttributesWithoutClass
+        => AdditionalAttributes?
+            .Where(static kvp => !string.Equals(kvp.Key, "class", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(static kvp => kvp.Key, static kvp => kvp.Value);
+}

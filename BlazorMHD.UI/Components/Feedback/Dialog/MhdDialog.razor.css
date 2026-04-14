@@ -1,0 +1,34 @@
+.mhd-dialog-header {
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.mhd-dialog-header-static {
+    cursor: default;
+    user-select: auto;
+    -webkit-user-select: auto;
+    touch-action: auto;
+}
+
+.mhd-dialog-close {
+    cursor: pointer;
+    font-size: 0;
+    line-height: 1;
+}
+
+.mhd-dialog-close::before {
+    content: "\2715";
+    font-size: 1rem;
+}
+
+.mhd-dialog-header * {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.mhd-dialog-body {
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}

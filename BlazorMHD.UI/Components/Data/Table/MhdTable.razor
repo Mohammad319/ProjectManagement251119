@@ -1,0 +1,395 @@
+@using BlazorMHD.UI.Shared
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@attribute [CascadingTypeParameter(nameof(TItem))]
+@typeparam TItem
+
+@if (ShowFilter)
+{
+    <input value="@filterText"
+           @oninput="OnFilterChanged"
+           placeholder="@Localization.Get("SearchPlaceholder")"
+           aria-label="@Localization.Get("SearchPlaceholder")"
+           class="mhd-table-search" />
+}
+
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+<table class="@TableClass"
+       aria-label="@EffectiveAriaLabel"
+       dir="@EffectiveDirection">
+    <thead class="@Thead">
+        <tr>
+            @if (HeaderTemplate != null)
+            {
+                @HeaderTemplate
+            }
+            else
+            {
+                @foreach (var col in _visibleColumns)
+                {
+                    <th class="@($"{TH} {col.HeaderClass}")" scope="col" aria-sort="@GetAriaSort(col)">
+                        @if (col.Sortable)
+                        {
+                            <button type="button"
+                                    class="mhd-table-sort-button"
+                                    @onclick="() => ToggleSort(col)"
+                                    aria-label="@GetSortAriaLabel(col)">
+                                <span class="truncate">@col.Title</span>
+                                @if (_currentSortColumn == col)
+                                {
+                                    <span aria-hidden="true">@(_sortAscending ? "↑" : "↓")</span>
+                                }
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="truncate">@col.Title</span>
+                        }
+                    </th>
+                }
+            }
+        </tr>
+    </thead>
+
+    <tbody class="@TBody">
+        @if (IsLoading)
+        {
+            <tr>
+                <td colspan="@Math.Max(1, _visibleColumns.Count)">
+                    <div class="mhd-table-empty">@Localization.Get("Loading")...</div>
+                </td>
+            </tr>
+        }
+        else if (!_filteredAndSorted.Any())
+        {
+            <tr>
+                <td colspan="@Math.Max(1, _visibleColumns.Count)">
+                    <div class="mhd-table-empty">@Localization.Get("NoData")</div>
+                </td>
+            </tr>
+        }
+        else
+        {
+            @if (EnableVirtualization)
+            {
+                <Virtualize Items="_filteredAndSorted" Context="item" ItemSize="34">
+                    <tr @onclick="() => OnRowClick.InvokeAsync(item)"
+                        @key="GetRowKey(item)"
+                        class="@GetRowClass(item)">
+                        @foreach (var col in _visibleColumns)
+                        {
+                            <td class="@GetCellClass(item, col)">
+                                @if (col.Template != null)
+                                {
+                                    @col.Template(item)
+                                }
+                                else if (col.ValueSelector != null)
+                                {
+                                    @col.ValueSelector(item)
+                                }
+                            </td>
+                        }
+                    </tr>
+                </Virtualize>
+            }
+            else
+            {
+                @foreach (var item in _pagedItems)
+                {
+                    <tr @onclick="() => OnRowClick.InvokeAsync(item)"
+                        @key="GetRowKey(item)"
+                        class="@GetRowClass(item)">
+                        @foreach (var col in _visibleColumns)
+                        {
+                            <td class="@GetCellClass(item, col)">
+                                @if (col.Template != null)
+                                {
+                                    @col.Template(item)
+                                }
+                                else if (col.ValueSelector != null)
+                                {
+                                    @col.ValueSelector(item)
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+        }
+    </tbody>
+</table>
+
+@if (FooterTemplate != null)
+{
+    @FooterTemplate
+}
+
+@if (EnablePaging && !EnableVirtualization && _filteredAndSorted.Any())
+{
+    <div class="mhd-table-pager">
+        <div class="mhd-table-pager-group">
+            <button class="mhd-table-pager-button"
+                    @onclick="PrevPage"
+                    disabled="@(_currentPage == 1)">
+                @Localization.Get("Prev")
+            </button>
+            <button class="mhd-table-pager-button"
+                    @onclick="NextPage"
+                    disabled="@(_currentPage >= TotalPages)">
+                @Localization.Get("Next")
+            </button>
+        </div>
+
+        <div>
+            @Localization.Get("Page") @_currentPage @Localization.Get("Of") @TotalPages
+        </div>
+
+        <div class="mhd-table-pager-group">
+            <span class="mhd-table-rows-label">@Localization.Get("RowsPerPage")</span>
+            <select value="@PageSize"
+                    @onchange="OnPageSizeChanged"
+                    class="mhd-table-select">
+                @foreach (var size in PageSizes)
+                {
+                    <option value="@size">@size</option>
+                }
+            </select>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+    [Parameter] public EventCallback<TItem> OnRowClick { get; set; }
+    [Parameter] public string TableClass { get; set; } = "min-w-full divide-y divide-gray-200 dark:divide-gray-600";
+    public const string Thead = "mhd-table-head";
+    public const string TH = "mhd-table-head-cell";
+    public const string TBody = "mhd-table-body";
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool ShowFilter { get; set; }
+    [Parameter] public bool EnablePaging { get; set; }
+    [Parameter] public bool EnableVirtualization { get; set; }
+    [Parameter] public int InitialPageSize { get; set; } = 10;
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment? FooterTemplate { get; set; }
+    [Parameter] public bool UseCurrentCultureDirection { get; set; } = true;
+    [Parameter] public string? TableAriaLabel { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string> Localization { get; set; } = new()
+    {
+        ["SearchPlaceholder"] = "Search...",
+        ["NoData"] = "No data available.",
+        ["Loading"] = "Loading",
+        ["Prev"] = "Prev",
+        ["Next"] = "Next",
+        ["Page"] = "Page",
+        ["Of"] = "of",
+        ["RowsPerPage"] = "Rows per page",
+        ["SortAsc"] = "Sort ascending",
+        ["SortDesc"] = "Sort descending",
+        ["Table"] = "Table"
+    };
+
+    [Parameter] public Func<TItem, string>? RowClassSelector { get; set; }
+    [Parameter] public Func<TItem, ColumnDefinition<TItem>, string>? CellClassSelector { get; set; }
+    [Parameter] public Func<TItem, object?>? RowKeySelector { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public List<int> PageSizes { get; set; } = new() { 10, 25, 50 };
+
+    private string filterText = string.Empty;
+    private bool _sortAscending = true;
+    private ColumnDefinition<TItem>? _currentSortColumn;
+    private int _currentPage = 1;
+    private int PageSize;
+
+    private List<TItem> _filteredAndSorted = new();
+    private List<TItem> _pagedItems = new();
+    private List<ColumnDefinition<TItem>> _visibleColumns = new();
+
+    internal List<ColumnDefinition<TItem>> Columns { get; set; } = new();
+
+    private string EffectiveDirection => LocaliztionExtensions.GetDirection(UseCurrentCultureDirection);
+    private string EffectiveAriaLabel => TableAriaLabel ?? Localization.Get("Table");
+
+    protected override void OnInitialized()
+    {
+        PageSize = InitialPageSize;
+    }
+
+    protected override void OnParametersSet()
+    {
+        RebuildView();
+    }
+
+    internal void RegisterColumn(ColumnDefinition<TItem> column)
+    {
+        column.SortKeySelector ??= column.ValueSelector;
+        Columns.Add(column);
+        RebuildView();
+    }
+
+    private void OnFilterChanged(ChangeEventArgs e)
+    {
+        filterText = e.Value?.ToString() ?? string.Empty;
+        _currentPage = 1;
+        RebuildView();
+    }
+
+    private void ToggleSort(ColumnDefinition<TItem> col)
+    {
+        if (!col.Sortable || col.SortKeySelector == null)
+            return;
+
+        if (_currentSortColumn == col)
+            _sortAscending = !_sortAscending;
+        else
+        {
+            _currentSortColumn = col;
+            _sortAscending = true;
+        }
+
+        RebuildView();
+    }
+
+    private void RebuildView()
+    {
+        _visibleColumns = Columns
+            .Where(c => c.Visible)
+            .OrderBy(c => c.Order)
+            .ToList();
+
+        var query = Items ?? Enumerable.Empty<TItem>();
+
+        if (!string.IsNullOrWhiteSpace(filterText))
+        {
+            var needle = filterText.Trim();
+            var searchableColumns = _visibleColumns.Where(c => c.Searchable && c.ValueSelector != null).ToList();
+
+            if (searchableColumns.Any())
+            {
+                query = query.Where(item =>
+                    searchableColumns.Any(col =>
+                        col.ValueSelector?.Invoke(item)?.ToString()?.Contains(needle, StringComparison.OrdinalIgnoreCase) == true));
+            }
+        }
+
+        if (_currentSortColumn?.SortKeySelector != null)
+        {
+            query = _sortAscending
+                ? query.OrderBy(_currentSortColumn.SortKeySelector)
+                : query.OrderByDescending(_currentSortColumn.SortKeySelector);
+        }
+
+        _filteredAndSorted = query.ToList();
+
+        if (!EnablePaging || EnableVirtualization)
+        {
+            _pagedItems = _filteredAndSorted;
+            return;
+        }
+
+        var totalPages = TotalPages;
+        _currentPage = Math.Clamp(_currentPage, 1, Math.Max(1, totalPages));
+
+        _pagedItems = _filteredAndSorted
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var newSize) && newSize > 0)
+        {
+            PageSize = newSize;
+            _currentPage = 1;
+            RebuildView();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private int TotalPages
+    {
+        get
+        {
+            if (_filteredAndSorted.Count == 0)
+                return 1;
+
+            return (int)Math.Ceiling(_filteredAndSorted.Count / (double)Math.Max(PageSize, 1));
+        }
+    }
+
+    private void PrevPage()
+    {
+        if (_currentPage <= 1)
+            return;
+
+        _currentPage--;
+        RebuildView();
+    }
+
+    private void NextPage()
+    {
+        if (_currentPage >= TotalPages)
+            return;
+
+        _currentPage++;
+        RebuildView();
+    }
+
+    private string GetAriaSort(ColumnDefinition<TItem> col)
+    {
+        if (!col.Sortable)
+            return "none";
+
+        if (_currentSortColumn != col)
+            return "none";
+
+        return _sortAscending ? "ascending" : "descending";
+    }
+
+    private string GetSortAriaLabel(ColumnDefinition<TItem> col)
+    {
+        var action = _currentSortColumn == col && _sortAscending
+            ? Localization.Get("SortDesc")
+            : Localization.Get("SortAsc");
+
+        return $"{col.Title}. {action}";
+    }
+
+    private object? GetRowKey(TItem item) => RowKeySelector?.Invoke(item) ?? item;
+
+    private string GetRowClass(TItem item)
+        => RowClassSelector?.Invoke(item)
+           ?? "mhd-table-row";
+
+    private string GetCellClass(TItem item, ColumnDefinition<TItem> col)
+    {
+        var byParam = CellClassSelector?.Invoke(item, col);
+        if (!string.IsNullOrWhiteSpace(byParam))
+            return byParam!;
+
+        if (!string.IsNullOrWhiteSpace(col.CellClass))
+            return col.CellClass!;
+
+        return "mhd-table-cell";
+    }
+
+    public class ColumnDefinition<T>
+    {
+        public string? Title { get; set; }
+        public Func<T, object?>? ValueSelector { get; set; }
+        public RenderFragment<T>? Template { get; set; }
+        public bool Sortable { get; set; }
+        public Func<T, object?>? SortKeySelector { get; set; }
+        public bool Visible { get; set; } = true;
+        public bool Searchable { get; set; } = true;
+        public int Order { get; set; } = int.MaxValue;
+        public string? HeaderClass { get; set; }
+        public string? CellClass { get; set; }
+    }
+}

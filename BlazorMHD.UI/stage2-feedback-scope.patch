@@ -1,0 +1,1152 @@
+--- /mnt/data/blazormhd_unz/BlazorMHD/BlazorMHD.UI/MHD.razor	2026-02-25 15:54:28.000000000 +0000
++++ /mnt/data/blazormhd/BlazorMHD/BlazorMHD.UI/MHD.razor	2026-04-13 10:57:09.236157467 +0000
+@@ -1,11 +1,17 @@
+-@using BlazorMHD.UI.Components.Feedback.Dialog
+-@using BlazorMHD.UI.Components.Feedback.Loading
+-@using BlazorMHD.UI.Components.Feedback.MessageBox
+-@using BlazorMHD.UI.Components.Feedback.Toast
+-
+-<div class="mhd-scope" dir="auto">
+-    <MhdMessageBox />
+-    <MhdToastContainer />
+-    <MhdLoadingOverlay />
+-    <MhdDialog />
+-</div>
++@using BlazorMHD.UI.Components.Feedback.Dialog
++@using BlazorMHD.UI.Components.Feedback.Loading
++@using BlazorMHD.UI.Components.Feedback.MessageBox
++@using BlazorMHD.UI.Components.Feedback.Toast
++
++<CascadingValue Name="MhdTheme" Value="ThemeMode" IsFixed="true">
++    <div data-mhd-theme="@ThemeMode" dir="auto">
++        <MhdMessageBox />
++        <MhdToastContainer />
++        <MhdLoadingOverlay />
++        <MhdDialog />
++    </div>
++</CascadingValue>
++
++@code {
++    [Parameter] public string ThemeMode { get; set; } = "light";
++}
+--- /mnt/data/blazormhd_unz/BlazorMHD/BlazorMHD.UI/tailwind.config.js	2026-02-25 15:54:28.000000000 +0000
++++ /mnt/data/blazormhd/BlazorMHD/BlazorMHD.UI/tailwind.config.js	2026-04-13 10:57:09.257481651 +0000
+@@ -1,7 +1,7 @@
+-﻿module.exports = {
+-    darkMode: "class",
+-    important: ".mhd-scope", 
+-    content: ["./**/*.{razor,cs}"],
+-    theme: { extend: {} },
+-    plugins: [],
+-};
++module.exports = {
++    darkMode: ["selector", '[data-mhd-theme="dark"]'],
++    important: ".mhd-scope",
++    content: ["./**/*.{razor,cs}"],
++    theme: { extend: {} },
++    plugins: [],
++};
+--- /mnt/data/blazormhd_unz/BlazorMHD/BlazorMHD.UI/Components/Feedback/Toast/MhdToastContainer.razor	2026-02-25 15:54:28.000000000 +0000
++++ /mnt/data/blazormhd/BlazorMHD/BlazorMHD.UI/Components/Feedback/Toast/MhdToastContainer.razor	2026-04-13 10:57:09.276001414 +0000
+@@ -1,95 +1,95 @@
+-@using BlazorMHD.UI.Core.DesignSystem
+-@using BlazorMHD.UI.Core.Services
+-@inject ToastService Toast
+-@implements IDisposable
+-
+-<div class="fixed right-4 bottom-4 z-[9999] flex flex-col gap-2 w-[20rem] pointer-events-none"
+-     aria-live="polite"
+-     aria-atomic="false">
+-
+-    @foreach (var t in Toast.GetToasts())
+-    {
+-        var totalMs = Math.Max(1, (t.ExpireAt - DateTimeOffset.UtcNow).TotalMilliseconds);
+-
+-        <div class="pointer-events-auto rounded-lg border shadow-lg overflow-hidden animate-slide-in @GetStateClass(t.State)"
+-             role="status"
+-             aria-label="Notification">
+-
+-            <div class="px-3 py-2">
+-                <div class="flex items-start gap-2">
+-                    <div class="text-sm leading-none mt-0.5" aria-hidden="true">@GetIcon(t.State)</div>
+-
+-                    <div class="flex-1 min-w-0">
+-                        <div class="text-xs font-semibold truncate">@t.Title</div>
+-                        @if (!string.IsNullOrWhiteSpace(t.Message))
+-                        {
+-                            <div class="text-[0.70rem] mt-0.5 opacity-90 break-words">@t.Message</div>
+-                        }
+-                    </div>
+-
+-                    <button type="button"
+-                            class="text-[0.75rem] opacity-70 hover:opacity-100 transition"
+-                            aria-label="Close"
+-                            @onclick="() => Toast.Dismiss(t.Id)">
+-                        ✕
+-                    </button>
+-                </div>
+-            </div>
+-
+-            <div class="h-0.5 w-full bg-black/10 dark:bg-white/10">
+-                <div class="h-full animate-toast-progress"
+-                     style="animation-duration:@($"{totalMs:0}ms"); background: currentColor; opacity:.35;"></div>
+-            </div>
+-        </div>
+-    }
+-</div>
+-
+-@code {
+-    protected override void OnInitialized()
+-    {
+-        Toast.OnChange += OnChanged;
+-    }
+-
+-    private void OnChanged()
+-        => InvokeAsync(StateHasChanged);
+-
+-    public void Dispose()
+-    {
+-        Toast.OnChange -= OnChanged;
+-    }
+-
+-    private static string GetIcon(MhdState state) => state switch
+-    {
+-        MhdState.Success => "✅",
+-        MhdState.Danger => "⛔",
+-        MhdState.Warning => "⚠️",
+-        MhdState.Info => "ℹ️",
+-        MhdState.Primary => "🔵",
+-        MhdState.Secondary => "🟣",
+-        _ => "💬"
+-    };
+-
+-    private static string GetStateClass(MhdState state) => state switch
+-    {
+-        MhdState.Success =>
+-            "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700",
+-
+-        MhdState.Danger =>
+-            "bg-red-50 text-red-900 border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700",
+-
+-        MhdState.Warning =>
+-            "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700",
+-
+-        MhdState.Info =>
+-            "bg-sky-50 text-sky-900 border-sky-200 dark:bg-sky-900/30 dark:text-sky-100 dark:border-sky-700",
+-
+-        MhdState.Primary =>
+-            "bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-700",
+-
+-        MhdState.Secondary =>
+-            "bg-violet-50 text-violet-900 border-violet-200 dark:bg-violet-900/30 dark:text-violet-100 dark:border-violet-700",
+-
+-        _ =>
+-            "bg-slate-50 text-slate-900 border-slate-200 dark:bg-slate-900/30 dark:text-slate-100 dark:border-slate-700"
+-    };
+-}
++@using BlazorMHD.UI.Core.DesignSystem
++@using BlazorMHD.UI.Core.Services
++@inject ToastService Toast
++@implements IDisposable
++
++<div class="mhd-scope fixed right-4 bottom-4 z-[9999] flex w-[20rem] flex-col gap-2 pointer-events-none"
++     aria-live="polite"
++     aria-atomic="false">
++
++    @foreach (var t in Toast.GetToasts())
++    {
++        var totalMs = Math.Max(1, (t.ExpireAt - DateTimeOffset.UtcNow).TotalMilliseconds);
++
++        <div class="pointer-events-auto overflow-hidden rounded-lg border shadow-lg animate-slide-in @GetStateClass(t.State)"
++             role="status"
++             aria-label="Notification">
++
++            <div class="px-3 py-2">
++                <div class="flex items-start gap-2">
++                    <div class="mt-0.5 text-sm leading-none" aria-hidden="true">@GetIcon(t.State)</div>
++
++                    <div class="min-w-0 flex-1">
++                        <div class="truncate text-xs font-semibold">@t.Title</div>
++                        @if (!string.IsNullOrWhiteSpace(t.Message))
++                        {
++                            <div class="mt-0.5 break-words text-[0.70rem] opacity-90">@t.Message</div>
++                        }
++                    </div>
++
++                    <button type="button"
++                            class="text-[0.75rem] opacity-70 transition hover:opacity-100"
++                            aria-label="Close"
++                            @onclick="() => Toast.Dismiss(t.Id)">
++                        ✕
++                    </button>
++                </div>
++            </div>
++
++            <div class="h-0.5 w-full bg-black/10 dark:bg-white/10">
++                <div class="h-full animate-toast-progress"
++                     style="animation-duration:@($"{totalMs:0}ms"); background: currentColor; opacity:.35;"></div>
++            </div>
++        </div>
++    }
++</div>
++
++@code {
++    protected override void OnInitialized()
++    {
++        Toast.OnChange += OnChanged;
++    }
++
++    private void OnChanged()
++        => InvokeAsync(StateHasChanged);
++
++    public void Dispose()
++    {
++        Toast.OnChange -= OnChanged;
++    }
++
++    private static string GetIcon(MhdState state) => state switch
++    {
++        MhdState.Success => "✅",
++        MhdState.Danger => "⛔",
++        MhdState.Warning => "⚠️",
++        MhdState.Info => "ℹ️",
++        MhdState.Primary => "🔵",
++        MhdState.Secondary => "🟣",
++        _ => "💬"
++    };
++
++    private static string GetStateClass(MhdState state) => state switch
++    {
++        MhdState.Success =>
++            "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700",
++
++        MhdState.Danger =>
++            "bg-red-50 text-red-900 border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700",
++
++        MhdState.Warning =>
++            "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700",
++
++        MhdState.Info =>
++            "bg-sky-50 text-sky-900 border-sky-200 dark:bg-sky-900/30 dark:text-sky-100 dark:border-sky-700",
++
++        MhdState.Primary =>
++            "bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-700",
++
++        MhdState.Secondary =>
++            "bg-violet-50 text-violet-900 border-violet-200 dark:bg-violet-900/30 dark:text-violet-100 dark:border-violet-700",
++
++        _ =>
++            "bg-slate-50 text-slate-900 border-slate-200 dark:bg-slate-900/30 dark:text-slate-100 dark:border-slate-700"
++    };
++}
+--- /mnt/data/blazormhd_unz/BlazorMHD/BlazorMHD.UI/Components/Feedback/Loading/MhdLoadingOverlay.razor	2026-02-25 15:54:28.000000000 +0000
++++ /mnt/data/blazormhd/BlazorMHD/BlazorMHD.UI/Components/Feedback/Loading/MhdLoadingOverlay.razor	2026-04-13 10:57:09.293284689 +0000
+@@ -1,32 +1,32 @@
+-@using BlazorMHD.UI.Core.Services
+-@using BlazorMHD.UI.Shared
+-@inject LoadingService Loading
+-@implements IDisposable
+-
+-@if (Loading.IsBusy)
+-{
+-    <div class="fixed inset-0 bg-black/25 flex items-center justify-center"
+-         style="z-index:9999;"
+-         role="status"
+-         aria-live="polite"
+-         aria-busy="true">
+-        <div class="px-3 py-2 rounded-md bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-sm text-xs flex items-center gap-2">
+-            <MhdLoading />
+-            <span>@Localiztion.Status_Processing ...</span>
+-        </div>
+-    </div>
+-}
+-
+-@code {
+-    protected override void OnInitialized()
+-    {
+-        Loading.OnChange += OnChanged;
+-    }
+-
+-    private void OnChanged() => InvokeAsync(StateHasChanged);
+-
+-    public void Dispose()
+-    {
+-        Loading.OnChange -= OnChanged;
+-    }
+-}
++@using BlazorMHD.UI.Core.Services
++@using BlazorMHD.UI.Shared
++@inject LoadingService Loading
++@implements IDisposable
++
++@if (Loading.IsBusy)
++{
++    <div class="mhd-scope fixed inset-0 flex items-center justify-center bg-black/25"
++         style="z-index:9999;"
++         role="status"
++         aria-live="polite"
++         aria-busy="true">
++        <div class="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
++            <MhdLoading />
++            <span>@Localiztion.Status_Processing ...</span>
++        </div>
++    </div>
++}
++
++@code {
++    protected override void OnInitialized()
++    {
++        Loading.OnChange += OnChanged;
++    }
++
++    private void OnChanged() => InvokeAsync(StateHasChanged);
++
++    public void Dispose()
++    {
++        Loading.OnChange -= OnChanged;
++    }
++}
+--- /mnt/data/blazormhd_unz/BlazorMHD/BlazorMHD.UI/Components/Feedback/MessageBox/MhdMessageBox.razor	2026-02-25 15:54:28.000000000 +0000
++++ /mnt/data/blazormhd/BlazorMHD/BlazorMHD.UI/Components/Feedback/MessageBox/MhdMessageBox.razor	2026-04-13 10:57:09.315214368 +0000
+@@ -1,87 +1,87 @@
+-@using BlazorMHD.UI.Core.DesignSystem
+-@using BlazorMHD.UI.Core.Services
+-@inject MessageBoxService MessageBox
+-@implements IDisposable
+-
+-@if (MessageBox.Current is not null)
+-{
+-    <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-[min(92vw,34rem)]">
+-        <div class="rounded-md border shadow-sm px-3 py-2 flex items-start gap-2 @GetStateClass(MessageBox.Current.State)"
+-             role="alert"
+-             aria-live="assertive"
+-             aria-atomic="true">
+-            <span class="text-sm leading-none mt-0.5" aria-hidden="true">@GetIcon(MessageBox.Current.State)</span>
+-            <div class="text-[0.75rem] flex-1 leading-relaxed">@MessageBox.Current.Message</div>
+-
+-            <button type="button"
+-                    class="text-[0.75rem] opacity-70 hover:opacity-100 transition"
+-                    aria-label="Close"
+-                    @onclick="() => MessageBox.Clear()">
+-                ✕
+-            </button>
+-        </div>
+-    </div>
+-}
+-
+-@code {
+-    private System.Timers.Timer? _timer;
+-
+-    protected override void OnInitialized()
+-    {
+-        MessageBox.OnChange += OnChanged;
+-
+-        _timer = new System.Timers.Timer(250);
+-        _timer.AutoReset = true;
+-        _timer.Elapsed += (_, _) => MessageBox.Tick();
+-        _timer.Start();
+-    }
+-
+-    private void OnChanged() => InvokeAsync(StateHasChanged);
+-
+-    public void Dispose()
+-    {
+-        MessageBox.OnChange -= OnChanged;
+-
+-        if (_timer is not null)
+-        {
+-            _timer.Stop();
+-            _timer.Dispose();
+-            _timer = null;
+-        }
+-    }
+-
+-    private static string GetIcon(MhdState state) => state switch
+-    {
+-        MhdState.Success => "✅",
+-        MhdState.Danger => "⛔",
+-        MhdState.Warning => "⚠️",
+-        MhdState.Info => "ℹ️",
+-        MhdState.Primary => "🔵",
+-        MhdState.Secondary => "🟣",
+-        _ => "💬"
+-    };
+-
+-    private static string GetStateClass(MhdState state) => state switch
+-    {
+-        MhdState.Success =>
+-            "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700",
+-
+-        MhdState.Danger =>
+-            "bg-red-50 text-red-900 border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700",
+-
+-        MhdState.Warning =>
+-            "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700",
+-
+-        MhdState.Info =>
+-            "bg-sky-50 text-sky-900 border-sky-200 dark:bg-sky-900/30 dark:text-sky-100 dark:border-sky-700",
+-
+-        MhdState.Primary =>
+-            "bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-700",
+-
+-        MhdState.Secondary =>
+-            "bg-violet-50 text-violet-900 border-violet-200 dark:bg-violet-900/30 dark:text-violet-100 dark:border-violet-700",
+-
+-        _ =>
+-            "bg-slate-50 text-slate-900 border-slate-200 dark:bg-slate-900/30 dark:text-slate-100 dark:border-slate-700"
+-    };
+-}
++@using BlazorMHD.UI.Core.DesignSystem
++@using BlazorMHD.UI.Core.Services
++@inject MessageBoxService MessageBox
++@implements IDisposable
++
++@if (MessageBox.Current is not null)
++{
++    <div class="mhd-scope fixed top-4 left-1/2 z-[9999] w-[min(92vw,34rem)] -translate-x-1/2">
++        <div class="flex items-start gap-2 rounded-md border px-3 py-2 shadow-sm @GetStateClass(MessageBox.Current.State)"
++             role="alert"
++             aria-live="assertive"
++             aria-atomic="true">
++            <span class="mt-0.5 text-sm leading-none" aria-hidden="true">@GetIcon(MessageBox.Current.State)</span>
++            <div class="flex-1 text-[0.75rem] leading-relaxed">@MessageBox.Current.Message</div>
++
++            <button type="button"
++                    class="text-[0.75rem] opacity-70 transition hover:opacity-100"
++                    aria-label="Close"
++                    @onclick="() => MessageBox.Clear()">
++                ✕
++            </button>
++        </div>
++    </div>
++}
++
++@code {
++    private System.Timers.Timer? _timer;
++
++    protected override void OnInitialized()
++    {
++        MessageBox.OnChange += OnChanged;
++
++        _timer = new System.Timers.Timer(250);
++        _timer.AutoReset = true;
++        _timer.Elapsed += (_, _) => MessageBox.Tick();
++        _timer.Start();
++    }
++
++    private void OnChanged() => InvokeAsync(StateHasChanged);
++
++    public void Dispose()
++    {
++        MessageBox.OnChange -= OnChanged;
++
++        if (_timer is not null)
++        {
++            _timer.Stop();
++            _timer.Dispose();
++            _timer = null;
++        }
++    }
++
++    private static string GetIcon(MhdState state) => state switch
++    {
++        MhdState.Success => "✅",
++        MhdState.Danger => "⛔",
++        MhdState.Warning => "⚠️",
++        MhdState.Info => "ℹ️",
++        MhdState.Primary => "🔵",
++        MhdState.Secondary => "🟣",
++        _ => "💬"
++    };
++
++    private static string GetStateClass(MhdState state) => state switch
++    {
++        MhdState.Success =>
++            "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-100 dark:border-emerald-700",
++
++        MhdState.Danger =>
++            "bg-red-50 text-red-900 border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-700",
++
++        MhdState.Warning =>
++            "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-100 dark:border-amber-700",
++
++        MhdState.Info =>
++            "bg-sky-50 text-sky-900 border-sky-200 dark:bg-sky-900/30 dark:text-sky-100 dark:border-sky-700",
++
++        MhdState.Primary =>
++            "bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-900/30 dark:text-blue-100 dark:border-blue-700",
++
++        MhdState.Secondary =>
++            "bg-violet-50 text-violet-900 border-violet-200 dark:bg-violet-900/30 dark:text-violet-100 dark:border-violet-700",
++
++        _ =>
++            "bg-slate-50 text-slate-900 border-slate-200 dark:bg-slate-900/30 dark:text-slate-100 dark:border-slate-700"
++    };
++}
+--- /mnt/data/blazormhd_unz/BlazorMHD/BlazorMHD.UI/Components/Feedback/Dialog/MhdDialog.razor	2026-04-09 15:24:56.000000000 +0000
++++ /mnt/data/blazormhd/BlazorMHD/BlazorMHD.UI/Components/Feedback/Dialog/MhdDialog.razor	2026-04-13 10:57:32.094625475 +0000
+@@ -1,242 +1,237 @@
+-@using System.Globalization
+-@using BlazorMHD.UI.Core.DesignSystem
+-@using BlazorMHD.UI.Core.Services
+-@using Microsoft.AspNetCore.Components.Web
+-@inject DialogService DialogService
+-@inject IDesignSystemService Design
+-@implements IDisposable
+-
+-@if (_dialogs.Count > 0)
+-{
+-    @for (var i = 0; i < _dialogs.Count; i++)
+-    {
+-        var model = _dialogs[i];
+-        var z = 1000 + i;
+-
+-        <div class="fixed inset-0 z-50 dialog-overlay-animate-in overflow-hidden overscroll-none p-3 sm:p-6"
+-             style="@GetOverlayStyle(model, z)"
+-             @onmousedown="(e => OnOverlayMouseDown(e, model))"
+-             @onmousemove="OnMouseMove"
+-             @onmouseup="OnMouseUp"
+-             @onmouseleave="OnMouseUp">
+-
+-            <div class="flex h-full w-full items-center justify-center">
+-                <div class="@GetDialogClass(model) dialog-animate-in"
+-                     role="dialog"
+-                     aria-modal="true"
+-                     aria-labelledby="@GetTitleId(model)"
+-                     aria-describedby="@GetDescriptionId(model)"
+-                     tabindex="0"
+-                     style="@($"transform: translate({model.OffsetX}px, {model.OffsetY}px);")"
+-                     @onclick:stopPropagation="true"
+-                     @onmousedown:stopPropagation="true"
+-                     @onkeydown="(e => OnDialogKeyDown(e, model))">
+-
+-                    <div class="@GetHeaderClass(model)"
+-                         @onmousedown="(e => OnHeaderMouseDown(model, e))"
+-                         title="Drag dialog">
+-                        <div class="flex min-w-0 items-start gap-2">
+-                            @if (!string.IsNullOrWhiteSpace(model.Icon))
+-                            {
+-                                <span class="mt-0.5 text-sm" aria-hidden="true">@((MarkupString)model.Icon!)</span>
+-                            }
+-
+-                            <div class="min-w-0">
+-                                <h3 id="@GetTitleId(model)" class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+-                                    @model.Title
+-                                </h3>
+-
+-                                @if (!string.IsNullOrWhiteSpace(model.Description))
+-                                {
+-                                    <p id="@GetDescriptionId(model)" class="mt-0.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+-                                        @model.Description
+-                                    </p>
+-                                }
+-                            </div>
+-                        </div>
+-
+-                        <button type="button"
+-                                class="ml-2 text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-slate-100"
+-                                aria-label="Close"
+-                                @onclick="() => DialogService.CloseAsync(model)">
+-                            ✕
+-                        </button>
+-                    </div>
+-
+-                    <div class="mhd-dialog-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 text-sm text-slate-700 dark:text-slate-200">
+-                        @if (model.Content is not null)
+-                        {
+-                            @model.Content
+-                        }
+-                    </div>
+-
+-                    @if (model.Buttons?.Any() == true)
+-                    {
+-                        <div class="flex items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-900">
+-                            @foreach (var btn in model.Buttons)
+-                            {
+-                                if (string.Equals(btn.Type, "submit", StringComparison.OrdinalIgnoreCase))
+-                                {
+-                                    <button type="submit"
+-                                            form="@btn.FormId"
+-                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)">
+-                                        @btn.Text
+-                                    </button>
+-                                }
+-                                else
+-                                {
+-                                    <button type="button"
+-                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)"
+-                                            @onclick="() => OnButtonClick(model, btn)">
+-                                        @btn.Text
+-                                    </button>
+-                                }
+-                            }
+-                        </div>
+-                    }
+-                </div>
+-            </div>
+-        </div>
+-    }
+-}
+-
+-@code {
+-    private IReadOnlyList<DialogModel> _dialogs = Array.Empty<DialogModel>();
+-
+-    private bool _isDragging;
+-    private DialogModel? _dragDialog;
+-    private double _startMouseX;
+-    private double _startMouseY;
+-    private double _startOffsetX;
+-    private double _startOffsetY;
+-
+-    protected override void OnInitialized()
+-    {
+-        DialogService.OnChange += OnDialogChanged;
+-        _dialogs = DialogService.Dialogs;
+-    }
+-
+-    private void OnDialogChanged()
+-    {
+-        _dialogs = DialogService.Dialogs;
+-        _ = InvokeAsync(StateHasChanged);
+-    }
+-
+-    private async Task OnOverlayMouseDown(MouseEventArgs e, DialogModel model)
+-    {
+-        if (e.Button != 0)
+-            return;
+-
+-        if (!model.CloseOnOverlayClick)
+-            return;
+-
+-        if (_isDragging)
+-            return;
+-
+-        await DialogService.CloseAsync(model);
+-    }
+-
+-    private async Task OnButtonClick(DialogModel model, DialogButtonModel btn)
+-    {
+-        if (btn.OnClick.HasValue)
+-            await btn.OnClick.Value.InvokeAsync();
+-
+-        if (btn.AutoClose)
+-            await DialogService.CloseAsync(model);
+-    }
+-
+-    private void OnHeaderMouseDown(DialogModel model, MouseEventArgs e)
+-    {
+-        if (!model.IsDraggable)
+-            return;
+-
+-        if (e.Button != 0)
+-            return;
+-
+-        _isDragging = true;
+-        _dragDialog = model;
+-        _startMouseX = e.ClientX;
+-        _startMouseY = e.ClientY;
+-        _startOffsetX = model.OffsetX;
+-        _startOffsetY = model.OffsetY;
+-    }
+-
+-    private void OnMouseMove(MouseEventArgs e)
+-    {
+-        if (!_isDragging || _dragDialog is null)
+-            return;
+-
+-        var dx = e.ClientX - _startMouseX;
+-        var dy = e.ClientY - _startMouseY;
+-
+-        _dragDialog.OffsetX = _startOffsetX + dx;
+-        _dragDialog.OffsetY = _startOffsetY + dy;
+-
+-        StateHasChanged();
+-    }
+-
+-    private void OnMouseUp(MouseEventArgs _)
+-    {
+-        _isDragging = false;
+-        _dragDialog = null;
+-    }
+-
+-    private async Task OnDialogKeyDown(KeyboardEventArgs e, DialogModel model)
+-    {
+-        // Keep keyboard handling minimal so arrow keys continue to work normally
+-        // inside inputs, textareas, and other editable controls.
+-        if (e.Key == "Escape")
+-        {
+-            await DialogService.CloseAsync(model);
+-        }
+-    }
+-
+-    private string GetOverlayStyle(DialogModel model, int z)
+-    {
+-        if (!model.UseOverlay)
+-            return $"z-index:{z}; background: transparent;";
+-
+-        var opacity = Math.Clamp(model.OverlayOpacity, 0d, 1d);
+-        return $"z-index:{z}; background-color: rgba(0, 0, 0, {opacity.ToString(CultureInfo.InvariantCulture)});";
+-    }
+-
+-    private string GetDialogClass(DialogModel model)
+-    {
+-        var size = model.Size switch
+-        {
+-            DialogSize.Small => "w-[24rem] max-h-[calc(100dvh-2rem)]",
+-            DialogSize.Medium => "w-[32rem] max-h-[calc(100dvh-2rem)]",
+-            DialogSize.Large => "w-[42rem] max-h-[calc(100dvh-2rem)]",
+-            DialogSize.ExtraLarge => "w-[64rem] max-h-[calc(100dvh-2rem)]",
+-            DialogSize.FullScreen => "h-[92dvh] max-h-[92dvh] w-[95vw]",
+-            _ => "w-[32rem] max-h-[calc(100dvh-2rem)]"
+-        };
+-
+-        return string.Join(" ",
+-        [
+-            "relative mx-auto my-2 flex min-h-0 max-w-[95vw] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl",
+-            "dark:border-slate-700 dark:bg-slate-900",
+-            size
+-        ]);
+-    }
+-
+-    private string GetHeaderClass(DialogModel model)
+-    {
+-        var dragCursor = model.IsDraggable ? "cursor-move select-none" : "cursor-default";
+-
+-        return string.Join(" ",
+-        [
+-            "flex shrink-0 items-start justify-between border-b border-slate-200 bg-white px-4 py-3",
+-            "dark:border-slate-700 dark:bg-slate-800/95",
+-            dragCursor
+-        ]);
+-    }
+-
+-    private static string GetTitleId(DialogModel model) => $"mhd-dialog-title-{model.GetHashCode()}";
+-    private static string GetDescriptionId(DialogModel model) => $"mhd-dialog-desc-{model.GetHashCode()}";
+-
+-    public void Dispose()
+-    {
+-        DialogService.OnChange -= OnDialogChanged;
+-    }
+-}
++@using System.Globalization
++@using BlazorMHD.UI.Core.DesignSystem
++@using BlazorMHD.UI.Core.Services
++@using Microsoft.AspNetCore.Components.Web
++@inject DialogService DialogService
++@inject IDesignSystemService Design
++@implements IDisposable
++
++@if (_dialogs.Count > 0)
++{
++    @for (var i = 0; i < _dialogs.Count; i++)
++    {
++        var model = _dialogs[i];
++        var z = 1000 + i;
++
++        <div class="mhd-dialog-overlay dialog-overlay-animate-in"
++             style="@GetOverlayStyle(model, z)"
++             @onmousedown="(e => OnOverlayMouseDown(e, model))"
++             @onmousemove="OnMouseMove"
++             @onmouseup="OnMouseUp"
++             @onmouseleave="OnMouseUp">
++
++            <div class="mhd-dialog-stage">
++                <div class="@GetDialogClass(model) dialog-animate-in @GetThemeClass()"
++                     role="dialog"
++                     aria-modal="true"
++                     aria-labelledby="@GetTitleId(model)"
++                     aria-describedby="@GetDescriptionId(model)"
++                     tabindex="0"
++                     style="@($"transform: translate({model.OffsetX}px, {model.OffsetY}px);")"
++                     @onclick:stopPropagation="true"
++                     @onmousedown:stopPropagation="true"
++                     @onkeydown="(e => OnDialogKeyDown(e, model))">
++
++                    <div class="@GetHeaderClass(model)"
++                         @onmousedown="(e => OnHeaderMouseDown(model, e))"
++                         title="Drag dialog">
++                        <div class="mhd-dialog-heading">
++                            @if (!string.IsNullOrWhiteSpace(model.Icon))
++                            {
++                                <span class="mhd-dialog-icon" aria-hidden="true">@((MarkupString)model.Icon!)</span>
++                            }
++
++                            <div class="mhd-dialog-heading-text">
++                                <h3 id="@GetTitleId(model)" class="mhd-dialog-title">
++                                    @model.Title
++                                </h3>
++
++                                @if (!string.IsNullOrWhiteSpace(model.Description))
++                                {
++                                    <p id="@GetDescriptionId(model)" class="mhd-dialog-description">
++                                        @model.Description
++                                    </p>
++                                }
++                            </div>
++                        </div>
++
++                        <button type="button"
++                                class="mhd-dialog-close"
++                                aria-label="Close"
++                                @onclick="() => DialogService.CloseAsync(model)">
++                            ✕
++                        </button>
++                    </div>
++
++                    <div class="mhd-dialog-body-host">
++                        @if (model.Content is not null)
++                        {
++                            @model.Content
++                        }
++                    </div>
++
++                    @if (model.Buttons?.Any() == true)
++                    {
++                        <div class="mhd-scope mhd-dialog-footer">
++                            @foreach (var btn in model.Buttons)
++                            {
++                                if (string.Equals(btn.Type, "submit", StringComparison.OrdinalIgnoreCase))
++                                {
++                                    <button type="submit"
++                                            form="@btn.FormId"
++                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)">
++                                        @btn.Text
++                                    </button>
++                                }
++                                else
++                                {
++                                    <button type="button"
++                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)"
++                                            @onclick="() => OnButtonClick(model, btn)">
++                                        @btn.Text
++                                    </button>
++                                }
++                            }
++                        </div>
++                    }
++                </div>
++            </div>
++        </div>
++    }
++}
++
++@code {
++    [CascadingParameter(Name = "MhdTheme")]
++    public string? ThemeMode { get; set; }
++
++    private IReadOnlyList<DialogModel> _dialogs = Array.Empty<DialogModel>();
++
++    private bool _isDragging;
++    private DialogModel? _dragDialog;
++    private double _startMouseX;
++    private double _startMouseY;
++    private double _startOffsetX;
++    private double _startOffsetY;
++
++    protected override void OnInitialized()
++    {
++        DialogService.OnChange += OnDialogChanged;
++        _dialogs = DialogService.Dialogs;
++    }
++
++    private void OnDialogChanged()
++    {
++        _dialogs = DialogService.Dialogs;
++        _ = InvokeAsync(StateHasChanged);
++    }
++
++    private async Task OnOverlayMouseDown(MouseEventArgs e, DialogModel model)
++    {
++        if (e.Button != 0)
++            return;
++
++        if (!model.CloseOnOverlayClick)
++            return;
++
++        if (_isDragging)
++            return;
++
++        await DialogService.CloseAsync(model);
++    }
++
++    private async Task OnButtonClick(DialogModel model, DialogButtonModel btn)
++    {
++        if (btn.OnClick.HasValue)
++            await btn.OnClick.Value.InvokeAsync();
++
++        if (btn.AutoClose)
++            await DialogService.CloseAsync(model);
++    }
++
++    private void OnHeaderMouseDown(DialogModel model, MouseEventArgs e)
++    {
++        if (!model.IsDraggable)
++            return;
++
++        if (e.Button != 0)
++            return;
++
++        _isDragging = true;
++        _dragDialog = model;
++        _startMouseX = e.ClientX;
++        _startMouseY = e.ClientY;
++        _startOffsetX = model.OffsetX;
++        _startOffsetY = model.OffsetY;
++    }
++
++    private void OnMouseMove(MouseEventArgs e)
++    {
++        if (!_isDragging || _dragDialog is null)
++            return;
++
++        var dx = e.ClientX - _startMouseX;
++        var dy = e.ClientY - _startMouseY;
++
++        _dragDialog.OffsetX = _startOffsetX + dx;
++        _dragDialog.OffsetY = _startOffsetY + dy;
++
++        StateHasChanged();
++    }
++
++    private void OnMouseUp(MouseEventArgs _)
++    {
++        _isDragging = false;
++        _dragDialog = null;
++    }
++
++    private async Task OnDialogKeyDown(KeyboardEventArgs e, DialogModel model)
++    {
++        if (e.Key == "Escape")
++        {
++            await DialogService.CloseAsync(model);
++        }
++    }
++
++    private string GetOverlayStyle(DialogModel model, int z)
++    {
++        if (!model.UseOverlay)
++            return $"z-index:{z}; background: transparent;";
++
++        var opacity = Math.Clamp(model.OverlayOpacity, 0d, 1d);
++        return $"z-index:{z}; background-color: rgba(0, 0, 0, {opacity.ToString(CultureInfo.InvariantCulture)});";
++    }
++
++    private string GetDialogClass(DialogModel model)
++    {
++        var size = model.Size switch
++        {
++            DialogSize.Small => "mhd-dialog-size-sm",
++            DialogSize.Medium => "mhd-dialog-size-md",
++            DialogSize.Large => "mhd-dialog-size-lg",
++            DialogSize.ExtraLarge => "mhd-dialog-size-xl",
++            DialogSize.FullScreen => "mhd-dialog-size-full",
++            _ => "mhd-dialog-size-md"
++        };
++
++        return $"mhd-dialog-panel {size}";
++    }
++
++    private string GetThemeClass()
++        => string.Equals(ThemeMode, "dark", StringComparison.OrdinalIgnoreCase)
++            ? "mhd-dialog-theme-dark"
++            : "mhd-dialog-theme-light";
++
++    private static string GetHeaderClass(DialogModel model)
++        => model.IsDraggable ? "mhd-dialog-header" : "mhd-dialog-header mhd-dialog-header-static";
++
++    private static string GetTitleId(DialogModel model)
++        => $"mhd-dialog-title-{model.Id}";
++
++    private static string GetDescriptionId(DialogModel model)
++        => $"mhd-dialog-desc-{model.Id}";
++
++    public void Dispose()
++    {
++        DialogService.OnChange -= OnDialogChanged;
++    }
++}
+--- /mnt/data/blazormhd_unz/BlazorMHD/BlazorMHD.UI/Components/Feedback/Dialog/MhdDialog.razor.css	2026-04-09 15:24:58.000000000 +0000
++++ /mnt/data/blazormhd/BlazorMHD/BlazorMHD.UI/Components/Feedback/Dialog/MhdDialog.razor.css	2026-04-13 10:57:09.361250196 +0000
+@@ -1,13 +1,169 @@
+-.mhd-dialog-header {
+-    cursor: move;
+-    user-select: none;
+-}
+-
+-    .mhd-dialog-header button {
+-        cursor: pointer;
+-    }
+-
+-.mhd-dialog-body {
+-    scrollbar-gutter: stable;
+-    overscroll-behavior: contain;
+-}
++.mhd-dialog-overlay {
++    position: fixed;
++    inset: 0;
++    overflow: hidden;
++    overscroll-behavior: none;
++    padding: 0.75rem;
++}
++
++@media (min-width: 640px) {
++    .mhd-dialog-overlay {
++        padding: 1.5rem;
++    }
++}
++
++.mhd-dialog-stage {
++    display: flex;
++    height: 100%;
++    width: 100%;
++    align-items: center;
++    justify-content: center;
++}
++
++.mhd-dialog-panel {
++    position: relative;
++    margin: 0.5rem auto;
++    display: flex;
++    min-height: 0;
++    max-width: 95vw;
++    flex-direction: column;
++    overflow: hidden;
++    border: 1px solid #e2e8f0;
++    border-radius: 0.75rem;
++    background: #ffffff;
++    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.12);
++}
++
++.mhd-dialog-theme-dark.mhd-dialog-panel {
++    border-color: #334155;
++    background: #0f172a;
++}
++
++.mhd-dialog-size-sm {
++    width: 24rem;
++    max-height: calc(100dvh - 2rem);
++}
++
++.mhd-dialog-size-md {
++    width: 32rem;
++    max-height: calc(100dvh - 2rem);
++}
++
++.mhd-dialog-size-lg {
++    width: 42rem;
++    max-height: calc(100dvh - 2rem);
++}
++
++.mhd-dialog-size-xl {
++    width: 64rem;
++    max-height: calc(100dvh - 2rem);
++}
++
++.mhd-dialog-size-full {
++    width: 95vw;
++    height: 92dvh;
++    max-height: 92dvh;
++}
++
++.mhd-dialog-header {
++    display: flex;
++    align-items: flex-start;
++    justify-content: space-between;
++    gap: 0.75rem;
++    border-bottom: 1px solid #e2e8f0;
++    padding: 1rem 1rem 0.75rem;
++    cursor: move;
++    user-select: none;
++}
++
++.mhd-dialog-theme-dark .mhd-dialog-header {
++    border-bottom-color: #334155;
++}
++
++.mhd-dialog-header-static {
++    cursor: default;
++}
++
++.mhd-dialog-heading {
++    display: flex;
++    min-width: 0;
++    align-items: flex-start;
++    gap: 0.5rem;
++}
++
++.mhd-dialog-icon {
++    margin-top: 0.125rem;
++    font-size: 0.875rem;
++}
++
++.mhd-dialog-heading-text {
++    min-width: 0;
++}
++
++.mhd-dialog-title {
++    margin: 0;
++    overflow: hidden;
++    text-overflow: ellipsis;
++    white-space: nowrap;
++    font-size: 0.875rem;
++    font-weight: 600;
++    color: #0f172a;
++}
++
++.mhd-dialog-theme-dark .mhd-dialog-title {
++    color: #f8fafc;
++}
++
++.mhd-dialog-description {
++    margin: 0.125rem 0 0;
++    font-size: 0.75rem;
++    line-height: 1.5;
++    color: #64748b;
++}
++
++.mhd-dialog-theme-dark .mhd-dialog-description {
++    color: #94a3b8;
++}
++
++.mhd-dialog-close {
++    margin-left: 0.5rem;
++    border: 0;
++    background: transparent;
++    color: #94a3b8;
++    cursor: pointer;
++    font-size: 1rem;
++    line-height: 1;
++    transition: color 150ms ease-in-out;
++}
++
++.mhd-dialog-close:hover {
++    color: #0f172a;
++}
++
++.mhd-dialog-theme-dark .mhd-dialog-close:hover {
++    color: #f8fafc;
++}
++
++.mhd-dialog-body-host {
++    min-height: 0;
++    flex: 1 1 auto;
++    overflow-y: auto;
++    overscroll-behavior: contain;
++    scrollbar-gutter: stable;
++    padding: 0.75rem 1rem;
++}
++
++.mhd-dialog-footer {
++    display: flex;
++    align-items: center;
++    justify-content: flex-end;
++    gap: 0.5rem;
++    border-top: 1px solid #e2e8f0;
++    background: #ffffff;
++    padding: 0.75rem 1rem;
++}
++
++.mhd-dialog-theme-dark .mhd-dialog-footer {
++    border-top-color: #334155;
++    background: #0f172a;
++}

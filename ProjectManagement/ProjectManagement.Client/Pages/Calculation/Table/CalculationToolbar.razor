@@ -75,10 +75,17 @@
 
     @* <CalculationDisplayOptions /> *@
 
-    <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
-          @onclick="TableCoordinator.ToggleOH">
-        @(Calc.OHFactors ? "OH" : CalcResource.netCal)
-    </span>
+    <div class="inline-flex min-w-0 items-center gap-1 rounded px-1 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
+        <select class="min-w-[5rem] max-w-[10rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none dark:bg-transparent"
+                title="@FactorDisplayTitle"
+                aria-label="@FactorDisplayTitle"
+                value="@SelectedFactorDisplayValue"
+                @onchange="OnFactorDisplayChanged">
+            <option value="@((int)CalculationFactorDisplayMode.NetCal)">@CalcResource.netCal</option>
+            <option value="@((int)CalculationFactorDisplayMode.OH)">OH</option>
+            <option value="@((int)CalculationFactorDisplayMode.All)">@($"{CalcResource.netCal} + OH")</option>
+        </select>
+    </div>
 
     <span class="inline-flex items-center rounded text-slate-700 hover:bg-slate-100 cursor-pointer dark:text-slate-200 dark:hover:bg-slate-800"
           title="@CalcResource.quantity"

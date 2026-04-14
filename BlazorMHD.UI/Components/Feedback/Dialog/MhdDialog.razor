@@ -1,0 +1,260 @@
+@using System.Globalization
+@using BlazorMHD.UI.Core.DesignSystem
+@using BlazorMHD.UI.Core.Services
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@inject DialogService DialogService
+@inject IDesignSystemService Design
+@inject IJSRuntime JS
+@implements IDisposable
+
+@if (_dialogs.Count > 0)
+{
+    @for (var i = 0; i < _dialogs.Count; i++)
+    {
+        var model = _dialogs[i];
+        var z = 1000 + i;
+
+        <div class="mhd-dialog-overlay"
+             style="@GetOverlayStyle(model, z)"
+             @onmousedown="(e => OnOverlayMouseDown(e, model))">
+
+            <div class="mhd-dialog-center">
+                <div class="@GetDialogClass(model)"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="@GetTitleId(model)"
+                     aria-describedby="@GetDescriptionId(model)"
+                     tabindex="0"
+                     @ref="model.SurfaceRef"
+                     style="@GetDialogStyle(model)"
+                     @onclick:stopPropagation="true"
+                     @onmousedown:stopPropagation="true"
+                     @onkeydown="(e => OnDialogKeyDown(e, model))">
+
+                    <div class="@GetHeaderClass(model)"
+                         @onmousedown="(e => OnHeaderMouseDownAsync(model, e))"
+                         title="@(model.IsDraggable ? "Drag dialog" : null)">
+                        <div class="mhd-dialog-title-wrap">
+                            @if (!string.IsNullOrWhiteSpace(model.Icon))
+                            {
+                                <span class="mt-0.5 text-sm" aria-hidden="true">@((MarkupString)model.Icon!)</span>
+                            }
+
+                            <div class="min-w-0">
+                                <h3 id="@GetTitleId(model)" class="mhd-dialog-title">
+                                    @model.Title
+                                </h3>
+
+                                @if (!string.IsNullOrWhiteSpace(model.Description))
+                                {
+                                    <p id="@GetDescriptionId(model)" class="mhd-dialog-description">
+                                        @model.Description
+                                    </p>
+                                }
+                            </div>
+                        </div>
+
+                        <button type="button"
+                                class="mhd-dialog-close"
+                                aria-label="Close"
+                                @onclick="() => DialogService.CloseAsync(model)">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="mhd-dialog-body">
+                        @if (model.Content is not null)
+                        {
+                            @model.Content
+                        }
+                    </div>
+
+                    @if (model.Buttons?.Any() == true)
+                    {
+                        <div class="mhd-scope mhd-dialog-footer">
+                            @foreach (var btn in model.Buttons)
+                            {
+                                if (string.Equals(btn.Type, "submit", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <button type="submit"
+                                            form="@btn.FormId"
+                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)">
+                                        @btn.Text
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button"
+                                            class="@Design.GetButtonClass(btn.State, btn.IsPrimary ? MhdVariant.Filled : MhdVariant.Outline, btn.Size)"
+                                            @onclick="() => OnButtonClick(model, btn)">
+                                        @btn.Text
+                                    </button>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private IReadOnlyList<DialogModel> _dialogs = Array.Empty<DialogModel>();
+
+    private bool _isDragging;
+    private DialogModel? _dragDialog;
+    private DotNetObjectReference<MhdDialog>? _dragInteropRef;
+
+    protected override void OnInitialized()
+    {
+        DialogService.OnChange += OnDialogChanged;
+        _dialogs = DialogService.Dialogs;
+    }
+
+    private void OnDialogChanged()
+    {
+        _dialogs = DialogService.Dialogs;
+
+        if (_dragDialog is not null && !_dialogs.Contains(_dragDialog))
+        {
+            _ = CancelDragAsync();
+            ResetDragState();
+        }
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnOverlayMouseDown(MouseEventArgs e, DialogModel model)
+    {
+        if (e.Button != 0)
+            return;
+
+        if (!model.CloseOnOverlayClick)
+            return;
+
+        if (_isDragging)
+            return;
+
+        await DialogService.CloseAsync(model);
+    }
+
+    private async Task OnButtonClick(DialogModel model, DialogButtonModel btn)
+    {
+        if (btn.OnClick.HasValue)
+            await btn.OnClick.Value.InvokeAsync();
+
+        if (btn.AutoClose)
+            await DialogService.CloseAsync(model);
+    }
+
+    private async Task OnHeaderMouseDownAsync(DialogModel model, MouseEventArgs e)
+    {
+        if (!model.IsDraggable)
+            return;
+
+        if (e.Button != 0)
+            return;
+
+        _isDragging = true;
+        _dragDialog = model;
+        _dragInteropRef ??= DotNetObjectReference.Create(this);
+
+        await JS.InvokeVoidAsync(
+            "BlazorMHDUI.dialogDrag.startDrag",
+            _dragInteropRef,
+            model.SurfaceRef,
+            e.ClientX,
+            e.ClientY);
+    }
+
+    private async Task OnDialogKeyDown(KeyboardEventArgs e, DialogModel model)
+    {
+        if (e.Key == "Escape")
+            await DialogService.CloseAsync(model);
+    }
+
+    private string GetOverlayStyle(DialogModel model, int z)
+    {
+        if (!model.UseOverlay)
+            return $"z-index:{z}; background: transparent;";
+
+        var opacity = Math.Clamp(model.OverlayOpacity, 0d, 1d);
+        return $"z-index:{z}; background-color: rgba(0, 0, 0, {opacity.ToString(CultureInfo.InvariantCulture)});";
+    }
+
+    private string GetDialogClass(DialogModel model)
+    {
+        var size = model.Size switch
+        {
+            DialogSize.Small => "w-[24rem]",
+            DialogSize.Medium => "w-[32rem]",
+            DialogSize.Large => "w-[42rem]",
+            DialogSize.ExtraLarge => "w-[64rem]",
+            DialogSize.FullScreen => "h-[calc(100dvh-5rem)] w-[95vw]",
+            _ => "w-[32rem]"
+        };
+
+        return $"mhd-dialog-surface {size}";
+    }
+
+    private static string GetDialogStyle(DialogModel model)
+    {
+        if (model.HasExplicitPosition)
+            return $"left:{model.OffsetX}px; top:{model.OffsetY}px; transform: translate3d(0, 0, 0);";
+
+        return "left:50%; top:0.5rem; transform: translateX(-50%) translate3d(0, 0, 0);";
+    }
+
+    private string GetHeaderClass(DialogModel model)
+        => model.IsDraggable ? "mhd-dialog-header" : "mhd-dialog-header mhd-dialog-header-static";
+
+    [JSInvokable]
+    public Task OnDialogDragStart(double left, double top)
+    {
+        if (_isDragging && _dragDialog is not null)
+        {
+            _dragDialog.OffsetX = left;
+            _dragDialog.OffsetY = top;
+            _dragDialog.HasExplicitPosition = true;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnDialogDragEnd(double offsetX, double offsetY)
+    {
+        if (_isDragging && _dragDialog is not null)
+        {
+            _dragDialog.OffsetX = offsetX;
+            _dragDialog.OffsetY = offsetY;
+            _dragDialog.HasExplicitPosition = true;
+        }
+
+        ResetDragState();
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task CancelDragAsync()
+        => JS.InvokeVoidAsync("BlazorMHDUI.dialogDrag.cancel").AsTask();
+
+    private void ResetDragState()
+    {
+        _isDragging = false;
+        _dragDialog = null;
+    }
+
+    private static string GetTitleId(DialogModel model) => $"{model.Id}-title";
+    private static string GetDescriptionId(DialogModel model) => $"{model.Id}-desc";
+
+    public void Dispose()
+    {
+        if (_isDragging)
+            _ = CancelDragAsync();
+
+        DialogService.OnChange -= OnDialogChanged;
+        _dragInteropRef?.Dispose();
+    }
+}

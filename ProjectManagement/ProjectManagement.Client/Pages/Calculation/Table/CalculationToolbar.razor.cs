@@ -5,6 +5,8 @@ using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles;
+using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
+using System.Globalization;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table;
 
@@ -28,6 +30,13 @@ public partial class CalculationToolbar : ComponentBase, IDisposable
     private int? CurrentTemplateId => Calc.TemplateId.GetValueOrDefault() > 0 ? Calc.TemplateId : null;
     private bool IsTemplateSelectionDisabled => IsLoadingTemplates || IsUpdatingTemplate;
     private string SelectedTemplateValue => CurrentTemplateId?.ToString() ?? string.Empty;
+    private string SelectedFactorDisplayValue => ((int)Calc.FactorDisplayMode).ToString(CultureInfo.InvariantCulture);
+    private string FactorDisplayTitle => Calc.FactorDisplayMode switch
+    {
+        CalculationFactorDisplayMode.OH => "OH",
+        CalculationFactorDisplayMode.All => $"{CalcResource.netCal} + OH",
+        _ => CalcResource.netCal
+    };
 
     protected override void OnInitialized()
     {
@@ -101,6 +110,19 @@ public partial class CalculationToolbar : ComponentBase, IDisposable
         {
             IsUpdatingTemplate = false;
         }
+    }
+
+    private void OnFactorDisplayChanged(ChangeEventArgs args)
+    {
+        if (!int.TryParse(args.Value?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var rawValue))
+            return;
+
+        var newMode = (CalculationFactorDisplayMode)rawValue;
+        if (!Enum.IsDefined(typeof(CalculationFactorDisplayMode), newMode) || Calc.FactorDisplayMode == newMode)
+            return;
+
+        Calc.FactorDisplayMode = newMode;
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
     }
 
     public void Dispose()

@@ -2,6 +2,7 @@
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList
 @using ProjectManagement.Client.Pages.Project.Storage
 
+<div class="flex h-full min-h-0 flex-col gap-1">
 @if (!HasCalculation)
 {
     <section class="calc-state-panel calc-state-panel-muted" data-testid="calculation-page-unavailable">
@@ -117,7 +118,7 @@ else
             </section>
     }
 
-        <VerticalSplitter Class="h-[80vh] border border-zinc-200 dark:border-zinc-800 rounded-2xl"
+        <VerticalSplitter Class="min-h-0 flex-1 border border-zinc-200 dark:border-zinc-800 rounded-2xl"
                       InitialPaneHeight="400"
                           InitialHeightForBottomPane="false"
                           MinTopHeight="50"
@@ -147,6 +148,5 @@ else
                 </div>
             </BottomContent>
         </VerticalSplitter>
- 
-    
 }
+</div>

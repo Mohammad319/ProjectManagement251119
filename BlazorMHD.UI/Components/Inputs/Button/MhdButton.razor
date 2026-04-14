@@ -1,0 +1,52 @@
+@using BlazorMHD.UI.Core.DesignSystem
+@using Microsoft.AspNetCore.Components.Web
+@inject IDesignSystemService Design
+
+<button @onclick="OnClick"
+        disabled="@Disabled"
+        class="@BuildClass()"
+        @attributes="FilteredAttributes">
+    @if (Icon != null)
+    {
+        <span class="mhd-btn-icon">
+            @Icon
+        </span>
+    }
+    @ChildContent
+</button>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? Icon { get; set; }
+
+    [Parameter] public MhdState State { get; set; } = MhdState.Primary;
+    [Parameter] public MhdVariant Variant { get; set; } = MhdVariant.Filled;
+    [Parameter] public MhdSize Size { get; set; } = MhdSize.Sm;
+    [Parameter] public bool FullWidth { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private IReadOnlyDictionary<string, object>? FilteredAttributes =>
+        AdditionalAttributes?
+            .Where(kv => !string.Equals(kv.Key, "class", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+    private string BuildClass()
+    {
+        var cls = Design.GetButtonClass(State, Variant, Size, FullWidth, Disabled);
+
+        if (AdditionalAttributes != null &&
+            AdditionalAttributes.TryGetValue("class", out var clsObj) &&
+            clsObj is string extra &&
+            !string.IsNullOrWhiteSpace(extra))
+        {
+            cls += " " + extra;
+        }
+
+        return cls;
+    }
+}

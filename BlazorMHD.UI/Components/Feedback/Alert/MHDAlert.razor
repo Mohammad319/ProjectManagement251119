@@ -1,0 +1,99 @@
+@using Microsoft.AspNetCore.Components
+@using System.Linq
+@using System.Collections.Generic
+
+@if (Visible && HasContent)
+{
+    <div class="@ContainerClass"
+         role="@Role"
+         aria-live="@AriaLive"
+         aria-atomic="true"
+         @attributes="AdditionalAttributes">
+
+        <div class="mhd-alert__content">
+            @if (!string.IsNullOrWhiteSpace(Title))
+            {
+                <div class="mhd-alert__title">@Title</div>
+            }
+
+            @if (ChildContent is not null)
+            {
+                <div class="@BodyClass">@ChildContent</div>
+            }
+            else if (!string.IsNullOrWhiteSpace(Message))
+            {
+                <div class="@BodyClass">@Message</div>
+            }
+        </div>
+
+        @if (Dismissible)
+        {
+            <button type="button"
+                    class="mhd-alert__close"
+                    aria-label="@CloseButtonAriaLabel"
+                    @onclick="DismissAsync">
+                <span aria-hidden="true" class="mhd-alert__close-icon">✕</span>
+                <span class="sr-only">@CloseButtonAriaLabel</span>
+            </button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public MhdState Kind { get; set; } = MhdState.Info;
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public bool Dismissible { get; set; } = false;
+    [Parameter] public bool Visible { get; set; } = true;
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    [Parameter] public bool Dense { get; set; } = false;
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string CloseButtonAriaLabel { get; set; } = "Close";
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private bool HasContent =>
+        !string.IsNullOrWhiteSpace(Title) ||
+        !string.IsNullOrWhiteSpace(Message) ||
+        ChildContent is not null;
+
+    private string Role =>
+        Kind is MhdState.Warning or MhdState.Danger ? "alert" : "status";
+
+    private string AriaLive =>
+        Kind is MhdState.Warning or MhdState.Danger ? "assertive" : "polite";
+
+    private string ToneClass => Kind switch
+    {
+        MhdState.Success => "mhd-alert--success",
+        MhdState.Warning => "mhd-alert--warning",
+        MhdState.Danger => "mhd-alert--danger",
+        _ => "mhd-alert--info"
+    };
+
+    private string ContainerClass => Join(
+        "mhd-alert",
+        Dense ? "mhd-alert--dense" : "mhd-alert--normal",
+        ToneClass,
+        Class
+    );
+
+    private string BodyClass => Dense
+        ? "mhd-alert__body mhd-alert__body--dense"
+        : "mhd-alert__body mhd-alert__body--normal";
+
+    private static string Join(params string?[] parts) =>
+        string.Join(" ", parts.Where(p => !string.IsNullOrWhiteSpace(p)));
+
+    private async Task DismissAsync()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnDismiss.InvokeAsync();
+    }
+}

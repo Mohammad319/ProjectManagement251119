@@ -1,0 +1,72 @@
+@using BlazorMHD.UI.Core.DesignSystem
+@using BlazorMHD.UI.Core.Services
+@inject MessageBoxService MessageBox
+@implements IDisposable
+
+@if (MessageBox.Current is not null)
+{
+    <div class="mhd-scope mhd-messagebox-host">
+        <div class="@GetStateClass(MessageBox.Current.State)"
+             role="alert"
+             aria-live="assertive"
+             aria-atomic="true">
+            <span class="mhd-messagebox-icon" aria-hidden="true">@GetIcon(MessageBox.Current.State)</span>
+            <div class="mhd-messagebox-body">@MessageBox.Current.Message</div>
+
+            <button type="button"
+                    class="mhd-messagebox-close"
+                    aria-label="Close"
+                    @onclick="() => MessageBox.Clear()">
+                ✕
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    private System.Timers.Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        MessageBox.OnChange += OnChanged;
+        _timer = new System.Timers.Timer(250);
+        _timer.AutoReset = true;
+        _timer.Elapsed += (_, _) => MessageBox.Tick();
+        _timer.Start();
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        MessageBox.OnChange -= OnChanged;
+        if (_timer is not null)
+        {
+            _timer.Stop();
+            _timer.Dispose();
+            _timer = null;
+        }
+    }
+
+    private static string GetIcon(MhdState state) => state switch
+    {
+        MhdState.Success => "✅",
+        MhdState.Danger => "⛔",
+        MhdState.Warning => "⚠️",
+        MhdState.Info => "ℹ️",
+        MhdState.Primary => "🔵",
+        MhdState.Secondary => "🟣",
+        _ => "💬"
+    };
+
+    private static string GetStateClass(MhdState state) => state switch
+    {
+        MhdState.Success => "mhd-messagebox-surface mhd-messagebox-tone-success",
+        MhdState.Danger => "mhd-messagebox-surface mhd-messagebox-tone-danger",
+        MhdState.Warning => "mhd-messagebox-surface mhd-messagebox-tone-warning",
+        MhdState.Info => "mhd-messagebox-surface mhd-messagebox-tone-info",
+        MhdState.Primary => "mhd-messagebox-surface mhd-messagebox-tone-primary",
+        MhdState.Secondary => "mhd-messagebox-surface mhd-messagebox-tone-secondary",
+        _ => "mhd-messagebox-surface mhd-messagebox-tone-neutral"
+    };
+}

@@ -83,7 +83,11 @@ namespace ProjectManagement.Client.Services.Calculation
             if (CurrentCalculation == null)
                 return;
 
-            CurrentCalculation.OHFactors = !CurrentCalculation.OHFactors;
+            CurrentCalculation.FactorDisplayMode =
+                CurrentCalculation.FactorDisplayMode == CalculationFactorDisplayMode.OH
+                    ? CalculationFactorDisplayMode.NetCal
+                    : CalculationFactorDisplayMode.OH;
+
             calculationService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
         }
 

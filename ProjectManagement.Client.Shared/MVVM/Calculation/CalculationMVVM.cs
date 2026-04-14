@@ -11,6 +11,13 @@ using System.Text.Json.Serialization;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
+    public enum CalculationFactorDisplayMode
+    {
+        NetCal = 0,
+        OH = 1,
+        All = 2
+    }
+
     public class ListCalculationMVVM : ListCalculationDTO
     {
         public bool IsDragOver { get; set; }
@@ -101,7 +108,35 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public bool ShowTasks { get; set; } = true;
         public bool ShowResources { get; set; } = true;
 
-        public bool OHFactors { get; set; }
+        private bool _ohFactors;
+        [JsonIgnore] private CalculationFactorDisplayMode _factorDisplayMode;
+
+        public bool OHFactors
+        {
+            get => _ohFactors;
+            set
+            {
+                _ohFactors = value;
+
+                if (_factorDisplayMode != CalculationFactorDisplayMode.All)
+                    _factorDisplayMode = value ? CalculationFactorDisplayMode.OH : CalculationFactorDisplayMode.NetCal;
+            }
+        }
+
+        [JsonIgnore]
+        public CalculationFactorDisplayMode FactorDisplayMode
+        {
+            get => _factorDisplayMode == CalculationFactorDisplayMode.All
+                ? CalculationFactorDisplayMode.All
+                : (_ohFactors ? CalculationFactorDisplayMode.OH : CalculationFactorDisplayMode.NetCal);
+            set
+            {
+                _factorDisplayMode = value;
+
+                if (value != CalculationFactorDisplayMode.All)
+                    _ohFactors = value == CalculationFactorDisplayMode.OH;
+            }
+        }
 
         public List<HourlyPriceListGroupDTO> HourlyPriceList { get; set; } = [];
         public List<OpportunityModel> Opportunities { get; set; } = [];
@@ -500,8 +535,16 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         private bool IsTaskBranchVisible(TaskListMVVM task) =>
             task.Ui.FilterVisible &&
-            task.IsOH == OHFactors &&
+            MatchesFactorDisplay(task.IsOH) &&
             (!OnlyActive || task.Active);
+
+        public bool MatchesFactorDisplay(bool isOH) =>
+            FactorDisplayMode switch
+            {
+                CalculationFactorDisplayMode.OH => isOH,
+                CalculationFactorDisplayMode.All => true,
+                _ => !isOH
+            };
 
         private void EnsureStructureFlatList()
         {

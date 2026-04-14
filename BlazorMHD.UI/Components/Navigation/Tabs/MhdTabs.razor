@@ -1,0 +1,333 @@
+@using BlazorMHD.UI.Core.Navigation
+@using Microsoft.AspNetCore.Components.Web
+@using System.Globalization
+
+<div class="@BuildRootClass()" dir="@EffectiveDirection">
+
+    @if (Mode == MhdTabMode.Horizontal)
+    {
+        <div class="mhd-tabs-horizontal-bar border-b border-slate-200 dark:border-slate-800 mb-0.5 flex items-center gap-1"
+             role="tablist"
+             aria-label="@AriaLabel"
+             aria-orientation="horizontal">
+
+            <div class="mhd-tabs-list-horizontal flex min-w-0 flex-wrap gap-1">
+                @foreach (var tab in Items)
+                {
+                    var isActive = IsActive(tab);
+
+                    <button type="button"
+                            id="@GetTabId(tab)"
+                            role="tab"
+                            aria-selected="@isActive"
+                            aria-controls="@GetPanelId(tab)"
+                            tabindex="@(isActive ? 0 : -1)"
+                            class="@BuildTabClass(tab)"
+                            @onclick="() => Activate(tab)"
+                            @onkeydown="(e => OnTabKeyDown(e, tab))">
+                        @if (!string.IsNullOrWhiteSpace(tab.Icon))
+                        {
+                            <span class="mr-1" aria-hidden="true">@tab.Icon</span>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(tab.Text))
+                        {
+                            <span class="mhd-tab-truncate truncate">@tab.Text</span>
+                        }
+                    </button>
+                }
+            </div>
+
+            @if (RightContent is not null)
+            {
+                <div class="mhd-tabs-right ml-auto flex items-center gap-1">
+                    @RightContent
+                </div>
+            }
+        </div>
+
+        @if (ActiveTab?.Content is not null)
+        {
+            <div id="@GetPanelId(ActiveTab)"
+                 role="tabpanel"
+                 aria-labelledby="@GetTabId(ActiveTab)"
+                 class="@BuildHorizontalPanelClass()">
+                @ActiveTab.Content
+            </div>
+        }
+    }
+    else
+    {
+        <div class="mhd-tabs-vertical-shell flex h-full w-full min-w-0">
+            <div class="@GetSidebarClass()"
+                 role="tablist"
+                 aria-orientation="vertical"
+                 aria-label="@AriaLabel">
+
+                @if (Collapsible)
+                {
+                    <div class="mhd-tabs-sidebar-header mb-2 flex items-center justify-between">
+                        <button type="button"
+                                class="mhd-tabs-collapse-btn"
+                                aria-label="@CollapseToggleAriaLabel"
+                                @onclick="ToggleCollapse">
+                            @(EffectiveCollapsed ? "▶" : "◀")
+                        </button>
+
+                        @if (!EffectiveCollapsed && RightContent is not null)
+                        {
+                            <div class="mhd-tabs-sidebar-right ml-2 flex-1">
+                                @RightContent
+                            </div>
+                        }
+                    </div>
+                }
+                else if (RightContent is not null)
+                {
+                    <div class="mb-2">
+                        @RightContent
+                    </div>
+                }
+
+                <div class="mhd-tabs-list-vertical flex flex-col gap-1">
+                    @foreach (var tab in Items)
+                    {
+                        var isActive = IsActive(tab);
+
+                        <button type="button"
+                                id="@GetTabId(tab)"
+                                role="tab"
+                                aria-selected="@isActive"
+                                aria-controls="@GetPanelId(tab)"
+                                tabindex="@(isActive ? 0 : -1)"
+                                class="@BuildTabClass(tab)"
+                                title="@tab.Text"
+                                @onclick="() => Activate(tab)"
+                                @onkeydown="(e => OnTabKeyDown(e, tab))">
+                            @if (!string.IsNullOrEmpty(tab.Icon))
+                            {
+                                <i class="@tab.Icon" aria-hidden="true"></i>
+                            }
+
+                            @if (!EffectiveCollapsed && !string.IsNullOrWhiteSpace(tab.Text))
+                            {
+                                <span class="mhd-tab-truncate truncate">@tab.Text</span>
+                            }
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="@GetVerticalContentClass()"
+                 role="tabpanel"
+                 id="@(ActiveTab is null ? null : GetPanelId(ActiveTab))"
+                 aria-labelledby="@(ActiveTab is null ? null : GetTabId(ActiveTab))">
+                @if (ActiveTab?.Content is not null)
+                {
+                    @ActiveTab.Content
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<TabItem> Items { get; set; } = Array.Empty<TabItem>();
+
+    [Parameter] public string? ActiveKey { get; set; }
+    [Parameter] public EventCallback<string?> ActiveKeyChanged { get; set; }
+
+    [Parameter] public RenderFragment? RightContent { get; set; }
+
+    [Parameter] public MhdSize Size { get; set; } = MhdSize.Md;
+    [Parameter] public MhdTabMode Mode { get; set; } = MhdTabMode.Horizontal;
+
+    [Parameter] public bool Collapsible { get; set; }
+    [Parameter] public bool IsCollapsed { get; set; }
+    [Parameter] public EventCallback<bool> IsCollapsedChanged { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? ContentClass { get; set; }
+    [Parameter] public string? TabClass { get; set; }
+
+    [Parameter] public string AriaLabel { get; set; } = "Tabs";
+    [Parameter] public string CollapseToggleAriaLabel { get; set; } = "Toggle sidebar";
+    [Parameter] public bool UseCurrentCultureDirection { get; set; } = true;
+
+    private TabItem? ActiveTab =>
+        Items.FirstOrDefault(t => t.Key == ActiveKey) ?? Items.FirstOrDefault();
+
+    private bool EffectiveCollapsed => Collapsible && IsCollapsed;
+
+    private string EffectiveDirection =>
+        UseCurrentCultureDirection && CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+
+    protected override void OnParametersSet()
+    {
+        if (!Items.Any())
+            return;
+
+        if (ActiveKey is null || !Items.Any(t => t.Key == ActiveKey))
+        {
+            ActiveKey = Items[0].Key;
+        }
+    }
+
+    private bool IsActive(TabItem tab) => tab.Key == ActiveKey;
+
+    private async Task Activate(TabItem tab)
+    {
+        if (tab.Key == ActiveKey)
+            return;
+
+        ActiveKey = tab.Key;
+        await ActiveKeyChanged.InvokeAsync(ActiveKey);
+    }
+
+    private async Task ToggleCollapse()
+    {
+        if (!Collapsible)
+            return;
+
+        IsCollapsed = !IsCollapsed;
+        await IsCollapsedChanged.InvokeAsync(IsCollapsed);
+    }
+
+    private async Task OnTabKeyDown(KeyboardEventArgs e, TabItem current)
+    {
+        if (!Items.Any())
+            return;
+
+        var idx = Items.ToList().FindIndex(x => x.Key == current.Key);
+        if (idx < 0)
+            return;
+
+        var rtl = EffectiveDirection == "rtl";
+
+        if (e.Key == "Home")
+        {
+            await Activate(Items[0]);
+            return;
+        }
+
+        if (e.Key == "End")
+        {
+            await Activate(Items[^1]);
+            return;
+        }
+
+        if (Mode == MhdTabMode.Horizontal)
+        {
+            if (e.Key == "ArrowRight")
+            {
+                var next = rtl ? (idx - 1 + Items.Count) % Items.Count : (idx + 1) % Items.Count;
+                await Activate(Items[next]);
+                return;
+            }
+
+            if (e.Key == "ArrowLeft")
+            {
+                var prev = rtl ? (idx + 1) % Items.Count : (idx - 1 + Items.Count) % Items.Count;
+                await Activate(Items[prev]);
+                return;
+            }
+        }
+        else
+        {
+            if (e.Key == "ArrowDown")
+            {
+                var next = (idx + 1) % Items.Count;
+                await Activate(Items[next]);
+                return;
+            }
+
+            if (e.Key == "ArrowUp")
+            {
+                var prev = (idx - 1 + Items.Count) % Items.Count;
+                await Activate(Items[prev]);
+                return;
+            }
+        }
+
+        if (e.Key is "Enter" or " ")
+        {
+            await Activate(current);
+        }
+    }
+
+    private string BuildRootClass()
+        => JoinClasses("mhd-tabs-root w-full h-full min-w-0", Class);
+
+    private string GetSidebarClass()
+    {
+        var width = EffectiveCollapsed ? "w-14" : "w-60";
+        return JoinClasses(
+            $"mhd-tabs-sidebar {(EffectiveCollapsed ? "mhd-tabs-sidebar-collapsed" : "mhd-tabs-sidebar-expanded")} {width} flex flex-col bg-gray-100 dark:bg-gray-800 p-2 overflow-auto transition-[width] duration-200 ease-in-out",
+            null);
+    }
+
+    private string GetVerticalContentClass()
+        => JoinClasses("mhd-tabs-vertical-panel flex-1 overflow-auto p-1 bg-white dark:bg-gray-950", ContentClass);
+
+    private string BuildHorizontalPanelClass()
+        => JoinClasses("mhd-tabs-horizontal-panel mt-1 rounded-md bg-white p-2 shadow dark:bg-gray-900", ContentClass);
+
+    private string BuildTabClass(TabItem tab)
+    {
+        var isActive = IsActive(tab);
+        var sizeCls = GetSizeClass();
+
+        if (Mode == MhdTabMode.Horizontal)
+        {
+            var stateCls = isActive
+                ? "mhd-tab-horizontal-active border-blue-600 text-blue-700 dark:bg-slate-900 dark:text-blue-400 bg-slate-50"
+                : "mhd-tab-horizontal-inactive border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50/50 dark:hover:bg-slate-900/40";
+
+            return JoinClasses(
+                $"mhd-tab-base mhd-tab-horizontal inline-flex items-center gap-1 rounded-t-md border-b-2 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 whitespace-nowrap {sizeCls} {stateCls}",
+                TabClass);
+        }
+
+        var verticalBaseCls = EffectiveCollapsed
+            ? "mhd-tab-vertical-collapsed flex w-full items-center justify-center rounded-md transition-colors duration-150 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            : "mhd-tab-vertical flex w-full items-center gap-2 rounded-md text-left transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
+        var stateVertical = isActive
+            ? "mhd-tab-vertical-active bg-blue-500 text-white dark:bg-blue-600"
+            : "mhd-tab-vertical-inactive bg-white text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600";
+
+        return JoinClasses(
+            $"mhd-tab-base {verticalBaseCls} {sizeCls} {stateVertical}",
+            TabClass);
+    }
+
+    private string GetSizeClass() => Size switch
+    {
+        MhdSize.Xs => "mhd-tab-size-xs px-2 py-0.5 text-[0.7rem]",
+        MhdSize.Sm => "mhd-tab-size-sm px-2.5 py-1 text-xs",
+        MhdSize.Md => "mhd-tab-size-md px-3 py-1.5 text-sm",
+        MhdSize.LG => "mhd-tab-size-lg px-3.5 py-2 text-base",
+        MhdSize.XL => "mhd-tab-size-xl px-4 py-2.5 text-lg",
+        _ => "mhd-tab-size-md px-3 py-1.5 text-sm"
+    };
+
+    private static string JoinClasses(string primary, string? secondary)
+    {
+        if (string.IsNullOrWhiteSpace(secondary))
+            return primary;
+
+        return $"{primary} {secondary}".Trim();
+    }
+
+    private static string NormalizeKey(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return "item";
+
+        var cleaned = new string(key.Where(ch => char.IsLetterOrDigit(ch) || ch == '-' || ch == '_').ToArray());
+        return string.IsNullOrWhiteSpace(cleaned) ? "item" : cleaned;
+    }
+
+    private string GetTabId(TabItem tab) => $"mhd-tab-{NormalizeKey(tab.Key)}";
+    private string GetPanelId(TabItem tab) => $"mhd-tabpanel-{NormalizeKey(tab.Key)}";
+}
