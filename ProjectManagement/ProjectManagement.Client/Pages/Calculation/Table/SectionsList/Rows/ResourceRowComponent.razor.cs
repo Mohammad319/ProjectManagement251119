@@ -33,7 +33,8 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
 
     private bool HasParameters => Resource?.Data?.Parameters?.Count > 0;
     private bool HasTimes => Resource?.Data?.Times?.Count > 0;
-    private bool HasDetails => HasParameters || HasTimes;
+    private bool HasAddOns => Resource?.Data?.AddOns?.Count > 0;
+    private bool HasDetails => HasParameters || HasTimes || HasAddOns;
     private bool CanShowDetails => CalcService.ShowResourceVariables && HasDetails;
 
     protected override void OnInitialized()

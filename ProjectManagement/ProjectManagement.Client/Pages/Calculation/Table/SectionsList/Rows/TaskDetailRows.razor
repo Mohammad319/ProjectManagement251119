@@ -1,0 +1,11 @@
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.DTO.Calculation.Template
+
+@foreach (var line in DetailLines)
+{
+    <CalculationDataRow RowStyle="@DetailRowStyle"
+                        Left="@(Left + 1)"
+                        ShowHierarchyPlaceholder="true"
+                        Cells="@(builder => RenderDetailCells(builder, line))"
+                        ValueColumns="Colmuns.Count" />
+}

@@ -55,6 +55,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string Note => Metadata.Note;
         public List<string> UpperNote => Metadata.UpperNote;
         public string QuantityParam => Metadata.QuantityParam;
+        public IReadOnlyList<TaskConversionParameter> ConversionParameters => Metadata.ConversionParameters;
+        public decimal? BaseQuantity => Metadata.BaseQuantity;
         public decimal? Quantity => Metadata.Quantity;
         public string Unit => Metadata.Unit;
         public decimal ChangeFactor1 => Metadata.ChangeFactor1;

@@ -13,3 +13,11 @@
                     Cells="_taskCells"
                     Notes="Task.Metadata?.UpperNote"
                     ValueColumns="Colmuns.Count" />
+
+@if (HasConversionParameters)
+{
+    <TaskDetailRows Task="Task"
+                    Colmuns="Colmuns"
+                    Left="Left"
+                    Color="Color" />
+}

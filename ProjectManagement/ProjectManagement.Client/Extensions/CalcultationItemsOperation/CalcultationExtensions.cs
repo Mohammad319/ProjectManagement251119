@@ -442,16 +442,40 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             {
                 meta.Quantity = null;
             }
-            else if (!string.IsNullOrEmpty(meta.QuantityParam))
-            {
-                if (qIndex.TryGetValue(meta.QuantityParam, out var param))
-                    meta.Quantity = param.Quantity;
-                else
-                    meta.QuantityParam = ConstValues.FixedQ;
-            }
             else
             {
-                meta.Quantity = meta.ChangeFactor1 * meta.ChangeFactor2 * (parentQuantity ?? 0m);
+                meta.SyncConversionFactorFromParameters();
+
+                decimal? baseQuantity = null;
+
+                if (!string.IsNullOrEmpty(meta.QuantityParam))
+                {
+                    if (string.Equals(meta.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
+                    {
+                        baseQuantity = meta.BaseQuantity ?? meta.Quantity;
+                    }
+                    else if (qIndex.TryGetValue(meta.QuantityParam, out var param))
+                    {
+                        baseQuantity = param.Quantity;
+                    }
+                    else
+                    {
+                        meta.QuantityParam = ConstValues.FixedQ;
+                        baseQuantity = meta.BaseQuantity ?? meta.Quantity;
+                    }
+                }
+                else if (parentQuantity.HasValue)
+                {
+                    baseQuantity = parentQuantity.Value;
+                }
+                else
+                {
+                    baseQuantity = meta.BaseQuantity ?? meta.Quantity;
+                }
+
+                meta.Quantity = baseQuantity.HasValue
+                    ? Math.Round(baseQuantity.Value * meta.ChangeFactor1 * meta.ChangeFactor2, 3, MidpointRounding.AwayFromZero)
+                    : null;
             }
 
             if (task.Tasks is null || task.Tasks.Count == 0)

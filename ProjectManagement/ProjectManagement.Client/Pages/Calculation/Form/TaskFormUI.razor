@@ -69,7 +69,7 @@
 
                             @if (TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ)
                             {
-                                <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="@InputClass" />
+                                <InputNumber @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
                             }
                         </div>
                     }
@@ -77,10 +77,10 @@
                     {
                         <div class="grid items-start gap-1.5 grid-cols-[7.25rem_minmax(0,1fr)]">
                             <input class="@DisabledInputClass" value="@CalcResource.fixedQ" disabled />
-                            <InputNumber @bind-Value="TaskUpdate.Metadata.Quantity" class="@InputClass" />
+                            <InputNumber @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
                         </div>
                     }
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.Quantity)" />
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.BaseQuantity)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-4 xl:col-span-3">
@@ -105,13 +105,20 @@
                         <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@InputClass" />
                         <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor1)" />
                     </div>
-
-                    <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                        <label class="@LabelClass">@CalcResource.changeFactor2 </label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
-                        <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
-                    </div>
                 }
+
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
+                    <label class="@LabelClass">@CalcResource.changeFactor2 </label>
+                    @if (TaskUpdate.Metadata.ConversionParameters.Any())
+                    {
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@DisabledInputClass" disabled />
+                    }
+                    else
+                    {
+                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
+                    }
+                    <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
+                </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["actuallyQuantity"]</label>
@@ -222,6 +229,65 @@
     }
 
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="text-[12px] font-semibold text-slate-800 dark:text-slate-100">Mängdomräkningsparametrar</div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Använd parametrar för att räkna om uppgiftens egen mängd eller en överordnad mängd, till exempel bredd, djup eller tjocklek.</div>
+                </div>
+                @if (!TaskUpdate.OnlyCodeText)
+                {
+                    <button type="button" class="@OutlineBlueButtonClass" @onclick="AddConversionParameter">Ny parameter</button>
+                }
+            </div>
+
+            @if (!TaskUpdate.OnlyCodeText)
+            {
+                @if (!TaskUpdate.Metadata.ConversionParameters.Any())
+                {
+                    <div class="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+                        Inga omräkningsparametrar ännu. Lämna listan tom om du vill skriva in Mängdomräkningsfaktor manuellt.
+                    </div>
+                }
+                else
+                {
+                    <div class="grid gap-2">
+                        @for (int i = 0; i < TaskUpdate.Metadata.ConversionParameters.Count; i++)
+                        {
+                            var idx = i;
+                            <div class="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/60 md:grid-cols-[minmax(0,1.4fr)_110px_110px_auto]">
+                                <div class="min-w-0">
+                                    <label class="@LabelClass">@CalcResource.name</label>
+                                    <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Name" class="@InputClass" />
+                                </div>
+                                <div class="min-w-0">
+                                    <label class="@LabelClass">@CalcResource.unit</label>
+                                    <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Unit" class="@InputClass" />
+                                </div>
+                                <div class="min-w-0">
+                                    <label class="@LabelClass">Värde</label>
+                                    <InputNumber @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Value"
+                                                 class="@InputClass"
+                                                 @bind-Value:after="RecalculateConversionFactor" />
+                                </div>
+                                <div class="flex items-end justify-end">
+                                    <button type="button" class="@OutlineRedButtonClass" @onclick="() => RemoveConversionParameter(idx)">Ta bort</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+                    Omräkningsparametrar används inte för kodrader.
+                </div>
+            }
+        </div>
+    </MhdCard>
+
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.note </label>
@@ -310,8 +376,63 @@
         }
 
         TaskUpdate.Metadata.QuantityParam = qp;
-        if (string.IsNullOrEmpty(qp)) TaskUpdate.Metadata.Quantity = null;
-        else if (qp != ConstValues.FixedQ) TaskUpdate.Metadata.Quantity = Calc.QuanityList?.FirstOrDefault(x => x.Name == qp)?.Quantity;
+        if (string.IsNullOrEmpty(qp))
+            TaskUpdate.Metadata.Quantity = null;
+        else if (qp != ConstValues.FixedQ)
+            TaskUpdate.Metadata.Quantity = Calc.QuanityList?.FirstOrDefault(x => x.Name == qp)?.Quantity;
+        else if (!TaskUpdate.Metadata.BaseQuantity.HasValue)
+            TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Metadata.Quantity;
+    }
+
+    private void EnsureConversionParameters()
+    {
+        TaskUpdate.Metadata.ConversionParameters ??= [];
+    }
+
+    private void EnsureBaseQuantity()
+    {
+        if (!TaskUpdate.Metadata.BaseQuantity.HasValue && TaskUpdate.Metadata.Quantity.HasValue)
+            TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Metadata.Quantity;
+    }
+
+    private void AddConversionParameter()
+    {
+        EnsureConversionParameters();
+        TaskUpdate.Metadata.ConversionParameters.Add(new TaskConversionParameter
+        {
+            Name = string.Empty,
+            Unit = string.Empty,
+            Value = 1m
+        });
+        RecalculateConversionFactor();
+    }
+
+    private void RemoveConversionParameter(int index)
+    {
+        if (TaskUpdate.Metadata.ConversionParameters is null)
+            return;
+        if (index < 0 || index >= TaskUpdate.Metadata.ConversionParameters.Count)
+            return;
+
+        TaskUpdate.Metadata.ConversionParameters.RemoveAt(index);
+        RecalculateConversionFactor();
+    }
+
+    private void RecalculateConversionFactor()
+    {
+        if (TaskUpdate.Metadata.ConversionParameters is not { Count: > 0 })
+            return;
+
+        TaskUpdate.Metadata.SyncConversionFactorFromParameters();
+    }
+
+    private static void SyncQuantityForSave(TaskPostDTO task)
+    {
+        if (task.Metadata is null)
+            return;
+
+        if (string.Equals(task.Metadata.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
+            task.Metadata.Quantity = task.Metadata.BaseQuantity;
     }
 
     protected async override Task OnInitializedAsync()
@@ -319,6 +440,9 @@
         TaskUpdate = TaskConvert.GetToPost(Task);
         TaskUpdate.OnlyCodeText = TaskUpdate.Metadata.Type == TaskType.CodeName;
         ApplyTaskFormRules(TaskUpdate);
+        EnsureConversionParameters();
+        EnsureBaseQuantity();
+        RecalculateConversionFactor();
 
         if (Task.Id == 0) PostList.Add(TaskUpdate);
         Statuses = (await Repo.Task.GetAsync()).ToList();
@@ -368,8 +492,14 @@
         {
             task.Metadata.QuantityParam = ConstValues.FixedQ;
             task.Metadata.ChangeFactor1 = 1;
-            task.Metadata.ChangeFactor2 = 1;
+            if (task.Metadata.ConversionParameters is { Count: > 0 })
+                task.Metadata.SyncConversionFactorFromParameters();
+            else
+                task.Metadata.ChangeFactor2 = 1;
         }
+
+        if (!task.Metadata.BaseQuantity.HasValue && task.Metadata.Quantity.HasValue)
+            task.Metadata.BaseQuantity = task.Metadata.Quantity;
 
         if (!ShowTaskCapInput)
             task.Metadata.Cap = null;
@@ -399,6 +529,7 @@
             if (Task.Id > 0)
             {
                 CheckTaskType(TaskUpdate);
+                SyncQuantityForSave(TaskUpdate);
                 hasSuccess = await Repo.Task.UpdateAsync(TaskUpdate, Task.Id);
             }
             else
@@ -410,6 +541,7 @@
                 foreach (var item in PostList)
                 {
                     CheckTaskType(item);
+                    SyncQuantityForSave(item);
                     item.Order = maxOrder;
                     maxOrder += 100;
                     item.Metadata.IsOH = Calc.OHFactors;

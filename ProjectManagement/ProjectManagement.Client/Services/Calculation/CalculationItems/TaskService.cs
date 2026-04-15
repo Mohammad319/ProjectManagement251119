@@ -6,6 +6,7 @@ using ProjectManagement.Client.Shared.Mapping;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Project;
 
 namespace ProjectManagement.Client.Services.Calculation.CalculationItems
@@ -24,9 +25,25 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
         {
             if (oldT.Metadata?.Quantity != newT.Metadata?.Quantity) return true;
             if (oldT.Metadata?.ChangeFactor1 != newT.Metadata?.ChangeFactor1) return true;
-            if (oldT.Metadata?.ChangeFactor2 != newT.Metadata?.ChangeFactor2) return true;
+            if (GetEffectiveChangeFactor2(oldT.Metadata) != GetEffectiveChangeFactor2(newT.Metadata)) return true;
             if (oldT.Metadata?.Cap != newT.Metadata?.Cap) return true;
             return false;
+        }
+
+        private static decimal GetEffectiveChangeFactor2(TaskMetadata? metadata)
+        {
+            if (metadata is null)
+                return 1m;
+
+            var parameters = metadata.ConversionParameters;
+            if (parameters is null || parameters.Count == 0)
+                return metadata.ChangeFactor2;
+
+            decimal product = 1m;
+            for (int i = 0; i < parameters.Count; i++)
+                product *= parameters[i].Value;
+
+            return Math.Round(product, 4, MidpointRounding.AwayFromZero);
         }
 
         public async Task ContextMenu(TaskListMVVM task)
