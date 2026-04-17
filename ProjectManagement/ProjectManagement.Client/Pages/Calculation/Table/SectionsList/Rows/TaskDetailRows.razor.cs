@@ -23,15 +23,32 @@ public partial class TaskDetailRows
     {
         get
         {
-            var parameters = Task?.Metadata?.ConversionParameters;
-            if (parameters is not { Count: > 0 })
+            var metadata = Task?.Metadata;
+            var parameters = metadata?.ConversionParameters;
+
+            if (metadata is null || parameters is not { Count: > 0 })
                 yield break;
+
+            var baseUnit = string.IsNullOrWhiteSpace(metadata.BaseUnit)
+                ? (metadata.Unit ?? string.Empty)
+                : metadata.BaseUnit;
+
+            yield return new DetailLine
+            {
+                Kind = DetailKind.BaseQuantity,
+                Name = Task?.Name ?? string.Empty,
+                QuantityText = metadata.BaseQuantity.HasValue
+                    ? FormatDecimal(metadata.BaseQuantity.Value)
+                    : string.Empty,
+                Unit = baseUnit
+            };
 
             for (int i = 0; i < parameters.Count; i++)
             {
                 var parameter = parameters[i];
                 yield return new DetailLine
                 {
+                    Kind = DetailKind.ConversionParameter,
                     Name = parameter.Name,
                     ChangeFactor2Text = FormatDecimal(parameter.Value),
                     Unit = parameter.Unit
@@ -50,25 +67,47 @@ public partial class TaskDetailRows
             builder.AddAttribute(seq++, "class", GetDetailCellClass(column.Id));
             builder.AddAttribute(seq++, "style", "background-color: inherit;");
 
-            if (column.Id == NetColumnId.Name)
+            if (line.Kind == DetailKind.BaseQuantity)
             {
-                RenderNameCell(builder, ref seq, line);
-            }
-            else if (column.Id == NetColumnId.ChangeFactor2)
-            {
-                RenderValueCell(builder, ref seq, line.ChangeFactor2Text);
-            }
-            else if (!HasChangeFactor2Column && column.Id == NetColumnId.Quantity)
-            {
-                RenderValueCell(builder, ref seq, line.ChangeFactor2Text);
-            }
-            else if (column.Id == NetColumnId.Unit)
-            {
-                RenderValueCell(builder, ref seq, line.Unit);
+                if (column.Id == NetColumnId.Name)
+                {
+                    RenderNameCell(builder, ref seq, line);
+                }
+                else if (column.Id == NetColumnId.Quantity)
+                {
+                    RenderValueCell(builder, ref seq, line.QuantityText);
+                }
+                else if (column.Id == NetColumnId.Unit)
+                {
+                    RenderValueCell(builder, ref seq, line.Unit);
+                }
+                else
+                {
+                    builder.AddMarkupContent(seq++, "&nbsp;");
+                }
             }
             else
             {
-                builder.AddMarkupContent(seq++, "&nbsp;");
+                if (column.Id == NetColumnId.Name)
+                {
+                    RenderNameCell(builder, ref seq, line);
+                }
+                else if (column.Id == NetColumnId.ChangeFactor2)
+                {
+                    RenderValueCell(builder, ref seq, line.ChangeFactor2Text);
+                }
+                else if (!HasChangeFactor2Column && column.Id == NetColumnId.Quantity)
+                {
+                    RenderValueCell(builder, ref seq, line.ChangeFactor2Text);
+                }
+                else if (column.Id == NetColumnId.Unit)
+                {
+                    RenderValueCell(builder, ref seq, line.Unit);
+                }
+                else
+                {
+                    builder.AddMarkupContent(seq++, "&nbsp;");
+                }
             }
 
             builder.CloseElement();
@@ -77,15 +116,23 @@ public partial class TaskDetailRows
 
     private static void RenderNameCell(RenderTreeBuilder builder, ref int seq, DetailLine line)
     {
+        var dotClass = line.Kind == DetailKind.BaseQuantity
+            ? "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500"
+            : "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500";
+
+        var textClass = line.Kind == DetailKind.BaseQuantity
+            ? "truncate text-[11px] font-medium text-slate-700"
+            : "truncate text-[11px] text-slate-700";
+
         builder.OpenElement(seq++, "div");
         builder.AddAttribute(seq++, "class", "flex min-w-0 items-start gap-2");
 
         builder.OpenElement(seq++, "span");
-        builder.AddAttribute(seq++, "class", "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500");
+        builder.AddAttribute(seq++, "class", dotClass);
         builder.CloseElement();
 
         builder.OpenElement(seq++, "span");
-        builder.AddAttribute(seq++, "class", "truncate text-[11px] text-slate-700");
+        builder.AddAttribute(seq++, "class", textClass);
         builder.AddContent(seq++, line.Name);
         builder.CloseElement();
 
@@ -152,9 +199,17 @@ public partial class TaskDetailRows
     private string FormatDecimal(decimal value)
         => NumericFormatHelper.Format(value, MaxFractionDigits, CultureInfo.CurrentCulture);
 
+    private enum DetailKind
+    {
+        BaseQuantity,
+        ConversionParameter
+    }
+
     private sealed class DetailLine
     {
+        public DetailKind Kind { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string? QuantityText { get; set; }
         public string? Unit { get; set; }
         public string? ChangeFactor2Text { get; set; }
     }

@@ -20,13 +20,43 @@ namespace ProjectManagement.Shared.Base.Calculation
         public decimal Value { get; set; } = 1m;
     }
 
+    public class TaskQuantityConversion
+    {
+        [MaxLength(25, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        public string BaseUnit { get; set; } = string.Empty;
+
+        public List<TaskConversionParameter> Parameters { get; set; } = [];
+    }
+
     public class TaskMetadata
     {
         [AllowNull, MaxLength(500)]
         public string Note { get; set; } = string.Empty;
         public List<string> UpperNote { get; set; } = [];
         public string QuantityParam { get; set; } = string.Empty;
-        public List<TaskConversionParameter> ConversionParameters { get; set; } = [];
+
+        // Canonical storage for conversion-related UI data.
+        public TaskQuantityConversion Conversion { get; set; } = new();
+
+        // Compatibility wrappers used by existing code paths.
+        [JsonIgnore]
+        public string BaseUnit
+        {
+            get => Conversion.BaseUnit;
+            set => Conversion.BaseUnit = value ?? string.Empty;
+        }
+
+        [JsonIgnore]
+        public List<TaskConversionParameter> ConversionParameters
+        {
+            get
+            {
+                Conversion.Parameters ??= [];
+                return Conversion.Parameters;
+            }
+            set => Conversion.Parameters = value ?? [];
+        }
+
         public decimal? BaseQuantity { get; set; }
         public decimal? Quantity { get; set; }
 
@@ -62,7 +92,9 @@ namespace ProjectManagement.Shared.Base.Calculation
         {
             WorkedQ = RoundQuantity(WorkedQ);
             BaseQuantity = BaseQuantity.HasValue ? RoundQuantity(BaseQuantity.Value) : null;
+            BaseUnit = NormalizeText(BaseUnit);
             Quantity = Quantity.HasValue ? RoundQuantity(Quantity.Value) : null;
+            Unit = NormalizeText(Unit);
             ChangeFactor1 = RoundFactor(ChangeFactor1);
             ChangeFactor2 = RoundFactor(ChangeFactor2);
 
@@ -72,13 +104,15 @@ namespace ProjectManagement.Shared.Base.Calculation
             for (int i = 0; i < ConversionParameters.Count; i++)
             {
                 var parameter = ConversionParameters[i];
+                if (parameter is null)
+                    continue;
+
                 parameter.Name = NormalizeText(parameter.Name);
                 parameter.Unit = NormalizeText(parameter.Unit);
                 parameter.Value = RoundFactor(parameter.Value);
             }
 
-            //if (!BaseQuantity.HasValue && Quantity.HasValue && string.Equals(QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
-            if (!BaseQuantity.HasValue && Quantity.HasValue && QuantityParam == "FQ")//ProjectManagement.Shared.Constant.ConstValues.FixedQ)
+            if (!BaseQuantity.HasValue && Quantity.HasValue && QuantityParam == "FQ" && ConversionParameters.Count == 0)
                 BaseQuantity = Quantity;
 
             PriceProductionDB = PriceProductionDB.HasValue ? RoundMoney(PriceProductionDB.Value) : null;
@@ -121,14 +155,18 @@ namespace ProjectManagement.Shared.Base.Calculation
                 Note = Note ?? string.Empty,
                 UpperNote = UpperNote is null ? new() : new List<string>(UpperNote),
                 QuantityParam = QuantityParam ?? string.Empty,
-                ConversionParameters = ConversionParameters is null
-                    ? []
-                    : [.. ConversionParameters.Select(p => new TaskConversionParameter
-                    {
-                        Name = p.Name,
-                        Unit = p.Unit,
-                        Value = p.Value
-                    })],
+                Conversion = new TaskQuantityConversion
+                {
+                    BaseUnit = Conversion?.BaseUnit ?? string.Empty,
+                    Parameters = Conversion?.Parameters is null
+                        ? []
+                        : [.. Conversion.Parameters.Select(p => new TaskConversionParameter
+                        {
+                            Name = p.Name,
+                            Unit = p.Unit,
+                            Value = p.Value
+                        })]
+                },
                 BaseQuantity = BaseQuantity,
                 Quantity = Quantity,
                 Unit = Unit ?? string.Empty,

@@ -2,6 +2,7 @@ using AngleSharp.Dom;
 using BlazorMHD.UI.Components.Feedback.Splitter;
 using Bunit;
 using Bunit.TestDoubles;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -328,6 +329,60 @@ public class CalculationComponentRenderTests : BunitContext
         {
             Assert.Single(cut.FindAll("tr"));
             Assert.DoesNotContain("Note A", cut.Markup);
+        });
+    }
+
+    [Fact]
+    public void TaskRowComponent_CanToggleConversionParameterRows()
+    {
+        var interactionState = new CalculationInteractionState();
+        var calcService = CreateCalculationService();
+        RegisterRowComponentServices(interactionState, calcService);
+
+        var task = new TaskListMVVM
+        {
+            Id = 8,
+            Name = "Task with variables",
+            Resources = [],
+            Tasks = []
+        };
+        task.Metadata = new()
+        {
+            IsActive = true,
+            Quantity = 12,
+            BaseQuantity = 3,
+            Unit = "m2",
+            BaseUnit = "m",
+            ConversionParameters =
+            [
+                new TaskConversionParameter
+                {
+                    Name = "Length",
+                    Unit = "m",
+                    Value = 4
+                }
+            ]
+        };
+
+        var cut = Render<TaskRowComponent>(parameters => parameters
+            .Add(x => x.Task, task)
+            .Add(x => x.ActiveParent, true)
+            .Add(x => x.Color, "#abcdef")
+            .Add(x => x.Left, 0)
+            .Add(x => x.Colmuns, CreateTestColumns())
+            .Add(x => x.OnCollapseToggle, EventCallback.Factory.Create<TaskListMVVM>(
+                this,
+                toggledTask => toggledTask.Ui.CollSpan = !toggledTask.Ui.CollSpan)));
+
+        Assert.Single(cut.FindAll("span[role='button']"));
+        Assert.Contains("Length", cut.Markup);
+
+        cut.Find("span[role='button']").Click();
+
+        cut.WaitForAssertion(() =>
+        {
+            Assert.Equal("+", cut.Find("span[role='button']").TextContent.Trim());
+            Assert.DoesNotContain("Length", cut.Markup);
         });
     }
 

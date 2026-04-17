@@ -432,11 +432,14 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
         // =========================================================
         // Task variables (DFS) - بدون LINQ
         // =========================================================
-        private static void CalcTaskVariablesRecursive(TaskListMVVM task, 
-            Dictionary<string, QuanityListDTO> qIndex, decimal? parentQuantity)
+        private static void CalcTaskVariablesRecursive(
+       TaskListMVVM task,
+       Dictionary<string, QuanityListDTO> qIndex,
+       decimal? parentQuantity)
         {
             var meta = task.Metadata;
-            if (meta is null) return;
+            if (meta is null)
+                return;
 
             if (meta.Type == TaskType.CodeName)
             {
@@ -447,34 +450,52 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 meta.SyncConversionFactorFromParameters();
 
                 decimal? baseQuantity = null;
+                var hasConversionParameters = meta.ConversionParameters is { Count: > 0 };
 
-                if (!string.IsNullOrEmpty(meta.QuantityParam))
+                if (!string.IsNullOrWhiteSpace(meta.QuantityParam))
                 {
                     if (string.Equals(meta.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase))
                     {
+                        // المهمة تعتمد على قيمة المستخدم المباشرة
                         baseQuantity = meta.BaseQuantity ?? meta.Quantity;
                     }
                     else if (qIndex.TryGetValue(meta.QuantityParam, out var param))
                     {
+                        // المهمة تعتمد على متحول كمية
                         baseQuantity = param.Quantity;
                     }
                     else
                     {
+                        // fallback
                         meta.QuantityParam = ConstValues.FixedQ;
                         baseQuantity = meta.BaseQuantity ?? meta.Quantity;
                     }
                 }
                 else if (parentQuantity.HasValue)
                 {
+                    // المهمة الابن تعتمد على كمية المهمة الأب
                     baseQuantity = parentQuantity.Value;
                 }
                 else
                 {
+                    // fallback للمهمة العليا
                     baseQuantity = meta.BaseQuantity ?? meta.Quantity;
                 }
 
+                if (hasConversionParameters)
+                {
+                    // نحفظ الكمية الأساسية كما هي قبل الحساب
+                    meta.BaseQuantity = baseQuantity;
+
+                    if (string.IsNullOrWhiteSpace(meta.BaseUnit))
+                        meta.BaseUnit = meta.Unit;
+                }
+
                 meta.Quantity = baseQuantity.HasValue
-                    ? Math.Round(baseQuantity.Value * meta.ChangeFactor1 * meta.ChangeFactor2, 3, MidpointRounding.AwayFromZero)
+                    ? Math.Round(
+                        baseQuantity.Value * meta.ChangeFactor1 * meta.ChangeFactor2,
+                        3,
+                        MidpointRounding.AwayFromZero)
                     : null;
             }
 
@@ -485,7 +506,6 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
             for (int i = 0; i < task.Tasks.Count; i++)
                 CalcTaskVariablesRecursive(task.Tasks[i], qIndex, nextParent);
         }
-
         // =========================================================
         // Resource variables - بدون LINQ
         // =========================================================

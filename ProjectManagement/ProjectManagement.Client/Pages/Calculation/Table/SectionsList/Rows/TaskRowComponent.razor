@@ -4,7 +4,7 @@
 
 <CalculationDataRow RowStyle="@RowStyle"
                     Left="Left"
-                    CanToggle="HasDescendants"
+                    CanToggle="CanToggle"
                     IsExpanded="Task.Ui.CollSpan"
                     ShowHierarchyPlaceholder="Left > 0"
                     OnClick="RowClick"
@@ -14,7 +14,7 @@
                     Notes="Task.Metadata?.UpperNote"
                     ValueColumns="Colmuns.Count" />
 
-@if (HasConversionParameters)
+@if (CanShowConversionParameters)
 {
     <TaskDetailRows Task="Task"
                     Colmuns="Colmuns"

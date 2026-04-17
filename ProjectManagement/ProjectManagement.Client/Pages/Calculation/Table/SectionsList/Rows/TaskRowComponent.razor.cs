@@ -27,6 +27,8 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     private string RowStyle => Task.Style(Color, ActiveParent, IsRowSelected);
     private bool HasDescendants => (Task.Resources?.Count ?? 0) > 0 || (Task.Tasks?.Count ?? 0) > 0;
     private bool HasConversionParameters => Task?.Metadata?.ConversionParameters?.Count > 0;
+    private bool CanToggle => HasDescendants || HasConversionParameters;
+    private bool CanShowConversionParameters => HasConversionParameters && Task.Ui.CollSpan;
 
     private void RowClick()
     {
