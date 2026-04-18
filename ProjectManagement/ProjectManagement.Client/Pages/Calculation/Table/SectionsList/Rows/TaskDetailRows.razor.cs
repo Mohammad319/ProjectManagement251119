@@ -14,9 +14,10 @@ public partial class TaskDetailRows
     [Parameter] public IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = Array.Empty<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>();
     [Parameter] public int Left { get; set; }
     [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
-    [Parameter] public string Color { get; set; } = string.Empty;
+    [Parameter] public NetColor? Colors { get; set; }
 
-    private string DetailRowStyle => BuildDetailRowStyle(Color);
+    private string BaseQuantityRowStyle => BuildDetailRowStyle(Colors?.TaskDetailBaseQuantity ?? TemplateConstBase.TaskDetailBaseQuantity);
+    private string ConversionParamRowStyle => BuildDetailRowStyle(Colors?.Task ?? TemplateConstBase.Task);
     private bool HasChangeFactor2Column => Colmuns.Any(x => x.Id == NetColumnId.ChangeFactor2);
 
     private IEnumerable<DetailLine> DetailLines
@@ -65,7 +66,7 @@ public partial class TaskDetailRows
             var column = Colmuns[i];
             builder.OpenElement(seq++, "td");
             builder.AddAttribute(seq++, "class", GetDetailCellClass(column.Id));
-            builder.AddAttribute(seq++, "style", "background-color: inherit;");
+            builder.AddAttribute(seq++, "style", GetDetailCellStyle(column.Id));
 
             if (line.Kind == DetailKind.BaseQuantity)
             {
@@ -150,10 +151,11 @@ public partial class TaskDetailRows
     private static string GetDetailCellClass(NetColumnId columnId)
     {
         const string baseClass = "px-2 py-1 text-xs align-middle";
-        return columnId == NetColumnId.Name
-            ? $"{baseClass} text-left"
-            : $"{baseClass} text-right";
+        return $"{baseClass} text-left";
     }
+
+    private static string GetDetailCellStyle(NetColumnId columnId) =>
+        "background-color: inherit; text-align: left; direction: ltr; unicode-bidi: isolate;";
 
     private static string BuildDetailRowStyle(string color)
     {

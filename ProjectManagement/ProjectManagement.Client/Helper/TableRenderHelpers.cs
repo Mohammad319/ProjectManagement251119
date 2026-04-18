@@ -31,6 +31,21 @@ namespace ProjectManagement.Client.Helper
             builder.CloseElement();
         }
 
+        public static void RenderWithTitleIndented(RenderTreeBuilder builder, string? content, int indentPx)
+        {
+            int seq = 0;
+            builder.OpenElement(seq++, "td");
+            if (indentPx > 0)
+                builder.AddAttribute(seq++, "style", $"padding-left:{indentPx}px");
+            if (!string.IsNullOrEmpty(content))
+            {
+                builder.AddAttribute(seq++, "data-pm-overflow-title", content);
+                builder.AddContent(seq++, content);
+            }
+
+            builder.CloseElement();
+        }
+
         public static void RenderTextTd(RenderTreeBuilder builder, string? value) =>
             RenderTd(builder, value);
 

@@ -416,11 +416,24 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             return false;
         }
 
-        decimal netCostQ = 0m;
         decimal totalNetCost = 0m;
         decimal priceTotally = 0m;
         decimal priceTotallyTax = 0m;
+        decimal baseCost = 0m;
+        decimal priceTotalSub = 0m;
+        decimal diff = 0m;
+        double totalCo2 = 0d;
+        decimal priceActuallyQuantity = 0m;
+        decimal priceWorkedQ = 0m;
+        decimal priceActuallyQuantityTax = 0m;
+        decimal priceWorkedQTax = 0m;
+        decimal priceTotalSubTax = 0m;
+        decimal quantitySum = 0m;
+        string? commonUnit = null;
+        bool unitMismatch = false;
         bool hasTasks = false;
+
+        var tax = Calc.Tax;
 
         for (int i = 0; i < Calc.RootTasks.Count; i++)
         {
@@ -429,23 +442,60 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
                 continue;
 
             hasTasks = true;
-            netCostQ += task.GetComputedNetCostQ();
             totalNetCost += task.GetComputedNetCostTotaly();
             priceTotally += task.GetComputedApriceTotally();
-            priceTotallyTax += task.ApriceTotallyTax(Calc.Tax);
+            priceTotallyTax += task.ApriceTotallyTax(tax);
+            baseCost += task.BaseCost ?? 0m;
+            priceTotalSub += task.PriceSubTotal;
+            diff += task.Diff;
+            totalCo2 += task.TotalCO2 ?? 0d;
+            priceActuallyQuantity += task.PriceActuallyQuantity;
+            priceWorkedQ += task.PriceWorkedQ;
+            priceActuallyQuantityTax += task.PriceActuallyQuantityTax(tax);
+            priceWorkedQTax += task.PriceWorkedQTax(tax);
+            priceTotalSubTax += task.PriceTotalSubTax(tax);
+
+            if (!unitMismatch && task.Quantity.HasValue)
+            {
+                var unit = task.Unit ?? string.Empty;
+                if (commonUnit is null)
+                    commonUnit = unit;
+                else if (commonUnit != unit)
+                    unitMismatch = true;
+
+                if (!unitMismatch)
+                    quantitySum += task.Quantity.Value;
+            }
         }
 
-        totals = new SummaryTotals(netCostQ, totalNetCost, priceTotally, priceTotallyTax);
+        var qSum = (!unitMismatch && commonUnit is not null) ? quantitySum : (decimal?)null;
+        totals = new SummaryTotals(totalNetCost, priceTotally, priceTotallyTax,
+            baseCost, priceTotalSub, diff, totalCo2,
+            priceActuallyQuantity, priceWorkedQ, priceActuallyQuantityTax, priceWorkedQTax, priceTotalSubTax,
+            qSum);
         return hasTasks;
     }
 
     private bool TryBuildSummaryTotals(IReadOnlyList<FlatItem> flatItems, out SummaryTotals totals)
     {
-        decimal netCostQ = 0m;
         decimal totalNetCost = 0m;
         decimal priceTotally = 0m;
         decimal priceTotallyTax = 0m;
+        decimal baseCost = 0m;
+        decimal priceTotalSub = 0m;
+        decimal diff = 0m;
+        double totalCo2 = 0d;
+        decimal priceActuallyQuantity = 0m;
+        decimal priceWorkedQ = 0m;
+        decimal priceActuallyQuantityTax = 0m;
+        decimal priceWorkedQTax = 0m;
+        decimal priceTotalSubTax = 0m;
+        decimal quantitySum = 0m;
+        string? commonUnit = null;
+        bool unitMismatch = false;
         bool hasTasks = false;
+
+        var tax = Calc.Tax;
 
         for (int i = 0; i < flatItems.Count; i++)
         {
@@ -455,13 +505,37 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
             var task = item.Task;
             hasTasks = true;
-            netCostQ += task.GetComputedNetCostQ();
             totalNetCost += task.GetComputedNetCostTotaly();
             priceTotally += task.GetComputedApriceTotally();
-            priceTotallyTax += task.ApriceTotallyTax(Calc.Tax);
+            priceTotallyTax += task.ApriceTotallyTax(tax);
+            baseCost += task.BaseCost ?? 0m;
+            priceTotalSub += task.PriceSubTotal;
+            diff += task.Diff;
+            totalCo2 += task.TotalCO2 ?? 0d;
+            priceActuallyQuantity += task.PriceActuallyQuantity;
+            priceWorkedQ += task.PriceWorkedQ;
+            priceActuallyQuantityTax += task.PriceActuallyQuantityTax(tax);
+            priceWorkedQTax += task.PriceWorkedQTax(tax);
+            priceTotalSubTax += task.PriceTotalSubTax(tax);
+
+            if (!unitMismatch && task.Quantity.HasValue)
+            {
+                var unit = task.Unit ?? string.Empty;
+                if (commonUnit is null)
+                    commonUnit = unit;
+                else if (commonUnit != unit)
+                    unitMismatch = true;
+
+                if (!unitMismatch)
+                    quantitySum += task.Quantity.Value;
+            }
         }
 
-        totals = new SummaryTotals(netCostQ, totalNetCost, priceTotally, priceTotallyTax);
+        var qSum = (!unitMismatch && commonUnit is not null) ? quantitySum : (decimal?)null;
+        totals = new SummaryTotals(totalNetCost, priceTotally, priceTotallyTax,
+            baseCost, priceTotalSub, diff, totalCo2,
+            priceActuallyQuantity, priceWorkedQ, priceActuallyQuantityTax, priceWorkedQTax, priceTotalSubTax,
+            qSum);
         return hasTasks;
     }
 
@@ -473,15 +547,36 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private string GetSummaryCellValue(NetColumnId columnId, SummaryTotals totals) =>
         columnId switch
         {
-            NetColumnId.NetCostQ => FormatSummaryValue(totals.NetCostQ),
             NetColumnId.TotalNetCost => FormatSummaryValue(totals.TotalNetCost),
             NetColumnId.PriceTotaly => FormatSummaryValue(totals.PriceTotally),
             NetColumnId.PriceTotallyTax => FormatSummaryValue(totals.PriceTotallyTax),
+            NetColumnId.BaseCost => FormatSummaryValue(totals.BaseCost),
+            NetColumnId.PriceTotalSub => FormatSummaryValue(totals.PriceTotalSub),
+            NetColumnId.Diff => FormatSummaryValue(totals.Diff),
+            NetColumnId.TotalCo2 => FormatSummaryDouble(totals.TotalCo2),
+            NetColumnId.PriceActuallyQuantity => FormatSummaryValue(totals.PriceActuallyQuantity),
+            NetColumnId.PriceWorkedQ => FormatSummaryValue(totals.PriceWorkedQ),
+            NetColumnId.PriceActuallyQuantityTax => FormatSummaryValue(totals.PriceActuallyQuantityTax),
+            NetColumnId.PriceWorkedQTax => FormatSummaryValue(totals.PriceWorkedQTax),
+            NetColumnId.PriceTotalSubTax => FormatSummaryValue(totals.PriceTotalSubTax),
+            NetColumnId.Quantity => totals.QuantitySum.HasValue ? FormatSummaryValue(totals.QuantitySum.Value) : string.Empty,
             _ => string.Empty
         };
 
     private static bool IsSummaryValueColumn(NetColumnId columnId) =>
-        columnId is NetColumnId.NetCostQ or NetColumnId.TotalNetCost or NetColumnId.PriceTotaly or NetColumnId.PriceTotallyTax;
+        columnId is NetColumnId.TotalNetCost
+            or NetColumnId.PriceTotaly
+            or NetColumnId.PriceTotallyTax
+            or NetColumnId.BaseCost
+            or NetColumnId.PriceTotalSub
+            or NetColumnId.Diff
+            or NetColumnId.TotalCo2
+            or NetColumnId.PriceActuallyQuantity
+            or NetColumnId.PriceWorkedQ
+            or NetColumnId.PriceActuallyQuantityTax
+            or NetColumnId.PriceWorkedQTax
+            or NetColumnId.PriceTotalSubTax
+            or NetColumnId.Quantity;
 
     private NetColumnId? GetSummaryLabelColumnId()
     {
@@ -518,6 +613,9 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private string FormatSummaryValue(decimal value) =>
         NumericFormatHelper.Format(value, Template.MathRound, CultureInfo.CurrentCulture);
 
+    private string FormatSummaryDouble(double value) =>
+        NumericFormatHelper.Format((decimal)value, Template.MathRound, CultureInfo.CurrentCulture);
+
     public void Dispose()
     {
         _disposed = true;
@@ -546,5 +644,18 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     }
 
     private readonly record struct ColumnHeader(NetColumnId Id, int Width);
-    private readonly record struct SummaryTotals(decimal NetCostQ, decimal TotalNetCost, decimal PriceTotally, decimal PriceTotallyTax);
+    private readonly record struct SummaryTotals(
+        decimal TotalNetCost,
+        decimal PriceTotally,
+        decimal PriceTotallyTax,
+        decimal BaseCost,
+        decimal PriceTotalSub,
+        decimal Diff,
+        double TotalCo2,
+        decimal PriceActuallyQuantity,
+        decimal PriceWorkedQ,
+        decimal PriceActuallyQuantityTax,
+        decimal PriceWorkedQTax,
+        decimal PriceTotalSubTax,
+        decimal? QuantitySum);
 }

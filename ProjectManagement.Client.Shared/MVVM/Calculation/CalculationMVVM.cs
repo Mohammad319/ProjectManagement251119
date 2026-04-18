@@ -3,7 +3,9 @@ using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Client.Shared.ViewModel;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -107,6 +109,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public bool OnlyActive { get; set; }
         public bool ShowTasks { get; set; } = true;
         public bool ShowResources { get; set; } = true;
+        public bool ShowOnlyCodeTextTasks { get; set; } = true;
 
         private bool _ohFactors;
         [JsonIgnore] private CalculationFactorDisplayMode _factorDisplayMode;
@@ -416,7 +419,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                     branchVisibleByDepth[item.Depth] = branchVisible;
                     branchActiveByDepth[item.Depth] = branchActive;
 
-                    if (!branchVisible || !ShowTasks)
+                    if (!branchVisible || !ShowTasks || !ShouldShowTaskRow(task))
                         continue;
 
                     flat.Add(new FlatItem(index++, task, null, item.Depth, parentBranchActive));
@@ -476,15 +479,17 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 flatItems.InsertRange(taskIndex + 1, descendants);
         }
 
+        private SortConfig? CurrentSort => Template?.NetCalc?.Sort;
+
         private void BuildStructureFlatListInternal(
             List<TaskListMVVM> tasks,
             int depth,
             List<FlatItem> flat,
             ref int index)
         {
-            for (int i = 0; i < tasks.Count; i++)
+            var sorted = ApplyTaskSort(tasks, CurrentSort);
+            foreach (var task in sorted)
             {
-                var task = tasks[i];
                 flat.Add(new FlatItem(index++, task, null, depth));
 
                 if (!task.Ui.CollSpan)
@@ -500,21 +505,19 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             List<FlatItem> flat,
             ref int index)
         {
-            if (task.Resources is not null)
+            if (task.Resources is not null && task.Resources.Count > 0)
             {
-                for (int i = 0; i < task.Resources.Count; i++)
-                {
-                    var res = task.Resources[i];
+                var sortedResources = ApplyResourceSort(task.Resources, CurrentSort);
+                foreach (var res in sortedResources)
                     flat.Add(new FlatItem(index++, null, res, depth));
-                }
             }
 
             if (task.Tasks is null || task.Tasks.Count == 0)
                 return;
 
-            for (int i = 0; i < task.Tasks.Count; i++)
+            var sortedChildren = ApplyTaskSort(task.Tasks, CurrentSort);
+            foreach (var child in sortedChildren)
             {
-                var child = task.Tasks[i];
                 flat.Add(new FlatItem(index++, child, null, depth));
 
                 if (!child.Ui.CollSpan)
@@ -522,6 +525,56 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
                 BuildStructureDescendants(child, depth + 1, flat, ref index);
             }
+        }
+
+        private static IEnumerable<TaskListMVVM> ApplyTaskSort(IList<TaskListMVVM> tasks, SortConfig? sort)
+        {
+            if (sort?.TaskColumn is not NetColumnId col)
+                return tasks;
+
+            Func<TaskListMVVM, IComparable> key = col switch
+            {
+                NetColumnId.Name        => t => t.Name,
+                NetColumnId.Code        => t => t.Code,
+                NetColumnId.Quantity    => t => (IComparable)(t.Quantity ?? 0m),
+                NetColumnId.Unit        => t => t.Unit,
+                NetColumnId.NetCostQ    => t => t.NetCostQ,
+                NetColumnId.TotalNetCost => t => t.NetCostTotaly,
+                NetColumnId.PriceTotaly  => t => t.ApriceTotally,
+                NetColumnId.ChangeFactor1 => t => t.ChangeFactor1,
+                NetColumnId.ChangeFactor2 => t => t.ChangeFactor2,
+                NetColumnId.Status       => t => t.Status,
+                NetColumnId.Responsible  => t => t.Responsible,
+                _                        => t => (IComparable)t.Order,
+            };
+
+            return sort.TaskDescending
+                ? tasks.OrderByDescending(key)
+                : tasks.OrderBy(key);
+        }
+
+        private static IEnumerable<ResourceListMVVM> ApplyResourceSort(IList<ResourceListMVVM> resources, SortConfig? sort)
+        {
+            if (sort?.ResourceColumn is not NetColumnId col)
+                return resources;
+
+            Func<ResourceListMVVM, IComparable> key = col switch
+            {
+                NetColumnId.Name              => r => r.Name,
+                NetColumnId.Quantity          => r => (IComparable)(r.Quantity ?? 0m),
+                NetColumnId.Unit              => r => r.Unit,
+                NetColumnId.Cost              => r => r.Cost,
+                NetColumnId.NetCostQ          => r => r.NetCostQ,
+                NetColumnId.ChangeFactor1     => r => r.ChangeFactor1,
+                NetColumnId.Account           => r => r.Account ?? string.Empty,
+                NetColumnId.ResourceTypeSystem => r => r.ResType.ToString(),
+                NetColumnId.Status            => r => r.Status ?? string.Empty,
+                _                             => r => (IComparable)0,
+            };
+
+            return sort.ResourceDescending
+                ? resources.OrderByDescending(key)
+                : resources.OrderBy(key);
         }
 
         private void ReindexFlatItems(List<FlatItem> flatItems, int startIndex)
@@ -537,6 +590,9 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             task.Ui.FilterVisible &&
             MatchesFactorDisplay(task.IsOH) &&
             (!OnlyActive || task.Active);
+
+        private bool ShouldShowTaskRow(TaskListMVVM task) =>
+            ShowOnlyCodeTextTasks || task.Type != TaskType.CodeName;
 
         public bool MatchesFactorDisplay(bool isOH) =>
             FactorDisplayMode switch

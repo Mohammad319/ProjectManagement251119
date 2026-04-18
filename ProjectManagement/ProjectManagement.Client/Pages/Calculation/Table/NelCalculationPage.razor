@@ -33,6 +33,15 @@ else
                     </button>
 
                     <button type="button"
+                            data-testid="status-toggle-only-code-text"
+                            class="@GetToggleChipClass(Calc!.ShowOnlyCodeTextTasks)"
+                            aria-pressed="@(Calc.ShowOnlyCodeTextTasks ? "true" : "false")"
+                            @onclick="ToggleShowOnlyCodeTextTasks">
+                        <span class="calc-status-chip-label">@AppLoc["onlyCodeText"]</span>
+                        <strong>@OnlyCodeTextTaskCount</strong>
+                    </button>
+
+                    <button type="button"
                             data-testid="status-toggle-resources"
                             class="@GetToggleChipClass(Calc!.ShowResources)"
                             aria-pressed="@(Calc.ShowResources ? "true" : "false")"

@@ -279,7 +279,7 @@ public class CalculationComponentRenderTests : BunitContext
         var cut = Render<TaskRowComponent>(parameters => parameters
             .Add(x => x.Task, task)
             .Add(x => x.ActiveParent, true)
-            .Add(x => x.Color, "#123456")
+            .Add(x => x.Colors, new NetColor { Task = "#123456" })
             .Add(x => x.Left, 10)
             .Add(x => x.Colmuns, CreateTestColumns()));
 
@@ -315,7 +315,7 @@ public class CalculationComponentRenderTests : BunitContext
         var cut = Render<TaskRowComponent>(parameters => parameters
             .Add(x => x.Task, task)
             .Add(x => x.ActiveParent, true)
-            .Add(x => x.Color, "#abcdef")
+            .Add(x => x.Colors, new NetColor { Task = "#abcdef" })
             .Add(x => x.Left, 0)
             .Add(x => x.Colmuns, CreateTestColumns()));
 
@@ -367,7 +367,7 @@ public class CalculationComponentRenderTests : BunitContext
         var cut = Render<TaskRowComponent>(parameters => parameters
             .Add(x => x.Task, task)
             .Add(x => x.ActiveParent, true)
-            .Add(x => x.Color, "#abcdef")
+            .Add(x => x.Colors, new NetColor { Task = "#abcdef" })
             .Add(x => x.Left, 0)
             .Add(x => x.Colmuns, CreateTestColumns())
             .Add(x => x.OnCollapseToggle, EventCallback.Factory.Create<TaskListMVVM>(
@@ -408,7 +408,7 @@ public class CalculationComponentRenderTests : BunitContext
         var cut = Render<ResourceRowComponent>(parameters => parameters
             .Add(x => x.Resource, resource)
             .Add(x => x.TaskBranchActive, false)
-            .Add(x => x.Color, "#eeeeee")
+            .Add(x => x.Colors, new NetColor { Resource = "#eeeeee" })
             .Add(x => x.Left, 20)
             .Add(x => x.Colmuns, CreateTestColumns()));
 
@@ -443,7 +443,7 @@ public class CalculationComponentRenderTests : BunitContext
         var cut = Render<ResourceRowComponent>(parameters => parameters
             .Add(x => x.Resource, resource)
             .Add(x => x.TaskBranchActive, true)
-            .Add(x => x.Color, "#ffffff")
+            .Add(x => x.Colors, new NetColor { Resource = "#ffffff" })
             .Add(x => x.Left, 0)
             .Add(x => x.Colmuns, CreateTestColumns()));
 
@@ -778,6 +778,7 @@ public class CalculationComponentRenderTests : BunitContext
         ComponentFactories.AddStub<VerticalSplitter>();
 
         var calc = CreateGridCalculation(includeSecondTask: true);
+        calc.Tasks[1].Metadata.Type = TaskType.CodeName;
         var interactionState = new CalculationInteractionState();
         interactionState.SetModifierKey("Control");
         interactionState.HandleItemSelected(calc.Tasks[0].Id, calc.Tasks[0].Quantity, CalculationItemType.task);
@@ -795,6 +796,13 @@ public class CalculationComponentRenderTests : BunitContext
         {
             Assert.False(calc.ShowTasks);
             Assert.Equal("false", cut.Find("[data-testid='status-toggle-tasks']").GetAttribute("aria-pressed")?.ToLowerInvariant());
+        });
+
+        cut.Find("[data-testid='status-toggle-only-code-text']").Click();
+        cut.WaitForAssertion(() =>
+        {
+            Assert.False(calc.ShowOnlyCodeTextTasks);
+            Assert.Equal("false", cut.Find("[data-testid='status-toggle-only-code-text']").GetAttribute("aria-pressed")?.ToLowerInvariant());
         });
 
         cut.Find("[data-testid='status-toggle-resources']").Click();

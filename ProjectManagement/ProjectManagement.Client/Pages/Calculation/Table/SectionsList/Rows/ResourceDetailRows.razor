@@ -3,7 +3,7 @@
 
 @foreach (var line in DetailLines)
 {
-    <CalculationDataRow RowStyle="@DetailRowStyle"
+    <CalculationDataRow RowStyle="@GetDetailRowStyle(line.Kind)"
                         Left="@(Left + 1)"
                         ShowHierarchyPlaceholder="true"
                         Cells="@(builder => RenderDetailCells(builder, line))"

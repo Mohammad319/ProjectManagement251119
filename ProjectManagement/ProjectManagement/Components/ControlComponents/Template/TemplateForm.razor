@@ -7,46 +7,25 @@
 
 @if (TemplateUpdate is not null)
 {
-    <section class="space-y-4">
-        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">@ResourceLoc.templates</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">@CalcResource.name</p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                    <button type="submit"
-                            form="netTable"
-                            class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                            disabled="@btnSubmitDisabled">
-                        @ResourceApp.save
-                    </button>
-
-                    <button type="button"
-                            @onclick="BackAsync"
-                            class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
-                            disabled="@btnSubmitDisabled">
-                        @((MarkupString)Icons.Back)
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <EditForm Model="@TemplateUpdate" id="netTable" OnValidSubmit="HandleSubmitAsync">
+    <section class="space-y-1">
+        <EditForm Model="@TemplateUpdate"
+                  id="@FormId"
+                  FormName="@FormId"
+                  OnValidSubmit="HandleSubmitAsync"
+                  OnInvalidSubmit="HandleInvalidSubmit">
             <DataAnnotationsValidator />
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
-                        <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Name" />
+            <div class="px-1 py-0.5 dark:bg-slate-900">
+                <div class="grid grid-cols-1 gap-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+                    <div class="min-w-0">
+                        <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Name" />
                         <ValidationMessage For="() => TemplateUpdate.Name" class="mt-1 block text-xs text-rose-600" />
                     </div>
 
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.date</label>
-                        <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
+                    <div class="min-w-0">
+                        <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@ResourceApp.date</label>
+                        <InputSelect @bind-Value="TemplateUpdate.DateFormat" class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
                             @foreach (var dateFormat in DateFormats)
                             {
                                 <option value="@dateFormat">@dateFormat</option>
@@ -54,9 +33,9 @@
                         </InputSelect>
                     </div>
 
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMWebResource.NumberFormat</label>
-                        <InputSelect @bind-Value="TemplateUpdate.MathRound" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
+                    <div class="min-w-0">
+                        <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@PMWebResource.NumberFormat</label>
+                        <InputSelect @bind-Value="TemplateUpdate.MathRound" class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100">
                             @foreach (var numberFormat in NumberFormats)
                             {
                                 <option value="@numberFormat.Value">@numberFormat.Label</option>
@@ -64,15 +43,31 @@
                         </InputSelect>
                     </div>
 
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.Currency</label>
-                        <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Currency" />
+                    <div class="min-w-0">
+                        <label class="mb-0.5 block text-xs font-medium text-slate-700 dark:text-slate-200">@CalcResource.Currency</label>
+                        <InputText class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Currency" />
                         <ValidationMessage For="() => TemplateUpdate.Currency" class="mt-1 block text-xs text-rose-600" />
+                    </div>
+
+                    <div class="flex items-end justify-end gap-1 sm:col-span-2 xl:col-span-1 xl:justify-start">
+                        <button type="submit"
+                                form="@FormId"
+                                class="inline-flex h-[37px] items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled="@btnSubmitDisabled">
+                            @ResourceApp.save
+                        </button>
+
+                        <button type="button"
+                                @onclick="BackAsync"
+                                class="inline-flex h-[37px] w-[56px] items-center justify-center rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                                disabled="@btnSubmitDisabled">
+                            @((MarkupString)Icons.Back)
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-1">
                 <NelCalculationTemplate2 Temp="TemplateUpdate"></NelCalculationTemplate2>
                 <SummarySheetTemplate Temp="TemplateUpdate"></SummarySheetTemplate>
             </div>
@@ -107,6 +102,7 @@
     [Parameter] public int? DepartmentId { get; set; }
     [Parameter] public EventCallback<bool> Callback { get; set; }
 
+    private readonly string FormId = $"template-control-form-{Guid.NewGuid():N}";
     private bool btnSubmitDisabled;
 
     protected override void OnParametersSet()
@@ -154,6 +150,9 @@
 
         await Callback.InvokeAsync(refresh);
     }
+
+    private void HandleInvalidSubmit(EditContext _)
+        => MHD.Notifications(TempForm.Id > 0 ? ToastType.Update : ToastType.Add, false);
 
     private Task BackAsync() => Callback.InvokeAsync(false);
 }

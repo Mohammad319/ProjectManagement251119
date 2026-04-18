@@ -6,9 +6,10 @@
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inject IStringLocalizer<CalcResource> CalcLoc
 
-<div class="calc-grid-shell">
+<div class="calc-grid-shell" dir="ltr">
     <div class="divNetCalc">
         <table tabindex="0"
+               dir="ltr"
                @onkeydown="HandleKeyDown"
                @onkeyup="HandleKeyUp"
                id="resizeMe"
@@ -89,7 +90,7 @@
                                               Task="item.Task"
                                               ActiveParent="item.ParentActive"
                                               OnCollapseToggle="ToggleCollSpan"
-                                              Color="@(Template.NetCalc?.Color?.Task ?? TemplateConstBase.Task)"
+                                              Colors="Template.NetCalc?.Color"
                                               Left="@(item.Depth * 10)"
                                               Colmuns="Columns" />
                         }
@@ -98,7 +99,7 @@
                             <ResourceRowComponent @key="item.Key"
                                                   Resource="item.Resource"
                                                   TaskBranchActive="item.ParentActive"
-                                                  Color="@(Template.NetCalc?.Color?.Resource ?? string.Empty)"
+                                                  Colors="Template.NetCalc?.Color"
                                                   Left="@(item.Depth * 10)"
                                                   MaxFractionDigits="Template.MathRound"
                                                   Colmuns="Columns" />

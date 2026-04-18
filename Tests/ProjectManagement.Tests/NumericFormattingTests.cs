@@ -219,7 +219,12 @@ public class NumericFormattingTests : BunitContext
             .Add(x => x.Resource, resource)
             .Add(x => x.Colmuns, CreateDetailColumns())
             .Add(x => x.MaxFractionDigits, 2)
-            .Add(x => x.Color, "#88aadd"));
+            .Add(x => x.Colors, new NetColor
+            {
+                ResourceAttachment = "#88aadd",
+                ResourceParameter = "#88aadd",
+                ResourceTime = "#88aadd"
+            }));
 
         var markup = cut.Markup;
         var expectedParameter = NumericFormatHelper.Format(resource.Data.Parameters[0].Value, 2);

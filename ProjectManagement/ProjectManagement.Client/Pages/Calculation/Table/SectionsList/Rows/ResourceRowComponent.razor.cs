@@ -4,6 +4,8 @@ using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
+using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows;
 
@@ -18,7 +20,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
 
     [Parameter] public ResourceListMVVM Resource { get; set; } = default!;
     [Parameter] public bool TaskBranchActive { get; set; } = true;
-    [Parameter] public string Color { get; set; } = string.Empty;
+    [Parameter] public NetColor? Colors { get; set; }
     [Parameter] public int Left { get; set; }
     [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
     [Parameter] public IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = Array.Empty<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>();
@@ -29,7 +31,8 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
 
     private bool IsDetailsOpen { get; set; }
 
-    private string RowStyle => Resource.Style(Color, TaskBranchActive, IsRowSelected);
+    private string ResolvedColor => Colors?.Resource ?? TemplateConstBase.Resource;
+    private string RowStyle => Resource.Style(ResolvedColor, TaskBranchActive, IsRowSelected);
 
     private bool HasParameters => Resource?.Data?.Parameters?.Count > 0;
     private bool HasTimes => Resource?.Data?.Times?.Count > 0;
@@ -70,7 +73,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     }
 
     private void RenderResourceCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource);
+        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left);
 
     public override void Dispose()
     {

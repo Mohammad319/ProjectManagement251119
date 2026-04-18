@@ -52,7 +52,7 @@ namespace Domain.Entities.Calculation
         {
             SetName(name);
             IsVisible = isVisible;
-            DepartmentId = departmentId;
+            //DepartmentId = departmentId;
             Metadata = metadata;
         }
 

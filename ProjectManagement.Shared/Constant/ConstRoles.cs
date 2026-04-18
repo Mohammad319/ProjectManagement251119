@@ -348,37 +348,8 @@ namespace ProjectManagement.Shared.Constants
 
         public static List<NetColumnState> EnsureNetCalcColumns(IEnumerable<NetColumnState>? columns)
         {
-            var normalized = columns?.Select(CloneNetColumn).ToList() ?? NetCalc();
-            if (normalized.Count == 0)
-                return NetCalc();
-
-            EnsureMissingNetColumn(
-                normalized,
-                new NetColumnState { Id = NetColumnId.PriceProduction, Width = 110, Frozen = false },
-                NetColumnId.PriceQ);
-
-            return normalized;
-        }
-
-        private static void EnsureMissingNetColumn(
-            List<NetColumnState> columns,
-            NetColumnState column,
-            NetColumnId? afterId = null)
-        {
-            if (columns.Any(x => x.Id == column.Id))
-                return;
-
-            if (afterId.HasValue)
-            {
-                var afterIndex = columns.FindIndex(x => x.Id == afterId.Value);
-                if (afterIndex >= 0)
-                {
-                    columns.Insert(afterIndex + 1, column);
-                    return;
-                }
-            }
-
-            columns.Add(column);
+            var normalized = columns?.Select(CloneNetColumn).ToList();
+            return normalized is { Count: > 0 } ? normalized : NetCalc();
         }
 
         private static NetColumnState CloneNetColumn(NetColumnState value)

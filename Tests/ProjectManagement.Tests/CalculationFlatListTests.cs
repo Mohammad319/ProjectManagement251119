@@ -2,6 +2,7 @@ using ProjectManagement.Client.Shared.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Client.Shared.ViewModel;
+using ProjectManagement.Shared.Base.Calculation;
 using Xunit;
 
 namespace ProjectManagement.Tests;
@@ -52,6 +53,31 @@ public class CalculationFlatListTests
         var flat = calculation.BuildFlatList();
 
         Assert.Empty(flat);
+    }
+
+    [Fact]
+    public void BuildFlatList_WhenOnlyCodeTextTasksAreHidden_KeepsVisibleDescendants()
+    {
+        var calculation = CreateCalculation();
+        calculation.Tasks[0].Metadata.Type = TaskType.CodeName;
+        calculation.Tasks[0].Resources.Clear();
+        calculation.RebuildHierarchyAndIndexes();
+        calculation.ShowOnlyCodeTextTasks = false;
+
+        var flat = calculation.BuildFlatList();
+
+        Assert.Collection(
+            flat,
+            item =>
+            {
+                Assert.True(item.IsTask);
+                Assert.Equal(2, item.Task!.Id);
+            },
+            item =>
+            {
+                Assert.True(item.IsResource);
+                Assert.Equal(20, item.Resource!.Id);
+            });
     }
 
     [Fact]

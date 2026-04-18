@@ -378,4 +378,28 @@
   <data name="waste" xml:space="preserve">
     <value>Waste</value>
   </data>
+  <data name="Actually quantity" xml:space="preserve">
+    <value>Actually quantity</value>
+  </data>
+  <data name="Worked Q" xml:space="preserve">
+    <value>Worked Q</value>
+  </data>
+  <data name="Worked Q (%)" xml:space="preserve">
+    <value>Worked Q (%)</value>
+  </data>
+  <data name="Price Actually quantity" xml:space="preserve">
+    <value>Price actually quantity</value>
+  </data>
+  <data name="Price Worked Q" xml:space="preserve">
+    <value>Price worked Q</value>
+  </data>
+  <data name="Price sub Tax" xml:space="preserve">
+    <value>Price sub tax</value>
+  </data>
+  <data name="Price Actually quantity Tax" xml:space="preserve">
+    <value>Price actually quantity tax</value>
+  </data>
+  <data name="Price Worked Q Tax" xml:space="preserve">
+    <value>Price worked Q tax</value>
+  </data>
 </root>

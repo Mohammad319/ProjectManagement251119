@@ -30,7 +30,7 @@ namespace Application.Services.CalculationItems.TemplateTable
 
             return await context.Templates
                 .AsNoTracking()
-                .Where(x => x.DepartmentId == departmentId || !x.DepartmentId.HasValue)
+                .Where(x => !departmentId.HasValue || x.DepartmentId == departmentId || !x.DepartmentId.HasValue)
                 .OrderByDescending(x => x.Id)
                 .Select(x => new TemplateListDTO
                 {

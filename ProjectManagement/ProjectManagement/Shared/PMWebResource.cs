@@ -102,6 +102,19 @@ public class PMWebResource
     public static string AttributeValue => GetString(nameof(AttributeValue), "Attribute value");
     public static string NumberFormat => GetString(nameof(NumberFormat), "Number format");
     public static string NewTemplate => GetString(nameof(NewTemplate), "New template");
+    public static string GlobalTemplates => GetString(nameof(GlobalTemplates), "Global templates");
+    public static string ReadOnly => GetString(nameof(ReadOnly), "Read only");
+    public static string CannotEdit => GetString(nameof(CannotEdit), "Cannot be edited");
+    public static string SortTitle => GetString(nameof(SortTitle), "Sort order");
+    public static string SortDescription => GetString(nameof(SortDescription), "Default sort column for tasks and resources.");
+    public static string SortNone => GetString(nameof(SortNone), "No sort");
+    public static string SortAscending => GetString(nameof(SortAscending), "Asc");
+    public static string SortDescending => GetString(nameof(SortDescending), "Desc");
+    public static string TaskCodeName => GetString(nameof(TaskCodeName), "OnlyCodeText task");
+    public static string TaskDetailBaseQuantity => GetString(nameof(TaskDetailBaseQuantity), "BaseQuantity row");
+    public static string ResourceParameter => GetString(nameof(ResourceParameter), "Quantity-driving factor");
+    public static string ResourceAttachment => GetString(nameof(ResourceAttachment), "Add-ons / Attachments");
+    public static string ResourceTime => GetString(nameof(ResourceTime), "Breakdown of hours");
     public static string Impressum => GetString(nameof(Impressum), "Impressum");
 
     private static string GetString(string name, string fallback)

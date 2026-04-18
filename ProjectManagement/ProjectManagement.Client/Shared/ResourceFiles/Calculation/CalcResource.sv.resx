@@ -378,4 +378,28 @@
   <data name="waste" xml:space="preserve">
     <value>Spill</value>
   </data>
+  <data name="Actually quantity" xml:space="preserve">
+    <value>Faktisk mängd</value>
+  </data>
+  <data name="Worked Q" xml:space="preserve">
+    <value>Utförd mängd</value>
+  </data>
+  <data name="Worked Q (%)" xml:space="preserve">
+    <value>Utförd mängd (%)</value>
+  </data>
+  <data name="Price Actually quantity" xml:space="preserve">
+    <value>Pris faktisk mängd</value>
+  </data>
+  <data name="Price Worked Q" xml:space="preserve">
+    <value>Pris utförd mängd</value>
+  </data>
+  <data name="Price sub Tax" xml:space="preserve">
+    <value>Á-pris moms</value>
+  </data>
+  <data name="Price Actually quantity Tax" xml:space="preserve">
+    <value>Pris faktisk mängd moms</value>
+  </data>
+  <data name="Price Worked Q Tax" xml:space="preserve">
+    <value>Pris utförd mängd moms</value>
+  </data>
 </root>

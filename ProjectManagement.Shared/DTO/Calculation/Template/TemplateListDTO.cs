@@ -18,6 +18,11 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         public string Task { get; set; } = TemplateConstBase.Task;
         public string SubTask { get; set; } = TemplateConstBase.SubTask;
         public string Resource { get; set; } = TemplateConstBase.Resource;
+        public string TaskCodeName { get; set; } = TemplateConstBase.TaskCodeName;
+        public string TaskDetailBaseQuantity { get; set; } = TemplateConstBase.TaskDetailBaseQuantity;
+        public string ResourceParameter { get; set; } = TemplateConstBase.ResourceParameter;
+        public string ResourceAttachment { get; set; } = TemplateConstBase.ResourceAttachment;
+        public string ResourceTime { get; set; } = TemplateConstBase.ResourceTime;
 
         public NetColor Clone()
         {
@@ -30,7 +35,12 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
                 Text = Text ?? "#000",
                 Task = Task ?? TemplateConstBase.Task,
                 SubTask = SubTask ?? TemplateConstBase.SubTask,
-                Resource = Resource ?? TemplateConstBase.Resource
+                Resource = Resource ?? TemplateConstBase.Resource,
+                TaskCodeName = TaskCodeName ?? TemplateConstBase.TaskCodeName,
+                TaskDetailBaseQuantity = TaskDetailBaseQuantity ?? TemplateConstBase.TaskDetailBaseQuantity,
+                ResourceParameter = ResourceParameter ?? TemplateConstBase.ResourceParameter,
+                ResourceAttachment = ResourceAttachment ?? TemplateConstBase.ResourceAttachment,
+                ResourceTime = ResourceTime ?? TemplateConstBase.ResourceTime,
             };
         }
     }
@@ -60,17 +70,35 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         }
     }
 
+    public class SortConfig
+    {
+        public NetColumnId? TaskColumn { get; set; }
+        public bool TaskDescending { get; set; }
+        public NetColumnId? ResourceColumn { get; set; }
+        public bool ResourceDescending { get; set; }
+
+        public SortConfig Clone() => new()
+        {
+            TaskColumn = TaskColumn,
+            TaskDescending = TaskDescending,
+            ResourceColumn = ResourceColumn,
+            ResourceDescending = ResourceDescending,
+        };
+    }
+
     public class NetCalc
     {
         public NetColor Color { get; set; } = new();
         public List<NetColumnState> Columns { get; set; } = TemplateDefaults.NetCalc();
+        public SortConfig Sort { get; set; } = new();
 
         public NetCalc Clone()
         {
             return new NetCalc
             {
                 Color = (Color ?? new NetColor()).Clone(),
-                Columns = TemplateDefaults.EnsureNetCalcColumns(Columns)
+                Columns = TemplateDefaults.EnsureNetCalcColumns(Columns),
+                Sort = (Sort ?? new SortConfig()).Clone(),
             };
         }
     }
@@ -100,7 +128,6 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
 
     public class TemplateData
     {
-        [JsonIgnore]
         public int MathRound { get; set; } = 2;
 
         [MaxLength(5)]
@@ -143,7 +170,6 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
             set => data = value?.Clone() ?? new TemplateData();
         }
 
-        [JsonIgnore]
         public int MathRound
         {
             get => Data.MathRound;
@@ -179,7 +205,6 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
 
     public class TemplateListPostDTO : TemplateBaseData
     {
-        [Range(0, 200, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public bool Active { get; set; } = true;
     }
 

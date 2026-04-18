@@ -82,4 +82,28 @@
   <data name="ErrorPageTitle" xml:space="preserve"><value>An unexpected error occurred</value></data>
   <data name="ErrorPageMessage" xml:space="preserve"><value>Sorry, an unexpected error occurred while processing your request.</value></data>
   <data name="TraceIdLabel" xml:space="preserve"><value>Trace ID</value></data>
+  <data name="BackToHomeAction" xml:space="preserve"><value>Back to home</value></data>
+  <data name="RefreshPageAction" xml:space="preserve"><value>Refresh page</value></data>
+  <data name="LoadingApplications" xml:space="preserve"><value>Loading applications...</value></data>
+  <data name="PreviewStyle" xml:space="preserve"><value>Preview style</value></data>
+  <data name="AttributeValue" xml:space="preserve"><value>Attribute value</value></data>
+  <data name="NumberFormat" xml:space="preserve"><value>Number format</value></data>
+  <data name="NewTemplate" xml:space="preserve"><value>New template</value></data>
+  <data name="GlobalTemplates" xml:space="preserve"><value>Global templates</value></data>
+  <data name="ReadOnly" xml:space="preserve"><value>Read only</value></data>
+  <data name="CannotEdit" xml:space="preserve"><value>Cannot be edited</value></data>
+  <data name="SortTitle" xml:space="preserve"><value>Sort order</value></data>
+  <data name="SortDescription" xml:space="preserve"><value>Default sort column for tasks and resources.</value></data>
+  <data name="SortNone" xml:space="preserve"><value>No sort</value></data>
+  <data name="SortAscending" xml:space="preserve"><value>Asc</value></data>
+  <data name="SortDescending" xml:space="preserve"><value>Desc</value></data>
+  <data name="TaskCodeName" xml:space="preserve"><value>OnlyCodeText task</value></data>
+  <data name="TaskDetailBaseQuantity" xml:space="preserve"><value>BaseQuantity row</value></data>
+  <data name="ResourceParameter" xml:space="preserve"><value>Quantity-driving factor</value></data>
+  <data name="ResourceAttachment" xml:space="preserve"><value>Add-ons / Attachments</value></data>
+  <data name="ResourceTime" xml:space="preserve"><value>Breakdown of hours</value></data>
+  <data name="Impressum" xml:space="preserve"><value>Impressum</value></data>
+  <data name="ProjectManagementHome" xml:space="preserve"><value>ProjectManagement home</value></data>
+  <data name="ToggleNavigation" xml:space="preserve"><value>Toggle navigation</value></data>
+  <data name="Reload" xml:space="preserve"><value>Reload</value></data>
 </root>

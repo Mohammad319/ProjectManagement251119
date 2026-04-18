@@ -5,7 +5,9 @@ using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ViewModel;
+using ProjectManagement.Shared.Base.Calculation;
 using System.Globalization;
+using System.Linq;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table;
 
@@ -29,6 +31,7 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
 
     private bool HasCalculation => Calc is not null;
     private int TaskCount => Calc?.Tasks.Count ?? 0;
+    private int OnlyCodeTextTaskCount => Calc?.Tasks.Count(task => task.Type == TaskType.CodeName) ?? 0;
     private int ResourceCount => Calc?.ResourceById.Count ?? 0;
     private int SelectedItemCount => InteractionState.SelectedItems.Count;
     private bool HasFlatListSnapshot => Calc is not null && (Calc.AllFlatItems is not null || TaskCount == 0);
@@ -102,6 +105,15 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
             return;
 
         Calc.ShowTasks = !Calc.ShowTasks;
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+    }
+
+    private void ToggleShowOnlyCodeTextTasks()
+    {
+        if (Calc is null)
+            return;
+
+        Calc.ShowOnlyCodeTextTasks = !Calc.ShowOnlyCodeTextTasks;
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
     }
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows;
@@ -13,9 +14,19 @@ public partial class ResourceDetailRows
     [Parameter] public IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = Array.Empty<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>();
     [Parameter] public int Left { get; set; }
     [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;
-    [Parameter] public string Color { get; set; } = string.Empty;
+    [Parameter] public NetColor? Colors { get; set; }
 
-    private string DetailRowStyle => BuildDetailRowStyle(Color);
+    private string AttachmentRowStyle => BuildDetailRowStyle(Colors?.ResourceAttachment ?? TemplateConstBase.ResourceAttachment);
+    private string ParameterRowStyle => BuildDetailRowStyle(Colors?.ResourceParameter ?? TemplateConstBase.ResourceParameter);
+    private string TimeRowStyle => BuildDetailRowStyle(Colors?.ResourceTime ?? TemplateConstBase.ResourceTime);
+
+    private string GetDetailRowStyle(DetailKind kind) => kind switch
+    {
+        DetailKind.Attachment => AttachmentRowStyle,
+        DetailKind.Parameter => ParameterRowStyle,
+        DetailKind.Time => TimeRowStyle,
+        _ => BuildDetailRowStyle(Colors?.Resource ?? TemplateConstBase.Resource)
+    };
     private bool HasChangeFactor1Column => Colmuns.Any(x => x.Id == NetColumnId.ChangeFactor1);
 
     protected override void OnParametersSet()
@@ -88,7 +99,7 @@ public partial class ResourceDetailRows
 
             builder.OpenElement(seq++, "td");
             builder.AddAttribute(seq++, "class", GetDetailCellClass(column.Id));
-            builder.AddAttribute(seq++, "style", "background-color: inherit;");
+            builder.AddAttribute(seq++, "style", GetDetailCellStyle(column.Id));
             if (column.Id == NetColumnId.Name)
             {
                 RenderNameCell(builder, ref seq, line);
@@ -234,6 +245,9 @@ public partial class ResourceDetailRows
 
         return baseClass;
     }
+
+    private static string GetDetailCellStyle(NetColumnId columnId) =>
+        "background-color: inherit; text-align: left; direction: ltr; unicode-bidi: isolate;";
 
     private static string BuildDetailRowStyle(string? color)
     {

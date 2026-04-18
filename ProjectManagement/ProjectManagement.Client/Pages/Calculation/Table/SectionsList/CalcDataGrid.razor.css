@@ -15,6 +15,7 @@
     min-height: 0;
     overflow: auto;
     background-color: var(--net-surface, #fafafa);
+    direction: ltr;
 }
 
     .divNetCalc ::deep #resizeMe {
@@ -26,6 +27,8 @@
         border-collapse: separate;
         border-spacing: 0;
         background-color: var(--net-table-bg, #ffffff);
+        direction: ltr;
+        unicode-bidi: isolate;
     }
 
     .divNetCalc ::deep td,
@@ -38,6 +41,9 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        text-align: left;
+        direction: ltr;
+        unicode-bidi: isolate;
     }
 
     .divNetCalc ::deep th {
@@ -49,7 +55,7 @@
         z-index: 10;
         font-weight: 600;
         font-size: 11px;
-        text-align: start;
+        text-align: left;
         box-shadow: 0 1px 0 rgba(15, 23, 42, 0.12);
     }
 
@@ -74,7 +80,14 @@
     }
 
     .divNetCalc ::deep tbody tr.calc-summary-row > td.num-cell {
-        text-align: end;
+        text-align: left;
+        direction: ltr;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .divNetCalc ::deep td.num-cell {
+        text-align: left;
+        direction: ltr;
         font-variant-numeric: tabular-nums;
     }
 

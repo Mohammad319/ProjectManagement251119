@@ -27,7 +27,8 @@ namespace Domain.Entities.Calculation
             return new NetCalc
             {
                 Color = CloneNetColor(value.Color),
-                Columns = TemplateDefaults.EnsureNetCalcColumns(value.Columns)
+                Columns = TemplateDefaults.EnsureNetCalcColumns(value.Columns),
+                Sort = (value.Sort ?? new SortConfig()).Clone()
             };
         }
 
@@ -55,7 +56,12 @@ namespace Domain.Entities.Calculation
                 Text = value.Text ?? "#000",
                 Task = value.Task ?? TemplateConstBase.Task,
                 SubTask = value.SubTask ?? TemplateConstBase.SubTask,
-                Resource = value.Resource ?? TemplateConstBase.Resource
+                Resource = value.Resource ?? TemplateConstBase.Resource,
+                TaskCodeName = value.TaskCodeName ?? TemplateConstBase.TaskCodeName,
+                TaskDetailBaseQuantity = value.TaskDetailBaseQuantity ?? TemplateConstBase.TaskDetailBaseQuantity,
+                ResourceParameter = value.ResourceParameter ?? TemplateConstBase.ResourceParameter,
+                ResourceAttachment = value.ResourceAttachment ?? TemplateConstBase.ResourceAttachment,
+                ResourceTime = value.ResourceTime ?? TemplateConstBase.ResourceTime
             };
         }
 
