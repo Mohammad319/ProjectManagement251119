@@ -1,4 +1,5 @@
 using AngleSharp.Dom;
+using BlazorMHD.UI.Core.Services;
 using BlazorMHD.UI.Components.Feedback.Splitter;
 using Bunit;
 using Bunit.TestDoubles;
@@ -114,7 +115,7 @@ public class CalculationComponentRenderTests : BunitContext
         cut.Find("div.relative > span").Click();
 
         var checkboxes = cut.FindAll("input[type='checkbox']");
-        Assert.Equal(4, checkboxes.Count);
+        Assert.Equal(5, checkboxes.Count);
 
         checkboxes[0].Change(false);
         Assert.False(calc.ShowTasks);
@@ -132,6 +133,11 @@ public class CalculationComponentRenderTests : BunitContext
 
         checkboxes = cut.FindAll("input[type='checkbox']");
         checkboxes[3].Change(true);
+        Assert.True(calcService.ShowResourceVariables);
+        Assert.Equal(2, coordinator.NotifyStructureRefreshCalls);
+
+        checkboxes = cut.FindAll("input[type='checkbox']");
+        checkboxes[4].Change(true);
         Assert.True(calc.OnlyActive);
         Assert.Equal(3, coordinator.NotifyStructureRefreshCalls);
     }
@@ -700,7 +706,7 @@ public class CalculationComponentRenderTests : BunitContext
     }
 
     [Fact]
-    public void NelCalculationPage_ShowsStatusAndEmptyState_WhenCalculationHasNoTasks()
+    public void NelCalculationPage_ShowsStatus_WhenCalculationHasNoTasks()
     {
         ComponentFactories.AddStub<CalculationToolbar>();
         ComponentFactories.AddStub<CalcDataGrid>();
@@ -719,9 +725,7 @@ public class CalculationComponentRenderTests : BunitContext
         cut.WaitForAssertion(() =>
         {
             Assert.Single(cut.FindAll("[data-testid='calculation-page-status']"));
-            Assert.Single(cut.FindAll("[data-testid='calculation-page-empty']"));
             Assert.Contains("visibleItems", cut.Markup);
-            Assert.Contains("calculationTableEmptyState", cut.Markup);
         });
     }
 
@@ -839,7 +843,8 @@ public class CalculationComponentRenderTests : BunitContext
         CalculationService calcService,
         FolderState folderState,
         CalculationInteractionState interactionState,
-        ITemplateRepository? templateRepository = null)
+        ITemplateRepository? templateRepository = null,
+        ICalculationRepository? calculationRepository = null)
     {
         Services.AddSingleton<ICalculationTableCoordinator>(coordinator);
         Services.AddSingleton<IStringLocalizer<ResourceApp>>(new FakeStringLocalizer<ResourceApp>());
@@ -847,6 +852,7 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton(folderState);
         Services.AddSingleton(interactionState);
         Services.AddSingleton<ITemplateRepository>(templateRepository ?? new FakeTemplateRepository());
+        Services.AddSingleton<ICalculationRepository>(calculationRepository ?? new FakeCalculationRepository());
     }
 
     private void RegisterPageComponentServices(
@@ -858,6 +864,8 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton(calcService);
         Services.AddSingleton(folderState);
         Services.AddSingleton(interactionState);
+        Services.AddSingleton<ITemplateRepository>(new FakeTemplateRepository());
+        Services.AddSingleton<ICalculationRepository>(new FakeCalculationRepository());
     }
 
     private void RegisterRowComponentServices(
@@ -887,6 +895,8 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton<IStringLocalizer<CalcResource>>(new FakeStringLocalizer<CalcResource>());
         Services.AddSingleton<ITaskRepository>(new FakeTaskRepository());
         Services.AddSingleton<IResourceTypeRepository>(new FakeResourceTypeRepository());
+        Services.AddSingleton<ICalculationRepository>(new FakeCalculationRepository());
+        Services.AddSingleton<DialogService>();
         var clientLogger = new FakeClientLogger();
         Services.AddSingleton<IClientLogger>(clientLogger);
         Services.AddSingleton(new CalculationFilterPresetStorage(JSInterop.JSRuntime, clientLogger));
@@ -921,6 +931,7 @@ public class CalculationComponentRenderTests : BunitContext
         ITemplateRepository templateRepository) =>
         new(
             templateRepository,
+            (ITemplateColumnRepository)RuntimeHelpers.GetUninitializedObject(typeof(ITemplateColumnRepository)),
             new FakeCalculationRepository(),
             folderState,
             (MhdServices)RuntimeHelpers.GetUninitializedObject(typeof(MhdServices)),
@@ -1193,6 +1204,8 @@ public class CalculationComponentRenderTests : BunitContext
         public Task<bool> UpdateAsync(CalculationPostDTO model, int id) => Task.FromResult(true);
         public Task<bool> UpdateAsync(List<OHFactors> model, int id) => Task.FromResult(true);
         public Task<bool> UpdateAsync(List<QuanityListDTO> model, int id) => Task.FromResult(true);
+        public Task<bool> UpdateSortAsync(int id, SortConfig sort) => Task.FromResult(true);
+        public Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store) => Task.FromResult(true);
         public Task<bool> DeleteAsync(int id) => Task.FromResult(true);
     }
 }

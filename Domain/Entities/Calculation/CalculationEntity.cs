@@ -8,6 +8,7 @@ using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -65,6 +66,15 @@ namespace Domain.Entities.Calculation
 
         public int SortOrder { get; private set; }
 
+        private SortConfig? _sort;
+        public SortConfig Sort
+        {
+            get => _sort ??= new SortConfig();
+            private set => _sort = (value ?? new SortConfig()).Clone();
+        }
+
+        public DisplayOptionsPresetStore DisplayPresets { get; private set; } = new();
+
         public DateTime? PublicationDate { get; private set; } = DateTime.UtcNow;
         public DateTime? DecisionDate { get; private set; } = DateTime.UtcNow;
 
@@ -118,6 +128,11 @@ namespace Domain.Entities.Calculation
         [JsonIgnore]
         public TemplateEntity? Template { get; private set; }
 
+        public int? TemplateColumnId { get; private set; }
+
+        [JsonIgnore]
+        public TemplateColumnEntity? TemplateColumn { get; private set; }
+
         [JsonIgnore]
         public ICollection<TenderAttributeDefinitionEntity> AttributesTender { get; private set; } = [];
 
@@ -139,6 +154,7 @@ namespace Domain.Entities.Calculation
             var copy = new CalculationEntity
             {
                 ProjectId = newProjectId,
+                DepartmentId = original.DepartmentId,
                 Name = original.Name,
                 Code = original.Code,
                 OrganisationId = original.OrganisationId,
@@ -147,6 +163,8 @@ namespace Domain.Entities.Calculation
                 ProcurementMethodsId = original.ProcurementMethodsId,
                 Procurement = original.Procurement,
                 TemplateId = original.TemplateId,
+                TemplateColumnId = original.TemplateColumnId,
+                Sort = original.Sort,
                 Tax = original.Tax,
                 PublicationDate = original.PublicationDate,
                 DecisionDate = original.DecisionDate,
@@ -174,6 +192,11 @@ namespace Domain.Entities.Calculation
         public void SetTemplate(int? tempId)
         {
             TemplateId = tempId;
+        }
+
+        public void SetTemplateColumn(int? templateColumnId)
+        {
+            TemplateColumnId = templateColumnId;
         }
 
         public void UpdateFactors(List<OHFactors> factors)
@@ -213,6 +236,7 @@ namespace Domain.Entities.Calculation
             UpdateOrder(dto.Order);
 
             Metadata = dto.Metadata;
+            Sort = dto.Sort;
             HourlyPrice = CloneHourlyPrice(dto.HourlyPrice);
             Factors = CloneFactors(dto.Factors);
 
@@ -225,6 +249,7 @@ namespace Domain.Entities.Calculation
             CompensationId = dto.CompensationId;
             ContractId = dto.ContractId;
             TemplateId = dto.TemplateId;
+            TemplateColumnId = dto.TemplateColumnId;
         }
 
         public void SetTax(int tax)
@@ -281,6 +306,16 @@ namespace Domain.Entities.Calculation
                 throw new ArgumentOutOfRangeException(nameof(newOrder), "SortOrder must be a finite number.");
 
             SortOrder = newOrder;
+        }
+
+        public void UpdateSort(SortConfig sort)
+        {
+            Sort = sort;
+        }
+
+        public void UpdateDisplayPresets(DisplayOptionsPresetStore store)
+        {
+            DisplayPresets = DisplayOptionsPresetState.Normalize(store);
         }
 
         private static string NormalizeRequired(string? value, string paramName, int maxLength, string requiredMessage)

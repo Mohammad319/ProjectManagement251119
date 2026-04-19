@@ -24,6 +24,7 @@ public partial class ShardingSingleDbContext
     public DbSet<OrganisationTypeEntity> OrganisationType { get; set; } = default!;
     public DbSet<StorageEntity> Storages { get; set; } = default!;
     public DbSet<TemplateEntity> Templates { get; set; } = default!;
+    public DbSet<TemplateColumnEntity> TemplateColumns { get; set; } = default!;
     public DbSet<ResourceSortEntity> ResourceSorts { get; set; } = default!;
     public DbSet<ApplicationEntity> Applications { get; set; } = default!;
     public DbSet<ApplicationValuesEntity> ApplicationValues { get; set; } = default!;

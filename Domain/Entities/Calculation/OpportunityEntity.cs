@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public sealed class OpportunityEntity : IntBaseEntity
+    public sealed class OpportunityEntity : AuditableEntity<int>
     {
         [Required, MaxLength(FieldLengths.Note)]
         public string OpportunitiesRisks { get; private set; } = string.Empty;

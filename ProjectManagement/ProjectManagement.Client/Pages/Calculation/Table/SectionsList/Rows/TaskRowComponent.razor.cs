@@ -18,6 +18,9 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     [Parameter] public EventCallback<TaskListMVVM> OnCollapseToggle { get; set; }
     [Parameter] public TaskListMVVM Task { get; set; } = default!;
     [Parameter] public bool ActiveParent { get; set; }
+    [Parameter] public bool IsItemActive { get; set; } = true;
+    [Parameter] public bool ShowActiveToggle { get; set; }
+    [Parameter] public EventCallback OnToggleActive { get; set; }
     [Parameter] public NetColor? Colors { get; set; }
     [Parameter] public int Left { get; set; }
     [Parameter] public IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> Colmuns { get; set; } = Array.Empty<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>>();

@@ -86,19 +86,27 @@
                     <ItemContent>
                         @if (item.IsTask && Calc.ShowTasks)
                         {
+                            var taskId = item.Task!.Id;
                             <TaskRowComponent @key="item.Key"
                                               Task="item.Task"
                                               ActiveParent="item.ParentActive"
                                               OnCollapseToggle="ToggleCollSpan"
+                                              ShowActiveToggle="true"
+                                              IsItemActive="item.Task.Active"
+                                              OnToggleActive="async () => await ToggleTaskActiveById(taskId)"
                                               Colors="Template.NetCalc?.Color"
                                               Left="@(item.Depth * 10)"
                                               Colmuns="Columns" />
                         }
                         else if (item.IsResource && Calc.ShowResources)
                         {
+                            var resourceId = item.Resource!.Id;
                             <ResourceRowComponent @key="item.Key"
                                                   Resource="item.Resource"
                                                   TaskBranchActive="item.ParentActive"
+                                                  ShowActiveToggle="true"
+                                                  IsItemActive="item.Resource.Active"
+                                                  OnToggleActive="async () => await ToggleResourceActiveById(resourceId)"
                                                   Colors="Template.NetCalc?.Color"
                                                   Left="@(item.Depth * 10)"
                                                   MaxFractionDigits="Template.MathRound"

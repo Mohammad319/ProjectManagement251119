@@ -1,17 +1,19 @@
 <td>
-    <div class="flex items-center" style="@IndentStyle">
+    <div class="flex items-center gap-1" style="@IndentStyle">
+        @if (ShowActiveToggle)
+        {
+            <span role="button"
+                  title="@(IsItemActive ? "Active" : "Inactive")"
+                  @onclick="() => OnToggleActive.InvokeAsync()"
+                  @onclick:stopPropagation="true"
+                  class="@ActiveToggleClass">
+            </span>
+        }
         @if (CanToggle)
         {
-        @*     <span class="@ToggleClass"
-                  role="button"
-                  @onclick="HandleToggle"
-                  @onclick:stopPropagation="true">
-                @((MarkupString)Icons.TopBottom(IsExpanded))
-            </span> *@
-
             <span role="button"
                   @onclick="HandleToggle"
-                  @onclick:stopPropagation="true" 
+                  @onclick:stopPropagation="true"
                   class="@ToggleClass">
                 @(IsExpanded ? "−" : "+")
             </span>

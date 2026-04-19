@@ -16,4 +16,16 @@
             int? departmentId,
             CancellationToken ct = default);
     }
+
+    public interface ITemplateColumnQueryService
+    {
+        Task<TemplateColumnModelDTO?> GetByIdAsync(
+            int id,
+            int? departmentId,
+            CancellationToken ct = default);
+
+        Task<List<TemplateColumnListDTO>> GetByUserAsync(
+            int? departmentId,
+            CancellationToken ct = default);
+    }
 }

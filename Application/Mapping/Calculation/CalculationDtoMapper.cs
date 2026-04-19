@@ -21,6 +21,7 @@ namespace Application.Mapping.Calculation
                 ProcurementMethods = entity.ProcurementMethods?.Name ?? string.Empty,
                 Type = entity.Type?.Name ?? string.Empty,
                 Order = entity.SortOrder,
+                Sort = entity.Sort,
                 Code = entity.Code,
                 DecisionDate = entity.DecisionDate,
                 EndDate = entity.EndDate,
@@ -58,9 +59,11 @@ namespace Application.Mapping.Calculation
                 IsVisible = entity.IsVisible,
                 StartDate = entity.StartDate,
                 Order = entity.SortOrder,
+                Sort = entity.Sort,
                 DecisionDate = entity.DecisionDate,
                 PublicationDate = entity.PublicationDate,
                 TemplateId = entity.TemplateId,
+                TemplateColumnId = entity.TemplateColumnId,
                 Metadata = entity.GetMetadataSnapshot(),
                 PriceData = new CalculationHourlyPriceFactorData
                 {

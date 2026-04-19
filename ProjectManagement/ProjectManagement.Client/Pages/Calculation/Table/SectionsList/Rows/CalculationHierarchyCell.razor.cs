@@ -9,6 +9,9 @@ public partial class CalculationHierarchyCell
     [Parameter] public bool IsExpanded { get; set; }
     [Parameter] public bool ShowPlaceholder { get; set; } = true;
     [Parameter] public EventCallback OnToggle { get; set; }
+    [Parameter] public bool ShowActiveToggle { get; set; }
+    [Parameter] public bool IsItemActive { get; set; } = true;
+    [Parameter] public EventCallback OnToggleActive { get; set; }
 
     private string IndentStyle => IndentPx > 0 ? $"padding-left:{IndentPx}px;" : string.Empty;
 
@@ -21,4 +24,8 @@ public partial class CalculationHierarchyCell
         "hover:opacity-70 hover:scale-110 hover:shadow-sm";
 
     private Task HandleToggle() => OnToggle.InvokeAsync();
+
+    private string ActiveToggleClass => IsItemActive
+        ? "inline-block h-3 w-3 shrink-0 rounded-full bg-emerald-500 cursor-pointer transition hover:opacity-70"
+        : "inline-block h-3 w-3 shrink-0 rounded-full border border-slate-400 bg-transparent cursor-pointer transition hover:opacity-70";
 }

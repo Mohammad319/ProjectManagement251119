@@ -54,44 +54,44 @@ namespace ProjectManagement.Client.Shared.Repositories
             throw new InvalidOperationException($"Unable to deserialize response body to {typeof(T).Name}.");
         }
 
-        public async Task<T> GetAsync<T>(string url)
+        public async Task<T> GetAsync<T>(string url, CancellationToken ct = default)
         {
-            var response = await _httpClient.GetAsync(url);
+            var response = await _httpClient.GetAsync(url, ct);
             return await ReadAsync<T>(response);
         }
 
-        public async Task<TResponse> PostAsync<TResponse, TRequest>(TRequest data, string url)
+        public async Task<TResponse> PostAsync<TResponse, TRequest>(TRequest data, string url, CancellationToken ct = default)
         {
-            var response = await _httpClient.PostAsJsonAsync(url, data);
+            var response = await _httpClient.PostAsJsonAsync(url, data, cancellationToken: ct);
             return await ReadAsync<TResponse>(response);
         }
 
-        public async Task<TResponse> PutAsync<TResponse, TRequest>(TRequest data, string url)
+        public async Task<TResponse> PutAsync<TResponse, TRequest>(TRequest data, string url, CancellationToken ct = default)
         {
-            var response = await _httpClient.PutAsJsonAsync(url, data);
+            var response = await _httpClient.PutAsJsonAsync(url, data, cancellationToken: ct);
             return await ReadAsync<TResponse>(response);
         }
 
-        public Task<bool> PutAsync<T>(T data, string url)
-            => PutAsync<bool, T>(data, url);
+        public Task<bool> PutAsync<T>(T data, string url, CancellationToken ct = default)
+            => PutAsync<bool, T>(data, url, ct);
 
-        public async Task<T> DeleteAsync<T>(string url)
+        public async Task<T> DeleteAsync<T>(string url, CancellationToken ct = default)
         {
-            var response = await _httpClient.DeleteAsync(url);
+            var response = await _httpClient.DeleteAsync(url, ct);
             return await ReadAsync<T>(response);
         }
-        public Task<bool> DeleteAsync<T>(string url, T obj) => DeleteAsync<bool, T>(url, obj);
-        public Task<bool> DeleteAsync(string url)
-            => DeleteAsync<bool>(url);
+        public Task<bool> DeleteAsync<T>(string url, T obj, CancellationToken ct = default) => DeleteAsync<bool, T>(url, obj, ct);
+        public Task<bool> DeleteAsync(string url, CancellationToken ct = default)
+            => DeleteAsync<bool>(url, ct);
 
-        public async Task<T> DeleteAsync<T, TBody>(string url, TBody body)
+        public async Task<T> DeleteAsync<T, TBody>(string url, TBody body, CancellationToken ct = default)
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, url)
             {
                 Content = JsonContent.Create(body, options: JsonOptions)
             };
 
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.SendAsync(request, ct);
             return await ReadAsync<T>(response);
         }
     }

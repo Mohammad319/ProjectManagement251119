@@ -14,7 +14,7 @@ public class UnauthorizedRedirectHandler(
     IClientLogger clientLogger,
     IStringLocalizer<ResourceApp> appLoc) : DelegatingHandler
 {
-    private static DateTime _lastDialogUtc = DateTime.MinValue;
+    private DateTime _lastDialogUtc = DateTime.MinValue;
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {

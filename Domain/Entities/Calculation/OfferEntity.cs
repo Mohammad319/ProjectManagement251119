@@ -50,7 +50,6 @@ namespace Domain.Entities.Calculation
             OrganisationId = organisationId;
             Metadata = metadata;
             Comment = NormalizeComment(comment);
-            Date = DateTime.UtcNow;
         }
 
         public OfferData GetMetadataSnapshot()

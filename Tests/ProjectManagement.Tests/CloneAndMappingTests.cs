@@ -101,6 +101,31 @@ public class CloneAndMappingTests
     }
 
     [Fact]
+    public void ClientDtoMapper_ToCalculationMVVM_ClearsActiveDisplayPresetOnLoad()
+    {
+        var preset = new DisplayOptionsPreset
+        {
+            Id = "preset-1",
+            Name = "Saved preset"
+        };
+
+        var dto = new CalculationPageDTO
+        {
+            DisplayPresets = new DisplayOptionsPresetStore
+            {
+                ActivePresetId = preset.Id,
+                Presets = [preset]
+            }
+        };
+
+        var model = dto.ToCalculationMVVM();
+
+        Assert.Null(model.DisplayPresets.ActivePresetId);
+        Assert.Single(model.DisplayPresets.Presets);
+        Assert.Null(DisplayOptionsPresetState.GetActivePreset(model.DisplayPresets));
+    }
+
+    [Fact]
     public void ApplicationDto_DataSetter_ClonesRowsAndAttributes()
     {
         var rowId = Guid.NewGuid();

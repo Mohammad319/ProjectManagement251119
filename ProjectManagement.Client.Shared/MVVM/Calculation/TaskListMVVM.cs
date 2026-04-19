@@ -8,7 +8,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     {
         public static TaskPostDTO GetToPost(TaskListMVVM task)
         {
-            if (task == null) return new TaskPostDTO();
+            ArgumentNullException.ThrowIfNull(task);
             return new TaskPostDTO()
             {
                 Id = task.Id,
@@ -21,7 +21,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 ChangeFactor1 = task.ChangeFactor1,
                 ChangeFactor2 = task.ChangeFactor2,
                 Cap = task.Cap,
-                IsActive = task.Active,
+                IsActive = task.Metadata.IsActive,
                 Code = task.Code,
                 Type = task.Type,
                 IsOH = task.IsOH,
@@ -38,7 +38,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
     public class TaskListMVVM : TaskBase
     {
-        private TaskMetadata? metadata = new();
+        private TaskMetadata? _metadata = new();
         [JsonIgnore] public TaskUiState Ui { get; } = new();
         [JsonIgnore] public TaskComputedState Computed { get; } = new();
 
@@ -46,10 +46,10 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         {
             get
             {
-                metadata ??= new TaskMetadata();
-                return metadata;
+                _metadata ??= new TaskMetadata();
+                return _metadata;
             }
-            set { metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value); }
+            set { _metadata = CalculationItemMetadataMapper.CloneTaskMetadata(value); }
         }
 
         public string Note => Metadata.Note;
@@ -68,7 +68,11 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public decimal WorkedQPercent => (Metadata.ActuallyQuantity == 0) ? 0 : (Metadata.WorkedQ / Metadata.ActuallyQuantity) * 100;
 
         public decimal? Cap => Metadata.Cap;
-        public bool Active => Metadata.IsActive;
+
+        [JsonIgnore] private bool? _activeOverride;
+        public bool Active => _activeOverride ?? Metadata.IsActive;
+        public void SetActiveOverride(bool? value) => _activeOverride = value;
+
         public string Code => Metadata.Code;
         public TaskType Type => Metadata.Type;
 

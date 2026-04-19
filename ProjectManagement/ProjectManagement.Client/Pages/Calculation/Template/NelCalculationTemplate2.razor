@@ -43,9 +43,11 @@
     </style>
 
     <div class="overflow-x-auto">
-        <div class="flex min-w-[1240px] items-start gap-1">
-            <section class="w-[480px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="border-b border-slate-200 px-3 py-1 dark:border-slate-700">
+        <div class="flex @(ShowColumnSettings ? "min-w-[1100px]" : "min-w-full") items-start gap-2">
+            @if (ShowColumnSettings)
+            {
+            <section class="w-[480px] flex-none overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 px-2 py-1 dark:border-slate-700">
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -56,7 +58,7 @@
                             </p>
                         </div>
 
-                        <div class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <div class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             @AppLoc["dragAndReorder"]
                         </div>
                     </div>
@@ -73,7 +75,7 @@
                         <thead class="sticky top-0 z-10">
                             <tr class="bg-slate-100 text-[11px] font-semibold text-slate-800 dark:bg-slate-800 dark:text-slate-100">
                                 <th class="px-1 py-0.5 text-center">#</th>
-                                <th class="px-1 py-0.5text-start">@CalcResource.name</th>
+                                <th class="px-1 py-0.5 text-start">@CalcResource.name</th>
                                 <th class="px-1 py-0.5 text-center">@AppLoc["settings"]</th>
                             </tr>
                         </thead>
@@ -96,7 +98,7 @@
                                     </div>
                                 </td>
 
-                                <td class="px-1 py-0.5align-middle">
+                                <td class="px-1 py-0.5 align-middle">
                                     <div class="flex items-center gap-2">
                                         <div class="flex shrink-0 items-center gap-1">
                                             <button type="button"
@@ -146,7 +148,7 @@
                                     </div>
                                 </td>
 
-                                <td class="px-0.5 py-0.5align-middle">
+                                <td class="px-0.5 py-0.5 align-middle">
                                     <div class="flex items-center justify-center gap-1 whitespace-nowrap">
                                         <input class="w-[50px] rounded-lg border border-slate-300 bg-white px-1.5 py-1 text-center text-[11px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                                                type="number"
@@ -175,8 +177,8 @@
             </section>
 
             <!-- Hidden Columns -->
-            <section class="w-[260px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="border-b border-slate-200 px-3 py-1 dark:border-slate-700">
+            <section class="w-[240px] flex-none overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="border-b border-slate-200 px-2 py-1 dark:border-slate-700">
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         @ResourceApp.hiddenItems
                     </h3>
@@ -190,7 +192,7 @@
                         <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900">
                             <tr class="text-[11px] text-slate-700 dark:text-slate-200">
                                 <th class="w-[56px] px-1 py-0.5 text-center"></th>
-                                <th class="px-1 py-0.5text-start font-medium">@CalcResource.name</th>
+                                <th class="px-1 py-0.5 text-start font-medium">@CalcResource.name</th>
                             </tr>
                         </thead>
 
@@ -209,7 +211,7 @@
                                             </button>
                                         </td>
 
-                                        <td class="px-1 py-0.5align-middle">
+                                        <td class="px-1 py-0.5 align-middle">
                                             <div class="font-medium text-slate-800 dark:text-slate-100">
                                                 @CalcLoc[NetColumnLoc.Key[id]]
                                             </div>
@@ -224,84 +226,11 @@
                     </table>
                 </div>
             </section>
-
-            <!-- Sort -->
-            <section class="w-[220px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="border-b border-slate-200 px-3 py-1 dark:border-slate-700">
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Sort order</h3>
-                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Default sort column for tasks and resources.</p>
-                </div>
-
-                <div class="max-h-[65vh] space-y-3 overflow-auto p-2">
-                    @{
-                        var taskSortColStr = Temp.NetCalc.Sort.TaskColumn.HasValue
-                            ? ((int)Temp.NetCalc.Sort.TaskColumn.Value).ToString()
-                            : string.Empty;
-
-                        var resSortColStr = Temp.NetCalc.Sort.ResourceColumn.HasValue
-                            ? ((int)Temp.NetCalc.Sort.ResourceColumn.Value).ToString()
-                            : string.Empty;
-                    }
-
-                    <div class="space-y-1.5">
-                        <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">@ResourceLoc.task</p>
-
-                        <select class="@SelectInputClass"
-                                value="@taskSortColStr"
-                                @onchange="e => SetTaskSortColumn(e.Value?.ToString())">
-                            <option value="">— No sort —</option>
-                            @foreach (var (id, label) in TaskSortColumns)
-                            {
-                                <option value="@((int)id)">@label</option>
-                            }
-                        </select>
-
-                        <div class="flex gap-1">
-                            <button type="button"
-                                    class="@SortBtnClass(!Temp.NetCalc.Sort.TaskDescending)"
-                                    @onclick="() => Temp.NetCalc.Sort.TaskDescending = false">
-                                ↑ Asc
-                            </button>
-                            <button type="button"
-                                    class="@SortBtnClass(Temp.NetCalc.Sort.TaskDescending)"
-                                    @onclick="() => Temp.NetCalc.Sort.TaskDescending = true">
-                                ↓ Desc
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">@ResourceLoc.resource</p>
-
-                        <select class="@SelectInputClass"
-                                value="@resSortColStr"
-                                @onchange="e => SetResourceSortColumn(e.Value?.ToString())">
-                            <option value="">— No sort —</option>
-                            @foreach (var (id, label) in ResourceSortColumns)
-                            {
-                                <option value="@((int)id)">@label</option>
-                            }
-                        </select>
-
-                        <div class="flex gap-1">
-                            <button type="button"
-                                    class="@SortBtnClass(!Temp.NetCalc.Sort.ResourceDescending)"
-                                    @onclick="() => Temp.NetCalc.Sort.ResourceDescending = false">
-                                ↑ Asc
-                            </button>
-                            <button type="button"
-                                    class="@SortBtnClass(Temp.NetCalc.Sort.ResourceDescending)"
-                                    @onclick="() => Temp.NetCalc.Sort.ResourceDescending = true">
-                                ↓ Desc
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            }
 
             <!-- Settings -->
-            <section class="w-[220px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="border-b border-slate-200 px-3 py-1 dark:border-slate-700">
+            <section class="@SettingsSectionClass">
+                <div class="border-b border-slate-200 px-2 py-1 dark:border-slate-700">
                     <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
                         @AppLoc["appearance"]
                     </h3>
@@ -310,7 +239,8 @@
                     </p>
                 </div>
 
-                <div class="max-h-[65vh] space-y-1 overflow-auto p-1">
+                <div class="max-h-[65vh] overflow-auto p-2">
+                    <div class="@SettingsGridClass">
                     <div class="space-y-1">
                         <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300">
                             @AppFormatResource.borderType
@@ -324,7 +254,7 @@
                         </select>
                     </div>
 
-                    <div class="grid gap-1">
+                    <div class="@ColorGridClass">
                         <div class="@ColorRowClass">
                             <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
                             <input type="color"
@@ -409,6 +339,7 @@
                                    @bind="Temp.NetCalc.Color.Note" />
                         </div>
                     </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -441,20 +372,34 @@
         "dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50";
 
     private const string SelectInputClass =
-        "w-full rounded-xl border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white";
+        "h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-[12px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white";
 
     private const string ColorRowClass =
-        "flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/70";
+        "flex min-h-9 items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/70";
 
     private const string ColorLabelClass =
-        "text-[11px] font-medium text-slate-700 dark:text-slate-200";
+        "truncate text-[11px] font-medium text-slate-700 dark:text-slate-200";
 
     private const string ColorInputClass =
-        "h-8 w-14 rounded-md border border-slate-300 bg-transparent p-0.5 dark:border-slate-600";
+        "h-7 w-10 shrink-0 rounded border border-slate-300 bg-transparent p-0.5 dark:border-slate-600";
 
     [Parameter] public TemplateListPostDTO Temp { get; set; } = new();
+    [Parameter] public bool ShowColumnSettings { get; set; } = true;
 
     private bool TableVisible = true;
+    private string SettingsSectionClass =>
+        (ShowColumnSettings ? "w-[360px] flex-none" : "min-w-0 flex-1") +
+        " overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900";
+
+    private string SettingsGridClass =>
+        ShowColumnSettings
+            ? "grid grid-cols-1 gap-2"
+            : "grid grid-cols-1 gap-2 lg:grid-cols-[220px_minmax(0,1fr)]";
+
+    private string ColorGridClass =>
+        ShowColumnSettings
+            ? "grid grid-cols-2 gap-1"
+            : "grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6";
 
     private static readonly IReadOnlyDictionary<NetColumnId, NetColumnState> _defaults =
         TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x);
@@ -541,51 +486,4 @@
         list.Add(col);
     }
 
-    private static readonly (NetColumnId Id, string Label)[] TaskSortColumns =
-    [
-        (NetColumnId.Name,          "Name"),
-        (NetColumnId.Code,          "Code"),
-        (NetColumnId.Quantity,      "Quantity"),
-        (NetColumnId.Unit,          "Unit"),
-        (NetColumnId.NetCostQ,      "Net cost/Q"),
-        (NetColumnId.TotalNetCost,  "Total net cost"),
-        (NetColumnId.PriceTotaly,   "Price total"),
-        (NetColumnId.ChangeFactor1, "Factor 1"),
-        (NetColumnId.ChangeFactor2, "Factor 2"),
-        (NetColumnId.Status,        "Status"),
-        (NetColumnId.Responsible,   "Responsible"),
-    ];
-
-    private static readonly (NetColumnId Id, string Label)[] ResourceSortColumns =
-    [
-        (NetColumnId.Name,              "Name"),
-        (NetColumnId.Quantity,          "Quantity"),
-        (NetColumnId.Unit,              "Unit"),
-        (NetColumnId.Cost,              "Cost"),
-        (NetColumnId.NetCostQ,          "Net cost/Q"),
-        (NetColumnId.ChangeFactor1,     "Factor 1"),
-        (NetColumnId.Account,           "Account"),
-        (NetColumnId.ResourceTypeSystem,"Resource type"),
-        (NetColumnId.Status,            "Status"),
-    ];
-
-    private static string SortBtnClass(bool active) => active
-        ? "flex-1 rounded-lg border border-blue-400 bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-800 transition dark:border-blue-500 dark:bg-blue-900/50 dark:text-blue-200"
-        : "flex-1 rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300";
-
-    private void SetTaskSortColumn(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-            Temp.NetCalc.Sort.TaskColumn = null;
-        else if (int.TryParse(value, out var intVal))
-            Temp.NetCalc.Sort.TaskColumn = (NetColumnId)intVal;
-    }
-
-    private void SetResourceSortColumn(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-            Temp.NetCalc.Sort.ResourceColumn = null;
-        else if (int.TryParse(value, out var intVal))
-            Temp.NetCalc.Sort.ResourceColumn = (NetColumnId)intVal;
-    }
 }

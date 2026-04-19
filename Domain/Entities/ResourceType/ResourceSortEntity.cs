@@ -54,7 +54,7 @@ namespace Domain.Entities.ResourceType
 
             Name = NormalizeName(dto.Name);
             IsVisible = dto.IsVisible;
-            AccountId = NormalizeOptionalPositive(dto.AccountId, nameof(dto.AccountId));
+            AccountId = NormalizeOptionalPositive(dto.AccountId);
             Metadata = dto.Data;
         }
 
@@ -94,7 +94,7 @@ namespace Domain.Entities.ResourceType
             return trimmed;
         }
 
-        private static int? NormalizeOptionalPositive(int? value, string fieldName)
+        private static int? NormalizeOptionalPositive(int? value)
         {
             if (!value.HasValue || value.Value <= 0)
                 return null;

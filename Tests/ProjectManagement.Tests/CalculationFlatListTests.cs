@@ -3,6 +3,7 @@ using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Client.Shared.ViewModel;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Calculation;
 using Xunit;
 
 namespace ProjectManagement.Tests;
@@ -214,6 +215,64 @@ public class CalculationFlatListTests
         Assert.False(resource.HasOfferSelected());
         Assert.Null(resource.OfferId);
         Assert.Single(resource.Offers);
+    }
+
+    [Fact]
+    public void ApplyPresetActiveOverrides_AppliesToCollapsedDescendants()
+    {
+        var calculation = CreateCalculation();
+        calculation.Tasks[0].Ui.CollSpan = false;
+
+        calculation.ApplyPresetActiveOverrides(new DisplayOptionsPreset
+        {
+            InactiveTaskIds = [2],
+            InactiveResourceIds = [20]
+        });
+
+        Assert.True(calculation.Tasks[0].Active);
+        Assert.True(calculation.Tasks[0].Resources[0].Active);
+        Assert.False(calculation.Tasks[1].Active);
+        Assert.False(calculation.Tasks[1].Resources[0].Active);
+    }
+
+    [Fact]
+    public void BuildDisplayOptionsPreset_CapturesCurrentInactiveItems()
+    {
+        var calculation = CreateCalculation();
+        calculation.Tasks[1].Metadata.IsActive = false;
+        calculation.Tasks[0].Resources[0].IsActive = false;
+
+        var preset = calculation.BuildDisplayOptionsPreset(
+            showComments: false,
+            showResourceVariables: true);
+
+        Assert.False(preset.ShowComments);
+        Assert.True(preset.ShowResourceVariables);
+        Assert.Contains(2, preset.InactiveTaskIds);
+        Assert.Contains(10, preset.InactiveResourceIds);
+        Assert.DoesNotContain(1, preset.InactiveTaskIds);
+        Assert.DoesNotContain(20, preset.InactiveResourceIds);
+    }
+
+    [Fact]
+    public void ToggleTaskActiveInPreset_WhenNoPreset_PreservesCurrentInactiveStateBeforeToggle()
+    {
+        var calculation = CreateCalculation();
+        calculation.Tasks[1].Metadata.IsActive = false;
+        calculation.Tasks[0].Resources[0].IsActive = false;
+
+        calculation.ToggleTaskActiveInPreset(
+            calculation.Tasks[1].Id,
+            showComments: false,
+            showResourceVariables: true);
+
+        var activePreset = DisplayOptionsPresetState.GetActivePreset(calculation.DisplayPresets);
+        Assert.NotNull(activePreset);
+        Assert.False(activePreset!.ShowComments);
+        Assert.True(calculation.Tasks[1].Active);
+        Assert.DoesNotContain(2, activePreset.InactiveTaskIds);
+        Assert.False(calculation.Tasks[0].Resources[0].Active);
+        Assert.Contains(10, activePreset.InactiveResourceIds);
     }
 
     private static CalculationMVVM CreateCalculation()

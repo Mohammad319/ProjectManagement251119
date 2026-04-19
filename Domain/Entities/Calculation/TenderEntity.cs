@@ -9,16 +9,16 @@ using System.Text.Json.Serialization;
 
 namespace Domain.Entities.Calculation
 {
-    public sealed class TenderAttributeBindEntity : IntBaseEntity
+    public sealed class TenderAttributeBindEntity : AuditableEntity<int>
     {
         public int TenderId { get; private set; }
 
-        [ForeignKey(nameof(TenderId))]
+        [JsonIgnore, ForeignKey(nameof(TenderId))]
         public TenderEntity Tender { get; private set; } = null!;
 
         public int TenderAttributeId { get; private set; }
 
-        [ForeignKey(nameof(TenderAttributeId))]
+        [JsonIgnore, ForeignKey(nameof(TenderAttributeId))]
         public TenderAttributeDefinitionEntity TenderAttribute { get; private set; } = null!;
 
         public decimal Value { get; private set; }
@@ -38,8 +38,9 @@ namespace Domain.Entities.Calculation
         }
     }
 
-    public sealed class TenderEntity : IntBaseEntity
+    public sealed class TenderEntity : AuditableEntity<int>
     {
+        [MaxLength(8000)]
         public string? Attributes { get; private set; }
 
         [MaxLength(FieldLengths.Comment)]

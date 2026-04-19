@@ -18,7 +18,7 @@ public class CalculationUiFlowTests
         var calc = new CalculationMVVM();
         folderState.SetCalculation(calc);
 
-        var service = new CalculationService(null!, null!, folderState, null!, new CalculationInteractionState());
+        var service = new CalculationService(null!, null!, null!, folderState, null!, new CalculationInteractionState());
 
         int refreshCalls = 0;
         calc.OnChangeInCalculation += () => refreshCalls++;
@@ -37,12 +37,12 @@ public class CalculationUiFlowTests
         var calc = new CalculationMVVM();
         folderState.SetCalculation(calc);
 
-        var service = new CalculationService(null!, null!, folderState, null!, new CalculationInteractionState());
+        var service = new CalculationService(null!, null!, null!, folderState, null!, new CalculationInteractionState());
 
         service.RequestGridRefresh(CalculationGridRefreshKind.Structure);
 
         var structureDirty = typeof(CalculationMVVM)
-            .GetProperty("StructureFlatListDirty", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetField("_structureFlatListDirty", BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(calc);
 
         Assert.True(calc.FlatListDirty);
@@ -60,7 +60,7 @@ public class CalculationUiFlowTests
         interactionState.SetModifierKey("Control");
         interactionState.HandleItemSelected(42, 5m, CalculationItemType.task);
 
-        var service = new CalculationService(null!, null!, folderState, null!, interactionState);
+        var service = new CalculationService(null!, null!, null!, folderState, null!, interactionState);
         var coordinator = new CalculationTableCoordinator(folderState, null!, null!, null!, interactionState, service, null!);
 
         int refreshCalls = 0;

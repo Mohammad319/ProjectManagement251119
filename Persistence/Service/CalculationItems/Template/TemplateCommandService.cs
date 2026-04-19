@@ -2,7 +2,9 @@ using Application.Mapping.Calculation;
 using Application.Services.CalculationItems.TemplateTable;
 using Domain.Entities.Calculation;
 using Microsoft.EntityFrameworkCore;
+using Persistence.Context;
 using Persistence.Factory;
+using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace Persistence.Service.CalculationItems.Template
@@ -33,7 +35,12 @@ namespace Persistence.Service.CalculationItems.Template
                 return false;
 
             var template = await context.Templates
-                .FirstOrDefaultAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
+                .FirstOrDefaultAsync(
+                    x => x.Id == id &&
+                         (departmentId.HasValue
+                             ? x.DepartmentId == departmentId.Value
+                             : !x.DepartmentId.HasValue),
+                    ct);
 
             if (template == null)
                 return false;
@@ -50,7 +57,12 @@ namespace Persistence.Service.CalculationItems.Template
 
             var templateExists = await context.Templates
                 .AsNoTracking()
-                .AnyAsync(x => x.Id == id && (!departmentId.HasValue || x.DepartmentId == departmentId.Value), ct);
+                .AnyAsync(
+                    x => x.Id == id &&
+                         (departmentId.HasValue
+                             ? x.DepartmentId == departmentId.Value
+                             : !x.DepartmentId.HasValue),
+                    ct);
 
             if (!templateExists)
                 return false;

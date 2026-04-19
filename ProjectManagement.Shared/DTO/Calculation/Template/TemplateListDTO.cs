@@ -221,4 +221,33 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         public int? DepartmentId { get; set; }
         public int? TemplateId { get; set; }
     }
+
+    public class TemplateColumnBaseData : TemplateBase
+    {
+        private List<NetColumnState>? columns = TemplateDefaults.NetCalc();
+
+        public List<NetColumnState> Columns
+        {
+            get => TemplateDefaults.EnsureNetCalcColumns(columns);
+            set => columns = TemplateDefaults.EnsureNetCalcColumns(value);
+        }
+    }
+
+    public class TemplateColumnPostDTO : TemplateColumnBaseData
+    {
+        public bool Active { get; set; } = true;
+    }
+
+    public class TemplateColumnModelDTO : TemplateColumnBaseData
+    {
+        public int Id { get; set; }
+        public int? DepartmentId { get; set; }
+    }
+
+    public class TemplateColumnListDTO
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int? DepartmentId { get; set; }
+    }
 }

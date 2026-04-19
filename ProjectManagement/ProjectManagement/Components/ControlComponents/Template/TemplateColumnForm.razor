@@ -1,0 +1,106 @@
+@using Application.Feature.Calculation.TemplateTable.Commands
+@using ProjectManagement.Client.Constant
+@using ProjectManagement.Shared.Constants
+@using ProjectManagement.Shared.DTO.Calculation.Template
+@inherits AppComponentBase
+
+@if (TemplateColumnUpdate is not null)
+{
+    <section class="space-y-2">
+        <EditForm Model="@TemplateColumnUpdate"
+                  id="@FormId"
+                  FormName="@FormId"
+                  OnValidSubmit="HandleSubmitAsync"
+                  OnInvalidSubmit="HandleInvalidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <div class="min-w-0">
+                        <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+                        <InputText class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateColumnUpdate.Name" />
+                        <ValidationMessage For="() => TemplateColumnUpdate.Name" class="mt-1 block text-xs text-rose-600" />
+                    </div>
+
+                    <div class="flex items-end justify-end gap-1">
+                        <button type="submit"
+                                form="@FormId"
+                                class="inline-flex h-8 items-center justify-center rounded-md bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled="@btnSubmitDisabled">
+                            @ResourceApp.save
+                        </button>
+
+                        <button type="button"
+                                @onclick="BackAsync"
+                                class="inline-flex h-8 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+                                disabled="@btnSubmitDisabled">
+                            @((MarkupString)Icons.Back)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <TemplateColumnEditor Columns="TemplateColumnUpdate.Columns" />
+        </EditForm>
+    </section>
+}
+
+@code {
+    private TemplateColumnPostDTO TemplateColumnUpdate = new();
+
+    [Parameter] public TemplateColumnModelDTO TempForm { get; set; } = new();
+    [Parameter] public int? DepartmentId { get; set; }
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    private readonly string FormId = $"template-column-control-form-{Guid.NewGuid():N}";
+    private bool btnSubmitDisabled;
+
+    protected override void OnParametersSet()
+    {
+        TemplateColumnUpdate = new TemplateColumnPostDTO
+        {
+            Name = TempForm.Name ?? string.Empty,
+            Active = true,
+            Columns = TemplateDefaults.EnsureNetCalcColumns(TempForm.Columns)
+        };
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        if (btnSubmitDisabled)
+            return;
+
+        btnSubmitDisabled = true;
+        var refresh = false;
+
+        try
+        {
+            if (TempForm.Id > 0)
+            {
+                refresh = await Dispatcher.Send(new UpdateTemplateColumnCommand(TemplateColumnUpdate, TempForm.Id, DepartmentId));
+                MHD.Notifications(ToastType.Update, refresh);
+            }
+            else
+            {
+                var created = await Dispatcher.Send(new CreateTemplateColumnCommand(TemplateColumnUpdate, DepartmentId));
+                refresh = created is not null && created.Id > 0;
+                MHD.Notifications(ToastType.Add, refresh);
+            }
+        }
+        catch
+        {
+            MHD.Notifications(TempForm.Id > 0 ? ToastType.Update : ToastType.Add, false);
+        }
+        finally
+        {
+            btnSubmitDisabled = false;
+        }
+
+        await Callback.InvokeAsync(refresh);
+    }
+
+    private void HandleInvalidSubmit(EditContext _)
+        => MHD.Notifications(TempForm.Id > 0 ? ToastType.Update : ToastType.Add, false);
+
+    private Task BackAsync() => Callback.InvokeAsync(false);
+}

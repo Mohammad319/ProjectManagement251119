@@ -1,5 +1,6 @@
 using Domain.Entities.Calculation;
 using ProjectManagement.Shared.Constants;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using System.Text.Json;
 using Xunit;
@@ -9,7 +10,7 @@ namespace ProjectManagement.Tests;
 public class TemplateMetadataTests
 {
     [Fact]
-    public void TemplateEntity_MetadataSnapshot_PreservesNetCalcSettings()
+    public void TemplateEntity_MetadataSnapshot_PreservesStyleAndReadsColumnsFromColumnEntity()
     {
         var metadata = new TemplateData
         {
@@ -44,7 +45,8 @@ public class TemplateMetadataTests
         var entity = new TemplateEntity("Default", true, 1);
         entity.UpdateMetadata(metadata);
 
-        var snapshot = entity.GetMetadataSnapshot();
+        var columnSettings = new TemplateColumnEntity("Default", true, 1, metadata.NetCalc.Columns);
+        var snapshot = entity.GetMetadataSnapshot(columnSettings.GetColumnsSnapshot());
 
         Assert.Equal(4, snapshot.MathRound);
         Assert.Equal("#123456", snapshot.NetCalc.Color.ResourceParameter);
@@ -52,12 +54,37 @@ public class TemplateMetadataTests
         Assert.Equal("#345678", snapshot.NetCalc.Color.ResourceTime);
         Assert.Equal("#456789", snapshot.NetCalc.Color.TaskCodeName);
         Assert.Equal("#56789a", snapshot.NetCalc.Color.TaskDetailBaseQuantity);
-        Assert.Equal(NetColumnId.Quantity, snapshot.NetCalc.Sort.TaskColumn);
-        Assert.True(snapshot.NetCalc.Sort.TaskDescending);
-        Assert.Equal(NetColumnId.Name, snapshot.NetCalc.Sort.ResourceColumn);
-        Assert.True(snapshot.NetCalc.Sort.ResourceDescending);
+        Assert.Null(snapshot.NetCalc.Sort.TaskColumn);
+        Assert.False(snapshot.NetCalc.Sort.TaskDescending);
+        Assert.Null(snapshot.NetCalc.Sort.ResourceColumn);
+        Assert.False(snapshot.NetCalc.Sort.ResourceDescending);
         Assert.DoesNotContain(snapshot.NetCalc.Columns, x => x.Id == NetColumnId.ChangeFactor1);
         Assert.DoesNotContain(snapshot.NetCalc.Columns, x => x.Id == NetColumnId.PriceProduction);
+    }
+
+    [Fact]
+    public void CalculationEntity_Update_PreservesSortConfigOnCalculation()
+    {
+        var dto = new CalculationPostDTO
+        {
+            Code = "C-1",
+            Name = "Calculation",
+            Sort = new SortConfig
+            {
+                TaskColumn = NetColumnId.Quantity,
+                TaskDescending = true,
+                ResourceColumn = NetColumnId.Name,
+                ResourceDescending = true
+            }
+        };
+
+        var entity = new CalculationEntity();
+        entity.Update(dto);
+
+        Assert.Equal(NetColumnId.Quantity, entity.Sort.TaskColumn);
+        Assert.True(entity.Sort.TaskDescending);
+        Assert.Equal(NetColumnId.Name, entity.Sort.ResourceColumn);
+        Assert.True(entity.Sort.ResourceDescending);
     }
 
     [Fact]

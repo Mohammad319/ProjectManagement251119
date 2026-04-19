@@ -19,6 +19,7 @@
         public static string Auth => ApiV1 + "auth/";
         public static string Token => ApiV1 + "token/";
         public static string Template => ApiV1 + "template/";
+        public static string TemplateColumn => ApiV1 + "templatecolumn/";
         public static string Application => ApiV1 + "Application/";
         public static string Section => ApiV1 + "section/";
         public static string Tender => ApiV1 + "tender/";

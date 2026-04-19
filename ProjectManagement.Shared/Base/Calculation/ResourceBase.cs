@@ -276,7 +276,17 @@ namespace ProjectManagement.Shared.Base.Calculation
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
         public int Order { get; set; }
-        public bool Active { get; set; } = true;
+
+        private bool _storedActive = true;
+        [JsonIgnore] private bool? _activeOverride;
+
+        public bool Active
+        {
+            get => _activeOverride ?? _storedActive;
+            set => _storedActive = value;
+        }
+
+        public void SetActiveOverride(bool? value) => _activeOverride = value;
 
         [JsonIgnore]
         public int SortOrder
@@ -288,8 +298,8 @@ namespace ProjectManagement.Shared.Base.Calculation
         [JsonIgnore]
         public bool IsActive
         {
-            get => Active;
-            set => Active = value;
+            get => _storedActive;
+            set => _storedActive = value;
         }
     }
 }

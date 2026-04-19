@@ -7,16 +7,16 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 {
     public class ResFromData : ResourceBase
     {
-        private ResourceMetadata? data = new();
+        private ResourceMetadata? _data = new();
 
         public ResourceMetadata Data
         {
             get
             {
-                data ??= new ResourceMetadata();
-                return data;
+                _data ??= new ResourceMetadata();
+                return _data;
             }
-            set { data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
+            set { _data = CalculationItemMetadataMapper.CloneResourceMetadata(value); }
         }
 
         public string QuantityParam => Data.QuantityParam;

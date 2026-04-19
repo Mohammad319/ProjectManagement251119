@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using static ProjectManagement.Shared.Constant.PMRolesConst;
 
 namespace ProjectManagement.Server.Controllers.v1.Project
@@ -115,6 +116,20 @@ namespace ProjectManagement.Server.Controllers.v1.Project
         public async Task<IActionResult> UpdateQuantityList(int id, List<QuanityListDTO> model)
         {
             return Ok(await MicroBus.Send(new UpdateQuantityListCommand(model, id, GetDepartmentId())));
+        }
+
+        [Authorize(Roles = Tenant.AdminManger)]
+        [HttpPut(URLConst.Calculation.Sort + "/{id}")]
+        public async Task<IActionResult> UpdateSort(int id, SortConfig sort)
+        {
+            return Ok(await MicroBus.Send(new UpdateCalculationSortCommand(sort, id, GetUserId(), GetDepartmentId())));
+        }
+
+        [Authorize(Roles = Tenant.Users)]
+        [HttpPut(URLConst.Calculation.DisplayPresets + "/{id}")]
+        public async Task<IActionResult> UpdateDisplayPresets(int id, DisplayOptionsPresetStore store)
+        {
+            return Ok(await MicroBus.Send(new UpdateDisplayPresetsCommand(store, id, GetDepartmentId())));
         }
 
     }

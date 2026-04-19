@@ -1,11 +1,16 @@
+using BlazorMHD.UI.Core.DesignSystem;
+using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
+using ProjectManagement.Client.Pages.Calculation.Table.Header;
 using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
+using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
 using ProjectManagement.Client.Shared.ViewModel;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Calculation;
 using System.Globalization;
 using System.Linq;
 
@@ -17,6 +22,8 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     [Inject] private CalculationService CalcService { get; set; } = default!;
     [Inject] private CalculationInteractionState InteractionState { get; set; } = default!;
     [Inject] private FolderState FolderState { get; set; } = default!;
+    [Inject] private ICalculationRepository CalcRepo { get; set; } = default!;
+    [Inject] private DialogService DialogService { get; set; } = default!;
 
     private Action? _onFolderChanged;
     private Action? _onInteractionChanged;
@@ -70,7 +77,18 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     private void HandleFolderChanged()
     {
         ObserveCalculation();
+        ApplyActivePresetIfExists();
         _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void ApplyActivePresetIfExists()
+    {
+        if (Calc is null) return;
+        var active = DisplayOptionsPresetState.GetActivePreset(Calc.DisplayPresets);
+        if (active is not null)
+            Calc.ApplyPresetActiveOverrides(active);
+        else
+            Calc.ClearPresetActiveOverrides();
     }
 
     private void ObserveCalculation()
@@ -85,6 +103,14 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
 
         if (_observedCalculation is not null && _onCalculationChanged is not null)
             _observedCalculation.OnChangeInCalculation += _onCalculationChanged;
+    }
+
+    private void ClearPresetOverrides()
+    {
+        if (Calc is null) return;
+        Calc.ClearPresetActiveOverrides();
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+        StateHasChanged();
     }
 
     private void ClearFilters()
@@ -137,6 +163,41 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
 
         Calc.OnlyActive = !Calc.OnlyActive;
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+    }
+
+    private void OpenDisplayPresetsDialog()
+    {
+        if (Calc is null) return;
+
+        DialogService.ShowComponent<CalculationDisplayOptionsPresetsDialog>(
+            AppLoc["displayPresets"],
+            new Dictionary<string, object>
+            {
+                [nameof(CalculationDisplayOptionsPresetsDialog.Store)] = Calc.DisplayPresets,
+                [nameof(CalculationDisplayOptionsPresetsDialog.OnApply)] = EventCallback.Factory.Create<DisplayOptionsPreset>(this, ApplyDisplayPreset),
+                [nameof(CalculationDisplayOptionsPresetsDialog.OnSave)] = EventCallback.Factory.Create<DisplayOptionsPresetStore>(this, SaveDisplayPresetsAsync),
+                [nameof(CalculationDisplayOptionsPresetsDialog.OnClear)] = EventCallback.Factory.Create(this, ClearPresetOverrides),
+            },
+            DialogSize.Medium);
+    }
+
+    private void ApplyDisplayPreset(DisplayOptionsPreset preset)
+    {
+        if (Calc is null) return;
+        Calc.ShowTasks = preset.ShowTasks;
+        Calc.ShowResources = preset.ShowResources;
+        CalcService.ShowComments = preset.ShowComments;
+        CalcService.ShowResourceVariables = preset.ShowResourceVariables;
+        Calc.OnlyActive = preset.OnlyActive;
+        Calc.ApplyPresetActiveOverrides(preset);
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+        StateHasChanged();
+    }
+
+    private async Task SaveDisplayPresetsAsync(DisplayOptionsPresetStore store)
+    {
+        if (Calc is null) return;
+        await CalcRepo.UpdateDisplayPresetsAsync(Calc.Id, store);
     }
 
     private static string GetToggleChipClass(bool isActive) =>

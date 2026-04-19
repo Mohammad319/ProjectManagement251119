@@ -1,5 +1,6 @@
-﻿using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using System;
 
 namespace Application.Feature.Calculation.Calculation
@@ -54,6 +55,19 @@ namespace Application.Feature.Calculation.Calculation
         Task<bool> UpdateQuantityListAsync(
             int id,
             List<QuanityListDTO> model,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> UpdateSortAsync(
+            int id,
+            SortConfig sort,
+            int userId,
+            int? departmentId,
+            CancellationToken cancellationToken = default);
+
+        Task<bool> UpdateDisplayPresetsAsync(
+            int id,
+            DisplayOptionsPresetStore store,
             int? departmentId,
             CancellationToken cancellationToken = default);
     }

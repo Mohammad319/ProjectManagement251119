@@ -74,7 +74,7 @@ namespace ProjectManagement.Client.Shared.Calculation
                 return isSuccess;
             if (type == FilterType.startsWith && items.Any(f => str.StartsWith(f, System.StringComparison.CurrentCultureIgnoreCase)))
                 return isSuccess;
-            if (type == FilterType.endsWith && items.Any(f => str.ToLower().EndsWith(f.ToLower())))
+            if (type == FilterType.endsWith && items.Any(f => str.EndsWith(f, System.StringComparison.OrdinalIgnoreCase)))
                 return isSuccess;
             return !isSuccess;
         }

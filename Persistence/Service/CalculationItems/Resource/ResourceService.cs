@@ -63,7 +63,7 @@ namespace Persistence.Service.CalculationItems.Resource
                 }
                 else
                 {
-                    copy.PrimaryOfferId = null;
+                    copy.SetPrimaryOffer(null);
                 }
 
                 copy.MoveToTask(parentTaskId, nextOrder);
@@ -124,8 +124,6 @@ namespace Persistence.Service.CalculationItems.Resource
             {
                 var resource = ResourceEntity.Create(dto, nextOrder, parentTaskId);
                 nextOrder += 100;
-                if(resource.AccountId == 0)
-                    resource.AccountId = null;
                 entities.Add(resource);
             }
 

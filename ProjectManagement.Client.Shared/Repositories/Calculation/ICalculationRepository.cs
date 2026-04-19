@@ -4,6 +4,7 @@ using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.General;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -26,6 +27,8 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation
         Task<bool> UpdateAsync(CalculationPostDTO model, int id);
         Task<bool> UpdateAsync(List<OHFactors> model, int id);
         Task<bool> UpdateAsync(List<QuanityListDTO> model, int id);
+        Task<bool> UpdateSortAsync(int id, SortConfig sort);
+        Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store);
 
         Task<bool> DeleteAsync(int id);
     }

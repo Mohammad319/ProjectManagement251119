@@ -41,21 +41,27 @@ namespace Domain.Entities.Project
         }
 
         public int? ProjectTypeId { get; private set; }
+        [JsonIgnore]
         public TypeEntity? ProjectType { get; private set; }
 
         public Guid FolderId { get; private set; }
+        [JsonIgnore]
         public FolderEntity Folder { get; private set; } = null!;
 
         public int? OrganisationId { get; private set; }
+        [JsonIgnore]
         public OrganisationEntity? Organisation { get; private set; }
 
         public int? ProcurementMethodId { get; private set; }
+        [JsonIgnore]
         public ProcurementMethodEntity? ProcurementMethod { get; private set; }
 
         public int? CompensationId { get; private set; }
+        [JsonIgnore]
         public CompensationEntity? Compensation { get; private set; }
 
         public int? ContractId { get; private set; }
+        [JsonIgnore]
         public ContractEntity? Contract { get; private set; }
 
         public bool IsVisible { get; private set; } = true;

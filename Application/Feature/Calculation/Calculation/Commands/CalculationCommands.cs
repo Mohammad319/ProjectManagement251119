@@ -1,6 +1,7 @@
-﻿using Application.Interfaces;
+using Application.Interfaces;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace Application.Feature.Calculation.Calculation.Commands
 {
@@ -38,6 +39,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
         public Task<bool> Handle(NewOrderCalculationCommand request, CancellationToken ct)
             => service.NewOrderAsync(request.Id, request.NewOrder, ct);
     }
+
     public sealed record UpdateCalculationCommand(CalculationPostDTO dto, int Id, int UserId, int? DepartmentId) : IRequest<bool>;
 
     public class UpdateCalculationCommandHandler(ICalculationService service) : IRequestHandler<UpdateCalculationCommand, bool>
@@ -45,6 +47,7 @@ namespace Application.Feature.Calculation.Calculation.Commands
         public Task<bool> Handle(UpdateCalculationCommand request, CancellationToken ct)
             => service.UpdateAsync(request.Id, request.dto, request.UserId, request.DepartmentId, ct);
     }
+
     public sealed record UpdateFactorsCommand(List<OHFactors> model, int Id, int? DepartmentId) : IRequest<bool>;
     public class UpdateFactorsCommandHandler(ICalculationService service) : IRequestHandler<UpdateFactorsCommand, bool>
     {
@@ -57,5 +60,19 @@ namespace Application.Feature.Calculation.Calculation.Commands
     {
         public Task<bool> Handle(UpdateQuantityListCommand request, CancellationToken ct)
             => service.UpdateQuantityListAsync(request.Id, request.model, request.DepartmentId, ct);
+    }
+
+    public sealed record UpdateCalculationSortCommand(SortConfig Sort, int Id, int UserId, int? DepartmentId) : IRequest<bool>;
+    public class UpdateCalculationSortCommandHandler(ICalculationService service) : IRequestHandler<UpdateCalculationSortCommand, bool>
+    {
+        public Task<bool> Handle(UpdateCalculationSortCommand request, CancellationToken ct)
+            => service.UpdateSortAsync(request.Id, request.Sort, request.UserId, request.DepartmentId, ct);
+    }
+
+    public sealed record UpdateDisplayPresetsCommand(DisplayOptionsPresetStore Store, int Id, int? DepartmentId) : IRequest<bool>;
+    public class UpdateDisplayPresetsCommandHandler(ICalculationService service) : IRequestHandler<UpdateDisplayPresetsCommand, bool>
+    {
+        public Task<bool> Handle(UpdateDisplayPresetsCommand request, CancellationToken ct)
+            => service.UpdateDisplayPresetsAsync(request.Id, request.Store, request.DepartmentId, ct);
     }
 }

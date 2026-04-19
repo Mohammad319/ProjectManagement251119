@@ -1,5 +1,4 @@
-﻿#nullable enable
-using ProjectManagement.Client.Shared.Model.Project.Calculation;
+﻿using ProjectManagement.Client.Shared.Model.Project.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Offer;
 using ProjectManagement.Client.Shared.ViewModel;
 using ProjectManagement.Shared.Base.Calculation;
@@ -46,7 +45,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
     {
         [JsonIgnore] public bool LastHubChangeAffectsCalc { get; set; } = false;
         [JsonIgnore] public bool FlatListDirty { get; set; } = true;
-        [JsonIgnore] private bool StructureFlatListDirty { get; set; } = true;
+        private bool _structureFlatListDirty = true;
 
         // ParentId -> Children Tasks
         [JsonIgnore] public Dictionary<int, List<TaskListMVVM>> ChildrenLookup { get; private set; } = new();
@@ -59,7 +58,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         // القائمة المسطّحة المستخدمة في Virtualize
         public List<FlatItem>? AllFlatItems { get; set; }
-        [JsonIgnore] private List<FlatItem>? StructureFlatItems { get; set; }
+        private List<FlatItem>? _structureFlatItems;
 
         // ====== Indexes (أهم تحسين للسرعة) ======
         [JsonIgnore] public Dictionary<int, TaskListMVVM> TaskById { get; private set; } = new();
@@ -83,6 +82,8 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public string Contract { get; set; } = string.Empty;
 
         public int? TemplateId { get; set; }
+        public int? TemplateColumnId { get; set; }
+        public SortConfig Sort { get; set; } = new();
 
         public bool Tap1 { get; set; } = true;
         public bool Tap2 { get; set; } = true;
@@ -146,6 +147,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public TemplateMVVM Template { get; set; } = new();
         public FilterVM? FilterVM { get; set; }
+        public DisplayOptionsPresetStore DisplayPresets { get; set; } = new();
 
         // ====== إشعار الجدول بالتحديث ======
         public event Action? OnChangeInCalculation;
@@ -153,7 +155,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         public void NotifyGridRefresh(bool flatListDirty = false, bool structureFlatListDirty = false)
         {
             if (structureFlatListDirty)
-                StructureFlatListDirty = true;
+                _structureFlatListDirty = true;
 
             if (flatListDirty)
                 FlatListDirty = true;
@@ -344,22 +346,22 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public bool TryToggleTaskCollapse(TaskListMVVM task)
         {
-            if (task is null || StructureFlatItems is null || StructureFlatListDirty)
+            if (task is null || _structureFlatItems is null || _structureFlatListDirty)
                 return false;
 
-            int taskIndex = FindTaskFlatIndex(task.Id, StructureFlatItems);
+            int taskIndex = FindTaskFlatIndex(task.Id, _structureFlatItems);
             if (taskIndex < 0)
                 return false;
 
-            int depth = StructureFlatItems[taskIndex].Depth;
+            int depth = _structureFlatItems[taskIndex].Depth;
             task.Ui.CollSpan = !task.Ui.CollSpan;
 
             if (!task.Ui.CollSpan)
-                RemoveTaskDescendants(StructureFlatItems, taskIndex, depth);
+                RemoveTaskDescendants(_structureFlatItems, taskIndex, depth);
             else
-                InsertTaskDescendants(StructureFlatItems, task, taskIndex, depth);
+                InsertTaskDescendants(_structureFlatItems, task, taskIndex, depth);
 
-            ReindexFlatItems(StructureFlatItems, taskIndex + 1);
+            ReindexFlatItems(_structureFlatItems, taskIndex + 1);
             FlatListDirty = true;
             return true;
         }
@@ -392,7 +394,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             }
 
             EnsureStructureFlatList();
-            if (StructureFlatItems is null || StructureFlatItems.Count == 0)
+            if (_structureFlatItems is null || _structureFlatItems.Count == 0)
             {
                 MaxDepth = 0;
                 return [];
@@ -400,15 +402,15 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
             MaxDepth = 0;
 
-            int estimatedCapacity = Math.Max(256, StructureFlatItems.Count);
+            int estimatedCapacity = Math.Max(256, _structureFlatItems.Count);
             var flat = new List<FlatItem>(estimatedCapacity);
             bool[] branchVisibleByDepth = new bool[Math.Max(8, MaxDepth + Tasks.Count + 4)];
             bool[] branchActiveByDepth = new bool[branchVisibleByDepth.Length];
 
             int index = 0;
-            for (int i = 0; i < StructureFlatItems.Count; i++)
+            for (int i = 0; i < _structureFlatItems.Count; i++)
             {
-                var item = StructureFlatItems[i];
+                var item = _structureFlatItems[i];
                 if (item.IsTask)
                 {
                     var task = item.Task!;
@@ -435,6 +437,9 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
                     var resource = item.Resource!;
                     if (!resource.Ui.FilterVisible)
+                        continue;
+
+                    if (OnlyActive && !resource.Active)
                         continue;
 
                     flat.Add(new FlatItem(index++, null, resource, item.Depth, parentBranchActive));
@@ -479,7 +484,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                 flatItems.InsertRange(taskIndex + 1, descendants);
         }
 
-        private SortConfig? CurrentSort => Template?.NetCalc?.Sort;
+        private SortConfig? CurrentSort => Sort;
 
         private void BuildStructureFlatListInternal(
             List<TaskListMVVM> tasks,
@@ -591,6 +596,123 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
             MatchesFactorDisplay(task.IsOH) &&
             (!OnlyActive || task.Active);
 
+        public DisplayOptionsPreset BuildDisplayOptionsPreset(bool showComments, bool showResourceVariables)
+        {
+            var preset = new DisplayOptionsPreset
+            {
+                ShowTasks = ShowTasks,
+                ShowResources = ShowResources,
+                ShowComments = showComments,
+                ShowResourceVariables = showResourceVariables,
+                OnlyActive = OnlyActive,
+            };
+
+            for (int i = 0; i < Tasks.Count; i++)
+            {
+                var task = Tasks[i];
+                if (!task.Active)
+                    preset.InactiveTaskIds.Add(task.Id);
+
+                if (task.Resources is null)
+                    continue;
+
+                for (int r = 0; r < task.Resources.Count; r++)
+                {
+                    var resource = task.Resources[r];
+                    if (!resource.Active)
+                        preset.InactiveResourceIds.Add(resource.Id);
+                }
+            }
+
+            return preset;
+        }
+
+        public void ApplyPresetActiveOverrides(DisplayOptionsPreset preset)
+        {
+            var inactiveTaskIds = preset.InactiveTaskIds is null
+                ? new HashSet<int>()
+                : new HashSet<int>(preset.InactiveTaskIds);
+
+            var inactiveResourceIds = preset.InactiveResourceIds is null
+                ? new HashSet<int>()
+                : new HashSet<int>(preset.InactiveResourceIds);
+
+            for (int i = 0; i < Tasks.Count; i++)
+            {
+                var task = Tasks[i];
+                task.SetActiveOverride(!inactiveTaskIds.Contains(task.Id));
+
+                if (task.Resources is null)
+                    continue;
+
+                for (int r = 0; r < task.Resources.Count; r++)
+                {
+                    var resource = task.Resources[r];
+                    resource.SetActiveOverride(!inactiveResourceIds.Contains(resource.Id));
+                }
+            }
+        }
+
+        public void ClearPresetActiveOverrides()
+        {
+            for (int i = 0; i < Tasks.Count; i++)
+            {
+                var task = Tasks[i];
+                task.SetActiveOverride(null);
+
+                if (task.Resources is null)
+                    continue;
+
+                for (int r = 0; r < task.Resources.Count; r++)
+                    task.Resources[r].SetActiveOverride(null);
+            }
+        }
+
+        public void ToggleTaskActiveInPreset(int taskId, bool showComments, bool showResourceVariables)
+        {
+            var preset = GetOrCreateActivePreset(showComments, showResourceVariables);
+            var task = FindInStructure(taskId, isTask: true)?.Task;
+            if (task == null) return;
+            bool newActive = !task.Active;
+            task.SetActiveOverride(newActive);
+            if (!newActive) { if (!preset.InactiveTaskIds.Contains(taskId)) preset.InactiveTaskIds.Add(taskId); }
+            else preset.InactiveTaskIds.Remove(taskId);
+        }
+
+        public void ToggleResourceActiveInPreset(int resourceId, bool showComments, bool showResourceVariables)
+        {
+            var preset = GetOrCreateActivePreset(showComments, showResourceVariables);
+            var resource = FindInStructure(resourceId, isTask: false)?.Resource;
+            if (resource == null) return;
+            bool newActive = !resource.Active;
+            resource.SetActiveOverride(newActive);
+            if (!newActive) { if (!preset.InactiveResourceIds.Contains(resourceId)) preset.InactiveResourceIds.Add(resourceId); }
+            else preset.InactiveResourceIds.Remove(resourceId);
+        }
+
+        private FlatItem? FindInStructure(int id, bool isTask)
+        {
+            EnsureStructureFlatList();
+            foreach (var item in _structureFlatItems!)
+            {
+                if (isTask && item.IsTask && item.Task!.Id == id) return item;
+                if (!isTask && item.IsResource && item.Resource!.Id == id) return item;
+            }
+            return null;
+        }
+
+        private DisplayOptionsPreset GetOrCreateActivePreset(bool showComments, bool showResourceVariables)
+        {
+            var preset = DisplayOptionsPresetState.GetActivePreset(DisplayPresets);
+            if (preset != null) return preset;
+            var created = DisplayOptionsPresetState.SavePreset(
+                DisplayPresets,
+                "Default",
+                BuildDisplayOptionsPreset(showComments, showResourceVariables));
+            ApplyPresetActiveOverrides(created);
+            return created;
+        }
+
         private bool ShouldShowTaskRow(TaskListMVVM task) =>
             ShowOnlyCodeTextTasks || task.Type != TaskType.CodeName;
 
@@ -604,19 +726,19 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         private void EnsureStructureFlatList()
         {
-            if (!StructureFlatListDirty && StructureFlatItems is not null)
+            if (!_structureFlatListDirty && _structureFlatItems is not null)
                 return;
 
             int index = 0;
             var flat = new List<FlatItem>(Math.Max(256, Tasks.Count + ResourceById.Count));
             BuildStructureFlatListInternal(RootTasks, 0, flat, ref index);
-            StructureFlatItems = flat;
-            StructureFlatListDirty = false;
+            _structureFlatItems = flat;
+            _structureFlatListDirty = false;
         }
 
         private void MarkStructureDirty()
         {
-            StructureFlatListDirty = true;
+            _structureFlatListDirty = true;
             FlatListDirty = true;
         }
     }

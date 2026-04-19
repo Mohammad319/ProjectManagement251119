@@ -1,4 +1,5 @@
 using ProjectManagement.Client.Shared.Constants;
+using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace ProjectManagement.Client.Shared.MVVM.Calculation
@@ -22,5 +23,13 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         //}
 
         //public string FreezColtodelete() => FreezCol();
+    }
+
+    public class TemplateColumnMVVM
+    {
+        public int Id { get; set; }
+        public int? DepartmentId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public List<NetColumnState> Columns { get; set; } = TemplateDefaults.NetCalc();
     }
 }

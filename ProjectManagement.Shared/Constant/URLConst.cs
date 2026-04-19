@@ -40,8 +40,10 @@
             public const string Create = "create";
             public const string AdditionalFactor = "af";
             public const string NetCalc = "nekjktc";
+            public const string Sort = "sort";
 
             public const string HourlyPriceList = "hplzu";
+            public const string DisplayPresets = "displaypresets";
         }
 
         public static class ResourceType
@@ -65,6 +67,14 @@
             public const string Update = "update";
             public const string PostAdmin = "cadmin";
 
+        }
+        public static class TemplateColumn
+        {
+            public const string GetByDepartment = "getByDepartment";
+            public const string GetById = "getbyid";
+            public const string Set = "set";
+            public const string Update = "update";
+            public const string PostAdmin = "cadmin";
         }
         public static class Tender
         {

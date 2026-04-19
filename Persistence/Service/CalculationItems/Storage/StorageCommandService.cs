@@ -65,7 +65,7 @@ namespace Persistence.Service.CalculationItems.Storage
                     .ToDictionary(g => g.Key, g => g.ToList());
 
                 foreach (var t in tasks)
-                    t.Resources = resourcesByTaskId.TryGetValue(t.Id, out var list) ? list : [];
+                    t.SetResources(resourcesByTaskId.TryGetValue(t.Id, out var list) ? list : []);
 
                 TaskExtention.BuildTaskHierarchy(tasks);
 

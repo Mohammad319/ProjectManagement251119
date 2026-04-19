@@ -57,6 +57,15 @@
                        @bind-value:after="NotifyStructureRefresh" />
                 <span>@ResourceLoc.onlyActive</span>
             </label>
+
+            <div class="border-t border-gray-100 dark:border-slate-700 px-3 py-2">
+                <button type="button"
+                        class="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sky-700"
+                        @onclick="OpenPresetsDialog">
+                    @((MarkupString)Icons.SaveCloud)
+                    <span>@AppLoc["displayPresets"]</span>
+                </button>
+            </div>
         </div>
     }
 </div>

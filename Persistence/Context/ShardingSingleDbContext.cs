@@ -115,7 +115,7 @@ public partial class ShardingSingleDbContext(DbContextOptions<ShardingSingleDbCo
 
         modelBuilder.Entity<TemplateEntity>()
             .Property(e => e.Metadata)
-            .HasJsonConversion<TemplateData>();
+            .HasJsonConversion<TemplateMetadataData>();
     }
 
     private static void ConfigureOrderSequences(ModelBuilder modelBuilder)

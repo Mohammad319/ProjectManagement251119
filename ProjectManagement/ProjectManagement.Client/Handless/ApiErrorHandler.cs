@@ -116,6 +116,10 @@ public class ApiErrorHandler(
         {
             return response.Content is null ? string.Empty : await response.Content.ReadAsStringAsync(ct);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch
         {
             return string.Empty;
@@ -136,14 +140,13 @@ public class ApiErrorHandler(
     private static string Trim(string value, int max)
         => value.Length <= max ? value : value[..max];
 
+    private static readonly JsonSerializerOptions _problemDetailsOptions = new(JsonSerializerDefaults.Web);
+
     private static ApiProblemDetails? TryParseProblemDetails(string json)
     {
         try
         {
-            return JsonSerializer.Deserialize<ApiProblemDetails>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
+            return JsonSerializer.Deserialize<ApiProblemDetails>(json, _problemDetailsOptions);
         }
         catch
         {

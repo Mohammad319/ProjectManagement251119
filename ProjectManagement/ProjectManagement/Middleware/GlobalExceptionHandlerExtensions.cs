@@ -6,6 +6,8 @@ namespace ProjectManagement.Middleware;
 
 public static class GlobalExceptionHandlerExtensions
 {
+    private sealed class GlobalExceptionLog { }
+
     public static WebApplication UseGlobalExceptionHandling(this WebApplication app, bool isDev)
     {
         app.UseExceptionHandler(errorApp =>
@@ -18,8 +20,7 @@ public static class GlobalExceptionHandlerExtensions
                 var traceId = System.Diagnostics.Activity.Current?.Id ?? context.TraceIdentifier;
 
                 var logger = context.RequestServices
-                    .GetRequiredService<ILoggerFactory>()
-                    .CreateLogger("GlobalException");
+                    .GetRequiredService<ILogger<GlobalExceptionLog>>();
 
                 if (ex is not null)
                     logger.LogError(ex, "Unhandled exception. TraceId={TraceId} Path={Path}", traceId, context.Request.Path);

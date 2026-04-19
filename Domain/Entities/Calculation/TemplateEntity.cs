@@ -1,6 +1,7 @@
 using Domain.Entities.Base;
 using Domain.Entities.Users;
 using ProjectManagement.Shared.Constant;
+using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -12,10 +13,10 @@ namespace Domain.Entities.Calculation
         [Required, MaxLength(FieldLengths.Name)]
         public string Name { get; private set; } = string.Empty;
 
-        private TemplateData? _metadata;
-        public TemplateData Metadata
+        private TemplateMetadataData? _metadata;
+        public TemplateMetadataData Metadata
         {
-            get => _metadata ??= new TemplateData();
+            get => _metadata ??= new TemplateMetadataData();
             private set => _metadata = TemplateMetadataMapper.Build(value);
         }
 
@@ -52,16 +53,16 @@ namespace Domain.Entities.Calculation
         {
             SetName(name);
             IsVisible = isVisible;
-            //DepartmentId = departmentId;
-            Metadata = metadata;
+            DepartmentId = departmentId;
+            _metadata = TemplateMetadataMapper.Build(metadata);
         }
 
-        public TemplateData GetMetadataSnapshot()
-            => TemplateMetadataMapper.Build(_metadata);
+        public TemplateData GetMetadataSnapshot(IEnumerable<NetColumnState>? columns = null)
+            => TemplateMetadataMapper.BuildTemplateData(_metadata, columns);
 
         public void UpdateMetadata(TemplateData metadata)
         {
-            Metadata = metadata;
+            _metadata = TemplateMetadataMapper.Build(metadata);
         }
 
         public void UpdateMetadata(Action<TemplateData> update)
@@ -70,7 +71,7 @@ namespace Domain.Entities.Calculation
 
             var snapshot = GetMetadataSnapshot();
             update(snapshot);
-            Metadata = snapshot;
+            _metadata = TemplateMetadataMapper.Build(snapshot);
         }
 
         public void SetVisibility(bool isVisible)

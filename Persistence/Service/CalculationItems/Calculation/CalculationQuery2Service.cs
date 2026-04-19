@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Offer;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,11 +19,14 @@ namespace Persistence.Service.CalculationItems.Calculation
             public int? OrganisationId { get; set; }
             public string Code { get; set; } = string.Empty;
             public int? TemplateId { get; set; }
+            public int? TemplateColumnId { get; set; }
+            public SortConfig Sort { get; set; } = new();
             public List<OHFactors> Factors { get; set; } = [];
             public List<QuanityListDTO> QuanityList { get; set; } = [];
             public string Compensation { get; set; } = string.Empty;
             public string Customer { get; set; } = string.Empty;
             public string Contract { get; set; } = string.Empty;
+            public DisplayOptionsPresetStore DisplayPresets { get; set; } = new();
         }
 
         private sealed class CalculationPageResourceRow
@@ -88,11 +92,14 @@ namespace Persistence.Service.CalculationItems.Calculation
                     OrganisationId = x.OrganisationId,
                     Code = x.Code,
                     TemplateId = x.TemplateId,
+                    TemplateColumnId = x.TemplateColumnId,
+                    Sort = x.Sort,
                     Factors = x.Factors,
                     QuanityList = x.Metadata.QuanityList,
                     Compensation = x.Compensation == null ? string.Empty : (x.Compensation.Name ?? string.Empty),
                     Customer = x.Organisation == null ? string.Empty : (x.Organisation.Name ?? string.Empty),
                     Contract = x.Contract == null ? string.Empty : (x.Contract.Name ?? string.Empty),
+                    DisplayPresets = x.DisplayPresets,
                 })
                 .FirstOrDefaultAsync(ct);
 
@@ -243,11 +250,14 @@ namespace Persistence.Service.CalculationItems.Calculation
                 OrganisationId = header.OrganisationId,
                 Code = header.Code,
                 TemplateId = header.TemplateId,
+                TemplateColumnId = header.TemplateColumnId,
+                Sort = header.Sort,
                 Factors = header.Factors ?? [],
                 QuanityList = header.QuanityList ?? [],
                 Compensation = header.Compensation ?? string.Empty,
                 Customer = header.Customer ?? string.Empty,
                 Contract = header.Contract ?? string.Empty,
+                DisplayPresets = DisplayOptionsPresetState.Normalize(header.DisplayPresets),
                 Tasks = tasks
             };
         }

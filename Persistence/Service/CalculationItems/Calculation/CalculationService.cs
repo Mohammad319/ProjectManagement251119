@@ -6,6 +6,7 @@ using Persistence.Context;
 using Persistence.Factory;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 
 namespace Persistence.Service.CalculationItems.Calculation
 {
@@ -170,6 +171,33 @@ namespace Persistence.Service.CalculationItems.Calculation
             return true;
         }
 
+        public async Task<bool> UpdateSortAsync(
+            int id,
+            SortConfig sort,
+            int userId,
+            int? departmentId,
+            CancellationToken cancellationToken = default)
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
+            if (calculation is null)
+                return false;
+
+            calculation.UpdateSort(sort ?? new SortConfig());
+            Touch(calculation, userId);
+
+            await db.SaveChangesAsync(cancellationToken);
+
+            await notification.SendNotificationAsync(
+                calculation.Id.ToString(),
+                ObjectTypHub.calculation,
+                OperationType.Update,
+                BuildPageDto(calculation));
+
+            return true;
+        }
+
         public async Task<bool> UpdateHourlyPriceListAsync(
             int id,
             List<HourlyPriceListGroupDTO> hourlyPriceList,
@@ -247,6 +275,23 @@ namespace Persistence.Service.CalculationItems.Calculation
             return true;
         }
 
+        public async Task<bool> UpdateDisplayPresetsAsync(
+            int id,
+            DisplayOptionsPresetStore store,
+            int? departmentId,
+            CancellationToken cancellationToken = default)
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+
+            var calculation = await GetEditableCalculationAsync(db, id, departmentId, cancellationToken);
+            if (calculation is null)
+                return false;
+
+            calculation.UpdateDisplayPresets(store);
+            await db.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+
         private static async Task<CalculationEntity?> GetEditableCalculationAsync(
             ShardingSingleDbContext db,
             int id,
@@ -308,6 +353,16 @@ namespace Persistence.Service.CalculationItems.Calculation
                     return false;
             }
 
+            if (dto.TemplateColumnId.HasValue)
+            {
+                var templateColumnAllowed = await db.TemplateColumns
+                    .AsNoTracking()
+                    .AnyAsync(x => x.Id == dto.TemplateColumnId.Value && (x.DepartmentId == null || x.DepartmentId == departmentId), cancellationToken);
+
+                if (!templateColumnAllowed)
+                    return false;
+            }
+
             var normalizedCode = NormalizeCode(dto.Code);
             if (!string.IsNullOrWhiteSpace(normalizedCode))
             {
@@ -347,6 +402,8 @@ namespace Persistence.Service.CalculationItems.Calculation
                 Supervisor = x.Metadata.Supervisor,
                 Inspector = x.Metadata.Inspector,
                 TemplateId = x.TemplateId,
+                TemplateColumnId = x.TemplateColumnId,
+                Sort = x.Sort,
                 Tasks = []
             };
         }

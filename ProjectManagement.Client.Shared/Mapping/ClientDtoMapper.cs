@@ -10,6 +10,7 @@ using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.Folder;
 using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.Project;
+using ProjectManagement.Shared.Constants;
 using System;
 using System.Linq;
 
@@ -43,7 +44,7 @@ namespace ProjectManagement.Client.Shared.Mapping
 
             var model = new CalculationMVVM
             {
-                Tax = (int)dto.Tax,
+                Tax = (int)Math.Round(dto.Tax),
                 Name = dto.Name ?? string.Empty,
                 Code = dto.Code ?? string.Empty,
                 Company = dto.Company ?? string.Empty,
@@ -54,11 +55,17 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Compensation = dto.Compensation ?? string.Empty,
                 Contract = dto.Contract ?? string.Empty,
                 TemplateId = dto.TemplateId,
+                TemplateColumnId = dto.TemplateColumnId,
+                Sort = dto.Sort?.Clone() ?? new SortConfig(),
                 QuanityList = dto.QuanityList is null ? [] : [.. dto.QuanityList],
                 Factors = dto.Factors?.Select(ToFactors).ToList() ?? [],
                 AdditionalCostEarnings = (double)dto.AdditionalCostEarnings,
                 Tasks = dto.Tasks?.Select(ToTaskListMVVM).ToList() ?? [],
             };
+
+            model.DisplayPresets = DisplayOptionsPresetState.Normalize(dto.DisplayPresets);
+            // Preset selection is session-only; first table open should use stored IsActive values.
+            model.DisplayPresets.ActivePresetId = null;
 
             if (dto is CalculationPageOtherDepartmentDTO sharedPage)
             {
@@ -210,6 +217,31 @@ namespace ProjectManagement.Client.Shared.Mapping
                 Id = dto.Id,
                 DepartmentId = dto.DepartmentId,
                 Name = dto.Name ?? string.Empty,
+            };
+        }
+
+        public static TemplateColumnMVVM ToTemplateColumnMVVM(this TemplateColumnModelDTO dto)
+        {
+            ArgumentNullException.ThrowIfNull(dto);
+
+            return new TemplateColumnMVVM
+            {
+                Id = dto.Id,
+                DepartmentId = dto.DepartmentId,
+                Name = dto.Name ?? string.Empty,
+                Columns = TemplateDefaults.EnsureNetCalcColumns(dto.Columns)
+            };
+        }
+
+        public static TemplateColumnMVVM ToTemplateColumnMVVM(this TemplateColumnListDTO dto)
+        {
+            ArgumentNullException.ThrowIfNull(dto);
+
+            return new TemplateColumnMVVM
+            {
+                Id = dto.Id,
+                DepartmentId = dto.DepartmentId,
+                Name = dto.Name ?? string.Empty
             };
         }
 

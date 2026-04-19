@@ -85,10 +85,10 @@ namespace Persistence.Service.CalculationItems.Opportunity
             var resources = await context.Resources.Where(x => x.OpportunityId == opp.Id).ToListAsync(ct);
 
             foreach (var task in tasks)
-                task.OpportunityId = null;
+                task.SetOpportunity(null);
 
             foreach (var resource in resources)
-                resource.OpportunityId = null;
+                resource.SetOpportunity(null);
 
             context.Opportunity.Remove(opp);
             await context.SaveChangesAsync(ct);

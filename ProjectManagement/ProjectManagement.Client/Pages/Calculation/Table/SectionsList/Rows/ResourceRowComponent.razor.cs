@@ -20,6 +20,9 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
 
     [Parameter] public ResourceListMVVM Resource { get; set; } = default!;
     [Parameter] public bool TaskBranchActive { get; set; } = true;
+    [Parameter] public bool IsItemActive { get; set; } = true;
+    [Parameter] public bool ShowActiveToggle { get; set; }
+    [Parameter] public EventCallback OnToggleActive { get; set; }
     [Parameter] public NetColor? Colors { get; set; }
     [Parameter] public int Left { get; set; }
     [Parameter] public int MaxFractionDigits { get; set; } = NumericFormatHelper.DefaultMaxFractionDigits;

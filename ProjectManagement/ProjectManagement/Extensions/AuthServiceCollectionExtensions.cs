@@ -13,6 +13,7 @@ namespace ProjectManagement.Extensions;
 
 public static class AuthRegistration
 {
+    private sealed class AuthLog { }
     public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, string connectionString)
     {
         services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
@@ -108,8 +109,7 @@ public static class AuthRegistration
             return;
 
         var logger = context.HttpContext.RequestServices
-            .GetRequiredService<ILoggerFactory>()
-            .CreateLogger("ProjectManagement.Auth");
+            .GetRequiredService<ILogger<AuthLog>>();
 
         var user = context.HttpContext.User;
         var userId = user.FindFirstValue(PMClaimsConst.UserId)

@@ -298,6 +298,10 @@ namespace Persistence.Migrations
                     b.Property<int>("DepartmentId")
                         .HasColumnType("int");
 
+                    b.Property<string>("DisplayPresets")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -348,6 +352,10 @@ namespace Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("Sort")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
@@ -358,6 +366,9 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Tax")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TemplateColumnId")
                         .HasColumnType("int");
 
                     b.Property<int?>("TemplateId")
@@ -398,6 +409,8 @@ namespace Persistence.Migrations
                     b.HasIndex("ProjectId");
 
                     b.HasIndex("StatusId");
+
+                    b.HasIndex("TemplateColumnId");
 
                     b.HasIndex("TemplateId");
 
@@ -531,6 +544,12 @@ namespace Persistence.Migrations
                     b.Property<int>("CalculationId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
                     b.Property<string>("Metadata")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -544,12 +563,28 @@ namespace Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CalculationId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "CalculationId")
                         .HasDatabaseName("IX_Opportunities_Tenant_Calc");
@@ -858,7 +893,8 @@ namespace Persistence.Migrations
 
                     b.Property<string>("StorageValue")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -1076,6 +1112,70 @@ namespace Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.Calculation.TemplateColumnEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Columns")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("TenantId", "DepartmentId", "Id")
+                        .HasDatabaseName("IX_TemplateColumns_Tenant_Department_Id");
+
+                    b.HasIndex("TenantId", "DepartmentId", "Name")
+                        .HasDatabaseName("IX_TemplateColumns_Tenant_Department_Name");
+
+                    b.ToTable("TemplateColumns", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TemplateColumns_Name_NotEmpty", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Calculation.TemplateEntity", b =>
                 {
                     b.Property<int>("Id")
@@ -1146,6 +1246,18 @@ namespace Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
 
@@ -1155,14 +1267,24 @@ namespace Persistence.Migrations
                     b.Property<int>("TenderId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Value")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedBy");
+
                     b.HasIndex("TenderAttributeId");
 
                     b.HasIndex("TenderId");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "TenderId", "TenderAttributeId")
                         .IsUnique()
@@ -1213,9 +1335,16 @@ namespace Persistence.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Attributes")
+                        .HasMaxLength(8000)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CalculationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
@@ -1225,14 +1354,30 @@ namespace Persistence.Migrations
                     b.Property<int>("OrganisationId")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CalculationId");
 
+                    b.HasIndex("CreatedBy");
+
                     b.HasIndex("OrganisationId");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "CalculationId")
                         .HasDatabaseName("IX_Tenders_Tenant_Calc");
@@ -2377,6 +2522,10 @@ namespace Persistence.Migrations
                         .WithMany("Calculations")
                         .HasForeignKey("StatusId");
 
+                    b.HasOne("Domain.Entities.Calculation.TemplateColumnEntity", "TemplateColumn")
+                        .WithMany("Calculations")
+                        .HasForeignKey("TemplateColumnId");
+
                     b.HasOne("Domain.Entities.Calculation.TemplateEntity", "Template")
                         .WithMany("Calculations")
                         .HasForeignKey("TemplateId");
@@ -2407,6 +2556,8 @@ namespace Persistence.Migrations
                     b.Navigation("Status");
 
                     b.Navigation("Template");
+
+                    b.Navigation("TemplateColumn");
 
                     b.Navigation("Type");
 
@@ -2452,7 +2603,21 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Calculation");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.ResourceEntity", b =>
@@ -2652,6 +2817,30 @@ namespace Persistence.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Calculation.TemplateColumnEntity", b =>
+                {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.DepartmentEntity", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
             modelBuilder.Entity("Domain.Entities.Calculation.TemplateEntity", b =>
                 {
                     b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
@@ -2678,6 +2867,11 @@ namespace Persistence.Migrations
 
             modelBuilder.Entity("Domain.Entities.Calculation.TenderAttributeBindEntity", b =>
                 {
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Domain.Entities.Calculation.TenderAttributeDefinitionEntity", "TenderAttribute")
                         .WithMany("TendersAttributes")
                         .HasForeignKey("TenderAttributeId")
@@ -2690,9 +2884,18 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
                     b.Navigation("Tender");
 
                     b.Navigation("TenderAttribute");
+
+                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.TenderAttributeDefinitionEntity", b =>
@@ -2714,15 +2917,29 @@ namespace Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Users.UserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Domain.Entities.Organisation.OrganisationEntity", "Organisation")
                         .WithMany("Tenders")
                         .HasForeignKey("OrganisationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Users.UserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Calculation");
 
+                    b.Navigation("CreatedByUser");
+
                     b.Navigation("Organisation");
+
+                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.Folder.FolderEntity", b =>
@@ -3120,6 +3337,11 @@ namespace Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Calculation.TaskStatusEntity", b =>
                 {
                     b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Calculation.TemplateColumnEntity", b =>
+                {
+                    b.Navigation("Calculations");
                 });
 
             modelBuilder.Entity("Domain.Entities.Calculation.TemplateEntity", b =>

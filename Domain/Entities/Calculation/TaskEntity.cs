@@ -16,60 +16,51 @@ namespace Domain.Entities.Calculation
         public TaskMetadata Metadata
         {
             get => _metadata ??= new TaskMetadata();
-            set => ApplyMetadataSnapshot(value);
+            private set => ApplyMetadataSnapshot(value);
         }
 
         [Required, MaxLength(FieldLengths.Name)]
-        public string Name { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = true;
+        public string Name { get; private set; } = string.Empty;
+        public bool IsActive { get; private set; } = true;
 
         [MaxLength(FieldLengths.Unit)]
-        public string? Unit { get; set; }
-        public TaskType Type { get; set; }
+        public string? Unit { get; private set; }
+        public TaskType Type { get; private set; }
 
-        /// <summary>
-        /// SortOrder of task in UI display.
-        /// </summary>
-        public int SortOrder { get; set; }
+        public int SortOrder { get; private set; }
 
         [MaxLength(FieldLengths.Comment)]
-        public string? Note { get; set; }
+        public string? Note { get; private set; }
 
         [MaxLength(FieldLengths.Code)]
-        public string? Code { get; set; }
+        public string? Code { get; private set; }
 
-        public bool IsOH { get; set; }
+        public bool IsOH { get; private set; }
 
-        /// <summary>
-        /// Parent task reference for hierarchical structure (optional).
-        /// </summary>
-        public int? ParentTaskId { get; set; }
+        public int? ParentTaskId { get; private set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(ParentTaskId))]
-        public TaskEntity? ParentTask { get; set; }
+        public TaskEntity? ParentTask { get; private set; }
 
-        /// <summary>
-        /// Child tasks (subtasks).
-        /// </summary>
-        public ICollection<TaskEntity> Tasks { get; set; } = [];
+        public ICollection<TaskEntity> Tasks { get; private set; } = [];
 
-        public int? OpportunityId { get; set; }
+        public int? OpportunityId { get; private set; }
 
         [JsonIgnore]
-        public OpportunityEntity? Opportunity { get; set; }
+        public OpportunityEntity? Opportunity { get; private set; }
 
-        public int CalculationId { get; set; }
-
-        [JsonIgnore]
-        public CalculationEntity Calculation { get; set; } = null!;
-
-        public int? StatusId { get; set; }
+        public int CalculationId { get; private set; }
 
         [JsonIgnore]
-        public TaskStatusEntity? Status { get; set; }
+        public CalculationEntity Calculation { get; private set; } = null!;
 
-        public ICollection<ResourceEntity> Resources { get; set; } = [];
+        public int? StatusId { get; private set; }
+
+        [JsonIgnore]
+        public TaskStatusEntity? Status { get; private set; }
+
+        public ICollection<ResourceEntity> Resources { get; private set; } = [];
 
         private TaskEntity() { }
 
@@ -121,8 +112,8 @@ namespace Domain.Entities.Calculation
                 dto.Type,
                 dto.IsOH);
 
-            OpportunityId = dto.OpportunityId;
-            StatusId = dto.StatusId;
+            SetOpportunity(dto.OpportunityId);
+            StatusId = dto.StatusId is > 0 ? dto.StatusId : null;
             SetParentTask(dto.ParentTaskId);
         }
 
@@ -159,6 +150,11 @@ namespace Domain.Entities.Calculation
             CalculationId = calculationId;
         }
 
+        public void SetOpportunity(int? opportunityId)
+        {
+            OpportunityId = opportunityId is > 0 ? opportunityId : null;
+        }
+
         public void ClearOpportunity()
         {
             OpportunityId = null;
@@ -173,6 +169,17 @@ namespace Domain.Entities.Calculation
             ParentTask = null;
             Status = null;
             Opportunity = null;
+            Calculation = null!;
+        }
+
+        public void SetChildTasks(ICollection<TaskEntity> children)
+        {
+            Tasks = children ?? [];
+        }
+
+        public void SetResources(ICollection<ResourceEntity> resources)
+        {
+            Resources = resources ?? [];
         }
 
         private void ApplyMetadataSnapshot(TaskMetadata? metadata)
@@ -201,10 +208,10 @@ namespace Domain.Entities.Calculation
         private static string? NormalizeOptional(string? value)
             => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-        private static void ValidateSortOrder(double sortOrder)
+        private static void ValidateSortOrder(int sortOrder)
         {
-            if (double.IsNaN(sortOrder) || double.IsInfinity(sortOrder) || sortOrder < 0)
-                throw new ValidationException("SortOrder must be a finite number greater than or equal to zero.");
+            if (sortOrder < 0)
+                throw new ValidationException("SortOrder cannot be negative.");
         }
     }
 }

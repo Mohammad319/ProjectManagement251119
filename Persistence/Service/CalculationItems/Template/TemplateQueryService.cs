@@ -16,7 +16,9 @@ namespace Application.Services.CalculationItems.TemplateTable
             var template = await context.Templates
                 .AsNoTracking()
                 .Where(x => x.Id == id &&
-                            (!x.DepartmentId.HasValue || x.DepartmentId == departmentId || !departmentId.HasValue))
+                            (departmentId.HasValue
+                                ? (!x.DepartmentId.HasValue || x.DepartmentId == departmentId)
+                                : !x.DepartmentId.HasValue))
                 .FirstOrDefaultAsync(ct);
 
             return template?.ToModel();
@@ -30,7 +32,9 @@ namespace Application.Services.CalculationItems.TemplateTable
 
             return await context.Templates
                 .AsNoTracking()
-                .Where(x => !departmentId.HasValue || x.DepartmentId == departmentId || !x.DepartmentId.HasValue)
+                .Where(x => departmentId.HasValue
+                    ? x.DepartmentId == departmentId || !x.DepartmentId.HasValue
+                    : !x.DepartmentId.HasValue)
                 .OrderByDescending(x => x.Id)
                 .Select(x => new TemplateListDTO
                 {

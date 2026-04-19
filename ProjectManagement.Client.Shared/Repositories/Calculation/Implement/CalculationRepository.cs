@@ -4,6 +4,7 @@ using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.General;
 using System;
 using System.Collections.Generic;
@@ -96,6 +97,16 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
         public async Task<bool> UpdateAsync(List<QuanityListDTO> model, int id)
         {
             return await _httpRepository.PutAsync(model, CalcURLBase + "QuantityList/" + id);
+        }
+
+        public async Task<bool> UpdateSortAsync(int id, SortConfig sort)
+        {
+            return await _httpRepository.PutAsync(sort, CalcURLBase + URLConst.Calculation.Sort + "/" + id);
+        }
+
+        public async Task<bool> UpdateDisplayPresetsAsync(int id, DisplayOptionsPresetStore store)
+        {
+            return await _httpRepository.PutAsync(store, CalcURLBase + URLConst.Calculation.DisplayPresets + "/" + id);
         }
     }
 }

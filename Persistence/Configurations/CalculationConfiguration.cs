@@ -13,8 +13,10 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         builder.ToTable("Calculations");
 
         builder.Property(e => e.Metadata).HasJsonConversion();
+        builder.Property(e => e.Sort).HasJsonConversion();
         builder.Property(e => e.HourlyPrice).HasJsonConversion();
         builder.Property(e => e.Factors).HasJsonConversion();
+        builder.Property(e => e.DisplayPresets).HasJsonConversion();
         builder.Property(e => e.RowVersion).IsRowVersion();
 
         builder.HasOne(x => x.ProcurementMethods)
@@ -45,6 +47,11 @@ internal sealed class CalculationConfiguration : IEntityTypeConfiguration<Calcul
         builder.HasOne(x => x.Template)
             .WithMany(x => x.Calculations)
             .HasForeignKey(x => x.TemplateId)
+            .OnDelete(DeleteBehavior.ClientSetNull);
+
+        builder.HasOne(x => x.TemplateColumn)
+            .WithMany(x => x.Calculations)
+            .HasForeignKey(x => x.TemplateColumnId)
             .OnDelete(DeleteBehavior.ClientSetNull);
 
         builder.HasOne(x => x.Organisation)

@@ -5,6 +5,7 @@ using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.Repositories.Calculation;
 using ProjectManagement.Client.Shared.ViewModel;
+using ProjectManagement.Shared.Constants;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.Offer;
 
@@ -12,6 +13,7 @@ namespace ProjectManagement.Client.Services.Calculation
 {
     public class CalculationService(
         ITemplateRepository templateRepo,
+        ITemplateColumnRepository templateColumnRepo,
         ICalculationRepository calcRepo,
         FolderState folderState,
         MhdServices mhdServices,
@@ -98,6 +100,13 @@ namespace ProjectManagement.Client.Services.Calculation
             {
                 calculation.Template = new();
             }
+
+            if (calculation.TemplateColumnId > 0)
+            {
+                var columnTemplate = await templateColumnRepo.GetByIdAsync(calculation.TemplateColumnId.Value);
+                calculation.Template.NetCalc.Columns = TemplateDefaults.EnsureNetCalcColumns(columnTemplate.Columns);
+            }
+
             return calculation;
         }
 
@@ -196,6 +205,9 @@ namespace ProjectManagement.Client.Services.Calculation
             folderState.Calculation.Supervisor = calcDto.Supervisor ?? string.Empty;
             folderState.Calculation.Inspector = calcDto.Inspector ?? string.Empty;
             folderState.Calculation.TemplateId = calcDto.TemplateId;
+            folderState.Calculation.TemplateColumnId = calcDto.TemplateColumnId;
+            folderState.Calculation.Sort = calcDto.Sort?.Clone() ?? new();
+            RequestGridRefresh(CalculationGridRefreshKind.Structure);
         }
 
         public void GetFilter(FilterVM? filter)

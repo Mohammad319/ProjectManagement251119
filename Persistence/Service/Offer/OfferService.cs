@@ -109,7 +109,7 @@ namespace Persistence.Service.Offer
             var calculationId = offer.Resource.Task.CalculationId;
 
             if (offer.Resource.PrimaryOfferId == id)
-                offer.Resource.PrimaryOfferId = null;
+                offer.Resource.SetPrimaryOffer(null);
 
             context.Offers.Remove(offer);
             await context.SaveChangesAsync(ct);
@@ -145,7 +145,7 @@ namespace Persistence.Service.Offer
                     return false;
             }
 
-            resource.PrimaryOfferId = offerId;
+            resource.SetPrimaryOffer(offerId);
 
             if (offer is not null)
             {

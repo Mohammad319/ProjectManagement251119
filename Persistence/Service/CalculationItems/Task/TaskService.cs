@@ -267,7 +267,7 @@ namespace Persistence.Service.CalculationItems.Task
                         .ToListAsync(ct);
 
                     foreach (var t in tasks)
-                        t.Resources = [.. resources.Where(r => r.TaskId == t.Id)];
+                        t.SetResources([.. resources.Where(r => r.TaskId == t.Id)]);
 
                     var root = tasks.FirstOrDefault(x => x.Id == item.Id);
                     if (root == null)
@@ -552,9 +552,7 @@ namespace Persistence.Service.CalculationItems.Task
             if (taskWithNav is null)
                 return false;
 
-            // Load resource lookups (optional, but keeps UI consistent)
-            // (EF doesn't allow multiple ThenInclude branches from same Include chain in one go, so we repeat Include)
-            taskWithNav.Resources = taskWithNav.Resources ?? [];
+            // Resources collection is initialized to [] by default — no reassignment needed.
 
             var taskDto = taskWithNav.MapToTaskListDTO();
 
@@ -627,7 +625,7 @@ namespace Persistence.Service.CalculationItems.Task
                 .ToListAsync(ct);
 
             foreach (var task in tasks)
-                task.Resources = [.. resources.Where(r => r.TaskId == task.Id)];
+                task.SetResources([.. resources.Where(r => r.TaskId == task.Id)]);
 
             var rootTask = tasks.FirstOrDefault(t => t.Id == rootTaskId);
             if (rootTask == null)
@@ -669,9 +667,9 @@ namespace Persistence.Service.CalculationItems.Task
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var task in tasks)
-                task.Resources = resourceLookup.TryGetValue(task.Id, out var resList)
+                task.SetResources(resourceLookup.TryGetValue(task.Id, out var resList)
                     ? resList
-                    : [];
+                    : []);
             // ملاحظة: deleteOriginal يمكن استخدامه لاحقاً في CutAsync لحذف النسخة الأصلية
             return tasks;
         }

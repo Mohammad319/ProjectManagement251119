@@ -17,59 +17,56 @@ namespace Domain.Entities.Calculation
         public ResourceMetadata Metadata
         {
             get => _metadata ??= new ResourceMetadata();
-            set => ApplyMetadataSnapshot(value);
+            private set => ApplyMetadataSnapshot(value);
         }
 
         [Required, MaxLength(FieldLengths.Name)]
-        public string Name { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = true;
+        public string Name { get; private set; } = string.Empty;
+        public bool IsActive { get; private set; } = true;
 
         [MaxLength(FieldLengths.Unit)]
-        public string? Unit { get; set; }
-        public ResourceTypesEnum ResType { get; set; }
+        public string? Unit { get; private set; }
+        public ResourceTypesEnum ResType { get; private set; }
 
-        /// <summary>
-        /// SortOrder of resource in UI display.
-        /// </summary>
-        public int SortOrder { get; set; }
+        public int SortOrder { get; private set; }
 
         [MaxLength(FieldLengths.Comment)]
-        public string? Note { get; set; }
+        public string? Note { get; private set; }
 
-        public int TaskId { get; set; }
-
-        [JsonIgnore]
-        public TaskEntity Task { get; set; } = null!;
-
-        public int? OpportunityId { get; set; }
+        public int TaskId { get; private set; }
 
         [JsonIgnore]
-        public OpportunityEntity? Opportunity { get; set; }
+        public TaskEntity Task { get; private set; } = null!;
 
-        public int? AccountId { get; set; }
-
-        [JsonIgnore]
-        public AccountEntity? Account { get; set; }
-
-        public int? StatusId { get; set; }
+        public int? OpportunityId { get; private set; }
 
         [JsonIgnore]
-        public StatusResourcesEntity? Status { get; set; }
+        public OpportunityEntity? Opportunity { get; private set; }
 
-        public int? ResourceSortId { get; set; }
-
-        [JsonIgnore]
-        public ResourceSortEntity? ResourceSort { get; set; }
-
-        public int? ResourceTypeId { get; set; }
+        public int? AccountId { get; private set; }
 
         [JsonIgnore]
-        public ResourceTypeEntity? ResourceType { get; set; }
+        public AccountEntity? Account { get; private set; }
 
-        public int? PrimaryOfferId { get; set; }
+        public int? StatusId { get; private set; }
 
         [JsonIgnore]
-        public ICollection<OfferEntity> Offers { get; set; } = [];
+        public StatusResourcesEntity? Status { get; private set; }
+
+        public int? ResourceSortId { get; private set; }
+
+        [JsonIgnore]
+        public ResourceSortEntity? ResourceSort { get; private set; }
+
+        public int? ResourceTypeId { get; private set; }
+
+        [JsonIgnore]
+        public ResourceTypeEntity? ResourceType { get; private set; }
+
+        public int? PrimaryOfferId { get; private set; }
+
+        [JsonIgnore]
+        public ICollection<OfferEntity> Offers { get; private set; } = [];
 
         public static ResourceEntity Create(ResourcePostDTO dto, int sortOrder, int? parentTaskId = null)
         {
@@ -120,12 +117,12 @@ namespace Domain.Entities.Calculation
 
             SetSortOrder(dto.SortOrder);
 
-            OpportunityId = dto.OpportunityId;
-            AccountId = dto.AccountId;
-            StatusId = dto.StatusId;
-            ResourceSortId = dto.ResourceSortId;
-            ResourceTypeId = dto.ResourceTypeId;
-            PrimaryOfferId = dto.OfferId;
+            SetOpportunity(dto.OpportunityId);
+            AccountId = dto.AccountId is > 0 ? dto.AccountId : null;
+            StatusId = dto.StatusId is > 0 ? dto.StatusId : null;
+            ResourceSortId = dto.ResourceSortId is > 0 ? dto.ResourceSortId : null;
+            ResourceTypeId = dto.ResourceTypeId is > 0 ? dto.ResourceTypeId : null;
+            SetPrimaryOffer(dto.OfferId);
         }
 
         public ResourceMetadata GetMetadataSnapshot()
@@ -154,10 +151,20 @@ namespace Domain.Entities.Calculation
             SortOrder = sortOrder;
         }
 
+        public void SetOpportunity(int? opportunityId)
+        {
+            OpportunityId = opportunityId is > 0 ? opportunityId : null;
+        }
+
         public void MoveToTask(int taskId, int sortOrder)
         {
             SetTask(taskId);
             SetSortOrder(sortOrder);
+        }
+
+        public void SetPrimaryOffer(int? offerId)
+        {
+            PrimaryOfferId = offerId is > 0 ? offerId : null;
         }
 
         public void ClearCrossCalculationState(bool resetQuantityParam)
@@ -208,10 +215,10 @@ namespace Domain.Entities.Calculation
         private static string? NormalizeOptional(string? value)
             => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-        private static void ValidateSortOrder(double sortOrder)
+        private static void ValidateSortOrder(int sortOrder)
         {
-            if (double.IsNaN(sortOrder) || double.IsInfinity(sortOrder) || sortOrder < 0)
-                throw new ValidationException("SortOrder must be a finite number greater than or equal to zero.");
+            if (sortOrder < 0)
+                throw new ValidationException("SortOrder cannot be negative.");
         }
     }
 }

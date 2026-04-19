@@ -1,5 +1,6 @@
 @using BlazorMHD.UI.Components.Feedback.Splitter
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList
+@using ProjectManagement.Client.Pages.Calculation.Table.Header
 @using ProjectManagement.Client.Pages.Project.Storage
 
 <div class="flex h-full min-h-0 flex-col gap-1">
@@ -72,6 +73,14 @@ else
                             aria-pressed="@(Calc.OnlyActive ? "true" : "false")"
                             @onclick="ToggleOnlyActive">
                         <span class="calc-status-chip-label">@ResourceLoc.onlyActive</span>
+                    </button>
+
+                    <button type="button"
+                            data-testid="status-display-presets"
+                            class="calc-status-chip calc-status-chip-toggle"
+                            title="@AppLoc["displayPresets"]"
+                            @onclick="OpenDisplayPresetsDialog">
+                        @((MarkupString)Icons.SaveCloud)
                     </button>
 
                     @if (SelectedItemCount > 0)

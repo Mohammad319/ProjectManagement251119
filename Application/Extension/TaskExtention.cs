@@ -38,9 +38,9 @@ namespace Application.Extention
 
             foreach (var task in all)
             {
-                task.Tasks = lookup.TryGetValue(task.Id, out var children)
+                task.SetChildTasks(lookup.TryGetValue(task.Id, out var children)
                     ? children
-                    : [];
+                    : []);
             }
         }
 
@@ -58,16 +58,11 @@ namespace Application.Extention
         {
             task.ResetIdentityForClone();
             task.ClearOpportunity();
-            task.Calculation = null!;
 
             if (task.Resources != null)
-            {
-                task.Resources = task.Resources
-                    .Select(ResourceExtention.Reset)
-                    .ToList();
-            }
+                task.SetResources(task.Resources.Select(ResourceExtention.Reset).ToList());
 
-            task.Tasks = [.. task.Tasks.Select(Reset)];
+            task.SetChildTasks([.. task.Tasks.Select(Reset)]);
             return task;
         }
     }

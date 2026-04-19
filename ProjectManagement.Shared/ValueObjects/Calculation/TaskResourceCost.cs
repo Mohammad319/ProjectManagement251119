@@ -32,7 +32,7 @@ namespace ProjectManagement.Shared.ValueObjects.Calculation
             Set(cost, baseCost, changeFactor1, changeFactor2);
         }
 
-        public void Set(
+        private void Set(
             decimal cost,
             decimal? baseCost,
             decimal? changeFactor1,

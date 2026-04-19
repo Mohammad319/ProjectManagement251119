@@ -3,6 +3,7 @@ using ProjectManagement.Shared.Base.Organisation;
 using ProjectManagement.Shared.Base.Project;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.App;
+using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Helper;
 using System;
 using System.Collections.Generic;
@@ -94,6 +95,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
     {
         private CalculationData? data = new();
         private CalculationHourlyPriceFactorData? priceData = new();
+
+        public SortConfig Sort { get; set; } = new();
 
         [JsonIgnore]
         public CalculationData Data
@@ -233,6 +236,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
     public class CalculationPostDTO
     {
         public int? TemplateId { get; set; }
+        public int? TemplateColumnId { get; set; }
+        public SortConfig Sort { get; set; } = new();
 
         private CalculationData? metadata = new();
         private CalculationHourlyPriceFactorData? priceData = new();
@@ -433,7 +438,10 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public string Compensation { get; set; } = string.Empty;
         public string Contract { get; set; } = string.Empty;
         public int? TemplateId { get; set; }
+        public int? TemplateColumnId { get; set; }
+        public SortConfig Sort { get; set; } = new();
         public decimal AdditionalCostEarnings { get; set; } = 10m;
+        public DisplayOptionsPresetStore DisplayPresets { get; set; } = new();
         public virtual List<TaskListDTO> Tasks { get; set; } = [];
     }
 

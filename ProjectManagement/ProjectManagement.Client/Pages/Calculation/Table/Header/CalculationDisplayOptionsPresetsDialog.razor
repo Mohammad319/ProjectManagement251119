@@ -1,0 +1,198 @@
+@inherits AppComponentBase
+@using ProjectManagement.Shared.DTO.Calculation
+
+<div class="w-full max-w-lg space-y-3 p-3 text-slate-800 dark:text-slate-100">
+
+    @* ── Active preset status ── *@
+    @if (ActivePreset is not null)
+    {
+        <div class="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-800 dark:bg-emerald-950/20">
+            <div class="min-w-0">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">@AppLoc["activePreset"]</div>
+                <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">@ActivePreset.Name</div>
+            </div>
+            <div class="flex shrink-0 gap-2">
+                <button type="button"
+                        class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-sky-600 px-3 text-xs font-medium text-white transition hover:bg-sky-700"
+                        @onclick="UpdateActivePresetAsync">
+                    @((MarkupString)Icons.SaveCloud)
+                    <span>@AppLoc["update"]</span>
+                </button>
+                <button type="button"
+                        class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        @onclick="ClearPresetAsync">
+                    @((MarkupString)Icons.Filter)
+                    <span>@AppLoc["clear"]</span>
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+            <div class="text-sm text-slate-500 dark:text-slate-400">@AppLoc["noPresetSelected"]</div>
+        </div>
+    }
+
+    @* ── Save as new ── *@
+    <div class="flex gap-2">
+        <InputText class="h-9 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                   @bind-Value="NewPresetName"
+                   placeholder="@AppLoc["presetName"]" />
+        <button type="button"
+                class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-slate-700 px-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-600 dark:hover:bg-slate-500"
+                disabled="@string.IsNullOrWhiteSpace(NewPresetName)"
+                @onclick="SaveAsNewAsync">
+            @((MarkupString)Icons.SaveCloud)
+            <span>@AppLoc["saveNew"]</span>
+        </button>
+    </div>
+
+    @* ── Preset list ── *@
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-700 dark:bg-slate-900/60">
+        <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@AppLoc["savedPresets"]</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">@Store.Presets.Count</div>
+        </div>
+
+        @if (Store.Presets.Count == 0)
+        {
+            <div class="px-3 py-5 text-sm text-slate-500 dark:text-slate-400">@AppLoc["noSavedPresets"]</div>
+        }
+        else
+        {
+            <div class="max-h-64 overflow-auto p-2">
+                @foreach (var preset in Store.Presets)
+                {
+                    var isActive = string.Equals(Store.ActivePresetId, preset.Id, StringComparison.Ordinal);
+                    <div class="@GetRowClass(isActive)">
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-sm font-medium">@preset.Name</span>
+                            <span class="block text-xs text-slate-500 dark:text-slate-400">@preset.SavedAtUtc.ToLocalTime().ToString("g")</span>
+                        </span>
+                        <span class="flex shrink-0 items-center gap-1.5">
+                            @if (isActive)
+                            {
+                                <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                    @AppLoc["active"]
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button"
+                                        class="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300 dark:hover:bg-emerald-950/60"
+                                        @onclick="() => ApplyPresetAndCloseAsync(preset)">
+                                    @((MarkupString)Icons.Check)
+                                    <span>@AppLoc["apply"]</span>
+                                </button>
+                            }
+                            <button type="button"
+                                    class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-800 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                                    @onclick="() => ConfirmDeletePreset(preset)">
+                                @((MarkupString)Icons.DeleteSVG)
+                            </button>
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @* ── Footer ── *@
+    <div class="flex justify-end border-t border-slate-200 pt-3 dark:border-slate-700">
+        <button type="button"
+                class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                @onclick="CloseDialog">
+            @AppLoc["close"]
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public DisplayOptionsPresetStore Store { get; set; } = new();
+    [Parameter] public EventCallback<DisplayOptionsPreset> OnApply { get; set; }
+    [Parameter] public EventCallback<DisplayOptionsPresetStore> OnSave { get; set; }
+    [Parameter] public EventCallback OnClear { get; set; }
+
+    private string NewPresetName = string.Empty;
+
+    private DisplayOptionsPreset? ActivePreset =>
+        DisplayOptionsPresetState.GetActivePreset(Store);
+
+    protected override void OnInitialized()
+    {
+        var active = ActivePreset;
+        if (active is not null)
+            NewPresetName = active.Name;
+    }
+
+    private async Task SaveAsNewAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewPresetName)) return;
+        var current = BuildCurrentPreset();
+        DisplayOptionsPresetState.SavePreset(Store, NewPresetName.Trim(), current, targetId: null);
+        await OnSave.InvokeAsync(Store);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateActivePresetAsync()
+    {
+        var active = ActivePreset;
+        if (active is null) return;
+        var current = BuildCurrentPreset();
+        DisplayOptionsPresetState.SavePreset(Store, active.Name, current, targetId: active.Id);
+        DisplayOptionsPresetState.SetActivePreset(Store, active.Id);
+        await OnSave.InvokeAsync(Store);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ApplyPresetAndCloseAsync(DisplayOptionsPreset preset)
+    {
+        DisplayOptionsPresetState.SetActivePreset(Store, preset.Id);
+        await OnApply.InvokeAsync(preset);
+        await OnSave.InvokeAsync(Store);
+        CloseDialog();
+    }
+
+    private async Task ClearPresetAsync()
+    {
+        DisplayOptionsPresetState.SetActivePreset(Store, null);
+        await OnClear.InvokeAsync();
+        await OnSave.InvokeAsync(Store);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ConfirmDeletePreset(DisplayOptionsPreset preset)
+    {
+        MHD.MessageYesNo(
+            AppLoc["deletePreset"],
+            $"{AppLoc["delete"]} '{preset.Name}'?",
+            BlazorMHD.UI.Core.DesignSystem.MhdState.Danger,
+            EventCallback.Factory.Create(this, () => DeletePresetAsync(preset.Id)));
+    }
+
+    private async Task DeletePresetAsync(string? presetId)
+    {
+        var preset = DisplayOptionsPresetState.GetPreset(Store, presetId);
+        if (preset is null) return;
+        if (!DisplayOptionsPresetState.RemovePreset(Store, preset.Id)) return;
+        await OnSave.InvokeAsync(Store);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private DisplayOptionsPreset BuildCurrentPreset()
+    {
+        return Calc.BuildDisplayOptionsPreset(
+            CalcService.ShowComments,
+            CalcService.ShowResourceVariables);
+    }
+
+    private void CloseDialog() => Modal.Close();
+
+    private static string GetRowClass(bool isActive)
+    {
+        if (isActive)
+            return "mb-1.5 flex w-full items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/20";
+        return "mb-1.5 flex w-full items-center gap-3 rounded-lg border border-transparent bg-white px-3 py-2 transition hover:border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-700/60";
+    }
+}

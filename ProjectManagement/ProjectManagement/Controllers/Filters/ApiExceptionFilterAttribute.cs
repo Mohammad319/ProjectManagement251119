@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ProjectManagement.Shared.Exceptions;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjectManagement.Server.Controllers.Filters
 {
@@ -21,17 +22,26 @@ namespace ProjectManagement.Server.Controllers.Filters
             var http = context.HttpContext;
             var traceId = http.TraceIdentifier;
 
-            var logger = http.RequestServices.GetService<ILogger<ApiExceptionFilterAttribute>>();
-            logger?.LogError(context.Exception, "Unhandled API exception. TraceId={TraceId}", traceId);
+            var logger = http.RequestServices.GetRequiredService<ILogger<ApiExceptionFilterAttribute>>();
+            var env = http.RequestServices.GetRequiredService<IHostEnvironment>();
+            var isDev = env.IsDevelopment();
 
-            var env = http.RequestServices.GetService<IHostEnvironment>();
-            var isDev = env?.IsDevelopment() ?? false;
+            if (context.Exception is not OperationCanceledException)
+                logger.LogError(context.Exception, "Unhandled API exception. TraceId={TraceId}", traceId);
 
             var ex = context.Exception;
 
             // Map known exceptions
             var (status, title, type, errorCode, detail) = ex switch
             {
+                OperationCanceledException => (
+                    StatusCodes.Status408RequestTimeout,
+                    "Request cancelled",
+                    "https://httpstatuses.com/408",
+                    "request_cancelled",
+                    "The operation was cancelled."
+                ),
+
                 ConcurrencyConflictException cex => (
                     StatusCodes.Status409Conflict,
                     "Concurrency conflict",
@@ -46,6 +56,14 @@ namespace ProjectManagement.Server.Controllers.Filters
                     "https://httpstatuses.com/409",
                     "concurrency_conflict",
                     "The resource was modified by someone else. Please reload and try again."
+                ),
+
+                ValidationException vex => (
+                    StatusCodes.Status400BadRequest,
+                    "Validation failed",
+                    "https://httpstatuses.com/400",
+                    "validation_failed",
+                    isDev ? vex.Message : "The request data is invalid."
                 ),
 
                 KeyNotFoundException knf => (

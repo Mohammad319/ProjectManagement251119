@@ -60,6 +60,8 @@ namespace Persistence.Factory
             services.AddScoped<ITaskService, TaskService>();
             services.AddScoped<ITemplateCommandService, TemplateCommandService>();
             services.AddScoped<ITemplateQueryService, TemplateQueryService>();
+            services.AddScoped<ITemplateColumnCommandService, TemplateColumnCommandService>();
+            services.AddScoped<ITemplateColumnQueryService, TemplateColumnQueryService>();
             services.AddScoped<ITenderAttributeCommandService, TenderAttributeCommandService>();
             services.AddScoped<ITenderAttributeQueryService, TenderAttributeQueryService>();
             services.AddScoped<ITenderCommandService, TenderCommandService>();

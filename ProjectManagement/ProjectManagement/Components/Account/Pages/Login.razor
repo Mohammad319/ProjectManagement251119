@@ -109,12 +109,8 @@
                         @PMIdentityText.LoginWithPasskeyAction
                     </PasskeySubmit>
 
-                    <!-- Error & Forgot Password -->
+                    <!-- Forgot Password -->
                     <div class="mt-4 text-center">
-                        @if (!string.IsNullOrEmpty(errorMessage))
-                        {
-                            <p class="text-sm text-red-500">@errorMessage</p>
-                        }
                         <NavLink href="Account/ForgotPassword" class="inline-block mt-2 text-blue-600 hover:underline dark:text-blue-400">
                             @PMResourceIdentity.passwordForget
                         </NavLink>
@@ -128,7 +124,6 @@
 
 @code {
     private string? errorMessage;
-    private EditContext editContext = default!;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
@@ -142,8 +137,6 @@
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();
-
-        editContext = new EditContext(Input);
 
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
@@ -171,10 +164,6 @@
         }
         else
         {
-            if (!editContext.Validate())
-            {
-                return;
-            }
 
             signInMethod = "password";
             passwordUser = await UserManager.FindByEmailAsync(Input.Email.Trim());
@@ -226,6 +215,7 @@
 
         [Required]
         [DataType(DataType.Password)]
+        [MaxLength(128)]
         public string Password { get; set; } = "";
 
         [Display(Name = "Remember me?")]

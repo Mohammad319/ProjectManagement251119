@@ -31,5 +31,8 @@
 
         // أرقام الحسابات
         public const int AccountNumber = 20;
+
+        // Storage
+        public const int StorageValue = 4000;
     }
 }

@@ -34,6 +34,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     [Inject] private ITemplateRepository TemplateRepository { get; set; } = default!;
     [Inject] private TaskService TaskService { get; set; } = default!;
     [Inject] private ResourceService ResourceService { get; set; } = default!;
+    [Inject] private ICalculationRepository CalcRepo { get; set; } = default!;
 
     private Virtualize<FlatItem>? virtualizeComponent;
     private DotNetObjectReference<CalcDataGrid>? _dotNetRef;
@@ -289,6 +290,32 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             CalcService.GetFilter(null);
             Calc.FilterVM = null;
         }
+    }
+
+    private bool HasActivePreset => DisplayOptionsPresetState.GetActivePreset(Calc.DisplayPresets) is not null;
+
+    private async Task ToggleTaskActiveById(int taskId)
+    {
+        if (_disposed || _observedCalculation is null) return;
+        Calc.ToggleTaskActiveInPreset(taskId, CalcService.ShowComments, CalcService.ShowResourceVariables);
+        await RefreshAndSavePresetsAsync();
+    }
+
+    private async Task ToggleResourceActiveById(int resourceId)
+    {
+        if (_disposed || _observedCalculation is null) return;
+        Calc.ToggleResourceActiveInPreset(resourceId, CalcService.ShowComments, CalcService.ShowResourceVariables);
+        await RefreshAndSavePresetsAsync();
+    }
+
+    private async Task RefreshAndSavePresetsAsync()
+    {
+        Calc.AllFlatItems = Calc.BuildFlatList();
+        Calc.FlatListDirty = false;
+        if (virtualizeComponent != null)
+            await virtualizeComponent.RefreshDataAsync();
+        await InvokeAsync(StateHasChanged);
+        await CalcRepo.UpdateDisplayPresetsAsync(Calc.Id, Calc.DisplayPresets);
     }
 
     private async Task ToggleCollSpan(TaskListMVVM task)

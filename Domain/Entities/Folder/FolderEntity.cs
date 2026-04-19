@@ -55,8 +55,8 @@ namespace Domain.Entities.Folder
 
         public void UpdateOrder(int newOrder)
         {
-            if (double.IsNaN(newOrder) || double.IsInfinity(newOrder))
-                throw new ArgumentOutOfRangeException(nameof(newOrder), "SortOrder must be a finite number.");
+            if (newOrder < 0)
+                throw new ArgumentOutOfRangeException(nameof(newOrder), "SortOrder cannot be negative.");
 
             SortOrder = newOrder;
         }

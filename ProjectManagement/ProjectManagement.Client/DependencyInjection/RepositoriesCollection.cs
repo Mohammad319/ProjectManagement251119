@@ -31,6 +31,7 @@ namespace ProjectManagement.Client.DependencyInjection
             services.AddScoped<IDepartmentsRepository, DepartmentsRepository>();
             services.AddScoped<IStorageRepository, StorageRepository>();
             services.AddScoped<ITemplateRepository, TemplateRepository>();
+            services.AddScoped<ITemplateColumnRepository, TemplateColumnRepository>();
             services.AddScoped<IApplicationRepo, ApplicationRepo>();
             services.AddScoped<IOfferRepository, OfferRepository>();
             services.AddScoped<IOrganisationRepository, OrganisationRepository>();

@@ -6,29 +6,72 @@ namespace Domain.Entities.Calculation
 {
     internal static class TemplateMetadataMapper
     {
-        public static TemplateData Build(TemplateData? metadata)
+        public static TemplateMetadataData Build(TemplateData? metadata)
         {
             metadata ??= new TemplateData();
 
-            return new TemplateData
+            return new TemplateMetadataData
             {
                 MathRound = metadata.MathRound,
-                Currency = Normalize(metadata.Currency, 5, "€"),
+                Currency = Normalize(metadata.Currency, 5, "â‚¬"),
                 DateFormat = Normalize(metadata.DateFormat, 15, "dd.MM.yyyy"),
-                NetCalc = CloneNetCalc(metadata.NetCalc),
+                NetCalc = CloneNetCalcStyle(metadata.NetCalc),
                 SummarySheet = CloneSummarySheet(metadata.SummarySheet)
             };
         }
 
-        private static NetCalc CloneNetCalc(NetCalc? value)
+        public static TemplateMetadataData Build(TemplateMetadataData? metadata)
+        {
+            metadata ??= new TemplateMetadataData();
+
+            return new TemplateMetadataData
+            {
+                MathRound = metadata.MathRound,
+                Currency = Normalize(metadata.Currency, 5, "â‚¬"),
+                DateFormat = Normalize(metadata.DateFormat, 15, "dd.MM.yyyy"),
+                NetCalc = CloneNetCalcStyle(metadata.NetCalc),
+                SummarySheet = CloneSummarySheet(metadata.SummarySheet)
+            };
+        }
+
+        public static TemplateData BuildTemplateData(
+            TemplateMetadataData? metadata,
+            IEnumerable<NetColumnState>? columns)
+        {
+            var normalized = Build(metadata);
+
+            return new TemplateData
+            {
+                MathRound = normalized.MathRound,
+                Currency = normalized.Currency,
+                DateFormat = normalized.DateFormat,
+                NetCalc = new NetCalc
+                {
+                    Color = CloneNetColor(normalized.NetCalc.Color),
+                    Columns = TemplateDefaults.EnsureNetCalcColumns(columns),
+                    Sort = new SortConfig()
+                },
+                SummarySheet = CloneSummarySheet(normalized.SummarySheet)
+            };
+        }
+
+        private static NetCalcStyleData CloneNetCalcStyle(NetCalc? value)
         {
             value ??= new NetCalc();
 
-            return new NetCalc
+            return new NetCalcStyleData
             {
-                Color = CloneNetColor(value.Color),
-                Columns = TemplateDefaults.EnsureNetCalcColumns(value.Columns),
-                Sort = (value.Sort ?? new SortConfig()).Clone()
+                Color = CloneNetColor(value.Color)
+            };
+        }
+
+        private static NetCalcStyleData CloneNetCalcStyle(NetCalcStyleData? value)
+        {
+            value ??= new NetCalcStyleData();
+
+            return new NetCalcStyleData
+            {
+                Color = CloneNetColor(value.Color)
             };
         }
 
