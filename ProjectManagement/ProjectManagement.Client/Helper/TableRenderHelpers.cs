@@ -78,6 +78,31 @@ namespace ProjectManagement.Client.Helper
             builder.CloseElement();
         }
 
+        public static void RenderActiveToggleTd(RenderTreeBuilder builder, bool isActive, Func<Task>? onToggle)
+        {
+            int seq = 0;
+            var label = isActive ? "Active" : "Inactive";
+
+            builder.OpenElement(seq++, "td");
+            builder.AddAttribute(seq++, "class", "calc-active-cell");
+
+            builder.OpenElement(seq++, "button");
+            builder.AddAttribute(seq++, "type", "button");
+            builder.AddAttribute(seq++, "title", label);
+            builder.AddAttribute(seq++, "aria-label", label);
+            builder.AddAttribute(seq++, "aria-pressed", isActive ? "true" : "false");
+            builder.AddAttribute(seq++, "class", isActive ? "calc-active-toggle is-active" : "calc-active-toggle is-inactive");
+
+            if (onToggle is not null)
+            {
+                builder.AddAttribute(seq++, "onclick", onToggle);
+                builder.AddEventStopPropagationAttribute(seq++, "onclick", true);
+            }
+
+            builder.CloseElement();
+            builder.CloseElement();
+        }
+
         public static void RenderStatusTd(RenderTreeBuilder builder, string color, string status)
         {
             int seq = 0;

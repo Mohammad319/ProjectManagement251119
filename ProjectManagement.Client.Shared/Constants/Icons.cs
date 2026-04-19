@@ -47,6 +47,12 @@
         public const string Template = "🎨";              // U+1F5C2 (Template)
         public const string Refresh = "🔄";              // U+1F504 (Refresh) 🔄
         public const string Refresh2 = "↻";              // U+1F504 (Refresh) ↻
+        public const string RefreshSvg = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+  <path d='M21 12a9 9 0 0 1-15.3 6.4' />
+  <path d='M3 12A9 9 0 0 1 18.3 5.6' />
+  <polyline points='21 5 21 11 15 11' />
+  <polyline points='3 19 3 13 9 13' />
+</svg>";
         public const string Active = "🟢";              // U+1F7E2 (Refresh) ↻
         public const string NotActive = "🔴";              // U+1F534 (Refresh) ↻
         public const string NotSelected = "⬜";              // U+1F534 (NotSelected) ⬜
@@ -127,6 +133,10 @@
 </svg>";
         public const string Filter = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
   <polygon points='22 3 2 3 10 12 10 19 14 21 14 12 22 3' />
+</svg>";
+        public const string FilterOff = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+  <path d='M22 3 13.5 12v7L10 21v-9L2 3h20z' />
+  <line x1='4' y1='20' x2='20' y2='4' />
 </svg>";
 
         public const string Back = @$"<svg {SVGHeader} fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>

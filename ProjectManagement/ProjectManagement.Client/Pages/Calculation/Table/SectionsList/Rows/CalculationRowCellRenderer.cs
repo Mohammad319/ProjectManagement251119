@@ -11,10 +11,14 @@ public static class CalculationRowCellRenderer
         RenderTreeBuilder builder,
         IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> columns,
         TaskListMVVM task,
-        int namePaddingPx = 0) =>
+        int namePaddingPx = 0,
+        bool showActiveToggle = false,
+        Func<Task>? onToggleActive = null) =>
         RenderCells(builder, columns.Count, i =>
         {
-            if (namePaddingPx > 0 && columns[i].Id == NetColumnId.Name)
+            if (showActiveToggle && columns[i].Id == NetColumnId.Active)
+                TableRenderHelpers.RenderActiveToggleTd(builder, task.Active, onToggleActive);
+            else if (namePaddingPx > 0 && columns[i].Id == NetColumnId.Name)
                 TableRenderHelpers.RenderWithTitleIndented(builder, task.Name, namePaddingPx);
             else
                 columns[i].TaskRender(builder, task);
@@ -24,10 +28,14 @@ public static class CalculationRowCellRenderer
         RenderTreeBuilder builder,
         IReadOnlyList<CalcColmunDefinition<TaskListMVVM, ResourceListMVVM>> columns,
         ResourceListMVVM resource,
-        int namePaddingPx = 0) =>
+        int namePaddingPx = 0,
+        bool showActiveToggle = false,
+        Func<Task>? onToggleActive = null) =>
         RenderCells(builder, columns.Count, i =>
         {
-            if (namePaddingPx > 0 && columns[i].Id == NetColumnId.Name)
+            if (showActiveToggle && columns[i].Id == NetColumnId.Active)
+                TableRenderHelpers.RenderActiveToggleTd(builder, resource.Active, onToggleActive);
+            else if (namePaddingPx > 0 && columns[i].Id == NetColumnId.Name)
                 TableRenderHelpers.RenderWithTitleIndented(builder, resource.Name, namePaddingPx);
             else
                 columns[i].ResRender(builder, resource);

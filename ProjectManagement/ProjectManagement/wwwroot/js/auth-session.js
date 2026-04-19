@@ -55,7 +55,7 @@
         return [localUrl.substring(0, fragmentIndex), localUrl.substring(fragmentIndex)];
     }
 
-    async function sendKeepAlive() {
+    async function sendKeepAlive(redirectOnExpiry = false) {
         if (document.hidden || isAccountPage()) {
             return;
         }
@@ -77,6 +77,9 @@
 
             if (response.ok) {
                 cleanupRetryFlag();
+            } else if (response.status === 401 && redirectOnExpiry) {
+                const returnUrl = window.location.pathname + window.location.search + window.location.hash;
+                window.location.replace("/Account/Login?returnUrl=" + encodeURIComponent(returnUrl));
             }
         }
         catch {
@@ -93,7 +96,7 @@
         document.addEventListener("visibilitychange", () => {
             if (!document.hidden) {
                 markActivity();
-                void sendKeepAlive();
+                void sendKeepAlive(true);
             }
         });
 

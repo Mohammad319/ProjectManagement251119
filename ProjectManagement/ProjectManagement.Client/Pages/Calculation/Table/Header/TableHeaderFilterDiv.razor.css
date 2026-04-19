@@ -43,6 +43,64 @@
         color: #000;
 }
 
+.filter-actions-cell {
+    padding: 1px 2px !important;
+    overflow: visible !important;
+}
+
+.calc-filter-toolbar {
+    display: grid;
+    grid-template-columns: repeat(2, 18px);
+    gap: 2px;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    min-width: 38px;
+    margin: 0 auto;
+}
+
+.calc-filter-tool-button {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(148, 163, 184, 0.38);
+    border-radius: 4px;
+    padding: 0;
+    background: rgba(248, 250, 252, 0.94);
+    color: #334155;
+    cursor: pointer;
+    line-height: 1;
+    transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+}
+
+.calc-filter-tool-button:hover {
+    border-color: rgba(14, 165, 233, 0.45);
+    background: rgba(224, 242, 254, 0.96);
+}
+
+.calc-filter-tool-button svg {
+    width: 13px;
+    height: 13px;
+}
+
+.calc-filter-tool-button-primary {
+    color: #1d4ed8;
+}
+
+.calc-filter-tool-button-success {
+    color: #047857;
+}
+
+.calc-filter-tool-button-neutral {
+    color: #475569;
+}
+
+.calc-filter-tool-button-danger {
+    color: #b91c1c;
+}
+
 .tdHeaderFilter {
     white-space: normal;
     overflow: hidden;

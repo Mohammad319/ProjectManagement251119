@@ -15,5 +15,6 @@
         public const string ResourceParameter = "#d1fae5";
         public const string ResourceAttachment = "#fce7f3";
         public const string ResourceTime = "#e2e8f0";
+        public const string InactiveText = "#8a8a8a";
     }
 }

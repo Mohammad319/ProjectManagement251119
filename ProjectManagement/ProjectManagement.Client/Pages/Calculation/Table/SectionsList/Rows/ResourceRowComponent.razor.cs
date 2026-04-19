@@ -35,7 +35,8 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     private bool IsDetailsOpen { get; set; }
 
     private string ResolvedColor => Colors?.Resource ?? TemplateConstBase.Resource;
-    private string RowStyle => Resource.Style(ResolvedColor, TaskBranchActive, IsRowSelected);
+    private string InactiveTextColor => Colors?.InactiveText ?? TemplateConstBase.InactiveText;
+    private string RowStyle => Resource.Style(ResolvedColor, InactiveTextColor, TaskBranchActive, IsRowSelected);
 
     private bool HasParameters => Resource?.Data?.Parameters?.Count > 0;
     private bool HasTimes => Resource?.Data?.Times?.Count > 0;
@@ -76,7 +77,9 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     }
 
     private void RenderResourceCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left);
+        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left, ShowActiveToggle, ToggleActive);
+
+    private Task ToggleActive() => OnToggleActive.InvokeAsync();
 
     public override void Dispose()
     {

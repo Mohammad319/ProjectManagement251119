@@ -26,7 +26,6 @@ public class UnauthorizedRedirectHandler(
 
             if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
             {
-                ShowOnce(appLoc["sessionTitle"], appLoc["sessionRefreshMessage"]);
                 _ = clientLogger.ErrorAsync($"Unauthorized (401) recovered via refresh for {request.RequestUri}");
                 nav.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
             }

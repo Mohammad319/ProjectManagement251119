@@ -20,12 +20,16 @@
                     {
                         <th @key="Template.StartCol1"
                             id="h1"
-                            class="draggable-table"
+                            class="draggable-table calc-filter-header-cell"
                             data-pm-frozen="true"
                             style="width:@(Template.StartCol1 + "px;")">
-                            <span role="button" @onclick="ShFilter" class="text-outline-info">
+                            <button type="button"
+                                    class="@GetFilterToggleButtonClass()"
+                                    title="Toggle filters" aria-label="Toggle filters"
+                                    aria-pressed="@(Calc.FilterVM is not null ? "true" : "false")"
+                                    @onclick="ShFilter">
                                 @((MarkupString)Icons.Filter)
-                            </span>
+                            </button>
                         </th>
                     }
                     else
@@ -35,11 +39,35 @@
 
                     @for (int i = 0; i < HeaderColumns.Count; i++)
                     {
+                        var colId = HeaderColumns[i].Id;
                         <th id="@("h" + (i + 2))"
                             class="@GetHeaderCssClass(i)"
-                            data-pm-frozen="@GetFrozenHeaderAttribute(HeaderColumns[i].Id)"
+                            data-pm-frozen="@GetFrozenHeaderAttribute(colId)"
                             style="width:@(HeaderColumns[i].Width)px;">
-                            @CalcLoc[NetColumnLoc.Key[HeaderColumns[i].Id]]
+                            @if (IsTaskSortableColumn(colId))
+                            {
+                                <div class="relative flex items-center justify-center w-full overflow-hidden select-none">
+                                    <button type="button"
+                                            class="@GetTaskSortClass(colId, true)"
+                                            style="position:absolute;left:1px;"
+                                            title="Sort descending"
+                                            disabled="@_isUpdatingSort"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => ToggleTaskSortAsync(colId, true)">↓</button>
+                                    <span class="truncate" style="padding:0 14px;">@CalcLoc[NetColumnLoc.Key[colId]]</span>
+                                    <button type="button"
+                                            class="@GetTaskSortClass(colId, false)"
+                                            style="position:absolute;right:1px;"
+                                            title="Sort ascending"
+                                            disabled="@_isUpdatingSort"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => ToggleTaskSortAsync(colId, false)">↑</button>
+                                </div>
+                            }
+                            else
+                            {
+                                @CalcLoc[NetColumnLoc.Key[colId]]
+                            }
                         </th>
                     }
                 </tr>

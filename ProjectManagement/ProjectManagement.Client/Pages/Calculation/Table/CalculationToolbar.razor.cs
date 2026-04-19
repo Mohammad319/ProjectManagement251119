@@ -42,9 +42,6 @@ public partial class CalculationToolbar : ComponentBase, IDisposable
     private string SelectedTemplateValue => CurrentTemplateId?.ToString() ?? string.Empty;
     private string SelectedTemplateColumnValue => CurrentTemplateColumnId?.ToString() ?? string.Empty;
     private string SelectedFactorDisplayValue => ((int)Calc.FactorDisplayMode).ToString(CultureInfo.InvariantCulture);
-    private string TaskSortColumnValue => Calc.Sort.TaskColumn.HasValue
-        ? ((int)Calc.Sort.TaskColumn.Value).ToString(CultureInfo.InvariantCulture)
-        : string.Empty;
     private string ResourceSortColumnValue => Calc.Sort.ResourceColumn.HasValue
         ? ((int)Calc.Sort.ResourceColumn.Value).ToString(CultureInfo.InvariantCulture)
         : string.Empty;
@@ -212,24 +209,9 @@ public partial class CalculationToolbar : ComponentBase, IDisposable
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
     }
 
-    private async Task OnTaskSortColumnChangedAsync(ChangeEventArgs args)
-    {
-        Calc.Sort.TaskColumn = ParseColumnId(args.Value?.ToString());
-        await SaveSortAsync();
-    }
-
     private async Task OnResourceSortColumnChangedAsync(ChangeEventArgs args)
     {
         Calc.Sort.ResourceColumn = ParseColumnId(args.Value?.ToString());
-        await SaveSortAsync();
-    }
-
-    private async Task SetTaskSortDescendingAsync(bool descending)
-    {
-        if (Calc.Sort.TaskDescending == descending)
-            return;
-
-        Calc.Sort.TaskDescending = descending;
         await SaveSortAsync();
     }
 
@@ -273,21 +255,6 @@ public partial class CalculationToolbar : ComponentBase, IDisposable
         active
             ? "inline-flex h-5 w-5 items-center justify-center rounded bg-slate-900 text-[11px] text-white disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900"
             : "inline-flex h-5 w-5 items-center justify-center rounded text-[11px] text-slate-500 hover:bg-slate-200 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-700";
-
-    private static readonly (NetColumnId Id, string Label)[] TaskSortColumns =
-    [
-        (NetColumnId.Name, "Name"),
-        (NetColumnId.Code, "Code"),
-        (NetColumnId.Quantity, "Quantity"),
-        (NetColumnId.Unit, "Unit"),
-        (NetColumnId.NetCostQ, "Net cost/Q"),
-        (NetColumnId.TotalNetCost, "Total net cost"),
-        (NetColumnId.PriceTotaly, "Price total"),
-        (NetColumnId.ChangeFactor1, "Factor 1"),
-        (NetColumnId.ChangeFactor2, "Factor 2"),
-        (NetColumnId.Status, "Status"),
-        (NetColumnId.Responsible, "Responsible")
-    ];
 
     private static readonly (NetColumnId Id, string Label)[] ResourceSortColumns =
     [

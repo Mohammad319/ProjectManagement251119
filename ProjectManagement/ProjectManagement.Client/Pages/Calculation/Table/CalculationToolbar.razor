@@ -65,36 +65,6 @@
 
                 <div class="inline-flex min-w-0 items-center gap-0.5 rounded px-1 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
                     <select class="min-w-[4.5rem] max-w-[8rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none disabled:cursor-wait dark:bg-transparent"
-                            title="Task sort"
-                            aria-label="Task sort"
-                            value="@TaskSortColumnValue"
-                            @onchange="OnTaskSortColumnChangedAsync"
-                            disabled="@IsUpdatingSort">
-                        <option value="">Task</option>
-                        @foreach (var (id, label) in TaskSortColumns)
-                        {
-                            <option value="@((int)id)">@label</option>
-                        }
-                    </select>
-
-                    <button type="button"
-                            class="@GetSortDirectionClass(!Calc.Sort.TaskDescending)"
-                            title="Task ascending"
-                            disabled="@IsUpdatingSort"
-                            @onclick="() => SetTaskSortDescendingAsync(false)">
-                        ↑
-                    </button>
-                    <button type="button"
-                            class="@GetSortDirectionClass(Calc.Sort.TaskDescending)"
-                            title="Task descending"
-                            disabled="@IsUpdatingSort"
-                            @onclick="() => SetTaskSortDescendingAsync(true)">
-                        ↓
-                    </button>
-                </div>
-
-                <div class="inline-flex min-w-0 items-center gap-0.5 rounded px-1 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-                    <select class="min-w-[4.5rem] max-w-[8rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none disabled:cursor-wait dark:bg-transparent"
                             title="Resource sort"
                             aria-label="Resource sort"
                             value="@ResourceSortColumnValue"

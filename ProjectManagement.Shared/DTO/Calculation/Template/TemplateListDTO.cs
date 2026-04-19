@@ -23,6 +23,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         public string ResourceParameter { get; set; } = TemplateConstBase.ResourceParameter;
         public string ResourceAttachment { get; set; } = TemplateConstBase.ResourceAttachment;
         public string ResourceTime { get; set; } = TemplateConstBase.ResourceTime;
+        public string InactiveText { get; set; } = TemplateConstBase.InactiveText;
 
         public NetColor Clone()
         {
@@ -41,6 +42,7 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
                 ResourceParameter = ResourceParameter ?? TemplateConstBase.ResourceParameter,
                 ResourceAttachment = ResourceAttachment ?? TemplateConstBase.ResourceAttachment,
                 ResourceTime = ResourceTime ?? TemplateConstBase.ResourceTime,
+                InactiveText = InactiveText ?? TemplateConstBase.InactiveText,
             };
         }
     }

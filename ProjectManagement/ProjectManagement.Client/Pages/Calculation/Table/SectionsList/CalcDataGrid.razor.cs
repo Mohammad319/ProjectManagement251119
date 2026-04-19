@@ -28,7 +28,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private CalculationService CalcService { get; set; } = default!;
-    [Inject] private CalculationFilterPresetStorage FilterPresetStorage { get; set; } = default!;
     [Inject] private CalculationInteractionState InteractionState { get; set; } = default!;
     [Inject] private FolderState FolderState { get; set; } = default!;
     [Inject] private ITemplateRepository TemplateRepository { get; set; } = default!;
@@ -50,7 +49,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private bool _reloadPending;
     private bool _jsSyncPending = true;
     private bool _disposed;
-    private int? _pendingFilterRestoreCalculationId;
 
     private static readonly IReadOnlyDictionary<NetColumnId, int> DefaultWidths =
         TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x.Width);
@@ -62,13 +60,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     {
         if (_disposed)
             return;
-
-        if (_observedCalculation is not null &&
-            _pendingFilterRestoreCalculationId == _observedCalculation.Id)
-        {
-            _pendingFilterRestoreCalculationId = null;
-            await RestoreSavedFilterPresetAsync();
-        }
 
         if (!firstRender && !_jsSyncPending)
             return;
@@ -112,7 +103,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         _observedCalculation = currentCalculation;
         _observedTemplate = currentCalculation?.Template;
-        _pendingFilterRestoreCalculationId = currentCalculation?.Id;
 
         if (_observedCalculation is not null && _onChangeHandler is not null)
             _observedCalculation.OnChangeInCalculation += _onChangeHandler;
@@ -149,19 +139,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         }
 
         return true;
-    }
-
-    private async Task RestoreSavedFilterPresetAsync()
-    {
-        if (_observedCalculation is null)
-            return;
-
-        var savedFilters = await FilterPresetStorage.LoadAsync(_observedCalculation.Id);
-        var activePreset = CalculationFilterPresetState.GetActivePreset(savedFilters);
-        if (activePreset is null)
-            return;
-
-        CalcService.GetFilter(CalculationFilterPresetState.CloneFilter(activePreset.Filter));
     }
 
     private void EnsureColumnsUpToDate()
@@ -281,6 +258,12 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     protected void HandleKeyUp(KeyboardEventArgs _) => InteractionState.ClearModifierKey();
 
+
+
+    private string GetFilterToggleButtonClass() =>
+        Calc.FilterVM is null
+            ? "calc-filter-toggle-button"
+            : "calc-filter-toggle-button is-active";
     private void ShFilter()
     {
         if (Calc.FilterVM == null)
@@ -291,7 +274,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             Calc.FilterVM = null;
         }
     }
-
     private bool HasActivePreset => DisplayOptionsPresetState.GetActivePreset(Calc.DisplayPresets) is not null;
 
     private async Task ToggleTaskActiveById(int taskId)
@@ -642,6 +624,59 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private string FormatSummaryDouble(double value) =>
         NumericFormatHelper.Format((decimal)value, Template.MathRound, CultureInfo.CurrentCulture);
+
+    private bool _isUpdatingSort;
+
+    private static readonly HashSet<NetColumnId> TaskSortableColumns =
+    [
+        NetColumnId.Name,
+        NetColumnId.Code,
+        NetColumnId.Quantity,
+        NetColumnId.Unit,
+        NetColumnId.NetCostQ,
+        NetColumnId.TotalNetCost,
+        NetColumnId.PriceTotaly,
+        NetColumnId.ChangeFactor1,
+        NetColumnId.ChangeFactor2,
+        NetColumnId.Status,
+        NetColumnId.Responsible
+    ];
+
+    private bool IsTaskSortableColumn(NetColumnId id) =>
+        Calc.Tap1 && TaskSortableColumns.Contains(id);
+
+    private bool IsTaskSortActive(NetColumnId id, bool descending) =>
+        Calc.Sort.TaskColumn == id && Calc.Sort.TaskDescending == descending;
+
+    private string GetTaskSortClass(NetColumnId id, bool descending) =>
+        IsTaskSortActive(id, descending)
+            ? "text-[10px] leading-none rounded bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-0.5 cursor-pointer disabled:opacity-50"
+            : "text-[10px] leading-none rounded text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200 px-0.5 cursor-pointer disabled:opacity-50";
+
+    private async Task ToggleTaskSortAsync(NetColumnId columnId, bool descending)
+    {
+        if (_isUpdatingSort) return;
+
+        if (Calc.Sort.TaskColumn == columnId && Calc.Sort.TaskDescending == descending)
+            Calc.Sort.TaskColumn = null;
+        else
+        {
+            Calc.Sort.TaskColumn = columnId;
+            Calc.Sort.TaskDescending = descending;
+        }
+
+        _isUpdatingSort = true;
+        try
+        {
+            CalcService.RequestGridRefresh(CalculationGridRefreshKind.Structure);
+            await CalcRepo.UpdateSortAsync(Calc.Id, Calc.Sort);
+        }
+        finally
+        {
+            _isUpdatingSort = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
     public void Dispose()
     {

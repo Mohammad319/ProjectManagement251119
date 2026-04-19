@@ -59,6 +59,44 @@
         box-shadow: 0 1px 0 rgba(15, 23, 42, 0.12);
     }
 
+    .divNetCalc ::deep tbody tr.calc-data-row > td,
+    .divNetCalc ::deep tbody tr.calc-data-row > td :not(.calc-active-toggle) {
+        color: var(--calc-row-text-color, inherit);
+    }
+
+    .divNetCalc ::deep .calc-filter-header-cell {
+        padding: 1px;
+        text-align: center;
+        overflow: visible;
+    }
+
+    .divNetCalc ::deep .calc-filter-toggle-button {
+        display: inline-flex;
+        width: 20px;
+        height: 20px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(14, 165, 233, 0.35);
+        border-radius: 4px;
+        padding: 0;
+        background: rgba(240, 249, 255, 0.92);
+        color: #0369a1;
+        cursor: pointer;
+        transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+    }
+
+    .divNetCalc ::deep .calc-filter-toggle-button:hover,
+    .divNetCalc ::deep .calc-filter-toggle-button.is-active {
+        border-color: rgba(2, 132, 199, 0.6);
+        background: rgba(186, 230, 253, 0.95);
+        color: #075985;
+    }
+
+    .divNetCalc ::deep .calc-filter-toggle-button svg {
+        width: 15px;
+        height: 15px;
+    }
+
     .divNetCalc ::deep .pm-frozen-col {
         position: sticky;
         background: inherit;
@@ -89,6 +127,37 @@
         text-align: left;
         direction: ltr;
         font-variant-numeric: tabular-nums;
+    }
+
+    .divNetCalc ::deep td.calc-active-cell {
+        text-align: center;
+        overflow: visible;
+    }
+
+    .divNetCalc ::deep .calc-active-toggle {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 9999px;
+        padding: 0;
+        vertical-align: middle;
+        cursor: pointer;
+        transition: opacity 120ms ease-out, transform 120ms ease-out, border-color 120ms ease-out, background-color 120ms ease-out;
+    }
+
+    .divNetCalc ::deep .calc-active-toggle:hover {
+        opacity: 0.75;
+        transform: scale(1.08);
+    }
+
+    .divNetCalc ::deep .calc-active-toggle.is-active {
+        border: 1px solid #10b981;
+        background-color: #10b981;
+    }
+
+    .divNetCalc ::deep .calc-active-toggle.is-inactive {
+        border: 1px solid #94a3b8;
+        background-color: transparent;
     }
 
     .divNetCalc ::deep tbody tr.calc-summary-row > td.calc-summary-label-cell,

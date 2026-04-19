@@ -4,8 +4,10 @@
 @using ProjectManagement.Client.Shared.Model.Project
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
+@using System.Globalization
 @using System.IO
 @inherits AppComponentBase
+@implements IDisposable
 
 <div class="space-y-3 p-3 text-slate-800 dark:text-slate-100" style="--net-task: @UiStyles.Task;--net-subtask: @UiStyles.SubTask;">
     <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/60">
@@ -14,9 +16,14 @@
             {
                 <div class="flex flex-col gap-1">
                     <label class="text-sm font-medium text-slate-700 dark:text-slate-300">@AppLoc["sheetNr"]</label>
-                    <input type="number"
-                           class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
-                           @bind="SheetNr" />
+                    <select class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+                            value="@SheetNr"
+                            @onchange="OnSheetChanged">
+                        @foreach (var sheet in SheetOptions)
+                        {
+                            <option value="@sheet.Index">@sheet.DisplayName</option>
+                        }
+                    </select>
                 </div>
             }
 
@@ -33,8 +40,15 @@
                 <div class="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
                     <InputFile type="file" OnChange="(InputFileChangeEventArgs e) => CheckedChanged(e)"></InputFile>
 
-                    @if (workbook != null)
+                    @if (HasSelectedFile)
                     {
+                        <button type="button"
+                                class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:border-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-300"
+                                @onclick="DetectCurrentSheet"
+                                disabled="@wait">
+                            Auto
+                        </button>
+
                         <button type="button"
                                 class="inline-flex h-8 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 px-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:hover:text-slate-900"
                                 @onclick="Import"
@@ -53,6 +67,20 @@
                         </button>
                     }
                 </div>
+
+                @if (!string.IsNullOrWhiteSpace(DetectionMessage))
+                {
+                    <div class="rounded-lg border border-blue-100 bg-blue-50 px-2 py-1.5 text-xs text-blue-800 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200">
+                        @DetectionMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(ImportMessage))
+                {
+                    <div class="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        @ImportMessage
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -194,6 +222,11 @@
     int SheetNr = 1;
     List<ListOrderDTO>? Statuses;
     bool SheetIsVisible = false;
+    List<ExcelWorksheetOption> SheetOptions = new();
+    string DetectionMessage = string.Empty;
+    string ImportMessage = string.Empty;
+    byte[]? workbookBytes;
+    bool HasSelectedFile => workbookBytes is { Length: > 0 };
 
     async Task SaveConfirm()
     {
@@ -206,41 +239,125 @@
         wait = true;
         bool result = await Repo.Task.CreateAsync(Sections, Calc.Id);
         MHD.Notifications(ToastType.Add, result);
+        workbook?.Dispose();
         workbook = null;
+        workbookStream?.Dispose();
+        workbookStream = null;
+        workbookBytes = null;
         wait = false;
         Close();
     }
     
     XLWorkbook? workbook;
+    MemoryStream? workbookStream;
 
     async Task CheckedChanged(InputFileChangeEventArgs f)
     {
-        IBrowserFile File = f.File;
-        using MemoryStream memStream = new();
-        await File.OpenReadStream(File.Size).CopyToAsync(memStream);
-        using XLWorkbook workbook1 = new(memStream);
-        workbook = workbook1;
-        int count = workbook.Worksheets.Count();
+        try
+        {
+            IBrowserFile File = f.File;
+            using MemoryStream memStream = new();
+            await File.OpenReadStream(File.Size).CopyToAsync(memStream);
+            workbookBytes = memStream.ToArray();
 
-        if (count > 0)
-        {
-            SheetIsVisible = true;
-        }
-        else
-        {
+            Sections = null;
+            ImportMessage = string.Empty;
+            DetectionMessage = string.Empty;
+            SheetOptions = new();
             SheetIsVisible = false;
+
+            LoadWorkbook();
+
+            if (workbook != null)
+            {
+                SheetOptions = ExcelHelper.GetWorksheetOptions(workbook);
+                SheetIsVisible = SheetOptions.Any();
+
+                if (SheetIsVisible)
+                    ApplyDetectedLayout(ExcelHelper.DetectLayout(workbook));
+            }
         }
+        catch (Exception ex)
+        {
+            workbook?.Dispose();
+            workbook = null;
+            workbookStream?.Dispose();
+            workbookStream = null;
+            SheetOptions = new();
+            SheetIsVisible = false;
+            DetectionMessage = string.Empty;
+            ImportMessage = $"تعذر قراءة ملف Excel: {ex.Message}";
+        }
+    }
+
+    void OnSheetChanged(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out int selectedSheet))
+        {
+            SheetNr = selectedSheet;
+            DetectCurrentSheet();
+        }
+    }
+
+    void DetectCurrentSheet()
+    {
+        if (!EnsureWorkbook())
+            return;
+
+        XLWorkbook currentWorkbook = workbook!;
+        ApplyDetectedLayout(ExcelHelper.DetectLayout(currentWorkbook, SheetNr));
+    }
+
+    void ApplyDetectedLayout(ExcelImportLayout layout)
+    {
+        SheetNr = layout.SheetIndex;
+
+        if (!layout.IsDetected)
+        {
+            DetectionMessage = string.Empty;
+            return;
+        }
+
+        RowStart = layout.RowStart;
+        CodeIndex = layout.CodeIndex;
+        NameIndex = layout.NameIndex;
+        UnitIndex = layout.UnitIndex;
+        QuantityIndex = layout.QuantityIndex;
+        PriceIndex = layout.PriceIndex;
+        DetectionMessage = $"Auto: {layout.SheetName} | row {RowStart} | code {CodeIndex} | name {NameIndex} | unit {UnitIndex} | qty {QuantityIndex} | price {PriceIndex}";
     }
 
     private void Import()
     {
-        if (workbook == null)
+        if (!EnsureWorkbook())
             return;
 
-        wait = true;
-        Sections = null;
-        Sections = ExcelHelper.Import(SheetNr, workbook, RowStart, CodeIndex, NameIndex, UnitIndex, QuantityIndex, PriceIndex, Calc.OHFactors);
-        wait = false;
+        try
+        {
+            XLWorkbook currentWorkbook = workbook!;
+            wait = true;
+            Sections = ExcelHelper.Import(SheetNr, currentWorkbook, RowStart, CodeIndex, NameIndex, UnitIndex, QuantityIndex, PriceIndex, Calc.OHFactors);
+            int importedCount = CountTasks(Sections);
+
+            if (importedCount == 0)
+            {
+                ImportMessage = "لم يتم العثور على بيانات. تحقق من اسم sheet ورقم الصف والأعمدة ثم اضغط import مرة أخرى.";
+                MHD.MessageOk("Import", ImportMessage, MhdState.Warning);
+                return;
+            }
+
+            ImportMessage = $"تم استيراد {importedCount} صف.";
+        }
+        catch (Exception ex)
+        {
+            Sections = null;
+            ImportMessage = ex.Message;
+            MHD.MessageOk("Import", ex.Message, MhdState.Danger);
+        }
+        finally
+        {
+            wait = false;
+        }
     }
 
     protected async override Task OnInitializedAsync()
@@ -251,4 +368,73 @@
     void RemoveSection(TaskPostDTO task) => Sections?.Remove(task);
 
     void Close() => Modal.Close();
+
+    public void Dispose()
+    {
+        workbook?.Dispose();
+        workbook = null;
+        workbookStream?.Dispose();
+        workbookStream = null;
+    }
+
+    bool EnsureWorkbook()
+    {
+        if (workbook != null)
+            return true;
+
+        if (!HasSelectedFile)
+        {
+            ImportMessage = "اختر ملف Excel أولاً.";
+            return false;
+        }
+
+        try
+        {
+            LoadWorkbook();
+            return workbook != null;
+        }
+        catch (Exception ex)
+        {
+            workbook?.Dispose();
+            workbook = null;
+            workbookStream?.Dispose();
+            workbookStream = null;
+            ImportMessage = $"تعذر قراءة ملف Excel: {ex.Message}";
+            MHD.MessageOk("Import", ImportMessage, MhdState.Danger);
+            return false;
+        }
+    }
+
+    void LoadWorkbook()
+    {
+        if (workbookBytes == null || workbookBytes.Length == 0)
+            return;
+
+        workbook?.Dispose();
+        workbookStream?.Dispose();
+        workbookStream = new MemoryStream(workbookBytes);
+
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            workbook = new XLWorkbook(workbookStream);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+        }
+    }
+
+    static int CountTasks(List<TaskPostDTO>? tasks)
+    {
+        if (tasks == null)
+            return 0;
+
+        int count = tasks.Count;
+        foreach (TaskPostDTO task in tasks)
+            count += CountTasks(task.Tasks);
+
+        return count;
+    }
 }

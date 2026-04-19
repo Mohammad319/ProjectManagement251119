@@ -104,7 +104,8 @@ namespace Domain.Entities.Calculation
                 TaskDetailBaseQuantity = value.TaskDetailBaseQuantity ?? TemplateConstBase.TaskDetailBaseQuantity,
                 ResourceParameter = value.ResourceParameter ?? TemplateConstBase.ResourceParameter,
                 ResourceAttachment = value.ResourceAttachment ?? TemplateConstBase.ResourceAttachment,
-                ResourceTime = value.ResourceTime ?? TemplateConstBase.ResourceTime
+                ResourceTime = value.ResourceTime ?? TemplateConstBase.ResourceTime,
+                InactiveText = value.InactiveText ?? TemplateConstBase.InactiveText
             };
         }
 

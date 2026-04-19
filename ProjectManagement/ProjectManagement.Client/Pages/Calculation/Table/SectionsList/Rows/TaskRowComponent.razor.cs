@@ -33,7 +33,8 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
         ? (Colors?.TaskCodeName ?? TemplateConstBase.TaskCodeName)
         : (Colors?.Task ?? TemplateConstBase.Task);
 
-    private string RowStyle => Task.Style(ResolvedColor, ActiveParent, IsRowSelected);
+    private string InactiveTextColor => Colors?.InactiveText ?? TemplateConstBase.InactiveText;
+    private string RowStyle => Task.Style(ResolvedColor, InactiveTextColor, ActiveParent, IsRowSelected);
     private bool HasDescendants => (Task.Resources?.Count ?? 0) > 0 || (Task.Tasks?.Count ?? 0) > 0;
     private bool HasConversionParameters => Task?.Metadata?.ConversionParameters?.Count > 0;
     private bool CanToggle => HasDescendants || HasConversionParameters;
@@ -48,5 +49,7 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     private System.Threading.Tasks.Task ToggleCollapse() => OnCollapseToggle.InvokeAsync(Task);
 
     private void RenderTaskCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left);
+        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left, ShowActiveToggle, ToggleActive);
+
+    private Task ToggleActive() => OnToggleActive.InvokeAsync();
 }

@@ -253,22 +253,36 @@
     id="headerFilter">
     @if (TemplateConst.Col0 > PMValuesConst.MinWidthCol)
     {
-        <td>
-            <div style="display:flex;align-items:center;gap:2px;">
-                <span role="button"
-                      title="Open filter presets"
-                      class="text-outline-primary"
-                      style="font-size:18px;top:6px;"
-                      @onclick="OpenPresetsDialog">
+        <td class="filter-actions-cell">
+            <div class="calc-filter-toolbar" role="toolbar" aria-label="Filter actions">
+                <button type="button"
+                        class="calc-filter-tool-button calc-filter-tool-button-primary"
+                        title="Open filter presets"
+                        aria-label="Open filter presets"
+                        @onclick="OpenPresetsDialog">
                     @((MarkupString)Icons.Storage)
-                </span>
-                <span role="button"
-                      title="Apply filter"
-                      class="text-outline-success"
-                      style="font-size:20px;top:6px;"
-                      @onclick=" ()=> CalcService.GetFilter(Filter)">
+                </button>
+                <button type="button"
+                        class="calc-filter-tool-button calc-filter-tool-button-success"
+                        title="Apply filter"
+                        aria-label="Apply filter"
+                        @onclick="ApplyCurrentFilterAsync">
                     @((MarkupString)Icons.SaveCloud)
-                </span>
+                </button>
+                <button type="button"
+                        class="calc-filter-tool-button calc-filter-tool-button-neutral"
+                        title="Refresh filter"
+                        aria-label="Refresh filter"
+                        @onclick="RefreshFilterAsync">
+                    @((MarkupString)Icons.RefreshSvg)
+                </button>
+                <button type="button"
+                        class="calc-filter-tool-button calc-filter-tool-button-danger"
+                        title="Clear filters"
+                        aria-label="Clear filters"
+                        @onclick="ClearAllFiltersAsync">
+                    @((MarkupString)Icons.FilterOff)
+                </button>
             </div>
         </td>
     }
@@ -524,6 +538,12 @@
     {
         CalcService.GetFilter(Filter);
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RefreshFilterAsync()
+    {
+        CommitPendingTextFilterValue();
+        await ApplyCurrentFilterAsync();
     }
 
     private async Task ApplyAndCloseAsync()
