@@ -503,63 +503,87 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     {
         decimal totalNetCost = 0m;
         decimal priceTotally = 0m;
-        decimal priceTotallyTax = 0m;
         decimal baseCost = 0m;
         decimal priceTotalSub = 0m;
-        decimal diff = 0m;
         double totalCo2 = 0d;
         decimal priceActuallyQuantity = 0m;
         decimal priceWorkedQ = 0m;
-        decimal priceActuallyQuantityTax = 0m;
-        decimal priceWorkedQTax = 0m;
-        decimal priceTotalSubTax = 0m;
         decimal quantitySum = 0m;
         string? commonUnit = null;
         bool unitMismatch = false;
-        bool hasTasks = false;
+        bool hasItems = false;
 
         var tax = Calc.Tax;
+        bool sumFromResources = Calc.ShowResources;
 
         for (int i = 0; i < flatItems.Count; i++)
         {
             var item = flatItems[i];
-            if (!item.IsTask || item.Depth != 0 || item.Task is null)
-                continue;
 
-            var task = item.Task;
-            hasTasks = true;
-            totalNetCost += task.GetComputedNetCostTotaly();
-            priceTotally += task.GetComputedApriceTotally();
-            priceTotallyTax += task.ApriceTotallyTax(tax);
-            baseCost += task.BaseCost ?? 0m;
-            priceTotalSub += task.PriceSubTotal;
-            diff += task.Diff;
-            totalCo2 += task.TotalCO2 ?? 0d;
-            priceActuallyQuantity += task.PriceActuallyQuantity;
-            priceWorkedQ += task.PriceWorkedQ;
-            priceActuallyQuantityTax += task.PriceActuallyQuantityTax(tax);
-            priceWorkedQTax += task.PriceWorkedQTax(tax);
-            priceTotalSubTax += task.PriceTotalSubTax(tax);
-
-            if (!unitMismatch && task.Quantity.HasValue)
+            if (sumFromResources && item.IsResource && item.Resource is not null)
             {
-                var unit = task.Unit ?? string.Empty;
-                if (commonUnit is null)
-                    commonUnit = unit;
-                else if (commonUnit != unit)
-                    unitMismatch = true;
+                var res = item.Resource;
+                hasItems = true;
+                totalNetCost += res.GetComputedNetCostTotaly();
+                priceTotally += res.GetComputedApriceTotally();
+                baseCost += res.GetComputedBaseCost() ?? 0m;
+                priceTotalSub += res.PriceSubTotal;
+                totalCo2 += res.GetComputedTotalCO2() ?? 0d;
+            }
 
-                if (!unitMismatch)
-                    quantitySum += task.Quantity.Value;
+            if (item.IsTask && item.Depth == 0 && item.Task is not null)
+            {
+                var task = item.Task;
+
+                if (!sumFromResources)
+                {
+                    hasItems = true;
+                    totalNetCost += task.GetComputedNetCostTotaly();
+                    priceTotally += task.GetComputedApriceTotally();
+                    baseCost += task.BaseCost ?? 0m;
+                    priceTotalSub += task.PriceSubTotal;
+                    totalCo2 += task.TotalCO2 ?? 0d;
+                }
+                else
+                {
+                    hasItems = true;
+                }
+
+                priceActuallyQuantity += task.PriceActuallyQuantity;
+                priceWorkedQ += task.PriceWorkedQ;
+
+                if (!unitMismatch && task.Quantity.HasValue)
+                {
+                    var unit = task.Unit ?? string.Empty;
+                    if (commonUnit is null)
+                        commonUnit = unit;
+                    else if (commonUnit != unit)
+                        unitMismatch = true;
+
+                    if (!unitMismatch)
+                        quantitySum += task.Quantity.Value;
+                }
             }
         }
+
+        if (!hasItems)
+        {
+            totals = default;
+            return false;
+        }
+
+        decimal diff = priceTotalSub - priceTotally;
+        decimal priceTotallyTax = priceTotally * (1m + (tax / 100m));
+        decimal priceActuallyQuantityTax = priceActuallyQuantity * (1m + (tax / 100m));
+        decimal priceWorkedQTax = priceWorkedQ * (1m + (tax / 100m));
+        decimal priceTotalSubTax = priceTotalSub * (1m + (tax / 100m));
 
         var qSum = (!unitMismatch && commonUnit is not null) ? quantitySum : (decimal?)null;
         totals = new SummaryTotals(totalNetCost, priceTotally, priceTotallyTax,
             baseCost, priceTotalSub, diff, totalCo2,
             priceActuallyQuantity, priceWorkedQ, priceActuallyQuantityTax, priceWorkedQTax, priceTotalSubTax,
             qSum);
-        return hasTasks;
+        return true;
     }
 
     private bool ShouldIncludeSummaryTask(TaskListMVVM task) =>
