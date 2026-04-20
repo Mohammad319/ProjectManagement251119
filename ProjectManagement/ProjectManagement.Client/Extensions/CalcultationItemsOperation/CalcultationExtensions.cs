@@ -8,6 +8,34 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
     {
         // مفتاح تجميع/بحث عوامل الموارد (Factor lookup)
         private readonly record struct FactorKey(int? ResId, int? SortId, ResourceTypesEnum ResourceType);
+        private static Dictionary<int, bool> BuildActiveTaskBranchLookup(CalculationMVVM calc)
+        {
+            var result = new Dictionary<int, bool>(Math.Max(16, calc.Tasks?.Count ?? 0));
+            var roots = calc.RootTasks is { Count: > 0 } ? calc.RootTasks : calc.Tasks;
+            if (roots is null || roots.Count == 0)
+                return result;
+
+            var stack = new Stack<(TaskListMVVM Task, bool ParentActive)>(roots.Count);
+            for (int i = roots.Count - 1; i >= 0; i--)
+                stack.Push((roots[i], true));
+
+            while (stack.Count > 0)
+            {
+                var (task, parentActive) = stack.Pop();
+                var branchActive = parentActive && task.Active;
+                result[task.Id] = branchActive;
+
+                var children = task.Tasks;
+                if (children is null || children.Count == 0)
+                    continue;
+
+                for (int i = children.Count - 1; i >= 0; i--)
+                    stack.Push((children[i], branchActive));
+            }
+
+            return result;
+        }
+
         private static void ComputeTaskAggregates(CalculationMVVM calc)
         {
             var roots = calc.RootTasks;
@@ -226,6 +254,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
             // index من الموجود
             var factorIndex = new Dictionary<FactorKey, Factors>(Math.Max(256, factors.Count * 2));
+            var activeTaskBranches = BuildActiveTaskBranchLookup(calc);
 
             // ✅ صفّر قيم التجميع فقط (لا تلمس Earnings/IsLocked/Selected...)
             for (int i = 0; i < factors.Count; i++)
@@ -252,6 +281,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
                 var taskQty = task.Metadata?.Quantity;
                 var taskCap = task.Metadata?.Cap;
                 bool taskIsOH = task.Metadata?.IsOH == true;
+                bool taskBranchActive = !activeTaskBranches.TryGetValue(task.Id, out var branchActive) || branchActive;
 
                 for (int r = 0; r < resList.Count; r++)
                 {
@@ -259,7 +289,7 @@ namespace ProjectManagement.Client.Extensions.CalcultationItemsOperation
 
                     CalcResourceVariables(res, qIndex, taskQty, taskCap);
 
-                    if (!res.Active)
+                    if (!taskBranchActive || !res.Active)
                         continue;
 
                     var key = new FactorKey(res.ResourceTypeId, res.ResourceSortId, res.ResType);

@@ -29,7 +29,7 @@ else if (Form is not null)
 
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.firstname</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.firstname</label>
                     <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                @bind-Value="Form.Firstname"
                                disabled="@IsBusy" />
@@ -37,7 +37,7 @@ else if (Form is not null)
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.lastname</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.lastname</label>
                     <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                @bind-Value="Form.Lastname"
                                disabled="@IsBusy" />
@@ -45,7 +45,7 @@ else if (Form is not null)
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.email</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email</label>
                     <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                @bind-Value="Form.Email"
                                disabled="@IsBusy" />
@@ -53,7 +53,7 @@ else if (Form is not null)
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.phone</label>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.phone</label>
                     <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                @bind-Value="Form.PhoneNumber"
                                disabled="@IsBusy" />
@@ -65,17 +65,17 @@ else if (Form is not null)
                     <InputSelect class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                  @bind-Value="Form.Role"
                                  disabled="@IsBusy">
-                        <option value="@PMRolesConst.Tenant.Admin">@PMResourceIdentity.Admin</option>
+                        <option value="@PMRolesConst.Tenant.Admin">@ResourceIdentity.Admin</option>
                         <option value="@PMRolesConst.Tenant.SuperManger">@PMResourceIdentity.SuperManger</option>
-                        <option value="@PMRolesConst.Tenant.Manger">@PMResourceIdentity.Manger</option>
-                        <option value="@PMRolesConst.Tenant.User">@PMResourceIdentity.User</option>
+                        <option value="@PMRolesConst.Tenant.Manger">@ResourceIdentity.Manger</option>
+                        <option value="@PMRolesConst.Tenant.User">@ResourceIdentity.User</option>
                     </InputSelect>
                 </div>
 
                 @if (Departments?.Any() == true && Form.Role != PMRolesConst.Tenant.Admin)
                 {
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@PMResourceIdentity.department</label>
+                        <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.department</label>
                         <InputSelect class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
                                      @bind-Value="Form.DepartmentId"
                                      disabled="@IsBusy">

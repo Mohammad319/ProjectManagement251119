@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="storageOptions" xml:space="preserve"><value>Storage options</value></data>
+  <data name="storageOptionsHint" xml:space="preserve"><value>Choose the permission level and the sorting.</value></data>
+  <data name="storageLevel" xml:space="preserve"><value>Storage level</value></data>
+  <data name="storageLevelHint" xml:space="preserve"><value>Define which level should be used for saving.</value></data>
+  <data name="storageSort" xml:space="preserve"><value>Sorting</value></data>
+  <data name="storageSortHint" xml:space="preserve"><value>Choose how the saved data should be categorized.</value></data>
+  <data name="storageNoResourcesAvailable" xml:space="preserve"><value>No resources are available right now. Choose a group above or update the inputs.</value></data>
+  <data name="storageSelectAccount" xml:space="preserve"><value>Select an account</value></data>
+  <data name="storageMorning" xml:space="preserve"><value>Morning</value></data>
+  <data name="storageMorningCost" xml:space="preserve"><value>Morning cost</value></data>
+  <data name="storageDay" xml:space="preserve"><value>Day</value></data>
+  <data name="storageDayCost" xml:space="preserve"><value>Day cost</value></data>
+  <data name="storageEvening" xml:space="preserve"><value>Evening</value></data>
+  <data name="storageEveningCost" xml:space="preserve"><value>Evening cost</value></data>
+  <data name="storageFormulas" xml:space="preserve"><value>Formulas</value></data>
+  <data name="storageResult" xml:space="preserve"><value>Result</value></data>
+  <data name="storageNoConditions" xml:space="preserve"><value>No conditions.</value></data>
+  <data name="storageVariables" xml:space="preserve"><value>Variables</value></data>
+  <data name="storageEnterVariables" xml:space="preserve"><value>Enter variable values:</value></data>
+  <data name="resourceOverrides" xml:space="preserve"><value>Resource overrides</value></data>
+  <data name="resourceOverridesHint" xml:space="preserve"><value>Change user-facing values without modifying the underlying blueprint.</value></data>
+  <data name="resourceParametersTitle" xml:space="preserve"><value>Quantity-driving factor</value></data>
+  <data name="resourceParametersHint" xml:space="preserve"><value>Define reusable variables for this resource.</value></data>
+  <data name="resourceAddOnsTitle" xml:space="preserve"><value>Tillägg/Tillbehör, Add-ons / Attachments</value></data>
+  <data name="resourceAddOnsHint" xml:space="preserve"><value>The first row mirrors the resource itself. Add extra rows for attachments and accessories.</value></data>
+  <data name="resourceTimesTitle" xml:space="preserve"><value>Breakdown of hours</value></data>
+  <data name="resourceTimesHint" xml:space="preserve"><value>Track work/time slices used in calculations.</value></data>
+  <data name="resourceNotesHint" xml:space="preserve"><value>Capture notes and upper notes for the selected resource.</value></data>
+  <data name="resourceChangeFactor2Label" xml:space="preserve"><value>Unit conversion factor</value></data>
+  <data name="resourceUnitCostLabel" xml:space="preserve"><value>Unit cost</value></data>
+  <data name="reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="failedToSaveChanges" xml:space="preserve"><value>Failed to save changes.</value></data>
+</root>

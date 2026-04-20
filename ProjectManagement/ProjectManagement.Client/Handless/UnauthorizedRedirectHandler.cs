@@ -12,7 +12,7 @@ public class UnauthorizedRedirectHandler(
     IErrorDialog ui,
     NavigationManager nav,
     IClientLogger clientLogger,
-    IStringLocalizer<ResourceApp> appLoc) : DelegatingHandler
+    IStringLocalizer<ResourceErrors> errLoc) : DelegatingHandler
 {
     private DateTime _lastDialogUtc = DateTime.MinValue;
 
@@ -31,7 +31,7 @@ public class UnauthorizedRedirectHandler(
             }
             else
             {
-                ShowOnce(appLoc["signInTitle"], appLoc["signInRedirectMessage"]);
+                ShowOnce(errLoc["signInTitle"], errLoc["signInRedirectMessage"]);
                 _ = clientLogger.ErrorAsync($"Unauthorized (401) redirected to login for {request.RequestUri}");
                 nav.NavigateTo(AuthRecoveryPathHelper.BuildLoginUrl(currentLocalUrl), forceLoad: true);
             }

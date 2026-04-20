@@ -1,28 +1,20 @@
 @page "/Account/Manage/Libraries"
-@using System.Globalization
+@using ProjectManagement.Shared
+@inject Microsoft.Extensions.Localization.IStringLocalizer<PMResourceLegal> L
 
-<h2>@PMAppFormatResource.TabLicenses</h2>
+<div class="prose dark:prose-invert max-w-none">
+    <h2>@L["legalTabLicenses"]</h2>
 
-<p>
-    @T("ThirdPartyLibrariesDescription", "This application is built using the .NET platform and relies on several open-source libraries. We gratefully acknowledge the work of the developers behind these components.")
-</p>
+    <p>@L["licensesDescription"]</p>
 
-<ul>
-    <li>Blazored.LocalStorage - @T("MitLicenseLabel", "MIT License")</li>
-    <li>ClosedXML - @T("MitLicenseLabel", "MIT License")</li>
-    <li>ChartJs.Blazor.Fork - @T("MitLicenseLabel", "MIT License")</li>
-    @* <li>Newtonsoft.Json - @T("MitLicenseLabel", "MIT License")</li> *@
-</ul>
+    <ul>
+        <li>Blazored.LocalStorage — @L["mitLicenseLabel"]</li>
+        <li>ClosedXML — @L["mitLicenseLabel"]</li>
+        <li>pax.BlazorChartJs — @L["mitLicenseLabel"]</li>
+        <li>ContextMenuMHD — @L["mitLicenseLabel"]</li>
+    </ul>
 
-<p>
-    @T("ThirdPartyLibrariesMicrosoftNotice", ".NET and ASP.NET Core libraries used are provided by Microsoft and licensed under the MIT License.")
-</p>
+    <p>@L["licensesMicrosoftNotice"]</p>
 
-<p>
-    @T("ThirdPartyLibrariesOwnership", "Each library is the property of its respective authors and contributors.")
-</p>
-
-@code {
-    private static string T(string key, string fallback)
-        => PMAppFormatResource.ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? fallback;
-}
+    <p>@L["licensesOwnership"]</p>
+</div>

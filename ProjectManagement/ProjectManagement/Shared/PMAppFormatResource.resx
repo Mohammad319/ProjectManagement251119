@@ -171,9 +171,6 @@
   <data name="paddingTop" xml:space="preserve">
     <value>Padding-Top</value>
   </data>
-  <data name="PrivacyContent" xml:space="preserve">
-    <value>We respect your privacy. Your data is stored securely and not shared with third parties unless required by law.</value>
-  </data>
   <data name="right" xml:space="preserve">
     <value>Right</value>
   </data>
@@ -183,66 +180,7 @@
   <data name="separator" xml:space="preserve">
     <value>Separator</value>
   </data>
-  <data name="TabLicenses" xml:space="preserve">
-    <value>Third-Party Licenses</value>
-  </data>
-  <data name="TabPrivacy" xml:space="preserve">
-    <value>Privacy Policy</value>
-  </data>
-  <data name="TabTerms" xml:space="preserve">
-    <value>Terms of Use</value>
-  </data>
-  <data name="TermsContent" xml:space="preserve">
-    <value>Terms of Use
-Effective Date: July 2025
-
-Welcome to Atasoft. By accessing or using our platform, you agree to the following terms and conditions. Please read them carefully before proceeding.
-
-1. Eligibility
-This service is primarily designed for construction and infrastructure companies. However, individuals may register and use the platform. By using the service, you confirm that you are at least 18 years old and authorized to represent your organization if applicable.
-
-2. Purpose of the Service
-Our platform provides tools to help estimate project costs, organize tasks, resources, and teams. Users can create folders, projects, tasks, and assign roles within their company structure.
-
-3. Trial and Paid Access
-The service may offer a trial period, after which access will require a paid subscription. Pricing and payment terms will be clearly communicated during registration or onboarding.
-
-4. Data Input and Usage
-Users may enter data such as employee names, tasks, resources, project information, and import tasks from Excel files. Uploaded files or documents are currently not supported. Atasoft is not responsible for the accuracy of data entered by users.
-
-5. Data Storage and Privacy
-Your data is stored securely on servers provided by IONOS.de in Germany. We do not share your data with third parties. Please refer to our Privacy Policy for more details.
-
-6. Intellectual Property
-All content and features of this platform are the intellectual property of Atasoft unless otherwise specified. You may not copy, modify, or reuse any part of the platform without permission.
-
-7. Acceptable Use
-You agree not to misuse the service. This includes but is not limited to:
-- Attempting unauthorized access
-- Entering false company information
-- Using the platform for unlawful purposes
-
-8. Support
-Basic support is available via email at: ataya@atayasoft.de. We aim to respond within a reasonable timeframe but do not guarantee availability.
-
-9. Service Availability
-The platform is under active development and may experience changes or temporary interruptions. We reserve the right to update, change, or discontinue any part of the service at any time.
-
-10. Limitation of Liability
-Atasoft is not liable for any direct or indirect damages arising from the use of the platform. All usage is at the user’s own risk.
-
-11. Governing Law
-These terms are governed by the laws of the Netherlands. Any disputes shall be settled under Dutch jurisdiction.
-
-Contact:
-If you have any questions regarding these Terms of Use, please contact us at: ataya@atayasoft.de
-</value>
-  </data>
   <data name="width" xml:space="preserve">
     <value>Width</value>
   </data>
-  <data name="ThirdPartyLibrariesDescription" xml:space="preserve"><value>This application is built using the .NET platform and relies on several open-source libraries. We gratefully acknowledge the work of the developers behind these components.</value></data>
-  <data name="ThirdPartyLibrariesMicrosoftNotice" xml:space="preserve"><value>.NET and ASP.NET Core libraries used are provided by Microsoft and licensed under the MIT License.</value></data>
-  <data name="ThirdPartyLibrariesOwnership" xml:space="preserve"><value>Each library is the property of its respective authors and contributors.</value></data>
-  <data name="MitLicenseLabel" xml:space="preserve"><value>MIT License</value></data>
 </root>

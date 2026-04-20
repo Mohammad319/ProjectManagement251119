@@ -125,7 +125,7 @@
             </div>
            
                 <div class="min-w-0 md:col-span-4 xl:col-span-2">
-                    <label class="@LabelClass">@AppLoc["resourceUnitCostLabel"]</label>
+                    <label class="@LabelClass">@StorageLoc["resourceUnitCostLabel"]</label>
                     @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
                     {
                         <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(Resource.Data.Cost)" />
@@ -174,7 +174,7 @@
                 </div>
 
             <div class="min-w-0 md:col-span-4 xl:col-span-2">
-                <label class="@LabelClass">@AppLoc["resourceChangeFactor2Label"]</label>
+                <label class="@LabelClass">@StorageLoc["resourceChangeFactor2Label"]</label>
                 <TrimmedNumberInput TValue="decimal"
                                     @bind-Value="ResourceUpdate.Data.ChangeFactor2"
                                     MaxFractionDigits="@NumericFractionDigits"
@@ -322,9 +322,9 @@
         <div class="mb-2 flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0 flex-1 overflow-x-auto">
                 <div class="@SectionMetaRowClass">
-                    <span class="@SectionTitleInlineClass">@AppLoc["resourceParametersTitle"]</span>
+                    <span class="@SectionTitleInlineClass">@StorageLoc["resourceParametersTitle"]</span>
                     <span class="@SectionSubtleInlineClass">@AppLoc["itemsCount", ResourceUpdate.Data.Parameters.Count]</span>
-                    <span class="@SectionMutedInlineClass">@AppLoc["resourceParametersHint"]</span>
+                    <span class="@SectionMutedInlineClass">@StorageLoc["resourceParametersHint"]</span>
                 </div>
             </div>
 
@@ -392,9 +392,9 @@
         <div class="mb-1 flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0 flex-1 overflow-x-auto">
                 <div class="@SectionMetaRowClass">
-                    <span class="@SectionTitleInlineClass">@AppLoc["resourceAddOnsTitle"]</span>
+                    <span class="@SectionTitleInlineClass">@StorageLoc["resourceAddOnsTitle"]</span>
                     <span class="@SectionSubtleInlineClass">@AppLoc["itemsCount", AddOnRowCount]</span>
-                    <span class="@SectionMutedInlineClass">@AppLoc["resourceAddOnsHint"]</span>
+                    <span class="@SectionMutedInlineClass">@StorageLoc["resourceAddOnsHint"]</span>
                 </div>
             </div>
 
@@ -532,9 +532,9 @@
             <div class="mb-1 flex flex-wrap items-start justify-between gap-1">
                 <div class="min-w-0 flex-1 overflow-x-auto">
                     <div class="@SectionMetaRowClass">
-                        <span class="@SectionTitleInlineClass">@AppLoc["resourceTimesTitle"]</span>
+                        <span class="@SectionTitleInlineClass">@StorageLoc["resourceTimesTitle"]</span>
                         <span class="@SectionSubtleInlineClass">@AppLoc["itemsCount", ResourceUpdate.Data.Times.Count]</span>
-                        <span class="@SectionMutedInlineClass">@AppLoc["resourceTimesHint"]</span>
+                        <span class="@SectionMutedInlineClass">@StorageLoc["resourceTimesHint"]</span>
                         <span class="@SectionMutedInlineClass">Resource Q: @ResourceQuantityReference</span>
                         <span class="@SectionMutedInlineClass">Times %: @TimesPercentageReference</span>
                     </div>
@@ -563,7 +563,7 @@
                                 <th class="@TableHeadCellClass">@ResourceLoc.inprecent</th>
                                 <th class="@TableHeadCellClass">@CalcResource.quantity</th>
                                 <th class="@TableHeadCellClass">@CalcResource.unit</th>
-                                <th class="@TableHeadCellClass">@AppLoc["resourceUnitCostLabel"]</th>
+                                <th class="@TableHeadCellClass">@StorageLoc["resourceUnitCostLabel"]</th>
                                 <th class="@TableHeadCellClass w-12"></th>
                             </tr>
                         </thead>
@@ -617,7 +617,7 @@
     <MhdCard Elevated="true" Compact="true" Class="mb-1">
         <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
             <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.note</label>
-            <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["resourceNotesHint"]</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">@StorageLoc["resourceNotesHint"]</p>
 
             <button type="button"
                     class="@PrimaryBlueButtonClass"

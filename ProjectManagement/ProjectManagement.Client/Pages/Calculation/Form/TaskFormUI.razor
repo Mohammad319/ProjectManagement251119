@@ -55,7 +55,10 @@
                             <InputSelect class="@InputClass"
                                          @bind-Value:get="TaskUpdate.Metadata.QuantityParam"
                                          @bind-Value:set="(value) => ChangeQuantityParam(value)">
-                                <option></option>
+                                @if (!ParentIsOnlyCodeText)
+                                {
+                                    <option></option>
+                                }
                                 <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
                                 @if (Calc.QuanityList != null)
                                 {
@@ -357,6 +360,7 @@
     [Parameter] public TaskListMVVM Task { get; set; } = default!;
     TaskPostDTO TaskUpdate = new();
     private bool HasTaskAbove => HasParentTask(TaskUpdate);
+    private bool ParentIsOnlyCodeText => IsParentOnlyCodeText(TaskUpdate);
     private bool ShowExpandedTaskQuantity => !HasTaskAbove || TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ;
     private bool ShowTaskCapInput => CanEditTaskCap(Task?.Resources);
 
@@ -510,6 +514,14 @@
 
         return Calc?.Tasks?.Any(item => item.Id == task.ParentTaskId.Value) == true;
     }
+
+    private bool IsParentOnlyCodeText(TaskPostDTO task)
+    {
+        if (!task.ParentTaskId.HasValue || task.ParentTaskId <= 0)
+            return false;
+        var parent = Calc?.Tasks?.FirstOrDefault(item => item.Id == task.ParentTaskId.Value);
+        return parent?.Type == TaskType.CodeName;
+    }
     private void ApplyTaskFormRules(TaskPostDTO task)
     {
         if (task.OnlyCodeText)
@@ -527,6 +539,10 @@
 
             if (task.Metadata.ConversionParameters is not { Count: > 0 })
                 task.Metadata.ChangeFactor2 = 1;
+        }
+        else if (IsParentOnlyCodeText(task) && string.IsNullOrEmpty(task.Metadata.QuantityParam))
+        {
+            task.Metadata.QuantityParam = ConstValues.FixedQ;
         }
 
         if (!ShowTaskCapInput)

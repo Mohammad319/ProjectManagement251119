@@ -294,6 +294,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
     private async Task RefreshAndSavePresetsAsync()
     {
+        Calc.ExecuteCalculation();
         Calc.AllFlatItems = Calc.BuildFlatList();
         Calc.FlatListDirty = false;
         if (virtualizeComponent != null)

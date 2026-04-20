@@ -5,38 +5,48 @@
 @inject CalculationFilterPresetStorage FilterPresetStorage
 
 <div class="w-full max-w-lg space-y-3 p-3 text-slate-800 dark:text-slate-100">
-    <div class="rounded-xl border border-slate-200 bg-white/95 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0 space-y-1">
-                <div class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+    @if (LoadPresetCandidate is not null)
+    {
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-800 dark:bg-emerald-950/20">
+            <div class="min-w-0">
+                <div class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
                     Filter preset
                 </div>
                 <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    @(LoadPresetCandidate?.Name ?? "No preset selected")
+                    @LoadPresetCandidate.Name
                 </div>
             </div>
-
-            <button type="button"
-                    class="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-                    title="Clear current filter"
-                    @onclick="ClearFilterAndPresetAsync">
-                <span class="inline-flex h-4 w-4 items-center justify-center">@((MarkupString)Icons.Filter)</span>
-                <span>Clear</span>
-            </button>
         </div>
+    }
+    else
+    {
+        <div class="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900/60">
+            <div class="text-sm text-slate-500 dark:text-slate-400">No preset selected</div>
+        </div>
+    }
 
-        <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-            <InputText id="filterPresetName"
-                       class="h-10 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                       @bind-Value="PresetName"
-                       placeholder="Preset name" />
+    <div class="flex flex-wrap gap-2">
+        <InputText id="filterPresetName"
+                   class="h-9 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                   @bind-Value="PresetName"
+                   placeholder="Preset name" />
+        <button type="button"
+                class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-slate-700 px-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-600 dark:hover:bg-slate-500"
+                disabled="@string.IsNullOrWhiteSpace(PresetName)"
+                @onclick="SavePresetAsync">
+            <span class="inline-flex h-4 w-4 items-center justify-center">@((MarkupString)Icons.SaveCloud)</span>
+            <span>Save</span>
+        </button>
+        @if (SelectedPreset is not null)
+        {
             <button type="button"
-                    class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-sky-600 px-4 text-sm font-medium text-white transition hover:bg-sky-700"
-                    @onclick="SavePresetAsync">
+                    class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-sky-600 px-3 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled="@string.IsNullOrWhiteSpace(PresetName)"
+                    @onclick="UpdateSelectedPresetAsync">
                 <span class="inline-flex h-4 w-4 items-center justify-center">@((MarkupString)Icons.SaveCloud)</span>
-                <span>Save</span>
+                <span>Update</span>
             </button>
-        </div>
+        }
     </div>
 
     <div class="rounded-xl border border-slate-200 bg-slate-50/80 dark:border-slate-700 dark:bg-slate-900/60">
@@ -45,7 +55,7 @@
                 Saved Presets
             </div>
             <div class="text-xs text-slate-500 dark:text-slate-400">
-                @SavedFilters.Presets.Count total
+                @SavedFilters.Presets.Count
             </div>
         </div>
 
@@ -101,6 +111,13 @@
 
     <div class="flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
         <button type="button"
+                class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                title="Clear current filter"
+                @onclick="ClearFilterAndPresetAsync">
+            <span class="inline-flex h-4 w-4 items-center justify-center">@((MarkupString)Icons.Filter)</span>
+            <span>Clear</span>
+        </button>
+        <button type="button"
                 class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                 @onclick="CloseDialog">
             Cancel
@@ -144,14 +161,24 @@
 
     private async Task SavePresetAsync()
     {
-        string? targetPresetId = null;
-        if (SelectedPreset is not null &&
-            string.Equals(SelectedPreset.Name, PresetName.Trim(), StringComparison.OrdinalIgnoreCase))
-        {
-            targetPresetId = SelectedPreset.Id;
-        }
+        if (string.IsNullOrWhiteSpace(PresetName))
+            return;
 
-        var preset = CalculationFilterPresetState.SavePreset(SavedFilters, PresetName, CurrentFilter, targetPresetId);
+        var preset = CalculationFilterPresetState.SavePreset(SavedFilters, PresetName, CurrentFilter);
+        SelectedPresetId = preset.Id;
+        PresetName = preset.Name;
+
+        await FilterPresetStorage.SaveAsync(Calc.Id, SavedFilters);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UpdateSelectedPresetAsync()
+    {
+        var selected = SelectedPreset;
+        if (selected is null || string.IsNullOrWhiteSpace(PresetName))
+            return;
+
+        var preset = CalculationFilterPresetState.SavePreset(SavedFilters, PresetName, CurrentFilter, selected.Id);
         SelectedPresetId = preset.Id;
         PresetName = preset.Name;
 
@@ -231,13 +258,13 @@
 
     private static string GetPresetRowClass(bool isSelected, bool isActive)
     {
-        if (isSelected)
-            return "mb-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-left shadow-sm dark:border-sky-700 dark:bg-sky-950/40";
-
         if (isActive)
-            return "mb-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-left shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/20 dark:hover:border-emerald-700";
+            return "mb-1.5 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-left shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/20 dark:hover:border-emerald-700";
 
-        return "mb-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-transparent bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-700/60";
+        if (isSelected)
+            return "mb-1.5 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-left shadow-sm dark:border-sky-700 dark:bg-sky-950/40";
+
+        return "mb-1.5 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-transparent bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-700/60";
     }
 
     private static string FormatSavedAt(DateTime savedAtUtc) =>

@@ -421,7 +421,9 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
                     branchVisibleByDepth[item.Depth] = branchVisible;
                     branchActiveByDepth[item.Depth] = branchActive;
 
-                    if (!branchVisible || !ShowTasks || !ShouldShowTaskRow(task))
+                    if (!branchVisible || !ShouldShowTaskRow(task))
+                        continue;
+                    if (task.Type != TaskType.CodeName && !ShowTasks)
                         continue;
 
                     flat.Add(new FlatItem(index++, task, null, item.Depth, parentBranchActive));

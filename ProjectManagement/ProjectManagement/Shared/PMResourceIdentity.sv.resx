@@ -1,17 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
+  <!--
+    Microsoft ResX Schema
+
     Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
     associated with the data types.
-    
+
     Example:
-    
+
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
     <resheader name="version">2.0</resheader>
@@ -26,36 +26,36 @@
         <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
         <comment>This is a comment</comment>
     </data>
-                
-    There are any number of "resheader" rows that contain simple 
+
+    There are any number of "resheader" rows that contain simple
     name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion through the TypeConverter architecture. 
-    Classes that don't support this are serialized and stored with the 
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
     mimetype set.
-    
-    The mimetype is used for serialized objects, and tells the 
-    ResXResourceReader how to depersist the object. This is currently not 
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
     extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
     read any of the formats listed below.
-    
+
     mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
+    value   : The object must be serialized with
             : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
-    
+
     mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
+    value   : The object must be serialized with
             : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
             : and then encoded with base64 encoding.
 
     mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
+    value   : The object must be serialized into a byte array
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
@@ -117,47 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="addUser" xml:space="preserve">
-    <value>Add User</value>
-  </data>
-  <data name="Admin" xml:space="preserve">
-    <value>Administration</value>
-  </data>
   <data name="Auth_LoginWithPasskey" xml:space="preserve">
     <value>Logga in med en passnyckel</value>
   </data>
-  <data name="build" xml:space="preserve">
-    <value>byggnr</value>
-  </data>
   <data name="changePassword" xml:space="preserve">
     <value>Byt lösenord</value>
-  </data>
-  <data name="city" xml:space="preserve">
-    <value>Stad</value>
   </data>
   <data name="confirmPassword" xml:space="preserve">
     <value>Repetera det nya lösenordet</value>
   </data>
   <data name="confirmPasswordNotMatchNewPasswordMsg" xml:space="preserve">
     <value>Du måste fylla i samma lösenord två gångerför att bekräfta. Försök igen.</value>
-  </data>
-  <data name="contact" xml:space="preserve">
-    <value>Kontakta</value>
-  </data>
-  <data name="country" xml:space="preserve">
-    <value>Land</value>
-  </data>
-  <data name="customer" xml:space="preserve">
-    <value>Kund</value>
-  </data>
-  <data name="customerGroup" xml:space="preserve">
-    <value>Kundgrupper</value>
-  </data>
-  <data name="department" xml:space="preserve">
-    <value>Avdelning</value>
-  </data>
-  <data name="email" xml:space="preserve">
-    <value>Email</value>
   </data>
   <data name="emailPasswordNotmatchMsg" xml:space="preserve">
     <value>Din e-postadress och ditt lösenord stämmer inte överens. Var god försök igen</value>
@@ -168,23 +138,14 @@
   <data name="fax" xml:space="preserve">
     <value>Faxnummer</value>
   </data>
-  <data name="firstname" xml:space="preserve">
-    <value>Förnamn</value>
-  </data>
   <data name="forgotPassword" xml:space="preserve">
     <value>Glömt lösenordet?</value>
-  </data>
-  <data name="IDNumber" xml:space="preserve">
-    <value>ID-nummer</value>
   </data>
   <data name="Label_PersonalData" xml:space="preserve">
     <value>Personuppgifter</value>
   </data>
   <data name="Label_ThirdParty" xml:space="preserve">
     <value>Tredje part</value>
-  </data>
-  <data name="lastname" xml:space="preserve">
-    <value>Efternamn</value>
   </data>
   <data name="lockout" xml:space="preserve">
     <value>Lockout</value>
@@ -204,14 +165,8 @@
   <data name="logoutConfirmMsg" xml:space="preserve">
     <value>Är du säker på att du vill logga ut?</value>
   </data>
-  <data name="Manger" xml:space="preserve">
-    <value>Krubba</value>
-  </data>
   <data name="Menu_Profile" xml:space="preserve">
     <value>Profil</value>
-  </data>
-  <data name="mobile" xml:space="preserve">
-    <value>Mobilnummer</value>
   </data>
   <data name="Nav_BackToHome" xml:space="preserve">
     <value>Tillbaka till startsidan</value>
@@ -221,9 +176,6 @@
   </data>
   <data name="newPasswordCannotBeurrentPasswordMsg" xml:space="preserve">
     <value>Ditt nya lösenord får inte vara detsamma som tidigare lösenord</value>
-  </data>
-  <data name="numberIDCards" xml:space="preserve">
-    <value>Nummer-ID-kort</value>
   </data>
   <data name="oldPassword" xml:space="preserve">
     <value>Gammalt lösenord</value>
@@ -236,22 +188,13 @@
   </data>
   <data name="passwordRequirementsMsg" xml:space="preserve">
     <value>Ett lösenord ska bestå av minst åtta tecken och innehålla minst ett tecken från tre av fyra kategorier:
-1. versaler (A B C) 
-2. gemener (a b c) 
-3. siffror (1 2 3) 
+1. versaler (A B C)
+2. gemener (a b c)
+3. siffror (1 2 3)
 4. specialtecken (!,@,$,#,%,&amp;,*,=,-)</value>
   </data>
   <data name="PasswordReset" xml:space="preserve">
     <value>Ditt lösenord har återställts! Klicka här för att logga in.</value>
-  </data>
-  <data name="PersonOrganisationNr" xml:space="preserve">
-    <value>Person/Organisationsnummer</value>
-  </data>
-  <data name="PersonOrganisationType" xml:space="preserve">
-    <value>Person-/organisationstyp</value>
-  </data>
-  <data name="phone" xml:space="preserve">
-    <value>Telefonnummer</value>
   </data>
   <data name="phoneNumberConfirmed" xml:space="preserve">
     <value>Telefonnummer bekräftat</value>
@@ -261,9 +204,6 @@
   </data>
   <data name="PleaseSelectDepartment" xml:space="preserve">
     <value>Vänligen välj en avdelning</value>
-  </data>
-  <data name="region" xml:space="preserve">
-    <value>Område</value>
   </data>
   <data name="register" xml:space="preserve">
     <value>Register</value>
@@ -277,34 +217,19 @@
   <data name="Security_TwoFactorAuthentication" xml:space="preserve">
     <value>Tvåfaktorsautentisering</value>
   </data>
-  <data name="street" xml:space="preserve">
-    <value>Gata</value>
-  </data>
   <data name="SuperManger" xml:space="preserve">
     <value>Super Manger</value>
   </data>
   <data name="sureLogoutMsg" xml:space="preserve">
     <value>Är du säker på att du vill logga ut?</value>
   </data>
-  <data name="telefon" xml:space="preserve">
-    <value>Telefonnummer</value>
-  </data>
   <data name="Title_ResetPasswordConfirmation" xml:space="preserve">
     <value>Bekräftelse av lösenordsåterställning</value>
-  </data>
-  <data name="User" xml:space="preserve">
-    <value>Användare</value>
   </data>
   <data name="UserDataIsUpdated" xml:space="preserve">
     <value>Användardata uppdateras</value>
   </data>
   <data name="users" xml:space="preserve">
     <value>Användare</value>
-  </data>
-  <data name="website" xml:space="preserve">
-    <value>Webbplats</value>
-  </data>
-  <data name="zipCode" xml:space="preserve">
-    <value>Postnummer</value>
   </data>
 </root>

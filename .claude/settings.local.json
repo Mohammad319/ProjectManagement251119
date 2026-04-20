@@ -5,7 +5,12 @@
       "Bash(xargs grep 2)",
       "Bash(grep -v \"\\\\.cs:.*//.*AllFlatItems\")",
       "Bash(xargs grep *)",
-      "Bash(powershell -Command ' *)"
+      "Bash(powershell -Command ' *)",
+      "Bash(grep -v \"^--$\")",
+      "Bash(sort grep *)",
+      "Bash(xargs cat *)",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(del *)"
     ]
   }
 }

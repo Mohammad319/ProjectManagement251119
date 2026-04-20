@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="networkUnavailableTitle" xml:space="preserve"><value>Kan inte ansluta</value></data>
+  <data name="networkUnavailableMessage" xml:space="preserve"><value>Det gick inte att nå servern. Kontrollera nätverket och försök igen.</value></data>
+  <data name="permissionsTitle" xml:space="preserve"><value>Behörigheter</value></data>
+  <data name="permissionsRefreshMessage" xml:space="preserve"><value>Vi kommer att kontrollera sessionen och behörigheterna automatiskt igen.</value></data>
+  <data name="permissionsDeniedMessage" xml:space="preserve"><value>Du har inte behörighet att utföra den här åtgärden.</value></data>
+  <data name="requestFailedTitle" xml:space="preserve"><value>Begäran misslyckades</value></data>
+  <data name="requestFailedMessage" xml:space="preserve"><value>Det gick inte att slutföra begäran.</value></data>
+  <data name="serverErrorTitle" xml:space="preserve"><value>Serverfel</value></data>
+  <data name="serverErrorMessage" xml:space="preserve"><value>Ett serverfel uppstod. Försök igen senare.</value></data>
+  <data name="sessionTitle" xml:space="preserve"><value>Session</value></data>
+  <data name="sessionRefreshMessage" xml:space="preserve"><value>Sessionen gick tillfälligt ut. Vi försöker uppdatera inloggningen automatiskt.</value></data>
+  <data name="signInTitle" xml:space="preserve"><value>Logga in</value></data>
+  <data name="signInRedirectMessage" xml:space="preserve"><value>Vi kunde inte återställa sessionen automatiskt. Du kommer att omdirigeras till inloggning.</value></data>
+  <data name="inputValueRequired" xml:space="preserve"><value>Indatavärdet får inte vara null eller tomt.</value></data>
+  <data name="jsonDeserializationFailed" xml:space="preserve"><value>Det gick inte att konvertera JSON-värdet till det begärda objektet.</value></data>
+</root>

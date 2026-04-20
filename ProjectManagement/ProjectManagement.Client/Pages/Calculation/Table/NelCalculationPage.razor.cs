@@ -19,6 +19,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table;
 public partial class NelCalculationPage : ComponentBase, IDisposable
 {
     [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
+    [Inject] private IStringLocalizer<ResourceStorage> StorageLoc { get; set; } = default!;
     [Inject] private CalculationService CalcService { get; set; } = default!;
     [Inject] private CalculationInteractionState InteractionState { get; set; } = default!;
     [Inject] private FolderState FolderState { get; set; } = default!;
@@ -37,14 +38,15 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     private TemplateMVVM? Template => Calc?.Template;
 
     private bool HasCalculation => Calc is not null;
-    private int TaskCount => Calc?.Tasks.Count ?? 0;
+    private int TaskCount => Calc?.Tasks.Count(task => task.Type != TaskType.CodeName) ?? 0;
     private int OnlyCodeTextTaskCount => Calc?.Tasks.Count(task => task.Type == TaskType.CodeName) ?? 0;
+    private int TotalTaskCount => Calc?.Tasks.Count ?? 0;
     private int ResourceCount => Calc?.ResourceById.Count ?? 0;
     private int SelectedItemCount => InteractionState.SelectedItems.Count;
-    private bool HasFlatListSnapshot => Calc is not null && (Calc.AllFlatItems is not null || TaskCount == 0);
+    private bool HasFlatListSnapshot => Calc is not null && (Calc.AllFlatItems is not null || TotalTaskCount == 0);
     private int VisibleItemCount => Calc?.AllFlatItems?.Count ?? 0;
     private string VisibleItemCountText => HasFlatListSnapshot ? VisibleItemCount.ToString(CultureInfo.InvariantCulture) : "...";
-    private bool ShowEmptyState => Calc is not null && TaskCount == 0;
+    private bool ShowEmptyState => Calc is not null && TotalTaskCount == 0;
     private bool ShowNoVisibleRowsState => Calc is not null && !ShowEmptyState && HasFlatListSnapshot && VisibleItemCount == 0;
     private bool HasActiveFilters => HasVisibleFilter(Calc?.FilterVM);
     private string NoVisibleRowsHint => HasActiveFilters
@@ -89,6 +91,8 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
             Calc.ApplyPresetActiveOverrides(active);
         else
             Calc.ClearPresetActiveOverrides();
+
+        Calc.ExecuteCalculation();
     }
 
     private void ObserveCalculation()
@@ -109,6 +113,7 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     {
         if (Calc is null) return;
         Calc.ClearPresetActiveOverrides();
+        Calc.ExecuteCalculation();
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
         StateHasChanged();
     }
@@ -190,6 +195,7 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
         CalcService.ShowResourceVariables = preset.ShowResourceVariables;
         Calc.OnlyActive = preset.OnlyActive;
         Calc.ApplyPresetActiveOverrides(preset);
+        Calc.ExecuteCalculation();
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
         StateHasChanged();
     }

@@ -1,17 +1,43 @@
-﻿@using Microsoft.Extensions.Localization
-@using ProjectManagement.Client.Shared.ResourceFiles.APP
-@using ProjectManagement.Shared
-@inject IStringLocalizer<ResourceApp> L
 @page "/Account/Manage/Impressum"
+@using ProjectManagement.Shared
+@inject Microsoft.Extensions.Localization.IStringLocalizer<PMResourceLegal> L
 
-<h1>@L["WelcomeText"]</h1>
-<h3>@L["TermsTitle"]</h3>
-<p>@L["BusinessActivity"]</p>
-<p>@L["ImpressumTxt"]</p>
-<h3>@PMAppFormatResource.TabPrivacy</h3>
-<p>@PMAppFormatResource.PrivacyContent</p>
-<footer>
-    <p>@L["CompanyAddress"]</p>
-    <p>@L["ContactEmail"]</p>
-    <p>@L["FooterCopyright"]</p>
-</footer>
+<div class="space-y-6">
+    <div>
+        <h2 class="text-lg font-semibold text-slate-800 dark:text-slate-100">@L["impressumTitle"]</h2>
+    </div>
+
+    <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">@L["impressumCompanyLabel"]</dt>
+            <dd class="mt-1 text-sm text-slate-800 dark:text-slate-100">@L["impressumCompanyName"]</dd>
+        </div>
+        <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">@L["impressumDirectorLabel"]</dt>
+            <dd class="mt-1 text-sm text-slate-800 dark:text-slate-100">@L["impressumDirector"]</dd>
+        </div>
+        <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">@L["impressumAddressLabel"]</dt>
+            <dd class="mt-1 text-sm text-slate-800 dark:text-slate-100">@L["impressumAddress"]</dd>
+        </div>
+        <div>
+            <dt class="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">@L["impressumEmailLabel"]</dt>
+            <dd class="mt-1 text-sm text-slate-800 dark:text-slate-100">
+                <a href="mailto:@L["impressumEmail"]" class="text-blue-600 hover:underline dark:text-blue-400">@L["impressumEmail"]</a>
+            </dd>
+        </div>
+    </dl>
+
+    <div>
+        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">@L["impressumRegistrationTitle"]</h3>
+        <ul class="space-y-1 text-sm text-slate-700 dark:text-slate-300">
+            <li>@L["impressumKvK"]</li>
+            <li>@L["impressumVAT"]</li>
+            <li>@L["impressumRSIN"]</li>
+        </ul>
+    </div>
+
+    <footer class="border-t border-slate-200 dark:border-slate-700 pt-4">
+        <p class="text-xs text-slate-500 dark:text-slate-400">@L["impressumCopyright"]</p>
+    </footer>
+</div>

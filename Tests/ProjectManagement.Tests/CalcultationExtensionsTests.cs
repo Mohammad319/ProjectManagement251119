@@ -2,6 +2,7 @@ using ProjectManagement.Client.Extensions.CalcultationItemsOperation;
 using ProjectManagement.Client.Services.Calculation.CalculationItems;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Enums;
 using Xunit;
 
@@ -111,6 +112,75 @@ public class CalcultationExtensionsTests
 
         Assert.Equal(300m, task.NetCostTotaly);
         Assert.Equal(30m, task.NetCostQ);
+    }
+
+    [Fact]
+    public void ExecuteCalculation_RecalculatesTotalsAfterPresetActiveOverridesChange()
+    {
+        var resource1 = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        resource1.Id = 10;
+        resource1.Data.Cost = 10m;
+
+        var resource2 = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        resource2.Id = 20;
+        resource2.Data.Cost = 20m;
+
+        var calc = CreateCalculation(resource1, 10m);
+        var task = Assert.Single(calc.Tasks);
+        task.Resources.Add(resource2);
+
+        calc.ExecuteCalculation();
+        Assert.Equal(300m, calc.Sum);
+        Assert.Equal(300m, task.NetCostTotaly);
+
+        calc.ApplyPresetActiveOverrides(new DisplayOptionsPreset
+        {
+            InactiveResourceIds = [20]
+        });
+        calc.ExecuteCalculation();
+
+        Assert.Equal(100m, calc.Sum);
+        Assert.Equal(100m, task.NetCostTotaly);
+    }
+
+    [Fact]
+    public void ExecuteCalculation_ExcludesResourcesFromInactiveTaskBranches()
+    {
+        var activeResource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        activeResource.Id = 10;
+        activeResource.Data.Cost = 10m;
+
+        var inactiveResource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        inactiveResource.Id = 20;
+        inactiveResource.TaskId = 2;
+        inactiveResource.Data.Cost = 20m;
+
+        var calc = CreateCalculation(activeResource, 10m);
+        var root = Assert.Single(calc.Tasks);
+        var inactiveChild = new TaskListMVVM
+        {
+            Id = 2,
+            TaskId = root.Id,
+            Name = "Inactive Child",
+            Metadata = new TaskMetadata
+            {
+                Quantity = 10m,
+                Type = TaskType.Task
+            },
+            Resources = [inactiveResource],
+            Tasks = []
+        };
+        calc.Tasks.Add(inactiveChild);
+        calc.RebuildHierarchyAndIndexes();
+
+        calc.ApplyPresetActiveOverrides(new DisplayOptionsPreset
+        {
+            InactiveTaskIds = [2]
+        });
+        calc.ExecuteCalculation();
+
+        Assert.Equal(100m, calc.Sum);
+        Assert.Equal(100m, root.NetCostTotaly);
     }
 
     [Fact]

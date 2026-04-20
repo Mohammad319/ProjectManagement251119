@@ -21,8 +21,8 @@ else
 
         <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <div class="mb-4">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@AppLoc["resourceOverrides"]</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400">@AppLoc["resourceOverridesHint"]</p>
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@StorageLoc["resourceOverrides"]</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">@StorageLoc["resourceOverridesHint"]</p>
             </div>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -98,7 +98,7 @@ else
         </section>
 
         <div class="flex flex-wrap items-center justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
-            <button type="button" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="ResetForm" disabled="@isSubmitting">@AppLoc["reset"]</button>
+            <button type="button" class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" @onclick="ResetForm" disabled="@isSubmitting">@StorageLoc["reset"]</button>
             <button type="submit" class="inline-flex items-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60" disabled="@isSubmitting">@ResourceApp.save</button>
         </div>
 
@@ -177,7 +177,7 @@ else
             }
             else
             {
-                error = AppLoc["failedToSaveChanges"];
+                error = StorageLoc["failedToSaveChanges"];
             }
         }
         catch (Exception ex)

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.Repositories;
 using ProjectManagement.Client.Shared.ResourceFiles.APP;
+using static ProjectManagement.Client.Shared.ResourceFiles.APP.ResourceApp;
 using ProjectManagement.Shared.Helper;
 using System.Net;
 using System.Text.Json;
@@ -14,7 +15,7 @@ public class ApiErrorHandler(
     IErrorDialog ui,
     IClientLogger clientLogger,
     NavigationManager navigationManager,
-    IStringLocalizer<ResourceApp> appLoc) : DelegatingHandler
+    IStringLocalizer<ResourceErrors> errLoc) : DelegatingHandler
 {
     private DateTime _lastDialogUtc = DateTime.MinValue;
 
@@ -35,13 +36,13 @@ public class ApiErrorHandler(
         }
         catch (HttpRequestException ex)
         {
-            ShowOnce(appLoc["networkUnavailableTitle"], appLoc["networkUnavailableMessage"]);
+            ShowOnce(errLoc["networkUnavailableTitle"], errLoc["networkUnavailableMessage"]);
             _ = clientLogger.ErrorAsync("Network error while calling API", traceId: null, ex: ex);
             throw;
         }
         catch (Exception ex)
         {
-            ShowOnce(appLoc["error"], appLoc["AnUnexpectedErrorHasOccurred"]);
+            ShowOnce(ResourceApp.error, ResourceApp.AnUnexpectedErrorHasOccurred);
             _ = clientLogger.ErrorAsync("Unexpected client error while calling API", traceId: null, ex: ex);
             throw;
         }
@@ -58,13 +59,13 @@ public class ApiErrorHandler(
 
             if (!AuthRecoveryPathHelper.HasRetryFlag(currentLocalUrl))
             {
-                ShowOnce(appLoc["permissionsTitle"], appLoc["permissionsRefreshMessage"]);
+                ShowOnce(errLoc["permissionsTitle"], errLoc["permissionsRefreshMessage"]);
                 _ = clientLogger.ErrorAsync($"Forbidden (403) recovered via refresh for {request.RequestUri}", traceId: null, ex: null);
                 navigationManager.NavigateTo(AuthRecoveryPathHelper.BuildRefreshUrl(currentLocalUrl), forceLoad: true);
                 return response;
             }
 
-            ShowOnce(appLoc["permissionsTitle"], appLoc["permissionsDeniedMessage"]);
+            ShowOnce(errLoc["permissionsTitle"], errLoc["permissionsDeniedMessage"]);
             var endpoint = request.RequestUri?.ToString() ?? "(unknown-endpoint)";
             _ = clientLogger.ErrorAsync($"Forbidden (403) from API {endpoint}", traceId: null, ex: null);
             return response;
@@ -76,8 +77,8 @@ public class ApiErrorHandler(
         if (contentType.Contains("application/problem+json", StringComparison.OrdinalIgnoreCase))
         {
             var pd = TryParseProblemDetails(body);
-            var title = pd?.Title ?? appLoc["requestFailedTitle"];
-            var detail = pd?.Detail ?? appLoc["requestFailedMessage"];
+            var title = pd?.Title ?? errLoc["requestFailedTitle"];
+            var detail = pd?.Detail ?? errLoc["requestFailedMessage"];
             var traceId = pd?.TraceId;
 
             ShowOnce(title, detail, traceId);
@@ -88,13 +89,13 @@ public class ApiErrorHandler(
 
         if (LooksLikeHtml(body))
         {
-            ShowOnce(appLoc["serverErrorTitle"], appLoc["serverErrorMessage"]);
+            ShowOnce(errLoc["serverErrorTitle"], errLoc["serverErrorMessage"]);
             _ = clientLogger.ErrorAsync("API returned HTML error page", traceId: null, new Exception(body));
             return response;
         }
 
-        var message = string.IsNullOrWhiteSpace(body) ? appLoc["requestFailedMessage"] : Trim(body, 300);
-        ShowOnce(appLoc["requestFailedTitle"], message);
+        var message = string.IsNullOrWhiteSpace(body) ? errLoc["requestFailedMessage"] : Trim(body, 300);
+        ShowOnce(errLoc["requestFailedTitle"], message);
         _ = clientLogger.ErrorAsync("API returned non-success response", traceId: null, new Exception(body));
 
         return response;

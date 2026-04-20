@@ -1,0 +1,19 @@
+@page "/Account/Manage/Privacy"
+@using ProjectManagement.Shared
+@inject Microsoft.Extensions.Localization.IStringLocalizer<PMResourceLegal> L
+
+<div class="prose dark:prose-invert max-w-none space-y-3 text-sm">
+    <h2>@L["privacyTitle"]</h2>
+    <p class="text-xs text-slate-400">@L["privacyLastUpdated"]</p>
+    <p>@L["privacyIntro"]</p>
+    <h3>@L["privacyDataCollectedTitle"]</h3>
+    <p>@L["privacyDataCollected"]</p>
+    <h3>@L["privacyDataStorageTitle"]</h3>
+    <p>@L["privacyDataStorage"]</p>
+    <h3>@L["privacyThirdPartyTitle"]</h3>
+    <p>@L["privacyThirdParty"]</p>
+    <h3>@L["privacyRightsTitle"]</h3>
+    <p>@L["privacyRights"]</p>
+    <h3>@L["privacyContactTitle"]</h3>
+    <p>@L["privacyContact"]</p>
+</div>

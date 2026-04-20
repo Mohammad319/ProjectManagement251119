@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema Version 2.0
+    See https://docs.microsoft.com/dotnet/framework/resources/creating-resource-files-for-desktop-apps
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ── Tab labels ─────────────────────────────────────────────────── -->
+  <data name="legalTabImpressum" xml:space="preserve">
+    <value>Impressum</value>
+  </data>
+  <data name="legalTabPrivacy" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
+  <data name="legalTabTerms" xml:space="preserve">
+    <value>Terms of Use</value>
+  </data>
+  <data name="legalTabLicenses" xml:space="preserve">
+    <value>Third-Party Licenses</value>
+  </data>
+
+  <!-- ── Impressum ──────────────────────────────────────────────────── -->
+  <data name="impressumTitle" xml:space="preserve">
+    <value>Legal Notice (Impressum)</value>
+  </data>
+  <data name="impressumCompanyLabel" xml:space="preserve">
+    <value>Company</value>
+  </data>
+  <data name="impressumCompanyName" xml:space="preserve">
+    <value>Atacost B.V.</value>
+  </data>
+  <data name="impressumAddressLabel" xml:space="preserve">
+    <value>Registered Address</value>
+  </data>
+  <data name="impressumAddress" xml:space="preserve">
+    <value>Villa Waterranonkel 319, 5146 AS Waalwijk, Netherlands</value>
+  </data>
+  <data name="impressumEmailLabel" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="impressumEmail" xml:space="preserve">
+    <value>info@atacost.nl</value>
+  </data>
+  <data name="impressumDirectorLabel" xml:space="preserve">
+    <value>Managing Director</value>
+  </data>
+  <data name="impressumDirector" xml:space="preserve">
+    <value>Abdulaziz Ataya</value>
+  </data>
+  <data name="impressumRegistrationTitle" xml:space="preserve">
+    <value>Registration &amp; Tax</value>
+  </data>
+  <data name="impressumKvK" xml:space="preserve">
+    <value>KvK: 91598001</value>
+  </data>
+  <data name="impressumVAT" xml:space="preserve">
+    <value>VAT number: NL865707820B01</value>
+  </data>
+  <data name="impressumRSIN" xml:space="preserve">
+    <value>RSIN: 865707820</value>
+  </data>
+  <data name="impressumCopyright" xml:space="preserve">
+    <value>© 2025 Atacost B.V. All rights reserved.</value>
+  </data>
+
+  <!-- ── Privacy Policy ────────────────────────────────────────────── -->
+  <data name="privacyTitle" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
+  <data name="privacyLastUpdated" xml:space="preserve">
+    <value>Last updated: April 2026</value>
+  </data>
+  <data name="privacyIntro" xml:space="preserve">
+    <value>Atacost B.V. is committed to protecting your personal data. This Privacy Policy explains how we collect, use, and store information when you use the Atacost platform.</value>
+  </data>
+  <data name="privacyDataCollectedTitle" xml:space="preserve">
+    <value>Data We Collect</value>
+  </data>
+  <data name="privacyDataCollected" xml:space="preserve">
+    <value>We collect information you provide directly, including your name, email address, company information, and project data you enter into the platform.</value>
+  </data>
+  <data name="privacyDataStorageTitle" xml:space="preserve">
+    <value>Data Storage</value>
+  </data>
+  <data name="privacyDataStorage" xml:space="preserve">
+    <value>Your data is stored securely on servers provided by IONOS.de, located in Germany, within the European Union. All data is protected in accordance with applicable EU data protection regulations (GDPR).</value>
+  </data>
+  <data name="privacyThirdPartyTitle" xml:space="preserve">
+    <value>Third-Party Sharing</value>
+  </data>
+  <data name="privacyThirdParty" xml:space="preserve">
+    <value>We do not sell or share your personal data with third parties. Data may only be disclosed if required by applicable law or a competent authority.</value>
+  </data>
+  <data name="privacyRightsTitle" xml:space="preserve">
+    <value>Your Rights</value>
+  </data>
+  <data name="privacyRights" xml:space="preserve">
+    <value>You have the right to access, correct, or request deletion of your personal data at any time. To exercise these rights, contact us at info@atacost.nl.</value>
+  </data>
+  <data name="privacyContactTitle" xml:space="preserve">
+    <value>Contact</value>
+  </data>
+  <data name="privacyContact" xml:space="preserve">
+    <value>For questions about this Privacy Policy, please contact us at info@atacost.nl.</value>
+  </data>
+
+  <!-- ── Terms of Use ───────────────────────────────────────────────── -->
+  <data name="termsContent" xml:space="preserve">
+    <value>Terms of Use
+Effective Date: July 2025
+
+Welcome to Atacost. By accessing or using our platform, you agree to the following terms and conditions. Please read them carefully before proceeding.
+
+1. Eligibility
+This service is primarily designed for construction and infrastructure companies. Individuals may also register and use the platform. By using the service, you confirm that you are at least 18 years old and, where applicable, authorized to act on behalf of your organization.
+
+2. Purpose of the Service
+Atacost provides tools to estimate project costs, organize tasks, resources, and teams. Users can create folders, projects, and tasks, and assign roles within their company structure.
+
+3. Trial and Paid Access
+The service may offer a free trial period, after which a paid subscription is required. Pricing and payment terms are communicated during registration or onboarding.
+
+4. Data Input and Responsibility
+Users may enter data such as employee names, tasks, resources, and project information, and import content from Excel files. Direct file uploads are not currently supported. Atacost is not responsible for the accuracy of data entered by users.
+
+5. Data Storage and Privacy
+Your data is stored securely on servers provided by IONOS.de in Germany. We do not share your data with third parties. Please refer to our Privacy Policy for full details.
+
+6. Intellectual Property
+All content and features of this platform are the intellectual property of Atacost B.V. unless otherwise stated. You may not copy, modify, or reuse any part of the platform without prior written permission.
+
+7. Acceptable Use
+You agree not to misuse the service. This includes, but is not limited to:
+- Attempting unauthorized access to the platform or its systems
+- Providing false company or personal information
+- Using the platform for any unlawful or fraudulent purpose
+
+8. Support
+Support is available by email at: info@atacost.nl. We aim to respond within a reasonable timeframe but do not guarantee specific response times or availability.
+
+9. Service Availability
+The platform is under active development and may be subject to updates, changes, or temporary interruptions. We reserve the right to modify or discontinue any part of the service at any time.
+
+10. Limitation of Liability
+Atacost B.V. is not liable for any direct or indirect damages arising from the use of the platform. All use is at the user's own risk.
+
+11. Governing Law
+These terms are governed by the laws of the Netherlands. Any disputes shall be resolved under Dutch jurisdiction.
+
+Contact:
+For questions about these Terms of Use, please contact us at: info@atacost.nl</value>
+  </data>
+
+  <!-- ── Third-Party Licenses ───────────────────────────────────────── -->
+  <data name="licensesDescription" xml:space="preserve">
+    <value>This application is built on the .NET platform and relies on several open-source libraries. We gratefully acknowledge the work of the developers behind these components.</value>
+  </data>
+  <data name="licensesMicrosoftNotice" xml:space="preserve">
+    <value>.NET and ASP.NET Core libraries are provided by Microsoft and licensed under the MIT License.</value>
+  </data>
+  <data name="licensesOwnership" xml:space="preserve">
+    <value>Each library is the property of its respective authors and contributors.</value>
+  </data>
+  <data name="mitLicenseLabel" xml:space="preserve">
+    <value>MIT License</value>
+  </data>
+
+</root>

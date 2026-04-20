@@ -2,6 +2,7 @@
 @using ProjectManagement.Shared.DTO.Calculation
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<ResourceApp> AppLoc
+@inject IStringLocalizer<ResourceStorage> StorageLoc
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
 @using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
 @using ProjectManagement.Shared.DTO.ResourceType
@@ -11,7 +12,7 @@
 @if (Rows is null || !Rows.Any())
 {
     <div class="mt-2 rounded border p-1 md:p-2 bg-white/60 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-        @AppLoc["storageNoResourcesAvailable"]
+        @StorageLoc["storageNoResourcesAvailable"]
     </div>
 }
 else
@@ -44,14 +45,14 @@ else
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor2</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.quantity</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cap / @CalcResource.waste</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@AppLoc["storageMorning"]</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@AppLoc["storageMorningCost"]</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageMorning"]</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageMorningCost"]</th>
 
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[85px]">@AppLoc["storageDay"]</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@AppLoc["storageDayCost"]</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[85px]">@StorageLoc["storageDay"]</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageDayCost"]</th>
 
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@AppLoc["storageEvening"]</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@AppLoc["storageEveningCost"]</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageEvening"]</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageEveningCost"]</th>
 
                     @if (_propColumns.Count > 0)
                     {
@@ -141,7 +142,7 @@ else
                         <td>
                             <select @bind="current.AccountId"
                                     class="@SelectSt">
-                                <option value="">@AppLoc["storageSelectAccount"]</option>
+                                <option value="">@StorageLoc["storageSelectAccount"]</option>
 
                                 @foreach (var g in (Config?.AccountGroups ?? Enumerable.Empty<AccountGroupsListDto>()))
                                 {
@@ -435,7 +436,7 @@ else
                         <tr class="hover:bg-transparent">
                             <td class="px-1 py-1" colspan="@(_staticColspan + _propColumns.Count)">
                                 <div class="mt-1 rounded border p-1.5 md:p-2 bg-white/60 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700">
-                                    <div class="text-[13px] font-semibold mb-1 text-gray-800 dark:text-gray-100">@AppLoc["storageFormulas"]</div>
+                                    <div class="text-[13px] font-semibold mb-1 text-gray-800 dark:text-gray-100">@StorageLoc["storageFormulas"]</div>
                                     <ul class="list-disc ml-5">
                                         @foreach (var f in current.Formulas)
                                         {

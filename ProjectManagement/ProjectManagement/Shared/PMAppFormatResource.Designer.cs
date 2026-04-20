@@ -223,15 +223,6 @@ namespace ProjectManagement.Shared {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to We respect your privacy. Your data is stored securely and not shared with third parties unless required by law..
-        /// </summary>
-        public static string PrivacyContent {
-            get {
-                return ResourceManager.GetString("PrivacyContent", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Right.
         /// </summary>
         public static string right {
@@ -255,51 +246,6 @@ namespace ProjectManagement.Shared {
         public static string separator {
             get {
                 return ResourceManager.GetString("separator", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Third-Party Licenses.
-        /// </summary>
-        public static string TabLicenses {
-            get {
-                return ResourceManager.GetString("TabLicenses", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Privacy Policy.
-        /// </summary>
-        public static string TabPrivacy {
-            get {
-                return ResourceManager.GetString("TabPrivacy", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Terms of Use.
-        /// </summary>
-        public static string TabTerms {
-            get {
-                return ResourceManager.GetString("TabTerms", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Terms of Use
-        ///Effective Date: July 2025
-        ///
-        ///Welcome to Atasoft. By accessing or using our platform, you agree to the following terms and conditions. Please read them carefully before proceeding.
-        ///
-        ///1. Eligibility
-        ///This service is primarily designed for construction and infrastructure companies. However, individuals may register and use the platform. By using the service, you confirm that you are at least 18 years old and authorized to represent your organization if applicable.
-        ///
-        ///2. Purpose of the Service
-        ///O [rest of string was truncated]&quot;;.
-        /// </summary>
-        public static string TermsContent {
-            get {
-                return ResourceManager.GetString("TermsContent", resourceCulture);
             }
         }
         

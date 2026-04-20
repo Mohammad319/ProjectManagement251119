@@ -6,24 +6,10 @@
     @* ── Active preset status ── *@
     @if (ActivePreset is not null)
     {
-        <div class="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-800 dark:bg-emerald-950/20">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-800 dark:bg-emerald-950/20">
             <div class="min-w-0">
                 <div class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">@AppLoc["activePreset"]</div>
                 <div class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">@ActivePreset.Name</div>
-            </div>
-            <div class="flex shrink-0 gap-2">
-                <button type="button"
-                        class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-sky-600 px-3 text-xs font-medium text-white transition hover:bg-sky-700"
-                        @onclick="UpdateActivePresetAsync">
-                    @((MarkupString)Icons.SaveCloud)
-                    <span>@AppLoc["update"]</span>
-                </button>
-                <button type="button"
-                        class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                        @onclick="ClearPresetAsync">
-                    @((MarkupString)Icons.Filter)
-                    <span>@AppLoc["clear"]</span>
-                </button>
             </div>
         </div>
     }
@@ -46,6 +32,15 @@
             @((MarkupString)Icons.SaveCloud)
             <span>@AppLoc["saveNew"]</span>
         </button>
+        @if (ActivePreset is not null)
+        {
+            <button type="button"
+                    class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-sky-600 px-3 text-sm font-medium text-white transition hover:bg-sky-700"
+                    @onclick="UpdateActivePresetAsync">
+                @((MarkupString)Icons.SaveCloud)
+                <span>@AppLoc["update"]</span>
+            </button>
+        }
     </div>
 
     @* ── Preset list ── *@
@@ -99,7 +94,16 @@
     </div>
 
     @* ── Footer ── *@
-    <div class="flex justify-end border-t border-slate-200 pt-3 dark:border-slate-700">
+    <div class="flex justify-end gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+        @if (ActivePreset is not null)
+        {
+            <button type="button"
+                    class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    @onclick="ClearPresetAsync">
+                @((MarkupString)Icons.Filter)
+                <span>@AppLoc["clear"]</span>
+            </button>
+        }
         <button type="button"
                 class="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                 @onclick="CloseDialog">
@@ -175,7 +179,10 @@
     {
         var preset = DisplayOptionsPresetState.GetPreset(Store, presetId);
         if (preset is null) return;
+        var wasActive = string.Equals(Store.ActivePresetId, preset.Id, StringComparison.Ordinal);
         if (!DisplayOptionsPresetState.RemovePreset(Store, preset.Id)) return;
+        if (wasActive)
+            await OnClear.InvokeAsync();
         await OnSave.InvokeAsync(Store);
         await InvokeAsync(StateHasChanged);
     }

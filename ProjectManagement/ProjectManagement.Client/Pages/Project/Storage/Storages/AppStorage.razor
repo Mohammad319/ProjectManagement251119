@@ -23,7 +23,7 @@
                 <div class="app-storage-conditions-wrap">
                     @if ((task.ConditionEffect == null || task.ConditionEffect?.Any() != true))
                     {
-                        <p class="text-gray-600 dark:text-gray-300 italic">@AppLoc["storageNoConditions"]</p>
+                        <p class="text-gray-600 dark:text-gray-300 italic">@StorageLoc["storageNoConditions"]</p>
                     }
                     else
                     {
@@ -72,9 +72,9 @@
                                                 <div class="mb-1">
                                                     <h3 class="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">
                                                         <span class="text-xs px-2 py-0 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 rounded-full">
-                                                            @AppLoc["storageVariables"]: @condition.ExternalVariables.Count
+                                                            @StorageLoc["storageVariables"]: @condition.ExternalVariables.Count
                                                         </span>
-                                                        @AppLoc["storageEnterVariables"]
+                                                        @StorageLoc["storageEnterVariables"]
                                                     </h3>
                                                     <div class="condition-variables-grid">
                                                         @foreach (var variable in condition.ExternalVariables)

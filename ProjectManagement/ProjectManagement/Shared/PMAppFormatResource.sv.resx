@@ -171,9 +171,6 @@
   <data name="paddingTop" xml:space="preserve">
     <value>Padding-Top</value>
   </data>
-  <data name="PrivacyContent" xml:space="preserve">
-    <value>Vi respekterar din integritet. Dina uppgifter lagras säkert och delas inte med tredje part om det inte krävs enligt lag.</value>
-  </data>
   <data name="right" xml:space="preserve">
     <value>Right</value>
   </data>
@@ -183,67 +180,7 @@
   <data name="separator" xml:space="preserve">
     <value>Avgränsare</value>
   </data>
-  <data name="TabLicenses" xml:space="preserve">
-    <value>Tredjepartslicenser</value>
-  </data>
-  <data name="TabPrivacy" xml:space="preserve">
-    <value>Integritetspolicy</value>
-  </data>
-  <data name="TabTerms" xml:space="preserve">
-    <value>Användarvillkor</value>
-  </data>
-  <data name="TermsContent" xml:space="preserve">
-    <value>Användarvillkor
-Giltigt från: juli 2025
-
-Välkommen till Atasoft. Genom att använda vår plattform godkänner du följande villkor. Läs dem noggrant innan du fortsätter.
-
-1. Behörighet
-Tjänsten är främst avsedd för bygg- och infrastrukturföretag. Dock kan även privatpersoner registrera sig. Genom att använda tjänsten intygar du att du är minst 18 år och har rätt att företräda ditt företag om tillämpligt.
-
-2. Syftet med tjänsten
-Plattformen erbjuder verktyg för att uppskatta projektkostnader, organisera uppgifter, resurser och team. Användare kan skapa mappar, projekt, uppgifter och tilldela roller inom sitt företagsstruktur.
-
-3. Testperiod och betalning
-En testperiod kan erbjudas, varefter tjänsten kräver betald prenumeration. Priser och betalningsvillkor anges vid registrering eller onboarding.
-
-4. Data och användning
-Användare kan lägga in data som namn på anställda, uppgifter, resurser och projekt samt importera uppgifter från Excel-filer. Det är för närvarande inte möjligt att ladda upp filer direkt. Atasoft ansvarar inte för korrektheten i användardata.
-
-5. Dataskydd och integritet
-Data lagras säkert på servrar från IONOS.de i Tyskland. Vi delar inte data med tredje part. Se vår integritetspolicy för mer information.
-
-6. Immateriella rättigheter
-Allt innehåll och alla funktioner tillhör Atasoft om inget annat anges. Det är inte tillåtet att kopiera, ändra eller återanvända delar av plattformen utan tillstånd.
-
-7. Acceptabel användning
-Du förbinder dig att inte missbruka tjänsten, t.ex. genom att:
-- Försöka få obehörig åtkomst
-- Ange falsk företagsinformation
-- Använda plattformen för olagliga syften
-
-8. Support
-Grundläggande support tillhandahålls via e-post: ataya@atayasoft.de
-Vi försöker svara inom rimlig tid men kan inte garantera tillgänglighet.
-
-9. Tjänstens tillgänglighet
-Plattformen är under utveckling och kan ändras eller tillfälligt vara otillgänglig. Vi förbehåller oss rätten att ändra eller avbryta tjänsten när som helst.
-
-10. Ansvarsbegränsning
-Atasoft är inte ansvarigt för några direkta eller indirekta skador som uppstår genom användning av plattformen. Användning sker på egen risk.
-
-11. Tillämplig lag
-Villkoren regleras enligt nederländsk lag. Tvister ska hanteras enligt nederländsk jurisdiktion.
-
-Kontakt:
-Vid frågor om användarvillkoren, kontakta oss via e-post: ataya@atayasoft.de
-</value>
-  </data>
   <data name="width" xml:space="preserve">
     <value>Width</value>
   </data>
-  <data name="ThirdPartyLibrariesDescription" xml:space="preserve"><value>Den här applikationen är byggd på .NET-plattformen och använder flera bibliotek med öppen källkod. Vi tackar utvecklarna bakom dessa komponenter för deras arbete.</value></data>
-  <data name="ThirdPartyLibrariesMicrosoftNotice" xml:space="preserve"><value>.NET- och ASP.NET Core-biblioteken som används tillhandahålls av Microsoft och är licensierade under MIT-licensen.</value></data>
-  <data name="ThirdPartyLibrariesOwnership" xml:space="preserve"><value>Varje bibliotek tillhör sina respektive upphovspersoner och bidragsgivare.</value></data>
-  <data name="MitLicenseLabel" xml:space="preserve"><value>MIT-licens</value></data>
 </root>

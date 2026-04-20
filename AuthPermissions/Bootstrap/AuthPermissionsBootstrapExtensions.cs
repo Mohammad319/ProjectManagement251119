@@ -28,16 +28,15 @@ public static class AuthPermissionsBootstrapExtensions
         if (!await IdentityUserSyncHelper.EnsureRolesExistAsync(roleManager, IdentityUserSyncHelper.GetAllRoles()))
             throw new InvalidOperationException("Failed to initialize application roles.");
 
+        var bootstrapEnabled = configuration.GetValue<bool>("Bootstrap:EnableConfiguredAdmin");
+        if (!bootstrapEnabled)
+            return;
 
-//var bootstrapEnabled = configuration.GetValue<bool?>("Bootstrap:EnableConfiguredAdmin") ?? false;
-//if (!bootstrapEnabled)
-//    return;
+        var email = configuration["User:Email"]?.Trim();
+        var password = configuration["User:Password"];
 
-var email = configuration["User:Email"]?.Trim();
-var password = configuration["User:Password"];
-
-if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-    return;
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            return;
 
         var user = await userManager.FindByEmailAsync(email);
         var isNewUser = false;

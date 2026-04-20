@@ -15,6 +15,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Table;
 public partial class CalculationDisplayOptions : ComponentBase
 {
     [Inject] private IStringLocalizer<ResourceApp> AppLoc { get; set; } = default!;
+    [Inject] private IStringLocalizer<ResourceStorage> StorageLoc { get; set; } = default!;
     [Inject] private ICalculationTableCoordinator TableCoordinator { get; set; } = default!;
     [Inject] private CalculationService CalcService { get; set; } = default!;
     [Inject] private FolderState FolderState { get; set; } = default!;
@@ -51,6 +52,7 @@ public partial class CalculationDisplayOptions : ComponentBase
         CalcService.ShowResourceVariables = preset.ShowResourceVariables;
         Calc.OnlyActive = preset.OnlyActive;
         Calc.ApplyPresetActiveOverrides(preset);
+        Calc.ExecuteCalculation();
         NotifyStructureRefresh();
         StateHasChanged();
     }
@@ -58,6 +60,7 @@ public partial class CalculationDisplayOptions : ComponentBase
     private void ClearPresetOverrides()
     {
         Calc.ClearPresetActiveOverrides();
+        Calc.ExecuteCalculation();
         NotifyStructureRefresh();
         StateHasChanged();
     }
