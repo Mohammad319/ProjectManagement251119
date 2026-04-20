@@ -23,7 +23,6 @@ namespace Persistence.Service.CalculationItems.Calculation
             CancellationToken cancellationToken = default)
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
-            if (departmentId is null) return 0;
 
             var projectDepartmentId = await db.Projects
                 .AsNoTracking()
@@ -31,10 +30,15 @@ namespace Persistence.Service.CalculationItems.Calculation
                 .Select(p => (int?)p.Folder.DepartmentId)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (projectDepartmentId != departmentId.Value)
+            if (projectDepartmentId is null)
                 return 0;
 
-            if (!await ValidateCalculationReferencesAsync(db, dto, projectId, departmentId.Value, null, cancellationToken))
+            if (departmentId.HasValue && projectDepartmentId != departmentId.Value)
+                return 0;
+
+            var effectiveDepartmentId = departmentId ?? projectDepartmentId.Value;
+
+            if (!await ValidateCalculationReferencesAsync(db, dto, projectId, effectiveDepartmentId, null, cancellationToken))
                 return 0;
 
             var maxOrder = await db.Calculations
@@ -45,7 +49,7 @@ namespace Persistence.Service.CalculationItems.Calculation
 
             var calculation = new CalculationEntity();
             calculation.AssignToProject(projectId);
-            calculation.AssignDepartment(departmentId.Value);
+            calculation.AssignDepartment(effectiveDepartmentId);
             calculation.Update(dto);
             calculation.UpdateOrder(sortOrder);
             calculation.CreatedBy = userId;

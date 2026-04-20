@@ -387,7 +387,7 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
         // ====== بناء القائمة المسطّحة ======
         public List<FlatItem> BuildFlatList()
         {
-            if (!ShowTasks && !ShowResources)
+            if (!ShowTasks && !ShowResources && !ShowOnlyCodeTextTasks)
             {
                 MaxDepth = 0;
                 return [];

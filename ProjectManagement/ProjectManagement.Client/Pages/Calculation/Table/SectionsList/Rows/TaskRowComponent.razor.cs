@@ -49,7 +49,7 @@ public partial class TaskRowComponent : CalculationSelectableRowComponentBase
     private System.Threading.Tasks.Task ToggleCollapse() => OnCollapseToggle.InvokeAsync(Task);
 
     private void RenderTaskCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left, ShowActiveToggle, ToggleActive);
+        => CalculationRowCellRenderer.RenderTaskCells(builder, Colmuns, Task, Left, ShowActiveToggle, ToggleActive, ActiveParent);
 
     private Task ToggleActive() => OnToggleActive.InvokeAsync();
 }

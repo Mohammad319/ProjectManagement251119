@@ -101,7 +101,7 @@
                 {
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.changeFactor1</label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@InputClass" />
+                        <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@InputClass" />
                     </div>
                 }
 
@@ -109,22 +109,22 @@
                     <label class="@LabelClass">@CalcResource.changeFactor2 </label>
                     @if (TaskUpdate.Metadata.ConversionParameters.Any())
                     {
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@DisabledInputClass" disabled />
+                        <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@DisabledInputClass" disabled />
                     }
                     else
                     {
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
+                        <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
                     }
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["actuallyQuantity"]</label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@InputClass" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["workedQuantity"]</label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@InputClass" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">

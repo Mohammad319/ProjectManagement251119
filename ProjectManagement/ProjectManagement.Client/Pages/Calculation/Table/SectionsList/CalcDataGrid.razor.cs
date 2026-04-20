@@ -48,6 +48,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private string _lastColumnSignature = string.Empty;
     private bool _reloadPending;
     private bool _jsSyncPending = true;
+    private bool _collapseScrollClampPending;
     private bool _disposed;
 
     private static readonly IReadOnlyDictionary<NetColumnId, int> DefaultWidths =
@@ -60,6 +61,12 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     {
         if (_disposed)
             return;
+
+        if (_collapseScrollClampPending)
+        {
+            _collapseScrollClampPending = false;
+            await JS.InvokeVoidAsync("clampCalcGridScroll");
+        }
 
         if (!firstRender && !_jsSyncPending)
             return;
@@ -326,6 +333,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         CalcService.NotifyGridViewMaterialized();
         _jsSyncPending = true;
+        _collapseScrollClampPending = true;
         await InvokeAsync(StateHasChanged);
     }
 

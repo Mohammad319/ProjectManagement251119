@@ -77,7 +77,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     }
 
     private void RenderResourceCells(RenderTreeBuilder builder)
-        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left, ShowActiveToggle, ToggleActive);
+        => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left, ShowActiveToggle, ToggleActive, TaskBranchActive);
 
     private Task ToggleActive() => OnToggleActive.InvokeAsync();
 

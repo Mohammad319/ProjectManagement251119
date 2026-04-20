@@ -128,6 +128,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
                 var tasks = taskDtos.Select(x => x.ToTaskListMVVM()).ToList();
 
                 calc.AddTasks(tasks);
+                calc.LastHubChangeAffectsCalc = true;
             }
             else if (ot == OperationType.MoveRange)
             {
@@ -139,6 +140,7 @@ namespace ProjectManagement.Client.Services.Calculation.CalculationItems
 
                 calc.RemoveTasks(list.Item2 ?? []);
                 calc.AddTasks(movedTasks);
+                calc.LastHubChangeAffectsCalc = true;
             }
         }
 

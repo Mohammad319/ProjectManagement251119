@@ -44,19 +44,24 @@ public class TrimmedNumberInput<TValue> : InputBase<TValue>
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            if (IsNullable())
+            result = default!;
+            validationErrorMessage = string.Empty;
+            return true;
+        }
+
+        var culture = CultureInfo.CurrentCulture;
+
+        if (TryParseFraction(value, culture, out var fractionResult))
+        {
+            var fractionStr = fractionResult.ToString(CultureInfo.InvariantCulture);
+            if (TryConvert(fractionStr, out result))
             {
-                result = default!;
                 validationErrorMessage = string.Empty;
                 return true;
             }
-
-            result = default!;
-            validationErrorMessage = GetParsingErrorMessage();
-            return false;
         }
 
-        var normalized = NormalizeNumericInput(value, CultureInfo.CurrentCulture);
+        var normalized = NormalizeNumericInput(value, culture);
         if (TryConvert(normalized, out result))
         {
             validationErrorMessage = string.Empty;
@@ -66,6 +71,38 @@ public class TrimmedNumberInput<TValue> : InputBase<TValue>
         result = default!;
         validationErrorMessage = GetParsingErrorMessage();
         return false;
+    }
+
+    private static bool TryParseFraction(string value, CultureInfo culture, out decimal result)
+    {
+        result = 0m;
+
+        var slashIndex = value.IndexOf('/');
+        if (slashIndex < 0)
+            return false;
+
+        var left = value[..slashIndex].Trim();
+        var right = value[(slashIndex + 1)..].Trim();
+
+        if (right.Contains('/'))
+            return false;
+
+        var leftNorm = NormalizeNumericInput(left, culture);
+        var rightNorm = NormalizeNumericInput(right, culture);
+
+        if (!decimal.TryParse(leftNorm, NumberStyles.Any, culture, out var numerator) &&
+            !decimal.TryParse(leftNorm, NumberStyles.Any, CultureInfo.InvariantCulture, out numerator))
+            return false;
+
+        if (!decimal.TryParse(rightNorm, NumberStyles.Any, culture, out var denominator) &&
+            !decimal.TryParse(rightNorm, NumberStyles.Any, CultureInfo.InvariantCulture, out denominator))
+            return false;
+
+        if (denominator == 0m)
+            return false;
+
+        result = numerator / denominator;
+        return true;
     }
 
     private static string NormalizeNumericInput(string value, CultureInfo culture)

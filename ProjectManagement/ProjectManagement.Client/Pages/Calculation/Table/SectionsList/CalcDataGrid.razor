@@ -3,6 +3,7 @@
 @using ProjectManagement.Client.Helper
 @using ProjectManagement.Client.Pages.Calculation.Table.SectionsList.Rows
 @using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation.Template
 @inject IStringLocalizer<CalcResource> CalcLoc
 
@@ -112,7 +113,7 @@
                             ItemSize="22"
                             OverscanCount="6">
                     <ItemContent>
-                        @if (item.IsTask && Calc.ShowTasks)
+                        @if (item.IsTask && (Calc.ShowTasks || item.Task!.Type == TaskType.CodeName))
                         {
                             var taskId = item.Task!.Id;
                             <TaskRowComponent @key="item.Key"

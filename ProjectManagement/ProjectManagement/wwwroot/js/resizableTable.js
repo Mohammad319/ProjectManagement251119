@@ -9,6 +9,10 @@ window.initializeResizableColumns = function (dotNetRef) {
     createResizableTable(table);
     observeFrozenColumns(table);
     queueFrozenSync(table);
+    preventSelectAll(table);
+
+    const scrollContainer = table.closest('.divNetCalc');
+    if (scrollContainer) preventHorizontalBackNavigation(scrollContainer);
 };
 
 const createResizableTable = (table) => {
@@ -173,6 +177,7 @@ function syncOverflowTitle(cell) {
 
     cell.removeAttribute('title');
 }
+
 
 function SaveTemplateJs(event) {
     if (!window.nelCalcDotNetRef) {
