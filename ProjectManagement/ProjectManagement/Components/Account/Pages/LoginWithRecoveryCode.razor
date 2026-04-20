@@ -22,7 +22,7 @@
     <div class="max-w-md">
         <EditForm Model="Input" FormName="login-with-recovery-code" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-5">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+            <FormValidationSummary />
 
             <!-- Recovery Code (floating label) -->
             <div class="relative">
@@ -40,7 +40,6 @@
                  dark:text-gray-400">
                     @PMIdentityText.RecoveryCodeLabel
                 </label>
-                <ValidationMessage For="() => Input.RecoveryCode" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
             </div>
 
             <button type="submit"

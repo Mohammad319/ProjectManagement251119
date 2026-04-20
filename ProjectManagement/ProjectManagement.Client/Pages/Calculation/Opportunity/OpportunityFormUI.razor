@@ -5,55 +5,49 @@
 
 <EditForm class="space-y-3 p-3 text-slate-800 dark:text-slate-100" Model="@Post" OnValidSubmit="async () => await HandleSubmitAsync()" id="@DialogFormId">
     <DataAnnotationsValidator />
+    <FormValidationSummary />
 
     <div class="grid grid-cols-2 gap-3">
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.opportunitiesRisks:</label>
             <InputText class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20"
                        @bind-Value="@Post.OpportunitiesRisks" />
-            <ValidationMessage For="@(() => Post.OpportunitiesRisks)" />
         </div>
 
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.risk:</label>
             <InputText class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20"
                        @bind-Value="@Post.OpportunityType" />
-            <ValidationMessage For="@(() => Post.OpportunityType)" />
         </div>
 
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.probabilityWorth:</label>
             <InputNumber class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20"
                          @bind-Value="@Post.Metadata.ProbabilityWorth" />
-            <ValidationMessage For="@(() => Post.Metadata.ProbabilityWorth)" />
         </div>
 
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.probability:</label>
             <InputNumber class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20"
                          @bind-Value="@Post.Metadata.ProbabilityPercent" />
-            <ValidationMessage For="@(() => Post.Metadata.ProbabilityPercent)" />
         </div>
 
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.probabilityBest:</label>
             <InputNumber class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20"
                          @bind-Value="@Post.Metadata.ProbabilityBest" />
-            <ValidationMessage For="@(() => Post.Metadata.ProbabilityBest)" />
         </div>
 
         <div class="flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceLoc.value:</label>
             <InputNumber class="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20"
                          @bind-Value="@Post.Metadata.Value" />
-            <ValidationMessage For="@(() => Post.Metadata.Value)" />
         </div>
 
         <div class="col-span-2 flex flex-col gap-1">
             <label class="text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note:</label>
             <InputTextArea class="min-h-[84px] w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/20"
                            @bind-Value="@Post.Metadata.Comment" />
-            <ValidationMessage For="@(() => Post.Metadata.Comment)" />
         </div>
     </div>
 </EditForm>

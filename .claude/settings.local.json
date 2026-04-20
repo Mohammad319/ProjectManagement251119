@@ -3,7 +3,9 @@
     "allow": [
       "Bash(dotnet build *)",
       "Bash(xargs grep 2)",
-      "Bash(grep -v \"\\\\.cs:.*//.*AllFlatItems\")"
+      "Bash(grep -v \"\\\\.cs:.*//.*AllFlatItems\")",
+      "Bash(xargs grep *)",
+      "Bash(powershell -Command ' *)"
     ]
   }
 }

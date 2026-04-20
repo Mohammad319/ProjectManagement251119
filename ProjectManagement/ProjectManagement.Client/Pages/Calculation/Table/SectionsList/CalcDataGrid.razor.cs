@@ -177,7 +177,9 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             {
                 Calc.AllFlatItems = Calc.BuildFlatList();
                 Calc.FlatListDirty = false;
-                Template.StartCol1 = GetStartColumnWidth(Calc.MaxDepth);
+                var needed = GetStartColumnWidth(Calc.MaxDepth);
+                if (Template.StartCol1 < needed)
+                    Template.StartCol1 = needed;
             }
 
             if (refreshItems && virtualizeComponent != null)
@@ -314,7 +316,9 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         Calc.AllFlatItems = Calc.BuildFlatList();
         Calc.FlatListDirty = false;
-        Template.StartCol1 = GetStartColumnWidth(Calc.MaxDepth);
+        var neededWidth = GetStartColumnWidth(Calc.MaxDepth);
+        if (Template.StartCol1 < neededWidth)
+            Template.StartCol1 = neededWidth;
 
         if (virtualizeComponent != null)
             await virtualizeComponent.RefreshDataAsync();
@@ -329,8 +333,17 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             ? string.Join(',', columns.Select(x => $"{(int)x.Id}:{x.Width}"))
             : string.Empty;
 
-    private static int GetStartColumnWidth(int maxDepth) =>
-        (Math.Max(maxDepth, 0) * 10) + PMValuesConst.MinWidthCol;
+    private static int GetStartColumnWidth(int maxDepth)
+    {
+        const int indentPerLevel = 10;  // matches Left="@(item.Depth * 10)"
+        const int toggleSize = 20;      // w-5 h-5 = 20px (expand/collapse button)
+        const int flexGap = 4;          // gap-1 between indent and toggle
+        const int breathing = 8;        // extra padding for comfortable click area
+        const int minWidth = 50;        // minimum even with no nesting
+
+        int computed = (Math.Max(maxDepth, 0) * indentPerLevel) + toggleSize + flexGap + breathing;
+        return Math.Max(minWidth, computed);
+    }
 
     private void RefreshColumns()
     {

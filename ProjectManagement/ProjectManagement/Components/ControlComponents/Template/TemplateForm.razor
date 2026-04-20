@@ -14,13 +14,13 @@
                   OnValidSubmit="HandleSubmitAsync"
                   OnInvalidSubmit="HandleInvalidSubmit">
             <DataAnnotationsValidator />
+            <FormValidationSummary />
 
             <div class="rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(160px,1fr)_minmax(140px,.75fr)_minmax(120px,.55fr)_minmax(110px,.55fr)_auto]">
                     <div class="min-w-0">
                         <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
                         <InputText class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Name" />
-                        <ValidationMessage For="() => TemplateUpdate.Name" class="mt-1 block text-xs text-rose-600" />
                     </div>
 
                     <div class="min-w-0">
@@ -46,7 +46,6 @@
                     <div class="min-w-0">
                         <label class="mb-1 block text-xs font-medium text-slate-700 dark:text-slate-200">@CalcResource.Currency</label>
                         <InputText class="h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100" @bind-Value="TemplateUpdate.Currency" />
-                        <ValidationMessage For="() => TemplateUpdate.Currency" class="mt-1 block text-xs text-rose-600" />
                     </div>
 
                     <div class="flex items-end justify-end gap-1 sm:col-span-2 xl:col-span-1 xl:justify-start">

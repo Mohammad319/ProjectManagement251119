@@ -1,0 +1,65 @@
+﻿@typeparam TItem
+
+<tbody>
+    @if (Items is null || RowTemplate is null)
+    {
+        @ChildContent
+    }
+    else
+    {
+        @for (int i = 0; i < Items.Count; i++)
+        {
+            var item = Items[i];
+
+            <tr class="@RowClass"
+                draggable="true"
+                @ondragstart="() => OnDragStart(item)"
+                @ondragover:preventDefault
+                @ondrop="() => OnDrop(item)"
+                @ondragend="OnDragEnd">
+                @RowTemplate(item)
+            </tr>
+        }
+    }
+</tbody>
+
+@code {
+    [Parameter] public IList<TItem>? Items { get; set; }
+    [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
+    [Parameter] public string RowClass { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private TItem? _draggedItem;
+
+    private void OnDragStart(TItem item)
+    {
+        _draggedItem = item;
+    }
+
+    private void OnDrop(TItem dropTarget)
+    {
+        if (Items is null || _draggedItem is null)
+            return;
+
+        var fromIndex = Items.IndexOf(_draggedItem);
+        var toIndex = Items.IndexOf(dropTarget);
+
+        if (fromIndex < 0 || toIndex < 0 || fromIndex == toIndex)
+            return;
+
+        var item = Items[fromIndex];
+        Items.RemoveAt(fromIndex);
+
+        if (fromIndex < toIndex)
+            toIndex--;
+
+        Items.Insert(toIndex, item);
+
+        StateHasChanged();
+    }
+
+    private void OnDragEnd()
+    {
+        _draggedItem = default;
+    }
+}

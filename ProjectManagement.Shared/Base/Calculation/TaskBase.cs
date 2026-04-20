@@ -199,6 +199,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class TaskBase
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [MaxLength(FieldLengths.Name, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
         public int Order { get; set; }
 

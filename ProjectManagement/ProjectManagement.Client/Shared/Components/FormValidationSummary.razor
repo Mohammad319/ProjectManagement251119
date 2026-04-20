@@ -1,0 +1,39 @@
+@implements IDisposable
+
+@if (_hasErrors)
+{
+    <div class="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 dark:border-rose-800 dark:bg-rose-950/40">
+        <ul class="list-disc space-y-0.5 pl-4 text-xs text-rose-700 dark:text-rose-300">
+            @foreach (var message in _messages)
+            {
+                <li>@message</li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    [CascadingParameter] private EditContext? CurrentEditContext { get; set; }
+
+    private IEnumerable<string> _messages = [];
+    private bool _hasErrors;
+
+    protected override void OnInitialized()
+    {
+        if (CurrentEditContext is null) return;
+        CurrentEditContext.OnValidationStateChanged += OnValidationStateChanged;
+    }
+
+    private void OnValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
+    {
+        _messages = CurrentEditContext?.GetValidationMessages() ?? [];
+        _hasErrors = _messages.Any();
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        if (CurrentEditContext is not null)
+            CurrentEditContext.OnValidationStateChanged -= OnValidationStateChanged;
+    }
+}

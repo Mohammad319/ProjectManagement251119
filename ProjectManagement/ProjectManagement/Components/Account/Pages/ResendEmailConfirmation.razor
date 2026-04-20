@@ -23,7 +23,7 @@
     <div class="max-w-md">
         <EditForm Model="Input" FormName="resend-email-confirmation" OnValidSubmit="OnValidSubmitAsync" method="post" class="space-y-5">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-red-600 dark:text-red-400" role="alert" />
+            <FormValidationSummary />
 
             <!-- Email (floating label) -->
             <div class="relative">
@@ -42,7 +42,6 @@
                  dark:text-gray-400">
                     @PMResourceIdentity.email
                 </label>
-                <ValidationMessage For="() => Input.Email" class="mt-1 block text-sm text-red-600 dark:text-red-400" />
             </div>
 
             <button type="submit"

@@ -1,0 +1,282 @@
+﻿@using Microsoft.Extensions.Localization
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.SharedComponent
+@using ProjectManagement.Shared.Constant
+@using ProjectManagement.Shared.Constants
+@using ProjectManagement.Shared.DTO.Calculation.Template
+@inherits AppComponentBase
+
+@inject IStringLocalizer<CalcResource> CalcLoc
+
+@if (Temp != null)
+{
+ 
+    <div class="overflow-x-auto">
+        <div class="flex @(ShowColumnSettings ? "min-w-[1100px]" : "min-w-full") items-start gap-2">
+    
+            <!-- Settings -->
+            <section class="@SettingsSectionClass">
+                <div class="border-b border-slate-200 px-2 py-1 dark:border-slate-700">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        @AppLoc["appearance"]
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        @AppLoc["tableColorsAndBorderStyle"]
+                    </p>
+                </div>
+
+                <div class="max-h-[65vh] overflow-auto p-2">
+                    <div class="@SettingsGridClass">
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                            @AppFormatResource.borderType
+                        </label>
+                        <select @bind="Temp.NetCalc.Color.BorderStyle"
+                                class="@SelectInputClass">
+                            @foreach (var item in TemplateConst.BorderStyles)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="@ColorGridClass">
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@AppFormatResource.bolder</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Border" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@AppFormatResource.font</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Text" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">Inactive font</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.InactiveText" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceApp.header</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Header" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceLoc.task</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Task" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">OnlyCodeText task</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.TaskCodeName" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceLoc.SubTask</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.SubTask" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">BaseQuantity row</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.TaskDetailBaseQuantity" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@ResourceLoc.resource</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Resource" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">Quantity-driving factor</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.ResourceParameter" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">Add-ons / Attachments</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.ResourceAttachment" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">Breakdown of hours</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.ResourceTime" />
+                        </div>
+
+                        <div class="@ColorRowClass">
+                            <label class="@ColorLabelClass">@CalcResource.note</label>
+                            <input type="color"
+                                   class="@ColorInputClass"
+                                   @bind="Temp.NetCalc.Color.Note" />
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    private const string IconButtonBaseClass =
+        "inline-flex h-7 w-7 items-center justify-center rounded-lg border text-[11px] " +
+        "transition duration-150 hover:scale-[1.03] active:scale-95";
+
+    private const string IconButtonSecondaryClass =
+        IconButtonBaseClass + " border-slate-300 bg-white text-slate-600 " +
+        "hover:bg-slate-100 hover:border-slate-400 " +
+        "dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
+
+    private const string IconButtonPrimaryClass =
+        IconButtonBaseClass + " border-blue-300 bg-blue-50 text-blue-700 " +
+        "hover:bg-blue-100 hover:border-blue-400 " +
+        "dark:border-blue-500/60 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/50";
+
+    private const string IconButtonWarningClass =
+        IconButtonBaseClass + " border-amber-300 bg-amber-50 text-amber-700 " +
+        "hover:bg-amber-100 hover:border-amber-400 " +
+        "dark:border-amber-500/60 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50";
+
+    private const string IconButtonWarningActiveClass =
+        IconButtonBaseClass + " border-emerald-300 bg-emerald-50 text-emerald-700 " +
+        "hover:bg-emerald-100 hover:border-emerald-400 " +
+        "dark:border-emerald-500/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-900/50";
+
+    private const string SelectInputClass =
+        "h-8 w-full rounded-md border border-slate-300 bg-white px-2 text-[12px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white";
+
+    private const string ColorRowClass =
+        "flex min-h-9 items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/70";
+
+    private const string ColorLabelClass =
+        "truncate text-[11px] font-medium text-slate-700 dark:text-slate-200";
+
+    private const string ColorInputClass =
+        "h-7 w-10 shrink-0 rounded border border-slate-300 bg-transparent p-0.5 dark:border-slate-600";
+
+    [Parameter] public TemplateListPostDTO Temp { get; set; } = new();
+    [Parameter] public bool ShowColumnSettings { get; set; } = true;
+
+    private bool TableVisible = true;
+    private string SettingsSectionClass =>
+        (ShowColumnSettings ? "w-[360px] flex-none" : "min-w-0 flex-1") +
+        " overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900";
+
+    private string SettingsGridClass =>
+        ShowColumnSettings
+            ? "grid grid-cols-1 gap-2"
+            : "grid grid-cols-1 gap-2 lg:grid-cols-[220px_minmax(0,1fr)]";
+
+    private string ColorGridClass =>
+        ShowColumnSettings
+            ? "grid grid-cols-2 gap-1"
+            : "grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6";
+
+    private static readonly IReadOnlyDictionary<NetColumnId, NetColumnState> _defaults =
+        TemplateDefaults.NetCalc().ToDictionary(x => x.Id, x => x);
+
+    private IEnumerable<NetColumnId> HiddenIds =>
+        Enum.GetValues<NetColumnId>()
+            .Where(id => !Temp.NetCalc.Columns.Any(c => c.Id == id));
+
+    private async Task AddAsync(NetColumnId id)
+    {
+        TableVisible = false;
+        await Task.Delay(1);
+
+        if (_defaults.TryGetValue(id, out var def))
+        {
+            Temp.NetCalc.Columns.Add(new NetColumnState
+            {
+                Id = def.Id,
+                Width = def.Width,
+                Frozen = def.Frozen
+            });
+        }
+        else
+        {
+            Temp.NetCalc.Columns.Add(new NetColumnState
+            {
+                Id = id,
+                Width = 80,
+                Frozen = false
+            });
+        }
+
+        TableVisible = true;
+    }
+
+    private async Task RemoveAsync(NetColumnState col)
+    {
+        TableVisible = false;
+        await Task.Delay(1);
+
+        if (col != null)
+        {
+            col.Frozen = false;
+            Temp.NetCalc.Columns.Remove(col);
+        }
+
+        await Task.Delay(1);
+        TableVisible = true;
+    }
+
+    private void MoveUp(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index <= 0) return;
+        list.RemoveAt(index);
+        list.Insert(index - 1, col);
+    }
+
+    private void MoveDown(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index < 0 || index >= list.Count - 1) return;
+        list.RemoveAt(index);
+        list.Insert(index + 1, col);
+    }
+
+    private void MoveToTop(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index <= 0) return;
+        list.RemoveAt(index);
+        list.Insert(0, col);
+    }
+
+    private void MoveToBottom(NetColumnState col)
+    {
+        var list = Temp.NetCalc.Columns;
+        var index = list.IndexOf(col);
+        if (index < 0 || index >= list.Count - 1) return;
+        list.RemoveAt(index);
+        list.Add(col);
+    }
+
+}

@@ -34,7 +34,7 @@
           OnValidSubmit="HandleSubmitAsync">
 
     <DataAnnotationsValidator />
-
+    <FormValidationSummary />
 
     <!-- PANEL 1 -->
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
@@ -42,7 +42,6 @@
             <div class="min-w-0 md:col-span-4">
                 <label class="@LabelClass">@CalcResource.name</label>
                 <InputText @bind-Value="ResourceUpdate.Name" class="@InputClass" />
-                <ValidationMessage For="@(() => ResourceUpdate.Name)" />
             </div>
 
             @if (!Refresh && Config.AccountGroups != null)
@@ -118,13 +117,11 @@
                     }
                 </div>
 
-                <ValidationMessage For="@(() => ResourceUpdate.Data.Quantity)" />
             </div>
 
             <div class="min-w-0 md:col-span-4 xl:col-span-3">
                 <label class="@LabelClass">@CalcResource.unit</label>
                 <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@InputClass" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.Unit)" />
             </div>
            
                 <div class="min-w-0 md:col-span-4 xl:col-span-2">
@@ -139,7 +136,6 @@
                                             @bind-Value="ResourceUpdate.Data.Cost"
                                             MaxFractionDigits="@NumericFractionDigits"
                                             class="@InputClass" />
-                        <ValidationMessage For="@(() => ResourceUpdate.Data.Cost)" />
                 }
                 else
                 {
@@ -159,7 +155,6 @@
                                         @bind-Value="ResourceUpdate.Data.BaseCost"
                                         MaxFractionDigits="@NumericFractionDigits"
                                         class="@InputClass" />
-                    <ValidationMessage For="@(() => ResourceUpdate.Data.BaseCost)" />
                 }
             </div>
          
@@ -171,7 +166,6 @@
                                         @bind-Value="ResourceUpdate.Data.ChangeFactor1"
                                         MaxFractionDigits="@NumericFractionDigits"
                                         class="@InputClass" />
-                    <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor1)" />
                 }
                 else
                 {
@@ -185,7 +179,6 @@
                                     @bind-Value="ResourceUpdate.Data.ChangeFactor2"
                                     MaxFractionDigits="@NumericFractionDigits"
                                     class="@InputClass" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.ChangeFactor2)" />
             </div>
 
             @if (ResourceUpdate.ResType == ResourceTypesEnum.Materials
@@ -211,11 +204,6 @@
                                              MaxFractionDigits="@NumericFractionDigits"
                                              class="@InputClass" />
                      }
-                    <ValidationMessage For="@(() => ResourceUpdate.Data.CapWaste)" />
-
-                  
-                     
-                  
                 </div>
             } 
             @if (HasCapResourceType)
@@ -293,7 +281,6 @@
                         }
                     }
                 </InputSelect>
-                <ValidationMessage For="@(() => ResourceUpdate.StatusId)" />
             </div>
 
             <div class="min-w-0 md:col-span-3 xl:col-span-2">
@@ -302,7 +289,6 @@
                                     @bind-Value="ResourceUpdate.Data.PriceSub"
                                     MaxFractionDigits="@NumericFractionDigits"
                                     class="@InputClass" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.PriceSub)" />
             </div>
 
             <div class="min-w-0 md:col-span-3 xl:col-span-2">
@@ -311,7 +297,6 @@
                                     @bind-Value="ResourceUpdate.Data.CO2"
                                     MaxFractionDigits="@NumericFractionDigits"
                                     class="@InputClass" />
-                <ValidationMessage For="@(() => ResourceUpdate.Data.CO2)" />
             </div>
 
             <div class="min-w-0 md:col-span-6 xl:col-span-4">
@@ -328,7 +313,6 @@
                         }
                     }
                 </InputSelect>
-                <ValidationMessage For="@(() => ResourceUpdate.OpportunityId)" />
             </div>
         </div>
     </MhdCard>
@@ -627,9 +611,6 @@
                 </div>
             }
         </MhdCard>
-        <div>
-            <ValidationMessage For="@(() => ResourceUpdate.Data.Times)" />
-        </div>
     }
 
     <!-- NOTES -->
@@ -648,7 +629,6 @@
         <div class="mb-2">
             <InputTextArea @bind-Value="ResourceData.Note"
                            class="@TextAreaClass" />
-            <ValidationMessage For="@(() => ResourceData.Note)" />
         </div>
 
         @for (int i = 0; i < ResourceData.UpperNote.Count; i++)

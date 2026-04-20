@@ -414,11 +414,13 @@ public class CalculationComponentRenderTests : BunitContext
         var cut = Render<ResourceRowComponent>(parameters => parameters
             .Add(x => x.Resource, resource)
             .Add(x => x.TaskBranchActive, false)
-            .Add(x => x.Colors, new NetColor { Resource = "#eeeeee" })
+            .Add(x => x.Colors, new NetColor { Resource = "#eeeeee", InactiveText = "#999999" })
             .Add(x => x.Left, 20)
             .Add(x => x.Colmuns, CreateTestColumns()));
 
-        Assert.Contains("color:rgb(49 48 45 / 55%)", cut.Find("tr").GetAttribute("style"));
+        var rowStyle = cut.Find("tr").GetAttribute("style");
+        Assert.Contains("--calc-row-text-color:var(--net-inactive-text-color, #999999)", rowStyle);
+        Assert.Contains("color:var(--net-inactive-text-color, #999999);", rowStyle);
 
         interactionState.SetModifierKey("Control");
         cut.Find("tr").Click();
@@ -844,6 +846,7 @@ public class CalculationComponentRenderTests : BunitContext
         FolderState folderState,
         CalculationInteractionState interactionState,
         ITemplateRepository? templateRepository = null,
+        ITemplateColumnRepository? templateColumnRepository = null,
         ICalculationRepository? calculationRepository = null)
     {
         Services.AddSingleton<ICalculationTableCoordinator>(coordinator);
@@ -852,7 +855,9 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton(folderState);
         Services.AddSingleton(interactionState);
         Services.AddSingleton<ITemplateRepository>(templateRepository ?? new FakeTemplateRepository());
+        Services.AddSingleton<ITemplateColumnRepository>(templateColumnRepository ?? new FakeTemplateColumnRepository());
         Services.AddSingleton<ICalculationRepository>(calculationRepository ?? new FakeCalculationRepository());
+        Services.AddSingleton<DialogService>();
     }
 
     private void RegisterPageComponentServices(
@@ -865,7 +870,9 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton(folderState);
         Services.AddSingleton(interactionState);
         Services.AddSingleton<ITemplateRepository>(new FakeTemplateRepository());
+        Services.AddSingleton<ITemplateColumnRepository>(new FakeTemplateColumnRepository());
         Services.AddSingleton<ICalculationRepository>(new FakeCalculationRepository());
+        Services.AddSingleton<DialogService>();
     }
 
     private void RegisterRowComponentServices(
@@ -892,6 +899,7 @@ public class CalculationComponentRenderTests : BunitContext
         Services.AddSingleton(templateRepository);
         Services.AddSingleton(taskService);
         Services.AddSingleton(resourceService);
+        Services.AddSingleton<ITemplateColumnRepository>(new FakeTemplateColumnRepository());
         Services.AddSingleton<IStringLocalizer<CalcResource>>(new FakeStringLocalizer<CalcResource>());
         Services.AddSingleton<ITaskRepository>(new FakeTaskRepository());
         Services.AddSingleton<IResourceTypeRepository>(new FakeResourceTypeRepository());
@@ -931,7 +939,7 @@ public class CalculationComponentRenderTests : BunitContext
         ITemplateRepository templateRepository) =>
         new(
             templateRepository,
-            (ITemplateColumnRepository)RuntimeHelpers.GetUninitializedObject(typeof(ITemplateColumnRepository)),
+            new FakeTemplateColumnRepository(),
             new FakeCalculationRepository(),
             folderState,
             (MhdServices)RuntimeHelpers.GetUninitializedObject(typeof(MhdServices)),
@@ -1168,6 +1176,31 @@ public class CalculationComponentRenderTests : BunitContext
             UpdateCalls++;
             return Task.FromResult(true);
         }
+        public Task<bool> DeleteAsync(int id) => Task.FromResult(true);
+    }
+
+    private sealed class FakeTemplateColumnRepository : ITemplateColumnRepository
+    {
+        public List<TemplateColumnMVVM> TemplateColumns { get; set; } = [];
+        public TemplateColumnMVVM SetDefaultResult { get; set; } = new();
+
+        public Task<List<TemplateColumnMVVM>> GetAsync(int? department = null) =>
+            Task.FromResult(TemplateColumns.ToList());
+
+        public Task<TemplateColumnMVVM> GetByIdAsync(int id) =>
+            Task.FromResult(TemplateColumns.FirstOrDefault(x => x.Id == id) ?? new TemplateColumnMVVM { Id = id });
+
+        public Task<TemplateColumnMVVM> SetDefaultAsync(int calcId, int? newTemplateColumnId) =>
+            Task.FromResult(SetDefaultResult);
+
+        public Task<TemplateColumnMVVM> CreateAsync(TemplateColumnPostDTO templateColumn) =>
+            Task.FromResult(new TemplateColumnMVVM());
+
+        public Task<TemplateColumnMVVM> CreateAsync(int? departmentId, TemplateColumnPostDTO templateColumn) =>
+            Task.FromResult(new TemplateColumnMVVM { DepartmentId = departmentId });
+
+        public Task<bool> UpdateAsync(TemplateColumnPostDTO templateColumn, int id) => Task.FromResult(true);
+
         public Task<bool> DeleteAsync(int id) => Task.FromResult(true);
     }
 

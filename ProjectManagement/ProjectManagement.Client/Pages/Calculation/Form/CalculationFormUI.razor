@@ -21,7 +21,7 @@
               OnValidSubmit="async () => await HandleSubmitAsync()">
 
         <DataAnnotationsValidator />
-        <ValidationSummary class="mb-2 text-red-600" />
+        <FormValidationSummary />
 
         <!-- التابات مع الأيقونات -->
         <MhdTabs Items="Tabs"
@@ -36,25 +36,21 @@
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.code</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Code" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Code) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.name</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Name" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Name) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tax</label>
                     <InputNumber class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Tax" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Tax) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.timeMonth</label>
                     <InputNumber class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.TimeMonth" />
-                    <ValidationMessage For=@(() => CalculationUpdate.TimeMonth) />
                 </div>
 
                 <div class="col-span-2 flex items-center">
@@ -73,7 +69,6 @@
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.maps</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Maps" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Maps) />
                 </div>
 
                 <div>
@@ -88,7 +83,6 @@
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For=@(() => CalculationUpdate.StatusId) />
                 </div>
 
                 <div>
@@ -103,7 +97,6 @@
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For=@(() => CalculationUpdate.TypeId) />
                 </div>
             </div>
         }
@@ -136,7 +129,6 @@
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For=@(() => CalculationUpdate.CompensationId) />
                 </div>
 
                 <div>
@@ -145,7 +137,6 @@
                         <option value="@Procurement.A">@Procurement.A.ToString()</option>
                         <option value="@Procurement.B">@Procurement.B.ToString()</option>
                     </InputSelect>
-                    <ValidationMessage For=@(() => CalculationUpdate.Procurement) />
                 </div>
 
                 <div>
@@ -160,7 +151,6 @@
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For=@(() => CalculationUpdate.ProcurementMethodsId) />
                 </div>
             </div>
         }
@@ -172,7 +162,6 @@
                     <div>
                         <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.responsible</label>
                         <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Responsibles[i]" />
-                        <ValidationMessage For=@(() => CalculationUpdate.Responsibles[i]) />
                     </div>
                 }
 
@@ -181,7 +170,6 @@
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                @bind-Value="@CalculationUpdate.Inspector"
                                placeholder="@(CalcResource.inspector)" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Inspector) />
                 </div>
 
                 <div>
@@ -189,7 +177,6 @@
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                @bind-Value="@CalculationUpdate.Supervisor"
                                placeholder="@(ResourceApp.organisation)" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Supervisor) />
                 </div>
             </div>
         }
@@ -207,38 +194,32 @@
                                 <option value="@status.Id">@status.Name</option>
                             }
                         </InputSelect>
-                        <ValidationMessage For=@(() => CalculationUpdate.OrganisationId) />
                     </div>
                 }
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.developer</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Developer" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Developer) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.clientsProjectmanager</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.ClientsManager" />
-                    <ValidationMessage For=@(() => CalculationUpdate.ClientsManager) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@ResourceLoc.designer</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.Designer" />
-                    <ValidationMessage For=@(() => CalculationUpdate.Designer) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.theClientsContactPersonTender</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.ContactPerson" />
-                    <ValidationMessage For=@(() => CalculationUpdate.ContactPerson) />
                 </div>
 
                 <div class="col-span-2">
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.overviewInfoProject</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.OverviewInfo" />
-                    <ValidationMessage For=@(() => CalculationUpdate.OverviewInfo) />
                 </div>
             </div>
         }
@@ -248,37 +229,31 @@
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.startDate</label>
                     <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.StartDate" />
-                    <ValidationMessage For=@(() => CalculationUpdate.StartDate) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.endDate</label>
                     <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.EndDate" />
-                    <ValidationMessage For=@(() => CalculationUpdate.EndDate) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderDeadline</label>
                     <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.TenderDeadline" />
-                    <ValidationMessage For=@(() => CalculationUpdate.TenderDeadline) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.publicationDate</label>
                     <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.PublicationDate" />
-                    <ValidationMessage For=@(() => CalculationUpdate.PublicationDate) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.decisionDate</label>
                     <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.DecisionDate" />
-                    <ValidationMessage For=@(() => CalculationUpdate.DecisionDate) />
                 </div>
 
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.tenderQA</label>
                     <InputDate class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@CalculationUpdate.TenderQA" />
-                    <ValidationMessage For=@(() => CalculationUpdate.TenderQA) />
                 </div>
             </div>
         }

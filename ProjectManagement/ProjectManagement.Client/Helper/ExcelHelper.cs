@@ -1,5 +1,6 @@
 using ClosedXML.Excel;
 using ProjectManagement.Shared.Base.Calculation;
+using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
 using System.Collections.Generic;
 using System.Data;
@@ -130,19 +131,26 @@ namespace ProjectManagement.Client.Helper
                     if (LooksLikeNumber(unit) && IsLikelyUnit(quantityStr))
                         (unit, quantityStr) = (quantityStr, unit);
 
+                    string importedName = LimitText(name, FieldLengths.Name);
+                    string importedCode = LimitText(code, FieldLengths.Code);
+                    string importedUnit = LimitText(unit, FieldLengths.Unit);
+
                     var task = new TaskPostDTO
                     {
-                        Name = !string.IsNullOrWhiteSpace(name) ? name : "Task",
+                        Name = !string.IsNullOrWhiteSpace(importedName) ? importedName : "Task",
                         Tasks = new(),
                         Colspan = false,
                         Metadata = new TaskMetadata
                         {
-                            Code = code,
-                            Unit = unit,
+                            Code = importedCode,
+                            Unit = importedUnit,
                             Type = TaskType.Task,
                             IsOH = isOH
                         }
                     };
+
+                    if (name.Length > FieldLengths.Name)
+                        task.Metadata.Note = LimitText(name, FieldLengths.Note);
 
                     if (string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(priceStr) && string.IsNullOrWhiteSpace(quantityStr))
                     {
@@ -524,6 +532,12 @@ namespace ProjectManagement.Client.Helper
         }
 
         static bool LooksLikeNumber(string text) => TryReadDecimal(text, out _);
+
+        static string LimitText(string text, int maxLength)
+        {
+            text = NormalizeText(text);
+            return text.Length <= maxLength ? text : text[..maxLength];
+        }
 
         static bool TryReadDecimal(string text, out decimal value)
         {

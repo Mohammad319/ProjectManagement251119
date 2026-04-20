@@ -102,7 +102,7 @@ namespace Domain.Entities.Calculation
         {
             ArgumentNullException.ThrowIfNull(dto);
 
-            Name = NormalizeRequired(dto.Name, "Task name is required.");
+            Name = NormalizeRequired(dto.Name, "Task name is required.", FieldLengths.Name, nameof(dto.Name));
             Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                 dto.Metadata,
                 dto.Note,
@@ -197,11 +197,13 @@ namespace Domain.Entities.Calculation
         private static TaskMetadata NormalizeMetadata(TaskMetadata? metadata)
             => CalculationItemMetadataMapper.CloneTaskMetadata(metadata);
 
-        private static string NormalizeRequired(string? value, string errorMessage)
+        private static string NormalizeRequired(string? value, string errorMessage, int maxLength, string fieldName)
         {
             var trimmed = value?.Trim();
             if (string.IsNullOrWhiteSpace(trimmed))
                 throw new ValidationException(errorMessage);
+            if (trimmed.Length > maxLength)
+                throw new ValidationException($"{fieldName} cannot exceed {maxLength} characters.");
             return trimmed;
         }
 

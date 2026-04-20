@@ -27,19 +27,18 @@
     }
 
     <DataAnnotationsValidator />
+    <FormValidationSummary />
 
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[180px_minmax(0,1fr)]">
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.code</label>
                 <InputText @bind-Value="TaskUpdate.Metadata.Code" class="@InputClass" />
-                <ValidationMessage For="@(() => TaskUpdate.Metadata.Code)" />
             </div>
 
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.name </label>
                 <InputText @bind-Value="TaskUpdate.Name" class="@InputClass" />
-                <ValidationMessage For="@(() => TaskUpdate.Name)" />
             </div>
         </div>
     </MhdCard>
@@ -80,13 +79,11 @@
                             <InputNumber @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
                         </div>
                     }
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.BaseQuantity)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-4 xl:col-span-3">
                     <label class="@LabelClass">@CalcResource.unit</label>
                     <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.Unit)" />
                 </div>
 
                 @if (ShowTaskCapInput || true)
@@ -94,7 +91,6 @@
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.cap </label>
                         <InputNumber @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
-                        <ValidationMessage For="@(() => TaskUpdate.Metadata.Cap)" />
                     </div>
                 }
 
@@ -103,7 +99,6 @@
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.changeFactor1</label>
                         <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@InputClass" />
-                        <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor1)" />
                     </div>
                 }
 
@@ -117,55 +112,36 @@
                     {
                         <InputNumber @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
                     }
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.ChangeFactor2)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["actuallyQuantity"]</label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.ActuallyQuantity)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["workedQuantity"]</label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.WorkedQ)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.priceProduction</label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.PriceProductionDB" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceProductionDB)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.priceSub </label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.PriceSubDB)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.minPrice </label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.MinPrice)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.ceilingPrice </label>
                     <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.CeilingPrice)" />
-                </div>
-            }
-
-            @if (Task.Resources == null || Task.Resources.Count == 0 || Task.Type == TaskType.CodeName)
-            {
-               
-                <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-3">
-                    <label class="@CheckboxCardClass">
-                        <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText"
-                                       class="@CheckboxClass" />
-                        <span>@AppLoc["onlyCodeText"]</span>
-                    </label>
                 </div>
             }
         </div>
@@ -187,7 +163,6 @@
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For="@(() => TaskUpdate.StatusId)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-8 xl:col-span-5">
@@ -202,13 +177,11 @@
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For="@(() => TaskUpdate.OpportunityId)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-6 xl:col-span-4">
                     <label class="@LabelClass">@CalcResource.responsible</label>
                     <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@InputClass" />
-                    <ValidationMessage For="@(() => TaskUpdate.Metadata.Responsible)" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
@@ -224,7 +197,18 @@
                         <span>@CalcResource.active</span>
                     </label>
                 </div>
-
+                
+                @if (Task.Resources == null || Task.Resources.Count == 0 || Task.Type == TaskType.CodeName)
+                {
+               
+                    <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-3">
+                        <label class="@CheckboxCardClass">
+                            <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText"
+                                           class="@CheckboxClass" />
+                            <span>@AppLoc["onlyCodeText"]</span>
+                        </label>
+                    </div>
+                }
             </div>
         </MhdCard>
     }
@@ -310,7 +294,6 @@
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.note </label>
                 <InputTextArea @bind-Value="TaskUpdate.Metadata.Note" class="@TextAreaClass" />
-                <ValidationMessage For="@(() => TaskUpdate.Metadata.Note)" />
             </div>
 
             <div class="md:pt-7">

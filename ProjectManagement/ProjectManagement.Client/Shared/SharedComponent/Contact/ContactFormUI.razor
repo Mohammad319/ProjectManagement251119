@@ -5,40 +5,33 @@
 @inherits AppComponentBase
 
 <EditForm id="UnderContactForm" class="space-y-3" Model="@underContact" OnValidSubmit=" ()=> SubmitAsync()">
-    <div>
-        <DataAnnotationsValidator />
-    </div>
+    <DataAnnotationsValidator />
+    <FormValidationSummary />
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.firstname</label>
             <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.FirstName" />
-            <ValidationMessage For=@(() => underContact.FirstName) />
         </div>
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.lastname</label>
             <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.LastName" />
-            <ValidationMessage For=@(() => underContact.LastName) />
         </div>
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.mobile</label>
             <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Mobile" />
-            <ValidationMessage For=@(() => underContact.Mobile) />
         </div>
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.phone</label>
             <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Telefone" />
-            <ValidationMessage For=@(() => underContact.Telefone) />
         </div>
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceIdentity.email</label>
             <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Email" />
-            <ValidationMessage For=@(() => underContact.Email) />
         </div>
 
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.department</label>
             <InputText class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Department" />
-            <ValidationMessage For=@(() => underContact.Department) />
         </div>
 
         <div>
@@ -49,12 +42,10 @@
                     <option value="@level">@level.ToString()</option>
                 }
             </InputSelect>
-            <ValidationMessage For=@(() => underContact.Status) />
         </div>
         <div class="md:col-span-2">
             <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.note</label>
             <InputTextArea rows="2" class="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" @bind-Value="@underContact.Note" />
-            <ValidationMessage For=@(() => underContact.Note) />
         </div>
         <div class="md:col-span-2 flex items-center gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
             <button type="submit" class="inline-flex items-center justify-center rounded-md border border-emerald-600 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-900/30" form="UnderContactForm">

@@ -18,7 +18,7 @@ else if (ProjectUpdate is not null)
               OnValidSubmit="HandleSubmitAsync">
 
         <DataAnnotationsValidator />
-        <ValidationSummary class="mb-2 text-red-600" />
+        <FormValidationSummary />
 
         <!-- التابات -->
         <MhdTabs Items="@TabItems"
@@ -33,12 +33,10 @@ else if (ProjectUpdate is not null)
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.code</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Code" />
-                    <ValidationMessage For=@(() => ProjectUpdate.Code) />
                 </div>
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.name</label>
                     <InputText class="w-full rounded border border-gray-300 px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white" @bind-Value="@ProjectUpdate.Name" />
-                    <ValidationMessage For=@(() => ProjectUpdate.Name) />
                 </div>
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.projectType</label>
@@ -52,7 +50,6 @@ else if (ProjectUpdate is not null)
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For=@(() => ProjectUpdate.TypeId) />
                 </div>
             </div>
         }
@@ -84,7 +81,6 @@ else if (ProjectUpdate is not null)
                             }
                         }
                     </InputSelect>
-                    <ValidationMessage For=@(() => ProjectUpdate.CompensationId) />
                 </div>
                 <div>
                     <label class="mb-0 block text-sm font-normal text-gray-700 dark:text-gray-300">@CalcResource.procurement</label>
