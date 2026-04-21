@@ -49,6 +49,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
     private bool _reloadPending;
     private bool _jsSyncPending = true;
     private bool _collapseScrollClampPending;
+    private int _virtualizeRenderKey;
     private bool _disposed;
 
     private static readonly IReadOnlyDictionary<NetColumnId, int> DefaultWidths =
@@ -184,6 +185,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
             {
                 Calc.AllFlatItems = Calc.BuildFlatList();
                 Calc.FlatListDirty = false;
+                _virtualizeRenderKey++;
                 var needed = GetStartColumnWidth(Calc.MaxDepth);
                 if (Template.StartCol1 < needed)
                     Template.StartCol1 = needed;
@@ -305,6 +307,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         Calc.ExecuteCalculation();
         Calc.AllFlatItems = Calc.BuildFlatList();
         Calc.FlatListDirty = false;
+        _virtualizeRenderKey++;
         _collapseScrollClampPending = true;
         if (virtualizeComponent != null)
             await virtualizeComponent.RefreshDataAsync();
@@ -326,6 +329,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
 
         Calc.AllFlatItems = Calc.BuildFlatList();
         Calc.FlatListDirty = false;
+        _virtualizeRenderKey++;
         var neededWidth = GetStartColumnWidth(Calc.MaxDepth);
         if (Template.StartCol1 < neededWidth)
             Template.StartCol1 = neededWidth;

@@ -105,7 +105,8 @@
                     </tr>
                 }
 
-                <Virtualize @ref="virtualizeComponent"
+                <Virtualize @key="_virtualizeRenderKey"
+                            @ref="virtualizeComponent"
                             SpacerElement="tr"
                             TItem="FlatItem"
                             Context="item"
