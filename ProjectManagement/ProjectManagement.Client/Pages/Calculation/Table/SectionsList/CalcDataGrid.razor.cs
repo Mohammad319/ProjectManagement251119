@@ -196,6 +196,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
                 CalcService.NotifyGridViewMaterialized();
 
             _jsSyncPending = true;
+            _collapseScrollClampPending = true;
             await InvokeAsync(StateHasChanged);
         }
         finally
@@ -304,6 +305,7 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         Calc.ExecuteCalculation();
         Calc.AllFlatItems = Calc.BuildFlatList();
         Calc.FlatListDirty = false;
+        _collapseScrollClampPending = true;
         if (virtualizeComponent != null)
             await virtualizeComponent.RefreshDataAsync();
         await InvokeAsync(StateHasChanged);

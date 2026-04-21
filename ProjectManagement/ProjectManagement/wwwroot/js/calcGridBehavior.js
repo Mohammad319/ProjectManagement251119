@@ -1,10 +1,62 @@
 window.clampCalcGridScroll = function () {
-    const el = document.querySelector('.divNetCalc');
-    if (!el) return;
-    const maxScroll = el.scrollHeight - el.clientHeight;
-    if (el.scrollTop > maxScroll) {
-        el.scrollTop = Math.max(0, maxScroll);
+    const table = document.getElementById('resizeMe');
+    const primaryContainer = table?.closest('.divNetCalc');
+    const containers = [];
+
+    if (primaryContainer) {
+        containers.push(primaryContainer);
     }
+
+    document.querySelectorAll('.divNetCalc').forEach(function (el) {
+        if (!containers.includes(el)) {
+            containers.push(el);
+        }
+    });
+
+    if (containers.length === 0) return;
+
+    const clampElement = function (el) {
+        const maxTop = Math.max(0, el.scrollHeight - el.clientHeight);
+        const maxLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+        let changed = false;
+
+        if (el.scrollTop > maxTop) {
+            el.scrollTop = maxTop;
+            changed = true;
+        } else if (el.scrollTop < 0) {
+            el.scrollTop = 0;
+            changed = true;
+        }
+
+        if (el.scrollLeft > maxLeft) {
+            el.scrollLeft = maxLeft;
+            changed = true;
+        } else if (el.scrollLeft < 0) {
+            el.scrollLeft = 0;
+            changed = true;
+        }
+
+        if (changed) {
+            el.dispatchEvent(new Event('scroll', { bubbles: true }));
+        }
+    };
+
+    const clamp = function () {
+        containers.forEach(clampElement);
+    };
+
+    const clampForFrames = function (remainingFrames) {
+        clamp();
+        if (remainingFrames <= 0) return;
+
+        window.requestAnimationFrame(function () {
+            clampForFrames(remainingFrames - 1);
+        });
+    };
+
+    clampForFrames(3);
+    window.setTimeout(clamp, 50);
+    window.setTimeout(clamp, 150);
 };
 
 function preventSelectAll(table) {

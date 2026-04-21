@@ -5,13 +5,15 @@
     height: 100%;
     min-height: 0;
     background-color: var(--net-surface, #fafafa);
+    overflow: hidden; /* ← أضف هذا */
 }
 
 .divNetCalc {
     display: block;
     flex: 1 1 auto;
     width: 100%;
-    height: auto;
+    /* احذف: height: auto; */
+    max-height: 100%; /* ← أضف هذا */
     min-height: 0;
     overflow: auto;
     background-color: var(--net-surface, #fafafa);
