@@ -612,6 +612,7 @@ namespace Persistence.Service.CalculationItems.Task
             await using var context = await dbFactory.CreateDbContextAsync(ct);
 
             var tasks = await RecursiveTasksCte.Query(context, rootTaskId, sourceCalcId)
+                .AsNoTracking()
                 .ToListAsync(ct);
 
             if (tasks == null || tasks.Count == 0)

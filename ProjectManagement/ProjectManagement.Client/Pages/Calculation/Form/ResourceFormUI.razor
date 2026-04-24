@@ -1,4 +1,5 @@
 ﻿@* ﻿@implements IDisposable *@
+@implements IDisposable
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 @using BlazorMHD.UI.Components.Data.Card
 @using ProjectManagement.Client.Shared.MVVM.Calculation
@@ -29,7 +30,8 @@
     </div>
 }
 
-<EditForm id="@DialogFormId"
+<EditForm @key="editContext"
+          id="@DialogFormId"
           EditContext="editContext!"
           OnValidSubmit="HandleSubmitAsync">
 

@@ -151,7 +151,7 @@ namespace ProjectManagement.Components.ControlComponents.Organisation.Organisati
         private void ValidateNameOnly()
         {
             NameValidationError = string.IsNullOrWhiteSpace(PostCompany.Name)
-                ? ResLocalize.FieldIsRequred
+                ? string.Format(ResLocalize.FieldIsRequred, nameof(PostCompany.Name))
                 : null;
         }
     }

@@ -1,13 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using ProjectManagement.Client.Shared.Components;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
+using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.DTO.ResourceType;
 
 namespace ProjectManagement.Client.Pages.Calculation.Form
 {
-    partial class ResourceFormUI
+    partial class ResourceFormUI : IDisposable
     {
         public const string DialogFormId = "resForm";
         private ResourceMetadata ResourceData => ResourceUpdate.Data;
@@ -293,6 +295,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             ResourceUpdate = new();
             ResourceUpdate.Data = new ResourceMetadata();
             editContext = new(ResourceUpdate);
+            editContext.SetFieldCssClassProvider(RequiredFieldCssClassProvider.Instance);
             editContext.OnValidationRequested += HandleValidationRequested;
             editContext.OnFieldChanged += HandleFieldChanged;
             messageStore = new(editContext);
@@ -322,10 +325,29 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
         bool Refresh = false;
         private EditContext? editContext;
         private ValidationMessageStore? messageStore;
+        private FieldIdentifier FixedQuantityField => new(ResourceUpdate.Data, nameof(ResourceMetadata.Quantity));
+
+        private bool IsFixedQuantityRequired()
+            => string.Equals(ResourceUpdate.Data.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase);
+
+        private void ClearFixedQuantityValidation()
+            => messageStore?.Clear(FixedQuantityField);
+
+        private void ValidateFixedQuantity()
+        {
+            if (IsFixedQuantityRequired() && !ResourceUpdate.Data.Quantity.HasValue)
+            {
+                messageStore?.Add(
+                    FixedQuantityField,
+                    string.Format(ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred, CalcResource.quantity));
+            }
+        }
+
         private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
         {
             messageStore?.Clear();
             SyncResolvedResourceAndTimes();
+            ValidateFixedQuantity();
             if (ResourceUpdate.ResType == ResourceTypesEnum.Materials && (ResourceUpdate.Data.CapWaste < 0) || ResourceUpdate.Data.CapWaste > 999)
             {
                 messageStore?.Add(() => ResourceUpdate.Data.CapWaste, ResourceApp.rangeErrors);
@@ -340,6 +362,13 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
                 && IsResourceQuantityDriver(args.FieldIdentifier.FieldName))
             {
                 SyncResolvedResourceAndTimes();
+
+                if (args.FieldIdentifier.FieldName is nameof(ResourceMetadata.Quantity) or nameof(ResourceMetadata.QuantityParam))
+                {
+                    ClearFixedQuantityValidation();
+                    editContext?.NotifyValidationStateChanged();
+                }
+
                 return;
             }
 

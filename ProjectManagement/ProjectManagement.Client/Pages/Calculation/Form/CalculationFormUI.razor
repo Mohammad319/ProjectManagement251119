@@ -16,8 +16,9 @@
 @if (CalculationUpdate != null)
 {
     <EditForm id="@DialogFormId"
+              @key="editContext"
               class="space-y-0"
-              Model="@CalculationUpdate"
+              EditContext="editContext!"
               OnValidSubmit="async () => await HandleSubmitAsync()">
 
         <DataAnnotationsValidator />
@@ -333,6 +334,7 @@
 
     CalculationPostDTO CalculationUpdate = new();
     GetProjectCalcConfigDTO? Config;
+    private EditContext? editContext;
 
     private int Part { get; set; } = 1;
 
@@ -365,6 +367,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ResetEditContext();
+
         if (Calculation.Id > 0)
         {
             CalculationUpdate = await Repo.Calculation.GetPostAsync(Calculation.Id) ?? new CalculationPostDTO();
@@ -382,6 +386,14 @@
                 CalculationUpdate.TypeId,
                 CalculationUpdate.StatusId
             );
+
+        ResetEditContext();
+    }
+
+    private void ResetEditContext()
+    {
+        editContext = new EditContext(CalculationUpdate);
+        editContext.SetFieldCssClassProvider(RequiredFieldCssClassProvider.Instance);
     }
 
     async Task HandleSubmitAsync()

@@ -5,10 +5,12 @@
 @using ProjectManagement.Shared.DTO.Calculation
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 @inherits AppComponentBase
+@implements IDisposable
 
 
-<EditForm id="@DialogFormId"
-          Model="@TaskUpdate"
+<EditForm @key="editContext"
+          id="@DialogFormId"
+          EditContext="editContext!"
           OnValidSubmit="async()=> await HandleSubmitAsync()">
 
     @if (Task.Id == 0 && PostList.Count > 1)
@@ -19,7 +21,7 @@
                 {
                     int x = i;
                     <li class="nav-item" role="presentation">
-                        <button @onclick="() => TaskUpdate = PostList[x]" class="nav-link active" type="button" role="tab">@(i + 1)</button>
+                        <button @onclick="() => SetActiveTask(PostList[x])" class="nav-link active" type="button" role="tab">@(i + 1)</button>
                     </li>
                 }
             </ul>
@@ -71,7 +73,7 @@
 
                             @if (TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ)
                             {
-                                <InputNumber @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
+                                <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
                             }
                         </div>
                     }
@@ -79,7 +81,7 @@
                     {
                         <div class="grid items-start gap-1.5 grid-cols-[7.25rem_minmax(0,1fr)]">
                             <input class="@DisabledInputClass" value="@CalcResource.fixedQ" disabled />
-                            <InputNumber @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
+                            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
                         </div>
                     }
                 </div>
@@ -93,7 +95,7 @@
                 {
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.cap </label>
-                        <InputNumber @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
+                        <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
                     </div>
                 }
 
@@ -119,32 +121,32 @@
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["actuallyQuantity"]</label>
-                    <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ActuallyQuantity" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal?" @bind-Value="_actuallyQuantity" class="@InputClass" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@AppLoc["workedQuantity"]</label>
-                    <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.WorkedQ" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal?" @bind-Value="_workedQ" class="@InputClass" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.priceProduction</label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceProductionDB" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.PriceProductionDB" class="@InputClass" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.priceSub </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.minPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
                 </div>
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.ceilingPrice </label>
-                    <InputNumber @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
+                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
                 </div>
             }
         </div>
@@ -271,7 +273,8 @@
                                 </div>
                                 <div class="min-w-0">
                                     <label class="@LabelClass">Värde</label>
-                                    <InputNumber @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Value"
+                                    <TrimmedNumberInput TValue="decimal"
+                                                 @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Value"
                                                  class="@InputClass"
                                                  @bind-Value:after="RecalculateConversionFactor" />
                                 </div>
@@ -334,7 +337,7 @@
     <div class="mt-1 flex flex-wrap justify-end gap-2">
         @if (PostList.Count > 1)
         {
-            <button type="button" class="@OutlineRedButtonClass" @onclick="() => PostList.Remove(TaskUpdate)">@ResourceApp.delete</button>
+            <button type="button" class="@OutlineRedButtonClass" @onclick="RemoveCurrentTask">@ResourceApp.delete</button>
         }
         <button type="button" class="@OutlineBlueButtonClass" @onclick="NewSP">@ResourceApp.newItem</button>
     </div>
@@ -359,17 +362,73 @@
     List<ListOrderDTO>? Statuses;
     [Parameter] public TaskListMVVM Task { get; set; } = default!;
     TaskPostDTO TaskUpdate = new();
+    private EditContext? editContext;
+
+    // Nullable wrappers: empty field = treat as 0 in calculations
+    private decimal? _actuallyQuantity;
+    private decimal? _workedQ;
+
+    private void SyncMetadataToWrappers()
+    {
+        _actuallyQuantity = TaskUpdate.Metadata.ActuallyQuantity == 0m ? null : TaskUpdate.Metadata.ActuallyQuantity;
+        _workedQ = TaskUpdate.Metadata.WorkedQ == 0m ? null : TaskUpdate.Metadata.WorkedQ;
+    }
+
+    private void SyncWrappersToMetadata()
+    {
+        TaskUpdate.Metadata.ActuallyQuantity = _actuallyQuantity ?? 0m;
+        TaskUpdate.Metadata.WorkedQ = _workedQ ?? 0m;
+    }
+    private ValidationMessageStore? messageStore;
     private bool HasTaskAbove => HasParentTask(TaskUpdate);
     private bool ParentIsOnlyCodeText => IsParentOnlyCodeText(TaskUpdate);
     private bool ShowExpandedTaskQuantity => !HasTaskAbove || TaskUpdate.Metadata.QuantityParam == ConstValues.FixedQ;
     private bool ShowTaskCapInput => CanEditTaskCap(Task?.Resources);
+    private FieldIdentifier BaseQuantityField => new(TaskUpdate.Metadata, nameof(TaskMetadata.BaseQuantity));
 
     void NewSP()
     {
         TaskPostDTO p = new();
         TaskUpdate.CopyPropertiesTo(p);
         ApplyTaskFormRules(p);
+        EnsureConversionParameters(p);
+        EnsureBaseQuantity(p);
+
+        if (p.Metadata.ConversionParameters.Any() && string.IsNullOrWhiteSpace(p.Metadata.BaseUnit))
+            p.Metadata.BaseUnit = p.Metadata.Unit;
+
+        if (p.Metadata.ConversionParameters.Any())
+            p.Metadata.SyncConversionFactorFromParameters();
+
         PostList.Insert(0, p);
+        SetActiveTask(p);
+    }
+
+    private void SetActiveTask(TaskPostDTO task)
+    {
+        if (ReferenceEquals(TaskUpdate, task) && editContext is not null)
+            return;
+
+        SyncWrappersToMetadata();
+        DetachEditContext();
+        TaskUpdate = task;
+        SyncMetadataToWrappers();
+        ConfigureEditContext();
+    }
+
+    private void RemoveCurrentTask()
+    {
+        if (PostList.Count <= 1)
+            return;
+
+        var index = PostList.IndexOf(TaskUpdate);
+        if (index < 0)
+            return;
+
+        PostList.RemoveAt(index);
+
+        if (PostList.Count > 0)
+            SetActiveTask(PostList[Math.Clamp(index - 1, 0, PostList.Count - 1)]);
     }
 
     private void ChangeQuantityParam(string qp)
@@ -389,20 +448,20 @@
             TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Metadata.Quantity;
     }
 
-    private void EnsureConversionParameters()
+    private static void EnsureConversionParameters(TaskPostDTO task)
     {
-        TaskUpdate.Metadata.ConversionParameters ??= [];
+        task.Metadata.ConversionParameters ??= [];
     }
 
-    private void EnsureBaseQuantity()
+    private static void EnsureBaseQuantity(TaskPostDTO task)
     {
-        if (!TaskUpdate.Metadata.BaseQuantity.HasValue && TaskUpdate.Metadata.Quantity.HasValue)
-            TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Metadata.Quantity;
+        if (!task.Metadata.BaseQuantity.HasValue && task.Metadata.Quantity.HasValue)
+            task.Metadata.BaseQuantity = task.Metadata.Quantity;
     }
 
     private void AddConversionParameter()
     {
-        EnsureConversionParameters();
+        EnsureConversionParameters(TaskUpdate);
 
         if (!TaskUpdate.Metadata.BaseQuantity.HasValue)
             TaskUpdate.Metadata.BaseQuantity = TaskUpdate.Metadata.Quantity;
@@ -475,12 +534,14 @@
         TaskUpdate = TaskConvert.GetToPost(Task);
         TaskUpdate.OnlyCodeText = TaskUpdate.Metadata.Type == TaskType.CodeName;
         ApplyTaskFormRules(TaskUpdate);
-        EnsureConversionParameters();
-        EnsureBaseQuantity();
+        EnsureConversionParameters(TaskUpdate);
+        EnsureBaseQuantity(TaskUpdate);
         if (TaskUpdate.Metadata.ConversionParameters.Any() && string.IsNullOrWhiteSpace(TaskUpdate.Metadata.BaseUnit))
             TaskUpdate.Metadata.BaseUnit = TaskUpdate.Metadata.Unit;
         RecalculateConversionFactor();
+        ConfigureEditContext();
 
+        SyncMetadataToWrappers();
         if (Task.Id == 0) PostList.Add(TaskUpdate);
         Statuses = (await Repo.Task.GetAsync()).ToList();
         if (Calc.Opportunities == null)
@@ -560,6 +621,65 @@
         //     .Any(group => group.Count() >= 2);
     }
 
+    private void ConfigureEditContext()
+    {
+        editContext = new EditContext(TaskUpdate);
+        editContext.SetFieldCssClassProvider(RequiredFieldCssClassProvider.Instance);
+        editContext.OnValidationRequested += HandleValidationRequested;
+        editContext.OnFieldChanged += HandleFieldChanged;
+        messageStore = new ValidationMessageStore(editContext);
+    }
+
+    private void DetachEditContext()
+    {
+        if (editContext is null)
+            return;
+
+        editContext.OnValidationRequested -= HandleValidationRequested;
+        editContext.OnFieldChanged -= HandleFieldChanged;
+    }
+
+    private bool IsBaseQuantityRequired()
+        => !TaskUpdate.OnlyCodeText
+            && string.Equals(TaskUpdate.Metadata.QuantityParam, ConstValues.FixedQ, StringComparison.OrdinalIgnoreCase);
+
+    private void ClearBaseQuantityValidation()
+        => messageStore?.Clear(BaseQuantityField);
+
+    private void ValidateBaseQuantity()
+    {
+        if (IsBaseQuantityRequired() && !TaskUpdate.Metadata.BaseQuantity.HasValue)
+        {
+            messageStore?.Add(
+                BaseQuantityField,
+                string.Format(ProjectManagement.Shared.Resource.ResLocalize.FieldIsRequred, CalcResource.quantity));
+        }
+    }
+
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
+    {
+        messageStore?.Clear();
+        ValidateBaseQuantity();
+    }
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs args)
+    {
+        if (ReferenceEquals(args.FieldIdentifier.Model, TaskUpdate.Metadata)
+            && args.FieldIdentifier.FieldName is nameof(TaskMetadata.BaseQuantity) or nameof(TaskMetadata.QuantityParam))
+        {
+            ClearBaseQuantityValidation();
+            editContext?.NotifyValidationStateChanged();
+            return;
+        }
+
+        if (ReferenceEquals(args.FieldIdentifier.Model, TaskUpdate)
+            && args.FieldIdentifier.FieldName == nameof(TaskPostDTO.OnlyCodeText))
+        {
+            ClearBaseQuantityValidation();
+            editContext?.NotifyValidationStateChanged();
+        }
+    }
+
     async Task HandleSubmitAsync()
     {
         if (btnSubmitDisabled)
@@ -571,12 +691,14 @@
         {
             if (Task.Id > 0)
             {
+                SyncWrappersToMetadata();
                 CheckTaskType(TaskUpdate);
                 SyncQuantityForSave(TaskUpdate);
                 hasSuccess = await Repo.Task.UpdateAsync(TaskUpdate, Task.Id);
             }
             else
             {
+                SyncWrappersToMetadata();
                 int maxOrder = 0;
                 var siblingTasks = Calc.Tasks.Where(x => x.TaskId == Task.TaskId).ToList();
                 if (siblingTasks.Count > 0)
@@ -598,6 +720,11 @@
             Console.WriteLine(ex.Message);
         }
         Close();
+    }
+
+    public void Dispose()
+    {
+        DetachEditContext();
     }
 
     void Close() => Modal.Close();

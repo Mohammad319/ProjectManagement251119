@@ -1,0 +1,19 @@
+::deep input.required-empty,
+::deep select.required-empty,
+::deep textarea.required-empty,
+::deep input.invalid,
+::deep select.invalid,
+::deep textarea.invalid {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.12);
+}
+
+::deep input.required-empty:focus,
+::deep select.required-empty:focus,
+::deep textarea.required-empty:focus,
+::deep input.invalid:focus,
+::deep select.invalid:focus,
+::deep textarea.invalid:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18);
+}

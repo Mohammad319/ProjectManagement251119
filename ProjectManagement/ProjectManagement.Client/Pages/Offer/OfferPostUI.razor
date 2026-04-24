@@ -1,110 +1,90 @@
-﻿@inherits AppComponentBase
+@inherits AppComponentBase
 <EditForm Model="PostOffer"
-          class="space-y-4"
           OnValidSubmit="async () => await HandleSubmitAsync()"
           id="myFormOffer">
 
     <DataAnnotationsValidator />
     <FormValidationSummary />
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <!-- Cost -->
-        <div class="flex flex-col gap-1">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                @CalcResource.cost:
-            </label>
-            <InputNumber @bind-Value="@PostOffer.Cost"
-                         class="w-full rounded border border-gray-300 px-2 py-1 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-blue-500
-                                dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
-        </div>
+    <div class="flex flex-col gap-2 p-3">
 
-        <!-- Base Cost -->
-        <div class="flex flex-col gap-1">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                @CalcResource.baseCost:
-            </label>
-            <InputNumber @bind-Value="@PostOffer.BaseCost"
-                         class="w-full rounded border border-gray-300 px-2 py-1 text-sm
-                                focus:outline-none focus:ring-2 focus:ring-blue-500
-                                dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
-        </div>
+        <!-- Row 1: Cost · BaseCost · Status · Organisation · Contact -->
+        <div class="flex flex-wrap gap-2 items-end">
 
-        <div class="flex flex-col gap-1">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                @CalcResource.status:
-            </label>
-            <InputSelect @bind-Value="PostOffer.Status"
-                         class="w-full rounded border border-gray-300 px-2 py-1 text-sm bg-white
-                                focus:outline-none focus:ring-2 focus:ring-blue-500
-                                dark:bg-gray-800 dark:text-white dark:border-gray-600">
-                <option value=""></option>
-                @foreach (var status in OfferStatuses)
-                {
-                    <option value="@status">@status</option>
-                }
-            </InputSelect>
-        </div>
-
-        @if (Organisations != null)
-        {
-            <!-- Organisation -->
-            <div class="flex flex-col gap-1">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                    @ResourceApp.organisation
-                </label>
-                <select class="w-full rounded border border-gray-300 px-2 py-1 text-sm bg-white
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500
-                                   dark:bg-gray-800 dark:text-white dark:border-gray-600"
-                        @onchange="(e) => OnChangeCompany(e)">
-                    <option value=""></option>
-                    @foreach (var cat in Organisations)
-                    {
-                        <option value="@cat.Id" selected="@(cat.Id == PostOffer.OrganisationId)">
-                            @cat.Name
-                        </option>
-                    }
-                </select>
+            <div class="flex-1 min-w-0">
+                <label class="block mb-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">@CalcResource.cost</label>
+                <InputNumber @bind-Value="@PostOffer.Cost"
+                             class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100" />
             </div>
 
-            @if (Contacts != null)
+            <div class="flex-1 min-w-0">
+                <label class="block mb-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">@CalcResource.baseCost</label>
+                <InputNumber @bind-Value="@PostOffer.BaseCost"
+                             class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100" />
+            </div>
+
+            <div class="flex-1 min-w-0">
+                <label class="block mb-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">@CalcResource.status</label>
+                <InputSelect @bind-Value="PostOffer.Status"
+                             class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
+                    <option value=""></option>
+                    @foreach (var status in OfferStatuses)
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </InputSelect>
+            </div>
+
+            @if (Organisations != null)
             {
-                <!-- Contact -->
-                <div class="flex flex-col gap-1">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                        @ResourceApp.UnderContactCompany
-                    </label>
-                    <InputSelect @bind-Value="PostOffer.Contact"
-                                 class="w-full rounded border border-gray-300 px-2 py-1 text-sm bg-white
-                                                focus:outline-none focus:ring-2 focus:ring-blue-500
-                                                dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <div class="flex-1 min-w-0">
+                    <label class="block mb-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">@ResourceApp.organisation</label>
+                    <select class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
+                            @onchange="(e) => OnChangeCompany(e)">
                         <option value=""></option>
-                        @foreach (var cat in Contacts)
+                        @foreach (var cat in Organisations)
                         {
-                            <option value="@cat.GetFullName()">@cat.GetFullName()</option>
+                            <option value="@cat.Id" selected="@(cat.Id == PostOffer.OrganisationId)">@cat.Name</option>
                         }
-                    </InputSelect>
+                    </select>
                 </div>
+
+                @if (Contacts != null)
+                {
+                    <div class="flex-1 min-w-0">
+                        <label class="block mb-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">@ResourceApp.UnderContactCompany</label>
+                        <InputSelect @bind-Value="PostOffer.Contact"
+                                     class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100">
+                            <option value=""></option>
+                            @foreach (var cat in Contacts)
+                            {
+                                <option value="@cat.GetFullName()">@cat.GetFullName()</option>
+                            }
+                        </InputSelect>
+                    </div>
+                }
             }
-        }
-
-        <!-- Comment / Notes: صف مستقل وعريض -->
-        <div class="flex flex-col gap-1 md:col-span-4">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                @CalcResource.comment:
-            </label>
-
-            <InputTextArea @bind-Value="@PostOffer.Comment"
-                           class="w-full rounded border border-gray-300 px-2 py-2 text-sm
-                                  min-h-20 resize-y
-                                  focus:outline-none focus:ring-2 focus:ring-blue-500
-                                  dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
-
         </div>
+
+        <!-- Row 2: Comment -->
+        <div>
+            <label class="block mb-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">@CalcResource.comment</label>
+            <InputTextArea @bind-Value="@PostOffer.Comment"
+                           rows="2"
+                           class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 resize-none focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100" />
+        </div>
+
     </div>
 </EditForm>
 
-<div class="mt-4 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-700 pt-3">
-    <button type="submit" form="myFormOffer" disabled="@IsLoading" class="inline-flex items-center justify-center rounded-md border border-emerald-600 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 dark:border-emerald-400 dark:text-emerald-300 dark:hover:bg-emerald-900/30 disabled:cursor-not-allowed disabled:opacity-60 mx-sm-2" style="margin-right:5px;">@ResourceApp.save</button>
-    <button type="button" class="inline-flex items-center justify-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" @onclick=" Modal.Close">@ResourceApp.cancel</button>
+<div class="flex items-center justify-end gap-2 border-t border-slate-200 dark:border-slate-700 px-3 py-2">
+    <button type="submit" form="myFormOffer" disabled="@IsLoading"
+            class="inline-flex items-center gap-1 rounded bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 dark:bg-emerald-500 dark:hover:bg-emerald-400 transition-colors">
+        @ResourceApp.save
+    </button>
+    <button type="button"
+            class="inline-flex items-center gap-1 rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
+            @onclick="Modal.Close">
+        @ResourceApp.cancel
+    </button>
 </div>

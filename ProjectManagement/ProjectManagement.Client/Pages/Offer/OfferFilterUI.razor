@@ -1,23 +1,26 @@
-﻿@using ProjectManagement.Client.Services.Calculation.CalculationItems
+@using ProjectManagement.Client.Services.Calculation.CalculationItems
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Shared.Enums
 @inherits AppComponentBase
 
-<div class="p-4 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 space-y-3">
+<div class="flex flex-col gap-3 p-3 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100">
 
-    <!-- نموذج الفلترة -->
-    <EditForm id="filterForm" Model="@Filter">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-            @* Folder *@
-            @if (FoldersList != null && FoldersList.Count > 0)
-            {
-                <div class="md:col-span-2">
-                    <div class="flex flex-col gap-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                            @ResourceLoc.folder
-                        </label>
+    <!-- Filter Card -->
+    <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+        <div class="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700">
+            <span class="text-indigo-500 dark:text-indigo-400 flex-shrink-0" style="width:14px;height:14px;display:inline-flex">@((MarkupString)Icons.Search)</span>
+            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@ResourceApp.filter</span>
+        </div>
 
-                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        <EditForm id="filterForm" Model="@Filter">
+            <div class="p-3 flex flex-row flex-wrap gap-2 items-end">
+
+                @* Folder *@
+                @if (FoldersList != null && FoldersList.Count > 0)
+                {
+                    <div class="flex-1 min-w-0">
+                        <label class="block mb-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">@ResourceLoc.folder</label>
+                        <InputSelect class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                                      @bind-Value:get="Filter.FolderID"
                                      @bind-Value:set="(value) => FolderChanged(value)">
                             <option value=""></option>
@@ -27,19 +30,14 @@
                             }
                         </InputSelect>
                     </div>
-                </div>
-            }
+                }
 
-            @* Project *@
-            @if (Projects != null && Projects.Count > 0)
-            {
-                <div class="md:col-span-2">
-                    <div class="flex flex-col gap-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                            @CalcResource.project
-                        </label>
-
-                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                @* Project *@
+                @if (Projects != null && Projects.Count > 0)
+                {
+                    <div class="flex-1 min-w-0">
+                        <label class="block mb-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">@CalcResource.project</label>
+                        <InputSelect class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                                      @bind-Value:get="Filter.ProjectID"
                                      @bind-Value:set="(value) => ProjectChanged(value)">
                             <option value=""></option>
@@ -49,19 +47,14 @@
                             }
                         </InputSelect>
                     </div>
-                </div>
-            }
+                }
 
-            @* Calculation *@
-            @if (Calcs != null && Calcs.Count > 0)
-            {
-                <div class="md:col-span-2">
-                    <div class="flex flex-col gap-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                            @CalcResource.calculation
-                        </label>
-
-                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                @* Calculation *@
+                @if (Calcs != null && Calcs.Count > 0)
+                {
+                    <div class="flex-1 min-w-0">
+                        <label class="block mb-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">@CalcResource.calculation</label>
+                        <InputSelect class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                                      @bind-Value:get="Filter.CalculationID"
                                      @bind-Value:set="(value) => CalcChanged(value)">
                             <option value="0"></option>
@@ -71,17 +64,12 @@
                             }
                         </InputSelect>
                     </div>
-                </div>
-            }
+                }
 
-            @* Resource Type Enum *@
-            <div class="md:col-span-2">
-                <div class="flex flex-col gap-1">
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                        @CalcResource.resourceType
-                    </label>
-
-                    <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                @* Resource Type Enum *@
+                <div class="flex-1 min-w-0">
+                    <label class="block mb-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">@CalcResource.resourceType</label>
+                    <InputSelect class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                                  @bind-Value="Filter.ResType">
                         <option></option>
                         @foreach (ResourceTypesEnum level in Enum.GetValues(typeof(ResourceTypesEnum)))
@@ -90,18 +78,13 @@
                         }
                     </InputSelect>
                 </div>
-            </div>
 
-            @* Resource Type from DB *@
-            @if (ResourceTypes != null)
-            {
-                <div class="md:col-span-2">
-                    <div class="flex flex-col gap-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                            @CalcResource.resourceType
-                        </label>
-
-                        <InputSelect class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                @* Resource Type from DB *@
+                @if (ResourceTypes != null)
+                {
+                    <div class="flex-1 min-w-0">
+                        <label class="block mb-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">@CalcResource.resourceType</label>
+                        <InputSelect class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                                      @bind-Value:get="Filter.ResourceTypeId"
                                      @bind-Value:set="(value) => ChangeResType(value)">
                             <option></option>
@@ -111,23 +94,17 @@
                             }
                         </InputSelect>
                     </div>
-                </div>
-            }
+                }
 
-            @* Organisation (datalist) *@
-            @if (Organisations != null)
-            {
-                <div class="md:col-span-2">
-                    <div class="flex flex-col gap-1">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">
-                            @ResourceApp.organisation
-                        </label>
-
+                @* Organisation (datalist) *@
+                @if (Organisations != null)
+                {
+                    <div class="flex-1 min-w-0">
+                        <label class="block mb-0.5 text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">@ResourceApp.organisation</label>
                         <input list="orgList"
                                id="orgInput"
-                               class="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                               class="w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
                                @oninput="OnInputOrgChanged" />
-
                         <datalist id="orgList">
                             <option></option>
                             @foreach (var cat in Organisations)
@@ -136,127 +113,127 @@
                             }
                         </datalist>
                     </div>
+                }
+
+                @* Filter Button *@
+                <div class="flex-shrink-0 flex items-end">
+                    <button type="submit"
+                            form="filterForm"
+                            class="inline-flex items-center gap-1.5 rounded bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400 transition-colors"
+                            @onclick="GetOffersAsync">
+                        @((MarkupString)Icons.Search)
+                        <span>@ResourceApp.filter</span>
+                    </button>
                 </div>
-            }
 
-            @* زر الفلترة *@
-            <div class="md:col-span-2 flex items-end">
-                <button type="submit"
-                        form="filterForm"
-                        class="inline-flex items-center justify-center gap-1 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                        @onclick="GetOffersAsync">
-                    @((MarkupString)Icons.Search)
-                    <span>@ResourceApp.filter</span>
-                </button>
             </div>
-        </div>
-    </EditForm>
+        </EditForm>
+    </div>
 
-<!-- نتائج الفلترة -->
-<div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm">
-    @if (Offers is null || Offers.Count == 0)
-    {
-        <div class="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
-            @ResourceApp.notFoundData
-        </div>
-    }
-    else
-    {
-        <div class="max-h-[55vh] overflow-y-auto overflow-x-auto rounded-lg">
-            <table class="min-w-full text-xs leading-tight text-xs sm:text-sm">
-                <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10">
-                    <tr>
-                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@ResourceApp.organisation</th>
-                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@ResourceLoc.resource</th>
-                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.cost</th>
-                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.baseCost</th>
-                        <th class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-center">@ResourceApp.date</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                    @for (var index = 0; index < Offers.Count; index++)
-                    {
-                        var cat = Offers[index];
-                        var isSelected = SelectedOfferIndex == index;
-                        var isExpanded = ExpandedOfferIndex == index;
+    <!-- Results -->
+    <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
+        @if (Offers is null || Offers.Count == 0)
+        {
+            <div class="flex flex-col items-center justify-center py-10 gap-2 text-slate-400 dark:text-slate-600">
+                <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span class="text-xs">@ResourceApp.notFoundData</span>
+            </div>
+        }
+        else
+        {
+            <div class="flex items-center px-3 py-1.5 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700">
+                <span class="text-[11px] text-slate-400 dark:text-slate-500">
+                    <span class="font-semibold text-slate-600 dark:text-slate-300">@Offers.Count</span>
+                </span>
+            </div>
 
-                        <tr class="transition-colors @(isSelected ? "bg-blue-50 dark:bg-blue-950/40" : "")">
-
-                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200">
-                                <span class="block text-[11px] sm:text-xs text-slate-800 dark:text-slate-100 truncate max-w-xs sm:max-w-sm">
-                                    @(string.IsNullOrEmpty(cat.Organisation)
-                                          ? ""
-                                          : $"{cat.Organisation} > {cat.SubCategory} > {cat.Category}")
-                                </span>
-                            </td>
-
-                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200">
-                                <span class="block text-[11px] sm:text-xs text-slate-700 dark:text-slate-200 truncate max-w-lg">
-                                    @cat.CalcName (@cat.CalcCode)
-                                    &nbsp;&gt;&nbsp;
-                                    @cat.TaskName (@cat.TaskCode)
-                                    &nbsp;&gt;&nbsp;
-                                    @cat.ResName
-                                </span>
-                            </td>
-
-                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
-                                <span class="tabular-nums">@cat.Cost</span>
-                            </td>
-
-                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-right">
-                                <span class="tabular-nums">@cat.BaseCost</span>
-                            </td>
-
-                            <td class="px-2 py-1.5 align-middle text-slate-700 dark:text-slate-200 text-center text-[11px] text-slate-600 dark:text-slate-300">
-                                @cat.Date
-                            </td>
+            <div class="max-h-[52vh] overflow-y-auto overflow-x-auto">
+                <table class="min-w-full text-xs">
+                    <thead class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                            <th class="px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 whitespace-nowrap">@ResourceApp.organisation</th>
+                            <th class="px-2 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 whitespace-nowrap">@ResourceLoc.resource</th>
+                            <th class="px-2 py-1.5 text-right text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 whitespace-nowrap">@CalcResource.cost</th>
+                            <th class="px-2 py-1.5 text-right text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 whitespace-nowrap">@CalcResource.baseCost</th>
+                            <th class="px-2 py-1.5 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500 whitespace-nowrap">@ResourceApp.date</th>
                         </tr>
-
-                        @* صف التفاصيل الموسّعة *@
-                        @if (isExpanded)
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @for (var index = 0; index < Offers.Count; index++)
                         {
-                            <tr class="bg-slate-50 dark:bg-slate-900/70">
-                                <td></td>
-                                <td colspan="6" class="px-2 py-2 text-[11px] sm:text-xs text-slate-700 dark:text-slate-200">
-                                    <div class="flex flex-col gap-1">
-                                        <div>
-                                            <span class="font-semibold">@ResourceApp.organisation:</span>
-                                            <span class="ms-1">
-                                                @(string.IsNullOrEmpty(cat.Organisation)
-                                                      ? "-"
-                                                      : $"{cat.Organisation} > {cat.SubCategory} > {cat.Category}")
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span class="font-semibold">@ResourceLoc.resource:</span>
-                                            <span class="ms-1">
-                                                @cat.CalcName (@cat.CalcCode) &gt; @cat.TaskName (@cat.TaskCode) &gt; @cat.ResName
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <span class="font-semibold">@CalcResource.cost:</span>
-                                            <span class="ms-1 tabular-nums">@cat.Cost</span>
-                                            <span class="mx-1 text-slate-400">/</span>
-                                            <span class="font-semibold">@CalcResource.baseCost:</span>
-                                            <span class="ms-1 tabular-nums">@cat.BaseCost</span>
-                                        </div>
-                                        @* لو فيه حقل تعليق في DTO تقدر تضيفه هنا *@
-                                        @* <div>
-                                            <span class="font-semibold">@CalcResource.comment:</span>
-                                            <span class="ms-1">@cat.Comment</span>
-                                           </div> *@
-                                    </div>
+                            var cat = Offers[index];
+                            var isSelected = SelectedOfferIndex == index;
+                            var isExpanded = ExpandedOfferIndex == index;
+
+                            <tr class="cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/40 @(isSelected ? "bg-indigo-50 dark:bg-indigo-950/40" : "")"
+                                @onclick="() => SelectOfferAsync(index)">
+
+                                <td class="px-2 py-1.5 align-middle">
+                                    <span class="block truncate max-w-[160px] text-slate-700 dark:text-slate-200">
+                                        @(string.IsNullOrEmpty(cat.Organisation)
+                                              ? ""
+                                              : $"{cat.Organisation} > {cat.SubCategory} > {cat.Category}")
+                                    </span>
+                                </td>
+
+                                <td class="px-2 py-1.5 align-middle">
+                                    <span class="block truncate max-w-xs text-slate-700 dark:text-slate-200">
+                                        @cat.CalcName (@cat.CalcCode)
+                                        &nbsp;&gt;&nbsp;
+                                        @cat.TaskName (@cat.TaskCode)
+                                        &nbsp;&gt;&nbsp;
+                                        @cat.ResName
+                                    </span>
+                                </td>
+
+                                <td class="px-2 py-1.5 align-middle text-right">
+                                    <span class="tabular-nums font-medium text-slate-800 dark:text-slate-100">@cat.Cost</span>
+                                </td>
+
+                                <td class="px-2 py-1.5 align-middle text-right">
+                                    <span class="tabular-nums text-slate-500 dark:text-slate-400">@cat.BaseCost</span>
+                                </td>
+
+                                <td class="px-2 py-1.5 align-middle text-center text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                    @cat.Date
                                 </td>
                             </tr>
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
 
+                            @if (isExpanded)
+                            {
+                                <tr class="bg-indigo-50/60 dark:bg-indigo-950/20">
+                                    <td></td>
+                                    <td colspan="4" class="px-3 py-2 text-[11px] text-slate-600 dark:text-slate-300">
+                                        <div class="flex flex-wrap gap-x-4 gap-y-0.5">
+                                            <div>
+                                                <span class="font-semibold text-slate-400 dark:text-slate-500">@ResourceApp.organisation:</span>
+                                                <span class="ms-1">
+                                                    @(string.IsNullOrEmpty(cat.Organisation) ? "-" : $"{cat.Organisation} > {cat.SubCategory} > {cat.Category}")
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-slate-400 dark:text-slate-500">@ResourceLoc.resource:</span>
+                                                <span class="ms-1">@cat.CalcName (@cat.CalcCode) &gt; @cat.TaskName (@cat.TaskCode) &gt; @cat.ResName</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-semibold text-slate-400 dark:text-slate-500">@CalcResource.cost:</span>
+                                                <span class="ms-1 tabular-nums">@cat.Cost</span>
+                                                <span class="mx-2 text-slate-300 dark:text-slate-600">/</span>
+                                                <span class="font-semibold text-slate-400 dark:text-slate-500">@CalcResource.baseCost:</span>
+                                                <span class="ms-1 tabular-nums">@cat.BaseCost</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
 
 </div>
 @code {
@@ -274,17 +251,11 @@
     private int? SelectedOfferIndex { get; set; }
     private int? ExpandedOfferIndex { get; set; }
 
-    // يُنادى عند الضغط على زر الاختيار
     private void SelectOffer2(int index)
     {
         SelectedOfferIndex = index;
-
-        // هنا تقدر تضيف أي منطق إضافي
-        // مثل استدعاء Callback للأب، أو حفظ الـ Offer المختار في متغير
-        // SelectedOffer = Offers[index];
     }
 
-    // يُنادى عند الضغط على زر السهم
     private void ToggleExpand(int index)
     {
         ExpandedOfferIndex = ExpandedOfferIndex == index ? null : index;

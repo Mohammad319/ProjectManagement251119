@@ -51,16 +51,18 @@ public class TrimmedNumberInput<TValue> : InputBase<TValue>
 
         var culture = CultureInfo.CurrentCulture;
 
-        if (TryParseFraction(value, culture, out var fractionResult))
+        // Try math expression first: handles +, -, *, / and plain a/b fractions
+        if (TryEvaluateExpression(value.Trim(), culture, out var expressionResult))
         {
-            var fractionStr = fractionResult.ToString(CultureInfo.InvariantCulture);
-            if (TryConvert(fractionStr, out result))
+            var exprStr = expressionResult.ToString(CultureInfo.InvariantCulture);
+            if (TryConvert(exprStr, out result))
             {
                 validationErrorMessage = string.Empty;
                 return true;
             }
         }
 
+        // Fallback: plain number
         var normalized = NormalizeNumericInput(value, culture);
         if (TryConvert(normalized, out result))
         {
@@ -73,37 +75,113 @@ public class TrimmedNumberInput<TValue> : InputBase<TValue>
         return false;
     }
 
-    private static bool TryParseFraction(string value, CultureInfo culture, out decimal result)
+    // -------------------------------------------------------
+    // Math expression evaluator  (+  −  *  /)
+    // Supports: "5+6"  "3-1"  "10/2"  "2*3"  "1.5+2*3"
+    // -------------------------------------------------------
+
+    private static bool TryEvaluateExpression(string value, CultureInfo culture, out decimal result)
     {
         result = 0m;
 
-        var slashIndex = value.IndexOf('/');
-        if (slashIndex < 0)
+        // Detect at least one arithmetic operator (skip leading sign)
+        bool hasOp = false;
+        for (int i = 0; i < value.Length; i++)
+        {
+            char c = value[i];
+            if (i > 0 && (c == '+' || c == '-' || c == '*' || c == '/'))
+            {
+                hasOp = true;
+                break;
+            }
+        }
+
+        if (!hasOp)
             return false;
 
-        var left = value[..slashIndex].Trim();
-        var right = value[(slashIndex + 1)..].Trim();
-
-        if (right.Contains('/'))
+        try
+        {
+            int pos = 0;
+            result = ParseAddSub(value, culture, ref pos);
+            SkipSpaces(value, ref pos);
+            return pos >= value.Length;
+        }
+        catch
+        {
             return false;
-
-        var leftNorm = NormalizeNumericInput(left, culture);
-        var rightNorm = NormalizeNumericInput(right, culture);
-
-        if (!decimal.TryParse(leftNorm, NumberStyles.Any, culture, out var numerator) &&
-            !decimal.TryParse(leftNorm, NumberStyles.Any, CultureInfo.InvariantCulture, out numerator))
-            return false;
-
-        if (!decimal.TryParse(rightNorm, NumberStyles.Any, culture, out var denominator) &&
-            !decimal.TryParse(rightNorm, NumberStyles.Any, CultureInfo.InvariantCulture, out denominator))
-            return false;
-
-        if (denominator == 0m)
-            return false;
-
-        result = numerator / denominator;
-        return true;
+        }
     }
+
+    // Level 1: addition and subtraction (lowest precedence)
+    private static decimal ParseAddSub(string expr, CultureInfo culture, ref int pos)
+    {
+        var left = ParseMulDiv(expr, culture, ref pos);
+        SkipSpaces(expr, ref pos);
+
+        while (pos < expr.Length && (expr[pos] == '+' || expr[pos] == '-'))
+        {
+            char op = expr[pos++];
+            var right = ParseMulDiv(expr, culture, ref pos);
+            left = op == '+' ? left + right : left - right;
+            SkipSpaces(expr, ref pos);
+        }
+
+        return left;
+    }
+
+    // Level 2: multiplication and division (higher precedence)
+    private static decimal ParseMulDiv(string expr, CultureInfo culture, ref int pos)
+    {
+        var left = ParseNumber(expr, culture, ref pos);
+        SkipSpaces(expr, ref pos);
+
+        while (pos < expr.Length && (expr[pos] == '*' || expr[pos] == '/'))
+        {
+            char op = expr[pos++];
+            var right = ParseNumber(expr, culture, ref pos);
+            if (op == '/' && right == 0m) throw new DivideByZeroException();
+            left = op == '*' ? left * right : left / right;
+            SkipSpaces(expr, ref pos);
+        }
+
+        return left;
+    }
+
+    // Level 3: a single numeric literal with optional leading sign
+    private static decimal ParseNumber(string expr, CultureInfo culture, ref int pos)
+    {
+        SkipSpaces(expr, ref pos);
+
+        bool negative = false;
+        if (pos < expr.Length && expr[pos] == '-') { negative = true; pos++; }
+        else if (pos < expr.Length && expr[pos] == '+') { pos++; }
+
+        SkipSpaces(expr, ref pos);
+
+        int start = pos;
+        while (pos < expr.Length && (char.IsDigit(expr[pos]) || expr[pos] == '.' || expr[pos] == ','))
+            pos++;
+
+        if (pos == start) throw new FormatException("Expected a number.");
+
+        var numStr = expr[start..pos];
+        var normalized = NormalizeNumericInput(numStr, culture);
+
+        if (!decimal.TryParse(normalized, NumberStyles.Any, culture, out var num) &&
+            !decimal.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out num))
+            throw new FormatException($"Cannot parse '{numStr}'.");
+
+        return negative ? -num : num;
+    }
+
+    private static void SkipSpaces(string expr, ref int pos)
+    {
+        while (pos < expr.Length && expr[pos] == ' ') pos++;
+    }
+
+    // -------------------------------------------------------
+    // Helpers (unchanged)
+    // -------------------------------------------------------
 
     private static string NormalizeNumericInput(string value, CultureInfo culture)
     {
@@ -163,8 +241,6 @@ public class TrimmedNumberInput<TValue> : InputBase<TValue>
         result = default!;
         return false;
     }
-
-    private static bool IsNullable() => Nullable.GetUnderlyingType(typeof(TValue)) is not null;
 
     private string GetParsingErrorMessage() =>
         $"The {DisplayName ?? FieldIdentifier.FieldName} field must be a number.";

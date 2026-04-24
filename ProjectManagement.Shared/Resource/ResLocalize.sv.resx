@@ -121,7 +121,7 @@
     <value>Vänligen ange en giltig e-postadress</value>
   </data>
   <data name="FieldIsRequred" xml:space="preserve">
-    <value>Detta fält är obligatoriskt</value>
+    <value>Fältet {0} är obligatoriskt.</value>
   </data>
   <data name="MaxLength" xml:space="preserve">
     <value>Denna fältlängd får inte vara mer än {1}.</value>

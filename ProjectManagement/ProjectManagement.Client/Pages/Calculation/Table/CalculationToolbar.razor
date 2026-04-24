@@ -26,18 +26,18 @@
                         @((MarkupString)Icons.Template)
                     </span>
 
-                    <select class="min-w-[4rem] max-w-[9rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none disabled:cursor-wait dark:bg-transparent"
+                    <select class="min-w-[4rem] max-w-[9rem] cursor-pointer bg-transparent text-[12px] leading-none text-slate-700 outline-none disabled:cursor-wait dark:bg-slate-900 dark:text-slate-100"
                             title="@ResourceLoc.templates"
                             aria-label="@ResourceLoc.templates"
                             data-testid="toolbar-template-select"
                             value="@SelectedTemplateValue"
                             @onchange="OnTemplateChangedAsync"
                             disabled="@IsTemplateSelectionDisabled">
-                        <option value="">@ResourceApp._default</option>
+                        <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="">@ResourceApp._default</option>
 
                         @foreach (var template in TemplateOptions)
                         {
-                            <option value="@template.Id">@template.Name</option>
+                            <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="@template.Id">@template.Name</option>
                         }
                     </select>
                 </div>
@@ -48,32 +48,32 @@
                         @((MarkupString)Icons.Template)
                     </span>
 
-                    <select class="min-w-[4rem] max-w-[9rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none disabled:cursor-wait dark:bg-transparent"
+                    <select class="min-w-[4rem] max-w-[9rem] cursor-pointer bg-transparent text-[12px] leading-none text-slate-700 outline-none disabled:cursor-wait dark:bg-slate-900 dark:text-slate-100"
                             title="Column template"
                             aria-label="Column template"
                             value="@SelectedTemplateColumnValue"
                             @onchange="OnTemplateColumnChangedAsync"
                             disabled="@IsTemplateColumnSelectionDisabled">
-                        <option value="">@ResourceApp._default</option>
+                        <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="">@ResourceApp._default</option>
 
                         @foreach (var templateColumn in TemplateColumnOptions)
                         {
-                            <option value="@templateColumn.Id">@templateColumn.Name</option>
+                            <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="@templateColumn.Id">@templateColumn.Name</option>
                         }
                     </select>
                 </div>
 
                 <div class="inline-flex min-w-0 items-center gap-0.5 rounded px-1 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-                    <select class="min-w-[4.5rem] max-w-[8rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none disabled:cursor-wait dark:bg-transparent"
+                    <select class="min-w-[4.5rem] max-w-[8rem] cursor-pointer bg-transparent text-[12px] leading-none text-slate-700 outline-none disabled:cursor-wait dark:bg-slate-900 dark:text-slate-100"
                             title="Resource sort"
                             aria-label="Resource sort"
                             value="@ResourceSortColumnValue"
                             @onchange="OnResourceSortColumnChangedAsync"
                             disabled="@IsUpdatingSort">
-                        <option value="">Resource</option>
+                        <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="">Resource</option>
                         @foreach (var (id, label) in ResourceSortColumns)
                         {
-                            <option value="@((int)id)">@label</option>
+                            <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="@((int)id)">@label</option>
                         }
                     </select>
 
@@ -128,14 +128,14 @@
     @* <CalculationDisplayOptions /> *@
 
     <div class="inline-flex min-w-0 items-center gap-1 rounded px-1 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800">
-        <select class="min-w-[5rem] max-w-[10rem] cursor-pointer bg-transparent text-[12px] leading-none outline-none dark:bg-transparent"
+        <select class="min-w-[5rem] max-w-[10rem] cursor-pointer bg-transparent text-[12px] leading-none text-slate-700 outline-none dark:bg-slate-900 dark:text-slate-100"
                 title="@FactorDisplayTitle"
                 aria-label="@FactorDisplayTitle"
                 value="@SelectedFactorDisplayValue"
                 @onchange="OnFactorDisplayChanged">
-            <option value="@((int)CalculationFactorDisplayMode.NetCal)">@CalcResource.netCal</option>
-            <option value="@((int)CalculationFactorDisplayMode.OH)">OH</option>
-            <option value="@((int)CalculationFactorDisplayMode.All)">@($"{CalcResource.netCal} + OH")</option>
+            <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="@((int)CalculationFactorDisplayMode.NetCal)">@CalcResource.netCal</option>
+            <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="@((int)CalculationFactorDisplayMode.OH)">OH</option>
+            <option class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100" value="@((int)CalculationFactorDisplayMode.All)">@($"{CalcResource.netCal} + OH")</option>
         </select>
     </div>
 

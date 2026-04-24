@@ -1,5 +1,7 @@
 ﻿using BlazorMHD.UI.Core.Navigation;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using ProjectManagement.Client.Shared.Components;
 using ProjectManagement.Client.Shared.MVVM.Folder;
 using ProjectManagement.Client.Shared.ResourceFiles.Calculation;
 using ProjectManagement.Client.Shared.ResourceFiles.Identity;
@@ -20,6 +22,7 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
 
         PostProjectDTO ProjectUpdate = new();
         GetProjectCalcConfigDTO? Config;
+        private EditContext? editContext;
 
         private record ProjectTab(int Id, string Label);
 
@@ -87,6 +90,7 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
         protected override async Task OnInitializedAsync()
         {
             ProjectUpdate.FolderId = FolderId;
+            ResetEditContext();
 
             if (Project.Id != Guid.Empty)
             {
@@ -104,7 +108,14 @@ namespace ProjectManagement.Client.Pages.Project.ProjectPages
                     ProjectUpdate.CompensationId,
                     ProjectUpdate.TypeId);
 
+            ResetEditContext();
             IsLoading = false;
+        }
+
+        private void ResetEditContext()
+        {
+            editContext = new EditContext(ProjectUpdate);
+            editContext.SetFieldCssClassProvider(RequiredFieldCssClassProvider.Instance);
         }
 
         private async Task HandleSubmitAsync()

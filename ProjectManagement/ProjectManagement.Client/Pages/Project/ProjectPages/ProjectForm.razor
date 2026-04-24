@@ -14,7 +14,7 @@
 }
 else if (ProjectUpdate is not null)
 {
-    <EditForm id="@DialogFormId" class="space-y-0" Model="@ProjectUpdate"
+    <EditForm id="@DialogFormId" @key="editContext" class="space-y-0" EditContext="editContext!"
               OnValidSubmit="HandleSubmitAsync">
 
         <DataAnnotationsValidator />
