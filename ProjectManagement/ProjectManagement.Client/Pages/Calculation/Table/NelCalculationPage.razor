@@ -34,6 +34,21 @@ else
                     </button>
 
                     <button type="button"
+                            data-testid="status-expand-collapse-tasks"
+                            class="calc-status-chip calc-status-chip-toggle @(_allTasksExpanded ? "is-active" : "is-muted")"
+                            title="@(_allTasksExpanded ? "Collapse all tasks" : "Expand all tasks")"
+                            @onclick="ExpandCollapseAllTasks">
+                        @if (_allTasksExpanded)
+                        {
+                            <span>↑↑</span>
+                        }
+                        else
+                        {
+                            <span>↓↓</span>
+                        }
+                    </button>
+
+                    <button type="button"
                             data-testid="status-toggle-only-code-text"
                             class="@GetToggleChipClass(Calc!.ShowOnlyCodeTextTasks)"
                             aria-pressed="@(Calc.ShowOnlyCodeTextTasks ? "true" : "false")"
@@ -49,6 +64,21 @@ else
                             @onclick="ToggleShowResources">
                         <span class="calc-status-chip-label">@ResourceLoc.resource</span>
                         <strong>@ResourceCount</strong>
+                    </button>
+
+                    <button type="button"
+                            data-testid="status-expand-collapse-resources"
+                            class="calc-status-chip calc-status-chip-toggle @(_allResourceDetailsExpanded ? "is-active" : "is-muted")"
+                            title="@(_allResourceDetailsExpanded ? "Collapse all resource details" : "Expand all resource details")"
+                            @onclick="ExpandCollapseAllResources">
+                        @if (_allResourceDetailsExpanded)
+                        {
+                            <span>↑↑</span>
+                        }
+                        else
+                        {
+                            <span>↓↓</span>
+                        }
                     </button>
 
                     <button type="button"

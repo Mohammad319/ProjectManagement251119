@@ -25,6 +25,7 @@ namespace ProjectManagement.Client.Services.Calculation
         public event Action? CommentsVisibilityChanged;
         public event Action? ResourceVariablesVisibilityChanged;
         public event Action? GridViewMaterialized;
+        public event Action<bool>? ResourceDetailsExpandChanged;
 
         public bool ShowComments
         {
@@ -79,6 +80,8 @@ namespace ProjectManagement.Client.Services.Calculation
         }
 
         public void NotifyGridViewMaterialized() => GridViewMaterialized?.Invoke();
+
+        public void ExpandAllResourceDetails(bool expand) => ResourceDetailsExpandChanged?.Invoke(expand);
 
         private async Task<CalculationMVVM?> NewCalculation(int id)
         {

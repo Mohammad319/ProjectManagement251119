@@ -55,6 +55,9 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     private static string ActiveToggleChipClass => "calc-status-chip calc-status-chip-toggle is-active";
     private static string InactiveToggleChipClass => "calc-status-chip calc-status-chip-toggle is-muted";
 
+    private bool _allTasksExpanded;
+    private bool _allResourceDetailsExpanded;
+
     protected override void OnInitialized()
     {
         _onFolderChanged = HandleFolderChanged;
@@ -160,6 +163,21 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     private void ToggleComments() => CalcService.ShowComments = !CalcService.ShowComments;
 
     private void ToggleResourceVariables() => CalcService.ShowResourceVariables = !CalcService.ShowResourceVariables;
+
+    private void ExpandCollapseAllTasks()
+    {
+        if (Calc is null) return;
+        _allTasksExpanded = !_allTasksExpanded;
+        foreach (var task in Calc.Tasks)
+            task.Ui.CollSpan = _allTasksExpanded;
+        CalcService.RequestGridRefresh(CalculationGridRefreshKind.Structure);
+    }
+
+    private void ExpandCollapseAllResources()
+    {
+        _allResourceDetailsExpanded = !_allResourceDetailsExpanded;
+        CalcService.ExpandAllResourceDetails(_allResourceDetailsExpanded);
+    }
 
     private void ToggleOnlyActive()
     {

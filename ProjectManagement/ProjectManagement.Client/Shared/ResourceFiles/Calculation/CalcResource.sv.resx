@@ -142,7 +142,7 @@
     <value>Förändringsfaktor 1</value>
   </data>
   <data name="changeFactor2" xml:space="preserve">
-    <value>Förändringsfaktor 2</value>
+    <value>Mängdomräkningsfaktor</value>
   </data>
   <data name="co2" xml:space="preserve">
     <value>Co2</value>
@@ -223,7 +223,7 @@
     <value>Nettokostnad Q</value>
   </data>
   <data name="newUnit" xml:space="preserve">
-    <value>Ny enhet</value>
+    <value>New enhet</value>
   </data>
   <data name="note" xml:space="preserve">
     <value>Notera</value>

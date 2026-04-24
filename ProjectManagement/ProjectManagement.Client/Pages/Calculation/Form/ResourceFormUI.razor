@@ -215,7 +215,7 @@
                         <InputCheckbox @bind-Value:get="ResourceUpdate.Data.CapFromTask"
                                        @bind-Value:set="ChangeCapFromTask"
                                        class="@CheckboxClass" />
-                        <span>cap from task</span>
+                        <span>Cap från uppgift</span>
                     </label>
 
             </div>  }
@@ -350,8 +350,8 @@
                     <thead>
                         <tr>
                             <th class="@TableHeadCellClass">@CalcResource.name</th>
-                            <th class="@TableHeadCellClass">@CalcResource.unit</th>
                             <th class="@TableHeadCellClass">@ResourceLoc.value</th>
+                            <th class="@TableHeadCellClass">@CalcResource.unit</th>
                             <th class="@TableHeadCellClass w-12"></th>
                         </tr>
                     </thead>
@@ -365,14 +365,14 @@
                                                @bind-Value="ResourceUpdate.Data.Parameters[idx].Name" />
                                 </td>
                                 <td class="@TableCellClass min-w-[6rem]">
-                                    <InputText class="@InputClass"
-                                               @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
-                                </td>
-                                <td class="@TableCellClass min-w-[6rem]">
                                     <TrimmedNumberInput TValue="decimal"
                                                         class="@InputClass"
                                                         @bind-Value="ResourceUpdate.Data.Parameters[idx].Value"
                                                         MaxFractionDigits="@NumericFractionDigits" />
+                                </td>
+                                <td class="@TableCellClass min-w-[6rem]">
+                                    <InputText class="@InputClass"
+                                               @bind-Value="ResourceUpdate.Data.Parameters[idx].Unit" />
                                 </td>
                                 <td class="@TableCellClass w-12 text-right">
                                     <button type="button"

@@ -48,6 +48,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     {
         base.OnInitialized();
         CalcService.ResourceVariablesVisibilityChanged += HandleResourceVariablesVisibilityChanged;
+        CalcService.ResourceDetailsExpandChanged += HandleResourceDetailsExpandChanged;
         ResourceService.OfferStateChanged += HandleOfferStateChanged;
     }
 
@@ -76,6 +77,14 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
         _ = InvokeAsync(StateHasChanged);
     }
 
+    private void HandleResourceDetailsExpandChanged(bool expand)
+    {
+        if (!CanShowDetails)
+            return;
+        IsDetailsOpen = expand;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
     private void RenderResourceCells(RenderTreeBuilder builder)
         => CalculationRowCellRenderer.RenderResourceCells(builder, Colmuns, Resource, Left, ShowActiveToggle, ToggleActive, TaskBranchActive);
 
@@ -85,6 +94,7 @@ public partial class ResourceRowComponent : CalculationSelectableRowComponentBas
     {
         base.Dispose();
         CalcService.ResourceVariablesVisibilityChanged -= HandleResourceVariablesVisibilityChanged;
+        CalcService.ResourceDetailsExpandChanged -= HandleResourceDetailsExpandChanged;
         ResourceService.OfferStateChanged -= HandleOfferStateChanged;
     }
 }

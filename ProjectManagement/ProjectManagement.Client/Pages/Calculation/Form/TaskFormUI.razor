@@ -87,7 +87,7 @@
                 </div>
 
                 <div class="min-w-0 md:col-span-4 xl:col-span-3">
-                    <label class="@LabelClass">@CalcResource.unit</label>
+                    <label class="@LabelClass">@(TaskUpdate.Metadata.ConversionParameters.Any() ? CalcResource.newUnit : CalcResource.unit)</label>
                     <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
                 </div>
 
@@ -98,14 +98,14 @@
                         <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
                     </div>
                 }
-
+@* 
                 @if (HasTaskAbove)
                 {
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
                         <label class="@LabelClass">@CalcResource.changeFactor1</label>
                         <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ChangeFactor1" class="@InputClass" />
                     </div>
-                }
+                } *@
 
                 <div class="min-w-0 md:col-span-3 xl:col-span-2">
                     <label class="@LabelClass">@CalcResource.changeFactor2 </label>
@@ -268,15 +268,15 @@
                                     <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Name" class="@InputClass" />
                                 </div>
                                 <div class="min-w-0">
-                                    <label class="@LabelClass">@CalcResource.unit</label>
-                                    <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Unit" class="@InputClass" />
-                                </div>
-                                <div class="min-w-0">
                                     <label class="@LabelClass">Värde</label>
                                     <TrimmedNumberInput TValue="decimal"
                                                  @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Value"
                                                  class="@InputClass"
                                                  @bind-Value:after="RecalculateConversionFactor" />
+                                </div>
+                                <div class="min-w-0">
+                                    <label class="@LabelClass">@CalcResource.unit</label>
+                                    <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Unit" class="@InputClass" />
                                 </div>
                                 <div class="flex items-end justify-end">
                                     <button type="button" class="@OutlineRedButtonClass" @onclick="() => RemoveConversionParameter(idx)">Ta bort</button>
