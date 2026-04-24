@@ -95,7 +95,8 @@
                         {
                             var columnId = HeaderColumns[i].Id;
                             var value = GetSummaryCellValue(columnId, summaryTotals);
-                            var label = summaryLabelColumnId == columnId ? CalcLoc["sum"] : string.Empty;
+                            @* var label = summaryLabelColumnId == columnId ? CalcLoc["sum"] : string.Empty; *@
+                            var label = string.Empty;
 
                             <td class="@GetSummaryCellCssClass(columnId, summaryLabelColumnId)"
                                 data-pm-frozen="@GetFrozenHeaderAttribute(columnId)">

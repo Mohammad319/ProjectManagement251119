@@ -70,7 +70,6 @@ public int? ParentTaskId { get; set; }
             set => Metadata.ChangeFactor2 = value;
         }
 
-        [Range(-20, 20, ErrorMessageResourceName = ErrorsMessages.Range, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public decimal? Cap
         {
             get => Metadata.Cap;
