@@ -16,7 +16,6 @@ namespace ProjectManagement.Shared.DTO.Calculation
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 public int? ParentTaskId { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public int? StatusId { get; set; }
 
         public int? OpportunityId { get; set; }

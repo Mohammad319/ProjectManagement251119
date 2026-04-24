@@ -10,6 +10,26 @@ namespace ProjectManagement.Client.Shared.MVVM.Calculation
 
         public static double? GetComputedTotalCO2(this TaskListMVVM task) => task.Computed.TotalCO2;
 
+        public static double? GetComputedCO2PerQuantity(this TaskListMVVM task)
+        {
+            var quantity = task.Metadata?.Quantity;
+            var totalCO2 = task.GetComputedTotalCO2();
+
+            return totalCO2.HasValue && quantity.HasValue && quantity.Value > 0m
+                ? totalCO2.Value / (double)quantity.Value
+                : null;
+        }
+
+        public static double? GetComputedCO2PerBaseQuantity(this TaskListMVVM task)
+        {
+            var baseQuantity = task.Metadata?.BaseQuantity;
+            var totalCO2 = task.GetComputedTotalCO2();
+
+            return totalCO2.HasValue && baseQuantity.HasValue && baseQuantity.Value > 0m
+                ? totalCO2.Value / (double)baseQuantity.Value
+                : null;
+        }
+
         public static decimal? GetComputedBaseCost(this TaskListMVVM task) => task.Computed.BaseCost;
 
         public static void SetComputedAggregates(

@@ -103,4 +103,28 @@ public class TemplateMetadataTests
         Assert.NotNull(restored);
         Assert.Equal(5, restored!.MathRound);
     }
+
+    [Fact]
+    public void TemplateColumnPostDto_Columns_PreserveInPlaceEditsAcrossReads()
+    {
+        var dto = new TemplateColumnPostDTO
+        {
+            Name = "Columns",
+            Columns =
+            [
+                new() { Id = NetColumnId.Account, Width = 70, Frozen = false },
+                new() { Id = NetColumnId.Name, Width = 120, Frozen = true }
+            ]
+        };
+
+        var firstRead = dto.Columns;
+        firstRead[0].Frozen = true;
+        firstRead[1].Width = 160;
+
+        var secondRead = dto.Columns;
+
+        Assert.Same(firstRead, secondRead);
+        Assert.True(secondRead[0].Frozen);
+        Assert.Equal(160, secondRead[1].Width);
+    }
 }

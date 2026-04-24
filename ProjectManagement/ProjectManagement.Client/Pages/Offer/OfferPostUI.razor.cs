@@ -11,6 +11,7 @@ namespace ProjectManagement.Client.Pages.Offer
         [Parameter] public ListOfferMVVM Offer { get; set; } = new ListOfferMVVM();
         [Parameter] public ResourceListMVVM? Resource { get; set; }
         PostOfferDTO PostOffer { get; set; } = new();
+        private static IReadOnlyList<string> OfferStatuses => OfferStatusCatalog.All;
         bool IsLoading = false;
         List<ListDTO> Organisations = [];
         List<UnderContactOrganisationBase> Contacts = [];
@@ -36,6 +37,7 @@ namespace ProjectManagement.Client.Pages.Offer
             offer.Comment = PostOffer.Comment;
             offer.OrganisationId = PostOffer.OrganisationId;
             offer.Contact = PostOffer.Contact;
+            offer.Status = PostOffer.Status;
             offer.Organisation = PostOffer.OrganisationId.HasValue ? Organisations.FirstOrDefault(x => x.Id == PostOffer.OrganisationId)?.Name ?? string.Empty : string.Empty;
         }
         private async Task HandleSubmitAsync()

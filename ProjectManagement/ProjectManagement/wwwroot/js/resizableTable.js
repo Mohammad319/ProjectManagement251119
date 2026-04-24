@@ -68,6 +68,23 @@ function getFrozenWidth(el) {
     return Number.isNaN(computedWidth) ? 0 : computedWidth;
 }
 
+function syncStickyTopOffsets(table) {
+    const scrollContainer = table.closest('.divNetCalc');
+    if (!scrollContainer) return;
+
+    const thead = table.tHead;
+    if (!thead) return;
+
+    const headerRow = table.querySelector('thead #header-row') || thead.rows[0];
+    const headerH = headerRow ? Math.round(headerRow.getBoundingClientRect().height) : 22;
+
+    const filterRow = thead.querySelector('#headerFilter');
+    const filterH = filterRow ? Math.round(filterRow.getBoundingClientRect().height) : 0;
+
+    scrollContainer.style.setProperty('--pm-th-height', `${headerH}px`);
+    scrollContainer.style.setProperty('--pm-filter-height', `${filterH}px`);
+}
+
 function queueFrozenSync(table) {
     if (!table) return;
 
@@ -79,8 +96,14 @@ function queueFrozenSync(table) {
         window.clearTimeout(table._pmFrozenTimer);
     }
 
-    table._pmFrozenFrame = window.requestAnimationFrame(() => syncFrozenColumns(table));
-    table._pmFrozenTimer = window.setTimeout(() => syncFrozenColumns(table), 40);
+    table._pmFrozenFrame = window.requestAnimationFrame(() => {
+        syncStickyTopOffsets(table);
+        syncFrozenColumns(table);
+    });
+    table._pmFrozenTimer = window.setTimeout(() => {
+        syncStickyTopOffsets(table);
+        syncFrozenColumns(table);
+    }, 40);
 }
 
 function observeFrozenColumns(table) {
@@ -95,12 +118,18 @@ function observeFrozenColumns(table) {
 
     const mutationObserver = new MutationObserver(() => queueFrozenSync(table));
     mutationObserver.observe(tbody, { childList: true, subtree: true });
+
+    const thead = table.tHead;
+    if (thead) {
+        mutationObserver.observe(thead, { childList: true, subtree: true });
+    }
+
     table._pmFrozenObserver = mutationObserver;
 
     if (window.ResizeObserver && !table._pmFrozenResizeObserver) {
         const resizeObserver = new ResizeObserver(() => queueFrozenSync(table));
         resizeObserver.observe(table);
-        resizeObserver.observe(table.tHead ?? table);
+        resizeObserver.observe(thead ?? table);
         table._pmFrozenResizeObserver = resizeObserver;
     }
 }
@@ -136,7 +165,13 @@ function syncFrozenColumns(table) {
     clearFrozenColumns(table);
 
     const frozenHeaders = getFrozenHeaders(table);
-    const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
+    const theadDataRows = Array.from(table.querySelectorAll('thead tr')).filter(
+        row => row.querySelector('td') !== null
+    );
+    const bodyRows = [
+        ...theadDataRows,
+        ...Array.from(table.querySelectorAll('tbody tr'))
+    ];
     let frozenLeft = 0;
 
     frozenHeaders.forEach(({ th, index }, order) => {

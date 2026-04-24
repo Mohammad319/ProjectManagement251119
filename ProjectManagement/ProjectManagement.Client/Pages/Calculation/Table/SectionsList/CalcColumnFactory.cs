@@ -246,7 +246,12 @@ public static class CalcColumnFactory
             },
             [NetColumnId.Co2] = new()
             {
-                TaskRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
+                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(
+                    b,
+                    round,
+                    t.Metadata?.ConversionParameters is { Count: > 0 }
+                        ? null
+                        : t.GetComputedCO2PerQuantity()),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.CO2)
             },
             [NetColumnId.TotalCo2] = new()

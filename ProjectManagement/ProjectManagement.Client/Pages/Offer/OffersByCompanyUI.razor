@@ -29,6 +29,7 @@
                             <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.cost</th>
                             <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-right">@CalcResource.baseCost</th>
                             <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-center">@ResourceApp.date</th>
+                            <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@CalcResource.status</th>
                             <th class="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 text-left">@CalcResource.note</th>
                         </tr>
                     </thead>
@@ -40,7 +41,7 @@
                             {
                                 <!-- صف عنوان الشركة -->
                                 <tr class="transition-colors bg-slate-50/80 dark:bg-slate-900/70 border-l-4 border-indigo-400 dark:border-indigo-500">
-                                    <td colspan="6" class="align-middle text-slate-700 dark:text-slate-200 pl-20 py-1.5">
+                                    <td colspan="7" class="align-middle text-slate-700 dark:text-slate-200 pl-20 py-1.5">
                                         <div class="flex items-center justify-between gap-2">
 
                                             <div class="flex items-center gap-1">
@@ -124,6 +125,21 @@
                                                 @cat.Item1.Date.ToString(ConstValues.DateFormat)
                                             </td>
 
+                                            <td class="align-middle text-slate-700 dark:text-slate-200 text-[11px]">
+                                                @if (string.IsNullOrWhiteSpace(cat.Item1.Status))
+                                                {
+                                                    <span class="text-slate-400 dark:text-slate-500 italic">
+                                                        —
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+                                                        @cat.Item1.Status
+                                                    </span>
+                                                }
+                                            </td>
+
                                             <!-- الملاحظة -->
                                             <td class="align-middle text-slate-700 dark:text-slate-200 text-[11px] text-slate-500 dark:text-slate-400">
                                                 @if (string.IsNullOrWhiteSpace(cat.Item1.Comment))
@@ -155,7 +171,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="6" class="px-3 py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+                                <td colspan="7" class="px-3 py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
                                     @ResourceApp.notFoundData
                                 </td>
                             </tr>

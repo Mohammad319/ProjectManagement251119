@@ -11,13 +11,15 @@
 
 @if (Form is not null)
 {
-    <TemplateForm TempForm="Form"
+    <TemplateForm @key="Form"
+                  TempForm="Form"
                   DepartmentId="FormDepartmentId"
                   Callback="CallBack"></TemplateForm>
 }
 else if (ColumnForm is not null)
 {
-    <TemplateColumnForm TempForm="ColumnForm"
+    <TemplateColumnForm @key="ColumnForm"
+                        TempForm="ColumnForm"
                         DepartmentId="ColumnFormDepartmentId"
                         Callback="ColumnCallBack"></TemplateColumnForm>
 }
@@ -44,14 +46,14 @@ else
 
                     <button @onclick="OpenCreate"
                             class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
-                            disabled="@(!CanCreateTemplate)">
+                            disabled="@(!CanCreateTemplate || Loading)">
                         <span class="text-base leading-none">+</span>
                         <span>@PMWebResource.NewTemplate</span>
                     </button>
 
                     <button @onclick="OpenCreateColumn"
                             class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-800"
-                            disabled="@(!CanCreateTemplate)">
+                            disabled="@(!CanCreateTemplate || Loading)">
                         <span class="text-base leading-none">+</span>
                         <span>New column template</span>
                     </button>
@@ -279,18 +281,52 @@ else
 
     private async Task FormUI(TemplateListDTO template)
     {
+        if (Loading)
+            return;
+
+        Loading = true;
+        Form = null;
+        ColumnForm = null;
         FormDepartmentId = template.DepartmentId;
-        Form = await Dispatcher.Send(new GetTemplateByIdQuery(template.Id, template.DepartmentId));
-        if (Form is not null)
-            Form.Id = template.Id;
+        ColumnFormDepartmentId = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            Form = await Dispatcher.Send(new GetTemplateByIdQuery(template.Id, template.DepartmentId));
+            if (Form is not null)
+                Form.Id = template.Id;
+        }
+        finally
+        {
+            Loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task ColumnFormUI(TemplateColumnListDTO templateColumn)
     {
+        if (Loading)
+            return;
+
+        Loading = true;
+        Form = null;
+        ColumnForm = null;
+        FormDepartmentId = null;
         ColumnFormDepartmentId = templateColumn.DepartmentId;
-        ColumnForm = await Dispatcher.Send(new GetTemplateColumnByIdQuery(templateColumn.Id, templateColumn.DepartmentId));
-        if (ColumnForm is not null)
-            ColumnForm.Id = templateColumn.Id;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            ColumnForm = await Dispatcher.Send(new GetTemplateColumnByIdQuery(templateColumn.Id, templateColumn.DepartmentId));
+            if (ColumnForm is not null)
+                ColumnForm.Id = templateColumn.Id;
+        }
+        finally
+        {
+            Loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task ChangeDepartmentAsync(ChangeEventArgs e)
@@ -314,6 +350,8 @@ else
         if (!CanCreateTemplate)
             return;
 
+        ColumnForm = null;
+        ColumnFormDepartmentId = null;
         FormDepartmentId = EffectiveDepartmentId;
         Form = new TemplateModelDTO();
     }
@@ -323,6 +361,8 @@ else
         if (!CanCreateTemplate)
             return;
 
+        Form = null;
+        FormDepartmentId = null;
         ColumnFormDepartmentId = EffectiveDepartmentId;
         ColumnForm = new TemplateColumnModelDTO();
     }

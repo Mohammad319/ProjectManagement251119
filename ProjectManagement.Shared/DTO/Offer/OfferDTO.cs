@@ -30,6 +30,7 @@ namespace ProjectManagement.Shared.DTO.Offer
     {
         public string Comment { get; set; } = string.Empty;
         public string Contact { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
         public decimal Cost { get; set; }
         public decimal BaseCost { get; set; }
 
@@ -39,6 +40,7 @@ namespace ProjectManagement.Shared.DTO.Offer
             {
                 Comment = MetadataCloneHelper.CopyText(Comment),
                 Contact = MetadataCloneHelper.CopyText(Contact),
+                Status = MetadataCloneHelper.CopyText(Status),
                 Cost = Cost,
                 BaseCost = BaseCost
             };
@@ -50,6 +52,7 @@ namespace ProjectManagement.Shared.DTO.Offer
             BaseCost = RoundMoney(BaseCost);
             Comment = MetadataCloneHelper.CopyText(Comment).Trim();
             Contact = MetadataCloneHelper.CopyText(Contact).Trim();
+            Status = MetadataCloneHelper.CopyText(Status).Trim();
         }
 
         private static decimal RoundMoney(decimal value)
@@ -89,6 +92,12 @@ namespace ProjectManagement.Shared.DTO.Offer
             set => Data.BaseCost = value;
         }
 
+        public string Status
+        {
+            get => Data.Status;
+            set => Data.Status = MetadataCloneHelper.CopyText(value);
+        }
+
         public int ResourceId { get; set; }
 
         /// <summary>
@@ -124,6 +133,7 @@ namespace ProjectManagement.Shared.DTO.Offer
         public string UCTelefone { get; set; } = string.Empty;
         public string UCMobile { get; set; } = string.Empty;
         public string Contact { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
     }
 
     public class ListOfferCalcInfo : ListOfferDTO

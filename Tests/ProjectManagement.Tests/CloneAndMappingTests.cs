@@ -4,6 +4,7 @@ using ProjectManagement.Shared.Base.Application;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.DTO.Offer;
 using System.Text.Json;
 using Xunit;
 
@@ -98,6 +99,32 @@ public class CloneAndMappingTests
         Assert.Equal(2m, restored!.Quantity);
         Assert.Equal(50m, restored.Percentage);
         Assert.Equal(7m, restored.Cost);
+    }
+
+    [Fact]
+    public void PostOfferDto_DataSetter_ClonesStatusAndContact()
+    {
+        var source = new OfferData
+        {
+            Contact = "Anna Andersson",
+            Status = "Förbereds",
+            Cost = 15m,
+            BaseCost = 2m
+        };
+
+        var dto = new PostOfferDTO
+        {
+            Data = source
+        };
+
+        source.Contact = "Changed";
+        source.Status = "Changed";
+
+        Assert.NotSame(source, dto.Data);
+        Assert.Equal("Anna Andersson", dto.Contact);
+        Assert.Equal("Förbereds", dto.Status);
+        Assert.Equal(15m, dto.Cost);
+        Assert.Equal(2m, dto.BaseCost);
     }
 
     [Fact]

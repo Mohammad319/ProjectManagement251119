@@ -51,7 +51,7 @@ namespace Domain.Entities.Calculation
         [Required, MaxLength(FieldLengths.Code)]
         public string Code { get; private set; } = string.Empty;
 
-        [Required, MaxLength(FieldLengths.Name)]
+        [Required, MaxLength(FieldLengths.LongName)]
         public string Name { get; private set; } = string.Empty;
 
         [Range(0, 100)]

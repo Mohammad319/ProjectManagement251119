@@ -3,8 +3,9 @@
     public static class FieldLengths
     {
         // أسماء
+        public const int TaskName = 2000;
         public const int Name = 80;
-        public const int LongName = 120;
+        public const int LongName = 1000;
         public const int ShortName = 50;
 
         // أكواد
@@ -19,11 +20,11 @@
         public const int ColorHex = 7;
 
         // وحدة القياس
-        public const int Unit = 25;
+        public const int Unit = 30;
 
         // تعليق / ملاحظات
-        public const int Comment = 500;
-        public const int Note = 500;
+        public const int Comment = 1000;
+        public const int Note = 1000;
 
         // Email, Phone
         public const int Email = 254;

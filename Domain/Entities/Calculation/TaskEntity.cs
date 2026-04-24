@@ -19,7 +19,7 @@ namespace Domain.Entities.Calculation
             private set => ApplyMetadataSnapshot(value);
         }
 
-        [Required, MaxLength(FieldLengths.Name)]
+        [Required, MaxLength(FieldLengths.TaskName)]
         public string Name { get; private set; } = string.Empty;
         public bool IsActive { get; private set; } = true;
 

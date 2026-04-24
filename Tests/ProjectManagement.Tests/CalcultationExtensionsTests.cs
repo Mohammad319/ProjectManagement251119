@@ -115,6 +115,54 @@ public class CalcultationExtensionsTests
     }
 
     [Fact]
+    public void ExecuteCalculation_TaskCo2PerQuantity_UsesTotalCarbonDividedByTaskQuantity()
+    {
+        var resource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
+        resource.Data.CO2 = 3d;
+
+        var calc = CreateCalculation(resource, 10m);
+
+        calc.ExecuteCalculation();
+
+        var task = Assert.Single(calc.Tasks);
+        Assert.Equal(30d, task.TotalCO2);
+        Assert.Equal(3d, task.GetComputedCO2PerQuantity());
+    }
+
+    [Fact]
+    public void GetComputedCO2PerBaseQuantity_UsesBaseQuantity_WhenTaskHasUnitConversion()
+    {
+        var task = new TaskListMVVM
+        {
+            Id = 1,
+            Name = "Converted Task",
+            Metadata = new TaskMetadata
+            {
+                Quantity = 10m,
+                Unit = "m2",
+                BaseQuantity = 100m,
+                BaseUnit = "kg",
+                ConversionParameters =
+                [
+                    new TaskConversionParameter
+                    {
+                        Name = "Density",
+                        Unit = "kg/m2",
+                        Value = 10m
+                    }
+                ]
+            },
+            Resources = [],
+            Tasks = []
+        };
+
+        task.SetComputedAggregates(0m, 0m, 0m, 50d, null);
+
+        Assert.Equal(5d, task.GetComputedCO2PerQuantity());
+        Assert.Equal(0.5d, task.GetComputedCO2PerBaseQuantity());
+    }
+
+    [Fact]
     public void ExecuteCalculation_RecalculatesTotalsAfterPresetActiveOverridesChange()
     {
         var resource1 = CreateResource(parameters: [], times: [], changeFactor2: 1m);

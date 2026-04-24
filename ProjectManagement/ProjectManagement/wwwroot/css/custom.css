@@ -6,12 +6,31 @@ h1:focus {
     outline: none;
 }
 
-.valid.modified:not([type=checkbox]) {
+.valid.modified:not([type=checkbox]):not(.invalid):not(.required-empty) {
     outline: 1px solid #26b050;
 }
 
-.invalid {
+input.invalid:not([type=checkbox]),
+select.invalid,
+textarea.invalid,
+input.required-empty:not([type=checkbox]),
+select.required-empty,
+textarea.required-empty {
+    border-color: #e50000 !important;
     outline: 1px solid #e50000;
+    outline-offset: 0;
+    box-shadow: 0 0 0 1px rgba(229, 0, 0, 0.12);
+}
+
+input.invalid:focus:not([type=checkbox]),
+select.invalid:focus,
+textarea.invalid:focus,
+input.required-empty:focus:not([type=checkbox]),
+select.required-empty:focus,
+textarea.required-empty:focus {
+    border-color: #e50000 !important;
+    outline: 1px solid #e50000;
+    box-shadow: 0 0 0 2px rgba(229, 0, 0, 0.2);
 }
 
 .validation-message {

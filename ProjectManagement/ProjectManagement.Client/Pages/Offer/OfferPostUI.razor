@@ -30,6 +30,22 @@
                                 dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
         </div>
 
+        <div class="flex flex-col gap-1">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                @CalcResource.status:
+            </label>
+            <InputSelect @bind-Value="PostOffer.Status"
+                         class="w-full rounded border border-gray-300 px-2 py-1 text-sm bg-white
+                                focus:outline-none focus:ring-2 focus:ring-blue-500
+                                dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <option value=""></option>
+                @foreach (var status in OfferStatuses)
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </div>
+
         @if (Organisations != null)
         {
             <!-- Organisation -->

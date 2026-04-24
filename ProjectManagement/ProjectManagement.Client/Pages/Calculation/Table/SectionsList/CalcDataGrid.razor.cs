@@ -20,12 +20,6 @@ namespace ProjectManagement.Client.Pages.Calculation.Table.SectionsList;
 
 public partial class CalcDataGrid : ComponentBase, IDisposable
 {
-    private static readonly HashSet<NetColumnId> AlwaysFrozenColumns =
-    [
-        NetColumnId.Account,
-        NetColumnId.Name
-    ];
-
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private CalculationService CalcService { get; set; } = default!;
     [Inject] private CalculationInteractionState InteractionState { get; set; } = default!;
@@ -381,7 +375,6 @@ public partial class CalcDataGrid : ComponentBase, IDisposable
         IsFrozenHeader(id) ? "true" : "false";
 
     private bool IsFrozenHeader(NetColumnId id) =>
-        AlwaysFrozenColumns.Contains(id) ||
         Template?.NetCalc?.Columns?.FirstOrDefault(x => x.Id == id)?.Frozen == true;
 
     private static IReadOnlyList<ColumnHeader> BuildHeaderColumns(

@@ -20,7 +20,7 @@ namespace Domain.Entities.Project
         [Range(0, 5)]
         public int Priority { get; private set; } = 3;
 
-        [Required, MaxLength(FieldLengths.Name)]
+        [Required, MaxLength(FieldLengths.LongName)]
         public string Name { get; private set; } = string.Empty;
 
         [MaxLength(FieldLengths.Code)]

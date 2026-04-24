@@ -32,6 +32,7 @@ using ProjectManagement.Shared.DTO.Offer;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.DTO.ResourceType;
 using ProjectManagement.Shared.Enums;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using Xunit;
 using ClientResourceService = ProjectManagement.Client.Services.Calculation.CalculationItems.ResourceService;
@@ -390,6 +391,56 @@ public class CalculationComponentRenderTests : BunitContext
             Assert.Equal("+", cut.Find("span[role='button']").TextContent.Trim());
             Assert.DoesNotContain("Length", cut.Markup);
         });
+    }
+
+    [Fact]
+    public void TaskDetailRows_RendersBaseQuantityCo2_InCo2ColumnForUnitConversionTasks()
+    {
+        RegisterRowComponentServices(new CalculationInteractionState(), CreateCalculationService());
+
+        var task = new TaskListMVVM
+        {
+            Id = 11,
+            Name = "Converted Task",
+            Resources = [],
+            Tasks = []
+        };
+        task.Metadata = new()
+        {
+            Quantity = 10m,
+            Unit = "m2",
+            BaseQuantity = 100m,
+            BaseUnit = "kg",
+            ConversionParameters =
+            [
+                new TaskConversionParameter
+                {
+                    Name = "Density",
+                    Unit = "kg/m2",
+                    Value = 10m
+                }
+            ]
+        };
+        task.SetComputedAggregates(0m, 0m, 0m, 50d, null);
+
+        var cut = Render<TaskDetailRows>(parameters => parameters
+            .Add(x => x.Task, task)
+            .Add(x => x.Colmuns,
+            [
+                new CalcColmunDefinition<TaskListMVVM, ResourceListMVVM> { Id = NetColumnId.Name },
+                new CalcColmunDefinition<TaskListMVVM, ResourceListMVVM> { Id = NetColumnId.Quantity },
+                new CalcColmunDefinition<TaskListMVVM, ResourceListMVVM> { Id = NetColumnId.Unit },
+                new CalcColmunDefinition<TaskListMVVM, ResourceListMVVM> { Id = NetColumnId.Co2 },
+                new CalcColmunDefinition<TaskListMVVM, ResourceListMVVM> { Id = NetColumnId.TotalCo2 }
+            ]));
+
+        var baseQuantityRow = cut.FindAll("tr").First();
+        var expectedCo2 = NumericFormatHelper.Format(0.5d, NumericFormatHelper.DefaultMaxFractionDigits, CultureInfo.CurrentCulture);
+
+        Assert.Contains("100", baseQuantityRow.TextContent);
+        Assert.Contains("kg", baseQuantityRow.TextContent);
+        Assert.Contains(expectedCo2, baseQuantityRow.TextContent);
+        Assert.DoesNotContain("50", baseQuantityRow.TextContent);
     }
 
     [Fact]

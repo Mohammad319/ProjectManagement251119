@@ -230,7 +230,13 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
 
         public List<NetColumnState> Columns
         {
-            get => TemplateDefaults.EnsureNetCalcColumns(columns);
+            get
+            {
+                if (columns is null || columns.Count == 0)
+                    columns = TemplateDefaults.NetCalc();
+
+                return columns;
+            }
             set => columns = TemplateDefaults.EnsureNetCalcColumns(value);
         }
     }

@@ -77,6 +77,7 @@ namespace Domain.Entities.Calculation
             {
                 Comment = metadata.Comment ?? string.Empty,
                 Contact = metadata.Contact ?? string.Empty,
+                Status = metadata.Status ?? string.Empty,
                 Cost = metadata.Cost,
                 BaseCost = metadata.BaseCost
             };

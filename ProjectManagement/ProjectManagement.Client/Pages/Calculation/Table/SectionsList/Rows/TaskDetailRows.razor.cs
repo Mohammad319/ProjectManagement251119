@@ -41,7 +41,8 @@ public partial class TaskDetailRows
                 QuantityText = metadata.BaseQuantity.HasValue
                     ? FormatDecimal(metadata.BaseQuantity.Value)
                     : string.Empty,
-                Unit = baseUnit
+                Unit = baseUnit,
+                Co2Text = FormatDouble(Task?.GetComputedCO2PerBaseQuantity())
             };
 
             for (int i = 0; i < parameters.Count; i++)
@@ -81,6 +82,10 @@ public partial class TaskDetailRows
                 else if (column.Id == NetColumnId.Unit)
                 {
                     RenderValueCell(builder, ref seq, line.Unit);
+                }
+                else if (column.Id == NetColumnId.Co2)
+                {
+                    RenderValueCell(builder, ref seq, line.Co2Text);
                 }
                 else
                 {
@@ -201,6 +206,11 @@ public partial class TaskDetailRows
     private string FormatDecimal(decimal value)
         => NumericFormatHelper.Format(value, MaxFractionDigits, CultureInfo.CurrentCulture);
 
+    private string? FormatDouble(double? value)
+        => value.HasValue
+            ? NumericFormatHelper.Format(value.Value, MaxFractionDigits, CultureInfo.CurrentCulture)
+            : null;
+
     private enum DetailKind
     {
         BaseQuantity,
@@ -214,5 +224,6 @@ public partial class TaskDetailRows
         public string? QuantityText { get; set; }
         public string? Unit { get; set; }
         public string? ChangeFactor2Text { get; set; }
+        public string? Co2Text { get; set; }
     }
 }
