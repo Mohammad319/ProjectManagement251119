@@ -2,8 +2,8 @@
     const keepAliveUrl = "/auth/session/keep-alive";
     const accountPrefix = "/Account";
     const retryQueryKey = "authRetry";
-    const intervalMs = 5 * 60 * 1000;
-    const idleWindowMs = 10 * 60 * 1000;
+    const intervalMs = 30 * 60 * 1000;
+    const idleWindowMs = 45 * 60 * 1000;
 
     let started = false;
     let lastActivityAt = Date.now();
@@ -102,7 +102,7 @@
 
         window.addEventListener("online", () => {
             markActivity();
-            void sendKeepAlive();
+            void sendKeepAlive(true);
         });
     }
 
@@ -116,7 +116,7 @@
         attachActivityListeners();
 
         window.setInterval(() => {
-            void sendKeepAlive();
+            void sendKeepAlive(true);
         }, intervalMs);
     }
 

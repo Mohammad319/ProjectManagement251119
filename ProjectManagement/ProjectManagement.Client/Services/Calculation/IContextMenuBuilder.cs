@@ -120,6 +120,11 @@ namespace ProjectManagement.Client.Services.Calculation
                     Icons.ImportFromCloud,
                     appLoc[LocalizerConst.Import, ResourceLoc.resource],
                     () => tableCoordinator.ShowGetFromStorage(item.Id, CalculationItemType.resource)));
+
+                list.Add(NewMenuItem(
+                    Icons.NewResource,
+                    "Suggest resources",
+                    () => tableCoordinator.ShowResourceSuggestions(item)));
             }
 
             if (item.Resources == null || item.Resources.Count == 0)

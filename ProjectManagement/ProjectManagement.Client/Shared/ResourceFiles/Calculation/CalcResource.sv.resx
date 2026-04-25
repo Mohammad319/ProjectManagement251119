@@ -402,4 +402,13 @@
   <data name="Price Worked Q Tax" xml:space="preserve">
     <value>Pris utförd mängd moms</value>
   </data>
+  <data name="suggestionNoResults" xml:space="preserve">
+    <value>Inga resursförslag hittades för denna uppgift.</value>
+  </data>
+  <data name="suggestionAddSelected" xml:space="preserve">
+    <value>Lägg till valda</value>
+  </data>
+  <data name="suggestionShowMore" xml:space="preserve">
+    <value>Visa fler</value>
+  </data>
 </root>

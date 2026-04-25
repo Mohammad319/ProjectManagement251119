@@ -31,10 +31,16 @@ public class UnauthorizedRedirectHandler(
             }
             else
             {
-                ShowOnce(errLoc["signInTitle"], errLoc["signInRedirectMessage"]);
                 _ = clientLogger.ErrorAsync($"Unauthorized (401) redirected to login for {request.RequestUri}");
                 nav.NavigateTo(AuthRecoveryPathHelper.BuildLoginUrl(currentLocalUrl), forceLoad: true);
             }
+
+            // Block until the page navigation cancels all pending requests.
+            // This prevents callers from processing the 401 response and showing error states.
+            using var safetyCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            safetyCts.CancelAfter(TimeSpan.FromSeconds(8));
+            try { await Task.Delay(Timeout.Infinite, safetyCts.Token); }
+            catch (OperationCanceledException) { }
         }
 
         return response;

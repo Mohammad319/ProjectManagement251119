@@ -199,9 +199,7 @@ namespace ProjectManagement.Adminstrator.Services.MHDBlazor
 
             if (type == ToastType.Delete)
             {
-                if (type == ToastType.Add)
-                    ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], MhdState.Success, time);
-
+                ToasterService.Show(itemName, _appLocalizer[LocalizerConst.hasBeenDeletedSuccessfully, itemName], state, time);
             }
             else if (type == ToastType.Add)
             {

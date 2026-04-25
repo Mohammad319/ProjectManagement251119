@@ -4,6 +4,7 @@ using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Pages.Calculation.Form;
 using ProjectManagement.Client.Pages.Calculation.Table;
 using ProjectManagement.Client.Pages.Calculation.Table.DragDrop;
+using ProjectManagement.Client.Pages.Calculation.Table.ResourceSuggestions;
 using ProjectManagement.Client.Pages.Project.Storage;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
@@ -26,6 +27,7 @@ namespace ProjectManagement.Client.Services.Calculation
         Task PasteAsync(int taskId);
         void ShowTaskForm(TaskListMVVM model);
         void ShowResourceForm(ResourceListMVVM model);
+        void ShowResourceSuggestions(TaskListMVVM task);
         void ShowImportDialog();
         void ShowTemplateDialog();
         void ShowTaskReorderDialog(TaskListMVVM? task = null);
@@ -157,6 +159,16 @@ namespace ProjectManagement.Client.Services.Calculation
                 DialogSize.ExtraLarge,
                 DialogButtonsHelper.CreateSaveCancelButtons(ResourceFormUI.DialogFormId));
         }
+
+        public void ShowResourceSuggestions(TaskListMVVM task) =>
+            dialogService.ShowComponent<TaskResourceSuggestionsDialog>(
+                $"Suggest resources ({task.Name} - {task.Code})",
+                Icons.NewResource,
+                new Dictionary<string, object>
+                {
+                    [nameof(TaskResourceSuggestionsDialog.TaskItem)] = task
+                },
+                DialogSize.ExtraLarge);
 
         public void ShowImportDialog() =>
             dialogService.ShowComponent<CSVUI>(ResourceApp.importFromFile, Icons.ImportFromFile, null, DialogSize.ExtraLarge);

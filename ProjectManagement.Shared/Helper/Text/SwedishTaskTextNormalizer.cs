@@ -129,6 +129,34 @@ public static partial class SwedishTaskTextNormalizer
         return Normalize(string.Join(' ', parts.Where(x => !string.IsNullOrWhiteSpace(x))));
     }
 
+    public static double CalculateSimilarity(string? leftNormalizedText, string? rightNormalizedText)
+    {
+        if (string.IsNullOrWhiteSpace(leftNormalizedText) || string.IsNullOrWhiteSpace(rightNormalizedText))
+            return 0d;
+
+        if (string.Equals(leftNormalizedText, rightNormalizedText, StringComparison.OrdinalIgnoreCase))
+            return 1d;
+
+        var leftTokens = Tokenize(leftNormalizedText);
+        var rightTokens = Tokenize(rightNormalizedText);
+
+        if (leftTokens.Count == 0 || rightTokens.Count == 0)
+            return 0d;
+
+        var intersectionCount = leftTokens.Intersect(rightTokens, StringComparer.OrdinalIgnoreCase).Count();
+        var unionCount = leftTokens.Union(rightTokens, StringComparer.OrdinalIgnoreCase).Count();
+
+        var jaccard = unionCount == 0 ? 0d : (double)intersectionCount / unionCount;
+        var coverage = (double)intersectionCount / Math.Min(leftTokens.Count, rightTokens.Count);
+        var containsBonus =
+            leftNormalizedText.Contains(rightNormalizedText, StringComparison.OrdinalIgnoreCase) ||
+            rightNormalizedText.Contains(leftNormalizedText, StringComparison.OrdinalIgnoreCase)
+                ? 0.10d
+                : 0d;
+
+        return Math.Round(Math.Min((0.60d * jaccard) + (0.30d * coverage) + (0.10d * containsBonus), 1d), 4);
+    }
+
     private static string NormalizeToken(string token)
     {
         if (token.Length <= 2)
@@ -153,6 +181,11 @@ public static partial class SwedishTaskTextNormalizer
             ? mapped.Trim()
             : token.Trim();
     }
+
+    private static HashSet<string> Tokenize(string normalizedText) =>
+        normalizedText
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
     [GeneratedRegex(@"[^\p{L}\p{N}\s²³]")]
     private static partial Regex NonSearchCharactersRegex();

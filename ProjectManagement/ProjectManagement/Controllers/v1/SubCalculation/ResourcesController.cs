@@ -1,6 +1,7 @@
 ﻿using Application.Feature.Calculation.Resource.Commands;
 using Application.Feature.Calculation.Resource.Queries;
 using Application.Feature.Calculation.ResourceType.Queries;
+using Application.Feature.Calculation.Task.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjectManagement.Shared.Constant;
@@ -8,7 +9,7 @@ using ProjectManagement.Shared.DTO.Calculation;
 
 namespace ProjectManagement.Server.Controllers.v1.SubCalculation
 {
-    [ApiVersion("1.0"), Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
+    [ApiVersion("1.0"), Authorize(Roles = PMRolesConst.Tenant.Users)]
     public class ResourcesController() : BaseApiController
     {
         [HttpGet]
@@ -33,6 +34,15 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
         public async Task<IActionResult> Post(int id, [FromBody] List<ResourcePostDTO> Items)
         {
             var result = await MicroBus.Send(new CreateResourceCommand(Items, id));
+            TrySetETag(result);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [HttpGet("suggestions/{taskId:int}")]
+        public async Task<IActionResult> GetSuggestions(int taskId, [FromQuery] int maxResults = 5)
+        {
+            var result = await MicroBus.Send(new GetTaskResourceSuggestionsQuery(taskId, maxResults));
             TrySetETag(result);
             return Ok(result);
         }

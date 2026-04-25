@@ -31,6 +31,12 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
             return await _httpRepository.PostAsync<bool, List<ResourcePostDTO>>(models, ResourceURLBase + taskId);
         }
 
+        public async Task<List<TaskResourceSuggestionDTO>> GetSuggestionsAsync(int taskId, int maxResults = 5)
+        {
+            return await _httpRepository.GetAsync<List<TaskResourceSuggestionDTO>>(
+                ResourceURLBase + $"suggestions/{taskId}?maxResults={maxResults}");
+        }
+
         public async Task<bool> UpdateAsync(ResourcePostDTO model, int id)
         {
             return await _httpRepository.PutAsync(model, ResourceURLBase + id);

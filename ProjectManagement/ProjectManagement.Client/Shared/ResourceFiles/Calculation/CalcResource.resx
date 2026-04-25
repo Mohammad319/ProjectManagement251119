@@ -402,4 +402,13 @@
   <data name="Price Worked Q Tax" xml:space="preserve">
     <value>Price worked Q tax</value>
   </data>
+  <data name="suggestionNoResults" xml:space="preserve">
+    <value>No resource suggestions were found for this task.</value>
+  </data>
+  <data name="suggestionAddSelected" xml:space="preserve">
+    <value>Add selected</value>
+  </data>
+  <data name="suggestionShowMore" xml:space="preserve">
+    <value>Show more</value>
+  </data>
 </root>

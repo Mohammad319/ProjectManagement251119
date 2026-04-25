@@ -30,7 +30,7 @@ public static class AuthRegistration
 
         services.ConfigureApplicationCookie(options =>
         {
-            options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+            options.ExpireTimeSpan = TimeSpan.FromHours(4);
             options.SlidingExpiration = true;
             options.LoginPath = "/Account/Login";
             options.LogoutPath = "/Account/Logout";

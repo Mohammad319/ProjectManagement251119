@@ -58,6 +58,7 @@ namespace Persistence.Factory
             services.AddScoped<IStorageQueryService, StorageQueryService>();
             services.AddScoped<ITaskQueryService, TaskQueryService>();
             services.AddScoped<ITaskService, TaskService>();
+            services.AddScoped<ITaskResourceSuggestionService, TaskResourceSuggestionService>();
             services.AddScoped<ITemplateCommandService, TemplateCommandService>();
             services.AddScoped<ITemplateQueryService, TemplateQueryService>();
             services.AddScoped<ITemplateColumnCommandService, TemplateColumnCommandService>();

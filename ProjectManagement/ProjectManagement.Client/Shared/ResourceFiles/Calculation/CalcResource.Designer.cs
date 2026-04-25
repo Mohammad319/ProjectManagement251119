@@ -833,5 +833,23 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
                 return ResourceManager.GetString("waste", resourceCulture);
             }
         }
+
+        public static string suggestionNoResults {
+            get {
+                return ResourceManager.GetString("suggestionNoResults", resourceCulture);
+            }
+        }
+
+        public static string suggestionAddSelected {
+            get {
+                return ResourceManager.GetString("suggestionAddSelected", resourceCulture);
+            }
+        }
+
+        public static string suggestionShowMore {
+            get {
+                return ResourceManager.GetString("suggestionShowMore", resourceCulture);
+            }
+        }
     }
 }

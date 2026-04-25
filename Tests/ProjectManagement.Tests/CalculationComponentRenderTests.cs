@@ -1177,6 +1177,7 @@ public class CalculationComponentRenderTests : BunitContext
         }
 
         public void ShowResourceForm(ResourceListMVVM model) { }
+        public void ShowResourceSuggestions(TaskListMVVM task) { }
         public void ShowImportDialog() { }
         public void ShowTemplateDialog() { }
         public void ShowTaskReorderDialog(TaskListMVVM? task = null) { }
