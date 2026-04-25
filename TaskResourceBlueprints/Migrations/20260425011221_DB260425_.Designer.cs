@@ -11,15 +11,15 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    [Migration("20260326063336_DB260326_1")]
-    partial class DB260326_1
+    [Migration("20260425011221_DB260425_")]
+    partial class DB260425_
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -926,6 +926,15 @@ namespace TaskResourceBlueprints.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("NormalizedTextSv")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal?>("PriceProduction")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
+
                     b.Property<decimal?>("Quantity")
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
@@ -967,6 +976,8 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("FallId");
 
                     b.HasIndex("LocationId");
+
+                    b.HasIndex("NormalizedTextSv");
 
                     b.HasIndex("TaskUnitGroupId");
 

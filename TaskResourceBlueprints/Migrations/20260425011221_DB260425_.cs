@@ -5,7 +5,7 @@
 namespace TaskResourceBlueprints.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260326_1 : Migration
+    public partial class DB260425_ : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -183,12 +183,14 @@ namespace TaskResourceBlueprints.Migrations
                     AdminNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FieldNotes = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
+                    PriceProduction = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: true),
                     UnitCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ChangeFactor1 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
                     ChangeFactor2 = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     Uncontrollable = table.Column<bool>(type: "bit", nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NormalizedTextSv = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     WorkloadThresholds = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ActionId = table.Column<int>(type: "int", nullable: true),
                     LocationId = table.Column<int>(type: "int", nullable: true),
@@ -886,6 +888,11 @@ namespace TaskResourceBlueprints.Migrations
                 name: "IX_Tasks_LocationId",
                 table: "Tasks",
                 column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_NormalizedTextSv",
+                table: "Tasks",
+                column: "NormalizedTextSv");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_Status_SortOrder",

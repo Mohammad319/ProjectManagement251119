@@ -17,7 +17,7 @@ namespace Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -328,8 +328,8 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("OrganisationId")
                         .HasColumnType("int");
@@ -467,8 +467,8 @@ namespace Persistence.Migrations
                         .HasComputedColumnSql("TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.BaseCost'))", true);
 
                     b.Property<string>("Comment")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<decimal?>("CostValue")
                         .ValueGeneratedOnAddOrUpdate()
@@ -556,12 +556,12 @@ namespace Persistence.Migrations
 
                     b.Property<string>("OpportunitiesRisks")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("OpportunityType")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -621,14 +621,14 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Note")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(500))", true);
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(1000))", true);
 
                     b.Property<int?>("OpportunityId")
                         .HasColumnType("int");
@@ -665,9 +665,9 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Unit")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)")
-                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(25))", true);
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(30))", true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -961,14 +961,19 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("NormalizedTextSv")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Note")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)")
-                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(500))", true);
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(1000))", true);
 
                     b.Property<int?>("OpportunityId")
                         .HasColumnType("int");
@@ -998,9 +1003,9 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Unit")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasMaxLength(25)
-                        .HasColumnType("nvarchar(25)")
-                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(25))", true);
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(30))", true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1023,6 +1028,9 @@ namespace Persistence.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "CalculationId");
+
+                    b.HasIndex("TenantId", "NormalizedTextSv")
+                        .HasDatabaseName("IX_Tasks_Tenant_NormalizedTextSv");
 
                     b.HasIndex("TenantId", "ParentTaskId")
                         .HasDatabaseName("IX_Tasks_Tenant_Parent");
@@ -1310,8 +1318,8 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -1348,8 +1356,8 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("OrganisationId")
                         .HasColumnType("int");
@@ -1895,8 +1903,8 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int?>("OrganisationId")
                         .HasColumnType("int");
@@ -2290,8 +2298,8 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()

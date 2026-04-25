@@ -9,15 +9,15 @@ u2@co1.se
 
 D1
 u1d1@co1.se
-u1d1m@co1.se	"xw#@w*A23EkyJ6yo"
+U1d1m@co1.se	"xw#@w*A23EkyJ6yo"
 U1d1sm@co1.se
  D2
-u1d2m@co1.se
-u1d2sm@co1.se
+U1d2m@co1.se
+U1d2sm@co1.se
 
 Company 2
 Admin
-u1@co2.se
+U1@co2.se
 D1
 u1d1sm@co2.se
 D2

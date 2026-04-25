@@ -170,6 +170,9 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
         builder.Property(e => e.Metadata)
             .HasJsonConversion();
 
+        builder.Property(x => x.NormalizedTextSv)
+            .HasMaxLength(FieldLengths.NormalizedText);
+
         builder.Property(x => x.Note)
             .HasComputedColumnSql(
                 CalculationMetadataComputedColumns.JsonString(nameof(TaskEntity.Note), FieldLengths.Comment),
@@ -228,6 +231,9 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 
         builder.HasIndex(x => new { x.TenantId, x.ParentTaskId })
             .HasDatabaseName("IX_Tasks_Tenant_Parent");
+
+        builder.HasIndex(x => new { x.TenantId, x.NormalizedTextSv })
+            .HasDatabaseName("IX_Tasks_Tenant_NormalizedTextSv");
     }
 }
 

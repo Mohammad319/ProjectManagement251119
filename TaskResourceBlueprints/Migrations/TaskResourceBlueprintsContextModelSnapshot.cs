@@ -16,7 +16,7 @@ namespace TaskResourceBlueprints.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -923,6 +923,11 @@ namespace TaskResourceBlueprints.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("NormalizedTextSv")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<decimal?>("PriceProduction")
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
@@ -968,6 +973,8 @@ namespace TaskResourceBlueprints.Migrations
                     b.HasIndex("FallId");
 
                     b.HasIndex("LocationId");
+
+                    b.HasIndex("NormalizedTextSv");
 
                     b.HasIndex("TaskUnitGroupId");
 

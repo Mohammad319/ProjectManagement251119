@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.Constant;
 using ProjectManagement.Shared.DTO.Calculation;
+using ProjectManagement.Shared.Helper.Text;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -21,6 +22,10 @@ namespace Domain.Entities.Calculation
 
         [Required, MaxLength(FieldLengths.TaskName)]
         public string Name { get; private set; } = string.Empty;
+
+        [MaxLength(FieldLengths.NormalizedText)]
+        public string NormalizedTextSv { get; private set; } = string.Empty;
+
         public bool IsActive { get; private set; } = true;
 
         [MaxLength(FieldLengths.Unit)]
@@ -83,6 +88,7 @@ namespace Domain.Entities.Calculation
             var clone = new TaskEntity
             {
                 Name = source.Name,
+                NormalizedTextSv = source.NormalizedTextSv,
                 StatusId = source.StatusId,
                 Metadata = source.GetMetadataSnapshot(),
             };
@@ -115,6 +121,7 @@ namespace Domain.Entities.Calculation
             SetOpportunity(dto.OpportunityId);
             StatusId = dto.StatusId is > 0 ? dto.StatusId : null;
             SetParentTask(dto.ParentTaskId);
+            RefreshNormalizedTextSv();
         }
 
         public TaskMetadata GetMetadataSnapshot()
@@ -153,6 +160,11 @@ namespace Domain.Entities.Calculation
         public void SetOpportunity(int? opportunityId)
         {
             OpportunityId = opportunityId is > 0 ? opportunityId : null;
+        }
+
+        public void RefreshNormalizedTextSv()
+        {
+            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, Unit, Type);
         }
 
         public void ClearOpportunity()

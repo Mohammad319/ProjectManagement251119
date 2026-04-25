@@ -3,6 +3,7 @@ using TaskResourceBlueprints.Entities.Questions.Assignments;
 using TaskResourceBlueprints.Entities.Questions.Conditions;
 using TaskResourceBlueprints.Entities.Questions.Groups;
 using ProjectManagement.Shared.Helper.ProjectAppStorage;
+using ProjectManagement.Shared.Helper.Text;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskResourceBlueprints.Entities.Tasks
@@ -60,6 +61,8 @@ namespace TaskResourceBlueprints.Entities.Tasks
         /// <summary>Code داخلي للمهمة (إن وجد).</summary>
         public string? Code { get; set; }
 
+        public string NormalizedTextSv { get; set; } = string.Empty;
+
         /// <summary>
         /// Workload thresholds, e.g. for Low / Medium / High.
         /// Always three values.
@@ -95,5 +98,10 @@ namespace TaskResourceBlueprints.Entities.Tasks
         public List<ResourceSelectorDefinition> ResourceSelectors { get; set; } = [];
         public List<NumericQuestionDefinition> NumericQuestions { get; set; } = [];
         public List<ConditionDefinition> Conditions { get; set; } = [];
+
+        public void RefreshNormalizedTextSv()
+        {
+            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, UnitCode, ActionType?.Name);
+        }
     }
 }

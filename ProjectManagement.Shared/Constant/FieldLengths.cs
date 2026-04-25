@@ -35,5 +35,8 @@
 
         // Storage
         public const int StorageValue = 4000;
+
+        // Search
+        public const int NormalizedText = 450;
     }
 }

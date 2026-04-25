@@ -13,6 +13,9 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
         builder.Property(x => x.Name)
             .HasMaxLength(Lengths.DisplayName);
 
+        builder.Property(x => x.NormalizedTextSv)
+            .HasMaxLength(Lengths.NormalizedText);
+
         builder.Property(x => x.Quantity)
             .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
 
@@ -35,6 +38,7 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
             .HasJsonScalarListComparer();
 
         builder.HasIndex(x => new { x.Status, x.SortOrder });
+        builder.HasIndex(x => x.NormalizedTextSv);
         builder.HasIndex(x => new { x.ActionId, x.LocationId, x.FallId, x.ActionTypeId });
 
         builder.HasMany(t => t.QuestionGroups)

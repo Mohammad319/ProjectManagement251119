@@ -185,6 +185,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 ]
             };
 
+            e.RefreshNormalizedTextSv();
+
             db.Tasks.Add(e);
             await db.SaveChangesAsync(ct);
             return e.Id;
@@ -225,6 +227,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             d.Width     ?? 0,
             d.Length    ?? 0
             ];
+            e.RefreshNormalizedTextSv();
 
             await db.SaveChangesAsync(ct);
         }
