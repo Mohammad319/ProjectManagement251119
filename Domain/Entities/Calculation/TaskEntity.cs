@@ -164,7 +164,7 @@ namespace Domain.Entities.Calculation
 
         public void RefreshNormalizedTextSv()
         {
-            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, Unit, Type);
+            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, Unit, Metadata.Quantity);
         }
 
         public void ClearOpportunity()

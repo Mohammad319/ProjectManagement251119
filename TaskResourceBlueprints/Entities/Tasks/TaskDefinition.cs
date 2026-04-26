@@ -101,7 +101,7 @@ namespace TaskResourceBlueprints.Entities.Tasks
 
         public void RefreshNormalizedTextSv()
         {
-            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, UnitCode, ActionType?.Name);
+            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, UnitCode, Quantity);
         }
     }
 }

@@ -31,10 +31,21 @@ namespace ProjectManagement.Client.Shared.Repositories.Calculation.Implement
             return await _httpRepository.PostAsync<bool, List<ResourcePostDTO>>(models, ResourceURLBase + taskId);
         }
 
-        public async Task<List<TaskResourceSuggestionDTO>> GetSuggestionsAsync(int taskId, int maxResults = 5)
+        public async Task<List<TaskResourceSuggestionDTO>> GetSuggestionsAsync(
+            int taskId,
+            int maxResults = 5,
+            bool includeResources = true)
         {
             return await _httpRepository.GetAsync<List<TaskResourceSuggestionDTO>>(
-                ResourceURLBase + $"suggestions/{taskId}?maxResults={maxResults}");
+                ResourceURLBase + $"suggestions/{taskId}?maxResults={maxResults}&includeResources={includeResources}");
+        }
+
+        public async Task<List<ResourcePostDTO>> GetSuggestionResourcesAsync(
+            int sourceTaskId,
+            TaskResourceSuggestionSource source)
+        {
+            return await _httpRepository.GetAsync<List<ResourcePostDTO>>(
+                ResourceURLBase + $"suggestions/resources/{sourceTaskId}?source={source}");
         }
 
         public async Task<bool> UpdateAsync(ResourcePostDTO model, int id)

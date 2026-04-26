@@ -55,8 +55,8 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
     private static string ActiveToggleChipClass => "calc-status-chip calc-status-chip-toggle is-active";
     private static string InactiveToggleChipClass => "calc-status-chip calc-status-chip-toggle is-muted";
 
-    private bool _allTasksExpanded;
-    private bool _allResourceDetailsExpanded;
+    private bool _allTasksExpanded = true;
+    private bool _allResourceDetailsExpanded = true;
 
     protected override void OnInitialized()
     {

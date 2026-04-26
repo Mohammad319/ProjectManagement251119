@@ -125,7 +125,12 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 query = query.Where(x => (x.Code ?? string.Empty).Contains(search) ||
                 x.Name.Contains(search));
             }
-            return await query.TasksBaseToDto(tenantid).ToListAsync(ct);
+            return await query
+                .OrderBy(x => x.Code).ThenBy(x => x.Name)
+                .Skip(filter.Skip)
+                .Take(filter.Take)
+                .TasksBaseToDto(tenantid)
+                .ToListAsync(ct);
         }
         public async Task<ProjectTaskDto?> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
         {

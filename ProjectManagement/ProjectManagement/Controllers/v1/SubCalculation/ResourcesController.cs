@@ -40,9 +40,23 @@ namespace ProjectManagement.Server.Controllers.v1.SubCalculation
 
         [Authorize(Roles = PMRolesConst.Tenant.Users)]
         [HttpGet("suggestions/{taskId:int}")]
-        public async Task<IActionResult> GetSuggestions(int taskId, [FromQuery] int maxResults = 5)
+        public async Task<IActionResult> GetSuggestions(
+            int taskId,
+            [FromQuery] int maxResults = 5,
+            [FromQuery] bool includeResources = true)
         {
-            var result = await MicroBus.Send(new GetTaskResourceSuggestionsQuery(taskId, maxResults));
+            var result = await MicroBus.Send(new GetTaskResourceSuggestionsQuery(taskId, maxResults, includeResources));
+            TrySetETag(result);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = PMRolesConst.Tenant.Users)]
+        [HttpGet("suggestions/resources/{sourceTaskId:int}")]
+        public async Task<IActionResult> GetSuggestionResources(
+            int sourceTaskId,
+            [FromQuery] TaskResourceSuggestionSource source)
+        {
+            var result = await MicroBus.Send(new GetTaskResourceSuggestionResourcesQuery(sourceTaskId, source));
             TrySetETag(result);
             return Ok(result);
         }

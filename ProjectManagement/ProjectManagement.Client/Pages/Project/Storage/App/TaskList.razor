@@ -1,4 +1,4 @@
-﻿@using ProjectManagement.Client.Pages.Project.Storage.App.Config
+@using ProjectManagement.Client.Pages.Project.Storage.App.Config
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
@@ -38,14 +38,23 @@
         </button>
     </div>
 </div>
+
+@if (_error is not null)
+{
+    <div class="mt-3 flex items-center gap-2 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-400">
+        <span>⚠ @_error</span>
+        <button class="ml-auto underline hover:no-underline" @onclick="Refresh">Retry</button>
+    </div>
+}
+
 @if (_loading)
 {
     <div class="pt-3">
         <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
     </div>
- 
 }
 else if (_tasks != null)
+{
     foreach (var task in _tasks)
     {
         <TaskCard @key="task.Id" Task="task" ToAdded="TaskToAdd" Config="Config"
@@ -53,7 +62,26 @@ else if (_tasks != null)
                   CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name" />
     }
 
+    @if (_hasMore)
+    {
+        <div class="flex justify-center pt-3 pb-2">
+            @if (_loadingMore)
+            {
+                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+            }
+            else
+            {
+                <button class="px-4 py-1.5 text-sm border border-blue-400 text-blue-600 rounded hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/30 transition"
+                        @onclick="LoadMoreAsync">
+                    + @PageSize
+                </button>
+            }
+        </div>
+    }
+}
+
 @code {
+    private const int PageSize = 25;
     private string InputClass => "border border-gray-300 rounded px-2 py-1 text-[13px] leading-tight h-[25px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
 
     void StorageStateModal()
@@ -80,12 +108,14 @@ else if (_tasks != null)
                         res.Data.Cost = (decimal)res.CostStorageValue.Value;
                 }
             }
-
         }
         Modal.Close();
-
     }
+
     private bool _loading = true;
+    private bool _loadingMore = false;
+    private bool _hasMore = false;
+    private string? _error;
     public List<ProjectTaskDto> _tasks = new();
     ProjectTaskFilterDto filterDto = new();
     [Parameter] public EventCallback RefreshBack { get; set; }
@@ -100,15 +130,59 @@ else if (_tasks != null)
 
     async Task Refresh()
     {
+        _error = null;
         _loading = true;
-        _tasks = await TaskService.GetTasksForUserDtoAsync(filterDto);
-        if (AppState.StorageApp.Cost) foreach (var item in _tasks)
+        try
+        {
+            filterDto.Skip = 0;
+            filterDto.Take = PageSize;
+            var result = await TaskService.GetTasksForUserDtoAsync(filterDto);
+            _tasks = result;
+            _hasMore = result.Count == PageSize;
+            ApplyCostAdjustments(result);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+            _tasks = [];
+            _hasMore = false;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    async Task LoadMoreAsync()
+    {
+        _error = null;
+        _loadingMore = true;
+        try
+        {
+            filterDto.Skip = _tasks.Count;
+            filterDto.Take = PageSize;
+            var result = await TaskService.GetTasksForUserDtoAsync(filterDto);
+            ApplyCostAdjustments(result);
+            _tasks.AddRange(result);
+            _hasMore = result.Count == PageSize;
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loadingMore = false;
+        }
+    }
+
+    void ApplyCostAdjustments(List<ProjectTaskDto> tasks)
+    {
+        if (!AppState.StorageApp.Cost) return;
+        foreach (var item in tasks)
             foreach (var res in item.Resources)
-            {
                 if (res.CostUserValue.HasValue)
                     res.Data.Cost = (decimal)res.CostUserValue.Value;
-            }
-        _loading = false;
     }
 
     public async Task<bool> SaveAsync()
@@ -120,7 +194,7 @@ else if (_tasks != null)
                 Name =  Task.DisplayName,
                 Order = Task.SortOrder,
                 StatusId = Task.StatusId,
-                
+
                 Metadata = new ProjectManagement.Shared.Base.Calculation.TaskMetadata
                 {
                     QuantityParam = ConstValues.FixedQ,
@@ -186,9 +260,19 @@ else if (_tasks != null)
 
     protected override async Task OnInitializedAsync()
     {
-        await Refresh();
-        Config = await Repo.Resource.GetConfigForm();
-        Statuses = (await Repo.Task.GetAsync()).ToList();
-        _loading = false;
+        try
+        {
+            await Refresh();
+            Config = await Repo.Resource.GetConfigForm();
+            Statuses = (await Repo.Task.GetAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 }

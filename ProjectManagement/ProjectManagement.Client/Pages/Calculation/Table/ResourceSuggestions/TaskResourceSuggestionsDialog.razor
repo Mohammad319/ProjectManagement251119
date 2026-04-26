@@ -1,6 +1,7 @@
 @using ProjectManagement.Client.Shared.MVVM.Calculation
 @using ProjectManagement.Client.Shared.ResourceFiles.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.Enums
 @using System.Globalization
 @inherits AppComponentBase
 
@@ -26,12 +27,26 @@
 
                     <div class="flex min-w-0 items-center justify-between gap-2 border-b border-gray-100 px-2 py-1.5 dark:border-gray-800">
 
+                        <button class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-gray-300 text-base leading-none text-gray-700 hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                                disabled="@state.IsLoadingResources"
+                                title="@(state.IsExpanded ? "Collapse resources" : "Load resources")"
+                                @onclick="() => ToggleResourcesAsync(state)">
+                            @(state.IsLoadingResources ? "..." : state.IsExpanded ? "-" : "+")
+                        </button>
+
                         <div class="min-w-0 flex-1 overflow-hidden">
                             <div class="flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap">
 
                                 <div class="min-w-0 flex-[1_1_18rem] truncate font-medium text-gray-900 dark:text-gray-100">
                                     @state.Suggestion.SourceTaskName
                                 </div>
+
+                                @if (HasTaskQuantityInfo(state.Suggestion))
+                                {
+                                    <span class="shrink-0 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                        @FormatTaskQuantity(state.Suggestion)
+                                    </span>
+                                }
 
                                 <span class="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                                     @state.Suggestion.Source
@@ -57,79 +72,97 @@
                         </div>
 
                         <button class="shrink-0 rounded border border-blue-600 px-3 py-1 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-40 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-950"
-                                disabled="@(state.IsApplying || !state.Rows.Any(r => r.Selected))"
+                                disabled="@(state.IsApplying || !state.IsExpanded || state.IsLoadingResources || !state.Rows.Any(r => r.Selected))"
                                 @onclick="() => ApplySuggestionAsync(state)">
                             @CalcResource.suggestionAddSelected
                         </button>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="border-b border-gray-100 bg-gray-50 text-xs dark:border-gray-800 dark:bg-gray-950">
-                                <tr>
-                                    <th class="w-8 px-2 py-1.5"></th>
-                                    <th class="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">@CalcResource.name</th>
-                                    <th class="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">@CalcResource.type</th>
-                                    <th class="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">@CalcResource.unit</th>
-                                    <th class="px-2 py-1.5 text-right font-medium text-gray-500 dark:text-gray-400">@CalcResource.quantity</th>
-                                    <th class="px-2 py-1.5 text-right font-medium text-gray-500 dark:text-gray-400">@CalcResource.cost</th>
-                                </tr>
-                            </thead>
+                    @if (state.IsExpanded)
+                    {
+                        if (state.IsLoadingResources)
+                        {
+                            <div class="py-3">
+                                <BlazorMHD.UI.Components.Feedback.Loading.MhdLoading />
+                            </div>
+                        }
+                        else if (state.Rows.Count == 0)
+                        {
+                            <div class="px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                @CalcResource.suggestionNoResults
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="border-b border-gray-100 bg-gray-50 text-xs dark:border-gray-800 dark:bg-gray-950">
+                                        <tr>
+                                            <th class="w-8 px-2 py-1.5"></th>
+                                            <th class="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">@CalcResource.name</th>
+                                            <th class="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">@CalcResource.type</th>
+                                            <th class="px-2 py-1.5 text-left font-medium text-gray-500 dark:text-gray-400">@CalcResource.unit</th>
+                                            <th class="w-32 px-2 py-1.5 text-right font-medium text-gray-500 dark:text-gray-400">@CalcResource.quantity</th>
+                                            <th class="w-32 px-2 py-1.5 text-right font-medium text-gray-500 dark:text-gray-400">@CalcResource.cost</th>
+                                        </tr>
+                                    </thead>
 
-                            <tbody>
-                                @foreach (var row in state.Rows)
-                                {
-                                    <tr class="border-b border-gray-50 last:border-0 dark:border-gray-800 @(row.Selected ? "" : "opacity-40")">
-                                        <td class="px-2 py-1 text-center">
-                                            <input type="checkbox"
-                                                   checked="@row.Selected"
-                                                   @onchange="e => row.Selected = (bool)(e.Value ?? false)"
-                                                   class="cursor-pointer accent-blue-600" />
-                                        </td>
+                                    <tbody>
+                                        @foreach (var row in state.Rows)
+                                        {
+                                            <tr class="border-b border-gray-50 last:border-0 dark:border-gray-800 @(row.Selected ? "" : "opacity-40")">
+                                                <td class="px-2 py-1 text-center">
+                                                    <input type="checkbox"
+                                                           checked="@row.Selected"
+                                                           @onchange="e => row.Selected = (bool)(e.Value ?? false)"
+                                                           class="cursor-pointer accent-blue-600" />
+                                                </td>
 
-                                        <td class="px-2 py-1">
-                                            <input type="text"
-                                                   value="@row.Name"
-                                                   @onchange="e => row.Name = e.Value?.ToString() ?? row.Name"
-                                                   class="w-full min-w-[8rem] rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
-                                        </td>
+                                                <td class="px-2 py-1">
+                                                    <input type="text"
+                                                           value="@row.Name"
+                                                           @onchange="e => row.Name = e.Value?.ToString() ?? row.Name"
+                                                           class="w-full min-w-[8rem] rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
+                                                </td>
 
-                                        <td class="px-2 py-1 text-gray-500 dark:text-gray-400">
-                                            @row.Resource.ResType
-                                        </td>
+                                                <td class="px-2 py-1 text-gray-500 dark:text-gray-400">
+                                                    @row.Resource.ResType
+                                                </td>
 
-                                        <td class="px-2 py-1 text-gray-500 dark:text-gray-400">
-                                            @row.Resource.Unit
-                                        </td>
+                                                <td class="px-2 py-1 text-gray-500 dark:text-gray-400">
+                                                    @row.Resource.Unit
+                                                </td>
 
-                                        <td class="px-2 py-1">
-                                            <input type="number"
-                                                   value="@row.Quantity.ToString(CultureInfo.InvariantCulture)"
-                                                   step="0.01"
-                                                   @onchange="e =>
-                                                                                               {
-                                                                                                   if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
-                                                                                                       row.Quantity = v;
-                                                                                               }"
-                                                   class="w-20 rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
-                                        </td>
+                                                <td class="px-2 py-1">
+                                                    <input type="number"
+                                                           value="@row.Quantity.ToString("0.00", CultureInfo.InvariantCulture)"
+                                                           step="0.01"
+                                                           @onchange="e =>
+                                                                                                       {
+                                                                                                           if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+                                                                                                               row.Quantity = RoundQuantity(v);
+                                                                                                       }"
+                                                           class="w-28 rounded border border-gray-200 bg-transparent px-2 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
+                                                </td>
 
-                                        <td class="px-2 py-1">
-                                            <input type="number"
-                                                   value="@row.Cost.ToString(CultureInfo.InvariantCulture)"
-                                                   step="0.01"
-                                                   @onchange="e =>
-                                                                                               {
-                                                                                                   if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
-                                                                                                       row.Cost = v;
-                                                                                               }"
-                                                   class="w-24 rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                                                <td class="px-2 py-1">
+                                                    <input type="number"
+                                                           value="@row.Cost.ToString("0.00", CultureInfo.InvariantCulture)"
+                                                           step="0.01"
+                                                           @onchange="e =>
+                                                                                                       {
+                                                                                                           if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v))
+                                                                                                               row.Cost = v;
+                                                                                                       }"
+                                                           class="w-28 rounded border border-gray-200 bg-transparent px-2 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    }
 
                 </div>
             }
@@ -151,8 +184,9 @@
 @code {
     [Parameter, EditorRequired] public TaskListMVVM TaskItem { get; set; } = default!;
 
+    private const int PageSize = 30;
     private bool _loading = true;
-    private int _maxResults = 5;
+    private int _maxResults = PageSize;
     private bool _canShowMore;
     private List<SuggestionState> _states = [];
 
@@ -166,13 +200,23 @@
         _loading = true;
         StateHasChanged();
 
-        var results = await Repo.Resource.GetSuggestionsAsync(TaskItem.Id, _maxResults + 1);
+        var previousStates = _states.ToDictionary(x => x.Key);
+        var results = await Repo.Resource.GetSuggestionsAsync(TaskItem.Id, _maxResults + 1, includeResources: false);
 
         _canShowMore = results.Count > _maxResults;
 
         _states = results
             .Take(_maxResults)
-            .Select(s => new SuggestionState(s))
+            .Select(s =>
+            {
+                if (previousStates.TryGetValue(SuggestionState.BuildKey(s), out var existing))
+                {
+                    existing.UpdateSuggestion(s);
+                    return existing;
+                }
+
+                return new SuggestionState(s, TaskItem);
+            })
             .ToList();
 
         _loading = false;
@@ -180,8 +224,41 @@
 
     private async Task ShowMoreAsync()
     {
-        _maxResults = 10;
+        _maxResults += PageSize;
         await LoadAsync();
+    }
+
+    private async Task ToggleResourcesAsync(SuggestionState state)
+    {
+        if (state.IsLoadingResources)
+            return;
+
+        if (state.IsExpanded)
+        {
+            state.IsExpanded = false;
+            return;
+        }
+
+        state.IsExpanded = true;
+
+        if (state.HasLoadedResources)
+            return;
+
+        state.IsLoadingResources = true;
+        StateHasChanged();
+
+        try
+        {
+            var resources = await Repo.Resource.GetSuggestionResourcesAsync(
+                state.Suggestion.SourceTaskId,
+                state.Suggestion.Source);
+
+            state.SetResources(resources, TaskItem);
+        }
+        finally
+        {
+            state.IsLoadingResources = false;
+        }
     }
 
     private async Task ApplySuggestionAsync(SuggestionState state)
@@ -232,16 +309,49 @@
         _ => "text-red-500 dark:text-red-400"
     };
 
+    private static bool HasTaskQuantityInfo(TaskResourceSuggestionDTO suggestion)
+        => suggestion.SourceTaskQuantity.HasValue || !string.IsNullOrWhiteSpace(suggestion.SourceTaskUnit);
+
+    private static string FormatTaskQuantity(TaskResourceSuggestionDTO suggestion)
+    {
+        var quantity = suggestion.SourceTaskQuantity?.ToString("0.###", CultureInfo.InvariantCulture);
+        var unit = suggestion.SourceTaskUnit?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(quantity) && !string.IsNullOrWhiteSpace(unit))
+            return $"{quantity} {unit}";
+
+        return quantity ?? unit ?? string.Empty;
+    }
+
     private sealed class SuggestionState
     {
-        public TaskResourceSuggestionDTO Suggestion { get; }
-        public List<ResourceEditRow> Rows { get; }
+        public TaskResourceSuggestionDTO Suggestion { get; private set; }
+        public List<ResourceEditRow> Rows { get; private set; }
         public bool IsApplying { get; set; }
+        public bool IsExpanded { get; set; }
+        public bool IsLoadingResources { get; set; }
+        public bool HasLoadedResources { get; private set; }
+        public string Key => BuildKey(Suggestion);
 
-        public SuggestionState(TaskResourceSuggestionDTO suggestion)
+        public SuggestionState(TaskResourceSuggestionDTO suggestion, TaskListMVVM task)
         {
             Suggestion = suggestion;
-            Rows = suggestion.Resources.Select(r => new ResourceEditRow(r)).ToList();
+            Rows = suggestion.Resources.Select(r => new ResourceEditRow(r, task)).ToList();
+            HasLoadedResources = suggestion.Resources.Count > 0;
+        }
+
+        public static string BuildKey(TaskResourceSuggestionDTO suggestion)
+            => $"{suggestion.Source}:{suggestion.SourceTaskId}";
+
+        public void UpdateSuggestion(TaskResourceSuggestionDTO suggestion)
+        {
+            Suggestion = suggestion;
+        }
+
+        public void SetResources(IEnumerable<ResourcePostDTO> resources, TaskListMVVM task)
+        {
+            Rows = resources.Select(r => new ResourceEditRow(r, task)).ToList();
+            HasLoadedResources = true;
         }
     }
 
@@ -254,12 +364,39 @@
         public decimal Quantity { get; set; }
         public decimal Cost { get; set; }
 
-        public ResourceEditRow(ResourcePostDTO resource)
+        public ResourceEditRow(ResourcePostDTO resource, TaskListMVVM task)
         {
             Resource = resource;
             Name = resource.Name;
-            Quantity = resource.Quantity;
+            Quantity = RoundQuantity(CalculateQuantity(resource, task));
+            resource.Quantity = Quantity;
             Cost = resource.Cost;
         }
+
+        private static decimal CalculateQuantity(ResourcePostDTO resource, TaskListMVVM task)
+        {
+            var effectiveTaskQuantity = task.Quantity ?? 0m;
+            var effectiveCapWaste = IsCapResource(resource) && resource.Data.CapFromTask && task.Cap.HasValue
+                ? task.Cap.Value
+                : resource.Data.CapWaste;
+            var baseCalc = effectiveTaskQuantity * resource.Data.ChangeFactor1 * resource.Data.ChangeFactor2;
+
+            if (IsWasteResource(resource) && effectiveCapWaste != 0)
+                return baseCalc * (1 + effectiveCapWaste / 100);
+
+            if (IsCapResource(resource) && effectiveCapWaste != 0)
+                return baseCalc / effectiveCapWaste;
+
+            return baseCalc;
+        }
+
+        private static bool IsCapResource(ResourcePostDTO resource)
+            => resource.ResType is ResourceTypesEnum.MachinesAndEquipments or ResourceTypesEnum.Worker;
+
+        private static bool IsWasteResource(ResourcePostDTO resource)
+            => resource.ResType is ResourceTypesEnum.Materials;
     }
+
+    private static decimal RoundQuantity(decimal value)
+        => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 }

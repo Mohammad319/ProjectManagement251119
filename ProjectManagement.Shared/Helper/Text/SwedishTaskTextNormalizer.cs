@@ -91,7 +91,8 @@ public static partial class SwedishTaskTextNormalizer
         {
             var token = rawToken.Trim();
 
-            if (string.IsNullOrWhiteSpace(token) || StopWords.Contains(token))
+            if (string.IsNullOrWhiteSpace(token) ||
+                StopWords.Contains(token))
                 continue;
 
             if (TokenMap.TryGetValue(token, out var mapped))
@@ -99,7 +100,8 @@ public static partial class SwedishTaskTextNormalizer
 
             token = NormalizeToken(token);
 
-            if (string.IsNullOrWhiteSpace(token) || StopWords.Contains(token))
+            if (string.IsNullOrWhiteSpace(token) ||
+                StopWords.Contains(token))
                 continue;
 
             tokens.Add(token);
@@ -116,14 +118,14 @@ public static partial class SwedishTaskTextNormalizer
             : normalized[..FieldLengths.NormalizedText].Trim();
     }
 
-    public static string NormalizeTask(string? name, string? code, string? unit, object? taskType = null)
+    public static string NormalizeTask(string? name, string? code, string? unit, decimal? quantity = null)
     {
         var parts = new[]
         {
             code,
             name,
             unit,
-            taskType?.ToString()
+            FormatQuantity(quantity)
         };
 
         return Normalize(string.Join(' ', parts.Where(x => !string.IsNullOrWhiteSpace(x))));
@@ -142,6 +144,9 @@ public static partial class SwedishTaskTextNormalizer
 
         if (leftTokens.Count == 0 || rightTokens.Count == 0)
             return 0d;
+
+        if (leftTokens.SetEquals(rightTokens))
+            return 1d;
 
         var intersectionCount = leftTokens.Intersect(rightTokens, StringComparer.OrdinalIgnoreCase).Count();
         var unionCount = leftTokens.Union(rightTokens, StringComparer.OrdinalIgnoreCase).Count();
@@ -186,6 +191,11 @@ public static partial class SwedishTaskTextNormalizer
         normalizedText
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static string? FormatQuantity(decimal? quantity)
+        => quantity.HasValue
+            ? quantity.Value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
+            : null;
 
     [GeneratedRegex(@"[^\p{L}\p{N}\s²³]")]
     private static partial Regex NonSearchCharactersRegex();
