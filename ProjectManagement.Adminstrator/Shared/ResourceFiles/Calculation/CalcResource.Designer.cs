@@ -241,7 +241,7 @@ namespace ProjectManagement.Adminstrator.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Earnings.
+        ///   Looks up a localized string similar to Earning.
         /// </summary>
         public static string earnings {
             get {

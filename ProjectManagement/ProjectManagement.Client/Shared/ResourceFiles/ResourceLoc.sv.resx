@@ -187,7 +187,7 @@
     <value>Värsta fall</value>
   </data>
   <data name="rating" xml:space="preserve">
-    <value>Gradering</value>
+    <value>Företagsrating</value>
   </data>
   <data name="resource" xml:space="preserve">
     <value>Resurs</value>
@@ -202,19 +202,19 @@
     <value>Egenkontroll</value>
   </data>
   <data name="ByCompany" xml:space="preserve">
-    <value>Av företag</value>
+    <value>Per företag</value>
   </data>
   <data name="ByResource" xml:space="preserve">
-    <value>av Resurs</value>
+    <value>Per resurs</value>
   </data>
   <data name="summarySheet" xml:space="preserve">
     <value>Slutsida</value>
   </data>
   <data name="task" xml:space="preserve">
-    <value>Post</value>
+    <value>Kalkylpost</value>
   </data>
   <data name="taskStatus" xml:space="preserve">
-    <value>Post status</value>
+    <value>Kalkylpost status</value>
   </data>
   <data name="template" xml:space="preserve">
     <value>Mall</value>
@@ -232,7 +232,7 @@
     <value>År</value>
   </data>
   <data name="SubTask" xml:space="preserve">
-    <value>Deluppgift</value>
+    <value>Underpost</value>
   </data>
   <data name="Comparison" xml:space="preserve">
     <value>Jämförelse</value>
@@ -265,7 +265,7 @@
     <value>Risk</value>
   </data>
   <data name="Adjustment" xml:space="preserve">
-    <value>Adjustment</value>
+    <value>Justering</value>
   </data>
   <data name="Information" xml:space="preserve">
     <value>Information</value>

@@ -187,7 +187,7 @@
     <value>Worst case</value>
   </data>
   <data name="rating" xml:space="preserve">
-    <value>Rating</value>
+    <value>Company rating</value>
   </data>
   <data name="resource" xml:space="preserve">
     <value>Resource</value>
@@ -211,10 +211,10 @@
     <value>Summary sheet</value>
   </data>
   <data name="task" xml:space="preserve">
-    <value>Task</value>
+    <value>Cost item</value>
   </data>
   <data name="taskStatus" xml:space="preserve">
-    <value>Task status</value>
+    <value>Cost item status</value>
   </data>
   <data name="template" xml:space="preserve">
     <value>Template</value>
@@ -232,7 +232,7 @@
     <value>Year</value>
   </data>
   <data name="SubTask" xml:space="preserve">
-    <value>Sub Task</value>
+    <value>Sub-item</value>
   </data>
   <data name="Comparison" xml:space="preserve">
     <value>Comparison</value>

@@ -439,7 +439,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Rating.
+        ///   Looks up a localized string similar to Company rating.
         /// </summary>
         public static string rating {
             get {
@@ -502,7 +502,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sub Task.
+        ///   Looks up a localized string similar to Sub-item.
         /// </summary>
         public static string SubTask {
             get {
@@ -520,7 +520,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Task.
+        ///   Looks up a localized string similar to Cost item.
         /// </summary>
         public static string task {
             get {
@@ -529,7 +529,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Task status.
+        ///   Looks up a localized string similar to Cost item status.
         /// </summary>
         public static string taskStatus {
             get {

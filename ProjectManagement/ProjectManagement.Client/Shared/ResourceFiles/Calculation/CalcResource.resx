@@ -139,13 +139,13 @@
     <value>Ceiling Price</value>
   </data>
   <data name="changeFactor1" xml:space="preserve">
-    <value>Change factor 1</value>
+    <value>Quantity-driving factor</value>
   </data>
   <data name="changeFactor2" xml:space="preserve">
-    <value>Change factor 2</value>
+    <value>Quantity conversion factor</value>
   </data>
   <data name="co2" xml:space="preserve">
-    <value>Co2</value>
+    <value>Co2/ unit</value>
   </data>
   <data name="code" xml:space="preserve">
     <value>Code</value>
@@ -154,7 +154,7 @@
     <value>Comment</value>
   </data>
   <data name="cost" xml:space="preserve">
-    <value>Cost</value>
+    <value>Cost/ unit</value>
   </data>
   <data name="Currency" xml:space="preserve">
     <value>Currency</value>
@@ -169,13 +169,7 @@
     <value>Difference</value>
   </data>
   <data name="earning" xml:space="preserve">
-    <value>Earning</value>
-  </data>
-  <data name="earnings" xml:space="preserve">
-    <value>Earnings</value>
-  </data>
-  <data name="Electricity" xml:space="preserve">
-    <value>Electricity</value>
+    <value>Net earnings</value>
   </data>
   <data name="endDate" xml:space="preserve">
     <value>End date</value>
@@ -216,11 +210,8 @@
   <data name="netCalOH" xml:space="preserve">
     <value>NetCal OH</value>
   </data>
-  <data name="netCost" xml:space="preserve">
-    <value>netCost</value>
-  </data>
   <data name="netCostQ" xml:space="preserve">
-    <value>Netcost Q</value>
+    <value>Net cost/ unit</value>
   </data>
   <data name="newUnit" xml:space="preserve">
     <value>New unit</value>
@@ -238,19 +229,19 @@
     <value>Overview information about the project</value>
   </data>
   <data name="price" xml:space="preserve">
-    <value>Price</value>
+    <value>Price/ unit</value>
   </data>
   <data name="priceOG" xml:space="preserve">
     <value>Price OG</value>
   </data>
   <data name="priceQ" xml:space="preserve">
-    <value>Price Q</value>
+    <value>Price unit</value>
   </data>
   <data name="priceProduction" xml:space="preserve">
     <value>Price production</value>
   </data>
   <data name="priceQTax" xml:space="preserve">
-    <value>Price Q Tax</value>
+    <value>Price/ unit Tax</value>
   </data>
   <data name="priceSub" xml:space="preserve">
     <value>Price sub.</value>
@@ -268,7 +259,7 @@
     <value>Price Totally</value>
   </data>
   <data name="priority" xml:space="preserve">
-    <value>Priority</value>
+    <value>Win probability</value>
   </data>
   <data name="procurement" xml:space="preserve">
     <value>Procurement</value>
@@ -301,10 +292,10 @@
     <value>Resources status</value>
   </data>
   <data name="resourceType" xml:space="preserve">
-    <value>Resource Type</value>
+    <value>Resource type</value>
   </data>
   <data name="resourceTypeSystem" xml:space="preserve">
-    <value>Resource Type System</value>
+    <value>Resource type system</value>
   </data>
   <data name="responsible" xml:space="preserve">
     <value>Responsible</value>
@@ -322,10 +313,7 @@
     <value>Status</value>
   </data>
   <data name="StorageSort" xml:space="preserve">
-    <value>Storage Sort</value>
-  </data>
-  <data name="SubmittedPrices" xml:space="preserve">
-    <value>Submitted prices</value>
+    <value>Library</value>
   </data>
   <data name="sum" xml:space="preserve">
     <value>Sum</value>
@@ -378,29 +366,29 @@
   <data name="waste" xml:space="preserve">
     <value>Waste</value>
   </data>
-  <data name="Actually quantity" xml:space="preserve">
+  <data name="actuallyQuantity" xml:space="preserve">
     <value>Actually quantity</value>
   </data>
-  <data name="Worked Q" xml:space="preserve">
-    <value>Worked Q</value>
+  <data name="workedQ" xml:space="preserve">
+    <value>Quantity completed</value>
   </data>
-  <data name="Worked Q (%)" xml:space="preserve">
-    <value>Worked Q (%)</value>
+  <data name="workedQPercent" xml:space="preserve">
+    <value>Quantity completed (%)</value>
   </data>
-  <data name="Price Actually quantity" xml:space="preserve">
+  <data name="priceActuallyQuantity" xml:space="preserve">
     <value>Price actually quantity</value>
   </data>
-  <data name="Price Worked Q" xml:space="preserve">
-    <value>Price worked Q</value>
+  <data name="priceWorkedQ" xml:space="preserve">
+    <value>Price worked/ unit</value>
   </data>
-  <data name="Price sub Tax" xml:space="preserve">
+  <data name="priceSubTax" xml:space="preserve">
     <value>Price sub tax</value>
   </data>
-  <data name="Price Actually quantity Tax" xml:space="preserve">
+  <data name="priceActuallyQuantityTax" xml:space="preserve">
     <value>Price actually quantity tax</value>
   </data>
-  <data name="Price Worked Q Tax" xml:space="preserve">
-    <value>Price worked Q tax</value>
+  <data name="priceWorkedQTax" xml:space="preserve">
+    <value>Price worked/ unit tax</value>
   </data>
   <data name="suggestionNoResults" xml:space="preserve">
     <value>No resource suggestions were found for this task.</value>
@@ -410,5 +398,8 @@
   </data>
   <data name="suggestionShowMore" xml:space="preserve">
     <value>Show more</value>
+  </data>
+  <data name="changeFactor2Resource" xml:space="preserve">
+    <value>Unit conversion factor</value>
   </data>
 </root>

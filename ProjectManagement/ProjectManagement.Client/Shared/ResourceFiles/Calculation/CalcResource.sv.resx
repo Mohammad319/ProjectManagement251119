@@ -139,13 +139,13 @@
     <value>Takpris</value>
   </data>
   <data name="changeFactor1" xml:space="preserve">
-    <value>Förändringsfaktor 1</value>
+    <value>Mängdpåverkande faktor</value>
   </data>
   <data name="changeFactor2" xml:space="preserve">
     <value>Mängdomräkningsfaktor</value>
   </data>
   <data name="co2" xml:space="preserve">
-    <value>Co2</value>
+    <value>Co2/ enhet</value>
   </data>
   <data name="code" xml:space="preserve">
     <value>Kod</value>
@@ -154,7 +154,7 @@
     <value>Kommentar</value>
   </data>
   <data name="cost" xml:space="preserve">
-    <value>Construction</value>
+    <value>Kostnad/ enhet</value>
   </data>
   <data name="Currency" xml:space="preserve">
     <value>Valuta</value>
@@ -169,13 +169,7 @@
     <value>Differens</value>
   </data>
   <data name="earning" xml:space="preserve">
-    <value>Tjäna</value>
-  </data>
-  <data name="earnings" xml:space="preserve">
-    <value>Förtjänst</value>
-  </data>
-  <data name="Electricity" xml:space="preserve">
-    <value>Elektricitet</value>
+    <value>Nettovinst</value>
   </data>
   <data name="endDate" xml:space="preserve">
     <value>Färdigställandetid</value>
@@ -214,19 +208,16 @@
     <value>Nettokalkyl</value>
   </data>
   <data name="netCalOH" xml:space="preserve">
-    <value>NetCal OH</value>
-  </data>
-  <data name="netCost" xml:space="preserve">
-    <value>Nettokostnad</value>
+    <value>Nettokalkyl Omkostnader</value>
   </data>
   <data name="netCostQ" xml:space="preserve">
-    <value>Nettokostnad Q</value>
+    <value>Nettokostnad/ enhet</value>
   </data>
   <data name="newUnit" xml:space="preserve">
     <value>New enhet</value>
   </data>
   <data name="note" xml:space="preserve">
-    <value>Notera</value>
+    <value>Anteckning</value>
   </data>
   <data name="opportunity" xml:space="preserve">
     <value>Möjlighet</value>
@@ -238,19 +229,19 @@
     <value>Översiktlig information om objektet</value>
   </data>
   <data name="price" xml:space="preserve">
-    <value>Á-pris</value>
+    <value>Á-pris/ enhet</value>
   </data>
   <data name="priceOG" xml:space="preserve">
     <value>Pris OG</value>
   </data>
   <data name="priceQ" xml:space="preserve">
-    <value>Pris Q</value>
+    <value>Pris/ enhet</value>
   </data>
   <data name="priceProduction" xml:space="preserve">
     <value>Produktionspris</value>
   </data>
   <data name="priceQTax" xml:space="preserve">
-    <value>Pris Q Tax</value>
+    <value>Pris/ enhet moms</value>
   </data>
   <data name="priceSub" xml:space="preserve">
     <value>Á-pris lämnats</value>
@@ -259,16 +250,16 @@
     <value>Pris totalt moms</value>
   </data>
   <data name="priceTotalSub" xml:space="preserve">
-    <value>Pris Totalt Delpris</value>
+    <value>Pris Totalt lämnats</value>
   </data>
   <data name="priceTotalSubTax" xml:space="preserve">
-    <value>Pris totalt delpris moms</value>
+    <value>Pris totalt lämnats moms</value>
   </data>
   <data name="priceTotaly" xml:space="preserve">
     <value>Pris totalt</value>
   </data>
   <data name="priority" xml:space="preserve">
-    <value>Prioritet</value>
+    <value>Vinstchans</value>
   </data>
   <data name="procurement" xml:space="preserve">
     <value>Upphandling</value>
@@ -304,7 +295,7 @@
     <value>Resurstyp</value>
   </data>
   <data name="resourceTypeSystem" xml:space="preserve">
-    <value>Resurstypsystem</value>
+    <value>Resurstyp system</value>
   </data>
   <data name="responsible" xml:space="preserve">
     <value>Ansvarig</value>
@@ -313,7 +304,7 @@
     <value>Risk</value>
   </data>
   <data name="sort" xml:space="preserve">
-    <value>Sortera</value>
+    <value>sortering</value>
   </data>
   <data name="startDate" xml:space="preserve">
     <value>Igångsättningstid</value>
@@ -322,19 +313,16 @@
     <value>Status</value>
   </data>
   <data name="StorageSort" xml:space="preserve">
-    <value>Förvaringssortering</value>
-  </data>
-  <data name="SubmittedPrices" xml:space="preserve">
-    <value>Inskickade priser</value>
+    <value>Bibliotek</value>
   </data>
   <data name="sum" xml:space="preserve">
-    <value>Belopp</value>
+    <value>Summa</value>
   </data>
   <data name="supervisor" xml:space="preserve">
     <value>Hanledare</value>
   </data>
   <data name="tax" xml:space="preserve">
-    <value>Beskatta</value>
+    <value>moms</value>
   </data>
   <data name="tenderDeadline" xml:space="preserve">
     <value>Anbudsdeadline</value>
@@ -378,29 +366,29 @@
   <data name="waste" xml:space="preserve">
     <value>Spill</value>
   </data>
-  <data name="Actually quantity" xml:space="preserve">
+  <data name="actuallyQuantity" xml:space="preserve">
     <value>Faktisk mängd</value>
   </data>
-  <data name="Worked Q" xml:space="preserve">
+  <data name="workedQ" xml:space="preserve">
     <value>Utförd mängd</value>
   </data>
-  <data name="Worked Q (%)" xml:space="preserve">
+  <data name="workedQPercent" xml:space="preserve">
     <value>Utförd mängd (%)</value>
   </data>
-  <data name="Price Actually quantity" xml:space="preserve">
+  <data name="priceActuallyQuantity" xml:space="preserve">
     <value>Pris faktisk mängd</value>
   </data>
-  <data name="Price Worked Q" xml:space="preserve">
-    <value>Pris utförd mängd</value>
+  <data name="priceWorkedQ" xml:space="preserve">
+    <value>Pris utförd/ enhet</value>
   </data>
-  <data name="Price sub Tax" xml:space="preserve">
-    <value>Á-pris moms</value>
+  <data name="priceSubTax" xml:space="preserve">
+    <value>Pris lämnats moms</value>
   </data>
-  <data name="Price Actually quantity Tax" xml:space="preserve">
-    <value>Pris faktisk mängd moms</value>
+  <data name="priceActuallyQuantityTax" xml:space="preserve">
+    <value>Pris faktisk mängd m/moms</value>
   </data>
-  <data name="Price Worked Q Tax" xml:space="preserve">
-    <value>Pris utförd mängd moms</value>
+  <data name="priceWorkedQTax" xml:space="preserve">
+    <value>Pris utförd/ enhet moms</value>
   </data>
   <data name="suggestionNoResults" xml:space="preserve">
     <value>Inga resursförslag hittades för denna uppgift.</value>
@@ -410,5 +398,8 @@
   </data>
   <data name="suggestionShowMore" xml:space="preserve">
     <value>Visa fler</value>
+  </data>
+  <data name="changeFactor2Resource" xml:space="preserve">
+    <value>Enhetsomräkningsfaktor</value>
   </data>
 </root>

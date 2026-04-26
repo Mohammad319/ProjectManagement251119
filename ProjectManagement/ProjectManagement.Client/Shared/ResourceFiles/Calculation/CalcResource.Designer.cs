@@ -88,6 +88,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Actually quantity.
+        /// </summary>
+        public static string actuallyQuantity {
+            get {
+                return ResourceManager.GetString("actuallyQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Base Cost.
         /// </summary>
         public static string baseCost {
@@ -124,7 +133,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Change factor 1.
+        ///   Looks up a localized string similar to Quantity-driving factor.
         /// </summary>
         public static string changeFactor1 {
             get {
@@ -133,7 +142,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Change factor 2.
+        ///   Looks up a localized string similar to Quantity conversion factor.
         /// </summary>
         public static string changeFactor2 {
             get {
@@ -142,7 +151,16 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Co2.
+        ///   Looks up a localized string similar to Unit conversion factor.
+        /// </summary>
+        public static string changeFactor2Resource {
+            get {
+                return ResourceManager.GetString("changeFactor2Resource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Co2/ unit.
         /// </summary>
         public static string co2 {
             get {
@@ -169,7 +187,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cost.
+        ///   Looks up a localized string similar to Cost/ unit.
         /// </summary>
         public static string cost {
             get {
@@ -214,29 +232,11 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Earning.
+        ///   Looks up a localized string similar to Net earnings.
         /// </summary>
         public static string earning {
             get {
                 return ResourceManager.GetString("earning", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Earnings.
-        /// </summary>
-        public static string earnings {
-            get {
-                return ResourceManager.GetString("earnings", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Electricity.
-        /// </summary>
-        public static string Electricity {
-            get {
-                return ResourceManager.GetString("Electricity", resourceCulture);
             }
         }
         
@@ -358,16 +358,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to netCost.
-        /// </summary>
-        public static string netCost {
-            get {
-                return ResourceManager.GetString("netCost", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Netcost Q.
+        ///   Looks up a localized string similar to Net cost/ unit.
         /// </summary>
         public static string netCostQ {
             get {
@@ -421,11 +412,29 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Price.
+        ///   Looks up a localized string similar to Price/ unit.
         /// </summary>
         public static string price {
             get {
                 return ResourceManager.GetString("price", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Price actually quantity.
+        /// </summary>
+        public static string priceActuallyQuantity {
+            get {
+                return ResourceManager.GetString("priceActuallyQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Price actually quantity tax.
+        /// </summary>
+        public static string priceActuallyQuantityTax {
+            get {
+                return ResourceManager.GetString("priceActuallyQuantityTax", resourceCulture);
             }
         }
         
@@ -439,15 +448,6 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Price Q.
-        /// </summary>
-        public static string priceQ {
-            get {
-                return ResourceManager.GetString("priceQ", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Price production.
         /// </summary>
         public static string priceProduction {
@@ -457,7 +457,16 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Price Q Tax.
+        ///   Looks up a localized string similar to Price unit.
+        /// </summary>
+        public static string priceQ {
+            get {
+                return ResourceManager.GetString("priceQ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Price/ unit Tax.
         /// </summary>
         public static string priceQTax {
             get {
@@ -471,6 +480,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         public static string priceSub {
             get {
                 return ResourceManager.GetString("priceSub", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Price sub tax.
+        /// </summary>
+        public static string priceSubTax {
+            get {
+                return ResourceManager.GetString("priceSubTax", resourceCulture);
             }
         }
         
@@ -493,6 +511,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Price total Sub tax.
+        /// </summary>
+        public static string priceTotalSubTax {
+            get {
+                return ResourceManager.GetString("priceTotalSubTax", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Price Totally.
         /// </summary>
         public static string priceTotaly {
@@ -502,7 +529,25 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Priority.
+        ///   Looks up a localized string similar to Price worked/ unit.
+        /// </summary>
+        public static string priceWorkedQ {
+            get {
+                return ResourceManager.GetString("priceWorkedQ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Price worked/ unit tax.
+        /// </summary>
+        public static string priceWorkedQTax {
+            get {
+                return ResourceManager.GetString("priceWorkedQTax", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Win probability.
         /// </summary>
         public static string priority {
             get {
@@ -601,7 +646,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource Type.
+        ///   Looks up a localized string similar to Resource type.
         /// </summary>
         public static string resourceType {
             get {
@@ -610,7 +655,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Resource Type System.
+        ///   Looks up a localized string similar to Resource type system.
         /// </summary>
         public static string resourceTypeSystem {
             get {
@@ -664,7 +709,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Storage Sort.
+        ///   Looks up a localized string similar to Library.
         /// </summary>
         public static string StorageSort {
             get {
@@ -673,11 +718,29 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Submitted prices.
+        ///   Looks up a localized string similar to Add selected.
         /// </summary>
-        public static string SubmittedPrices {
+        public static string suggestionAddSelected {
             get {
-                return ResourceManager.GetString("SubmittedPrices", resourceCulture);
+                return ResourceManager.GetString("suggestionAddSelected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No resource suggestions were found for this task..
+        /// </summary>
+        public static string suggestionNoResults {
+            get {
+                return ResourceManager.GetString("suggestionNoResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show more.
+        /// </summary>
+        public static string suggestionShowMore {
+            get {
+                return ResourceManager.GetString("suggestionShowMore", resourceCulture);
             }
         }
         
@@ -833,22 +896,22 @@ namespace ProjectManagement.Client.Shared.ResourceFiles.Calculation {
                 return ResourceManager.GetString("waste", resourceCulture);
             }
         }
-
-        public static string suggestionNoResults {
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantity completed.
+        /// </summary>
+        public static string workedQ {
             get {
-                return ResourceManager.GetString("suggestionNoResults", resourceCulture);
+                return ResourceManager.GetString("workedQ", resourceCulture);
             }
         }
-
-        public static string suggestionAddSelected {
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantity completed (%).
+        /// </summary>
+        public static string workedQPercent {
             get {
-                return ResourceManager.GetString("suggestionAddSelected", resourceCulture);
-            }
-        }
-
-        public static string suggestionShowMore {
-            get {
-                return ResourceManager.GetString("suggestionShowMore", resourceCulture);
+                return ResourceManager.GetString("workedQPercent", resourceCulture);
             }
         }
     }

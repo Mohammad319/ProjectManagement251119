@@ -106,28 +106,28 @@ namespace ProjectManagement.Shared.DTO.Calculation.Template
         [Display(Name = "totalCo2")]
         TotalCo2 = 31,
 
-        [Display(Name = "Actually quantity")]
+        [Display(Name = "actuallyQuantity")]
         ActuallyQuantity = 32,
 
-        [Display(Name = "Worked Q")]
+        [Display(Name = "workedQ")]
         WorkedQ = 33,
 
-        [Display(Name = "Worked Q (%)")]
+        [Display(Name = "workedQPercent")]
         WorkedQPercent = 34,
 
-        [Display(Name = "Price Actually quantity")]
+        [Display(Name = "priceActuallyQuantity")]
         PriceActuallyQuantity = 35,
 
-        [Display(Name = "Price Worked Q")]
+        [Display(Name = "priceWorkedQ")]
         PriceWorkedQ = 36,
 
-        [Display(Name = "Price sub Tax")]
+        [Display(Name = "priceSubTax")]
         PriceSubTax = 37,
 
-        [Display(Name = "Price Actually quantity Tax")]
+        [Display(Name = "priceActuallyQuantityTax")]
         PriceActuallyQuantityTax = 38,
 
-        [Display(Name = "Price Worked Q Tax")]
+        [Display(Name = "priceWorkedQTax")]
         PriceWorkedQTax = 39,
 
         [Display(Name = "note")]
