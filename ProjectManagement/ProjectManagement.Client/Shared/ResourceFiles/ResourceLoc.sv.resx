@@ -300,4 +300,16 @@
   <data name="Description_SystemOrUserValues" xml:space="preserve">
     <value>Visar om värdena är systemdefinierade eller användardefinierade.</value>
   </data>
+  <data name="DependsOnParentItem" xml:space="preserve">
+    <value>Beroende av överkalkylpost</value>
+  </data>
+  <data name="convertedQuantity" xml:space="preserve">
+    <value>Omräknad mängd</value>
+  </data>
+  <data name="BaseQuantity" xml:space="preserve">
+    <value>Utgångsmängd </value>
+  </data>
+  <data name="baseUnit" xml:space="preserve">
+    <value>Utgångsenhet </value>
+  </data>
 </root>

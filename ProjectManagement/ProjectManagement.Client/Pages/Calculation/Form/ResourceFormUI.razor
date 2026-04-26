@@ -175,13 +175,13 @@
             }
                 </div>
 
-            <div class="min-w-0 md:col-span-4 xl:col-span-2">
+@*             <div class="min-w-0 md:col-span-4 xl:col-span-2">
                 <label class="@LabelClass">@StorageLoc["changeFactor2Resource"]</label>
                 <TrimmedNumberInput TValue="decimal"
                                     @bind-Value="ResourceUpdate.Data.ChangeFactor2"
                                     MaxFractionDigits="@NumericFractionDigits"
                                     class="@InputClass" />
-            </div>
+            </div> *@
 
             @if (ResourceUpdate.ResType == ResourceTypesEnum.Materials
                                                               || ResourceUpdate.ResType == ResourceTypesEnum.Worker

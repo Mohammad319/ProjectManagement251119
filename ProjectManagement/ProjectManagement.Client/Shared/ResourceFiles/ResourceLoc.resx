@@ -300,4 +300,16 @@
   <data name="Description_SystemOrUserValues" xml:space="preserve">
     <value>Indicates whether the values are system-defined or user-defined.</value>
   </data>
+  <data name="DependsOnParentItem" xml:space="preserve">
+    <value>Depends on parent item</value>
+  </data>
+  <data name="convertedQuantity" xml:space="preserve">
+    <value>Converted quantity</value>
+  </data>
+  <data name="BaseQuantity" xml:space="preserve">
+    <value>Base quantity </value>
+  </data>
+  <data name="baseUnit" xml:space="preserve">
+    <value>Base unit </value>
+  </data>
 </root>

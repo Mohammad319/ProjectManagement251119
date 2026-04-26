@@ -32,6 +32,22 @@
     <FormValidationSummary />
 
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+             @if (!TaskUpdate.OnlyCodeText)
+            {
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@CheckboxCardClass">
+                <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@CheckboxClass" />
+                <span>@CalcResource.active</span>
+            </label>
+        </div>
+        }
+        <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-3">
+            <label class="@CheckboxCardClass">
+                <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText"
+                               class="@CheckboxClass" />
+                <span>@AppLoc["onlyCodeText"]</span>
+            </label>
+        </div>
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[180px_minmax(0,1fr)]">
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.code</label>
@@ -44,11 +60,11 @@
             </div>
         </div>
     </MhdCard>
-
-    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
-        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
             @if (!TaskUpdate.OnlyCodeText)
             {
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
+
                 <div class="min-w-0 md:col-span-12 xl:col-span-5">
                     <label class="@LabelClass">@CalcResource.quantity</label>
                     @if (HasTaskAbove)
@@ -59,7 +75,7 @@
                                          @bind-Value:set="(value) => ChangeQuantityParam(value)">
                                 @if (!ParentIsOnlyCodeText)
                                 {
-                                    <option></option>
+                                    <option>@ResourceLoc.DependsOnParentItem</option>
                                 }
                                 <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
                                 @if (Calc.QuanityList != null)
@@ -75,6 +91,10 @@
                             {
                                 <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.BaseQuantity" class="@InputClass" />
                             }
+                            else
+                            {
+                                <input type="number" value="@TaskUpdate.ActuallyQuantity" disabled />
+                            }
                         </div>
                     }
                     else
@@ -85,19 +105,23 @@
                         </div>
                     }
                 </div>
-
-                <div class="min-w-0 md:col-span-4 xl:col-span-3">
-                    <label class="@LabelClass">@(TaskUpdate.Metadata.ConversionParameters.Any() ? CalcResource.newUnit : CalcResource.unit)</label>
-                    <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
-                </div>
-
-                @if (ShowTaskCapInput || true)
+                @if (TaskUpdate.Metadata.ConversionParameters.Any())
                 {
                     <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                        <label class="@LabelClass">@CalcResource.cap </label>
-                        <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
+                        <label class="@LabelClass">@ResourceLoc.baseUnit</label>
+                        <InputText @bind-Value="TaskUpdate.Metadata.BaseUnit" class="@InputClass" />
                     </div>
                 }
+                else
+                {
+                    <div class="min-w-0 md:col-span-4 xl:col-span-3">
+                        <label class="@LabelClass">@(TaskUpdate.Metadata.ConversionParameters.Any() ? CalcResource.newUnit : CalcResource.unit)</label>
+                        <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
+                    </div>
+                }
+              
+
+
 @* 
                 @if (HasTaskAbove)
                 {
@@ -118,42 +142,69 @@
                         <TrimmedNumberInput TValue="decimal" @bind-Value="TaskUpdate.Metadata.ChangeFactor2" class="@InputClass" />
                     }
                 </div>
+                @if (TaskUpdate.Metadata.ConversionParameters.Any())
+                {
+                    <div class="min-w-0 md:col-span-3 xl:col-span-2">
+                        <label class="@LabelClass">@ResourceLoc.convertedQuantity</label>
+                        <input type="number" value="@(TaskUpdate.Metadata.ChangeFactor2 * TaskUpdate.Metadata.BaseQuantity)" class="@InputClass" />
+                    </div>
+                    <div class="min-w-0 md:col-span-4 xl:col-span-3">
+                        <label class="@LabelClass">@CalcResource.newUnit</label>
+                        <InputText @bind-Value="TaskUpdate.Metadata.Unit" class="@InputClass" />
+                    </div>
+                }
+                @if (ShowTaskCapInput || true)
+                {
+                    <div class="min-w-0 md:col-span-3 xl:col-span-2">
+                        <label class="@LabelClass">@CalcResource.cap </label>
+                        <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.Cap" class="@InputClass" />
+                    </div>
+                }
+            
+        </div>
+    </MhdCard>
+        <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+                            <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@LabelClass">@CalcResource.priceSub </label>
+            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
+        </div>
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@CheckboxCardClass">
+                <InputCheckbox class="@CheckboxClass" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
+                <span>@ResourceLoc.inprecent</span>
+            </label>
+        </div>
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@LabelClass">@CalcResource.minPrice </label>
+            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
+        </div>
 
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass">@AppLoc["actuallyQuantity"]</label>
-                    <TrimmedNumberInput TValue="decimal?" @bind-Value="_actuallyQuantity" class="@InputClass" />
-                </div>
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@LabelClass">@CalcResource.ceilingPrice </label>
+            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
+            </div>
+        </div>
+        </MhdCard>
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+                <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@LabelClass">@CalcResource.actuallyQuantity</label>
+            <TrimmedNumberInput TValue="decimal?" @bind-Value="_actuallyQuantity" class="@InputClass" />
+        </div>
 
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass">@AppLoc["workedQuantity"]</label>
-                    <TrimmedNumberInput TValue="decimal?" @bind-Value="_workedQ" class="@InputClass" />
-                </div>
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@LabelClass">@AppLoc["workedQuantity"]</label>
+            <TrimmedNumberInput TValue="decimal?" @bind-Value="_workedQ" class="@InputClass" />
+        </div>
 
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass">@CalcResource.priceProduction</label>
-                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.PriceProductionDB" class="@InputClass" />
-                </div>
-
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass">@CalcResource.priceSub </label>
-                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
-                </div>
-
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass">@CalcResource.minPrice </label>
-                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
-                </div>
-
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass">@CalcResource.ceilingPrice </label>
-                    <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
-                </div>
-            }
+        <div class="min-w-0 md:col-span-3 xl:col-span-2">
+            <label class="@LabelClass">@CalcResource.priceProduction</label>
+            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.PriceProductionDB" class="@InputClass" />
+            </div>
         </div>
     </MhdCard>
 
-    @if (!TaskUpdate.OnlyCodeText)
-    {
         <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
             <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
                 <div class="min-w-0 md:col-span-4 xl:col-span-3">
@@ -170,6 +221,12 @@
                     </InputSelect>
                 </div>
 
+
+
+                <div class="min-w-0 md:col-span-6 xl:col-span-4">
+                    <label class="@LabelClass">@CalcResource.responsible</label>
+                    <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@InputClass" />
+                </div>
                 <div class="min-w-0 md:col-span-8 xl:col-span-5">
                     <label class="@LabelClass">@CalcResource.opportunity</label>
                     <InputSelect @bind-Value="TaskUpdate.OpportunityId" class="@InputClass">
@@ -184,39 +241,12 @@
                     </InputSelect>
                 </div>
 
-                <div class="min-w-0 md:col-span-6 xl:col-span-4">
-                    <label class="@LabelClass">@CalcResource.responsible</label>
-                    <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@InputClass" />
-                </div>
 
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@CheckboxCardClass">
-                        <InputCheckbox class="@CheckboxClass" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
-                        <span>@ResourceLoc.inprecent</span>
-                    </label>
-                </div>
-
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@CheckboxCardClass">
-                        <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@CheckboxClass" />
-                        <span>@CalcResource.active</span>
-                    </label>
-                </div>
                 
-                @if (Task.Resources == null || Task.Resources.Count == 0 || Task.Type == TaskType.CodeName)
-                {
-               
-                    <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-3">
-                        <label class="@CheckboxCardClass">
-                            <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText"
-                                           class="@CheckboxClass" />
-                            <span>@AppLoc["onlyCodeText"]</span>
-                        </label>
-                    </div>
-                }
+  
             </div>
         </MhdCard>
-    }
+  
 
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-y-2">
@@ -231,13 +261,7 @@
                 @if (!TaskUpdate.OnlyCodeText)
                 {
                     <div class="flex items-end gap-2">
-                        @if (TaskUpdate.Metadata.ConversionParameters.Any())
-                        {
-                            <div class="w-[110px]">
-                                <label class="@LabelClass">Basenhet</label>
-                                <InputText @bind-Value="TaskUpdate.Metadata.BaseUnit" class="@InputClass" />
-                            </div>
-                        }
+
 
                         <button type="button"
                                 class="@OutlineBlueButtonClass"
@@ -268,7 +292,7 @@
                                     <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Name" class="@InputClass" />
                                 </div>
                                 <div class="min-w-0">
-                                    <label class="@LabelClass">Värde</label>
+                                    <label class="@LabelClass">@CalcResource.factor</label>
                                     <TrimmedNumberInput TValue="decimal"
                                                  @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Value"
                                                  class="@InputClass"
@@ -294,7 +318,7 @@
             }
         </div>
     </MhdCard>
-
+    }
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
             <div class="min-w-0">

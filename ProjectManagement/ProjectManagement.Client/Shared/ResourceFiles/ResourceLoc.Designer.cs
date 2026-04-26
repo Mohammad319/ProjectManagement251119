@@ -79,6 +79,24 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Base quantity .
+        /// </summary>
+        public static string BaseQuantity {
+            get {
+                return ResourceManager.GetString("BaseQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Base unit .
+        /// </summary>
+        public static string baseUnit {
+            get {
+                return ResourceManager.GetString("baseUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to By Company.
         /// </summary>
         public static string ByCompany {
@@ -160,6 +178,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Converted quantity.
+        /// </summary>
+        public static string convertedQuantity {
+            get {
+                return ResourceManager.GetString("convertedQuantity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Date of invoice control.
         /// </summary>
         public static string dateInvoiceControl {
@@ -174,6 +201,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         public static string dateOfControl {
             get {
                 return ResourceManager.GetString("dateOfControl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Depends on parent item.
+        /// </summary>
+        public static string DependsOnParentItem {
+            get {
+                return ResourceManager.GetString("DependsOnParentItem", resourceCulture);
             }
         }
         

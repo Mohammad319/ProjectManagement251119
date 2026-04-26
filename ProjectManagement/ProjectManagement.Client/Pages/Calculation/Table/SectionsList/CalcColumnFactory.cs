@@ -129,13 +129,14 @@ public static class CalcColumnFactory
             },
             [NetColumnId.ChangeFactor1] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ChangeFactor1),
+                TaskRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
                 ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.ChangeFactor1)
             },
             [NetColumnId.ChangeFactor2] = new()
             {
                 TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ChangeFactor2),
-                ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.ChangeFactor2)
+                //ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.ChangeFactor2)
+                ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
             },
             [NetColumnId.Cap] = new()
             {
