@@ -157,7 +157,7 @@
     <value>Income</value>
   </data>
   <data name="inprecent" xml:space="preserve">
-    <value>In Percent</value>
+    <value>Proportional update of price per unit</value>
   </data>
   <data name="InvoiceVerificationDate" xml:space="preserve">
     <value>Invoice Verification Date</value>
@@ -311,5 +311,11 @@
   </data>
   <data name="baseUnit" xml:space="preserve">
     <value>Base unit </value>
+  </data>
+  <data name="capacityFromCostItem" xml:space="preserve">
+    <value>Capacity from cost item</value>
+  </data>
+  <data name="timeShare" xml:space="preserve">
+    <value>Time share (%)</value>
   </data>
 </root>

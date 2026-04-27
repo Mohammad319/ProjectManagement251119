@@ -402,4 +402,22 @@
   <data name="changeFactor2Resource" xml:space="preserve">
     <value>Enhetsomräkningsfaktor</value>
   </data>
+  <data name="conversionParamTitle" xml:space="preserve">
+    <value>Mängdomräkningsparametrar</value>
+  </data>
+  <data name="newParameter" xml:space="preserve">
+    <value>Ny parameter</value>
+  </data>
+  <data name="conversionParamInfo" xml:space="preserve">
+    <value>Använd parametrar för att räkna om uppgiftens egen mängd eller en överordnad mängd, till exempel bredd, djup eller tjocklek.</value>
+  </data>
+  <data name="noConversionParams" xml:space="preserve">
+    <value>Inga omräkningsparametrar ännu. Lämna listan tom om du vill skriva in Mängdomräkningsfaktor manuellt.</value>
+  </data>
+  <data name="conversionParamNotForCodeRows" xml:space="preserve">
+    <value>Omräkningsparametrar används inte för kodrader.</value>
+  </data>
+  <data name="priceSubInfo" xml:space="preserve">
+    <value>Uppdaterar á-priset som skickas till kund proportionellt när á-pris per enhet ändras, så att samma procentuella skillnad behålls.</value>
+  </data>
 </root>

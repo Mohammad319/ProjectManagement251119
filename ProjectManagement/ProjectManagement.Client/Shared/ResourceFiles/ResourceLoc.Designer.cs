@@ -115,6 +115,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Capacity from cost item.
+        /// </summary>
+        public static string capacityFromCostItem {
+            get {
+                return ResourceManager.GetString("capacityFromCostItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Category.
         /// </summary>
         public static string category {
@@ -331,7 +340,7 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to In Percent.
+        ///   Looks up a localized string similar to Proportional update of price per unit.
         /// </summary>
         public static string inprecent {
             get {
@@ -597,6 +606,15 @@ namespace ProjectManagement.Client.Shared.ResourceFiles {
         public static string tender {
             get {
                 return ResourceManager.GetString("tender", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time share (%).
+        /// </summary>
+        public static string timeShare {
+            get {
+                return ResourceManager.GetString("timeShare", resourceCulture);
             }
         }
         

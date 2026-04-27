@@ -44,6 +44,10 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     : ITaskResourceCsvImportService
 {
     private const char Delimiter = ';';
+    private const int FallbackCodeIndex = 4;
+    private const int FallbackNameIndex = 5;
+    private const int FallbackQuantityIndex = 6;
+    private const int FallbackUnitIndex = 7;
 
     public async Task<TaskResourceCsvImportResult> ImportAsync(
         Stream csvStream,
@@ -203,8 +207,8 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         CancellationToken ct)
     {
         var externalId = Get(row, map, "TaskId").Trim();
-        var code = Get(row, map, "Code", fallbackIndex: 4).Trim();
-        var name = Get(row, map, "Name", fallbackIndex: 5).Trim();
+        var code = Get(row, map, "Code", fallbackIndex: FallbackCodeIndex).Trim();
+        var name = Get(row, map, "Name", fallbackIndex: FallbackNameIndex).Trim();
 
         if (string.IsNullOrWhiteSpace(name))
             throw new InvalidOperationException("Task name is required.");
@@ -235,8 +239,8 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
         task.Code = string.IsNullOrWhiteSpace(code) ? task.Code : code;
         task.Name = name;
-        task.Quantity = ParseNullableDecimal(Get(row, map, "Quantity"));
-        task.UnitCode = EmptyToNull(Get(row, map, "Unit"));
+        task.Quantity = ParseNullableDecimal(Get(row, map, "Quantity", fallbackIndex: FallbackQuantityIndex));
+        task.UnitCode = EmptyToNull(Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex));
         task.FieldNotes = EmptyToNull(Get(row, map, "CalculationMethod"));
         task.AdminNote = BuildAdminNote(fileName, account: null, category: Get(row, map, "Category"), rowNumber);
         task.ChangeFactor1 = 1m;
@@ -291,7 +295,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     {
         var parentTaskId = Get(row, map, "ParentTaskId").Trim();
         var parentCode = Get(row, map, "ParentCode").Trim();
-        var name = Get(row, map, "Name", fallbackIndex: 5).Trim();
+        var name = Get(row, map, "Name", fallbackIndex: FallbackNameIndex).Trim();
 
         if (string.IsNullOrWhiteSpace(name))
             throw new InvalidOperationException("Resource name is required.");
@@ -355,7 +359,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             category: Get(row, map, "Category"),
             rowNumber);
         resource.Data ??= new ResourceMetadata();
-        resource.Data.Unit = Get(row, map, "Unit").Trim();
+        resource.Data.Unit = Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex).Trim();
         resource.Data.Quantity = null;
         resource.Data.ChangeFactor1 = factor;
         resource.Data.ChangeFactor2 = 1m;
@@ -615,10 +619,14 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         if (string.IsNullOrWhiteSpace(value))
             return null;
 
-        if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.GetCultureInfo("sv-SE"), out var sv))
+        var normalizedValue = value.Trim()
+            .Replace("\u00a0", string.Empty, StringComparison.Ordinal)
+            .Replace(" ", string.Empty, StringComparison.Ordinal);
+
+        if (decimal.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.GetCultureInfo("sv-SE"), out var sv))
             return sv;
 
-        var normalized = value.Replace(',', '.');
+        var normalized = normalizedValue.Replace(',', '.');
         return decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out var invariant)
             ? invariant
             : null;

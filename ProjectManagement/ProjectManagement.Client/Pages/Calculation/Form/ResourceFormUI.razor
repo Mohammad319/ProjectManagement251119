@@ -40,12 +40,175 @@
 
     <!-- PANEL 1 -->
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
-        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
-            <div class="min-w-0 md:col-span-4">
+        <div class="grid gap-x-1.5 gap-y-1.5 md:grid-cols-12">
+
+            <div class="flex w-fit items-end md:col-span-2 xl:col-span-1">
+                <label class="@($"{CheckboxCardClass} w-fit whitespace-nowrap")">
+                    <InputCheckbox @bind-Value="ResourceUpdate.IsActive" class="@CheckboxClass" />
+                    <span>@CalcResource.active</span>
+                </label>
+            </div>
+
+            <div class="min-w-0 md:col-span-6 xl:col-span-4">
                 <label class="@LabelClass">@CalcResource.name</label>
                 <InputText @bind-Value="ResourceUpdate.Name" class="@InputClass" />
             </div>
 
+            <div class="min-w-0 md:col-span-12 xl:col-span-4">
+                <label class="@LabelClass">@CalcResource.quantity</label>
+
+                <div class="grid grid-cols-[minmax(0,1fr)_7rem] items-start gap-1.5">
+                    <InputSelect class="@InputClass"
+                                 @bind-Value:get="ResourceUpdate.Data.QuantityParam"
+                                 @bind-Value:set="(value) => ChangeQuantityParam(value)">
+                        <option>@ResourceLoc.DependsOnParentItem</option>
+                        <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
+
+                        @if (Calc.QuanityList != null)
+                        {
+                            foreach (var status in Calc.QuanityList)
+                            {
+                                <option value="@status.Name">@status.Name (@status.Quantity)</option>
+                            }
+                        }
+                    </InputSelect>
+
+                    @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
+                    {
+                        <TrimmedNumberInput TValue="decimal?"
+                                            @bind-Value="ResourceUpdate.Data.Quantity"
+                                            MaxFractionDigits="@QuantityFractionDigits"
+                                            class="@InputClass" />
+                    }
+                    else
+                    {
+                        <input value="@FormatQuantityDisplay(ResolvedResourceQuantity)"
+                               class="@InputClass"
+                               disabled />
+                    }
+                </div>
+            </div>
+
+            <div class="min-w-0 md:col-span-4 xl:col-span-2">
+                <label class="@LabelClass">@CalcResource.cost</label>
+
+                @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
+                {
+                    <input class="@DisabledInputClass"
+                           type="text"
+                           disabled
+                           value="@FormatNumericDisplay(Resource.Data.Cost)" />
+                }
+                else if (!ResourceUpdate.Data.Times.Any())
+                {
+                    <TrimmedNumberInput TValue="decimal"
+                                        @bind-Value="ResourceUpdate.Data.Cost"
+                                        MaxFractionDigits="@NumericFractionDigits"
+                                        class="@InputClass" />
+                }
+                else
+                {
+                    <input value="@FormatNumericDisplay(ResourceUpdate.Data.Cost)"
+                           class="@InputClass"
+                           disabled />
+                }
+            </div>
+
+            <div class="min-w-0 md:col-span-4 xl:col-span-3">
+                <label class="@LabelClass">@CalcResource.unit</label>
+                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@InputClass" />
+            </div>
+
+            <div class="min-w-0 md:col-span-4 xl:col-span-2">
+                <label class="@LabelClass">@CalcResource.baseCost</label>
+
+                @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
+                {
+                    <input type="text"
+                           disabled
+                           value="@FormatNumericDisplay(Resource.Data.BaseCost)"
+                           class="@DisabledInputClass" />
+                }
+                else
+                {
+                    <TrimmedNumberInput TValue="decimal?"
+                                        @bind-Value="ResourceUpdate.Data.BaseCost"
+                                        MaxFractionDigits="@NumericFractionDigits"
+                                        class="@InputClass" />
+                }
+            </div>
+
+        </div>
+    </MhdCard>
+    <!-- PANEL 2 -->
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
+@*             <div class="min-w-0 md:col-span-4 xl:col-span-2">
+                <label class="@LabelClass">@StorageLoc["changeFactor2Resource"]</label>
+                <TrimmedNumberInput TValue="decimal"
+                                    @bind-Value="ResourceUpdate.Data.ChangeFactor2"
+                                    MaxFractionDigits="@NumericFractionDigits"
+                                    class="@InputClass" />
+            </div> *@
+            <div class="min-w-0 md:col-span-4 xl:col-span-2">
+                <label class="@LabelClass">@CalcResource.changeFactor1</label>
+                @if (!ResourceUpdate.Data.Parameters.Any())
+                {
+                    <TrimmedNumberInput TValue="decimal"
+                                        @bind-Value="ResourceUpdate.Data.ChangeFactor1"
+                                        MaxFractionDigits="@NumericFractionDigits"
+                                        class="@InputClass" />
+                }
+                else
+                {
+                    <input value="@FormatNumericDisplay(ResourceUpdate.Data.ChangeFactor1)" class="@InputClass" disabled />
+                }
+            </div>
+            @if (ResourceUpdate.ResType == ResourceTypesEnum.Materials
+                                                              || ResourceUpdate.ResType == ResourceTypesEnum.Worker
+                                                              || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
+            {
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
+                    <label class="@LabelClass" for="waste">
+                        @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
+                    </label>
+                    @if (HasCapResourceType && UseCapFromTask)
+                     {
+                         <input id="waste"
+                                value="@FormatNumericDisplay(EffectiveCapWaste)"
+                                class="@DisabledInputClass"
+                                disabled />
+                     }
+                     else
+                     {
+                         <TrimmedNumberInput TValue="decimal"
+                                             id="waste"
+                                             @bind-Value="ResourceUpdate.Data.CapWaste"
+                                             MaxFractionDigits="@NumericFractionDigits"
+                                             class="@InputClass" />
+                     }
+                </div>
+            }
+            @if (HasCapResourceType)
+                    {
+            <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-2">
+                    <label class="@($"{CheckboxCardClass} mt-1")">
+                        <InputCheckbox @bind-Value:get="ResourceUpdate.Data.CapFromTask"
+                                       @bind-Value:set="ChangeCapFromTask"
+                                       class="@CheckboxClass" />
+                        <span>@ResourceLoc.capacityFromCostItem</span>
+                    </label>
+
+            </div>  }
+
+
+        </div>
+    </MhdCard>
+
+    <!-- PANEL 3 -->
+    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
+            
             @if (!Refresh && Config.AccountGroups != null)
             {
                 <div class="min-w-0 md:col-span-4">
@@ -81,158 +244,7 @@
                     </div>
                 }
             }
-        </div>
-    </MhdCard>
-
-    <!-- PANEL 2 -->
-    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
-        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
-
-            <div class="min-w-0 md:col-span-12 xl:col-span-4">
-                <label class="@LabelClass">@CalcResource.quantity</label>
-
-                <div class="grid items-start gap-1.5  grid-cols-[minmax(0,1fr)_7rem]">
-                    <InputSelect class="@InputClass"
-                                 @bind-Value:get="ResourceUpdate.Data.QuantityParam"
-                                 @bind-Value:set="(value) => ChangeQuantityParam(value)">
-                        <option></option>
-                        <option value="@ConstValues.FixedQ">@CalcResource.fixedQ</option>
-                        @if (Calc.QuanityList != null)
-                        {
-                            foreach (var status in Calc.QuanityList)
-                            {
-                                <option value="@status.Name">@status.Name (@status.Quantity)</option>
-                            }
-                        }
-                    </InputSelect>
-
-                    @if (ResourceUpdate.Data.QuantityParam == ConstValues.FixedQ)
-                    {
-                        <TrimmedNumberInput TValue="decimal?"
-                                            @bind-Value="ResourceUpdate.Data.Quantity"
-                                            MaxFractionDigits="@QuantityFractionDigits"
-                                            class="@InputClass" />
-                    }
-                    else
-                    {
-                        <input value="@FormatQuantityDisplay(ResolvedResourceQuantity)" class="@InputClass" disabled />
-                    }
-                </div>
-
-            </div>
-
-            <div class="min-w-0 md:col-span-4 xl:col-span-3">
-                <label class="@LabelClass">@CalcResource.unit</label>
-                <InputText @bind-Value="ResourceUpdate.Data.Unit" class="@InputClass" />
-            </div>
-           
-                <div class="min-w-0 md:col-span-4 xl:col-span-2">
-                    <label class="@LabelClass">@StorageLoc["resourceUnitCostLabel"]</label>
-                    @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
-                    {
-                        <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(Resource.Data.Cost)" />
-                    }
-                    else if (!ResourceUpdate.Data.Times.Any())
-                    {
-                        <TrimmedNumberInput TValue="decimal"
-                                            @bind-Value="ResourceUpdate.Data.Cost"
-                                            MaxFractionDigits="@NumericFractionDigits"
-                                            class="@InputClass" />
-                }
-                else
-                {
-                    <input value="@FormatNumericDisplay(ResourceUpdate.Data.Cost)" class="@InputClass" disabled />
-                }
-                </div>
-            
-            <div class="min-w-0 md:col-span-4 xl:col-span-2">
-                <label class="@LabelClass">@CalcResource.baseCost</label>
-                @if (Resource?.OfferId.HasValue == true && Resource.OfferId > 0)
-                {
-                    <input type="text" disabled value="@FormatNumericDisplay(Resource.Data.BaseCost)" class="@DisabledInputClass" />
-                }
-                else
-                {
-                    <TrimmedNumberInput TValue="decimal?"
-                                        @bind-Value="ResourceUpdate.Data.BaseCost"
-                                        MaxFractionDigits="@NumericFractionDigits"
-                                        class="@InputClass" />
-                }
-            </div>
-         
-                <div class="min-w-0 md:col-span-4 xl:col-span-2">
-                    <label class="@LabelClass">@CalcResource.changeFactor1</label>
-                @if (!ResourceUpdate.Data.Parameters.Any())
-                {
-                    <TrimmedNumberInput TValue="decimal"
-                                        @bind-Value="ResourceUpdate.Data.ChangeFactor1"
-                                        MaxFractionDigits="@NumericFractionDigits"
-                                        class="@InputClass" />
-                }
-                else
-                {
-                    <input value="@FormatNumericDisplay(ResourceUpdate.Data.ChangeFactor1)" class="@InputClass" disabled />
-            }
-                </div>
-
-@*             <div class="min-w-0 md:col-span-4 xl:col-span-2">
-                <label class="@LabelClass">@StorageLoc["changeFactor2Resource"]</label>
-                <TrimmedNumberInput TValue="decimal"
-                                    @bind-Value="ResourceUpdate.Data.ChangeFactor2"
-                                    MaxFractionDigits="@NumericFractionDigits"
-                                    class="@InputClass" />
-            </div> *@
-
-            @if (ResourceUpdate.ResType == ResourceTypesEnum.Materials
-                                                              || ResourceUpdate.ResType == ResourceTypesEnum.Worker
-                                                              || ResourceUpdate.ResType == ResourceTypesEnum.MachinesAndEquipments)
-            {
-                <div class="min-w-0 md:col-span-3 xl:col-span-2">
-                    <label class="@LabelClass" for="waste">
-                        @(ResourceUpdate.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)
-                    </label>
-                    @if (HasCapResourceType && UseCapFromTask)
-                     {
-                         <input id="waste"
-                                value="@FormatNumericDisplay(EffectiveCapWaste)"
-                                class="@DisabledInputClass"
-                                disabled />
-                     }
-                     else
-                     {
-                         <TrimmedNumberInput TValue="decimal"
-                                             id="waste"
-                                             @bind-Value="ResourceUpdate.Data.CapWaste"
-                                             MaxFractionDigits="@NumericFractionDigits"
-                                             class="@InputClass" />
-                     }
-                </div>
-            } 
-            @if (HasCapResourceType)
-                    {
-            <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-2">
-                    <label class="@($"{CheckboxCardClass} mt-1")">
-                        <InputCheckbox @bind-Value:get="ResourceUpdate.Data.CapFromTask"
-                                       @bind-Value:set="ChangeCapFromTask"
-                                       class="@CheckboxClass" />
-                        <span>Cap från uppgift</span>
-                    </label>
-
-            </div>  }
-
-            <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-2">
-                <label class="@CheckboxCardClass">
-                    <InputCheckbox @bind-Value="ResourceUpdate.IsActive" class="@CheckboxClass" />
-                    <span>@CalcResource.active</span>
-                </label>
-            </div>
-        </div>
-    </MhdCard>
-
-    <!-- PANEL 3 -->
-    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
-        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
-
+      
             @if (Config.ResourceTypes != null)
             {
                 <div class="min-w-0 md:col-span-4">
@@ -270,21 +282,10 @@
                     </InputSelect>
                 </div>
             }
-
-            <div class="min-w-0 md:col-span-4">
-                <label class="@LabelClass">@CalcResource.status</label>
-                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="@InputClass">
-                    @if (Config.Statues != null)
-                    {
-                        <option value=""></option>
-                        @foreach (var status in Config.Statues)
-                        {
-                            <option value="@status.Id">@status.Name</option>
-                        }
-                    }
-                </InputSelect>
-            </div>
-
+        </div>
+    </MhdCard>
+       <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
             <div class="min-w-0 md:col-span-3 xl:col-span-2">
                 <label class="@LabelClass">@CalcResource.priceSub</label>
                 <TrimmedNumberInput TValue="decimal?"
@@ -301,6 +302,20 @@
                                     class="@InputClass" />
             </div>
 
+            <div class="min-w-0 md:col-span-4">
+                <label class="@LabelClass">@CalcResource.status</label>
+                <InputSelect @bind-Value="ResourceUpdate.StatusId" class="@InputClass">
+                    @if (Config.Statues != null)
+                    {
+                        <option value=""></option>
+                        @foreach (var status in Config.Statues)
+                        {
+                            <option value="@status.Id">@status.Name</option>
+                        }
+                    }
+                </InputSelect>
+            </div>
+            
             <div class="min-w-0 md:col-span-6 xl:col-span-4">
                 <label class="@LabelClass">@CalcResource.opportunity</label>
                 <InputSelect @bind-Value="ResourceUpdate.OpportunityId" class="@InputClass">
@@ -316,17 +331,15 @@
                     }
                 </InputSelect>
             </div>
+       
         </div>
     </MhdCard>
-
     <!-- PARAMETERS -->
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="mb-2 flex flex-wrap items-start justify-between gap-2">
             <div class="min-w-0 flex-1 overflow-x-auto">
                 <div class="@SectionMetaRowClass">
                     <span class="@SectionTitleInlineClass">@StorageLoc["resourceParametersTitle"]</span>
-                    <span class="@SectionSubtleInlineClass">@AppLoc["itemsCount", ResourceUpdate.Data.Parameters.Count]</span>
-                    <span class="@SectionMutedInlineClass">@StorageLoc["resourceParametersHint"]</span>
                 </div>
             </div>
 
@@ -395,8 +408,6 @@
             <div class="min-w-0 flex-1 overflow-x-auto">
                 <div class="@SectionMetaRowClass">
                     <span class="@SectionTitleInlineClass">@StorageLoc["resourceAddOnsTitle"]</span>
-                    <span class="@SectionSubtleInlineClass">@AppLoc["itemsCount", AddOnRowCount]</span>
-                    <span class="@SectionMutedInlineClass">@StorageLoc["resourceAddOnsHint"]</span>
                 </div>
             </div>
 
@@ -412,11 +423,11 @@
                 <thead>
                     <tr>
                         <th class="@TableHeadCellClass">@CalcResource.name</th>
-                        <th class="@TableHeadCellClass">@CalcResource.factor</th>
                         <th class="@TableHeadCellClass">@CalcResource.type</th>
+                        <th class="@TableHeadCellClass">@CalcResource.factor</th>
                         <th class="@TableHeadCellClass">@CalcResource.quantity</th>
-                        <th class="@TableHeadCellClass">@CalcResource.unit</th>
                         <th class="@TableHeadCellClass">@CalcResource.cost</th>
+                        <th class="@TableHeadCellClass">@CalcResource.unit</th>
                         <th class="@TableHeadCellClass">@CalcResource.baseCost</th>
                         <th class="@TableHeadCellClass">@CalcResource.totalNetCost</th>
                         <th class="@TableHeadCellClass w-12"></th>
@@ -432,11 +443,12 @@
                         <td class="@TableCellClass min-w-[4rem]">
                             <input class="@DisabledInputClass" type="text" disabled value="@FormatQuantityDisplay(PrimaryAddOnQuantity)" />
                         </td>
-                        <td class="@TableCellClass min-w-[4rem]">
-                            <input class="@DisabledInputClass" type="text" disabled value="@ResourceUpdate.Data.Unit" />
-                        </td>
+                    
                         <td class="@TableCellClass min-w-[4rem]">
                             <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(ResourceUpdate.Data.Cost)" />
+                        </td>
+                        <td class="@TableCellClass min-w-[4rem]">
+                            <input class="@DisabledInputClass" type="text" disabled value="@ResourceUpdate.Data.Unit" />
                         </td>
                         <td class="@TableCellClass min-w-[4rem]">
                             <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(PrimaryAddOnBaseCost)" />
@@ -457,34 +469,32 @@
                                 <InputText class="@InputClass"
                                            @bind-Value="ResourceUpdate.Data.AddOns[idx].Name" />
                             </td>
+                            <td class="@TableCellClass min-w-[3.5rem]">
+                                <InputSelect @bind-Value="ResourceUpdate.Data.AddOns[idx].Type" class="@InputClass">
+                                    <option value="@QuantityResourceAddon.Multiplication" selected> * </option>
+                                    <option value="@QuantityResourceAddon.Division"> / </option>
+                                </InputSelect>
+                            </td>
                             <td class="@TableCellClass min-w-[4rem]">
                                 <TrimmedNumberInput TValue="decimal"
                                                     class="@InputClass"
                                                     @bind-Value="ResourceUpdate.Data.AddOns[idx].Factor"
                                                     MaxFractionDigits="@NumericFractionDigits" />
                             </td>
-                            <td class="@TableCellClass min-w-[3.5rem]">
-   <InputSelect @bind-Value="ResourceUpdate.Data.AddOns[idx].Type" class="@InputClass">
-                                <option value="@QuantityResourceAddon.Multiplication" selected> * </option>
-                                <option value="@QuantityResourceAddon.Division"> / </option>
-                                </InputSelect>
-                            </td>
-                         
-
-                          
                             <td class="@TableCellClass min-w-[4rem]">
                                 <input class="@InputClass" disabled
                                        value="@FormatQuantityDisplay(ResourceUpdate.Data.AddOns[idx].Quantity(ResourceUpdate.Quantity))" />
                             </td>
-                            <td class="@TableCellClass min-w-[4rem]">
-                                <InputText class="@InputClass"
-                                           @bind-Value="ResourceUpdate.Data.AddOns[idx].Unit" />
-                            </td>
+                 
                             <td class="@TableCellClass min-w-[4rem]">
                                 <TrimmedNumberInput TValue="decimal"
                                                     class="@InputClass"
                                                     @bind-Value="ResourceUpdate.Data.AddOns[idx].Cost"
                                                     MaxFractionDigits="@NumericFractionDigits" />
+                            </td>
+                            <td class="@TableCellClass min-w-[4rem]">
+                                <InputText class="@InputClass"
+                                           @bind-Value="ResourceUpdate.Data.AddOns[idx].Unit" />
                             </td>
                             <td class="@TableCellClass min-w-[4rem]">
                                 <TrimmedNumberInput TValue="decimal"
@@ -504,25 +514,28 @@
                             </td>
                         </tr>
                     }
+                    <tr>
+                        <td class="@TableCellClass min-w-[16rem]"></td>
+                        <td class="@TableCellClass min-w-[3.5rem]"></td>
+                        <td class="@TableCellClass min-w-[4rem]"></td>
+                        <td class="@TableCellClass min-w-[4rem]"></td>
+                 
+                        <td class="@TableCellClass min-w-[4rem]">  
+                            <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(EffectiveAddOnCost)" />
+                            </td>
+                        <td class="@TableCellClass min-w-[4rem]">
+                        </td>
+                        <td class="@TableCellClass min-w-[4rem]">
+                            <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(EffectiveAddOnBaseCost)" />
+                            </td>
+                        <td class="@TableCellClass min-w-[4rem]">
+                            <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(EffectiveAddOnTotalCost)" />
+                        </td>
+                        <td class="@TableCellClass w-12 text-right"> 
+                            </td>
+                    </tr>
                 </tbody>
             </table>
-        </div>
-
-        <div class="mt-1 grid gap-1 md:grid-cols-3">
-            <div class="min-w-0">
-                <label class="@LabelClass">@CalcResource.cost</label>
-                <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(EffectiveAddOnCost)" />
-            </div>
-
-            <div class="min-w-0">
-                <label class="@LabelClass">@CalcResource.baseCost</label>
-                <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(EffectiveAddOnBaseCost)" />
-            </div>
-
-            <div class="min-w-0">
-                <label class="@LabelClass">@CalcResource.totalNetCost</label>
-                <input class="@DisabledInputClass" type="text" disabled value="@FormatNumericDisplay(EffectiveAddOnTotalCost)" />
-            </div>
         </div>
     </MhdCard>
 
@@ -535,10 +548,6 @@
                 <div class="min-w-0 flex-1 overflow-x-auto">
                     <div class="@SectionMetaRowClass">
                         <span class="@SectionTitleInlineClass">@StorageLoc["resourceTimesTitle"]</span>
-                        <span class="@SectionSubtleInlineClass">@AppLoc["itemsCount", ResourceUpdate.Data.Times.Count]</span>
-                        <span class="@SectionMutedInlineClass">@StorageLoc["resourceTimesHint"]</span>
-                        <span class="@SectionMutedInlineClass">Resource Q: @ResourceQuantityReference</span>
-                        <span class="@SectionMutedInlineClass">Times %: @TimesPercentageReference</span>
                     </div>
                 </div>
 
@@ -562,11 +571,11 @@
                         <thead>
                             <tr>
                                 <th class="@TableHeadCellClass">@CalcResource.name</th>
-                                <th class="@TableHeadCellClass">@ResourceLoc.inprecent</th>
+                                <th class="@TableHeadCellClass">@ResourceLoc.timeShare</th>
                                 <th class="@TableHeadCellClass">@CalcResource.quantity</th>
+                                <th class="@TableHeadCellClass">@CalcResource.cost</th>
                                 <th class="@TableHeadCellClass">@CalcResource.unit</th>
-                                <th class="@TableHeadCellClass">@StorageLoc["resourceUnitCostLabel"]</th>
-                                <th class="@TableHeadCellClass w-12"></th>
+                                    <th class="@TableHeadCellClass w-12"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -589,15 +598,16 @@
                                         <input class="@DisabledInputClass" type="text" disabled
                                                value="@FormatResolvedTimeQuantity(ResourceUpdate.Data.Times[idx].Quantity)" />
                                     </td>
-                                    <td class="@TableCellClass min-w-[5rem]">
-                                        <input class="@DisabledInputClass" disabled
-                                               value="@ResourceUpdate.Data.Unit" />
-                                    </td>
+                          
                                     <td class="@TableCellClass min-w-[5rem]">
                                         <TrimmedNumberInput TValue="decimal"
                                                             class="@InputClass"
                                                             @bind-Value="ResourceUpdate.Data.Times[idx].Cost"
                                                             MaxFractionDigits="@NumericFractionDigits" />
+                                    </td>
+                                    <td class="@TableCellClass min-w-[5rem]">
+                                        <input class="@DisabledInputClass" disabled
+                                               value="@ResourceUpdate.Data.Unit" />
                                     </td>
                                     <td class="@TableCellClass w-12 text-right">
                                         <button type="button"
@@ -619,8 +629,6 @@
     <MhdCard Elevated="true" Compact="true" Class="mb-1">
         <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
             <label class="block text-sm font-semibold text-slate-800 dark:text-slate-100">@CalcResource.note</label>
-            <p class="text-xs text-slate-500 dark:text-slate-400">@StorageLoc["resourceNotesHint"]</p>
-
             <button type="button"
                     class="@PrimaryBlueButtonClass"
                     @onclick="AddUpperNote">
@@ -659,7 +667,7 @@
 
 </EditForm>
 
-@if (Resource?.Id == 0)
+@* @if (Resource?.Id == 0)
 {
     <div class="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 py-2 dark:border-slate-700 dark:bg-slate-900/95">
         <div class="flex flex-wrap items-center justify-end gap-2">
@@ -679,7 +687,7 @@
             </button>
         </div>
     </div>
-}
+} *@
 
 @code {
     private const int NumericFractionDigits = NumericFormatHelper.DefaultMaxFractionDigits;

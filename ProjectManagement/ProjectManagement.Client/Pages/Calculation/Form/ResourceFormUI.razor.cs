@@ -348,7 +348,7 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
             messageStore?.Clear();
             SyncResolvedResourceAndTimes();
             ValidateFixedQuantity();
-            if (ResourceUpdate.ResType == ResourceTypesEnum.Materials && (ResourceUpdate.Data.CapWaste < 0) || ResourceUpdate.Data.CapWaste > 999)
+            if (ResourceUpdate.ResType == ResourceTypesEnum.Materials && (ResourceUpdate.Data.CapWaste < 0 || ResourceUpdate.Data.CapWaste > 999))
             {
                 messageStore?.Add(() => ResourceUpdate.Data.CapWaste, ResourceApp.rangeErrors);
             }
@@ -388,12 +388,16 @@ namespace ProjectManagement.Client.Pages.Calculation.Form
 
         private void ValidateTimesPercentage()
         {
-            if (ResourceUpdate.Data.Times is null || ResourceUpdate.Data.Times.Count == 0)
+            var times = ResourceUpdate.Data.Times;
+            if (times is null || times.Count == 0)
                 return;
 
-            var timesPercentageSum = RoundPercentageForValidation(ResourceUpdate.Data.Times.Sum(x => x.Percentage ?? 0m));
+            if (times.Any(x => !x.Percentage.HasValue))
+                return;
 
-            if (timesPercentageSum != 100m)
+            var timesPercentageSum = RoundPercentageForValidation(times.Sum(x => x.Percentage!.Value));
+
+            if (Math.Abs(timesPercentageSum - 100m) > 0.01m)
                 messageStore?.Add(
                     new FieldIdentifier(ResourceUpdate.Data, nameof(ResourceUpdate.Data.Times)),
                     "The total Times percentage must equal 100%.");

@@ -7,57 +7,196 @@ public static partial class SwedishTaskTextNormalizer
 {
     private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
     {
+        // Swedish function words
         "för", "med", "och", "av", "till", "på", "i", "inom", "vid", "utan",
-        "inkl", "inklusive", "samt", "en", "ett", "den", "det", "de",
-        "arbete", "arbeten", "utförande"
+        "en", "ett", "den", "det", "de", "som", "är", "har", "kan", "ska",
+        "från", "efter", "under", "över", "mot", "hos", "per",
+        // AMA abbreviations (expanded)
+        "inkl", "inklusive", "exkl", "exklusive", "samt", "alt",
+        "resp", "dvs", "bl", "bla", "ca", "typ", "enl", "enligt",
+        // Generic construction filler
+        "arbete", "arbeten", "utförande", "åtgärd", "åtgärder",
+        // Single-letter abbreviation fragments (from "m m", "o d", "e d")
+        "m", "o", "e"
     };
 
     private static readonly Dictionary<string, string> PhraseMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["grundschaktning"] = "grund schakt",
-        ["grundschakt"] = "grund schakt",
-        ["rörgravsschakt"] = "rörgrav schakt",
-        ["betonggjutning"] = "betong gjut",
-        ["armeringsarbete"] = "armering",
-        ["schakt för grund"] = "grund schakt",
-        ["schaktning för grund"] = "grund schakt",
-        ["schaktning för grunder"] = "grund schakt"
+        // Earthworks
+        ["grundschaktning"]              = "grund schakt",
+        ["grundschakt"]                  = "grund schakt",
+        ["rörgravsschakt"]               = "rörgrav schakt",
+        ["jordschakt för grundläggning"] = "jordschakt grundläggning",
+        ["schakt för grund"]             = "grund schakt",
+        ["schaktning för grund"]         = "grund schakt",
+        ["schaktning för grunder"]       = "grund schakt",
+        ["schakt för ledning"]           = "schakt ledning",
+        ["schakt för rör"]               = "schakt rör",
+        ["dränerande lager"]             = "dränering lager",
+        ["dränerande material"]          = "dränering material",
+        ["tillfällig grundvattensänkning"] = "grundvatten sänkning",
+        ["tillfällig grundvattenhöjning"]  = "grundvatten höjning",
+        ["tillfällig väg"]               = "väg",
+        // Concrete
+        ["betonggjutning"]               = "betong gjut",
+        ["armeringsarbete"]              = "armering",
+        ["platsgjuten betong"]           = "betong gjut",
+        ["platsgjutna konstruktioner"]   = "betong gjut konstruktion",
+        // Road surfaces
+        ["beläggning av betongmarksten"] = "belägg betong marksten",
+        ["beläggning av smågatsten"]     = "belägg gatsten",
+        ["beläggning av storgatsten"]    = "belägg gatsten",
+        ["återställande av"]             = "återställ",
+        // Pipes
+        ["dagvattenledning"]             = "dagvatten ledning",
+        ["vattenledning"]                = "vatten ledning",
+        ["avloppsledning"]               = "avlopp ledning",
+        ["spillvattenledning"]           = "spillvatten ledning",
     };
 
     private static readonly Dictionary<string, string> TokenMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["schaktning"] = "schakt",
-        ["schakta"] = "schakt",
-        ["utgrävning"] = "schakt",
-        ["grävning"] = "schakt",
+        // ── Schakt / Excavation ──────────────────────────────────────────
+        ["schaktning"]         = "schakt",
+        ["schakta"]            = "schakt",
+        ["utgrävning"]         = "schakt",
+        ["grävning"]           = "schakt",
+        ["jordschaktning"]     = "jordschakt",
+        ["bergschaktning"]     = "bergschakt",
+        ["markschaktning"]     = "schakt",
+        ["rörgrävning"]        = "rörgrav",
+        ["rörgravsschaktning"] = "rörgrav schakt",
+        ["rörgravar"]          = "rörgrav",
 
-        ["grunder"] = "grund",
-        ["fundament"] = "grund",
-        ["fundamenten"] = "grund",
+        // ── Grund / Foundation ───────────────────────────────────────────
+        ["grunder"]            = "grund",
+        ["fundament"]          = "grund",
+        ["fundamenten"]        = "grund",
+        ["grundläggning"]      = "grundlägg",
+        ["grundläggningar"]    = "grundlägg",
 
-        ["gjutning"] = "gjut",
-        ["gjuta"] = "gjut",
-        ["gjuten"] = "gjut",
+        // ── Fyllning / Fill ──────────────────────────────────────────────
+        ["fyllning"]           = "fyll",
+        ["fyllningar"]         = "fyll",
+        ["återfyllning"]       = "fyll",
+        ["återfyllningar"]     = "fyll",
 
-        ["armerings"] = "armering",
-        ["armeringsjärn"] = "armering",
-        ["armeringar"] = "armering",
+        // ── Dränering / Drainage ─────────────────────────────────────────
+        ["dränerande"]         = "dränering",
+        ["dräneringsrör"]      = "dränering rör",
+        ["dräneringsarbete"]   = "dränering",
+        ["dräneringsmaterial"] = "dränering",
+        ["perkolation"]        = "perkolat",
+        ["perkolationsmagasin"] = "perkolat",
+        ["infiltration"]       = "infiltrat",
 
-        ["väggar"] = "vägg",
-        ["plattor"] = "platta",
-        ["ledningar"] = "ledning",
-        ["rören"] = "rör",
-        ["rörledningar"] = "rör",
-        ["kablar"] = "kabel",
+        // ── Terrass / Earthworks ─────────────────────────────────────────
+        ["terrassering"]       = "terrass",
+        ["terrasser"]          = "terrass",
+        ["terrassarbete"]      = "terrass",
 
-        ["m2"] = "m²",
-        ["kvm"] = "m²",
-        ["m3"] = "m³",
-        ["kbm"] = "m³",
-        ["st"] = "styck",
-        ["st."] = "styck",
-        ["inkl."] = "inkl",
-        ["ca."] = "ca"
+        // ── Pål / Piling ─────────────────────────────────────────────────
+        ["pålning"]            = "pål",
+        ["pålar"]              = "pål",
+        ["pålarbete"]          = "pål",
+        ["pålningsarbete"]     = "pål",
+
+        // ── Markförstärkning / Ground reinforcement ──────────────────────
+        ["markförstärkning"]   = "förstärkning",
+        ["förstärkningar"]     = "förstärkning",
+        ["förstärkningsarbete"] = "förstärkning",
+
+        // ── Rivning / Demolition ─────────────────────────────────────────
+        ["rivning"]            = "riv",
+        ["rivningsarbete"]     = "riv",
+        ["rivningsarbeten"]    = "riv",
+        ["röjning"]            = "röj",
+        ["röjningsarbete"]     = "röj",
+        ["demontering"]        = "demonter",
+        ["demonteringsarbete"] = "demonter",
+        ["sanering"]           = "saner",
+        ["saneringsarbete"]    = "saner",
+
+        // ── Betong / Concrete ─────────────────────────────────────────────
+        ["betongkonstruktion"] = "betong",
+        ["betongarbete"]       = "betong",
+        ["betongarbeten"]      = "betong",
+        ["betongelement"]      = "betong element",
+        ["gjutning"]           = "gjut",
+        ["gjuta"]              = "gjut",
+        ["gjuten"]             = "gjut",
+
+        // ── Armering / Reinforcement ──────────────────────────────────────
+        ["armerings"]          = "armering",
+        ["armeringsjärn"]      = "armering",
+        ["armeringar"]         = "armering",
+        ["armera"]             = "armering",
+
+        // ── Murning / Masonry ─────────────────────────────────────────────
+        ["murning"]            = "mur",
+        ["murverk"]            = "mur",
+        ["murningsarbete"]     = "mur",
+
+        // ── Beläggning / Pavement ─────────────────────────────────────────
+        ["beläggningar"]       = "belägg",
+        ["beläggningsarbete"]  = "belägg",
+        ["gatubeläggning"]     = "belägg",
+        ["gatubeläggningar"]   = "belägg",
+        ["vägbeläggning"]      = "belägg",
+
+        // ── Gatsten / Paving stones ───────────────────────────────────────
+        ["gatstensbeläggning"] = "gatsten",
+        ["smågatsten"]         = "gatsten",
+        ["storgatsten"]        = "gatsten",
+        ["kantstenar"]         = "kantsten",
+        ["kantstöd"]           = "kantsten",
+        ["kantstödar"]         = "kantsten",
+        ["betongmarksten"]     = "marksten",
+        ["markstenar"]         = "marksten",
+
+        // ── Återställande / Restoration ───────────────────────────────────
+        ["återställande"]      = "återställ",
+        ["återställning"]      = "återställ",
+        ["återställningar"]    = "återställ",
+
+        // ── Målning / Painting ────────────────────────────────────────────
+        ["nymålning"]          = "målning",
+        ["ommålning"]          = "målning",
+        ["rostskyddsmålning"]  = "rostskydd målning",
+        ["putsarbete"]         = "puts",
+
+        // ── Ledning / Pipes & Conduits ────────────────────────────────────
+        ["ledningsdragning"]   = "ledning",
+        ["rörledningar"]       = "rör ledning",
+        ["anslutningsledning"] = "ledning",
+        ["spillvattenledning"] = "spillvatten ledning",
+        ["brunnar"]            = "brunn",
+        ["brunnstillverkning"] = "brunn",
+        ["anslutningsarbete"]  = "anslutning",
+        ["tätningar"]          = "tätning",
+
+        // ── Vägg / Wall ───────────────────────────────────────────────────
+        ["väggar"]             = "vägg",
+
+        // ── Platta / Slab ─────────────────────────────────────────────────
+        ["plattor"]            = "platta",
+
+        // ── Övriga ────────────────────────────────────────────────────────
+        ["ledningar"]          = "ledning",
+        ["rören"]              = "rör",
+        ["kablar"]             = "kabel",
+        ["trall"]              = "trall",
+        ["trätrall"]           = "trall",
+
+        // ── Enheter / Units ───────────────────────────────────────────────
+        ["m2"]                 = "m²",
+        ["kvm"]                = "m²",
+        ["m3"]                 = "m³",
+        ["kbm"]                = "m³",
+        ["st"]                 = "styck",
+        ["st."]                = "styck",
+        ["inkl."]              = "inkl",
+        ["ca."]                = "ca",
     };
 
     public static string Normalize(string? input)
@@ -66,6 +205,9 @@ public static partial class SwedishTaskTextNormalizer
             return string.Empty;
 
         var text = input.Trim().ToLowerInvariant();
+
+        // Strip Swedish abbreviation phrases before tokenizing
+        text = AmaAbbreviationRegex().Replace(text, " ");
 
         text = text.Replace("/", " ");
         text = text.Replace("-", " ");
@@ -162,6 +304,53 @@ public static partial class SwedishTaskTextNormalizer
         return Math.Round(Math.Min((0.60d * jaccard) + (0.30d * coverage) + (0.10d * containsBonus), 1d), 4);
     }
 
+    /// <summary>
+    /// Returns a graduated score (0–0.15) based on how many AMA code letters match hierarchically.
+    /// CBB == CBB → 0.15, CB == CB → 0.10, C == C → 0.05, no match → 0.
+    /// </summary>
+    public static double GetCodeHierarchyScore(string? targetCode, string? candidateCode)
+    {
+        if (string.IsNullOrWhiteSpace(targetCode) || string.IsNullOrWhiteSpace(candidateCode))
+            return 0d;
+
+        var t = ExtractAmaLetterPrefix(targetCode.Trim());
+        var c = ExtractAmaLetterPrefix(candidateCode.Trim());
+
+        if (t.Length == 0 || c.Length == 0)
+            return 0d;
+
+        var minLen = Math.Min(t.Length, c.Length);
+
+        // Count matching prefix letters
+        var matchLen = 0;
+        for (int i = 0; i < minLen; i++)
+        {
+            if (char.ToUpperInvariant(t[i]) == char.ToUpperInvariant(c[i]))
+                matchLen++;
+            else
+                break;
+        }
+
+        return matchLen switch
+        {
+            >= 3 => 0.15d,
+            2    => 0.10d,
+            1    => 0.05d,
+            _    => 0d
+        };
+    }
+
+    private static string ExtractAmaLetterPrefix(string code)
+    {
+        var dotIndex = code.IndexOf('.');
+        var prefix = dotIndex > 0 ? code[..dotIndex] : code;
+        // Keep only leading letters (the AMA letter portion)
+        var end = 0;
+        while (end < prefix.Length && char.IsLetter(prefix[end]))
+            end++;
+        return end > 0 ? prefix[..end] : string.Empty;
+    }
+
     private static string NormalizeToken(string token)
     {
         if (token.Length <= 2)
@@ -171,6 +360,10 @@ public static partial class SwedishTaskTextNormalizer
             token = token[..^4];
         else if (token.EndsWith("erna", StringComparison.OrdinalIgnoreCase) && token.Length > 6)
             token = token[..^4];
+        else if (token.EndsWith("ingar", StringComparison.OrdinalIgnoreCase) && token.Length > 7)
+            token = token[..^2];  // "schaktningar" → "schaktning"
+        else if (token.EndsWith("ningar", StringComparison.OrdinalIgnoreCase) && token.Length > 8)
+            token = token[..^2];
         else if (token.EndsWith("ar", StringComparison.OrdinalIgnoreCase) && token.Length > 5)
             token = token[..^2];
         else if (token.EndsWith("er", StringComparison.OrdinalIgnoreCase) && token.Length > 5)
@@ -196,6 +389,10 @@ public static partial class SwedishTaskTextNormalizer
         => quantity.HasValue
             ? quantity.Value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)
             : null;
+
+    // Strips "m m", "m.m.", "o d", "o.d.", "e d", "e.d." and variants
+    [GeneratedRegex(@"\b(m\.?\s*m|o\.?\s*d|e\.?\s*d)\b\.?", RegexOptions.IgnoreCase)]
+    private static partial Regex AmaAbbreviationRegex();
 
     [GeneratedRegex(@"[^\p{L}\p{N}\s²³]")]
     private static partial Regex NonSearchCharactersRegex();

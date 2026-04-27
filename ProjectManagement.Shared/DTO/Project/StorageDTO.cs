@@ -29,7 +29,7 @@ namespace ProjectManagement.Shared.DTO.Project
     }
     public class GetFilterDTO
     {
-        public AuthorityStorage AuthoritySelected { get; set; } = AuthorityStorage.program;
+        public AuthorityStorage AuthoritySelected { get; set; } = AuthorityStorage._private;
         public StorageSort SortSelected { get; set; } = StorageSort.Construction;
         public CalculationItemType Type { get; set; } = CalculationItemType.task;
         public string ItemCalcCategory { get; set; } = string.Empty;

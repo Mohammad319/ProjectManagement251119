@@ -18,6 +18,8 @@ namespace ProjectManagement.Shared.DTO.Calculation
         /// </summary>
         public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 public ResourceTypesEnum ResType { get; set; }
+        [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(ProjectManagement.Shared.Resource.ResLocalize))]
+        [MaxLength(FieldLengths.Name, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(ProjectManagement.Shared.Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
 
         /// <summary>

@@ -3,9 +3,11 @@
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
+@using Microsoft.Extensions.Localization
 @attribute [Authorize(Roles = PMRolesConst.Tenant.AdminManger)]
 @inherits AppComponentBase
 @implements IDisposable
+@inject IStringLocalizer<ProjectManagement.Client.Shared.ResourceFiles.Calculation.CalcResource> CalcLoc
 
 
 <EditForm @key="editContext"
@@ -30,37 +32,40 @@
 
     <DataAnnotationsValidator />
     <FormValidationSummary />
-
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
-             @if (!TaskUpdate.OnlyCodeText)
+        <div class="@HeaderGridClass">
+
+            @if (!TaskUpdate.OnlyCodeText)
             {
-        <div class="min-w-0 md:col-span-3 xl:col-span-2">
-            <label class="@CheckboxCardClass">
-                <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@CheckboxClass" />
-                <span>@CalcResource.active</span>
-            </label>
-        </div>
-        }
-        <div class="min-w-0 flex items-end md:col-span-4 xl:col-span-3">
-            <label class="@CheckboxCardClass">
-                <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText"
-                               class="@CheckboxClass" />
-                <span>@AppLoc["onlyCodeText"]</span>
-            </label>
-        </div>
-        <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[180px_minmax(0,1fr)]">
+                <div class="min-w-0">
+                    <label class="@($"{CheckboxCardClass} w-fit whitespace-nowrap")">
+                        <InputCheckbox @bind-Value="TaskUpdate.IsActive" class="@CheckboxClass" />
+                        <span>@CalcResource.active</span>
+                    </label>
+                </div>
+            }
+
+            <div class="min-w-0">
+                <label class="@($"{CheckboxCardClass} w-fit whitespace-nowrap")">
+                    <InputCheckbox @bind-Value="TaskUpdate.OnlyCodeText"
+                                   class="@CheckboxClass" />
+                    <span>@AppLoc["onlyCodeText"]</span>
+                </label>
+            </div>
+
             <div class="min-w-0">
                 <label class="@LabelClass">@CalcResource.code</label>
                 <InputText @bind-Value="TaskUpdate.Metadata.Code" class="@InputClass" />
             </div>
 
             <div class="min-w-0">
-                <label class="@LabelClass">@CalcResource.name </label>
+                <label class="@LabelClass">@CalcResource.name</label>
                 <InputText @bind-Value="TaskUpdate.Name" class="@InputClass" />
             </div>
+
         </div>
     </MhdCard>
-            @if (!TaskUpdate.OnlyCodeText)
+    @if (!TaskUpdate.OnlyCodeText)
             {
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
@@ -163,30 +168,59 @@
             
         </div>
     </MhdCard>
+       
         <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
-                            <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
-        <div class="min-w-0 md:col-span-3 xl:col-span-2">
-            <label class="@LabelClass">@CalcResource.priceSub </label>
-            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.PriceSubDB" class="@InputClass" />
-        </div>
-        <div class="min-w-0 md:col-span-3 xl:col-span-2">
-            <label class="@CheckboxCardClass">
-                <InputCheckbox class="@CheckboxClass" @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
-                <span>@ResourceLoc.inprecent</span>
-            </label>
-        </div>
-        <div class="min-w-0 md:col-span-3 xl:col-span-2">
-            <label class="@LabelClass">@CalcResource.minPrice </label>
-            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.MinPrice" class="@InputClass" />
-        </div>
+            <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
 
-        <div class="min-w-0 md:col-span-3 xl:col-span-2">
-            <label class="@LabelClass">@CalcResource.ceilingPrice </label>
-            <TrimmedNumberInput TValue="decimal?" @bind-Value="TaskUpdate.Metadata.CeilingPrice" class="@InputClass" />
+                <div class="min-w-0 md:col-span-3 xl:col-span-2">
+                    <label class="@LabelClass">@CalcResource.priceSub</label>
+                    <TrimmedNumberInput TValue="decimal?"
+                                        @bind-Value="TaskUpdate.Metadata.PriceSubDB"
+                                        class="@InputClass" />
+                </div>
+
+                <div class="min-w-0 md:col-span-5 xl:col-span-4">
+                    <div class="flex h-full items-end">
+                        <div class="flex min-w-0 items-center gap-2">
+                            <label class="@($"{CheckboxCardClass} min-w-0 max-w-full")">
+                                <InputCheckbox class="@CheckboxClass"
+                                               @bind-Value="TaskUpdate.Metadata.PriceSubInPrecent" />
+                                <span class="truncate">@ResourceLoc.inprecent</span>
+                            </label>
+
+                            <div class="group relative inline-flex flex-shrink-0">
+                                <button type="button"
+                                        class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-slate-400 text-[10px] font-bold leading-none text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:bg-slate-600 dark:hover:bg-blue-500"
+                                        aria-label="@CalcLoc["priceSubInfo"]">
+                                    !
+                                </button>
+
+                                <div role="tooltip"
+                                     class="pointer-events-none absolute left-1/2 top-full z-50 mt-1 w-64 -translate-x-1/2 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-left text-[11px] font-normal leading-snug text-blue-700 opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                    @CalcLoc["priceSubInfo"]
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="min-w-0 md:col-span-2 xl:col-span-3">
+                    <label class="@LabelClass">@CalcResource.minPrice</label>
+                    <TrimmedNumberInput TValue="decimal?"
+                                        @bind-Value="TaskUpdate.Metadata.MinPrice"
+                                        class="@InputClass" />
+                </div>
+
+                <div class="min-w-0 md:col-span-2 xl:col-span-3">
+                    <label class="@LabelClass">@CalcResource.ceilingPrice</label>
+                    <TrimmedNumberInput TValue="decimal?"
+                                        @bind-Value="TaskUpdate.Metadata.CeilingPrice"
+                                        class="@InputClass" />
+                </div>
+
             </div>
-        </div>
         </MhdCard>
-    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+        <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
                 <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-12">
         <div class="min-w-0 md:col-span-3 xl:col-span-2">
             <label class="@LabelClass">@CalcResource.actuallyQuantity</label>
@@ -220,9 +254,6 @@
                         }
                     </InputSelect>
                 </div>
-
-
-
                 <div class="min-w-0 md:col-span-6 xl:col-span-4">
                     <label class="@LabelClass">@CalcResource.responsible</label>
                     <InputText @bind-Value="TaskUpdate.Metadata.Responsible" class="@InputClass" />
@@ -240,84 +271,99 @@
                         }
                     </InputSelect>
                 </div>
-
-
-                
-  
             </div>
         </MhdCard>
-  
+        <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
+            <div class="grid gap-y-1">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex min-w-0 items-center gap-1.5">
+                        <div class="text-[12px] font-semibold text-slate-800 dark:text-slate-100">
+                            @CalcLoc["conversionParamTitle"]
+                        </div>
 
-    <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
-        <div class="grid gap-y-2">
-            <div class="flex items-center justify-between gap-2">
-                <div class="min-w-0">
-                    <div class="text-[12px] font-semibold text-slate-800 dark:text-slate-100">Mängdomräkningsparametrar</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400">
-                        Använd parametrar för att räkna om uppgiftens egen mängd eller en överordnad mängd, till exempel bredd, djup eller tjocklek.
+                        <div class="group relative inline-flex">
+                            <button type="button"
+                                    class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-slate-400 text-[10px] font-bold leading-none text-white hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 dark:bg-slate-600 dark:hover:bg-blue-500"
+                                    aria-label="@CalcLoc["conversionParamInfo"]">
+                                !
+                            </button>
+
+                            <div role="tooltip"
+                                 class="pointer-events-none absolute left-1/2 top-full z-50 mt-1 w-72 -translate-x-1/2 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-left text-[11px] font-normal leading-snug text-blue-700 opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                @CalcLoc["conversionParamInfo"]
+                            </div>
+                        </div>
                     </div>
+
+                    @if (!TaskUpdate.OnlyCodeText)
+                    {
+                        <div class="flex items-end gap-2">
+                            <button type="button"
+                                    class="@OutlineBlueButtonClass"
+                                    @onclick="AddConversionParameter">
+                                @CalcLoc["newParameter"]
+                            </button>
+                        </div>
+                    }
                 </div>
 
                 @if (!TaskUpdate.OnlyCodeText)
                 {
-                    <div class="flex items-end gap-2">
-
-
-                        <button type="button"
-                                class="@OutlineBlueButtonClass"
-                                @onclick="AddConversionParameter">
-                            Ny parameter
-                        </button>
-                    </div>
-                }
-            </div>
-
-            @if (!TaskUpdate.OnlyCodeText)
-            {
-                @if (!TaskUpdate.Metadata.ConversionParameters.Any())
-                {
-                    <div class="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
-                        Inga omräkningsparametrar ännu. Lämna listan tom om du vill skriva in Mängdomräkningsfaktor manuellt.
-                    </div>
+                    @if (!TaskUpdate.Metadata.ConversionParameters.Any())
+                    {
+                        <div class="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+                            @CalcLoc["noConversionParams"]
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 dark:border-slate-700">
+                                    <th class="pb-1 text-left text-[11px] font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</th>
+                                    <th class="w-[110px] pb-1 pl-1.5 text-left text-[11px] font-medium text-slate-700 dark:text-slate-200">@CalcResource.factor</th>
+                                    <th class="w-[110px] pb-1 pl-1.5 text-left text-[11px] font-medium text-slate-700 dark:text-slate-200">@CalcResource.unit</th>
+                                    <th class="w-auto"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < TaskUpdate.Metadata.ConversionParameters.Count; i++)
+                                {
+                                    var idx = i;
+                                    <tr class="last:border-0 dark:border-slate-700/50">
+                                        <td class="py-0.5 pr-0.5">
+                                            <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Name" class="@InputClass" />
+                                        </td>
+                                        <td class="py-0.5 pr-0.5">
+                                            <TrimmedNumberInput TValue="decimal"
+                                                                @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Value"
+                                                                class="@InputClass"
+                                                                @bind-Value:after="RecalculateConversionFactor" />
+                                        </td>
+                                        <td class="py-0.5 pr-0.5">
+                                            <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Unit" class="@InputClass" />
+                                        </td>
+                                        <td class="py-0.5 text-right">
+                                            <button type="button"
+                                                    class="@OutlineRedButtonClass"
+                                                    @onclick="() => RemoveConversionParameter(idx)">
+                                                @AppLoc["delete"]
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
                 }
                 else
                 {
-                    <div class="grid gap-2">
-                        @for (int i = 0; i < TaskUpdate.Metadata.ConversionParameters.Count; i++)
-                        {
-                            var idx = i;
-                            <div class="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/60 md:grid-cols-[minmax(0,1.4fr)_110px_110px_auto]">
-                                <div class="min-w-0">
-                                    <label class="@LabelClass">@CalcResource.name</label>
-                                    <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Name" class="@InputClass" />
-                                </div>
-                                <div class="min-w-0">
-                                    <label class="@LabelClass">@CalcResource.factor</label>
-                                    <TrimmedNumberInput TValue="decimal"
-                                                 @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Value"
-                                                 class="@InputClass"
-                                                 @bind-Value:after="RecalculateConversionFactor" />
-                                </div>
-                                <div class="min-w-0">
-                                    <label class="@LabelClass">@CalcResource.unit</label>
-                                    <InputText @bind-Value="TaskUpdate.Metadata.ConversionParameters[idx].Unit" class="@InputClass" />
-                                </div>
-                                <div class="flex items-end justify-end">
-                                    <button type="button" class="@OutlineRedButtonClass" @onclick="() => RemoveConversionParameter(idx)">Ta bort</button>
-                                </div>
-                            </div>
-                        }
+                    <div class="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+                        @CalcLoc["conversionParamNotForCodeRows"]
                     </div>
                 }
-            }
-            else
-            {
-                <div class="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
-                    Omräkningsparametrar används inte för kodrader.
-                </div>
-            }
-        </div>
-    </MhdCard>
+            </div>
+        </MhdCard>
     }
     <MhdCard Elevated="true" Compact="true" Class="mb-1.5">
         <div class="grid gap-x-2 gap-y-1.5 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
@@ -356,7 +402,7 @@
 </EditForm>
 
 
-@if (Task.Id == 0)
+@* @if (Task.Id == 0)
 {
     <div class="mt-1 flex flex-wrap justify-end gap-2">
         @if (PostList.Count > 1)
@@ -365,7 +411,7 @@
         }
         <button type="button" class="@OutlineBlueButtonClass" @onclick="NewSP">@ResourceApp.newItem</button>
     </div>
-}
+} *@
 
 
 @code {
@@ -379,6 +425,9 @@
     private string OutlineBlueButtonClass => "inline-flex h-6 items-center justify-center rounded-md border border-blue-600 px-1 text-sm font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-300";
     private string OutlineRedButtonClass => "inline-flex h-6 items-center justify-center rounded-md border border-red-600 px-1 text-sm font-medium text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-400 dark:text-red-300";
     private string DeleteButtonClass => "inline-flex h-6 items-center justify-center rounded-md bg-red-600 px-3 text-sm font-medium text-white transition hover:bg-red-700 dark:bg-red-500";
+
+    private bool _showConversionInfo;
+    private bool _showPriceSubInfo;
 
     public const string DialogFormId = "taskForm";
     List<TaskPostDTO> PostList = new();
@@ -485,6 +534,10 @@
 
     private void AddConversionParameter()
     {
+        bool ch = false;
+        if (TaskUpdate.Metadata.ConversionParameters.Count == 0) 
+        ch = true;
+        
         EnsureConversionParameters(TaskUpdate);
 
         if (!TaskUpdate.Metadata.BaseQuantity.HasValue)
@@ -501,6 +554,7 @@
         });
 
         RecalculateConversionFactor();
+        if (ch) TaskUpdate.Metadata.Unit = string.Empty;
     }
     private void RemoveConversionParameter(int index)
     {
@@ -633,6 +687,11 @@
         if (!ShowTaskCapInput)
             task.Metadata.Cap = null;
     }
+    private string HeaderGridClass =>
+    TaskUpdate.OnlyCodeText
+        ? "grid grid-cols-[max-content_150px_minmax(260px,1fr)] items-end justify-start gap-x-1.5 gap-y-1"
+        : "grid grid-cols-[max-content_max-content_150px_minmax(260px,1fr)] items-end justify-start gap-x-1.5 gap-y-1";
+
     private static bool CanEditTaskCap(IEnumerable<ResourceListMVVM>? resources)
     {
         if (resources is null)

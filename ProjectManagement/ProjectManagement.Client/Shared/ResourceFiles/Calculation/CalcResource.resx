@@ -402,4 +402,22 @@
   <data name="changeFactor2Resource" xml:space="preserve">
     <value>Unit conversion factor</value>
   </data>
+  <data name="conversionParamTitle" xml:space="preserve">
+    <value>Conversion parameters</value>
+  </data>
+  <data name="newParameter" xml:space="preserve">
+    <value>New parameter</value>
+  </data>
+  <data name="conversionParamInfo" xml:space="preserve">
+    <value>Use parameters to convert the task's own quantity or a parent quantity, for example width, depth or thickness.</value>
+  </data>
+  <data name="noConversionParams" xml:space="preserve">
+    <value>No conversion parameters yet. Leave the list empty if you want to enter the Quantity conversion factor manually.</value>
+  </data>
+  <data name="conversionParamNotForCodeRows" xml:space="preserve">
+    <value>Conversion parameters are not used for code rows.</value>
+  </data>
+  <data name="priceSubInfo" xml:space="preserve">
+    <value>Updates the customer price proportionally when the price per unit changes, keeping the same percentage difference.</value>
+  </data>
 </root>

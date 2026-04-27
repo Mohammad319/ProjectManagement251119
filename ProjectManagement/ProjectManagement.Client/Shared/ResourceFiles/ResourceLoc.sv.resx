@@ -157,7 +157,7 @@
     <value>Inkomst</value>
   </data>
   <data name="inprecent" xml:space="preserve">
-    <value>I procent</value>
+    <value>Proportionell uppdatering av á-pris/enhet</value>
   </data>
   <data name="InvoiceVerificationDate" xml:space="preserve">
     <value>Fakturaverifieringsdatum</value>
@@ -311,5 +311,11 @@
   </data>
   <data name="baseUnit" xml:space="preserve">
     <value>Utgångsenhet </value>
+  </data>
+  <data name="capacityFromCostItem" xml:space="preserve">
+    <value>Kapacitet från kalkylpost</value>
+  </data>
+  <data name="timeShare" xml:space="preserve">
+    <value>Tidsandel (%)</value>
   </data>
 </root>

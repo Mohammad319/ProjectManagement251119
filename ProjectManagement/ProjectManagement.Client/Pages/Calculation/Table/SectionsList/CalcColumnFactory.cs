@@ -1,5 +1,6 @@
 using ProjectManagement.Client.Helper;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation.Template;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Constants;
@@ -134,7 +135,7 @@ public static class CalcColumnFactory
             },
             [NetColumnId.ChangeFactor2] = new()
             {
-                TaskRender = (b, t) => TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ChangeFactor2),
+                TaskRender = (b, t) => { if (t.Type == TaskType.CodeName) TableRenderHelpers.EmptyTd(b); else TableRenderHelpers.RenderFormattedTd(b, round, t.Metadata.ChangeFactor2); },
                 //ResRender = (b, r) => TableRenderHelpers.RenderFormattedTd(b, round, r.ChangeFactor2)
                 ResRender = static (b, _) => TableRenderHelpers.EmptyTd(b),
             },
