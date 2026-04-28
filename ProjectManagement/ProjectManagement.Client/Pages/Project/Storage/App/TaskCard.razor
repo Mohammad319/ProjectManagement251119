@@ -1,4 +1,4 @@
-﻿@using ProjectManagement.Client.Pages.Project.Storage.App.Config
+@using ProjectManagement.Client.Pages.Project.Storage.App.Config
 @using ProjectManagement.Client.Shared.Repositories.Calculation
 @using ProjectManagement.Shared.DTO.Calculation
 @using ProjectManagement.Shared.DTO.ProjectAppStorage
@@ -10,12 +10,11 @@
 @inherits AppComponentBase
 @inject AppState AppState
 
-<div class="mb-2">
+<div class="@(InlineHeader ? "inline-block align-top" : "mb-2")">
     <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
         <div class="flex items-center gap-0.5 flex-shrink-0">
             <button @onclick="CollspanTask"
                     class="shrink-0 text-slate-500 dark:text-slate-400 group-hover:text-slate-600 transition-transform duration-200">
-                    @* class="inline-flex items-center justify-center w-[26px] h-[26px] rounded-full border px-0 text-[12px] leading-none transition-all duration-150 hover:scale-105 active:scale-95 border-green-300 text-green-600 hover:bg-green-100 hover:ring-1 hover:ring-green-300 dark:border-green-400 dark:text-green-300 dark:hover:bg-green-900/40 dark:hover:ring-green-500"> *@
                 <svg xmlns="http://www.w3.org/2000/svg"
                      class="@($"w-4 h-4 transform transition-transform duration-200 {(Task.Collspanded ? "rotate-90" : "rotate-0")}")"
                      fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -30,11 +29,16 @@
             {
                 <button @onclick="ToggleResources"
                         class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white px-0.5 py-0 text-sm">
-                    @(_showResources? ResourceApp.hiddenItems: ResourceApp.visibleItems)
+                    @(_showResources ? ResourceApp.hiddenItems : ResourceApp.visibleItems)
                 </button>
             }
             <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
-                @Task.DisplayName @FormatNumber(Task.TotalCost)<span class="opacity-70">/ Unit: @Task.UnitCode</span>
+                @if (ShowTaskName)
+                {
+                    @Task.DisplayName
+                    <text> </text>
+                }
+                @FormatNumber(Task.TotalCost)<span class="opacity-70">/ Unit: @Task.UnitCode</span>
             </h3>
             <div class="w-[140px]">
                 <select @bind="Task.StatusId" class="w-full h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
@@ -48,7 +52,6 @@
             </div>
         </div>
 
-        <!-- القسم الأيسر -->
         <div class="flex items-center gap-2 flex-wrap justify-end text-[12px]">
             @if (Task.Collspanded)
             {
@@ -77,13 +80,7 @@
 
     @if (Task.Collspanded)
     {
-        @if (_rootGroups.Count > 0)
-        {
-            <GroupTree Task="Task" Answers="_answers" Groups="_rootGroups" OnChanged="OnAnswersChanged" />
-        }
-
         <div class="mt-2 min-w-0">
-           
             <FinalResourcesTable2 Rows="GetVisibleRows()"
                                   MaxFractionDigits="MaxFractionDigits"
                                   AddBtnIsVisible="Task.Added"
@@ -94,7 +91,6 @@
                                   NameConfig="NameConfig"
                                   TaskParameters="Task.ParameterValues"
                                   TotalCost="Task.TotalCost" />
-
         </div>
     }
 </div>
@@ -107,30 +103,27 @@
     [Parameter] public bool NameConfig { get; set; }
     [Parameter] public bool CostConfig { get; set; }
     [Parameter] public bool CO2Config { get; set; }
+    [Parameter] public bool ShowTaskName { get; set; } = true;
+    [Parameter] public bool InlineHeader { get; set; }
     private const string ToggleClass =
-            //"inline-flex items-center justify-center rounded-full " +
             "inline-flex h-5 w-5 items-center justify-center rounded-md  " +
     "border border-slate-400 dark:border-slate-600 " +
     "bg-transparent dark:bg-transparent " +
     "w-5 h-5 cursor-pointer transition-all duration-200 ease-out " +
     "hover:opacity-70 hover:scale-110 hover:shadow-sm";
-    string St => "w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-[13px] " +
-                 "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400";
     private bool _showResources = true;
     private int SummaryId => -Task.Id;
     private int MaxFractionDigits => Math.Clamp(Template?.MathRound ?? NumericFormatHelper.DefaultMaxFractionDigits, 0, 15);
     private string? _computeError;
     private string? _resultText;
-    private UserAnswers _answers = default!;
-    private List<GroupCardWasm> _rootGroups = new();
     private void ToggleResources() => _showResources = !_showResources;
     private bool IsSummary(ResourceDto r) => r?.Id == SummaryId;
     private IEnumerable<ResourceDto> GetVisibleRows()
     {
         var all = Task?.Resources ?? Enumerable.Empty<ResourceDto>();
-        if (!Task?.Uncontrollable ?? true) return all;              // ليست Uncontrollable => اعرض الكل
-        if (_showResources) return all;                              // إظهار الموارد => اعرض الكل
-        return all.Where(IsSummary);                                 // إخفاء الموارد => اعرض الملخص فقط
+        if (!Task?.Uncontrollable ?? true) return all;
+        if (_showResources) return all;
+        return all.Where(IsSummary);
     }
     void GetResourceTEnant(ResourceDto res)
     {
@@ -180,18 +173,16 @@
             var task = await TaskService.GetTaskForUserDtoAsync(Task.Id);
             if (task != null)
             {
-                Task.OptionGroups = task.OptionGroups;
-                Task.ResourceOptionGroups = task.ResourceOptionGroups;
-                Task.NumericInputs = task.NumericInputs;
-                Task.Conditions = task.Conditions;
-                Task.ResultResources ??= new List<ResourceDto>();
+                Task.BaseResources = task.BaseResources ?? new List<ResourceDto>();
+                Task.ResultResources = task.ResultResources ?? new List<ResourceDto>();
+                Task.UpperNote = task.UpperNote ?? [];
+                Task.StateLinks = task.StateLinks ?? [];
+                ApplyCostAdjustments(Task.BaseResources);
             }
             Task.IsLoading = true;
         }
 
-        _answers = Compute.A(Task.Id);
-        _rootGroups = GroupTreeHelpersWasm.RootCards(Task).ToList();
-
+        RefreshBaseResources();
         Compute.BuildFinalRows(Task);
         EnsureUncontrollableSummary();
         StateHasChanged();
@@ -203,10 +194,8 @@
     private void OnAnswersChanged()
     {
         RefreshBaseResources();
-
         Compute.BuildFinalRows(Task);
-        EnsureUncontrollableSummary();   // بعد أي تغيير
-
+        EnsureUncontrollableSummary();
         StateHasChanged();
     }
 
@@ -224,9 +213,6 @@
             _resultText = value.ToString("G");
 
             RefreshBaseResources();
-
-            // Always rebuild derived rows from scratch so Apply refreshes
-            // the existing resources instead of carrying old result rows forward.
             Compute.BuildFinalRows(Task);
             EnsureUncontrollableSummary();
             StateHasChanged();
@@ -240,16 +226,16 @@
     private void RefreshBaseResources()
         => Compute.RefreshResources(Task.BaseResources, Task.Quantity, Task.ParameterValues);
 
-    /// <summary>
-    /// إنشاء/تحديث مورد ملخص:
-    /// - يُدرج داخل Resources و ResultResources.
-    /// - الاسم/الوحدة/الكمية من المهمة.
-    /// - BaseCost/Cost = مجموع باقي الموارد (عدا الملخص).
-    /// - دائماً أول صف ليظهر أعلى الجدول.
-    /// </summary>
+    private void ApplyCostAdjustments(IEnumerable<ResourceDto> resources)
+    {
+        if (!CostConfig) return;
+        foreach (var res in resources)
+            if (res.CostUserValue.HasValue)
+                res.Data.Cost = res.CostUserValue.Value;
+    }
+
     private void EnsureUncontrollableSummary()
     {
-        // عند التحول لقابلة للتحكم: إزالة الملخص من القوائم
         if (Task is null || !Task.Uncontrollable)
         {
             if (Task is not null)
@@ -261,7 +247,6 @@
         }
 
         Task.BaseResources ??= [];
-        // حساب المجاميع من بقية الموارد (عدا الملخص)
         var others = (Task.Resources ?? new List<ResourceDto>()).Where(r => r is not null && !IsSummary(r)).ToList();
 
         var totalBaseCost = others.Sum(r => r?.Data?.BaseCost ?? 0);
@@ -270,9 +255,7 @@
         var totalStorageCost = others.Sum(r => r?.CostStorageValue ?? 0);
         var totalUserCost = others.Sum(r => r?.CostUserValue ?? r?.CostStorageValue ?? 0);
 
-        // إيجاد/إنشاء الملخص في Resources
         var summary = Task.BaseResources.FirstOrDefault(IsSummary);
-        //if (summary is not null) Task.BaseResources.Remove(summary);
         if (summary is null)
         {
             summary = new ResourceDto
@@ -284,7 +267,6 @@
                 ResourceSource = ResourceSource.Base,
                 CostStorageValue = totalStorageCost,
                 CostUserValue = totalUserCost,
-                
                 Data = new ProjectManagement.Shared.Base.Calculation.ResourceMetadata
                 {
                     Unit = Task.UnitCode ?? string.Empty,

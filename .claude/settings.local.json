@@ -10,7 +10,8 @@
       "Bash(sort grep *)",
       "Bash(xargs cat *)",
       "Bash(awk -F: '{print $1}')",
-      "Bash(del *)"
+      "Bash(del *)",
+      "Bash(dotnet ef *)"
     ]
   }
 }

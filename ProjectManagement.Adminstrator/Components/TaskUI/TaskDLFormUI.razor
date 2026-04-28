@@ -4,8 +4,10 @@
 @using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Entities.Tasks
 @using TaskResourceBlueprints.Services.ProjectTask
+@using TaskResourceBlueprints.Services.StateGroups
 @using System.Globalization
 @inject ITaskDefinitionService TaskService
+@inject ITaskStateGroupService StateGroupService
 @inherits AppComponentBase
 
 <div class="space-y-2 text-slate-900 dark:[color-scheme:dark] dark:text-slate-100">
@@ -28,62 +30,6 @@
             </div>
 
             <div class="grid grid-cols-1 gap-2 px-3 py-2 md:grid-cols-2 xl:grid-cols-3">
-                <div class="space-y-1">
-                    <label class="@LabelClass">Action</label>
-                    <InputSelect @bind-Value="UpdateForm.ActionId" class="@SelectClass">
-                        <option value="">Select Action</option>
-                        @if (ActionsTasks != null)
-                        {
-                            foreach (var action in ActionsTasks)
-                            {
-                                <option value="@action.Id">@action.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="@LabelClass">Location</label>
-                    <InputSelect @bind-Value="UpdateForm.LocationId" class="@SelectClass">
-                        <option value="">Select Location</option>
-                        @if (LocationsList != null)
-                        {
-                            foreach (var action in LocationsList)
-                            {
-                                <option value="@action.Id">@action.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="@LabelClass">Fall</label>
-                    <InputSelect @bind-Value="UpdateForm.FallId" class="@SelectClass">
-                        <option value="">Select Fall</option>
-                        @if (FallsList != null)
-                        {
-                            foreach (var action in FallsList)
-                            {
-                                <option value="@action.Id">@action.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="@LabelClass">ActionType</label>
-                    <InputSelect @bind-Value="UpdateForm.ActionTypeId" class="@SelectClass">
-                        <option value="">Select ActionType</option>
-                        @if (ActionTypesList != null)
-                        {
-                            foreach (var action in ActionTypesList)
-                            {
-                                <option value="@action.Id">@action.Name</option>
-                            }
-                        }
-                    </InputSelect>
-                </div>
-
                 <div class="space-y-1">
                     <label class="@LabelClass">@CalcResource.code</label>
                     <InputText @bind-Value="UpdateForm.Code" class="@InputClass" />
@@ -156,14 +102,14 @@
                            @oninput="OnPriceProductionInput" />
                 </div>
 
-                <div class="space-y-1">
+@*                 <div class="space-y-1">
                     <label class="@LabelClass">@CalcResource.changeFactor1</label>
                     <input type="text"
                            inputmode="decimal"
                            class="@InputClass"
                            value="@ChangeFactor1Text"
                            @oninput="OnChangeFactor1Input" />
-                </div>
+                </div> *@
 
                 <div class="space-y-1">
                     <label class="@LabelClass">@CalcResource.changeFactor2</label>
@@ -234,6 +180,100 @@
                             <span class="leading-5">@folder.DisplayName</span>
                         </label>
                     }
+                }
+            </div>
+        </section>
+
+        @if (StateGroups?.Count > 0)
+        {
+            <section class="@PanelClass">
+                <div class="@PanelHeaderClass">
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">State groups</h3>
+                    <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Link this task to one state per group.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2 px-3 py-2 md:grid-cols-2 xl:grid-cols-3">
+                    @foreach (var group in StateGroups)
+                    {
+                        var selectedStateId = UpdateForm.SelectedStateIds
+                            .FirstOrDefault(id => group.States.Any(s => s.Id == id));
+                        <div class="space-y-1">
+                            <label class="@LabelClass">@group.Name</label>
+                            <select class="@SelectClass"
+                                    @onchange="(e) => OnStateGroupChanged(group, e)">
+                                <option value="">— None —</option>
+                                @foreach (var state in group.States.OrderBy(s => s.SortOrder).ThenBy(s => s.Name))
+                                {
+                                    <option value="@state.Id" selected="@(selectedStateId == state.Id)">@state.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        <section class="@PanelClass">
+            <div class="@PanelHeaderClass">
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Conversion parameters</h3>
+            </div>
+
+            <div class="px-3 py-2">
+                <div class="mb-2 flex justify-end">
+                    <button type="button"
+                            class="inline-flex items-center justify-center rounded-lg border border-sky-600 px-3 py-1.5 text-xs font-medium text-sky-600 transition hover:bg-sky-600 hover:text-white dark:border-sky-400 dark:text-sky-300"
+                            @onclick="AddConversionParameter">
+                        + Add parameter
+                    </button>
+                </div>
+
+                @if (!UpdateForm.ConversionParameters.Any())
+                {
+                    <div class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-400">
+                        No conversion parameters
+                    </div>
+                }
+                else
+                {
+                    <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                        <table class="min-w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.factor</th>
+                                    <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                    <th class="w-12 px-3 py-2"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < UpdateForm.ConversionParameters.Count; i++)
+                                {
+                                    int idx = i;
+                                    <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                        <td class="px-2 py-1">
+                                            <InputText @bind-Value="UpdateForm.ConversionParameters[idx].Name"
+                                                       class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                        </td>
+                                        <td class="px-2 py-1">
+                                            <InputNumber @bind-Value="UpdateForm.ConversionParameters[idx].Value"
+                                                         class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                        </td>
+                                        <td class="px-2 py-1">
+                                            <InputText @bind-Value="UpdateForm.ConversionParameters[idx].Unit"
+                                                       class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                        </td>
+                                        <td class="px-2 py-1 text-right">
+                                            <button type="button"
+                                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500"
+                                                    @onclick="() => UpdateForm.ConversionParameters.RemoveAt(idx)">
+                                                x
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 }
             </div>
         </section>
@@ -312,12 +352,9 @@
 
     private TaskDefinitionEditDto UpdateForm { get; set; } = new();
 
-    private List<ActionEntity> ActionsTasks = new();
-    private List<ActionTypeEntity> ActionTypesList = new();
-    private List<FallEntity> FallsList = new();
-    private List<LocationEntity> LocationsList = new();
     private List<TaskUnitGroup> Groups = new();
     private List<ResourceCategory> Folders = new();
+    private List<TaskResourceBlueprints.Entities.Lookups.TaskStateGroup> StateGroups = new();
     private string QuantityText { get; set; } = string.Empty;
     private string PriceProductionText { get; set; } = string.Empty;
     private string ChangeFactor1Text { get; set; } = "1";
@@ -329,19 +366,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var (actions, actionTypes, falls, locations, unitGroups, folders) =
+        var (unitGroups, folders) =
             await TaskService.GetLookupsAsync(CancellationToken.None);
 
-        ActionsTasks = actions.ToList();
-        ActionTypesList = actionTypes.ToList();
-        FallsList = falls.ToList();
-        LocationsList = locations.ToList();
         Groups = unitGroups.ToList();
         Folders = folders.ToList();
+        StateGroups = await StateGroupService.GetGroupsWithStatesAsync();
         if (TaskId is > 0)
             UpdateForm = await TaskQueries.GetForEditAsync(TaskId.Value, CancellationToken.None);
 
         SyncNumericInputs();
+    }
+
+    private void OnStateGroupChanged(TaskResourceBlueprints.Entities.Lookups.TaskStateGroup group, ChangeEventArgs e)
+    {
+        foreach (var state in group.States)
+            UpdateForm.SelectedStateIds.Remove(state.Id);
+
+        if (int.TryParse(e.Value?.ToString(), out int stateId) && stateId > 0)
+            UpdateForm.SelectedStateIds.Add(stateId);
     }
 
     private void ToggleFolder(int folderId)
@@ -462,5 +505,15 @@
 
         value = null;
         return false;
+    }
+
+    private void AddConversionParameter()
+    {
+        UpdateForm.ConversionParameters.Add(new ProjectManagement.Shared.Base.Calculation.TaskConversionParameter
+        {
+            Name = string.Empty,
+            Unit = string.Empty,
+            Value = 1m
+        });
     }
 }

@@ -34,47 +34,6 @@
     }
     else
     {
-        <section class="@SectionClass">
-            <div class="@HeaderClass">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Task resource setup</h3>
-            </div>
-
-            <div class="@BodyClass">
-                <div class="overflow-x-auto">
-                    <div class="flex min-w-max flex-nowrap items-stretch gap-2">
-                        <div class="shrink-0">
-                            <span class="@BadgeClass">Task: @Task.DisplayName</span>
-                        </div>
-
-                        <div class="shrink-0">
-                            <span class="@BadgeClass">Resource: @Resource.DisplayName</span>
-                        </div>
-
-                        @if (!string.IsNullOrWhiteSpace(Resource.Unit))
-                        {
-                            <div class="shrink-0">
-                                <span class="@BadgeMutedClass">@Resource.Unit</span>
-                            </div>
-                        }
-
-                        <div class="@StatCardClass w-[150px] shrink-0">
-                            <div class="@StatLabelClass">Roles</div>
-                            <div class="@StatValueClass">@(TaskResource.CapRole?.Count ?? 0)</div>
-                        </div>
-
-                        <div class="@StatCardClass w-[150px] shrink-0">
-                            <div class="@StatLabelClass">Formulas</div>
-                            <div class="@StatValueClass">@(TaskResource.Formulas?.Count ?? 0)</div>
-                        </div>
-
-                        <div class="@StatCardClass w-[220px] shrink-0">
-                            <div class="@StatLabelClass">Type</div>
-                            <div class="@StatValueClass">@TaskResource.ResType</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <section class="@SectionClass">
             <div class="@HeaderClass">
@@ -84,6 +43,27 @@
             <div class="@BodyClass">
                 <div class="overflow-x-auto">
                     <div class="flex min-w-max flex-nowrap items-start gap-2">
+                        <div class="w-[180px] shrink-0">
+                            <label for="qty" class="@LabelClass">@CalcResource.quantity</label>
+                            <input id="qty"
+                                   type="text"
+                                   inputmode="decimal"
+                                   class="@InputClass"
+                                   value="@QuantityText"
+                                   @oninput="OnQuantityInput" />
+                        </div>
+
+                        <div class="flex w-[140px] shrink-0 flex-col">
+                            <label class="@LabelClass">Fixed</label>
+                            <label class="flex h-11 cursor-pointer items-center gap-2 px-1">
+                                <input type="checkbox"
+                                       class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                       checked="@TaskResource.IsFixed"
+                                       @onchange="e => { TaskResource.IsFixed = (bool)(e.Value ?? false); }" />
+                                <span class="text-sm text-slate-700 dark:text-slate-200">@(TaskResource.IsFixed ? "Yes" : "No")</span>
+                            </label>
+                        </div>
+
                         <div class="w-[180px] shrink-0">
                             <label for="menu-id" class="@LabelClass">Menu Id</label>
                             <input id="menu-id"
@@ -103,7 +83,7 @@
                                    value="@ChangeFactor1Text"
                                    @oninput="OnChangeFactor1Input" />
                         </div>
-
+@*
                         <div class="w-[180px] shrink-0">
                             <label for="cf2" class="@LabelClass">@CalcResource.changeFactor2</label>
                             <input id="cf2"
@@ -112,7 +92,7 @@
                                    class="@InputClass"
                                    value="@ChangeFactor2Text"
                                    @oninput="OnChangeFactor2Input" />
-                        </div>
+                        </div> *@
 
                         <div class="w-[180px] shrink-0">
                             <label for="cap" class="@LabelClass">@(TaskResource.ResType == ResourceTypesEnum.Materials ? CalcResource.waste : CalcResource.cap)</label>
@@ -220,56 +200,6 @@
                 </div>
             </section>
         }
-
-        <section class="@SectionClass">
-            <div class="@HeaderClass">
-                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">@CalcResource.Formulas</h4>
-
-                <button type="button"
-                        class="@SecondaryButtonClass"
-                        @onclick="@(() => TaskResource.Formulas.Add(string.Empty))">
-                    <span>+</span>
-                    <span>Add</span>
-                </button>
-            </div>
-
-            <div class="@BodyClass">
-                @if (TaskResource.Formulas is null || TaskResource.Formulas.Count == 0)
-                {
-                    <div class="flex min-h-[110px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 px-3 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:!bg-slate-900/70 dark:text-slate-300">
-                        No formulas
-                    </div>
-                }
-                else
-                {
-                    <div class="space-y-2">
-                        @foreach (var eq in TaskResource.Formulas.Select((value, index) => new { value, index }))
-                        {
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:!bg-slate-900/70">
-                                <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
-                                    <div class="min-w-0">
-                                        <label class="@LabelClass">Formula @(eq.index + 1)</label>
-                                        <input class="@InputClass"
-                                               placeholder="Formula"
-                                               value="@TaskResource.Formulas[eq.index]"
-                                               @oninput="e => TaskResource.Formulas[eq.index] = e.Value?.ToString() ?? string.Empty" />
-                                    </div>
-
-                                    <div class="shrink-0">
-                                        <button type="button"
-                                                class="@DangerButtonClass"
-                                                title="@ResourceApp.delete"
-                                                @onclick="@(() => RemoveFormula(eq.index))">
-                                            @ResourceApp.delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-        </section>
     }
 
     <div class="border-t border-slate-200 pt-2 dark:border-slate-700">
@@ -295,6 +225,7 @@
 
     private TaskResourceDto? TaskResource;
     private string? FormErrorMessage;
+    private string QuantityText { get; set; } = string.Empty;
     private string MenuIdText { get; set; } = string.Empty;
     private string ChangeFactor1Text { get; set; } = string.Empty;
     private string ChangeFactor2Text { get; set; } = string.Empty;
@@ -343,13 +274,6 @@
     private const string DangerButtonClass =
         "inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-rose-600 bg-rose-600 px-3 text-sm font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400";
 
-    private void RemoveFormula(int i)
-    {
-        if (TaskResource is not null && i >= 0 && i < TaskResource.Formulas.Count)
-        {
-            TaskResource.Formulas.RemoveAt(i);
-        }
-    }
 
     private void AddRole()
     {
@@ -379,7 +303,6 @@
     {
         TaskResource = await TaskResourceService.GetTaskResourceAsync(Task.Id, Resource.ResourceId, CancellationToken.None) ?? new TaskResourceDto();
         TaskResource.CapRole ??= [];
-        TaskResource.Formulas ??= [];
         SyncNumericInputs();
     }
 
@@ -390,7 +313,8 @@
             return;
         }
 
-        if (!TryParseNullableInt(MenuIdText, out var menuId) ||
+        if (!TryParseDecimal(QuantityText, out var quantity) ||
+            !TryParseNullableInt(MenuIdText, out var menuId) ||
             !TryParseDecimal(ChangeFactor1Text, out var changeFactor1) ||
             !TryParseDecimal(ChangeFactor2Text, out var changeFactor2) ||
             !TryParseDecimal(CapWasteText, out var capWaste) ||
@@ -401,6 +325,7 @@
         }
 
         FormErrorMessage = null;
+        TaskResource.Quantity = quantity;
         TaskResource.MenuId = menuId;
         TaskResource.ChangeFactor1 = changeFactor1;
         TaskResource.ChangeFactor2 = changeFactor2;
@@ -424,11 +349,22 @@
             return;
         }
 
+        QuantityText = FormatDecimal(TaskResource.Quantity);
         MenuIdText = TaskResource.MenuId?.ToString(CultureInfo.CurrentCulture) ?? string.Empty;
         ChangeFactor1Text = FormatDecimal(TaskResource.ChangeFactor1);
         ChangeFactor2Text = FormatDecimal(TaskResource.ChangeFactor2);
         CapWasteText = FormatDecimal(TaskResource.CapWaste);
         BaseCostText = FormatNullableDecimal(TaskResource.BaseCost);
+    }
+
+    private void OnQuantityInput(ChangeEventArgs e)
+    {
+        QuantityText = e.Value?.ToString() ?? string.Empty;
+        if (TryParseDecimal(QuantityText, out var value) && TaskResource is not null)
+        {
+            TaskResource.Quantity = value;
+            FormErrorMessage = null;
+        }
     }
 
     private void OnMenuIdInput(ChangeEventArgs e)

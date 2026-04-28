@@ -80,8 +80,6 @@
                                         <button @onclick="() => ConfirmDelete(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-600 bg-rose-600 px-1 py-1 text-xs font-medium text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400 px-1 py-1 text-xs" title="Delete">
                                             @Icons.Delete 
                                         </button>
-                                        <button @onclick="() => OpenConditions(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">@ResourceLoc.Conditions</button>
-                                        <button @onclick="() => OpenGroups(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">@ResourceLoc.group</button>
                                         <button @onclick="() => OpenTaskFolders(item.Id, item.DisplayName)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">@ResourceLoc.resource</button>
                                         <button @onclick="async () => await Collspan(item)" class="inline-flex items-center justify-center gap-2 rounded-xl px-1 py-1 text-xs font-medium transition focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-1 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800 px-1 py-1 text-xs">
                                             @(ColspanTaskIDs.Any(x => x == item.Id) ?"-" :"+")
@@ -229,18 +227,6 @@ new Dictionary<string, object>
             [nameof(TaskDLFormUI.TaskId)] = id,
             [nameof(TaskDLFormUI.Saved)] = EventCallback.Factory.Create<bool>(this, ReloadAsync),
         } , DialogSize.ExtraLarge);
-    }
-
-    private void OpenConditions(int id, string name)
-    {
-        MHD.Modal.ShowComponent<QuestionConditionListUI>($"Questions for Task {name}",
-            new Dictionary<string, object> { [nameof(QuestionConditionListUI.TaskId)] = id }, DialogSize.FullScreen);
-    }
-
-    private void OpenGroups(int id, string name)
-    {
-        MHD.Modal.ShowComponent<TaskGroupsFormUI>($"Questions for Task {name}",
-            new Dictionary<string, object> { [nameof(TaskGroupsFormUI.ID)] = id }, DialogSize.FullScreen);
     }
 
     private void OpenTaskFolders(int id, string name)

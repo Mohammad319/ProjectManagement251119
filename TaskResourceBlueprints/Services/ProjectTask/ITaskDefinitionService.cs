@@ -1,17 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.AppTenant;
-using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Enums;
 using ProjectManagement.Shared.Mappers;
 using System.Linq.Expressions;
-using System.Text.Json.Serialization;
 using TaskResourceBlueprints.Dto.ProjectTask;
-using TaskResourceBlueprints.Entities;
 using TaskResourceBlueprints.Entities.Lookups;
 using TaskResourceBlueprints.Entities.Resources;
 using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Entities;
 using TaskResourceBlueprints.Infrastructure;
 using TaskResourceBlueprints.Mappers.Shared.Mappers;
 namespace TaskResourceBlueprints.Services.ProjectTask
@@ -29,39 +27,21 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             Note = x.FieldNotes ?? string.Empty,
             Quantity = x.Quantity,
             Unit = x.UnitCode ?? string.Empty,
-            Resources = x.TaskResourceAssignments.Select(res => new ResourceEXDto()
-            {
-                CapRole = res.CapacityRoles,
-                Id = res.Resource != null ? res.Resource.Id : 0,
-                Name = res.Resource != null ? res.Resource.Name : string.Empty,
-                Data = new ResourceMetadata()
-                {
-                    ChangeFactor1 = res.ChangeFactor1,
-                    ChangeFactor2 = res.ChangeFactor2,
-                    CapWaste = res.CapWaste,
-                    BaseCost = res.BaseCost,
-                    Quantity = res.Resource != null && res.Resource.Data != null ? res.Resource.Data.Quantity : 0,
-                    Unit = res.Resource != null && res.Resource.Data != null ? res.Resource.Data.Unit : string.Empty,
-                    Cost = res.Resource != null && res.Resource.Data != null ? res.Resource.Data.Cost : 0,
-                },
-                Group = res.Resource != null && res.Resource.Folder != null ? res.Resource.Folder.DisplayName : string.Empty,
-                ResType = res.Resource != null ? res.Resource.ResType : ResourceTypesEnum.Adjustment,
-                SortOrder = res.Resource != null ? res.Resource.SortOrder : 0,
-            }).ToList()
+            Resources = new List<ResourceEXDto>()
         };
     }
     public class TaskResourceDto
     {
-        [JsonIgnore] public CalcResCost? CalcResCost;
         public int? MenuId { get; set; }
         public decimal ChangeFactor1 { get; set; } = 1;
         public decimal ChangeFactor2 { get; set; } = 1;
+        public bool IsFixed { get; set; }
+        public decimal Quantity { get; set; } = 1;
         public decimal CapWaste { get; set; } = 1;
         public decimal? BaseCost { get; set; } = 0;
         public bool Uncontrollable { get; set; } = false;
         public bool Active { get; set; } = false;
         public List<RoleDTO>? CapRole { get; set; } = [];
-        public List<string> Formulas { get; set; } = [];
         public ResourceTypesEnum ResType { get; set; }
     }
     public interface ITaskDefinitionService
@@ -73,16 +53,13 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         Task<int> CreateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task UpdateAsync(TaskDefinitionEditDto dto, CancellationToken ct);
         Task DeleteAsync(int id, CancellationToken ct);
-        Task<(IReadOnlyList<ActionEntity> actions,
-      IReadOnlyList<ActionTypeEntity> actionTypes, IReadOnlyList<FallEntity> falls,
-      IReadOnlyList<LocationEntity> locations, IReadOnlyList<TaskUnitGroup> unitGroups,
+        Task<(IReadOnlyList<TaskUnitGroup> unitGroups,
       IReadOnlyList<ResourceCategory> folders)> GetLookupsAsync(CancellationToken ct);
     }
 
     public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : ITaskDefinitionService
     {
-        public async Task<(IReadOnlyList<ActionEntity>, IReadOnlyList<ActionTypeEntity>,
-                   IReadOnlyList<FallEntity>, IReadOnlyList<LocationEntity>, IReadOnlyList<TaskUnitGroup>,
+        public async Task<( IReadOnlyList<TaskUnitGroup>,
                    IReadOnlyList<ResourceCategory>)> GetLookupsAsync(CancellationToken ct)
         {
             async Task<List<T>> Run<T>(Func<TaskResourceBlueprintsContext, IQueryable<T>> query) where T : class
@@ -92,28 +69,19 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             }
 
 
-            var actionsTask = Run(db => db.Actions.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
-            var actionTypesTask = Run(db => db.ActionTypes.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
-            var fallsTask = Run(db => db.Falls.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
-            var locationsTask = Run(db => db.Locations.OrderBy(x => x.SortOrder).ThenBy(x => x.Name));
             var unitGroupsTask = Run(db => db.TaskUnitGroups.OrderBy(x => x.DisplayName));
             var foldersTask = Run(db => db.ResourceCategories.OrderBy(x => x.SortOrder).ThenBy(x => x.DisplayName));
 
-            await Task.WhenAll(actionsTask, actionTypesTask, fallsTask, locationsTask, unitGroupsTask, foldersTask);
+            await Task.WhenAll(unitGroupsTask, foldersTask);
 
-            return (await actionsTask, await actionTypesTask, await fallsTask,
-                    await locationsTask, await unitGroupsTask, await foldersTask);
+            return ( await unitGroupsTask, await foldersTask);
         }
         public async Task<List<TaskWithResourcesMDto>?> GetTasksWithAdjustedResources(int? ActionId, int? LocationId, int? FallId, int? ActionTypeId)
         {
             await using var context = factory.CreateDbContext();
-            var tasks = await context.Tasks.AsNoTracking()
-                .Where(t =>
-                    (!ActionId.HasValue || t.ActionId == ActionId) &&
-                    (!LocationId.HasValue || t.LocationId == LocationId) &&
-                    (!FallId.HasValue || t.FallId == FallId) &&
-                    (!ActionTypeId.HasValue || t.ActionTypeId == ActionTypeId)).Select(TaskSelectors.WithResources).ToListAsync();
-            return tasks;
+            return await context.Tasks.AsNoTracking()
+                .Select(TaskSelectors.WithResources)
+                .ToListAsync();
         }
         public async Task<List<ProjectTaskDto>> GetTasksForUserDtoAsync(ProjectTaskFilterDto filter, int tenantid, CancellationToken ct)
         {
@@ -135,11 +103,66 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         public async Task<ProjectTaskDto?> GetTaskForUserDtoAsync(int id, int tenantid, int depId, CancellationToken ct)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            return await db.Tasks
+            var task = await db.Tasks
                 .Where(x => x.Status == TaskStatusEnum.Ready)
                 .AsNoTracking()
                 .ProjectToDto(tenantid, depId)
                 .FirstOrDefaultAsync(x => x.Id == id, ct);
+
+            if (task is null)
+                return null;
+
+            task.BaseResources = await GetTaskBaseResourcesAsync(db, id, tenantid, ct);
+            return task;
+        }
+
+        private static async Task<List<ResourceDto>> GetTaskBaseResourcesAsync(
+            TaskResourceBlueprintsContext db,
+            int taskId,
+            int tenantId,
+            CancellationToken ct)
+        {
+            var links = await db.TaskDefinitionResourceLinks
+                .AsNoTracking()
+                .Where(l => l.TaskDefinitionId == taskId && l.Resource != null && l.Resource.IsActive && l.Resource.IsVisible)
+                .Include(l => l.Resource!)
+                    .ThenInclude(r => r.TenantLinks)
+                .OrderBy(l => l.Resource!.SortOrder)
+                .ThenBy(l => l.Resource!.Name)
+                .ToListAsync(ct);
+
+            return links
+                .Where(l => l.Resource is not null)
+                .Select(l =>
+                {
+                    var resource = l.Resource!;
+                    var tenantLink = resource.TenantLinks.FirstOrDefault(t => t.TenantId == tenantId);
+                    var data = resource.Data.Clone();
+
+                    if (l.Quantity > 0)
+                        data.Quantity = l.Quantity;
+
+                    return new ResourceDto
+                    {
+                        Id = resource.Id,
+                        FolderId = resource.FolderId,
+                        Active = resource.IsActive,
+                        Name = resource.Name,
+                        NameUserValue = tenantLink?.Name ?? string.Empty,
+                        SortOrder = resource.SortOrder,
+                        ResType = resource.ResType,
+                        ResourceSource = ResourceSource.Base,
+                        Data = data,
+                        CostRole = resource.CostRoles,
+                        CostStorageValue = resource.Data.Cost,
+                        CostUserValue = tenantLink?.Cost,
+                        StatusId = tenantLink?.StatusId,
+                        ResourceTypeId = tenantLink?.ResourceTypeId,
+                        ResourceSortId = tenantLink?.ResourceSortId,
+                        AccountId = tenantLink?.AccountId,
+                    };
+                })
+                .ToList();
         }
         private static void Validate(TaskDefinitionEditDto d)
         {
@@ -162,13 +185,9 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             var e = new TaskDefinition
             {
-                ActionId = d.ActionId,
-                ActionTypeId = d.ActionTypeId,
                 Responsible = d.Responsible,
                 Status = d.Status,
                 AdminNote = d.AdminNote,
-                FallId = d.FallId,
-                LocationId = d.LocationId,
                 Code = d.Code,
                 Name = d.DisplayName,
                 TaskUnitGroupId = d.UnitGroupId,
@@ -194,6 +213,14 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             db.Tasks.Add(e);
             await db.SaveChangesAsync(ct);
+
+            if (d.SelectedStateIds?.Count > 0)
+            {
+                foreach (var stateId in d.SelectedStateIds.Distinct())
+                    db.TaskDefinitionStateLinks.Add(new TaskResourceBlueprints.Entities.Lookups.TaskDefinitionStateLink { TaskDefinitionId = e.Id, TaskStateId = stateId });
+                await db.SaveChangesAsync(ct);
+            }
+
             return e.Id;
         }
 
@@ -204,17 +231,14 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             await using var db = await factory.CreateDbContextAsync(ct);
 
-            var e = await db.Tasks.FirstAsync(x => x.Id == d.Id, ct);
+            var e = await db.Tasks
+                .Include(t => t.StateLinks)
+                .FirstAsync(x => x.Id == d.Id, ct);
 
-            e.ActionId = d.ActionId;
             e.Responsible = d.Responsible;
             e.Status = d.Status;
             e.AdminNote = d.AdminNote;
             e.Uncontrollable = d.Uncontrollable;
-
-            e.ActionTypeId = d.ActionTypeId;
-            e.FallId = d.FallId;
-            e.LocationId = d.LocationId;
             e.Code = d.Code;
             e.Name = d.DisplayName;
             e.TaskUnitGroupId = d.UnitGroupId;
@@ -233,6 +257,14 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             d.Length    ?? 0
             ];
             e.RefreshNormalizedTextSv();
+
+            // Sync state links
+            var incomingIds = (d.SelectedStateIds ?? []).Distinct().ToHashSet();
+            var existingIds = e.StateLinks.Select(l => l.TaskStateId).ToHashSet();
+            foreach (var link in e.StateLinks.Where(l => !incomingIds.Contains(l.TaskStateId)).ToList())
+                db.TaskDefinitionStateLinks.Remove(link);
+            foreach (var stateId in incomingIds.Where(id => !existingIds.Contains(id)))
+                db.TaskDefinitionStateLinks.Add(new TaskResourceBlueprints.Entities.Lookups.TaskDefinitionStateLink { TaskDefinitionId = e.Id, TaskStateId = stateId });
 
             await db.SaveChangesAsync(ct);
         }

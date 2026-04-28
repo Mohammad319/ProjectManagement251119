@@ -24,39 +24,23 @@ public class TasksUserComputationServiceWasmTests
     }
 
     [Fact]
-    public void BuildFinalRows_PreservesNestedResourceMetadataForDerivedCalculation()
+    public void BuildFinalRows_ClearsResultResources()
     {
         var service = new TasksUserComputationServiceWasm();
-        var sourceResource = CreateResource(parameters: [2m, 3m], times: [(2m, 60m), (1m, 120m)], changeFactor2: 4m);
         var task = new ProjectTaskDto
         {
             Id = 1,
             Quantity = 10m,
-            Conditions =
+            ResultResources =
             [
-                new TaskConditionDto
-                {
-                    ConditionResourceAssignments =
-                    [
-                        new ResourceAssignmentDto
-                        {
-                            Resource = sourceResource
-                        }
-                    ]
-                }
+                new ResourceDto { Id = 99, Name = "Old", ResType = ResourceTypesEnum.Materials, Data = new ResourceMetadata() }
             ]
         };
 
         var result = service.BuildFinalRows(task);
 
         Assert.True(result);
-
-        var resource = Assert.Single(task.ResultResources);
-        Assert.Equal(2, resource.Data.Parameters.Count);
-        Assert.Equal(2, resource.Data.Times.Count);
-        Assert.Equal(6m, resource.Data.ChangeFactor1);
-        Assert.Equal(240m, resource.Data.Quantity);
-        Assert.Equal(1m, resource.Data.Cost);
+        Assert.Empty(task.ResultResources);
     }
 
     [Fact]
@@ -76,108 +60,6 @@ public class TasksUserComputationServiceWasmTests
         Assert.Equal(30m, resource.Data.Times[0].Quantity);
         Assert.Equal(10m, resource.Data.Times[1].Quantity);
         Assert.Equal(75m, resource.Data.Cost);
-    }
-
-    [Fact]
-    public void BuildFinalRows_DeduplicatesDerivedResourcesWithSameIdAndMenu()
-    {
-        var service = new TasksUserComputationServiceWasm();
-        var sourceResource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
-        var task = new ProjectTaskDto
-        {
-            Id = 2,
-            Quantity = 5m,
-            Conditions =
-            [
-                new TaskConditionDto
-                {
-                    ConditionResourceAssignments =
-                    [
-                        new ResourceAssignmentDto
-                        {
-                            Resource = sourceResource
-                        }
-                    ]
-                },
-                new TaskConditionDto
-                {
-                    ConditionResourceAssignments =
-                    [
-                        new ResourceAssignmentDto
-                        {
-                            Resource = sourceResource
-                        }
-                    ]
-                }
-            ]
-        };
-
-        var result = service.BuildFinalRows(task);
-
-        Assert.True(result);
-        Assert.Single(task.ResultResources);
-    }
-
-    [Fact]
-    public void BuildFinalRows_PreservesUserEditedDerivedResourceValuesAcrossRebuilds()
-    {
-        var service = new TasksUserComputationServiceWasm();
-        var sourceResource = CreateResource(parameters: [], times: [], changeFactor2: 1m);
-        sourceResource.Data.BaseCost = 10m;
-        sourceResource.Data.Cost = 5m;
-        sourceResource.Properties =
-        [
-            new ResourcePropertyBindDto
-            {
-                Id = 100,
-                DisplayName = "P1",
-                DataType = DataType.Number,
-                NumberDefault = 3m
-            }
-        ];
-
-        var task = new ProjectTaskDto
-        {
-            Id = 3,
-            Quantity = 5m,
-            Conditions =
-            [
-                new TaskConditionDto
-                {
-                    ConditionResourceAssignments =
-                    [
-                        new ResourceAssignmentDto
-                        {
-                            Resource = sourceResource
-                        }
-                    ]
-                }
-            ]
-        };
-
-        Assert.True(service.BuildFinalRows(task));
-
-        var edited = Assert.Single(task.ResultResources);
-        edited.IsAdded = true;
-        edited.Name = "Edited Resource";
-        edited.Data.ChangeFactor1 = 7m;
-        edited.Data.ChangeFactor2 = 8m;
-        edited.Data.BaseCost = 99m;
-        edited.Data.Cost = 123m;
-        edited.Data.CO2 = 42d;
-        edited.Properties[0].NumberDefault = 77m;
-
-        Assert.True(service.BuildFinalRows(task));
-
-        var rebuilt = Assert.Single(task.ResultResources);
-        Assert.True(rebuilt.IsAdded);
-        Assert.Equal("Edited Resource", rebuilt.Name);
-        Assert.Equal(7m, rebuilt.Data.ChangeFactor1);
-        Assert.Equal(8m, rebuilt.Data.ChangeFactor2);
-        Assert.Equal(99m, rebuilt.Data.BaseCost);
-        Assert.Equal(123m, rebuilt.Data.Cost);
-        Assert.Equal(42d, rebuilt.Data.CO2);
-        Assert.Equal(77m, rebuilt.Properties[0].NumberDefault);
     }
 
     [Fact]

@@ -76,11 +76,14 @@
                 <span class="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">Completed</span>
             </div>
 
-            <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+            <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 @SummaryCard("Tasks", $"{result.CreatedTasks} created / {result.UpdatedTasks} updated")
                 @SummaryCard("Resources", $"{result.CreatedResources} created / {result.UpdatedResources} updated")
                 @SummaryCard("Folders", $"{result.CreatedFolders} created")
                 @SummaryCard("Assignments", $"{result.CreatedAssignments} created / {result.UpdatedAssignments} updated")
+                @SummaryCard("State Groups", $"{result.CreatedStateGroups} created")
+                @SummaryCard("States", $"{result.CreatedStates} created")
+                @SummaryCard("State Links", $"{result.CreatedStateLinks} created")
                 @SummaryCard("Issues", result.Issues.Count.ToString())
             </div>
         </section>

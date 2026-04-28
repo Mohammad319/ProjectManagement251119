@@ -67,10 +67,6 @@
                                 {
                                       
                                         @RowActions(r)
-                                        @if (r.ResType == ResourceTypesEnum.MachinesAndEquipments || r.ResType == ResourceTypesEnum.Worker || r.ResType == ResourceTypesEnum.Managers)
-                                        {
-                                            <button type="button" class="rounded-lg border border-cyan-600 px-1 py-0.5 text-xs text-cyan-700 hover:bg-cyan-50 dark:border-cyan-500 dark:text-cyan-300 dark:hover:bg-cyan-900/30" @onclick="() => CalcModeal(r)">Calc</button>
-                                        }
                                 }
                                 @r.Name
                                     </div>
@@ -105,12 +101,7 @@
     private static string FormatNumber(decimal? value)
         => NumericDisplayHelper.Format(value);
 
-    void CalcModeal(ResourceDefinition model) => MHD.Modal.ShowComponent<CalcResCostUI>(model.Name,
-    new Dictionary<string, object>
-    {
-        [nameof(CalcResCostUI.Resource)] = model,
-        [nameof(CalcResCostUI.CallBack)] = EventCallback.Factory.Create<bool>(this, StateHasChanged),
-    });
+
     protected override async Task OnInitializedAsync()
     {
         if (Folders.Count == 0)

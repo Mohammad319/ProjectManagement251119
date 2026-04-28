@@ -6,6 +6,7 @@
 @using ProjectManagement.Adminstrator.Shared.ResourceFiles
 @using ProjectManagement.Shared.DTO.App.Dataloader
 @using ProjectManagement.Shared.Enums
+@using ProjectManagement.Shared.Base.Calculation
 @inject IResourceBlueprintsService ResourceService
 @inherits AppComponentBase
 
@@ -42,11 +43,11 @@
                     <ValidationMessage For="@(() => model.ResType)" class="text-xs text-rose-400" />
                 </div>
 
-                <div class="min-w-0">
+@*                 <div class="min-w-0">
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="qty">@CalcResource.quantity</label>
                     <InputNumber id="qty" @bind-Value="model.Data.Quantity" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                     <ValidationMessage For="@(() => model.Data.Quantity)" class="text-xs text-rose-400" />
-                </div>
+                </div> *@
 
                 @if (model.ResType == ResourceTypesEnum.Materials || model.ResType == ResourceTypesEnum.Worker || model.ResType == ResourceTypesEnum.MachinesAndEquipments)
                 {
@@ -84,11 +85,11 @@
                     <InputNumber id="cf1" @bind-Value="model.Data.ChangeFactor1" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                     <ValidationMessage For="@(() => model.Data.ChangeFactor1)" class="text-xs text-rose-400" />
                 </div>
-                <div class="min-w-0">
+@*                 <div class="min-w-0">
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="cf2">@CalcResource.changeFactor2</label>
                     <InputNumber id="cf2" @bind-Value="model.Data.ChangeFactor2" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                     <ValidationMessage For="@(() => model.Data.ChangeFactor2)" class="text-xs text-rose-400" />
-                </div>
+                </div> *@
             </div>
         </div>
 
@@ -140,6 +141,213 @@
             }
         </div>
 
+        <!-- PARAMETERS -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:!border-slate-800 dark:!bg-slate-950/80">
+            <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Parameters</div>
+                </div>
+                <button type="button"
+                        class="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        @onclick="AddParameter">
+                    Add Parameter
+                </button>
+            </div>
+
+            @if (model.Data.Parameters.Any())
+            {
+                <div class="mt-2 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                    <table class="min-w-full border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                                <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Value</th>
+                                <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                <th class="w-10 px-2 py-1.5"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < model.Data.Parameters.Count; i++)
+                            {
+                                int idx = i;
+                                <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                    <td class="px-1 py-0.5 min-w-[16rem]">
+                                        <InputText @bind-Value="model.Data.Parameters[idx].Name"
+                                                   class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                    </td>
+                                    <td class="px-1 py-0.5 min-w-[6rem]">
+                                        <InputNumber @bind-Value="model.Data.Parameters[idx].Value"
+                                                     class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                    </td>
+                                    <td class="px-1 py-0.5 min-w-[6rem]">
+                                        <InputText @bind-Value="model.Data.Parameters[idx].Unit"
+                                                   class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                    </td>
+                                    <td class="px-1 py-0.5 w-10 text-right">
+                                        <button type="button"
+                                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500"
+                                                @onclick="() => model.Data.Parameters.RemoveAt(idx)">
+                                            x
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="mt-3 flex min-h-[80px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">
+                    <div class="text-sm text-slate-500 dark:text-slate-400">No parameters</div>
+                </div>
+            }
+        </div>
+
+        <!-- ADD-ONS -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:!border-slate-800 dark:!bg-slate-950/80">
+            <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Add-ons</div>
+                </div>
+                <button type="button"
+                        class="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        @onclick="AddAddOn">
+                    Add Add-on
+                </button>
+            </div>
+
+            <div class="mt-2 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                <table class="min-w-full border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                            <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                            <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.type</th>
+                            <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Factor</th>
+                            <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.cost</th>
+                            <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                            <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.baseCost</th>
+                            <th class="w-10 px-2 py-1.5"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < model.Data.AddOns.Count; i++)
+                        {
+                            int idx = i;
+                            <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                <td class="px-1 py-0.5 min-w-[14rem]">
+                                    <InputText @bind-Value="model.Data.AddOns[idx].Name"
+                                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                </td>
+                                <td class="px-1 py-0.5 min-w-[4rem]">
+                                    <InputSelect @bind-Value="model.Data.AddOns[idx].Type"
+                                                 class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                                        <option value="@QuantityResourceAddon.Multiplication">*</option>
+                                        <option value="@QuantityResourceAddon.Division">/</option>
+                                    </InputSelect>
+                                </td>
+                                <td class="px-1 py-0.5 min-w-[5rem]">
+                                    <InputNumber @bind-Value="model.Data.AddOns[idx].Factor"
+                                                 class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                </td>
+                                <td class="px-1 py-0.5 min-w-[5rem]">
+                                    <InputNumber @bind-Value="model.Data.AddOns[idx].Cost"
+                                                 class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                </td>
+                                <td class="px-1 py-0.5 min-w-[5rem]">
+                                    <InputText @bind-Value="model.Data.AddOns[idx].Unit"
+                                               class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                </td>
+                                <td class="px-1 py-0.5 min-w-[5rem]">
+                                    <InputNumber @bind-Value="model.Data.AddOns[idx].BaseCost"
+                                                 class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                </td>
+                                <td class="px-1 py-0.5 w-10 text-right">
+                                    <button type="button"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500"
+                                            @onclick="() => model.Data.AddOns.RemoveAt(idx)">
+                                        x
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TIMES (Worker / MachinesAndEquipments) -->
+        @if (model.ResType == ResourceTypesEnum.Worker || model.ResType == ResourceTypesEnum.MachinesAndEquipments)
+        {
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:!border-slate-800 dark:!bg-slate-950/80">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Times</div>
+                    </div>
+                    <button type="button"
+                            class="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            @onclick="AddTime">
+                        Add Time
+                    </button>
+                </div>
+
+                @if (model.Data.Times.Any())
+                {
+                    <div class="mt-2 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                        <table class="min-w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Time share %</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.cost</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                    <th class="w-10 px-2 py-1.5"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < model.Data.Times.Count; i++)
+                                {
+                                    int idx = i;
+                                    <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                        <td class="px-1 py-0.5 min-w-[16rem]">
+                                            <InputText @bind-Value="model.Data.Times[idx].Name"
+                                                       class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[6rem]">
+                                            <InputNumber @bind-Value="model.Data.Times[idx].Percentage"
+                                                         class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[5rem]">
+                                            <InputNumber @bind-Value="model.Data.Times[idx].Cost"
+                                                         class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[5rem]">
+                                            <input type="text"
+                                                   class="block w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                                   disabled value="@model.Data.Unit" />
+                                        </td>
+                                        <td class="px-1 py-0.5 w-10 text-right">
+                                            <button type="button"
+                                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white hover:bg-rose-700 dark:bg-rose-500"
+                                                    @onclick="() => RemoveTime(idx)">
+                                                x
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="mt-3 flex min-h-[80px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-4 text-center dark:border-slate-700 dark:bg-slate-900/40">
+                        <div class="text-sm text-slate-500 dark:text-slate-400">No times</div>
+                    </div>
+                }
+            </div>
+        }
+
         <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:!border-slate-800 dark:!bg-slate-950/80">
             <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">Notes</div>
             <div class="mt-1 text-xs text-slate-600 dark:text-slate-400">Internal notes and descriptive text for administrators.</div>
@@ -183,19 +391,40 @@
     }
 
     void GoBack() => MHD.Modal.Close();
-    void CalcResourceForm(ResourceEXDto Resource)
-    {
-        MHD.Modal.ShowComponent<CalcResCostUI>(Resource.Id == 0 ? ResourceApp.newItem : ResourceApp.update,
-            new Dictionary<string, object>
-            {
-                [nameof(CalcResCostUI.Resource)] = Resource,
-                [nameof(CalcResCostUI.CallBack)] = EventCallback.Factory.Create<bool>(this, RefreshCalcAsync),
-            });
-    }
+
     void RefreshCalcAsync(bool refre)
     {
 
     }
+    void AddParameter()
+    {
+        model.Data.Parameters.Add(new ResourceParameter { Name = string.Empty, Unit = string.Empty, Value = 1 });
+    }
+
+    void AddAddOn()
+    {
+        model.Data.AddOns.Add(new ResourceAddon { Name = string.Empty, Factor = 1, Cost = 0 });
+    }
+
+    void AddTime()
+    {
+        var usedPercentage = model.Data.Times.Sum(x => x.Percentage ?? 0m);
+        var remaining = Math.Round(100m - usedPercentage, 4, MidpointRounding.AwayFromZero);
+        model.Data.Times.Add(new ResourceTime
+        {
+            Name = string.Empty,
+            Unit = model.Data.Unit,
+            Percentage = remaining > 0m ? remaining : 0m,
+            Cost = 1
+        }.SetResolvedQuantity(0));
+    }
+
+    void RemoveTime(int index)
+    {
+        if (index < 0 || index >= model.Data.Times.Count) return;
+        model.Data.Times.RemoveAt(index);
+    }
+
     void AddRole()
     {
         if (model.CostRoles == null) model.CostRoles = [];

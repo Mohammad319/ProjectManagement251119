@@ -5,7 +5,6 @@ using Persistence.Factory;
 using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.Calculation;
 using ProjectManagement.Shared.Helper.Text;
-using TaskResourceBlueprints.Entities.Questions.Assignments;
 using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure;
 
@@ -182,7 +181,7 @@ public sealed class TaskResourceSuggestionService(
 
         var baseQuery = db.Tasks
             .AsNoTracking()
-            .Where(x => x.Status == TaskStatusEnum.Ready && x.TaskResourceAssignments.Any());
+            .Where(x => x.Status == TaskStatusEnum.Ready);
 
         var priorityQuery = ApplyBlueprintPriorityFilter(baseQuery, targetName, targetCode, targetUnit)
             .OrderBy(x => x.SortOrder)
@@ -191,19 +190,6 @@ public sealed class TaskResourceSuggestionService(
         var fallbackQuery = baseQuery
             .OrderBy(x => x.SortOrder)
             .Take(FallbackCandidateLimit);
-
-        if (includeResources)
-        {
-            priorityQuery = priorityQuery
-                .Include(x => x.TaskResourceAssignments)
-                    .ThenInclude(x => x.Resource)
-                        .ThenInclude(x => x!.TenantLinks);
-
-            fallbackQuery = fallbackQuery
-                .Include(x => x.TaskResourceAssignments)
-                    .ThenInclude(x => x.Resource)
-                        .ThenInclude(x => x!.TenantLinks);
-        }
 
         var priorityCandidates = await priorityQuery.ToListAsync(ct);
         var fallbackCandidates = await fallbackQuery.ToListAsync(ct);
@@ -236,14 +222,7 @@ public sealed class TaskResourceSuggestionService(
                     Source = TaskResourceSuggestionSource.BlueprintTask,
                     Score = score,
                     Reason = BuildReason(score, TaskResourceSuggestionSource.BlueprintTask),
-                    Resources = includeResources
-                        ? task.TaskResourceAssignments
-                            .OrderBy(x => x.Resource != null ? x.Resource.SortOrder : 0)
-                            .Select(x => ToResourcePostDto(x, tenantId))
-                            .Where(x => x is not null)
-                            .Select(x => x!)
-                            .ToList()
-                        : []
+                    Resources = []
                 };
             })
             .Where(x => x.Score >= MinimumScore)
@@ -342,20 +321,12 @@ public sealed class TaskResourceSuggestionService(
         var task = await db.Tasks
             .AsNoTracking()
             .Where(x => x.Id == sourceTaskId && x.Status == TaskStatusEnum.Ready)
-            .Include(x => x.TaskResourceAssignments)
-                .ThenInclude(x => x.Resource)
-                    .ThenInclude(x => x!.TenantLinks)
             .FirstOrDefaultAsync(ct);
 
         if (task is null)
             return [];
 
-        return task.TaskResourceAssignments
-            .OrderBy(x => x.Resource != null ? x.Resource.SortOrder : 0)
-            .Select(x => ToResourcePostDto(x, tenantId))
-            .Where(x => x is not null)
-            .Select(x => x!)
-            .ToList();
+        return [];
     }
 
     private static double ScoreCandidate(
@@ -475,37 +446,4 @@ public sealed class TaskResourceSuggestionService(
         };
     }
 
-    private static ResourcePostDTO? ToResourcePostDto(TaskResourceAssignment assignment, int tenantId)
-    {
-        var resource = assignment.Resource;
-        if (resource is null)
-            return null;
-
-        var tenantLink = resource.TenantLinks.FirstOrDefault(x => x.TenantId == tenantId);
-        var data = CalculationItemMetadataMapper.CloneResourceMetadata(resource.Data);
-
-        data.ChangeFactor1 = assignment.ChangeFactor1;
-        data.ChangeFactor2 = assignment.ChangeFactor2;
-        data.CapWaste = assignment.CapWaste;
-        data.BaseCost = assignment.BaseCost;
-
-        if (tenantLink?.Cost is not null)
-            data.Cost = tenantLink.Cost.Value;
-
-        if (tenantLink?.Co2 is not null)
-            data.CO2 = tenantLink.Co2;
-
-        return new ResourcePostDTO
-        {
-            Name = !string.IsNullOrWhiteSpace(tenantLink?.Name) ? tenantLink.Name : resource.Name,
-            IsActive = assignment.IsActive && resource.IsActive,
-            ResType = resource.ResType,
-            AccountId = tenantLink?.AccountId,
-            StatusId = tenantLink?.StatusId,
-            ResourceTypeId = tenantLink?.ResourceTypeId,
-            ResourceSortId = tenantLink?.ResourceSortId,
-            SortOrder = resource.SortOrder,
-            Data = data
-        };
-    }
 }

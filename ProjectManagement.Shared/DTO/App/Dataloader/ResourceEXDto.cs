@@ -14,30 +14,6 @@ using System.Text.RegularExpressions;
 
 namespace ProjectManagement.Shared.DTO.App.Dataloader
 {
-    public class CalcResCost
-    {
-        public bool IsPercent { get; set; } = true;
-        public int Morgen { get; set; } = 0;
-        public decimal MorgenCost { get; set; }
-        public int Day { get; set; } = 0;
-        public decimal DayCost { get; set; }
-        public int Evening { get; set; }
-        public decimal EveningCost { get; set; }
-        public decimal? Quantity { get; set; }
-
-        public bool CheckInput(decimal? quantity)
-        {
-            return IsPercent ? MorgenCost + DayCost <= 100 :
-                MorgenCost + DayCost <= quantity.GetValueOrDefault();
-        }
-        public decimal CalcCost() {
-            return (Morgen * MorgenCost)+ (Day * DayCost) + (Evening * EveningCost);
-        }
-        public void SetQuantity(decimal q)
-        {
-            Quantity = q;
-        }
-    }
     public class ResourceDLBase
     {
         public ResourceTypesEnum ResType { get; set; }
@@ -62,8 +38,6 @@ namespace ProjectManagement.Shared.DTO.App.Dataloader
     {
         private static string SharedText(string key, string fallback)
             => ResLocalize.ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? fallback;
-
-        [JsonIgnore] public CalcResCost CalcResCost { get; set; } = new();
 
         [JsonIgnore] public List<decimal> Values { get; set; } = [];
         public ResourceEXDto(){  }

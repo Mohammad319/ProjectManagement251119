@@ -22,8 +22,6 @@ public class ResourceDefinitionConfiguration : IEntityTypeConfiguration<Resource
         b.Property(e => e.Data)
             .HasJsonConversionWithComparer();
 
-        b.Property(e => e.CalcResCost)
-            .HasJsonConversionWithComparer();
 
         b.HasIndex(x => new { x.FolderId, x.SortOrder, x.Name });
         b.HasIndex(x => new { x.IsActive, x.IsVisible, x.Name });

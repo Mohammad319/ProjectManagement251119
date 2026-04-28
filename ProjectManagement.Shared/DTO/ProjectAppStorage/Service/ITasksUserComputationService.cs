@@ -142,98 +142,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
     public bool BuildFinalRows(ProjectTaskDto task)
     {
-        var previousResultResources = task.ResultResources?.ToList() ?? [];
         task.ResultResources = [];
-
-        var ans = A(task.Id);
-        foreach (var cond in task.Conditions)
-        {
-            var choiceOk = EvaluateChoices(cond, ans);
-            var resOk = EvaluateResources(cond, ans);
-            var numOk = EvaluateNumeric(cond, ans);
-            var varOk = EvaluateVariables(task, cond);
-
-            if (cond.OptionRequirements.Count == 0) choiceOk = true;
-            if (cond.ResourceRequirements.Count == 0) resOk = true;
-            if (cond.NumericRequirements.Count == 0) numOk = true;
-            if (cond.VariableRequirements.Count == 0) varOk = true;
-
-            bool cr = Combine(choiceOk, resOk, cond.OptionToResourceLogic);
-            bool cn = Combine(choiceOk, numOk, cond.OptionToNumericLogic);
-            bool nr = Combine(numOk, resOk, cond.NumericToResourceLogic);
-
-            if (!(cr && cn && nr && varOk))
-                continue;
-
-            foreach (var ra in cond.ConditionResourceAssignments)
-            {
-                if (ra.Resource == null) continue;
-
-                ra.Formulas = [];
-                var resName = ra.Resource.Name;
-
-                decimal cawaste = ra.Resource.Data.CapWaste;
-
-                if (ra.Resource.ResType == ResourceTypesEnum.MachinesAndEquipments ||
-                    ra.Resource.ResType == ResourceTypesEnum.Worker)
-                {
-                    foreach (var item in ra.CapRole)
-                    {
-                        var q = ra.Resource.Data.Quantity;
-                        if (q.HasValue && q.Value >= item.Min && q.Value <= item.Max && item.Value.HasValue)
-                            cawaste = item.Value.Value;
-                    }
-                }
-
-                GetOptionFormulas(ra, ans.SelectedChoiceOptionIds);
-                GetNumericFormulas(ra, ans.NumericValuesByGroupId);
-
-                var resourceData = ra.Resource.Data.Clone();
-                resourceData.CapWaste = cawaste;
-
-                ResourceDto res = new()
-                {
-                    Id = ra.Resource.Id,
-                    Name = resName,
-                    ResourceSource = ResourceSource.FromCodition,
-                    NameUserValue = ra.Resource.NameUserValue,
-                    ResourceSortId = ra.Resource.ResourceSortId,
-                    ResourceTypeId = ra.Resource.ResourceTypeId,
-                    AccountId = ra.Resource.AccountId,
-                    StatusId = ra.Resource.StatusId,
-                    CalcResCost = ra.Resource.CalcResCost,
-                    MenuId = ra.Resource.MenuId,
-                    Data = resourceData,
-                    ResType = ra.Resource.ResType,
-                    Active = ra.Resource.Active,
-                    Formulas = ra.Formulas,
-                    Properties = CloneProperties(ra.Resource.Properties),
-                };
-
-                var previous = previousResultResources.FirstOrDefault(x => x.Id == res.Id && x.MenuId == res.MenuId);
-                if (previous is not null)
-                    ApplyUserEdits(previous, res);
-
-                var existingIndex = task.ResultResources.FindIndex(x => x.Id == res.Id && x.MenuId == res.MenuId);
-                if (existingIndex < 0)
-                {
-                    task.ResultResources.Add(res);
-                    continue;
-                }
-
-                var existing = task.ResultResources[existingIndex];
-                res.IsAdded = existing.IsAdded;
-                res.Formulas = existing.Formulas
-                    .Concat(res.Formulas ?? Enumerable.Empty<string>())
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Distinct(StringComparer.Ordinal)
-                    .ToList();
-
-                task.ResultResources[existingIndex] = res;
-            }
-        }
-
-        RefreshResources(task.ResultResources, task.Quantity, task.ParameterValues);
         return true;
     }
 
@@ -247,7 +156,6 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         target.AccountId = source.AccountId;
         target.StatusId = source.StatusId;
         target.Active = source.Active;
-        target.CalcResCost = CloneCalcResCost(source.CalcResCost);
 
         target.Data.Unit = source.Data.Unit;
         target.Data.Note = source.Data.Note;
@@ -263,24 +171,6 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         target.Data.CO2 = source.Data.CO2;
 
         target.Properties = MergeProperties(target.Properties, source.Properties);
-    }
-
-    private static CalcResCost CloneCalcResCost(CalcResCost? source)
-    {
-        if (source is null)
-            return new CalcResCost();
-
-        return new CalcResCost
-        {
-            IsPercent = source.IsPercent,
-            Morgen = source.Morgen,
-            MorgenCost = source.MorgenCost,
-            Day = source.Day,
-            DayCost = source.DayCost,
-            Evening = source.Evening,
-            EveningCost = source.EveningCost,
-            Quantity = source.Quantity
-        };
     }
 
     private static List<ResourcePropertyBindDto> MergeProperties(

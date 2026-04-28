@@ -39,6 +39,38 @@ public class TaskResourceCsvImportServiceTests
         Assert.Equal("kg", Get(row, map, "Unit", fallbackIndex: 7));
     }
 
+    [Fact]
+    public void TaskImportKey_DistinguishesSameTaskCodeByStateValues()
+    {
+        var first = TaskImportKey(
+            "KB-01",
+            "K\u00e4rnborrning i betong, GC-v\u00e4g",
+            [("Del", "GC-v\u00e4g"), ("Status", "Planerad")]);
+
+        var second = TaskImportKey(
+            "KB-01",
+            "K\u00e4rnborrning i betong, GC-v\u00e4g",
+            [("Del", "GC-v\u00e4g"), ("Status", "Utf\u00f6rd")]);
+
+        Assert.NotEqual(first, second);
+    }
+
+    [Fact]
+    public void TaskImportKey_IsStableWhenStateColumnsAreSwapped()
+    {
+        var first = TaskImportKey(
+            "KB-01",
+            "K\u00e4rnborrning i betong, GC-v\u00e4g",
+            [("Del", "GC-v\u00e4g"), ("Status", "Planerad")]);
+
+        var second = TaskImportKey(
+            "KB-01",
+            "K\u00e4rnborrning i betong, GC-v\u00e4g",
+            [("Status", "Planerad"), ("Del", "GC-v\u00e4g")]);
+
+        Assert.Equal(first, second);
+    }
+
     private static decimal? ParseNullableDecimal(string value)
     {
         var method = typeof(TaskResourceCsvImportService).GetMethod(
@@ -63,5 +95,19 @@ public class TaskResourceCsvImportServiceTests
         Assert.NotNull(method);
 
         return (string)method.Invoke(null, [row, map, key, fallbackIndex])!;
+    }
+
+    private static string TaskImportKey(
+        string? code,
+        string name,
+        IEnumerable<(string Property, string Value)> statePairs)
+    {
+        var method = typeof(TaskResourceCsvImportService).GetMethod(
+            "TaskImportKey",
+            BindingFlags.NonPublic | BindingFlags.Static);
+
+        Assert.NotNull(method);
+
+        return (string)method.Invoke(null, [code, name, statePairs])!;
     }
 }

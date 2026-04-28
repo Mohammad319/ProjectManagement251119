@@ -38,15 +38,12 @@ namespace TaskResourceBlueprints.Services.ProjectTask
 
             var e = await db.Tasks
                 .AsNoTracking()
+                .Include(t => t.StateLinks)
                 .FirstAsync(x => x.Id == id, ct);
 
             var dto = new TaskDefinitionEditDto
             {
                 Id = e.Id,
-                ActionId = e.ActionId,
-                ActionTypeId = e.ActionTypeId,
-                FallId = e.FallId,
-                LocationId = e.LocationId,
                 Code = e.Code,
                 DisplayName = e.Name,
                 UnitGroupId = e.TaskUnitGroupId,
@@ -61,7 +58,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                 Responsible = e.Responsible,
                 Status = e.Status,
                 AdminNote = e.AdminNote,
-                Uncontrollable = e.Uncontrollable
+                Uncontrollable = e.Uncontrollable,
+                SelectedStateIds = e.StateLinks.Select(l => l.TaskStateId).ToList()
             };
 
             if (e.WorkloadThresholds?.Count >= 3)
@@ -78,21 +76,20 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(ct);
 
-            return await db.TaskResourceAssignments
-                .AsNoTracking()
-                .Where(t => t.TaskId == id)
-                .OrderBy(t => t.Resource != null ? t.Resource.Name : string.Empty)
-                .ThenBy(t => t.ResourceId)
-                .Select(t => new ResourceTaskIndexDto(
-                    t.Id,
-                    t.ResourceId,
-                    t.Resource != null ? t.Resource.Name : string.Empty,
-                    t.ChangeFactor1,
-                    t.ChangeFactor2,
-                    t.CapWaste,
-                    t.BaseCost,
-                    t.Resource != null && t.Resource.Data != null ? t.Resource.Data.Unit : string.Empty,
-                    t.IsActive && (t.Resource == null || t.Resource.IsActive)
+            return await db.TaskDefinitionResourceLinks.AsNoTracking()
+                .Where(l => l.TaskDefinitionId == id)
+                .OrderBy(l => l.Resource!.SortOrder)
+                .ThenBy(l => l.Resource!.Name)
+                .Select(l => new ResourceTaskIndexDto(
+                    l.Id,
+                    l.ResourceDefinitionId,
+                    l.Resource!.Name,
+                    l.Resource.Data.ChangeFactor1,
+                    l.Resource.Data.ChangeFactor2,
+                    l.Resource.Data.CapWaste,
+                    l.Resource.Data.BaseCost,
+                    l.Resource.Data.Unit ?? string.Empty,
+                    l.Resource.IsActive
                 ))
                 .ToListAsync(ct);
         }

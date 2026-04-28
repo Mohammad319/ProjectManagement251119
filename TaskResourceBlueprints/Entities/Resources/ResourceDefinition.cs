@@ -1,17 +1,13 @@
-﻿using TaskResourceBlueprints.Entities.Resources;
-using ProjectManagement.Shared.Base.AppTenant;
+﻿using ProjectManagement.Shared.Base.AppTenant;
 using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using TaskResourceBlueprints.Entities.Resources;
 
 namespace TaskResourceBlueprints.Entities
 {
     public class ResourceDefinition
     {
-        public CalcResCost CalcResCost { get; set; } = default!;
-
         public int Id { get; set; }
         public bool IsActive { get; set; } = true;
         public bool IsVisible { get; set; } = true;
@@ -30,7 +26,6 @@ namespace TaskResourceBlueprints.Entities
             set => _data = value;
         }
 
-        public List<ResourceAttributeValue> AttributeValues { get; set; } = [];
         public List<ResourceTenantLinkEntity> TenantLinks { get; set; } = [];
     }
 }

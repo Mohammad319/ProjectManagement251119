@@ -316,67 +316,6 @@ else
                                    class="@St" />
                         </td>
 
-                        <td class="px-1 py-0.5">
-                            @if (current.HasCap && current.CalcResCost != null)
-                            {
-                                <TrimmedNumberInput TValue="int"
-                                                    @bind-Value="current.CalcResCost.Morgen"
-                                                    MaxFractionDigits="@MaxFractionDigits"
-                                                    step="1"
-                                                    class="@St" />
-                            }
-                        </td>
-                        <td class="px-1 py-0.5">
-                            @if (current.HasCap && current.CalcResCost != null)
-                            {
-                                <TrimmedNumberInput TValue="decimal"
-                                                    @bind-Value="current.CalcResCost.MorgenCost"
-                                                    MaxFractionDigits="@MaxFractionDigits"
-                                                    step="any"
-                                                    class="@St" />
-                            }
-                        </td>
-                        <td class="px-1 py-0.5">
-                            @if (current.HasCap && current.CalcResCost != null)
-                            {
-                                <TrimmedNumberInput TValue="int"
-                                                    @bind-Value="current.CalcResCost.Day"
-                                                    MaxFractionDigits="@MaxFractionDigits"
-                                                    step="1"
-                                                    class="@St" />
-                            }
-                        </td>
-                        <td class="px-1 py-0.5">
-                            @if (current.HasCap && current.CalcResCost != null)
-                            {
-                                <TrimmedNumberInput TValue="decimal"
-                                                    @bind-Value="current.CalcResCost.DayCost"
-                                                    MaxFractionDigits="@MaxFractionDigits"
-                                                    step="any"
-                                                    class="@St" />
-                            }
-                        </td>
-                        <td class="px-1 py-0.5">
-                            @if (current.HasCap && current.CalcResCost != null)
-                            {
-                                <TrimmedNumberInput TValue="int"
-                                                    @bind-Value="current.CalcResCost.Evening"
-                                                    MaxFractionDigits="@MaxFractionDigits"
-                                                    step="1"
-                                                    class="@St" />
-                            }
-                        </td>
-                        <td class="px-1 py-0.5">
-                            @if (current.HasCap && current.CalcResCost != null)
-                            {
-                                <TrimmedNumberInput TValue="decimal"
-                                                    @bind-Value="current.CalcResCost.EveningCost"
-                                                    MaxFractionDigits="@MaxFractionDigits"
-                                                    step="any"
-                                                    class="@St" />
-                            }
-                        </td>
-
                         <!-- Dynamic properties -->
                         @if (_propColumns.Count > 0)
                         {

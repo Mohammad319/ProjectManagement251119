@@ -39,26 +39,5 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
 
         builder.HasIndex(x => new { x.Status, x.SortOrder });
         builder.HasIndex(x => x.NormalizedTextSv);
-        builder.HasIndex(x => new { x.ActionId, x.LocationId, x.FallId, x.ActionTypeId });
-
-        builder.HasMany(t => t.QuestionGroups)
-               .WithOne(g => g.Task)
-               .HasForeignKey(g => g.TaskId)
-               .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(t => t.ResourceSelectors)
-               .WithOne(g => g.Task)
-               .HasForeignKey(g => g.TaskId)
-               .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(t => t.NumericQuestions)
-               .WithOne(g => g.Task)
-               .HasForeignKey(g => g.TaskId)
-               .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(t => t.Conditions)
-               .WithOne(c => c.Task)
-               .HasForeignKey(c => c.TaskId)
-               .OnDelete(DeleteBehavior.Cascade);
     }
 }

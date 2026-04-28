@@ -1,36 +1,11 @@
-@using ProjectManagement.Adminstrator.Components.TaskStatus.ActionTask
-@using ProjectManagement.Adminstrator.Components.TaskStatus.ActionType
-@using ProjectManagement.Adminstrator.Components.TaskStatus.Fall
-@using ProjectManagement.Adminstrator.Components.TaskStatus.Location
+
+@using ProjectManagement.Adminstrator.Components.TaskStatus.StateGroup
 @inherits AppComponentBase
 
 <div class="">
-    <div class="rounded-[14px] border border-slate-200/80 bg-white/90 px-3 py-1 shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
-        <div class="flex flex-wrap gap-2" role="tablist" aria-label="Task Status Tabs">
-            @for (int i = 1; i <= 4; i++)
-            {
-                int u = i;
-                <button class="@GetTabClass(u)" @onclick="() => page = u">@GetTabLabel(i)</button>
-            }
-        </div>
-    </div>
 
     <div class="rounded-[14px] border border-slate-200/80 bg-white/95 p-1 shadow-sm dark:border-slate-800 dark:bg-slate-950/95">
-        @switch (page)
-        {
-            case 1:
-                <ActionIndexUI />
-                break;
-            case 2:
-                <LocationIndexUI />
-                break;
-            case 3:
-                <FallIndexUI />
-                break;
-            case 4:
-                <ActionTypeIndexUI />
-                break;
-        }
+        <StateGroupIndexUI />
     </div>
 </div>
 
@@ -46,10 +21,7 @@
 
     private string GetTabLabel(int index) => index switch
     {
-        1 => "Action",
-        2 => "Location",
-        3 => "Fall",
-        4 => "Action Type",
+        5 => "State Groups",
         _ => string.Empty
     };
 }

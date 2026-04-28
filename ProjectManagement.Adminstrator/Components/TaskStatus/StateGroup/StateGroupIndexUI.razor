@@ -1,0 +1,174 @@
+@using ProjectManagement.Adminstrator.Constants
+@using TaskResourceBlueprints.Entities.Lookups
+@using TaskResourceBlueprints.Services.StateGroups
+@inherits AppComponentBase
+@inject ITaskStateGroupService StateGroupService
+
+<div class="flex flex-col gap-1 rounded-[12px] border border-slate-200/80 bg-white/90 px-3 py-1 shadow-sm dark:border-slate-800 dark:bg-slate-950/90 lg:flex-row lg:items-center lg:justify-between">
+    <div>
+        <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">Manage state groups and their states. Each task can be linked to one state per group.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-1">
+        <button @onclick="AddGroup"
+                class="inline-flex items-center rounded-xl bg-blue-600 px-1.5 py-1 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+                title="@ResourceApp._new">
+            <span class="mr-2">@((MarkupString)Icons.Plus)</span> New Group
+        </button>
+    </div>
+</div>
+
+@if (Groups?.Count > 0)
+{
+    <div class="flex flex-col gap-2">
+        @foreach (var group in Groups.OrderBy(g => g.SortOrder).ThenBy(g => g.Name))
+        {
+            <div class="overflow-hidden rounded-[12px] border border-slate-200/80 bg-white/95 shadow-sm dark:border-slate-800 dark:bg-slate-950/95">
+                <div class="flex items-center justify-between bg-slate-100/80 px-3 py-2 dark:bg-slate-900/90">
+                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">@group.Name</span>
+                    <div class="flex items-center gap-1">
+                        <button @onclick="() => AddState(group)"
+                                class="inline-flex items-center rounded-lg bg-emerald-600 px-2 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400">
+                            <span class="mr-1">@((MarkupString)Icons.Plus)</span> Add State
+                        </button>
+                        <button @onclick="() => EditGroup(group)"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                            @Icons.Edit
+                        </button>
+                        <button @onclick="() => RemoveGroup(group)"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                            @Icons.Delete
+                        </button>
+                    </div>
+                </div>
+
+                @if (group.States.Count > 0)
+                {
+                    <div class="overflow-x-auto p-1.5">
+                        <table class="min-w-full overflow-hidden rounded-[12px] border border-slate-200/80 dark:border-slate-800">
+                            <thead class="bg-slate-50/80 dark:bg-slate-900/60">
+                                <tr>
+                                    <th class="w-24 px-2 py-1 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">Actions</th>
+                                    <th class="px-2 py-1 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">@CalcResource.name</th>
+                                    <th class="w-24 px-2 py-1 text-left text-xs font-semibold text-slate-600 dark:text-slate-400">Order</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200/80 bg-white dark:divide-slate-800 dark:bg-slate-950">
+                                @foreach (var state in group.States.OrderBy(s => s.SortOrder).ThenBy(s => s.Name))
+                                {
+                                    <tr class="align-middle transition hover:bg-slate-50 dark:hover:bg-slate-900/40">
+                                        <td class="px-2 py-1">
+                                            <div class="flex items-center gap-1">
+                                                <button @onclick="() => EditState(group, state)"
+                                                        class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-amber-200 bg-amber-50 text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
+                                                    @Icons.Edit
+                                                </button>
+                                                <button @onclick="() => RemoveState(group, state)"
+                                                        class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-700 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300">
+                                                    @Icons.Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td class="px-2 py-1 text-sm text-slate-900 dark:text-slate-100">@state.Name</td>
+                                        <td class="px-2 py-1 text-xs text-slate-500 dark:text-slate-400">@state.SortOrder</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="px-3 py-4 text-center text-sm text-slate-400 dark:text-slate-500">No states yet.</div>
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="rounded-[12px] border border-dashed border-slate-200/80 bg-white/95 px-1.5 py-8 text-center text-sm text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-400">
+        @AppLoc[nameof(ResourceApp.ThereAreNoItemsToDisplay)]
+    </div>
+}
+
+@code {
+    List<TaskStateGroup>? Groups;
+
+    void AddGroup()
+    {
+        var model = new TaskStateGroup { Name = string.Empty };
+        Modal.ShowComponent<StateGroupFormUI>("New Group", new Dictionary<string, object>
+        {
+            [nameof(StateGroupFormUI.Model)] = model,
+            [nameof(StateGroupFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
+        }, DialogSize.Medium);
+    }
+
+    void EditGroup(TaskStateGroup group)
+    {
+        var copy = new TaskStateGroup { Id = group.Id, Name = group.Name, SortOrder = group.SortOrder, IsVisible = group.IsVisible };
+        Modal.ShowComponent<StateGroupFormUI>(AppLoc[LocalizerConst.Update, group.Name], new Dictionary<string, object>
+        {
+            [nameof(StateGroupFormUI.Model)] = copy,
+            [nameof(StateGroupFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
+        }, DialogSize.Medium);
+    }
+
+    void AddState(TaskStateGroup group)
+    {
+        var model = new TaskState { Name = string.Empty, TaskStateGroupId = group.Id };
+        Modal.ShowComponent<StateItemFormUI>($"New State — {group.Name}", new Dictionary<string, object>
+        {
+            [nameof(StateItemFormUI.Model)] = model,
+            [nameof(StateItemFormUI.GroupId)] = group.Id,
+            [nameof(StateItemFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
+        }, DialogSize.Medium);
+    }
+
+    void EditState(TaskStateGroup group, TaskState state)
+    {
+        var copy = new TaskState { Id = state.Id, Name = state.Name, SortOrder = state.SortOrder, TaskStateGroupId = state.TaskStateGroupId };
+        Modal.ShowComponent<StateItemFormUI>(AppLoc[LocalizerConst.Update, state.Name], new Dictionary<string, object>
+        {
+            [nameof(StateItemFormUI.Model)] = copy,
+            [nameof(StateItemFormUI.GroupId)] = group.Id,
+            [nameof(StateItemFormUI.Callback)] = EventCallback.Factory.Create<bool>(this, OnGroupSaved)
+        }, DialogSize.Medium);
+    }
+
+    void RemoveGroup(TaskStateGroup group) =>
+        MHD.DeleteMessage(group.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveGroupAsync(group)));
+
+    void RemoveState(TaskStateGroup group, TaskState state) =>
+        MHD.DeleteMessage(state.Name, EventCallback.Factory.Create(this, () => ConfirmRemoveStateAsync(group, state)));
+
+    async Task ConfirmRemoveGroupAsync(TaskStateGroup group)
+    {
+        bool result = await ExHandlers.RunCheckTokenAsync(() => StateGroupService.DeleteGroupAsync(group.Id));
+        if (result) Groups?.Remove(group);
+        MHD.Notifications(ToastType.Delete, result);
+        StateHasChanged();
+    }
+
+    async Task ConfirmRemoveStateAsync(TaskStateGroup group, TaskState state)
+    {
+        bool result = await ExHandlers.RunCheckTokenAsync(() => StateGroupService.DeleteStateAsync(state.Id));
+        if (result) group.States.Remove(state);
+        MHD.Notifications(ToastType.Delete, result);
+        StateHasChanged();
+    }
+
+    async Task OnGroupSaved(bool isSuccess)
+    {
+        Modal.Close();
+        if (isSuccess)
+            Groups = await ExHandlers.RunCheckTokenAsync(() => StateGroupService.GetGroupsWithStatesAsync());
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Groups = await StateGroupService.GetGroupsWithStatesAsync();
+        StateHasChanged();
+    }
+}

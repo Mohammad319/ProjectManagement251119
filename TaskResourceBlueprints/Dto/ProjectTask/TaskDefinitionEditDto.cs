@@ -1,4 +1,4 @@
-using TaskResourceBlueprints.Entities;
+using ProjectManagement.Shared.Base.Calculation;
 using TaskResourceBlueprints.Entities.Tasks;
 
 namespace TaskResourceBlueprints.Dto.ProjectTask
@@ -9,33 +9,28 @@ namespace TaskResourceBlueprints.Dto.ProjectTask
         public TaskStatusEnum Status { get; set; } = TaskStatusEnum.ToPlan;
         public string? Responsible { get; set; }
         public string? AdminNote { get; set; }
-        public int? ActionId { get; set; }
-        public int? ActionTypeId { get; set; }
-        public int? FallId { get; set; }
-        public int? LocationId { get; set; }
         public string? Code { get; set; }
         public string DisplayName { get; set; } = string.Empty;
 
-        public int? UnitGroupId { get; set; }     // früher TaskUnitGroupId
-        public string? UnitCode { get; set; }     // früher Unit
+        public int? UnitGroupId { get; set; }
+        public string? UnitCode { get; set; }
 
         public decimal? Quantity { get; set; }
         public decimal? PriceProduction { get; set; }
 
-        public decimal ChangeFactor1 { get; set; } = 1m;    // früher ChangeFactor1
-        public decimal ChangeFactor2 { get; set; } = 1m;  // früher ChangeFactor2
+        public decimal ChangeFactor1 { get; set; } = 1m;
+        public decimal ChangeFactor2 { get; set; } = 1m;
         public bool Uncontrollable { get; set; }
 
         public bool IsActive { get; set; } = true;
         public string? Note { get; set; }
 
-        // Deutsch: drei Eingabefelder (Dicke/Breite/Länge) – bequemer als Index-Binding auf eine Liste
-        public decimal? Thickness { get; set; } // WorkloadThresholds[0]
-        public decimal? Width { get; set; }     // WorkloadThresholds[1]
-        public decimal? Length { get; set; }    // WorkloadThresholds[2]
+        public decimal? Thickness { get; set; }
+        public decimal? Width { get; set; }
+        public decimal? Length { get; set; }
 
-        public List<int> VisibleFolderIds { get; set; } = new();    // früher VisibleFolders
-
-        // Hilfsanzeige (RowNotes…): füg’s später hinzu, wenn nötig
+        public List<int> VisibleFolderIds { get; set; } = new();
+        public List<TaskConversionParameter> ConversionParameters { get; set; } = [];
+        public List<int> SelectedStateIds { get; set; } = [];
     }
 }

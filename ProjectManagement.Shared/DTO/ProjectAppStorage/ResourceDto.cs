@@ -12,8 +12,6 @@ public enum ResourceSource
 
 public class ResourceDto : ResourceDLBase
 {
-    public CalcResCost CalcResCost { get; set; } = new();
-
     public int Id { get; set; }
     public int? FolderId { get; set; }
     public int? MenuId { get; set; }

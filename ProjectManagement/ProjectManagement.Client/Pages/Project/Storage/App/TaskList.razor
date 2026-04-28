@@ -55,11 +55,66 @@
 }
 else if (_tasks != null)
 {
-    foreach (var task in _tasks)
+    foreach (var group in _taskGroups)
     {
-        <TaskCard @key="task.Id" Task="task" ToAdded="TaskToAdd" Config="Config"
-                  Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
-                  CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name" />
+        var stateGroups = group.StateGroupNames;
+        var selectedStates = _selectedStates[group.Key];
+        var matched = MatchTask(group, selectedStates);
+
+        <div class="mb-2" @key="group.Key">
+            @if (stateGroups.Count > 0)
+            {
+                <div class="inline-flex flex-wrap items-center gap-2 mb-1 align-top">
+                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">@group.DisplayName</span>
+                    @if (!string.IsNullOrEmpty(group.Code))
+                    {
+                        <span class="text-xs text-slate-500">[@group.Code]</span>
+                    }
+                    @foreach (var sg in stateGroups)
+                    {
+                        var groupId = sg.Key;
+                        var groupName = sg.Value;
+                        var stateOptions = group.Tasks
+                            .SelectMany(t => t.StateLinks)
+                            .Where(sl => sl.GroupId == groupId)
+                            .Select(sl => new { sl.StateId, sl.StateName })
+                            .DistinctBy(x => x.StateId)
+                            .OrderBy(x => x.StateName)
+                            .ToList();
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-slate-500">@groupName:</span>
+                            <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                                    value="@(selectedStates.TryGetValue(groupId, out var sv) ? sv.ToString() : string.Empty)"
+                                    @onchange="e => OnStateChanged(group.Key, groupId, e)">
+                                <option value="">--</option>
+                                @foreach (var opt in stateOptions)
+                                {
+                                    <option value="@opt.StateId">@opt.StateName</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    @if (matched is null && stateGroups.Count > 0)
+                    {
+                        <span class="text-xs text-amber-600 dark:text-amber-400">Select a combination to load task</span>
+                    }
+                </div>
+            }
+
+            @if (matched is not null)
+            {
+                <TaskCard @key="matched.Id" Task="matched" ToAdded="TaskToAdd" Config="Config"
+                          Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
+                          CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name"
+                          ShowTaskName="false" InlineHeader="true" />
+            }
+            else if (stateGroups.Count == 0 && group.Tasks.Count > 0)
+            {
+                <TaskCard @key="group.Tasks[0].Id" Task="group.Tasks[0]" ToAdded="TaskToAdd" Config="Config"
+                          Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
+                          CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name" />
+            }
+        </div>
     }
 
     @if (_hasMore)
@@ -84,6 +139,16 @@ else if (_tasks != null)
     private const int PageSize = 25;
     private string InputClass => "border border-gray-300 rounded px-2 py-1 text-[13px] leading-tight h-[25px] bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white";
 
+    private sealed class TaskGroup
+    {
+        public string Key { get; init; } = string.Empty;
+        public string DisplayName { get; init; } = string.Empty;
+        public string Code { get; init; } = string.Empty;
+        public List<ProjectTaskDto> Tasks { get; init; } = [];
+        // groupId → groupName
+        public Dictionary<int, string> StateGroupNames { get; init; } = [];
+    }
+
     void StorageStateModal()
     {
         Modal.ShowComponent<StorageDataSourceConfigUI>(ResourceLoc.Description_SystemOrUserValues,
@@ -100,7 +165,7 @@ else if (_tasks != null)
             InvokeAsync(StateHasChanged);
             foreach (var item in _tasks)
             {
-                           foreach (var res in item.Resources)
+                foreach (var res in item.Resources)
                 {
                     if (AppState.StorageApp.Cost && res.CostUserValue.HasValue)
                         res.Data.Cost = (decimal)res.CostUserValue.Value;
@@ -117,6 +182,9 @@ else if (_tasks != null)
     private bool _hasMore = false;
     private string? _error;
     public List<ProjectTaskDto> _tasks = new();
+    private List<TaskGroup> _taskGroups = [];
+    // groupKey → (stateGroupId → selectedStateId)
+    private Dictionary<string, Dictionary<int, int>> _selectedStates = [];
     ProjectTaskFilterDto filterDto = new();
     [Parameter] public EventCallback RefreshBack { get; set; }
     [Parameter] public RenderFragment? Content { get; set; }
@@ -126,6 +194,70 @@ else if (_tasks != null)
     async Task TaskToAdd()
     {
         await RefreshBack.InvokeAsync();
+    }
+
+    void OnStateChanged(string groupKey, int stateGroupId, ChangeEventArgs e)
+    {
+        if (!_selectedStates.TryGetValue(groupKey, out var dict))
+            return;
+        if (int.TryParse(e.Value?.ToString(), out var stateId) && stateId > 0)
+            dict[stateGroupId] = stateId;
+        else
+            dict.Remove(stateGroupId);
+        StateHasChanged();
+    }
+
+    ProjectTaskDto? MatchTask(TaskGroup group, Dictionary<int, int> selected)
+    {
+        if (group.StateGroupNames.Count > 0 && selected.Count < group.StateGroupNames.Count)
+            return null;
+
+        foreach (var task in group.Tasks)
+        {
+            bool allMatch = true;
+            foreach (var (groupId, stateId) in selected)
+            {
+                if (!task.StateLinks.Any(sl => sl.GroupId == groupId && sl.StateId == stateId))
+                {
+                    allMatch = false;
+                    break;
+                }
+            }
+            if (allMatch) return task;
+        }
+        return null;
+    }
+
+    void BuildTaskGroups(List<ProjectTaskDto> tasks)
+    {
+        var grouped = tasks
+            .GroupBy(t => $"{t.Code ?? string.Empty}||{t.DisplayName}")
+            .Select(g =>
+            {
+                var first = g.First();
+                var stateGroupNames = g
+                    .SelectMany(t => t.StateLinks)
+                    .Select(sl => new { sl.GroupId, sl.GroupName })
+                    .DistinctBy(x => x.GroupId)
+                    .OrderBy(x => x.GroupName)
+                    .ToDictionary(x => x.GroupId, x => x.GroupName);
+                return new TaskGroup
+                {
+                    Key = g.Key,
+                    DisplayName = first.DisplayName,
+                    Code = first.Code ?? string.Empty,
+                    Tasks = g.ToList(),
+                    StateGroupNames = stateGroupNames,
+                };
+            })
+            .ToList();
+
+        _taskGroups = grouped;
+        foreach (var tg in grouped)
+        {
+            if (!_selectedStates.ContainsKey(tg.Key))
+                _selectedStates[tg.Key] = [];
+        }
     }
 
     async Task Refresh()
@@ -139,12 +271,15 @@ else if (_tasks != null)
             var result = await TaskService.GetTasksForUserDtoAsync(filterDto);
             _tasks = result;
             _hasMore = result.Count == PageSize;
+            _selectedStates = [];
             ApplyCostAdjustments(result);
+            BuildTaskGroups(result);
         }
         catch (Exception ex)
         {
             _error = ex.Message;
             _tasks = [];
+            _taskGroups = [];
             _hasMore = false;
         }
         finally
@@ -165,6 +300,7 @@ else if (_tasks != null)
             ApplyCostAdjustments(result);
             _tasks.AddRange(result);
             _hasMore = result.Count == PageSize;
+            BuildTaskGroups(_tasks);
         }
         catch (Exception ex)
         {
@@ -191,7 +327,7 @@ else if (_tasks != null)
         Tasks = _tasks.Where(x => x.Added).Select(Task => new TaskPostDTO
             {
                 Id = Task.Id,
-                Name =  Task.DisplayName,
+                Name = Task.DisplayName,
                 Order = Task.SortOrder,
                 StatusId = Task.StatusId,
 
@@ -209,7 +345,7 @@ else if (_tasks != null)
                     Note = Task.Note,
                     IsOH = Calc.OHFactors,
                 },
-            Resources = Task.BaseResources.Concat(Task.ResultResources).Where(r => r.IsAdded).Select(res => new ResourcePostDTO
+                Resources = Task.BaseResources.Concat(Task.ResultResources).Where(r => r.IsAdded).Select(res => new ResourcePostDTO
                 {
                     Id = res.Id,
                     ResourceTypeId = res.ResourceTypeId,
@@ -217,21 +353,19 @@ else if (_tasks != null)
                     AccountId = res.AccountId,
                     IsActive = res.Active,
                     StatusId = res.StatusId,
-                // Metadata = res.Metadata,
                     Data = new ResourceMetadata()
                     {
-                    Note = res.Data.Note,
-                    ChangeFactor1= res.Data.ChangeFactor1,
-                    ChangeFactor2 = res.Data.ChangeFactor2,
-                    CapWaste = res.Data.CapWaste,
-                    CO2 = res.Data.CO2,
-                    Cost = res.Data.Cost,
-                    BaseCost = res.Data.BaseCost,
-                    Unit = res.Data.Unit,
-
+                        Note = res.Data.Note,
+                        ChangeFactor1 = res.Data.ChangeFactor1,
+                        ChangeFactor2 = res.Data.ChangeFactor2,
+                        CapWaste = res.Data.CapWaste,
+                        CO2 = res.Data.CO2,
+                        Cost = res.Data.Cost,
+                        BaseCost = res.Data.BaseCost,
+                        Unit = res.Data.Unit,
                     },
                     ResType = res.ResType,
-                Name = AppState.StorageApp.Name ? res.NameUserValue : res.Name,
+                    Name = AppState.StorageApp.Name ? res.NameUserValue : res.Name,
                 }).ToList()
             }).ToList();
         foreach (var ts in Tasks)

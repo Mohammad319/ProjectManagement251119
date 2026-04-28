@@ -1,0 +1,66 @@
+@using TaskResourceBlueprints.Entities.Lookups
+@using TaskResourceBlueprints.Services.StateGroups
+@inherits AppComponentBase
+@inject ITaskStateGroupService StateGroupService
+
+<EditForm id="stateGroupForm" Model="@Model" OnValidSubmit="HandleSubmitAsync" class="space-y-3">
+    <DataAnnotationsValidator />
+
+    <div>
+        <h3 class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Group settings</h3>
+        <p class="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">Define the display name and ordering for this state group.</p>
+    </div>
+
+    <div class="grid gap-3.5 md:grid-cols-2">
+        <div class="space-y-2 md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@CalcResource.name</label>
+            <InputText class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                       @bind-Value="@Model.Name" />
+            <ValidationMessage For="@(() => Model.Name)" class="text-sm text-rose-600 dark:text-rose-400" />
+        </div>
+
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">@ResourceApp.order</label>
+            <InputNumber class="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                         @bind-Value="@Model.SortOrder" />
+        </div>
+    </div>
+</EditForm>
+
+<div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <button type="submit" form="stateGroupForm"
+            class="inline-flex items-center rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 dark:bg-blue-500 dark:hover:bg-blue-400"
+            disabled="@IsLoading">
+        @ResourceApp.save
+    </button>
+    <button type="button"
+            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            @onclick="async () => await Callback.InvokeAsync(false)">
+        @ResourceApp.cancel
+    </button>
+</div>
+
+@code {
+    [Parameter] public TaskStateGroup Model { get; set; } = new() { Name = string.Empty };
+    [Parameter] public EventCallback<bool> Callback { get; set; }
+
+    bool IsLoading = false;
+
+    private async Task HandleSubmitAsync()
+    {
+        IsLoading = true;
+        bool result;
+        if (Model.Id == 0)
+        {
+            var created = await ExHandlers.RunCheckTokenAsync(() => StateGroupService.AddGroupAsync(Model.Name, Model.SortOrder));
+            result = created != null && created.Id > 0;
+        }
+        else
+        {
+            result = await ExHandlers.RunCheckTokenAsync(() => StateGroupService.UpdateGroupAsync(Model));
+        }
+        MHD.Notifications(Model.Id == 0 ? ToastType.Add : ToastType.Update, result);
+        await Callback.InvokeAsync(result);
+        IsLoading = false;
+    }
+}

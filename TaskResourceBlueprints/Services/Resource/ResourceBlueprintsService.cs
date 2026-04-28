@@ -46,7 +46,6 @@ namespace TaskResourceBlueprints.Services.Resource
         public async Task<int> CreateAsync(ResourceDefinition resource)
         {
             await using var context = await dbContextFactory.CreateDbContextAsync();
-            resource.CalcResCost ??= new CalcResCost();
             await context.Resources.AddAsync(resource);
             await context.SaveChangesAsync();
 
@@ -72,36 +71,11 @@ namespace TaskResourceBlueprints.Services.Resource
             await using var context = await dbContextFactory.CreateDbContextAsync();
 
             var resource = await context.Resources
-                .Include(r => r.AttributeValues)
                 .Include(r => r.TenantLinks)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
             if (resource is null)
                 return false;
-
-            var conditionAssignments = await context.ConditionResourceAssignments
-                .Where(x => x.ResourceId == id)
-                .ToListAsync();
-
-            var resourceChoices = await context.ResourceChoiceOptions
-                .Where(x => x.ResourceId == id)
-                .ToListAsync();
-
-            var taskAssignments = await context.TaskResourceAssignments
-                .Where(x => x.ResourceId == id)
-                .ToListAsync();
-
-            if (conditionAssignments.Count > 0)
-                context.RemoveRange(conditionAssignments);
-
-            if (resourceChoices.Count > 0)
-                context.RemoveRange(resourceChoices);
-
-            if (taskAssignments.Count > 0)
-                context.RemoveRange(taskAssignments);
-
-            if (resource.AttributeValues.Count > 0)
-                context.RemoveRange(resource.AttributeValues);
 
             if (resource.TenantLinks.Count > 0)
                 context.RemoveRange(resource.TenantLinks);

@@ -1,7 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ProjectManagement.Shared.Enums;
+using Microsoft.EntityFrameworkCore;
 using TaskResourceBlueprints.Dto.Resource;
-using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure;
 using TaskResourceBlueprints.Services.ProjectTask;
 
@@ -11,33 +10,30 @@ namespace TaskResourceBlueprints.Services.Resource
     {
         Task<(IReadOnlyList<ResourceRowDto> rows, string folderName)> GetFolderResourcesAsync(
             int projectTaskId, int folderId, CancellationToken ct = default);
-        Task<TaskResourceDto?> GetTaskResourceAsync(int TaskId, int ResourceId, CancellationToken ct);
-
-        Task<bool> UpdateAssignmentAsync(int TaskId, int ResourceId, TaskResourceDto taskResourceDto, CancellationToken ct);
-        Task<bool> AddAssignmentAsync(TaskResourceAssignment assignment, CancellationToken cancellationToken = default);
-        Task AddAssignmentAsync(int projectTaskId, int resourceId, CancellationToken ct = default);
-        Task RemoveResourceFromTaskAsync(int projectTaskId, int resourceId, CancellationToken ct = default);
-        Task<bool> RemoveAssignmentAsync(int id, CancellationToken ct = default);
+        Task AddAssignmentAsync(int taskId, int resourceId, CancellationToken ct = default);
+        Task RemoveResourceFromTaskAsync(int taskId, int resourceId, CancellationToken ct = default);
+        Task<bool> RemoveAssignmentAsync(int assignmentId, CancellationToken ct = default);
+        Task<TaskResourceDto?> GetTaskResourceAsync(int taskId, int resourceId, CancellationToken ct);
+        Task<bool> UpdateAssignmentAsync(int taskId, int resourceId, TaskResourceDto dto, CancellationToken ct);
     }
 
     public sealed class TaskResourceService(IDbContextFactory<TaskResourceBlueprintsContext> factory)
         : ITaskResourceService
     {
-
         public async Task<(IReadOnlyList<ResourceRowDto> rows, string folderName)> GetFolderResourcesAsync(
             int projectTaskId, int folderId, CancellationToken ct = default)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
 
-            var assignedIds = await db.TaskResourceAssignments.AsNoTracking()
-                .Where(tr => tr.TaskId == projectTaskId)
-                .Select(tr => tr.ResourceId)
-                .ToListAsync(ct);
-
             var folderName = await db.ResourceCategories.AsNoTracking()
                 .Where(f => f.Id == folderId)
                 .Select(f => f.DisplayName)
                 .FirstOrDefaultAsync(ct) ?? string.Empty;
+
+            var assignedIds = await db.TaskDefinitionResourceLinks.AsNoTracking()
+                .Where(l => l.TaskDefinitionId == projectTaskId)
+                .Select(l => l.ResourceDefinitionId)
+                .ToHashSetAsync(ct);
 
             var rows = await db.Resources.AsNoTracking()
                 .Where(r => r.FolderId == folderId)
@@ -60,131 +56,82 @@ namespace TaskResourceBlueprints.Services.Resource
 
             return (rows, folderName);
         }
-        public async Task<TaskResourceDto?> GetTaskResourceAsync(int taskId, int resourceId, CancellationToken ct)
+
+        public async Task AddAssignmentAsync(int taskId, int resourceId, CancellationToken ct = default)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-
-            var zz = await db.TaskResourceAssignments.AsNoTracking()
-                .Where(x => x.TaskId == taskId && x.ResourceId == resourceId)
-                .Select(x => new TaskResourceDto
-                {
-                    Active = x.IsActive,
-                    MenuId = x.MenuId,
-                    BaseCost = x.BaseCost,
-                    CapRole = x.CapacityRoles,
-                    CapWaste = x.CapWaste,
-                    ChangeFactor1 = x.ChangeFactor1,
-                    ChangeFactor2 = x.ChangeFactor2,
-                    Formulas = x.Expressions,
-                    ResType = x.Resource == null ? ResourceTypesEnum.Adjustment : x.Resource.ResType,
-                    Uncontrollable = x.Uncontrollable,
-                })
-                .FirstOrDefaultAsync(ct);
-
-            return zz;
-        }
-        public async Task<bool> UpdateAssignmentAsync(int TaskId, int ResourceId, TaskResourceDto taskResourceDto, CancellationToken ct)
-        {
-            await using var db = await factory.CreateDbContextAsync(ct);
-            var zz = await db.TaskResourceAssignments.FirstOrDefaultAsync
-                (x => x.TaskId == TaskId && x.ResourceId == ResourceId, ct);
-            if (zz != null)
+            var exists = await db.TaskDefinitionResourceLinks.AnyAsync(
+                l => l.TaskDefinitionId == taskId && l.ResourceDefinitionId == resourceId, ct);
+            if (!exists)
             {
-                zz.IsActive = taskResourceDto.Active;
-                zz.MenuId = taskResourceDto.MenuId;
-                zz.ChangeFactor1 = taskResourceDto.ChangeFactor1;
-                zz.ChangeFactor2 = taskResourceDto.ChangeFactor2;
-                zz.CapWaste = taskResourceDto.CapWaste;
-                zz.BaseCost = taskResourceDto.BaseCost;
-                zz.Uncontrollable = taskResourceDto.Uncontrollable;
-                zz.Expressions = taskResourceDto.Formulas;
-                zz.CapacityRoles = taskResourceDto.CapRole ?? [];
+                db.TaskDefinitionResourceLinks.Add(new TaskDefinitionResourceLink
+                {
+                    TaskDefinitionId = taskId,
+                    ResourceDefinitionId = resourceId
+                });
                 await db.SaveChangesAsync(ct);
-                return true;
             }
-            return false;
-        }
-        public async Task<bool> AddAssignmentAsync(
-            TaskResourceAssignment assignment,
-            CancellationToken cancellationToken = default)
-        {
-            await using var context = await factory.CreateDbContextAsync(cancellationToken);
-
-            var exists = await context.TaskResourceAssignments
-                .AsNoTracking()
-                .AnyAsync(x =>
-                    x.TaskId == assignment.TaskId &&
-                    x.ResourceId == assignment.ResourceId,
-                    cancellationToken);
-
-            if (exists)
-                return false;
-
-            await context.TaskResourceAssignments.AddAsync(assignment, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-        public async Task AddAssignmentAsync(int projectTaskId, int resourceId, CancellationToken ct = default)
-        {
-            await using var db = await factory.CreateDbContextAsync(ct);
-
-            var exists = await db.TaskResourceAssignments
-                .AnyAsync(x => x.TaskId == projectTaskId && x.ResourceId == resourceId, ct);
-            if (exists) return;
-
-            var r = await db.Resources.AsNoTracking()
-                .Where(x => x.Id == resourceId)
-                .Select(x => new
-                {
-                    x.Id,
-                    x.Data.ChangeFactor1,
-                    x.Data.ChangeFactor2,
-                    x.Data.CapWaste,
-                    x.Data.BaseCost
-                })
-                .FirstOrDefaultAsync(ct);
-
-            if (r is null) return;
-
-            db.TaskResourceAssignments.Add(new TaskResourceAssignment
-            {
-                TaskId = projectTaskId,
-                ResourceId = r.Id,
-                ChangeFactor1 = r.ChangeFactor1,
-                ChangeFactor2 = r.ChangeFactor2,
-                CapWaste = r.CapWaste,
-                BaseCost = r.BaseCost,
-            });
-
-            await db.SaveChangesAsync(ct);
         }
 
         public async Task RemoveResourceFromTaskAsync(int taskId, int resourceId, CancellationToken ct = default)
         {
-            await using var context = await factory.CreateDbContextAsync(ct);
-
-            var existing = await context.TaskResourceAssignments
-                .FirstOrDefaultAsync(
-                    tr => tr.TaskId == taskId && tr.ResourceId == resourceId,
-                    ct);
-
-            if (existing is null)
-                return;
-
-            context.TaskResourceAssignments.Remove(existing);
-            await context.SaveChangesAsync(ct);
+            await using var db = await factory.CreateDbContextAsync(ct);
+            var link = await db.TaskDefinitionResourceLinks
+                .FirstOrDefaultAsync(l => l.TaskDefinitionId == taskId && l.ResourceDefinitionId == resourceId, ct);
+            if (link is not null)
+            {
+                db.TaskDefinitionResourceLinks.Remove(link);
+                await db.SaveChangesAsync(ct);
+            }
         }
 
-        public async Task<bool> RemoveAssignmentAsync(int id, CancellationToken ct = default)
+        public async Task<bool> RemoveAssignmentAsync(int assignmentId, CancellationToken ct = default)
         {
             await using var db = await factory.CreateDbContextAsync(ct);
-            var ite = await db.TaskResourceAssignments.FirstOrDefaultAsync(x => x.Id == id, ct);
-            if (ite is null) return false;
+            var link = await db.TaskDefinitionResourceLinks.FindAsync([assignmentId], ct);
+            if (link is null) return false;
+            db.TaskDefinitionResourceLinks.Remove(link);
+            await db.SaveChangesAsync(ct);
+            return true;
+        }
 
-            db.TaskResourceAssignments.Remove(ite);
+        public async Task<TaskResourceDto?> GetTaskResourceAsync(int taskId, int resourceId, CancellationToken ct)
+        {
+            await using var db = await factory.CreateDbContextAsync(ct);
+
+            var link = await db.TaskDefinitionResourceLinks.AsNoTracking()
+                .FirstOrDefaultAsync(l => l.TaskDefinitionId == taskId && l.ResourceDefinitionId == resourceId, ct);
+
+            var resType = await db.Resources.AsNoTracking()
+                .Where(r => r.Id == resourceId)
+                .Select(r => r.ResType)
+                .FirstOrDefaultAsync(ct);
+
+            if (link is null)
+                return new TaskResourceDto { ResType = resType };
+
+            return new TaskResourceDto
+            {
+                Quantity = link.Quantity,
+                IsFixed = link.IsFixed,
+                ResType = resType,
+                CapRole = []
+            };
+        }
+
+        public async Task<bool> UpdateAssignmentAsync(int taskId, int resourceId, TaskResourceDto dto, CancellationToken ct)
+        {
+            await using var db = await factory.CreateDbContextAsync(ct);
+
+            var link = await db.TaskDefinitionResourceLinks
+                .FirstOrDefaultAsync(l => l.TaskDefinitionId == taskId && l.ResourceDefinitionId == resourceId, ct);
+
+            if (link is null) return false;
+
+            link.Quantity = dto.Quantity;
+            link.IsFixed = dto.IsFixed;
             await db.SaveChangesAsync(ct);
             return true;
         }
     }
-
 }

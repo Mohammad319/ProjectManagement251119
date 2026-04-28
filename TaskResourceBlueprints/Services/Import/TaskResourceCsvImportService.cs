@@ -1,11 +1,10 @@
-using System.Globalization;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.Calculation;
-using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.Enums;
+using System.Globalization;
+using System.Text;
 using TaskResourceBlueprints.Entities;
-using TaskResourceBlueprints.Entities.Questions.Assignments;
+using TaskResourceBlueprints.Entities.Lookups;
 using TaskResourceBlueprints.Entities.Resources;
 using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure;
@@ -33,6 +32,9 @@ public sealed class TaskResourceCsvImportResult
     public int CreatedFolders { get; set; }
     public int CreatedAssignments { get; set; }
     public int UpdatedAssignments { get; set; }
+    public int CreatedStateGroups { get; set; }
+    public int CreatedStates { get; set; }
+    public int CreatedStateLinks { get; set; }
     public bool DeletedExistingData { get; set; }
     public int SkippedRows { get; set; }
     public List<TaskResourceCsvImportIssue> Issues { get; set; } = [];
@@ -76,9 +78,12 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
         var taskByExternalId = new Dictionary<string, TaskDefinition>(StringComparer.OrdinalIgnoreCase);
         var taskByCode = new Dictionary<string, TaskDefinition>(StringComparer.OrdinalIgnoreCase);
+        var taskByImportKey = new Dictionary<string, TaskDefinition>(StringComparer.OrdinalIgnoreCase);
         var foldersByPath = await LoadFoldersAsync(db, ct);
         var resourcesByKey = await LoadResourcesAsync(db, ct);
-        var assignmentsByKey = await LoadAssignmentsAsync(db, ct);
+        var existingLinkKeys = await LoadExistingLinkKeysAsync(db, ct);
+        var stateGroupsByName = await LoadStateGroupsAsync(db, ct);
+        var statesByKey = await LoadStatesAsync(db, ct);
         var nextTaskSortOrder = await db.Tasks.Select(x => (int?)x.SortOrder).MaxAsync(ct) ?? 0;
         var nextResourceSortOrder = await db.Resources.Select(x => (int?)x.SortOrder).MaxAsync(ct) ?? 0;
         var nextFolderSortOrderByParent = await db.ResourceCategories
@@ -86,9 +91,10 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             .Select(x => new { ParentId = x.Key, MaxSortOrder = x.Max(f => f.SortOrder) })
             .ToDictionaryAsync(x => ParentSortKey(x.ParentId), x => x.MaxSortOrder, ct);
 
-        await LoadTaskDictionariesAsync(db, taskByExternalId, taskByCode, ct);
+        await LoadTaskDictionariesAsync(db, taskByCode, taskByImportKey, ct);
 
         var rowNumber = 1;
+        TaskDefinition? currentTask = null;
         while (await reader.ReadLineAsync(ct) is { } line)
         {
             ct.ThrowIfCancellationRequested();
@@ -106,26 +112,21 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
                 if (rowType.Equals("T", StringComparison.OrdinalIgnoreCase))
                 {
                     result.TaskRows++;
-                    await UpsertTaskAsync(db, row, map, fileName, rowNumber, result, taskByExternalId, taskByCode, ++nextTaskSortOrder, ct);
+                    currentTask = await UpsertTaskAsync(
+                        db, row, map, fileName, rowNumber, result,
+                        taskByExternalId, taskByCode, taskByImportKey,
+                        stateGroupsByName, statesByKey,
+                        ++nextTaskSortOrder, ct);
                 }
                 else if (rowType.Equals("R", StringComparison.OrdinalIgnoreCase))
                 {
                     result.ResourceRows++;
                     var created = await UpsertResourceAssignmentAsync(
-                        db,
-                        row,
-                        map,
-                        rowNumber,
-                        result,
-                        taskByExternalId,
-                        taskByCode,
-                        foldersByPath,
-                        resourcesByKey,
-                        assignmentsByKey,
-                        nextFolderSortOrderByParent,
-                        ++nextResourceSortOrder,
-                        fileName,
-                        ct);
+                        db, row, map, rowNumber, result,
+                        taskByExternalId, taskByCode, currentTask,
+                        foldersByPath, resourcesByKey, existingLinkKeys,
+                        nextFolderSortOrderByParent, ++nextResourceSortOrder,
+                        fileName, ct);
 
                     if (!created)
                         nextResourceSortOrder--;
@@ -146,39 +147,59 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         return result;
     }
 
+    // ──────────────────────────────────────────────────────────────────────
+    // Loaders
+    // ──────────────────────────────────────────────────────────────────────
+
     private static async Task LoadTaskDictionariesAsync(
         TaskResourceBlueprintsContext db,
-        Dictionary<string, TaskDefinition> taskByExternalId,
         Dictionary<string, TaskDefinition> taskByCode,
+        Dictionary<string, TaskDefinition> taskByImportKey,
         CancellationToken ct)
     {
-        var tasks = await db.Tasks.ToListAsync(ct);
+        var tasks = await db.Tasks
+            .Include(t => t.StateLinks)
+                .ThenInclude(l => l.State)
+                    .ThenInclude(s => s!.Group)
+            .ToListAsync(ct);
+
         foreach (var task in tasks)
         {
             if (!string.IsNullOrWhiteSpace(task.Code))
                 taskByCode[task.Code.Trim()] = task;
+
+            var statePairs = task.StateLinks
+                .Where(l => l.State?.Group is not null)
+                .Select(l => (Property: l.State!.Group!.Name, Value: l.State.Name));
+
+            var importKey = TaskImportKey(task.Code, task.Name, statePairs);
+            if (!string.IsNullOrWhiteSpace(importKey) && !taskByImportKey.ContainsKey(importKey))
+                taskByImportKey[importKey] = task;
         }
     }
 
     private static async Task<Dictionary<string, ResourceCategory>> LoadFoldersAsync(
-        TaskResourceBlueprintsContext db,
-        CancellationToken ct)
+        TaskResourceBlueprintsContext db, CancellationToken ct)
     {
         var folders = await db.ResourceCategories.ToListAsync(ct);
         var byId = folders.ToDictionary(x => x.Id);
         var byPath = new Dictionary<string, ResourceCategory>(StringComparer.OrdinalIgnoreCase);
-
         foreach (var folder in folders)
-        {
             byPath[BuildFolderPath(folder, byId)] = folder;
-        }
-
         return byPath;
     }
 
+    private static async Task<HashSet<string>> LoadExistingLinkKeysAsync(
+        TaskResourceBlueprintsContext db, CancellationToken ct)
+    {
+        var keys = await db.TaskDefinitionResourceLinks.AsNoTracking()
+            .Select(l => AssignmentKey(l.TaskDefinitionId, l.ResourceDefinitionId))
+            .ToListAsync(ct);
+        return [.. keys];
+    }
+
     private static async Task<Dictionary<string, ResourceDefinition>> LoadResourcesAsync(
-        TaskResourceBlueprintsContext db,
-        CancellationToken ct)
+        TaskResourceBlueprintsContext db, CancellationToken ct)
     {
         var resources = await db.Resources.ToListAsync(ct);
         return resources
@@ -186,15 +207,51 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
     }
 
-    private static async Task<Dictionary<string, TaskResourceAssignment>> LoadAssignmentsAsync(
-        TaskResourceBlueprintsContext db,
-        CancellationToken ct)
+    private static async Task<Dictionary<string, TaskStateGroup>> LoadStateGroupsAsync(
+        TaskResourceBlueprintsContext db, CancellationToken ct)
     {
-        return await db.TaskResourceAssignments
-            .ToDictionaryAsync(x => AssignmentKey(x.TaskId, x.ResourceId), x => x, ct);
+        var groups = await db.TaskStateGroups.ToListAsync(ct);
+        return groups
+            .GroupBy(x => NormalizeToken(x.Name), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
     }
 
-    private static async Task UpsertTaskAsync(
+    private static async Task<Dictionary<string, TaskState>> LoadStatesAsync(
+        TaskResourceBlueprintsContext db, CancellationToken ct)
+    {
+        var states = await db.TaskStates.ToListAsync(ct);
+        return states
+            .GroupBy(x => StateKey(x.TaskStateGroupId, x.Name), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.First(), StringComparer.OrdinalIgnoreCase);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Delete
+    // ──────────────────────────────────────────────────────────────────────
+
+    private static async Task DeleteExistingImportDataAsync(TaskResourceBlueprintsContext db, CancellationToken ct)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+
+        await db.ResourceTenantLinks.ExecuteDeleteAsync(ct);
+        await db.TaskDefinitionStateLinks.ExecuteDeleteAsync(ct);
+        await db.TaskDefinitionResourceLinks.ExecuteDeleteAsync(ct);
+        await db.Tasks.ExecuteDeleteAsync(ct);
+        await db.Resources.ExecuteDeleteAsync(ct);
+        await db.ResourceCategories.ExecuteUpdateAsync(
+            setters => setters.SetProperty(x => x.ParentCategoryId, (int?)null), ct);
+        await db.ResourceCategories.ExecuteDeleteAsync(ct);
+        await db.TaskStates.ExecuteDeleteAsync(ct);
+        await db.TaskStateGroups.ExecuteDeleteAsync(ct);
+
+        await transaction.CommitAsync(ct);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Upsert task
+    // ──────────────────────────────────────────────────────────────────────
+
+    private static async Task<TaskDefinition> UpsertTaskAsync(
         TaskResourceBlueprintsContext db,
         IReadOnlyList<string> row,
         IReadOnlyDictionary<string, int> map,
@@ -203,6 +260,9 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         TaskResourceCsvImportResult result,
         Dictionary<string, TaskDefinition> taskByExternalId,
         Dictionary<string, TaskDefinition> taskByCode,
+        Dictionary<string, TaskDefinition> taskByImportKey,
+        Dictionary<string, TaskStateGroup> stateGroupsByName,
+        Dictionary<string, TaskState> statesByKey,
         int sortOrder,
         CancellationToken ct)
     {
@@ -213,12 +273,18 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         if (string.IsNullOrWhiteSpace(name))
             throw new InvalidOperationException("Task name is required.");
 
+        var statePairs = new[]
+        {
+            (Property: Get(row, map, "Property1").Trim(), Value: Get(row, map, "Value1").Trim()),
+            (Property: Get(row, map, "Property2").Trim(), Value: Get(row, map, "Value2").Trim()),
+        };
+        var importKey = TaskImportKey(code, name, statePairs);
+
         TaskDefinition? task = null;
         if (!string.IsNullOrWhiteSpace(externalId))
             taskByExternalId.TryGetValue(externalId, out task);
-
-        if (!string.IsNullOrWhiteSpace(code))
-            task ??= taskByCode.TryGetValue(code, out var byCode) ? byCode : null;
+        if (!string.IsNullOrWhiteSpace(importKey))
+            task ??= taskByImportKey.TryGetValue(importKey, out var byImportKey) ? byImportKey : null;
 
         if (task is null)
         {
@@ -249,33 +315,55 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
         if (!string.IsNullOrWhiteSpace(externalId))
             taskByExternalId[externalId] = task;
-
+        if (!string.IsNullOrWhiteSpace(importKey))
+            taskByImportKey[importKey] = task;
         if (!string.IsNullOrWhiteSpace(task.Code))
             taskByCode[task.Code.Trim()] = task;
 
         await db.SaveChangesAsync(ct);
+
+        // ── State group links ──────────────────────────────────────────────
+        // Load current state links for this task (keyed by groupId for fast lookup)
+        var currentLinks = await db.TaskDefinitionStateLinks
+            .Where(l => l.TaskDefinitionId == task.Id)
+            .Include(l => l.State)
+            .ToListAsync(ct);
+        var linkByGroupId = currentLinks
+            .Where(l => l.State is not null)
+            .ToDictionary(l => l.State!.TaskStateGroupId);
+
+        foreach (var (property, value) in statePairs)
+        {
+            if (string.IsNullOrWhiteSpace(property) || string.IsNullOrWhiteSpace(value))
+                continue;
+
+            var group = await EnsureStateGroupAsync(db, property, stateGroupsByName, result, ct);
+            var state = await EnsureStateAsync(db, value, group, statesByKey, result, ct);
+
+            if (linkByGroupId.TryGetValue(group.Id, out var existingLink))
+            {
+                // Update to new state if different
+                if (existingLink.TaskStateId != state.Id)
+                    existingLink.TaskStateId = state.Id;
+            }
+            else
+            {
+                db.TaskDefinitionStateLinks.Add(new TaskDefinitionStateLink
+                {
+                    TaskDefinitionId = task.Id,
+                    TaskStateId = state.Id
+                });
+                result.CreatedStateLinks++;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+        return task;
     }
 
-    private static async Task DeleteExistingImportDataAsync(TaskResourceBlueprintsContext db, CancellationToken ct)
-    {
-        await using var transaction = await db.Database.BeginTransactionAsync(ct);
-
-        await db.NumericResourceAssignments.ExecuteDeleteAsync(ct);
-        await db.OptionResourceAssignments.ExecuteDeleteAsync(ct);
-        await db.ConditionResourceAssignments.ExecuteDeleteAsync(ct);
-        await db.TaskResourceAssignments.ExecuteDeleteAsync(ct);
-        await db.ResourceChoiceOptions.ExecuteDeleteAsync(ct);
-        await db.ResourceAttributeValues.ExecuteDeleteAsync(ct);
-        await db.ResourceTenantLinks.ExecuteDeleteAsync(ct);
-        await db.Tasks.ExecuteDeleteAsync(ct);
-        await db.Resources.ExecuteDeleteAsync(ct);
-        await db.ResourceCategories.ExecuteUpdateAsync(
-            setters => setters.SetProperty(x => x.ParentCategoryId, (int?)null),
-            ct);
-        await db.ResourceCategories.ExecuteDeleteAsync(ct);
-
-        await transaction.CommitAsync(ct);
-    }
+    // ──────────────────────────────────────────────────────────────────────
+    // Upsert resource assignment
+    // ──────────────────────────────────────────────────────────────────────
 
     private static async Task<bool> UpsertResourceAssignmentAsync(
         TaskResourceBlueprintsContext db,
@@ -285,9 +373,10 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         TaskResourceCsvImportResult result,
         Dictionary<string, TaskDefinition> taskByExternalId,
         Dictionary<string, TaskDefinition> taskByCode,
+        TaskDefinition? currentTask,
         Dictionary<string, ResourceCategory> foldersByPath,
         Dictionary<string, ResourceDefinition> resourcesByKey,
-        Dictionary<string, TaskResourceAssignment> assignmentsByKey,
+        HashSet<string> existingLinkKeys,
         Dictionary<int, int> nextFolderSortOrderByParent,
         int resourceSortOrder,
         string fileName,
@@ -300,17 +389,12 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         if (string.IsNullOrWhiteSpace(name))
             throw new InvalidOperationException("Resource name is required.");
 
-        var task = ResolveTask(taskByExternalId, taskByCode, parentTaskId, parentCode);
+        var task = ResolveTask(taskByExternalId, taskByCode, currentTask, parentTaskId, parentCode);
         if (task is null)
             throw new InvalidOperationException($"Parent task was not found. ParentTaskId='{parentTaskId}', ParentCode='{parentCode}'.");
 
         var folder = await EnsureFolderPathAsync(
-            db,
-            Get(row, map, "ResourceFolder"),
-            foldersByPath,
-            nextFolderSortOrderByParent,
-            result,
-            ct);
+            db, Get(row, map, "ResourceFolder"), foldersByPath, nextFolderSortOrderByParent, result, ct);
 
         var typeText = Get(row, map, "ResourceType");
         var resourceType = ParseResourceType(typeText, rowNumber, result);
@@ -328,7 +412,6 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
                 IsActive = true,
                 IsVisible = true,
                 SortOrder = resourceSortOrder,
-                CalcResCost = new CalcResCost(),
                 Data = new ResourceMetadata()
             };
             db.Resources.Add(resource);
@@ -353,11 +436,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         resource.ResType = resourceType;
         resource.IsActive = true;
         resource.IsVisible = true;
-        resource.AdminNote = BuildAdminNote(
-            fileName,
-            account: Get(row, map, "Account"),
-            category: Get(row, map, "Category"),
-            rowNumber);
+        resource.AdminNote = BuildAdminNote(fileName, account: Get(row, map, "Account"), category: Get(row, map, "Category"), rowNumber);
         resource.Data ??= new ResourceMetadata();
         resource.Data.Unit = Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex).Trim();
         resource.Data.Quantity = null;
@@ -365,24 +444,27 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         resource.Data.ChangeFactor2 = 1m;
         resource.Data.CapWaste = capWaste;
         resource.Data.Cost = unitCost;
-        //resource.Data.BaseCost = unitCost;
         resource.Data.Note = Get(row, map, "CalculationMethod").Trim();
         ApplyCapWaste(resource.Data, capWaste, capWasteType);
         resource.Data.Normalize();
 
-        var assignmentKey = AssignmentKey(task.Id, resource.Id);
-        if (!assignmentsByKey.TryGetValue(assignmentKey, out var assignment))
+        if (folder is not null && !task.VisibleFolderIds.Contains(folder.Id))
+            task.VisibleFolderIds.Add(folder.Id);
+
+        await db.SaveChangesAsync(ct);
+
+        var linkKey = AssignmentKey(task.Id, resource.Id);
+        if (!existingLinkKeys.Contains(linkKey))
         {
-            assignment = new TaskResourceAssignment
+            var quantity = ParseDecimalOrDefault(Get(row, map, "Quantity", fallbackIndex: FallbackQuantityIndex), 1m);
+            db.TaskDefinitionResourceLinks.Add(new TaskDefinitionResourceLink
             {
-                Task = task,
-                Resource = resource,
-                TaskId = task.Id,
-                ResourceId = resource.Id,
-                IsActive = true,
-            };
-            db.TaskResourceAssignments.Add(assignment);
-            assignmentsByKey[assignmentKey] = assignment;
+                TaskDefinitionId = task.Id,
+                ResourceDefinitionId = resource.Id,
+                Quantity = quantity > 0 ? quantity : 1m,
+            });
+            await db.SaveChangesAsync(ct);
+            existingLinkKeys.Add(linkKey);
             result.CreatedAssignments++;
         }
         else
@@ -390,32 +472,83 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             result.UpdatedAssignments++;
         }
 
-        assignment.ChangeFactor1 = factor;
-        assignment.ChangeFactor2 = 1m;
-        assignment.CapWaste = capWaste;
-        //assignment.BaseCost = unitCost;
-        assignment.Uncontrollable = resourceType == ResourceTypesEnum.Subcontractors;
-        assignment.Expressions = string.IsNullOrWhiteSpace(resource.Data.Note) ? [] : [resource.Data.Note];
-
-        if (folder is not null && !task.VisibleFolderIds.Contains(folder.Id))
-            task.VisibleFolderIds.Add(folder.Id);
-
-        await db.SaveChangesAsync(ct);
         return createdResource;
     }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // State group helpers
+    // ──────────────────────────────────────────────────────────────────────
+
+    private static async Task<TaskStateGroup> EnsureStateGroupAsync(
+        TaskResourceBlueprintsContext db,
+        string name,
+        Dictionary<string, TaskStateGroup> stateGroupsByName,
+        TaskResourceCsvImportResult result,
+        CancellationToken ct)
+    {
+        var key = NormalizeToken(name);
+        if (stateGroupsByName.TryGetValue(key, out var group))
+            return group;
+
+        var nextSort = stateGroupsByName.Count + 1;
+        group = new TaskStateGroup { Name = name.Trim(), SortOrder = nextSort, IsVisible = true };
+        db.TaskStateGroups.Add(group);
+        await db.SaveChangesAsync(ct);
+        stateGroupsByName[key] = group;
+        result.CreatedStateGroups++;
+        return group;
+    }
+
+    private static async Task<TaskState> EnsureStateAsync(
+        TaskResourceBlueprintsContext db,
+        string name,
+        TaskStateGroup group,
+        Dictionary<string, TaskState> statesByKey,
+        TaskResourceCsvImportResult result,
+        CancellationToken ct)
+    {
+        var key = StateKey(group.Id, name);
+        if (statesByKey.TryGetValue(key, out var state))
+            return state;
+
+        var nextSort = statesByKey.Values.Count(s => s.TaskStateGroupId == group.Id) + 1;
+        state = new TaskState
+        {
+            Name = name.Trim(),
+            TaskStateGroupId = group.Id,
+            SortOrder = nextSort,
+            IsVisible = true
+        };
+        db.TaskStates.Add(state);
+        await db.SaveChangesAsync(ct);
+        statesByKey[key] = state;
+        result.CreatedStates++;
+        return state;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Folder helpers
+    // ──────────────────────────────────────────────────────────────────────
 
     private static TaskDefinition? ResolveTask(
         IReadOnlyDictionary<string, TaskDefinition> taskByExternalId,
         IReadOnlyDictionary<string, TaskDefinition> taskByCode,
+        TaskDefinition? currentTask,
         string parentTaskId,
         string parentCode)
     {
         if (!string.IsNullOrWhiteSpace(parentTaskId) && taskByExternalId.TryGetValue(parentTaskId, out var byId))
             return byId;
 
+        if (currentTask is not null &&
+            (string.IsNullOrWhiteSpace(parentCode) ||
+             string.Equals(currentTask.Code?.Trim(), parentCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            return currentTask;
+        }
+
         if (!string.IsNullOrWhiteSpace(parentCode) && taskByCode.TryGetValue(parentCode, out var byCode))
             return byCode;
-
         return null;
     }
 
@@ -473,6 +606,10 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         return parent;
     }
 
+    // ──────────────────────────────────────────────────────────────────────
+    // Parsing helpers
+    // ──────────────────────────────────────────────────────────────────────
+
     private static void ApplyCapWaste(ResourceMetadata metadata, decimal value, string capWasteType)
     {
         var normalizedType = NormalizeToken(capWasteType);
@@ -484,7 +621,6 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             metadata.Cap = 0m;
             return;
         }
-
         metadata.Cap = value;
         metadata.Waste = 0m;
     }
@@ -493,29 +629,14 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     {
         var token = NormalizeToken(value);
 
-        if (token.Contains("material"))
-            return ResourceTypesEnum.Materials;
-
-        if (token.Contains("maskin") || token.Contains("machine") || token.Contains("equipment"))
-            return ResourceTypesEnum.MachinesAndEquipments;
-
-        if (token.Contains("arbet") || token.Contains("worker") || token.Contains("personal") || token.Contains("montor"))
-            return ResourceTypesEnum.Worker;
-
-        if (token is "ue" || token.Contains("underentrepren") || token.Contains("subcontract"))
-            return ResourceTypesEnum.Subcontractors;
-
-        if (token.Contains("manager") || token.Contains("ledning"))
-            return ResourceTypesEnum.Managers;
-
-        if (token.Contains("design") || token.Contains("projektering"))
-            return ResourceTypesEnum.Design;
-
-        if (token.Contains("risk"))
-            return ResourceTypesEnum.Risk;
-
-        if (token.Contains("overhead"))
-            return ResourceTypesEnum.ProjectOverheadCosts;
+        if (token.Contains("material")) return ResourceTypesEnum.Materials;
+        if (token.Contains("maskin") || token.Contains("machine") || token.Contains("equipment")) return ResourceTypesEnum.MachinesAndEquipments;
+        if (token.Contains("arbet") || token.Contains("worker") || token.Contains("personal") || token.Contains("montor")) return ResourceTypesEnum.Worker;
+        if (token is "ue" || token.Contains("underentrepren") || token.Contains("subcontract")) return ResourceTypesEnum.Subcontractors;
+        if (token.Contains("manager") || token.Contains("ledning")) return ResourceTypesEnum.Managers;
+        if (token.Contains("design") || token.Contains("projektering")) return ResourceTypesEnum.Design;
+        if (token.Contains("risk")) return ResourceTypesEnum.Risk;
+        if (token.Contains("overhead")) return ResourceTypesEnum.ProjectOverheadCosts;
 
         result.Issues.Add(new(rowNumber, $"Unknown resource type '{value}', imported as Adjustment."));
         return ResourceTypesEnum.Adjustment;
@@ -525,23 +646,27 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     {
         var aliases = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Radtyp"] = ["Radtyp", "RowType"],
-            ["TaskId"] = ["TaskId"],
-            ["ParentTaskId"] = ["ParentTaskId"],
-            ["ParentCode"] = ["ParentCode"],
-            ["Code"] = ["Code", "Kod"],
-            ["Name"] = ["Name", "Namn"],
-            ["Quantity"] = ["Mängd", "Mangd", "Quantity"],
-            ["Unit"] = ["Enhet", "Unit"],
-            ["Account"] = ["Konto", "Account"],
-            ["ResourceType"] = ["Resurs typ", "Resurstyp", "Resource type", "ResourceType"],
-            ["ResourceFolder"] = ["Resursmapp", "Resource folder", "ResourceFolder"],
-            ["CapWaste"] = ["Kapacitet/Spill", "Capacity/Waste"],
-            ["CapWasteType"] = ["Kapacitet/Spill typ", "Capacity/Waste type"],
-            ["QuantityFactor"] = ["Mängdpåverkande faktor", "Mangdpaverkande faktor", "Quantity factor"],
-            ["UnitCost"] = ["Enhetskostnad", "Unit cost"],
-            ["Category"] = ["Kategori", "Category"],
-            ["CalculationMethod"] = ["Beräkningssätt", "Berakningssatt", "Calculation method"]
+            ["Radtyp"]          = ["Radtyp", "RowType"],
+            ["TaskId"]          = ["TaskId"],
+            ["ParentTaskId"]    = ["ParentTaskId"],
+            ["ParentCode"]      = ["ParentCode"],
+            ["Code"]            = ["Code", "Kod"],
+            ["Name"]            = ["Name", "Namn"],
+            ["Quantity"]        = ["Mängd", "Mangd", "Quantity"],
+            ["Unit"]            = ["Enhet", "Unit"],
+            ["Property1"]       = ["Egenskap 1", "Egenskap1", "Property1"],
+            ["Value1"]          = ["Värde 1", "Varde 1", "Value1"],
+            ["Property2"]       = ["Egenskap 2", "Egenskap2", "Property2"],
+            ["Value2"]          = ["Värde 2", "Varde 2", "Value2"],
+            ["Account"]         = ["Konto", "Account"],
+            ["ResourceType"]    = ["Resurs typ", "Resurstyp", "Resource type", "ResourceType"],
+            ["ResourceFolder"]  = ["Resursmapp", "Resource folder", "ResourceFolder"],
+            ["CapWaste"]        = ["Kapacitet/Spill", "Capacity/Waste"],
+            ["CapWasteType"]    = ["Kapacitet/Spill typ", "Capacity/Waste type"],
+            ["QuantityFactor"]  = ["Mängdpåverkande faktor", "Mangdpaverkande faktor", "Quantity factor"],
+            ["UnitCost"]        = ["Enhetskostnad", "Unit cost"],
+            ["Category"]        = ["Kategori", "Category"],
+            ["CalculationMethod"] = ["Beräkningssätt", "Berakningssatt", "Calculation method"],
         };
 
         var normalizedHeader = header
@@ -585,7 +710,6 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
                 {
                     inQuotes = !inQuotes;
                 }
-
                 continue;
             }
 
@@ -607,10 +731,8 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     {
         if (map.TryGetValue(key, out var index) && index >= 0 && index < row.Count)
             return row[index].Trim();
-
         if (fallbackIndex is int fallback && fallback >= 0 && fallback < row.Count)
             return row[fallback].Trim();
-
         return string.Empty;
     }
 
@@ -641,21 +763,44 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     private static string BuildAdminNote(string? fileName, string? account, string? category, int rowNumber)
     {
         var parts = new List<string> { $"Imported from CSV row {rowNumber}." };
-        if (!string.IsNullOrWhiteSpace(fileName))
-            parts.Add($"File: {fileName.Trim()}.");
-        if (!string.IsNullOrWhiteSpace(account))
-            parts.Add($"Account: {account.Trim()}.");
-        if (!string.IsNullOrWhiteSpace(category))
-            parts.Add($"Category: {category.Trim()}.");
-
+        if (!string.IsNullOrWhiteSpace(fileName)) parts.Add($"File: {fileName.Trim()}.");
+        if (!string.IsNullOrWhiteSpace(account))  parts.Add($"Account: {account.Trim()}.");
+        if (!string.IsNullOrWhiteSpace(category)) parts.Add($"Category: {category.Trim()}.");
         return string.Join(" ", parts);
     }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Key helpers
+    // ──────────────────────────────────────────────────────────────────────
 
     private static string ResourceKey(string name, int? folderId, ResourceTypesEnum type)
         => $"{NormalizeToken(name)}|{folderId?.ToString(CultureInfo.InvariantCulture) ?? ""}|{(int)type}";
 
+    private static string TaskImportKey(
+        string? code,
+        string name,
+        IEnumerable<(string Property, string Value)> statePairs)
+    {
+        var identity = !string.IsNullOrWhiteSpace(code)
+            ? $"code:{NormalizeToken(code)}"
+            : $"name:{NormalizeToken(name)}";
+
+        var stateKeyParts = statePairs
+            .Where(x => !string.IsNullOrWhiteSpace(x.Property) && !string.IsNullOrWhiteSpace(x.Value))
+            .Select(x => $"{NormalizeToken(x.Property)}={NormalizeToken(x.Value)}")
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToList();
+
+        return stateKeyParts.Count == 0
+            ? identity
+            : $"{identity}|states:{string.Join("|", stateKeyParts)}";
+    }
+
     private static string AssignmentKey(int taskId, int resourceId)
         => $"{taskId}:{resourceId}";
+
+    private static string StateKey(int groupId, string stateName)
+        => $"{groupId}|{NormalizeToken(stateName)}";
 
     private static string BuildFolderPath(ResourceCategory folder, IReadOnlyDictionary<int, ResourceCategory> byId)
     {
@@ -668,12 +813,10 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
                 ? parent
                 : null;
         }
-
         return string.Join(" > ", names);
     }
 
-    private static int ParentSortKey(int? parentId)
-        => parentId ?? 0;
+    private static int ParentSortKey(int? parentId) => parentId ?? 0;
 
     private static string NormalizeHeader(string value)
         => NormalizeToken(value).Replace(" ", string.Empty, StringComparison.Ordinal);
