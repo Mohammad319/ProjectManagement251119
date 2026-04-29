@@ -11,7 +11,8 @@
       "Bash(xargs cat *)",
       "Bash(awk -F: '{print $1}')",
       "Bash(del *)",
-      "Bash(dotnet ef *)"
+      "Bash(dotnet ef *)",
+      "Bash(sqlcmd *)"
     ]
   }
 }

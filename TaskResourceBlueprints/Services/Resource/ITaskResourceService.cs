@@ -102,20 +102,31 @@ namespace TaskResourceBlueprints.Services.Resource
             var link = await db.TaskDefinitionResourceLinks.AsNoTracking()
                 .FirstOrDefaultAsync(l => l.TaskDefinitionId == taskId && l.ResourceDefinitionId == resourceId, ct);
 
-            var resType = await db.Resources.AsNoTracking()
+            var resource = await db.Resources.AsNoTracking()
                 .Where(r => r.Id == resourceId)
-                .Select(r => r.ResType)
+                .Select(r => new { r.ResType, r.Data.Unit })
                 .FirstOrDefaultAsync(ct);
 
+            if (resource is null)
+                return null;
+
             if (link is null)
-                return new TaskResourceDto { ResType = resType };
+                return new TaskResourceDto
+                {
+                    ResType = resource.ResType,
+                    Unit = resource.Unit,
+                };
 
             return new TaskResourceDto
             {
                 Quantity = link.Quantity,
                 IsFixed = link.IsFixed,
-                ResType = resType,
-                CapRole = []
+                ResType = resource.ResType,
+                CapRole = [],
+                Parameters = link.Parameters,
+                AddOns = link.AddOns,
+                Times = link.Times,
+                Unit = resource.Unit,
             };
         }
 
@@ -130,6 +141,9 @@ namespace TaskResourceBlueprints.Services.Resource
 
             link.Quantity = dto.Quantity;
             link.IsFixed = dto.IsFixed;
+            link.Parameters = dto.Parameters;
+            link.AddOns = dto.AddOns;
+            link.Times = dto.Times;
             await db.SaveChangesAsync(ct);
             return true;
         }

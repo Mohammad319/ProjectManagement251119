@@ -1,7 +1,6 @@
 @using TaskResourceBlueprints.Dto.ProjectTask
 @using TaskResourceBlueprints.Entities
 @using TaskResourceBlueprints.Entities.Lookups
-@using TaskResourceBlueprints.Entities.Resources
 @using TaskResourceBlueprints.Entities.Tasks
 @using TaskResourceBlueprints.Services.ProjectTask
 @using TaskResourceBlueprints.Services.StateGroups
@@ -93,15 +92,6 @@
                            @oninput="OnQuantityInput" />
                 </div>
 
-                <div class="space-y-1">
-                    <label class="@LabelClass">@CalcResource.priceProduction</label>
-                    <input type="text"
-                           inputmode="decimal"
-                           class="@InputClass"
-                           value="@PriceProductionText"
-                           @oninput="OnPriceProductionInput" />
-                </div>
-
 @*                 <div class="space-y-1">
                     <label class="@LabelClass">@CalcResource.changeFactor1</label>
                     <input type="text"
@@ -158,29 +148,6 @@
                     <label class="@LabelClass">Admin @CalcResource.note</label>
                     <InputTextArea @bind-Value="UpdateForm.AdminNote" class="@TextAreaClass" />
                 </div>
-            </div>
-        </section>
-
-        <section class="@PanelClass">
-            <div class="@PanelHeaderClass">
-                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Visible folders</h3>
-                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Select the catalog folders where this task definition should appear.</p>
-            </div>
-
-            <div class="flex flex-wrap gap-2 px-3 py-2">
-                @if (Folders != null)
-                {
-                    foreach (var folder in Folders)
-                    {
-                        <label class="@FolderChipClass">
-                            <input type="checkbox"
-                                   @onchange="() => ToggleFolder(folder.Id)"
-                                   class="@CheckboxClass"
-                                   checked="@(UpdateForm.VisibleFolderIds.Any(x => x == folder.Id))" />
-                            <span class="leading-5">@folder.DisplayName</span>
-                        </label>
-                    }
-                }
             </div>
         </section>
 
@@ -321,10 +288,6 @@
         "flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-sm transition " +
         "hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-800/80";
 
-    private const string FolderChipClass =
-        "inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 shadow-sm transition " +
-        "hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-800/80";
-
     private const string CheckboxClass =
         "h-4 w-4 shrink-0 rounded border-slate-300 bg-white text-sky-600 accent-sky-500 focus:ring-2 focus:ring-sky-500/30 " +
         "dark:border-slate-600 dark:bg-slate-950 dark:[color-scheme:dark]";
@@ -353,11 +316,8 @@
     private TaskDefinitionEditDto UpdateForm { get; set; } = new();
 
     private List<TaskUnitGroup> Groups = new();
-    private List<ResourceCategory> Folders = new();
     private List<TaskResourceBlueprints.Entities.Lookups.TaskStateGroup> StateGroups = new();
     private string QuantityText { get; set; } = string.Empty;
-    private string PriceProductionText { get; set; } = string.Empty;
-    private string ChangeFactor1Text { get; set; } = "1";
     private string ChangeFactor2Text { get; set; } = "1";
     private string? FormErrorMessage { get; set; }
 
@@ -366,11 +326,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var (unitGroups, folders) =
+        var (unitGroups, _) =
             await TaskService.GetLookupsAsync(CancellationToken.None);
 
         Groups = unitGroups.ToList();
-        Folders = folders.ToList();
         StateGroups = await StateGroupService.GetGroupsWithStatesAsync();
         if (TaskId is > 0)
             UpdateForm = await TaskQueries.GetForEditAsync(TaskId.Value, CancellationToken.None);
@@ -387,19 +346,9 @@
             UpdateForm.SelectedStateIds.Add(stateId);
     }
 
-    private void ToggleFolder(int folderId)
-    {
-        if (UpdateForm.VisibleFolderIds.Contains(folderId))
-            UpdateForm.VisibleFolderIds.Remove(folderId);
-        else
-            UpdateForm.VisibleFolderIds.Add(folderId);
-    }
-
     private async Task HandleSubmit()
     {
         if (!TryParseNullableDecimalInput(QuantityText, out var quantity) ||
-            !TryParseNullableDecimalInput(PriceProductionText, out var priceProduction) ||
-            !TryParseDecimalInput(ChangeFactor1Text, out var factor1) ||
             !TryParseDecimalInput(ChangeFactor2Text, out var factor2))
         {
             FormErrorMessage = "Quantity, Price production, Change Factor1 and Change Factor2 must be valid numbers.";
@@ -408,8 +357,6 @@
 
         FormErrorMessage = null;
         UpdateForm.Quantity = quantity;
-        UpdateForm.PriceProduction = priceProduction;
-        UpdateForm.ChangeFactor1 = factor1;
         UpdateForm.ChangeFactor2 = factor2;
 
         if (UpdateForm.Id > 0)
@@ -426,15 +373,6 @@
         MHD.Modal.Close();
     }
 
-    private void OnChangeFactor1Input(ChangeEventArgs e)
-    {
-        ChangeFactor1Text = e.Value?.ToString() ?? string.Empty;
-        if (TryParseDecimalInput(ChangeFactor1Text, out var value))
-        {
-            UpdateForm.ChangeFactor1 = value;
-            FormErrorMessage = null;
-        }
-    }
 
     private void OnQuantityInput(ChangeEventArgs e)
     {
@@ -442,16 +380,6 @@
         if (TryParseNullableDecimalInput(QuantityText, out var value))
         {
             UpdateForm.Quantity = value;
-            FormErrorMessage = null;
-        }
-    }
-
-    private void OnPriceProductionInput(ChangeEventArgs e)
-    {
-        PriceProductionText = e.Value?.ToString() ?? string.Empty;
-        if (TryParseNullableDecimalInput(PriceProductionText, out var value))
-        {
-            UpdateForm.PriceProduction = value;
             FormErrorMessage = null;
         }
     }
@@ -469,8 +397,6 @@
     private void SyncNumericInputs()
     {
         QuantityText = FormatNullableDecimal(UpdateForm.Quantity);
-        PriceProductionText = FormatNullableDecimal(UpdateForm.PriceProduction);
-        ChangeFactor1Text = FormatDecimal(UpdateForm.ChangeFactor1);
         ChangeFactor2Text = FormatDecimal(UpdateForm.ChangeFactor2);
     }
 

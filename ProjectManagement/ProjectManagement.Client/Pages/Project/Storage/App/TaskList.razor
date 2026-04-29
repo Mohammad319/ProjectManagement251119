@@ -62,13 +62,52 @@ else if (_tasks != null)
         var matched = MatchTask(group, selectedStates);
 
         <div class="mb-2" @key="group.Key">
-            @if (stateGroups.Count > 0)
+            @if (stateGroups.Count > 0 && matched is not null)
             {
-                <div class="inline-flex flex-wrap items-center gap-2 mb-1 align-top">
-                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">@group.DisplayName</span>
+                <TaskCard @key="matched.Id" Task="matched" ToAdded="TaskToAdd" Config="Config"
+                          Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
+                          CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name"
+                          ShowTaskName="false" InlineHeader="true">
+                    <HeaderContent>
+                        <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
+                        @if (!string.IsNullOrEmpty(group.Code))
+                        {
+                            <span class="text-xs text-slate-500 whitespace-nowrap">[@group.Code]</span>
+                        }
+                        @foreach (var sg in stateGroups)
+                        {
+                            var groupId = sg.Key;
+                            var groupName = sg.Value;
+                            var stateOptions = group.Tasks
+                                .SelectMany(t => t.StateLinks)
+                                .Where(sl => sl.GroupId == groupId)
+                                .Select(sl => new { sl.StateId, sl.StateName })
+                                .DistinctBy(x => x.StateId)
+                                .OrderBy(x => x.StateName)
+                                .ToList();
+                            <div class="flex items-center gap-1 shrink-0">
+                                <span class="text-xs text-slate-500 whitespace-nowrap">@groupName:</span>
+                                <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+                                        value="@(selectedStates.TryGetValue(groupId, out var sv) ? sv.ToString() : string.Empty)"
+                                        @onchange="e => OnStateChanged(group.Key, groupId, e)">
+                                    <option value="">--</option>
+                                    @foreach (var opt in stateOptions)
+                                    {
+                                        <option value="@opt.StateId">@opt.StateName</option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </HeaderContent>
+                </TaskCard>
+            }
+            else if (stateGroups.Count > 0)
+            {
+                <div class="inline-flex flex-nowrap items-center gap-2 mb-1 min-w-0 overflow-x-auto align-top">
+                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
                     @if (!string.IsNullOrEmpty(group.Code))
                     {
-                        <span class="text-xs text-slate-500">[@group.Code]</span>
+                        <span class="text-xs text-slate-500 whitespace-nowrap">[@group.Code]</span>
                     }
                     @foreach (var sg in stateGroups)
                     {
@@ -81,8 +120,8 @@ else if (_tasks != null)
                             .DistinctBy(x => x.StateId)
                             .OrderBy(x => x.StateName)
                             .ToList();
-                        <div class="flex items-center gap-1">
-                            <span class="text-xs text-slate-500">@groupName:</span>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <span class="text-xs text-slate-500 whitespace-nowrap">@groupName:</span>
                             <select class="h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                                     value="@(selectedStates.TryGetValue(groupId, out var sv) ? sv.ToString() : string.Empty)"
                                     @onchange="e => OnStateChanged(group.Key, groupId, e)">
@@ -94,19 +133,8 @@ else if (_tasks != null)
                             </select>
                         </div>
                     }
-                    @if (matched is null && stateGroups.Count > 0)
-                    {
-                        <span class="text-xs text-amber-600 dark:text-amber-400">Select a combination to load task</span>
-                    }
+                    <span class="text-xs text-amber-600 dark:text-amber-400 whitespace-nowrap">Select a combination to load task</span>
                 </div>
-            }
-
-            @if (matched is not null)
-            {
-                <TaskCard @key="matched.Id" Task="matched" ToAdded="TaskToAdd" Config="Config"
-                          Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
-                          CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name"
-                          ShowTaskName="false" InlineHeader="true" />
             }
             else if (stateGroups.Count == 0 && group.Tasks.Count > 0)
             {
@@ -266,14 +294,21 @@ else if (_tasks != null)
         _loading = true;
         try
         {
-            filterDto.Skip = 0;
-            filterDto.Take = PageSize;
-            var result = await TaskService.GetTasksForUserDtoAsync(filterDto);
-            _tasks = result;
-            _hasMore = result.Count == PageSize;
+            _tasks = [];
             _selectedStates = [];
-            ApplyCostAdjustments(result);
-            BuildTaskGroups(result);
+            List<ProjectTaskDto> batch;
+            do
+            {
+                filterDto.Skip = _tasks.Count;
+                filterDto.Take = PageSize;
+                batch = await TaskService.GetTasksForUserDtoAsync(filterDto);
+                ApplyCostAdjustments(batch);
+                _tasks.AddRange(batch);
+                BuildTaskGroups(_tasks);
+            }
+            while (_taskGroups.Count < PageSize && batch.Count == PageSize);
+
+            _hasMore = batch.Count == PageSize;
         }
         catch (Exception ex)
         {
@@ -294,13 +329,20 @@ else if (_tasks != null)
         _loadingMore = true;
         try
         {
-            filterDto.Skip = _tasks.Count;
-            filterDto.Take = PageSize;
-            var result = await TaskService.GetTasksForUserDtoAsync(filterDto);
-            ApplyCostAdjustments(result);
-            _tasks.AddRange(result);
-            _hasMore = result.Count == PageSize;
-            BuildTaskGroups(_tasks);
+            var groupsBefore = _taskGroups.Count;
+            List<ProjectTaskDto> batch;
+            do
+            {
+                filterDto.Skip = _tasks.Count;
+                filterDto.Take = PageSize;
+                batch = await TaskService.GetTasksForUserDtoAsync(filterDto);
+                ApplyCostAdjustments(batch);
+                _tasks.AddRange(batch);
+                BuildTaskGroups(_tasks);
+            }
+            while (_taskGroups.Count < groupsBefore + PageSize && batch.Count == PageSize);
+
+            _hasMore = batch.Count == PageSize;
         }
         catch (Exception ex)
         {

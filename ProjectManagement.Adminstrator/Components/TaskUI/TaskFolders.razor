@@ -1,9 +1,66 @@
 ﻿@using TaskResourceBlueprints.Dto.ProjectTask
 @using TaskResourceBlueprints.Dto.Resource
 @using TaskResourceBlueprints.Services.Resource
+@using TaskResourceBlueprints.Services.ProjectTask
 @inject ITaskResourceService FoldersService
 @inject IResourceCategoryService ResourceCategoryService
+@inject ITaskDefinitionService TaskDefinitionService
 <div class="space-y-2 text-slate-900 dark:text-slate-100">
+
+    <!-- Visible Folders Panel -->
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white/95 shadow-sm dark:border-slate-700/80 dark:bg-slate-950">
+        <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2 dark:border-slate-800/80">
+            <div>
+                <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Visible folders</h3>
+                <p class="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Select the catalog folders where this task definition should appear.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                @if (_visibleFoldersDirty)
+                {
+                    <button type="button"
+                            class="inline-flex items-center justify-center rounded-lg border border-emerald-600 px-3 py-1.5 text-xs font-medium text-emerald-600 transition hover:bg-emerald-600 hover:text-white dark:border-emerald-400 dark:text-emerald-400 dark:hover:bg-emerald-400 dark:hover:text-white"
+                            @onclick="SaveVisibleFoldersAsync">
+                        Save
+                    </button>
+                }
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                        @onclick="() => _foldersExpanded = !_foldersExpanded">
+                    @(_foldersExpanded ? "▲ Hide" : "▼ Show")
+                </button>
+            </div>
+        </div>
+
+        @if (_foldersExpanded)
+        {
+            @if (_allFolders is null)
+            {
+                <div class="px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">Loading…</div>
+            }
+            else if (_allFolders.Count == 0)
+            {
+                <div class="px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">No folders available.</div>
+            }
+            else
+            {
+                <div class="px-3 py-3">
+                    <div class="grid grid-cols-2 gap-1.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        @foreach (var folder in _allFolders)
+                        {
+                            var isChecked = _visibleFolderIds.Contains(folder.Id);
+                            <label class="@($"inline-flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition {(isChecked ? "border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-200" : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800")}")">
+                                <input type="checkbox"
+                                       checked="@isChecked"
+                                       @onchange="() => ToggleVisibleFolder(folder.Id)"
+                                       class="h-3.5 w-3.5 shrink-0 rounded border-slate-300 accent-sky-500 dark:border-slate-600" />
+                                <span class="leading-5 truncate">@folder.DisplayName</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
     <div class="grid grid-cols-1 gap-2 xl:grid-cols-[220px_minmax(0,1fr)]">
         <aside class="rounded-xl border border-slate-200 bg-slate-50/80 p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
             <div class="mb-2">
@@ -135,12 +192,41 @@
     private string? SelectedFolderName;
     private int? SelectedFolderId;
 
+    // Visible folders panel
+    private bool _foldersExpanded = false;
+    private bool _visibleFoldersDirty = false;
+    private List<TaskResourceBlueprints.Entities.Resources.ResourceCategory>? _allFolders;
+    private List<int> _visibleFolderIds = [];
+
     private static string FormatNumber(decimal? value)
         => NumericDisplayHelper.Format(value);
 
     protected override async Task OnInitializedAsync()
     {
+        var allFoldersTask = ResourceCategoryService.GetAllAsync();
+        var visibleFoldersTask = ResourceCategoryService.GetVisibleFoldersAsync(TaskId);
+
+        await Task.WhenAll(allFoldersTask, visibleFoldersTask);
+
+        _allFolders = await allFoldersTask;
+        Folders = (await visibleFoldersTask).ToList();
+        _visibleFolderIds = Folders.Select(f => f.Id).ToList();
+    }
+
+    private void ToggleVisibleFolder(int folderId)
+    {
+        if (_visibleFolderIds.Contains(folderId))
+            _visibleFolderIds.Remove(folderId);
+        else
+            _visibleFolderIds.Add(folderId);
+        _visibleFoldersDirty = true;
+    }
+
+    private async Task SaveVisibleFoldersAsync()
+    {
+        await TaskDefinitionService.UpdateVisibleFoldersAsync(TaskId, _visibleFolderIds);
         Folders = (await ResourceCategoryService.GetVisibleFoldersAsync(TaskId)).ToList();
+        _visibleFoldersDirty = false;
     }
 
     private async Task LoadResourcesAsync(int folderId, string folderName)

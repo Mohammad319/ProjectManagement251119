@@ -12,16 +12,4 @@ public static class NumericDisplayHelper
 
     public static string Format(decimal? value, CultureInfo? culture = null)
         => value.HasValue ? Format(value.Value, culture) : string.Empty;
-
-    public static string Format(double value, CultureInfo? culture = null)
-        => value.ToString(FloatingPointFormat, culture ?? CultureInfo.CurrentCulture);
-
-    public static string Format(double? value, CultureInfo? culture = null)
-        => value.HasValue ? Format(value.Value, culture) : string.Empty;
-
-    public static string Format(float value, CultureInfo? culture = null)
-        => value.ToString(FloatingPointFormat, culture ?? CultureInfo.CurrentCulture);
-
-    public static string Format(float? value, CultureInfo? culture = null)
-        => value.HasValue ? Format(value.Value, culture) : string.Empty;
 }

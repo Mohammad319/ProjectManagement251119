@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ProjectManagement.Shared.Base.Calculation;
 using TaskResourceBlueprints.Entities.Tasks;
+using TaskResourceBlueprints.Infrastructure.Extensions;
 
 namespace TaskResourceBlueprints.Infrastructure.Configurations.Tasks;
 
@@ -12,6 +14,10 @@ public class TaskDefinitionResourceLinkConfiguration : IEntityTypeConfiguration<
             .HasColumnName("ResourceId");
 
         b.Property(x => x.Quantity).HasPrecision(18, 6);
+
+        b.Property(x => x.Parameters).HasJsonListComparer<ResourceParameter>();
+        b.Property(x => x.AddOns).HasJsonListComparer<ResourceAddon>();
+        b.Property(x => x.Times).HasJsonListComparer<ResourceTime>();
 
         b.HasIndex(x => new { x.TaskDefinitionId, x.ResourceDefinitionId }).IsUnique();
 

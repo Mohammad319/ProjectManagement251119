@@ -1,3 +1,4 @@
+using ProjectManagement.Shared.Base.Calculation;
 using TaskResourceBlueprints.Entities.Lookups;
 using ProjectManagement.Shared.Helper.ProjectAppStorage;
 using ProjectManagement.Shared.Helper.Text;
@@ -54,6 +55,8 @@ namespace TaskResourceBlueprints.Entities.Tasks
         public string? NewUnitCode { get; set; }
 
         public TaskUnitGroup? TaskUnitGroup { get; set; }
+
+        public List<TaskConversionParameter> ConversionParameters { get; set; } = [];
 
         public List<TaskDefinitionStateLink> StateLinks { get; set; } = [];
         public List<TaskDefinitionResourceLink> ResourceLinks { get; set; } = [];

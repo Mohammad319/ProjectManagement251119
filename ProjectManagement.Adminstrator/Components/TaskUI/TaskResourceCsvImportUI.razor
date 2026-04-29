@@ -7,7 +7,7 @@
         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <h2 class="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Import tasks and resources</h2>
-                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Upload a semicolon separated CSV file. Task rows use Radtyp T, resource rows use Radtyp R, and Resursmapp paths are created automatically.</p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Upload a semicolon separated CSV file. Task rows use Radtyp T, resource rows use Radtyp R, parameter rows use Radtyp P (Typ 0–3), and Resursmapp paths are created automatically.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <label class="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-200">
@@ -84,6 +84,10 @@
                 @SummaryCard("State Groups", $"{result.CreatedStateGroups} created")
                 @SummaryCard("States", $"{result.CreatedStates} created")
                 @SummaryCard("State Links", $"{result.CreatedStateLinks} created")
+                @SummaryCard("Typ 0 – TaskUnit", $"{result.CreatedTaskConversionParams} created")
+                @SummaryCard("Typ 1 – Parameters", $"{result.CreatedResourceParameters} created")
+                @SummaryCard("Typ 2 – AddOns", $"{result.CreatedResourceAddOns} created")
+                @SummaryCard("Typ 3 – Times", $"{result.CreatedResourceTimes} created")
                 @SummaryCard("Issues", result.Issues.Count.ToString())
             </div>
         </section>

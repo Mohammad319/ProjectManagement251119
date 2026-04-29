@@ -4,11 +4,15 @@
 @using System.Linq.Expressions
 @inherits AppComponentBase
 
-<div class="flex flex-wrap items-end gap-1 md:gap-1.5 text-[11px]"
+@{
+    var unitOptions = GetUnitOptions();
+}
+
+<div class="flex min-w-0 flex-wrap items-end gap-1 text-[11px]"
      @key="@($"{Task.Id}:{Task.NewUnitCode ?? "-"}")">
 
     <!-- Quantity -->
-    <div class="flex flex-col gap-0.5 w-[90px]">
+    <div class="flex flex-col gap-0.5 w-[52px] shrink-0">
         <input type="text"
                id="@($"quantity-{Task.Id}")"
                inputmode="decimal"
@@ -16,23 +20,21 @@
                value="@GetTaskQuantityInputValue()"
                @oninput="OnTaskQuantityInputChanged"
                @onblur="OnTaskQuantityBlur"
-               class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+               class="h-[24px] w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
     </div>
 
     <!-- Unit -->
-    @if (Task.UnitGroupId.HasValue)
+    @if (unitOptions.Count > 0)
     {
-        <div class="flex flex-col gap-0.5 w-[110px]">
-            <label for="@($"unit-{Task.Id}")"
-                   class="text-[10px] text-gray-700 dark:text-gray-300">
-                @CalcResource.unit
-            </label>
+        <div class="flex flex-col gap-0.5 w-[68px] shrink-0">
             <select id="@($"unit-{Task.Id}")"
-                    class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    aria-label="@CalcResource.unit"
+                    title="@CalcResource.unit"
+                    class="h-[24px] w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     value="@Task.NewUnitCode"
                     @onchange="OnUnitChanged">
                 <option value=""> --- </option>
-                @foreach (var to in Task.UnitGroup.Keys.Distinct(StringComparer.OrdinalIgnoreCase))
+                @foreach (var to in unitOptions)
                 {
                     <option value="@to">@to</option>
                 }
@@ -52,19 +54,19 @@
     <!-- Dimensions -->
     @foreach (var inp in inputs)
     {
-        var maxVal = Task.WorkloadThresholds[inp.Index];
+        var maxVal = GetWorkloadThreshold(inp.Index);
         var show = (maxVal > 0) || Needs(Task, inp.Name);
 
         if (show)
         {
-            <div class="flex flex-col gap-0.5 w-[120px]">
+            <div class="flex flex-col gap-0.5 w-[58px] shrink-0">
                 <input type="text"
                        inputmode="decimal"
                        placeholder="@inp.Label"
                        value="@GetParameterInputValue(inp.Name)"
                        @oninput="e => OnParamInputChanged(inp.Name, e)"
                        @onblur="() => OnParamBlur(inp.Name)"
-                       class="w-full border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                       class="h-[24px] w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0 text-[11px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
                        @attributes="@((maxVal > 0 ? new Dictionary<string, object> { { "max", maxVal } } : null))" />
             </div>
         }
@@ -73,7 +75,7 @@
     <!-- Apply button -->
     @if (ShouldShowApply(Task))
     {
-        <button class="px-2 py-1 border border-blue-600 text-blue-600 rounded transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white px-1 py-0.5 text-sm mt-2 text-[11px] h-[26px] px-2"
+        <button class="h-[24px] shrink-0 rounded border border-blue-600 px-1.5 py-0 text-[11px] text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
                 @onclick="() => OnApply.InvokeAsync()">
             @ResourceApp.Button_Apply
         </button>
@@ -105,6 +107,17 @@
         if (OnChanged.HasDelegate)
             OnChanged.InvokeAsync();
     }
+
+    private List<string> GetUnitOptions()
+        => (Task.UnitGroup?.Keys ?? [])
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    private decimal GetWorkloadThreshold(int index)
+        => Task.WorkloadThresholds is not null && Task.WorkloadThresholds.Count > index
+            ? Task.WorkloadThresholds[index]
+            : 0m;
 
     // ========== تحديث بارامتر ==========
     private decimal? ReadParameterValue(ParamName name)

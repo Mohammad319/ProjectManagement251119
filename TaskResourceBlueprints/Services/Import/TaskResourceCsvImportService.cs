@@ -25,6 +25,7 @@ public sealed class TaskResourceCsvImportResult
     public int TotalRows { get; set; }
     public int TaskRows { get; set; }
     public int ResourceRows { get; set; }
+    public int ParameterRows { get; set; }
     public int CreatedTasks { get; set; }
     public int UpdatedTasks { get; set; }
     public int CreatedResources { get; set; }
@@ -35,6 +36,10 @@ public sealed class TaskResourceCsvImportResult
     public int CreatedStateGroups { get; set; }
     public int CreatedStates { get; set; }
     public int CreatedStateLinks { get; set; }
+    public int CreatedTaskConversionParams { get; set; }
+    public int CreatedResourceParameters { get; set; }
+    public int CreatedResourceAddOns { get; set; }
+    public int CreatedResourceTimes { get; set; }
     public bool DeletedExistingData { get; set; }
     public int SkippedRows { get; set; }
     public List<TaskResourceCsvImportIssue> Issues { get; set; } = [];
@@ -79,6 +84,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         var taskByExternalId = new Dictionary<string, TaskDefinition>(StringComparer.OrdinalIgnoreCase);
         var taskByCode = new Dictionary<string, TaskDefinition>(StringComparer.OrdinalIgnoreCase);
         var taskByImportKey = new Dictionary<string, TaskDefinition>(StringComparer.OrdinalIgnoreCase);
+        var linksByRowId = new Dictionary<string, TaskDefinitionResourceLink>(StringComparer.OrdinalIgnoreCase);
         var foldersByPath = await LoadFoldersAsync(db, ct);
         var resourcesByKey = await LoadResourcesAsync(db, ct);
         var existingLinkKeys = await LoadExistingLinkKeysAsync(db, ct);
@@ -121,7 +127,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
                 else if (rowType.Equals("R", StringComparison.OrdinalIgnoreCase))
                 {
                     result.ResourceRows++;
-                    var created = await UpsertResourceAssignmentAsync(
+                    var (created, rowId, link) = await UpsertResourceAssignmentAsync(
                         db, row, map, rowNumber, result,
                         taskByExternalId, taskByCode, currentTask,
                         foldersByPath, resourcesByKey, existingLinkKeys,
@@ -130,6 +136,16 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
                     if (!created)
                         nextResourceSortOrder--;
+
+                    if (!string.IsNullOrWhiteSpace(rowId))
+                        linksByRowId[rowId] = link;
+                }
+                else if (rowType.Equals("P", StringComparison.OrdinalIgnoreCase))
+                {
+                    result.ParameterRows++;
+                    await ApplyParameterRowAsync(
+                        db, row, map, rowNumber, result,
+                        taskByExternalId, currentTask, linksByRowId, ct);
                 }
                 else
                 {
@@ -311,6 +327,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
         task.AdminNote = BuildAdminNote(fileName, account: null, category: Get(row, map, "Category"), rowNumber);
         task.ChangeFactor1 = 1m;
         task.ChangeFactor2 = 1m;
+        task.ConversionParameters = [];
         task.RefreshNormalizedTextSv();
 
         if (!string.IsNullOrWhiteSpace(externalId))
@@ -365,7 +382,7 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
     // Upsert resource assignment
     // ──────────────────────────────────────────────────────────────────────
 
-    private static async Task<bool> UpsertResourceAssignmentAsync(
+    private static async Task<(bool Created, string RowId, TaskDefinitionResourceLink Link)> UpsertResourceAssignmentAsync(
         TaskResourceBlueprintsContext db,
         IReadOnlyList<string> row,
         IReadOnlyDictionary<string, int> map,
@@ -453,26 +470,139 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
 
         await db.SaveChangesAsync(ct);
 
+        TaskDefinitionResourceLink resourceLink;
         var linkKey = AssignmentKey(task.Id, resource.Id);
         if (!existingLinkKeys.Contains(linkKey))
         {
             var quantity = ParseDecimalOrDefault(Get(row, map, "Quantity", fallbackIndex: FallbackQuantityIndex), 1m);
-            db.TaskDefinitionResourceLinks.Add(new TaskDefinitionResourceLink
+            resourceLink = new TaskDefinitionResourceLink
             {
                 TaskDefinitionId = task.Id,
                 ResourceDefinitionId = resource.Id,
                 Quantity = quantity > 0 ? quantity : 1m,
-            });
+                Parameters = [],
+                AddOns = [],
+                Times = [],
+            };
+            db.TaskDefinitionResourceLinks.Add(resourceLink);
             await db.SaveChangesAsync(ct);
             existingLinkKeys.Add(linkKey);
             result.CreatedAssignments++;
         }
         else
         {
+            resourceLink = await db.TaskDefinitionResourceLinks
+                .FirstAsync(l => l.TaskDefinitionId == task.Id && l.ResourceDefinitionId == resource.Id, ct);
+            resourceLink.Parameters = [];
+            resourceLink.AddOns = [];
+            resourceLink.Times = [];
+            await db.SaveChangesAsync(ct);
             result.UpdatedAssignments++;
         }
 
-        return createdResource;
+        var resourceRowId = Get(row, map, "TaskId").Trim();
+        return (createdResource, resourceRowId, resourceLink);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Parameter row handler
+    // ──────────────────────────────────────────────────────────────────────
+
+    private static async Task ApplyParameterRowAsync(
+        TaskResourceBlueprintsContext db,
+        IReadOnlyList<string> row,
+        IReadOnlyDictionary<string, int> map,
+        int rowNumber,
+        TaskResourceCsvImportResult result,
+        Dictionary<string, TaskDefinition> taskByExternalId,
+        TaskDefinition? currentTask,
+        Dictionary<string, TaskDefinitionResourceLink> linksByRowId,
+        CancellationToken ct)
+    {
+        var paramType = Get(row, map, "Parametertyp").Trim();
+        var name = Get(row, map, "Name", fallbackIndex: FallbackNameIndex).Trim();
+        var unit = Get(row, map, "Unit", fallbackIndex: FallbackUnitIndex).Trim();
+        var valueStr = Get(row, map, "Parametervärde").Trim();
+        var value = ParseNullableDecimal(valueStr) ?? 0m;
+
+        if (paramType.StartsWith("Typ 0", StringComparison.OrdinalIgnoreCase))
+        {
+            var parentTaskId = Get(row, map, "ParentTaskId").Trim();
+            TaskDefinition? task = null;
+            if (!string.IsNullOrWhiteSpace(parentTaskId))
+                taskByExternalId.TryGetValue(parentTaskId, out task);
+            task ??= currentTask;
+
+            if (task is null)
+            {
+                result.Issues.Add(new(rowNumber, $"Typ 0 parameter '{name}': parent task not found."));
+                return;
+            }
+
+            task.ConversionParameters.Add(new TaskConversionParameter
+            {
+                Name = name,
+                Unit = unit,
+                Value = value,
+            });
+
+            var product = 1m;
+            foreach (var p in task.ConversionParameters)
+                product *= p.Value;
+            task.ChangeFactor2 = Math.Round(product, 4, MidpointRounding.AwayFromZero);
+
+            await db.SaveChangesAsync(ct);
+            result.CreatedTaskConversionParams++;
+            return;
+        }
+
+        var resursradId = Get(row, map, "ResursradId").Trim();
+        if (string.IsNullOrWhiteSpace(resursradId) || !linksByRowId.TryGetValue(resursradId, out var link))
+        {
+            result.Issues.Add(new(rowNumber, $"Parameter row '{name}': resource row '{resursradId}' not found."));
+            return;
+        }
+
+        if (paramType.StartsWith("Typ 1", StringComparison.OrdinalIgnoreCase))
+        {
+            link.Parameters.Add(new ResourceParameter
+            {
+                Name = name,
+                Unit = unit,
+                Value = value,
+            });
+            await db.SaveChangesAsync(ct);
+            result.CreatedResourceParameters++;
+        }
+        else if (paramType.StartsWith("Typ 2", StringComparison.OrdinalIgnoreCase))
+        {
+            link.AddOns.Add(new ResourceAddon
+            {
+                Name = name,
+                Unit = unit,
+                Cost = value,
+                Factor = 1m,
+                Type = QuantityResourceAddon.Multiplication,
+            });
+            await db.SaveChangesAsync(ct);
+            result.CreatedResourceAddOns++;
+        }
+        else if (paramType.StartsWith("Typ 3", StringComparison.OrdinalIgnoreCase))
+        {
+            var quantity = ParseNullableDecimal(Get(row, map, "Quantity", fallbackIndex: FallbackQuantityIndex)) ?? 0m;
+            link.Times.Add(new ResourceTime
+            {
+                Name = name,
+                Unit = unit,
+                Cost = value,
+            }.SetResolvedQuantity(quantity));
+            await db.SaveChangesAsync(ct);
+            result.CreatedResourceTimes++;
+        }
+        else
+        {
+            result.Issues.Add(new(rowNumber, $"Unknown Parametertyp '{paramType}'."));
+        }
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -667,6 +797,9 @@ public sealed class TaskResourceCsvImportService(IDbContextFactory<TaskResourceB
             ["UnitCost"]        = ["Enhetskostnad", "Unit cost"],
             ["Category"]        = ["Kategori", "Category"],
             ["CalculationMethod"] = ["Beräkningssätt", "Berakningssatt", "Calculation method"],
+            ["ResursradId"]     = ["ResursradId", "ResourceRowId"],
+            ["Parametertyp"]    = ["Parametertyp", "ParameterType"],
+            ["Parametervärde"]  = ["Parametervärde", "Parametervarde", "ParameterValue"],
         };
 
         var normalizedHeader = header

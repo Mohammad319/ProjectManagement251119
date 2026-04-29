@@ -5,14 +5,19 @@
 @using ProjectManagement.Shared.DTO.ProjectAppStorage.Service
 @using ProjectManagement.Shared.Enums
 @using ProjectManagement.Shared.Helper.ProjectAppStorage
+@using System.Globalization
 @inject ITasksUserComputationServiceWasm Compute
 @inject IStorageRepository TaskService
 @inherits AppComponentBase
 @inject AppState AppState
 
-<div class="@(InlineHeader ? "inline-block align-top" : "mb-2")">
-    <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+<div class="@(InlineHeader ? "w-full min-w-0" : "mb-2")">
+    <div class="flex flex-wrap items-start gap-x-2 gap-y-1.5 mb-2 min-w-0">
         <div class="flex items-center gap-0.5 flex-shrink-0">
+            <button @onclick="OnClick"
+                    class="@ToggleClass">
+                @(Task.Added ? "−" : "+")
+            </button>
             <button @onclick="CollspanTask"
                     class="shrink-0 text-slate-500 dark:text-slate-400 group-hover:text-slate-600 transition-transform duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -21,10 +26,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
-            <button @onclick="OnClick"
-                    class="@ToggleClass">
-                @(Task.Added ? "−" : "+")
-            </button>
             @if (Task.Uncontrollable)
             {
                 <button @onclick="ToggleResources"
@@ -32,15 +33,24 @@
                     @(_showResources ? ResourceApp.hiddenItems : ResourceApp.visibleItems)
                 </button>
             }
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
-                @if (ShowTaskName)
-                {
+        </div>
+
+        <div class="flex min-w-[260px] flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
+            @if (HeaderContent is not null)
+            {
+                @HeaderContent
+            }
+            else if (ShowTaskName)
+            {
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
                     @Task.DisplayName
-                    <text> </text>
-                }
+                </span>
+            }
+
+            <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
                 @FormatNumber(Task.TotalCost)<span class="opacity-70">/ Unit: @Task.UnitCode</span>
-            </h3>
-            <div class="w-[140px]">
+            </span>
+            <div class="w-[175px] shrink-0">
                 <select @bind="Task.StatusId" class="w-full h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
                     <option></option>
                     @if (Statuses != null)
@@ -52,30 +62,30 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap justify-end text-[12px]">
-            @if (Task.Collspanded)
-            {
-                <div class="flex items-center gap-2">
-                    <DimensionInputs Task="Task"
-                                     MaxFractionDigits="MaxFractionDigits"
-                                     OnChanged="OnAnswersChanged"
-                                     OnApply="Apply" />
-                    @if (!string.IsNullOrEmpty(_computeError))
-                    {
-                        <div class="inline-flex items-center rounded px-2 py-[2px] text-[11px] bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                            @_computeError
-                        </div>
-                    }
+        @if (ShouldShowDimensionInputs())
+        {
+            <div class="flex min-w-[min(100%,360px)] flex-1 flex-wrap items-end gap-2 text-[12px]">
+                <DimensionInputs Task="Task"
+                                 MaxFractionDigits="MaxFractionDigits"
+                                 OnChanged="OnAnswersChanged"
+                                 OnApply="Apply" />
+                @if (!string.IsNullOrEmpty(_computeError))
+                {
+                    <div class="inline-flex max-w-full items-center rounded bg-red-100 px-2 py-[3px] text-[11px] text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                        @_computeError
+                    </div>
+                }
 
-                    @if (!string.IsNullOrEmpty(_resultText))
-                    {
-                        <div class="text-[12px]">
-                            <strong class="font-semibold">@StorageLoc["storageResult"]:</strong> @_resultText (@Task.NewUnitCode)
-                        </div>
-                    }
-                </div>
-            }
-        </div>
+                @if (!string.IsNullOrEmpty(_resultText))
+                {
+                    <div class="inline-flex h-[27px] max-w-full items-center rounded border border-slate-200 bg-slate-50 px-2 text-[12px] text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
+                         title="@_resultFullText">
+                        <strong class="mr-1 font-semibold">@StorageLoc["storageResult"]:</strong>
+                        <span class="tabular-nums whitespace-nowrap">@_resultText (@Task.NewUnitCode)</span>
+                    </div>
+                }
+            </div>
+        }
     </div>
 
     @if (Task.Collspanded)
@@ -105,6 +115,7 @@
     [Parameter] public bool CO2Config { get; set; }
     [Parameter] public bool ShowTaskName { get; set; } = true;
     [Parameter] public bool InlineHeader { get; set; }
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
     private const string ToggleClass =
             "inline-flex h-5 w-5 items-center justify-center rounded-md  " +
     "border border-slate-400 dark:border-slate-600 " +
@@ -116,6 +127,7 @@
     private int MaxFractionDigits => Math.Clamp(Template?.MathRound ?? NumericFormatHelper.DefaultMaxFractionDigits, 0, 15);
     private string? _computeError;
     private string? _resultText;
+    private string? _resultFullText;
     private void ToggleResources() => _showResources = !_showResources;
     private bool IsSummary(ResourceDto r) => r?.Id == SummaryId;
     private IEnumerable<ResourceDto> GetVisibleRows()
@@ -210,7 +222,8 @@
                 fromUnit: Task.UnitCode!,
                 quantity: Task.Quantity ?? 0,
                 parameters: Task.ParameterValues);
-            _resultText = value.ToString("G");
+            _resultText = value.ToString("N3", CultureInfo.CurrentCulture);
+            _resultFullText = value.ToString("G", CultureInfo.CurrentCulture);
 
             RefreshBaseResources();
             Compute.BuildFinalRows(Task);
@@ -284,4 +297,14 @@
     }
     private string FormatNumber(decimal value)
         => NumericFormatHelper.Format(value, MaxFractionDigits);
+
+    private bool ShouldShowDimensionInputs()
+        => Task.Collspanded
+           || (InlineHeader && (HasUnitOptions() || HasWorkloadInputs()));
+
+    private bool HasUnitOptions()
+        => Task.UnitGroup?.Keys?.Any(x => !string.IsNullOrWhiteSpace(x)) == true;
+
+    private bool HasWorkloadInputs()
+        => Task.WorkloadThresholds?.Any(x => x > 0) == true;
 }

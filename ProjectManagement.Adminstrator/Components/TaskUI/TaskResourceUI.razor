@@ -7,6 +7,7 @@
 @using ProjectManagement.Adminstrator.Components.ResourceUI
 @using ProjectManagement.Shared.Base.AppTenant
 @using ProjectManagement.Shared.DTO.App.Dataloader
+@using ProjectManagement.Shared.Base.Calculation
 @using ProjectManagement.Shared.Enums
 @using TaskResourceBlueprints.Services.Resource
 @using System.Globalization
@@ -200,6 +201,215 @@
                 </div>
             </section>
         }
+
+        <!-- PARAMETERS -->
+        <section class="@SectionClass">
+            <div class="@HeaderClass">
+                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Parameters</h4>
+                <button type="button" class="@SecondaryButtonClass" @onclick="AddParameter">
+                    <span>+</span><span>Parameter</span>
+                </button>
+            </div>
+            <div class="@BodyClass">
+                @if (TaskResource.Parameters.Count > 0)
+                {
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                        <table class="min-w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <th class="w-10 px-1 py-1.5"></th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Value</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < TaskResource.Parameters.Count; i++)
+                                {
+                                    int idx = i;
+                                    <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                        <td class="px-1 py-0.5 w-10">
+                                            <button type="button" class="@DangerButtonClass h-8 w-8 !px-0"
+                                                    @onclick="() => TaskResource.Parameters.RemoveAt(idx)">×</button>
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[14rem]">
+                                            <input type="text" class="@InputClass"
+                                                   value="@TaskResource.Parameters[idx].Name"
+                                                   @oninput="e => TaskResource.Parameters[idx].Name = e.Value?.ToString() ?? string.Empty" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[7rem]">
+                                            <input type="text" inputmode="decimal" class="@InputClass"
+                                                   value="@FormatDecimal(TaskResource.Parameters[idx].Value)"
+                                                   @oninput="e => { if (TryParseDecimal(e.Value?.ToString(), out var v)) TaskResource.Parameters[idx].Value = v; }" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[7rem]">
+                                            <input type="text" class="@InputClass"
+                                                   value="@TaskResource.Parameters[idx].Unit"
+                                                   @oninput="e => TaskResource.Parameters[idx].Unit = e.Value?.ToString() ?? string.Empty" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex min-h-[80px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:!bg-slate-900/70 dark:text-slate-300">
+                        No parameters
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- ADD-ONS -->
+        <section class="@SectionClass">
+            <div class="@HeaderClass">
+                <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Add-ons</h4>
+                <button type="button" class="@SecondaryButtonClass" @onclick="AddAddOn">
+                    <span>+</span><span>Add-on</span>
+                </button>
+            </div>
+            <div class="@BodyClass">
+                @if (TaskResource.AddOns.Count > 0)
+                {
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                        <table class="min-w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                                    <th class="w-10 px-1 py-1.5"></th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.type</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Factor</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.cost</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                    <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.baseCost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < TaskResource.AddOns.Count; i++)
+                                {
+                                    int idx = i;
+                                    <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                        <td class="px-1 py-0.5 w-10">
+                                            <button type="button" class="@DangerButtonClass h-8 w-8 !px-0"
+                                                    @onclick="() => TaskResource.AddOns.RemoveAt(idx)">×</button>
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[12rem]">
+                                            <input type="text" class="@InputClass"
+                                                   value="@TaskResource.AddOns[idx].Name"
+                                                   @oninput="e => TaskResource.AddOns[idx].Name = e.Value?.ToString() ?? string.Empty" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[5rem]">
+                                            <select class="@InputClass"
+                                                    value="@((int)TaskResource.AddOns[idx].Type)"
+                                                    @onchange="e => OnAddOnTypeChanged(idx, e)">
+                                                <option value="@((int)QuantityResourceAddon.Multiplication)">*</option>
+                                                <option value="@((int)QuantityResourceAddon.Division)">/</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[7rem]">
+                                            <input type="text" inputmode="decimal" class="@InputClass"
+                                                   value="@FormatDecimal(TaskResource.AddOns[idx].Factor)"
+                                                   @oninput="e => { if (TryParseDecimal(e.Value?.ToString(), out var v)) TaskResource.AddOns[idx].Factor = v; }" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[7rem]">
+                                            <input type="text" inputmode="decimal" class="@InputClass"
+                                                   value="@FormatDecimal(TaskResource.AddOns[idx].Cost)"
+                                                   @oninput="e => { if (TryParseDecimal(e.Value?.ToString(), out var v)) TaskResource.AddOns[idx].Cost = v; }" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[7rem]">
+                                            <input type="text" class="@InputClass"
+                                                   value="@TaskResource.AddOns[idx].Unit"
+                                                   @oninput="e => TaskResource.AddOns[idx].Unit = e.Value?.ToString() ?? string.Empty" />
+                                        </td>
+                                        <td class="px-1 py-0.5 min-w-[7rem]">
+                                            <input type="text" inputmode="decimal" class="@InputClass"
+                                                   value="@FormatDecimal(TaskResource.AddOns[idx].BaseCost)"
+                                                   @oninput="e => { if (TryParseDecimal(e.Value?.ToString(), out var v)) TaskResource.AddOns[idx].BaseCost = v; }" />
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex min-h-[80px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:!bg-slate-900/70 dark:text-slate-300">
+                        No add-ons
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- TIMES -->
+        @if (TaskResource.ResType == ResourceTypesEnum.Worker || TaskResource.ResType == ResourceTypesEnum.MachinesAndEquipments)
+        {
+            <section class="@SectionClass">
+                <div class="@HeaderClass">
+                    <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Times</h4>
+                    <button type="button" class="@SecondaryButtonClass" @onclick="AddTime">
+                        <span>+</span><span>Time</span>
+                    </button>
+                </div>
+                <div class="@BodyClass">
+                    @if (TaskResource.Times.Count > 0)
+                    {
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                            <table class="min-w-full border-collapse text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+                                        <th class="w-10 px-1 py-1.5"></th>
+                                        <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                        <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Time share %</th>
+                                        <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.cost</th>
+                                        <th class="px-2 py-1.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < TaskResource.Times.Count; i++)
+                                    {
+                                        int idx = i;
+                                        <tr class="border-b border-slate-200 last:border-0 dark:border-slate-700">
+                                            <td class="px-1 py-0.5 w-10">
+                                                <button type="button" class="@DangerButtonClass h-8 w-8 !px-0"
+                                                        @onclick="() => TaskResource.Times.RemoveAt(idx)">×</button>
+                                            </td>
+                                            <td class="px-1 py-0.5 min-w-[14rem]">
+                                                <input type="text" class="@InputClass"
+                                                       value="@TaskResource.Times[idx].Name"
+                                                       @oninput="e => TaskResource.Times[idx].Name = e.Value?.ToString() ?? string.Empty" />
+                                            </td>
+                                            <td class="px-1 py-0.5 min-w-[7rem]">
+                                                <input type="text" inputmode="decimal" class="@InputClass"
+                                                       value="@FormatNullableDecimal(TaskResource.Times[idx].Percentage)"
+                                                       @oninput="e => { if (TryParseNullableDecimal(e.Value?.ToString(), out var v)) TaskResource.Times[idx].Percentage = v; }" />
+                                            </td>
+                                            <td class="px-1 py-0.5 min-w-[7rem]">
+                                                <input type="text" inputmode="decimal" class="@InputClass"
+                                                       value="@FormatDecimal(TaskResource.Times[idx].Cost)"
+                                                       @oninput="e => { if (TryParseDecimal(e.Value?.ToString(), out var v)) TaskResource.Times[idx].Cost = v; }" />
+                                            </td>
+                                            <td class="px-1 py-0.5 min-w-[7rem]">
+                                                <input type="text" class="block h-11 w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 dark:border-slate-700 dark:!bg-slate-800 dark:text-slate-300"
+                                                       disabled value="@TaskResource.Unit" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex min-h-[80px] items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-100 px-3 py-4 text-center text-sm text-slate-500 dark:border-slate-700 dark:!bg-slate-900/70 dark:text-slate-300">
+                            No times
+                        </div>
+                    }
+                </div>
+            </section>
+        }
     }
 
     <div class="border-t border-slate-200 pt-2 dark:border-slate-700">
@@ -278,24 +488,54 @@
     private void AddRole()
     {
         if (TaskResource?.CapRole is null)
-        {
             return;
-        }
 
         if (TaskResource.CapRole.Count != 0)
-        {
             TaskResource.CapRole.Add(new()
             {
                 Min = TaskResource.CapRole.Last().Max,
                 Max = TaskResource.CapRole.Last().Max + 10,
                 Value = TaskResource.CapRole.Last().Value + 1
             });
-        }
         else
-        {
             TaskResource.CapRole.Add(new() { Min = 0, Max = 10, Value = 5 });
-        }
 
+        StateHasChanged();
+    }
+
+    private void OnAddOnTypeChanged(int idx, ChangeEventArgs e)
+    {
+        if (TaskResource is null) return;
+        if (int.TryParse(e.Value?.ToString(), out var val))
+            TaskResource.AddOns[idx].Type = (QuantityResourceAddon)val;
+    }
+
+    private void AddParameter()
+    {
+        if (TaskResource is null) return;
+        TaskResource.Parameters.Add(new ResourceParameter { Name = string.Empty, Unit = string.Empty, Value = 1 });
+        StateHasChanged();
+    }
+
+    private void AddAddOn()
+    {
+        if (TaskResource is null) return;
+        TaskResource.AddOns.Add(new ResourceAddon { Name = string.Empty, Factor = 1, Cost = 0, Type = QuantityResourceAddon.Multiplication });
+        StateHasChanged();
+    }
+
+    private void AddTime()
+    {
+        if (TaskResource is null) return;
+        var usedPct = TaskResource.Times.Sum(x => x.Percentage ?? 0m);
+        var remaining = Math.Round(100m - usedPct, 4, MidpointRounding.AwayFromZero);
+        TaskResource.Times.Add(new ResourceTime
+        {
+            Name = string.Empty,
+            Unit = TaskResource.Unit,
+            Percentage = remaining > 0m ? remaining : 0m,
+            Cost = 1,
+        }.SetResolvedQuantity(0));
         StateHasChanged();
     }
 

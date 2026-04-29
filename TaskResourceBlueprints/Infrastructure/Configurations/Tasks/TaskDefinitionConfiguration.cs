@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ProjectManagement.Shared.Base.Calculation;
 using TaskResourceBlueprints.Entities.Tasks;
 using TaskResourceBlueprints.Infrastructure.ConfigurationConstants;
 using TaskResourceBlueprints.Infrastructure.Extensions;
@@ -27,6 +28,9 @@ public class TaskDefinitionConfiguration : IEntityTypeConfiguration<TaskDefiniti
 
         builder.Property(x => x.ChangeFactor2)
             .HasPrecision(Precision.FactorPrecision, Precision.FactorScale);
+
+        builder.Property(x => x.ConversionParameters)
+            .HasJsonListComparer();
 
         builder.Property(x => x.RowNotes)
             .HasJsonListComparer();

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Shared.Base.AppTenant;
+using ProjectManagement.Shared.Base.Calculation;
 using ProjectManagement.Shared.DTO.App.Dataloader;
 using ProjectManagement.Shared.DTO.ProjectAppStorage;
 using ProjectManagement.Shared.Enums;
@@ -43,6 +44,10 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         public bool Active { get; set; } = false;
         public List<RoleDTO>? CapRole { get; set; } = [];
         public ResourceTypesEnum ResType { get; set; }
+        public List<ResourceParameter> Parameters { get; set; } = [];
+        public List<ResourceAddon> AddOns { get; set; } = [];
+        public List<ResourceTime> Times { get; set; } = [];
+        public string Unit { get; set; } = string.Empty;
     }
     public interface ITaskDefinitionService
     {
@@ -55,6 +60,7 @@ namespace TaskResourceBlueprints.Services.ProjectTask
         Task DeleteAsync(int id, CancellationToken ct);
         Task<(IReadOnlyList<TaskUnitGroup> unitGroups,
       IReadOnlyList<ResourceCategory> folders)> GetLookupsAsync(CancellationToken ct);
+        Task UpdateVisibleFoldersAsync(int taskId, List<int> folderIds, CancellationToken ct = default);
     }
 
     public sealed class ProjectTaskService(IDbContextFactory<TaskResourceBlueprintsContext> factory) : ITaskDefinitionService
@@ -278,6 +284,15 @@ namespace TaskResourceBlueprints.Services.ProjectTask
             if (e is null) return;
 
             db.Tasks.Remove(e);
+            await db.SaveChangesAsync(ct);
+        }
+
+        public async Task UpdateVisibleFoldersAsync(int taskId, List<int> folderIds, CancellationToken ct = default)
+        {
+            await using var db = await factory.CreateDbContextAsync(ct);
+            var e = await db.Tasks.FirstOrDefaultAsync(x => x.Id == taskId, ct);
+            if (e is null) return;
+            e.VisibleFolderIds = folderIds;
             await db.SaveChangesAsync(ct);
         }
 

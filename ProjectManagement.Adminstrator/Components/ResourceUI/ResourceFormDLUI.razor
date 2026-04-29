@@ -47,7 +47,7 @@
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="qty">@CalcResource.quantity</label>
                     <InputNumber id="qty" @bind-Value="model.Data.Quantity" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                     <ValidationMessage For="@(() => model.Data.Quantity)" class="text-xs text-rose-400" />
-                </div> *@
+                </div>
 
                 @if (model.ResType == ResourceTypesEnum.Materials || model.ResType == ResourceTypesEnum.Worker || model.ResType == ResourceTypesEnum.MachinesAndEquipments)
                 {
@@ -56,7 +56,7 @@
                         <InputNumber id="waste" @bind-Value="model.Data.CapWaste" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                         <ValidationMessage For="@(() => model.Data.CapWaste)" class="text-xs text-rose-400" />
                     </div>
-                }
+                } *@
             </div>
         </div>
 
@@ -80,12 +80,12 @@
                     <InputNumber id="co2" @bind-Value="model.Data.CO2" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                     <ValidationMessage For="@(() => model.Data.CO2)" class="text-xs text-rose-400" />
                 </div>
-                <div class="min-w-0">
+                @*             <div class="min-w-0">
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="cf1">@CalcResource.changeFactor1</label>
                     <InputNumber id="cf1" @bind-Value="model.Data.ChangeFactor1" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                     <ValidationMessage For="@(() => model.Data.ChangeFactor1)" class="text-xs text-rose-400" />
                 </div>
-@*                 <div class="min-w-0">
+               <div class="min-w-0">
                     <label class="block text-xs font-medium text-slate-700 dark:text-slate-300" for="cf2">@CalcResource.changeFactor2</label>
                     <InputNumber id="cf2" @bind-Value="model.Data.ChangeFactor2" class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" />
                     <ValidationMessage For="@(() => model.Data.ChangeFactor2)" class="text-xs text-rose-400" />
