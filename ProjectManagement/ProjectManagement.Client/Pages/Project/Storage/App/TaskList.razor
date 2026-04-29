@@ -67,13 +67,15 @@ else if (_tasks != null)
                 <TaskCard @key="matched.Id" Task="matched" ToAdded="TaskToAdd" Config="Config"
                           Statuses="Statuses" CO2Config="AppState.StorageApp.CO2"
                           CostConfig="AppState.StorageApp.Cost" NameConfig="AppState.StorageApp.Name"
-                          ShowTaskName="false" InlineHeader="true">
+                          ShowTaskName="false">
                     <HeaderContent>
-                        <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
                         @if (!string.IsNullOrEmpty(group.Code))
                         {
                             <span class="text-xs text-slate-500 whitespace-nowrap">[@group.Code]</span>
                         }
+                        <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
+                    </HeaderContent>
+                    <Row2Content>
                         @foreach (var sg in stateGroups)
                         {
                             var groupId = sg.Key;
@@ -98,17 +100,21 @@ else if (_tasks != null)
                                 </select>
                             </div>
                         }
-                    </HeaderContent>
+                    </Row2Content>
                 </TaskCard>
             }
             else if (stateGroups.Count > 0)
             {
-                <div class="inline-flex flex-nowrap items-center gap-2 mb-1 min-w-0 overflow-x-auto align-top">
-                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
+                <!-- السطر الأول: الكود + الاسم -->
+                <div class="flex flex-wrap items-center gap-x-1.5 gap-y-1 mb-1">
                     @if (!string.IsNullOrEmpty(group.Code))
                     {
                         <span class="text-xs text-slate-500 whitespace-nowrap">[@group.Code]</span>
                     }
+                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">@group.DisplayName</span>
+                </div>
+                <!-- السطر الثاني: StateGroups + تنبيه -->
+                <div class="flex flex-wrap items-center gap-2 pl-0">
                     @foreach (var sg in stateGroups)
                     {
                         var groupId = sg.Key;
@@ -383,9 +389,16 @@ else if (_tasks != null)
                     Type = ProjectManagement.Shared.Base.Calculation.TaskType.Task,
                     Code = Task.Code,
                     UpperNote = Task.UpperNote,
-                    Unit = Task.UnitCode,
+                    Unit = !string.IsNullOrEmpty(Task.NewUnitCode) ? Task.NewUnitCode : Task.UnitCode,
                     Note = Task.Note,
                     IsOH = Calc.OHFactors,
+                    ConversionParameters = Task.ParameterValues
+                        .Select(kv => new ProjectManagement.Shared.Base.Calculation.TaskConversionParameter
+                        {
+                            Name = kv.Key.ToString(),
+                            Value = kv.Value,
+                            Unit = "m"
+                        }).ToList(),
                 },
                 Resources = Task.BaseResources.Concat(Task.ResultResources).Where(r => r.IsAdded).Select(res => new ResourcePostDTO
                 {
@@ -405,6 +418,9 @@ else if (_tasks != null)
                         Cost = res.Data.Cost,
                         BaseCost = res.Data.BaseCost,
                         Unit = res.Data.Unit,
+                        Parameters = res.Data.Parameters,
+                        AddOns = res.Data.AddOns,
+                        Times = res.Data.Times,
                     },
                     ResType = res.ResType,
                     Name = AppState.StorageApp.Name ? res.NameUserValue : res.Name,

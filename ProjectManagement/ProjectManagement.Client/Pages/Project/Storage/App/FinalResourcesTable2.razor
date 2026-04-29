@@ -18,20 +18,25 @@
 else
 {
     <!-- حاوية الجدول مع شريط تمرير أفقي وعمودي -->
-    <div class="w-full max-w-full"
+    <div class="w-full max-w-full rounded border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950"
          style="
                 max-height: calc(100vh - 220px);
                 overflow-x: auto;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
              ">
-        <table class="text-[11px] leading-tight"
-               style="min-width: 1800px; white-space: nowrap;">
-            <thead class="bg-gray-100/80 dark:bg-gray-800/70">
+        <table class="w-full table-fixed border-collapse text-[11px] leading-tight"
+               style="min-width: 1750px; white-space: nowrap;">
+            <thead class="sticky top-0 z-10 bg-slate-100/95 text-slate-700 shadow-[0_1px_0_rgba(148,163,184,0.35)] dark:bg-slate-900/95 dark:text-slate-200">
                 <tr>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[60px]">@CalcResource.active</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.account</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[450px]">@ResourceLoc.resource</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.co2</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor1</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.quantity</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cap / @CalcResource.waste</th>
+                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[70px]">Vars</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.type</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.resourceSort</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.status</th>
@@ -40,20 +45,6 @@ else
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cost</th>
                     <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.totalNetCost</th>
 
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.co2</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor1</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@CalcResource.changeFactor2</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.quantity</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">@CalcResource.cap / @CalcResource.waste</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageMorning"]</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageMorningCost"]</th>
-
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[85px]">@StorageLoc["storageDay"]</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageDayCost"]</th>
-
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageEvening"]</th>
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[65px]">@StorageLoc["storageEveningCost"]</th>
-
                     @if (_propColumns.Count > 0)
                     {
                         @foreach (var col in _propColumns)
@@ -61,7 +52,6 @@ else
                             <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[90px]">@col.DisplayName</th>
                         }
                     }
-                    <th class="px-1 py-0.5 text-left text-[11px] font-semibold w-[75px]">F</th>
                 </tr>
             </thead>
 
@@ -102,7 +92,6 @@ else
                     var assignedTargets = hasFormulas ? ResourceFormulaApplier.GetAssignedTargets(current.Formulas) : null;
                     var baseCostIsDerived = assignedTargets?.Contains(ResourceFieldBaseCost) == true;
                     var costIsDerived = assignedTargets?.Contains(ResourceFieldCost) == true;
-                    var expanded = _expanded.Contains(current.Id);
 
                     var group = (current.GroupId is int gid && gid > 0)
                     ? Config?.AccountGroups?.FirstOrDefault(x => x.Id == gid)
@@ -122,6 +111,9 @@ else
                     var rowKey = duplicateCount == 0
                         ? baseRowKey
                         : $"{baseRowKey}#{duplicateCount}";
+                    var variablesKey = $"{rowKey}:variables";
+                    var hasResourceVariables = HasResourceVariables(current);
+                    var variablesExpanded = _expandedVariableRows.Contains(variablesKey);
 
                     <tr @key="rowKey" class="hover:bg-amber-50/60 dark:hover:bg-amber-900/20">
                         <!-- Active / Add -->
@@ -139,7 +131,7 @@ else
                         </td>
 
                         <!-- Account -->
-                        <td>
+                        <td class="px-1 py-0.5">
                             <select @bind="current.AccountId"
                                     class="@SelectSt">
                                 <option value="">@StorageLoc["storageSelectAccount"]</option>
@@ -158,17 +150,18 @@ else
 
                         <!-- Resource + Dropdown حسب MenuId -->
                         <td class="px-1 py-0.5 text-[11px] text-gray-800 dark:text-gray-300">
-                            <div class="inline-flex gap-2">
+                            <div class="flex w-full min-w-0 items-center gap-1">
                                 <!-- زر التعديل -->
-                                <span class="text-[18px] text-neutral-800 underline hover:text-neutral-900 transition dark:text-neutral-300 dark:hover:text-neutral-100 text-[10px] leading-none px-0.5"
+                                <button type="button"
+                                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded border border-slate-300 text-[14px] leading-none text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                                       @onclick="async () => await OnEdit.InvokeAsync(current)">
                                     ✎
-                                </span>
+                                </button>
 
                                 @if (isMenuRow && menuGroup is not null)
                                 {
                                     <!-- القائمة المنسدلة للموارد التي لها نفس MenuId -->
-                                    <select class="@SelectSt mr-1"
+                                    <select class="@($"{SelectSt} w-[150px] shrink-0")"
                                             value="@menuGroup.SelectedResourceId"
                                             @onchange="e => OnMenuChanged(menuGroup, e)">
                                         @foreach (var opt in menuGroup.Resources)
@@ -182,22 +175,65 @@ else
                                 @if (!NameConfig || string.IsNullOrWhiteSpace(current.NameUserValue))
                                 {
                                     <input type="text" @bind="current.Name"
-                                           class="w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px]
-                                                              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                                              focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                           class="@($"{St} min-w-0 flex-1")" />
                                 }
                                 else
                                 {
                                     <input type="text" @bind="current.NameUserValue"
-                                           class="w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px]
-                                                              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                                                              focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                                           class="@($"{St} min-w-0 flex-1")" />
                                 }
                             </div>
                         </td>
 
+                        <!-- CO2 / ChangeFactor / Quantity / CapWaste -->
+                        <td class="px-1 py-0.5">
+                            <TrimmedNumberInput TValue="double?"
+                                                @bind-Value="current.Data.CO2"
+                                                MaxFractionDigits="@MaxFractionDigits"
+                                                step="any"
+                                                class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldChangeFactor1)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldChangeFactor1, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldChangeFactor1)"
+                                   class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="text"
+                                   inputmode="decimal" disabled
+                                   value="@GetResourceInputValue(current, ResourceFieldQuantity)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldQuantity, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldQuantity)"
+                                   class="@St" />
+                        </td>
+                        <td class="px-1 py-0.5">
+                            <input type="text"
+                                   inputmode="decimal"
+                                   value="@GetResourceInputValue(current, ResourceFieldCapWaste)"
+                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldCapWaste, e)"
+                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldCapWaste)"
+                                   class="@St" />
+                        </td>
+
+                        <td class="px-1 py-0.5">
+                            <button type="button"
+                                    class="@VariablesButtonClass(hasResourceVariables, variablesExpanded)"
+                                    disabled="@(!hasResourceVariables)"
+                                    title="Parameters / AddOns / Times"
+                                    @onclick="() => ToggleVariables(variablesKey)">
+                                @(variablesExpanded ? "Hide" : "Show")
+                                @if (hasResourceVariables)
+                                {
+                                    <span class="ml-1 tabular-nums">@GetResourceVariablesCount(current)</span>
+                                }
+                            </button>
+                        </td>
+
                         <!-- Type -->
-                        <td>
+                        <td class="px-1 py-0.5">
                             <select class="@SelectSt"
                                     @bind="current.ResourceTypeId">
                                 <option value=""></option>
@@ -212,7 +248,7 @@ else
                         </td>
 
                         <!-- Sort -->
-                        <td>
+                        <td class="px-1 py-0.5">
                             @if (type?.ResourcesSort is not null)
                             {
                                 <select class="@SelectSt"
@@ -227,7 +263,7 @@ else
                         </td>
 
                         <!-- Status -->
-                        <td>
+                        <td class="px-1 py-0.5">
                             <select @bind="current.StatusId"
                                     class="@SelectSt">
                                 <option value=""></option>
@@ -275,48 +311,6 @@ else
                             }
                         </td>
 
-                        <!-- CO2 / ChangeFactors / Quantity / CapWaste -->
-                        <td class="px-1 py-0.5">
-                            <TrimmedNumberInput TValue="double?"
-                                                @bind-Value="current.Data.CO2"
-                                                MaxFractionDigits="@MaxFractionDigits"
-                                                step="any"
-                                                class="@St" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            <input type="text"
-                                   inputmode="decimal"
-                                   value="@GetResourceInputValue(current, ResourceFieldChangeFactor1)"
-                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldChangeFactor1, e)"
-                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldChangeFactor1)"
-                                   class="@St" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            <input type="text"
-                                   inputmode="decimal"
-                                   value="@GetResourceInputValue(current, ResourceFieldChangeFactor2)"
-                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldChangeFactor2, e)"
-                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldChangeFactor2)"
-                                   class="@St" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            <input type="text"
-                                   inputmode="decimal" disabled
-                                   value="@GetResourceInputValue(current, ResourceFieldQuantity)"
-                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldQuantity, e)"
-                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldQuantity)"
-                                   class="@St" />
-                        </td>
-                        <td class="px-1 py-0.5">
-                            <input type="text"
-                                   inputmode="decimal"
-                                   value="@GetResourceInputValue(current, ResourceFieldCapWaste)"
-                                   @oninput="e => OnResourceNumberChanged(current, ResourceFieldCapWaste, e)"
-                                   @onblur="() => OnResourceNumberBlur(current, ResourceFieldCapWaste)"
-                                   class="@St" />
-                        </td>
-
-                        <!-- Dynamic properties -->
                         @if (_propColumns.Count > 0)
                         {
                             @foreach (var col in _propColumns)
@@ -325,11 +319,11 @@ else
                                 <td class="px-1 py-0.5">
                                     @if (p is null)
                                     {
-                                        <span class="text-[11px] text-gray-400">—</span>
+                                        <span class="block h-7 rounded border border-dashed border-slate-200 bg-slate-50 text-center leading-7 text-[11px] text-slate-400 dark:border-slate-800 dark:bg-slate-900/50">-</span>
                                     }
                                     else if (p.DataType == DataType.Number)
                                     {
-                                       <input type="text"
+                                        <input type="text"
                                                inputmode="decimal"
                                                value="@GetPropertyInputValue(current, p)"
                                                @oninput="e => OnPropertyNumberChanged(current, p, e)"
@@ -350,38 +344,97 @@ else
                                 </td>
                             }
                         }
-
-                        <!-- Formulas toggle -->
-                        <td class="px-1 py-0.5">
-                            @if (hasFormulas)
-                            {
-                                <button type="button"
-                                        class="inline-flex items-center rounded border px-2 py-0.5 text-[11px]
-                                                           border-gray-500 text-gray-700 hover:bg-gray-500 hover:text-white
-                                                           dark:border-gray-400 dark:text-gray-300 dark:hover:bg-gray-400"
-                                        @onclick="() => Toggle(current.Id)">
-                                    @((expanded ? "H" : "S")) (@current.Formulas.Count)
-                                </button>
-                            }
-                            else
-                            {
-                                <span class="text-[11px] text-gray-500 dark:text-gray-400">—</span>
-                            }
-                        </td>
                     </tr>
 
-                    @if (hasFormulas && expanded)
+                    @if (hasResourceVariables && variablesExpanded)
                     {
-                        <tr class="hover:bg-transparent">
-                            <td class="px-1 py-1" colspan="@(_staticColspan + _propColumns.Count)">
-                                <div class="mt-1 rounded border p-1.5 md:p-2 bg-white/60 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700">
-                                    <div class="text-[13px] font-semibold mb-1 text-gray-800 dark:text-gray-100">@StorageLoc["storageFormulas"]</div>
-                                    <ul class="list-disc ml-5">
-                                        @foreach (var f in current.Formulas)
-                                        {
-                                            <li class="text-[13px] text-gray-800 dark:text-gray-200">@f</li>
-                                        }
-                                    </ul>
+                        <tr @key="@($"{rowKey}:variables-row")" class="bg-slate-50/80 dark:bg-slate-900/60">
+                            <td colspan="@VisibleColumnCount" class="px-2 py-2">
+                                <div class="space-y-2">
+                                    @if (current.Data.Parameters?.Count > 0)
+                                    {
+                                        <section class="min-w-0 rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
+                                            <div class="mb-1 text-[12px] font-semibold text-slate-700 dark:text-slate-200">Parameters</div>
+                                            <div class="space-y-1">
+                                                @foreach (var parameter in current.Data.Parameters)
+                                                {
+                                                    <div class="@VariableRowGridClass">
+                                                        <span></span>
+                                                        <span></span>
+                                                        <input class="@St" value="@parameter.Name" readonly />
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <input class="@St" value="@parameter.Unit" readonly />
+                                                        <input class="@St" value="@FormatNumber(parameter.Value)" readonly />
+                                                    </div>
+                                                }
+                                            </div>
+                                        </section>
+                                    }
+
+                                    @if (current.Data.AddOns?.Count > 0)
+                                    {
+                                        <section class="min-w-0 rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
+                                            <div class="mb-1 text-[12px] font-semibold text-slate-700 dark:text-slate-200">AddOns</div>
+                                            <div class="space-y-1">
+                                                @foreach (var addOn in current.Data.AddOns)
+                                                {
+                                                    <div class="@VariableRowGridClass">
+                                                        <span></span>
+                                                        <span></span>
+                                                        <input class="@St" value="@addOn.Name" readonly />
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <input class="@St" value="@addOn.Unit" readonly />
+                                                        <input class="@St" value="@FormatNumber(addOn.Factor)" readonly />
+                                                        <input class="@St" value="@FormatNumber(addOn.Quantity(current.Data.Quantity.GetValueOrDefault()))" readonly />
+                                                        <input class="@St" value="@FormatNumber(addOn.Cost)" readonly />
+                                                    </div>
+                                                }
+                                            </div>
+                                        </section>
+                                    }
+
+                                    @if (current.Data.Times?.Count > 0)
+                                    {
+                                        <section class="min-w-0 rounded border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-950">
+                                            <div class="mb-1 text-[12px] font-semibold text-slate-700 dark:text-slate-200">Times</div>
+                                            <div class="space-y-1">
+                                                @foreach (var time in current.Data.Times)
+                                                {
+                                                    <div class="@VariableRowGridClass">
+                                                        <span></span>
+                                                        <span></span>
+                                                        <input class="@St" value="@time.Name" readonly />
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                        <input class="@St" value="@time.Unit" readonly />
+                                                        <input class="@St" value="@FormatNullableNumber(time.Percentage)" readonly />
+                                                        <input class="@St" value="@FormatNumber(time.Quantity)" readonly />
+                                                        <input class="@St" value="@FormatNumber(time.Cost)" readonly />
+                                                    </div>
+                                                }
+                                            </div>
+                                        </section>
+                                    }
                                 </div>
                             </td>
                         </tr>
@@ -413,16 +466,16 @@ else
     "w-5 h-5 cursor-pointer transition-all duration-200 ease-out " +
     "hover:opacity-70 hover:scale-110 hover:shadow-sm";
     // ستايل المدخلات العادية
-    string St = "w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px] " +
-                "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 " +
-                "focus:outline-none focus:ring-1 focus:ring-yellow-400";
+    string St = "block h-7 w-full min-w-0 rounded border border-slate-300 bg-white px-1.5 py-0 text-[11px] " +
+                "text-slate-900 shadow-sm disabled:bg-slate-100 disabled:text-slate-500 " +
+                "focus:outline-none focus:ring-1 focus:ring-yellow-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-500";
 
     // ستايل القوائم المنسدلة (select)
-    string SelectSt = "w-full border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 text-[11px] " +
-                      "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 " +
-                      "focus:outline-none focus:ring-1 focus:ring-blue-500";
+    string SelectSt = "block h-7 w-full min-w-0 rounded border border-slate-300 bg-white px-1.5 py-0 text-[11px] " +
+                      "text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 
-    private HashSet<int> _expanded = new();
+    string VariableRowGridClass = "grid grid-cols-[60px_75px_450px_75px_65px_75px_75px_70px_75px_75px_75px_75px_75px_75px_75px] gap-1";
+
     private const string ResourceFieldBaseCost = "basecost";
     private const string ResourceFieldCost = "cost";
     private const string ResourceFieldChangeFactor1 = "chf1";
@@ -431,6 +484,8 @@ else
     private const string ResourceFieldCapWaste = "capwaste";
     private readonly Dictionary<string, string> _propertyInputDrafts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _resourceInputDrafts = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _expandedVariableRows = new(StringComparer.Ordinal);
+    private int VisibleColumnCount => 15 + _propColumns.Count;
 
     private sealed class PropColumn
     {
@@ -448,8 +503,6 @@ else
 
     private List<PropColumn> _propColumns = new();
     private List<ResourceMenuGroup> _menuGroups = new();
-
-    private int _staticColspan = 17;
 
     protected override void OnParametersSet()
     {
@@ -522,12 +575,6 @@ else
         }
     }
 
-    private void Toggle(int resourceId)
-    {
-        if (!_expanded.Add(resourceId))
-            _expanded.Remove(resourceId);
-    }
-
     private ResourceMenuGroup? FindGroup(ResourceDto r)
         => r.MenuId.HasValue
             ? _menuGroups.FirstOrDefault(g => g.Key == GetMenuGroupKey(r))
@@ -535,6 +582,33 @@ else
 
     private static string BuildResourceRowKey(ResourceDto resource)
         => $"resource:{resource.ResourceSource}:{resource.MenuId ?? 0}:{resource.Id}";
+
+    private static bool HasResourceVariables(ResourceDto resource)
+        => (resource.Data.Parameters?.Count ?? 0) > 0
+           || (resource.Data.AddOns?.Count ?? 0) > 0
+           || (resource.Data.Times?.Count ?? 0) > 0;
+
+    private static int GetResourceVariablesCount(ResourceDto resource)
+        => (resource.Data.Parameters?.Count ?? 0)
+           + (resource.Data.AddOns?.Count ?? 0)
+           + (resource.Data.Times?.Count ?? 0);
+
+    private void ToggleVariables(string key)
+    {
+        if (!_expandedVariableRows.Add(key))
+            _expandedVariableRows.Remove(key);
+    }
+
+    private static string VariablesButtonClass(bool hasVariables, bool expanded)
+    {
+        var baseClass = "inline-flex h-7 w-full items-center justify-center rounded border px-1 text-[11px] transition";
+        if (!hasVariables)
+            return $"{baseClass} cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600";
+
+        return expanded
+            ? $"{baseClass} border-sky-500 bg-sky-50 text-sky-700 dark:border-sky-500 dark:bg-sky-950/50 dark:text-sky-200"
+            : $"{baseClass} border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+    }
 
     private async Task OnMenuChanged(ResourceMenuGroup group, ChangeEventArgs e)
     {

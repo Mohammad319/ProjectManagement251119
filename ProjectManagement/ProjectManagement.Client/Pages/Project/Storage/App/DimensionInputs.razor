@@ -45,9 +45,9 @@
     @{
         var inputs = new (string Label, ParamName Name, int Index)[]
         {
-            ("Thickness (mm)", ParamName.Thickness, 0),
-            ("Width (mm)",     ParamName.Width,     1),
-            ("Length (mm)",    ParamName.Length,    2)
+            ("Thickness (m)", ParamName.Thickness, 0),
+            ("Width (m)",     ParamName.Width,     1),
+            ("Length (m)",    ParamName.Length,    2)
         };
     }
 
@@ -72,14 +72,6 @@
         }
     }
 
-    <!-- Apply button -->
-    @if (ShouldShowApply(Task))
-    {
-        <button class="h-[24px] shrink-0 rounded border border-blue-600 px-1.5 py-0 text-[11px] text-blue-600 transition hover:bg-blue-600 hover:text-white dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400 dark:hover:text-white"
-                @onclick="() => OnApply.InvokeAsync()">
-            @ResourceApp.Button_Apply
-        </button>
-    }
 </div>
 
 @code {
@@ -100,12 +92,12 @@
     }
 
     // ========== تغيّر الوحدة ==========
-    private void OnUnitChanged(ChangeEventArgs e)
+    private async Task OnUnitChanged(ChangeEventArgs e)
     {
         Task.NewUnitCode = e.Value?.ToString();
-        StateHasChanged();
         if (OnChanged.HasDelegate)
-            OnChanged.InvokeAsync();
+            await OnChanged.InvokeAsync();
+        await ApplyResultAsync();
     }
 
     private List<string> GetUnitOptions()
@@ -156,6 +148,7 @@
 
         if (OnChanged.HasDelegate)
             await OnChanged.InvokeAsync();
+        await ApplyResultAsync();
     }
 
     private Task OnTaskQuantityBlur()
@@ -181,6 +174,7 @@
 
         if (OnChanged.HasDelegate)
             await OnChanged.InvokeAsync();
+        await ApplyResultAsync();
     }
 
     private Task OnParamBlur(ParamName name)
@@ -225,13 +219,10 @@
         return rule.Params.Any(param => param.Key == p);
     }
 
-    private bool ShouldShowApply(ProjectTaskDto t)
+    private async Task ApplyResultAsync()
     {
-        var thresholds = t.WorkloadThresholds ?? new List<decimal>();
-        bool needsDims = Needs(t, ParamName.Thickness)
-                      || Needs(t, ParamName.Width)
-                      || Needs(t, ParamName.Length);
-        return thresholds.Any(x => x > 0) || needsDims;
+        if (OnApply.HasDelegate)
+            await OnApply.InvokeAsync();
     }
 
     private sealed class DimensionValueModel

@@ -148,6 +148,8 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     if (l.Quantity > 0)
                         data.Quantity = l.Quantity;
 
+                    ApplyResourceLinkMetadata(data, l);
+
                     return new ResourceDto
                     {
                         Id = resource.Id,
@@ -169,6 +171,37 @@ namespace TaskResourceBlueprints.Services.ProjectTask
                     };
                 })
                 .ToList();
+        }
+
+        private static void ApplyResourceLinkMetadata(ResourceMetadata data, TaskDefinitionResourceLink link)
+        {
+            if (link.Parameters?.Count > 0)
+                data.Parameters = [.. link.Parameters.Select(p => new ResourceParameter
+                {
+                    Name = p.Name,
+                    Unit = p.Unit,
+                    Value = p.Value
+                })];
+
+            if (link.AddOns?.Count > 0)
+                data.AddOns = [.. link.AddOns.Select(a => new ResourceAddon
+                {
+                    Name = a.Name,
+                    Unit = a.Unit,
+                    Type = a.Type,
+                    Factor = a.Factor,
+                    Cost = a.Cost,
+                    BaseCost = a.BaseCost
+                })];
+
+            if (link.Times?.Count > 0)
+                data.Times = [.. link.Times.Select(t => new ResourceTime
+                {
+                    Name = t.Name,
+                    Unit = t.Unit,
+                    Percentage = t.Percentage,
+                    Cost = t.Cost
+                }.SetResolvedQuantity(t.Quantity))];
         }
         private static void Validate(TaskDefinitionEditDto d)
         {

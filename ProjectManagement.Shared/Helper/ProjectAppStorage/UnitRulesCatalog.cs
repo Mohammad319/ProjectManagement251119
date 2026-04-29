@@ -33,7 +33,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                     FromUnit = Units.SquareMeter,
                     ToUnit = Units.CubicMeter,
                     Params = { new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User } },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000m)
+                    Compute = (Q, p) => Q * p[ParamName.Thickness]
                 },
 
                 [(Units.Meter, Units.CubicMeter)] = new UnitRule
@@ -45,7 +45,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
                         new ParamDef { Key = ParamName.Width,     Source = ParamSource.User }
                         },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 10000) * (p[ParamName.Width] / 10000)
+                    Compute = (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width]
                 },
 
                 [(Units.Piece, Units.CubicMeter)] = new UnitRule
@@ -59,9 +59,9 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Length,    Source = ParamSource.User }
                     },
                     Compute = (Q, p) => Q
-                    * (p[ParamName.Thickness] / 1000m)
-                    * (p[ParamName.Width] / 1000m)
-                    * (p[ParamName.Length] / 1000m)
+                    * p[ParamName.Thickness]
+                    * p[ParamName.Width]
+                    * p[ParamName.Length]
                 },
                 [(Units.Ton, Units.CubicMeter)] = new UnitRule
                 {
@@ -93,7 +93,7 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
                         new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
                     },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000m) * p[ParamName.Density]
+                    Compute = (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Density]
                 },
                 [(Units.Meter, Units.Ton)] = new UnitRule
                 {
@@ -105,26 +105,24 @@ namespace ProjectManagement.Shared.Helper.ProjectAppStorage
                         new ParamDef { Key = ParamName.Width,     Source = ParamSource.User },
                         new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
                     },
-                    Compute = (Q, p) => Q * (p[ParamName.Thickness] / 1000m)
-                    * (p[ParamName.Width] / 1000m)
-                    * p[ParamName.Density]
+                    Compute = (Q, p) => Q * p[ParamName.Thickness] * p[ParamName.Width] * p[ParamName.Density]
                 },
                 [(Units.Piece, Units.Ton)] = new UnitRule
                 {
                     FromUnit = Units.Piece,
                     ToUnit = Units.Ton,
                     Params =
-                {
-                new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
-                new ParamDef { Key = ParamName.Width,     Source = ParamSource.User },
-                new ParamDef { Key = ParamName.Length,    Source = ParamSource.User },
-                new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
-                },
-                    Compute = (Q, p) =>(Q
-                     * (p[ParamName.Thickness] / 1000m)
-                     * (p[ParamName.Width] / 1000m)
-                     * (p[ParamName.Length] / 1000m))
-                    * p[ParamName.Density]
+                    {
+                        new ParamDef { Key = ParamName.Thickness, Source = ParamSource.User },
+                        new ParamDef { Key = ParamName.Width,     Source = ParamSource.User },
+                        new ParamDef { Key = ParamName.Length,    Source = ParamSource.User },
+                        new ParamDef { Key = ParamName.Density,   Source = ParamSource.Resource }
+                    },
+                    Compute = (Q, p) => Q
+                        * p[ParamName.Thickness]
+                        * p[ParamName.Width]
+                        * p[ParamName.Length]
+                        * p[ParamName.Density]
                 },
                 //معدلات لا تحتاج الى مدخلات خارجية
                 [(Units.Kilometer, Units.Meter)] = new UnitRule { FromUnit = Units.Kilometer, ToUnit = Units.Meter, Compute = (Q, _) => Q * 1000m },

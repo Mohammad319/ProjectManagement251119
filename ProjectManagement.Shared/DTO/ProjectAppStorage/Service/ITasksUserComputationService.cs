@@ -28,20 +28,16 @@ public sealed class UserAnswers
 
 public interface ITasksUserComputationServiceWasm
 {
-    UserAnswers A(int taskId);
     void ReCalcCostResources(List<ResourceDto> resources);
     void ReCalcCapResources(List<ResourceDto> resources);
     void CalcQuantityResource(List<ResourceDto> resource, decimal? taskQuantity);
     void RefreshResources(List<ResourceDto> resources, decimal? taskQuantity, IReadOnlyDictionary<ParamName, decimal>? taskParameters);
     bool BuildFinalRows(ProjectTaskDto task);
-    bool Combine(bool a, bool b, ConditionLogic op);
     decimal ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters);
 }
 
 public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServiceWasm
 {
-    private readonly Dictionary<int, UserAnswers> _answers = [];
-
     private static string SharedText(string key, string fallback)
         => ResLocalize.ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? fallback;
 
@@ -70,9 +66,9 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         foreach (var res in resources)
         {
             if (!res.Data.Quantity.HasValue) continue;
-
+            var q = res.Data.Quantity.Value;
             foreach (var item in res.CostRole)
-                if (res.Data.Quantity.Value >= item.Min && res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
+                if (q >= item.Min && q <= item.Max && item.Value.HasValue)
                 {
                     res.Data.Cost = item.Value.Value;
                     break;
@@ -84,12 +80,11 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     {
         foreach (var res in resources)
         {
-            if (!((res.ResType == ResourceTypesEnum.MachinesAndEquipments || res.ResType == ResourceTypesEnum.Worker)
-                && res.Data.Quantity.HasValue))
+            if (!res.HasCap || !res.Data.Quantity.HasValue)
                 continue;
-
+            var q = res.Data.Quantity.Value;
             foreach (var item in res.CapRole)
-                if (res.Data.Quantity.Value >= item.Min && res.Data.Quantity.Value <= item.Max && item.Value.HasValue)
+                if (q >= item.Min && q <= item.Max && item.Value.HasValue)
                 {
                     res.Data.CapWaste = item.Value.Value;
                     break;
@@ -104,16 +99,6 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
         RefreshDerivedValues(resources, taskQuantity);
         ApplyFormulaDrivenRecalculation(resources, taskQuantity, taskParameters);
-    }
-
-    public UserAnswers A(int taskId)
-    {
-        if (!_answers.TryGetValue(taskId, out var a))
-        {
-            a = new UserAnswers();
-            _answers[taskId] = a;
-        }
-        return a;
     }
 
     public decimal ComputeOrThrow(string toUnit, string fromUnit, decimal quantity, IReadOnlyDictionary<ParamName, decimal> parameters)
@@ -146,73 +131,6 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         return true;
     }
 
-    private static void ApplyUserEdits(ResourceDto source, ResourceDto target)
-    {
-        target.IsAdded = source.IsAdded;
-        target.Name = source.Name;
-        target.NameUserValue = source.NameUserValue;
-        target.ResourceSortId = source.ResourceSortId;
-        target.ResourceTypeId = source.ResourceTypeId;
-        target.AccountId = source.AccountId;
-        target.StatusId = source.StatusId;
-        target.Active = source.Active;
-
-        target.Data.Unit = source.Data.Unit;
-        target.Data.Note = source.Data.Note;
-        target.Data.UpperNote = source.Data.UpperNote is null ? [] : [.. source.Data.UpperNote];
-        target.Data.PriceSub = source.Data.PriceSub;
-        target.Data.ChangeFactor1 = source.Data.ChangeFactor1;
-        target.Data.ChangeFactor2 = source.Data.ChangeFactor2;
-        target.Data.CapWaste = source.Data.CapWaste;
-        target.Data.Cap = source.Data.Cap;
-        target.Data.Waste = source.Data.Waste;
-        target.Data.Cost = source.Data.Cost;
-        target.Data.BaseCost = source.Data.BaseCost;
-        target.Data.CO2 = source.Data.CO2;
-
-        target.Properties = MergeProperties(target.Properties, source.Properties);
-    }
-
-    private static List<ResourcePropertyBindDto> MergeProperties(
-        IEnumerable<ResourcePropertyBindDto>? templateProperties,
-        IEnumerable<ResourcePropertyBindDto>? editedProperties)
-    {
-        var editedById = (editedProperties ?? Enumerable.Empty<ResourcePropertyBindDto>())
-            .ToDictionary(p => p.Id);
-
-        var merged = new List<ResourcePropertyBindDto>();
-        foreach (var property in templateProperties ?? Enumerable.Empty<ResourcePropertyBindDto>())
-        {
-            var clone = CloneProperty(property);
-            if (editedById.TryGetValue(property.Id, out var edited))
-            {
-                clone.TextDefault = edited.TextDefault;
-                clone.NumberDefault = edited.NumberDefault;
-            }
-
-            merged.Add(clone);
-        }
-
-        return merged;
-    }
-
-    private static List<ResourcePropertyBindDto> CloneProperties(IEnumerable<ResourcePropertyBindDto>? properties)
-        => (properties ?? Enumerable.Empty<ResourcePropertyBindDto>())
-            .Select(CloneProperty)
-            .ToList();
-
-    private static ResourcePropertyBindDto CloneProperty(ResourcePropertyBindDto property)
-        => new()
-        {
-            Id = property.Id,
-            DisplayName = property.DisplayName,
-            IsUserEditable = property.IsUserEditable,
-            DataType = property.DataType,
-            MaxNumericValue = property.MaxNumericValue,
-            TextDefault = property.TextDefault,
-            NumberDefault = property.NumberDefault
-        };
-
     private void RefreshDerivedValues(List<ResourceDto> resources, decimal? taskQuantity)
     {
         CalcQuantityResource(resources, taskQuantity);
@@ -223,7 +141,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
 
     private void ApplyFormulaDrivenRecalculation(List<ResourceDto> resources, decimal? taskQuantity, IReadOnlyDictionary<ParamName, decimal>? taskParameters)
     {
-        if (resources.All(r => r.Formulas is null || r.Formulas.Count == 0))
+        if (!resources.Any(r => r.Formulas?.Count > 0))
             return;
 
         ResourceFormulaApplier.ApplyAll(resources, taskParameters);
@@ -244,7 +162,6 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
     {
         var singleResource = new List<ResourceDto> { resource };
         var assignsQuantity = targets.Contains("quantity");
-        var assignsCost = targets.Contains("cost");
         var assignsCapWaste = targets.Contains("cap") || targets.Contains("waste") || targets.Contains("capwaste");
         var assignsChangeFactor = targets.Contains("ch1") || targets.Contains("ch2");
 
@@ -259,7 +176,7 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
                 CalcQuantityResource(singleResource, taskQuantity);
         }
 
-        if (!assignsCost && (assignsQuantity || assignsChangeFactor || assignsCapWaste))
+        if (!targets.Contains("cost") && (assignsQuantity || assignsChangeFactor || assignsCapWaste))
             ReCalcCostResources(singleResource);
     }
 
@@ -269,11 +186,9 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         if (parameters is null || parameters.Count == 0)
             return;
 
-        decimal product = 1m;
-        for (int i = 0; i < parameters.Count; i++)
-            product *= parameters[i].Value;
-
-        data.ChangeFactor1 = Math.Round(product, 4, MidpointRounding.AwayFromZero);
+        data.ChangeFactor1 = Math.Round(
+            parameters.Aggregate(1m, (acc, p) => acc * p.Value),
+            4, MidpointRounding.AwayFromZero);
     }
 
     private static void ApplyResourceTimedCost(ResourceMetadata data)
@@ -290,75 +205,10 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
             return;
         }
 
-        decimal total = 0m;
-        for (int i = 0; i < times.Count; i++)
-            total += times[i].Quantity * times[i].Cost;
-
-        data.Cost = Math.Round(total / quantity, 2, MidpointRounding.AwayFromZero);
+        data.Cost = Math.Round(
+            times.Sum(t => t.Quantity * t.Cost) / quantity,
+            2, MidpointRounding.AwayFromZero);
     }
-
-    public bool Combine(bool a, bool b, ConditionLogic op)
-        => op == ConditionLogic.And ? a && b : a || b;
-
-    public void GetOptionFormulas(ResourceAssignmentDto res, HashSet<int> SelectedChoiceOptionIds)
-    {
-        if (SelectedChoiceOptionIds.Count == 0) return;
-
-        List<string> formulas = [];
-        foreach (var bind in res.OptionResourceFormulas)
-            if (SelectedChoiceOptionIds.Contains(bind.ChoiceOptionId))
-                formulas.AddRange(bind.Formulas);
-
-        res.Formulas ??= [];
-        res.Formulas.AddRange(formulas);
-    }
-
-    public void GetNumericFormulas(ResourceAssignmentDto res, Dictionary<int, decimal?> numericByGroup)
-    {
-        if (numericByGroup is null || numericByGroup.Count == 0) return;
-        if (res.NumericResourceFormulas is null || res.NumericResourceFormulas.Count == 0) return;
-
-        List<string> formulas = [];
-
-        foreach (var bind in res.NumericResourceFormulas)
-        {
-            if (!numericByGroup.TryGetValue(bind.NumericId, out var v) || !v.HasValue)
-                continue;
-
-            bool geMin = !bind.MinInputValue.HasValue || v.Value >= bind.MinInputValue.Value;
-            bool leMax = !bind.MaxInputValue.HasValue || v.Value <= bind.MaxInputValue.Value;
-
-            if (geMin && leMax)
-                formulas.AddRange(bind.Formulas ?? Enumerable.Empty<string>());
-        }
-
-        res.Formulas ??= [];
-        res.Formulas.AddRange(formulas);
-    }
-
-    public bool EvaluateChoices(TaskConditionDto cond, UserAnswers ans)
-        => cond.OptionRequirements.Count == 0 || cond.OptionRequirements
-           .GroupBy(r => r.SetKey)
-           .All(set => set.Any(r => ans.SelectedChoiceOptionIds.Contains(r.OptionItemId)));
-
-    public bool EvaluateResources(TaskConditionDto cond, UserAnswers ans)
-        => cond.ResourceRequirements.Count == 0 || cond.ResourceRequirements
-           .GroupBy(r => r.SetKey)
-           .All(set => set.Any(r => ans.SelectedResourceChoiceItemIds.Contains(r.ResourceOptionItemId)));
-
-    public bool EvaluateNumeric(TaskConditionDto cond, UserAnswers ans)
-        => cond.NumericRequirements.Count == 0 || cond.NumericRequirements
-           .GroupBy(r => r.SetKey)
-           .All(set =>
-                set.Any(r =>
-                {
-                    if (!ans.NumericValuesByGroupId.TryGetValue(r.NumericInputId, out var val) || val is null)
-                        return false;
-
-                    return (!r.MaxAllowedValue.HasValue || val.Value <= r.MaxAllowedValue.Value)
-                        && (!r.MinAllowedValue.HasValue || val.Value >= r.MinAllowedValue.Value);
-                })
-           );
 
     public bool EvaluateVariables(ProjectTaskDto task, TaskConditionDto cond)
         => cond.VariableRequirements.Count == 0 || cond.VariableRequirements
@@ -380,43 +230,17 @@ public sealed class TasksUserComputationServiceWasm : ITasksUserComputationServi
         if (string.IsNullOrWhiteSpace(variableName))
             return null;
 
-        switch (variableName.Trim().ToLowerInvariant())
+        return variableName.Trim().ToLowerInvariant() switch
         {
-            case "thickness":
-                return task.ParameterValues.TryGetValue(ParamName.Thickness, out var thickness)
-                    ? thickness
-                    : null;
-
-            case "width":
-                return task.ParameterValues.TryGetValue(ParamName.Width, out var width)
-                    ? width
-                    : null;
-
-            case "length":
-                return task.ParameterValues.TryGetValue(ParamName.Length, out var length)
-                    ? length
-                    : null;
-
-            case "density":
-                return task.ParameterValues.TryGetValue(ParamName.Density, out var density)
-                    ? density
-                    : null;
-
-            case "quantity":
-                return task.Quantity;
-
-            case "cost":
-                return task.BaseResources.Sum(r => r.Data.Cost);
-
-            case "basecost":
-                return task.BaseResources.Sum(r => r.Data.BaseCost.GetValueOrDefault());
-
-            case "priceproduction":
-            case "price production":
-                return task.PriceProduction;
-
-            default:
-                return null;
-        }
+            "thickness" => task.ParameterValues.TryGetValue(ParamName.Thickness, out var t) ? t : null,
+            "width" => task.ParameterValues.TryGetValue(ParamName.Width, out var w) ? w : null,
+            "length" => task.ParameterValues.TryGetValue(ParamName.Length, out var l) ? l : null,
+            "density" => task.ParameterValues.TryGetValue(ParamName.Density, out var d) ? d : null,
+            "quantity" => task.Quantity,
+            "cost" => task.BaseResources.Sum(r => r.Data.Cost),
+            "basecost" => task.BaseResources.Sum(r => r.Data.BaseCost.GetValueOrDefault()),
+            "priceproduction" or "price production" => task.PriceProduction,
+            _ => null,
+        };
     }
 }

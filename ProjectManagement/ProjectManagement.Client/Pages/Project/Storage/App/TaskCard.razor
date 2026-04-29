@@ -11,11 +11,11 @@
 @inherits AppComponentBase
 @inject AppState AppState
 
-<div class="@(InlineHeader ? "w-full min-w-0" : "mb-2")">
-    <div class="flex flex-wrap items-start gap-x-2 gap-y-1.5 mb-2 min-w-0">
-        <div class="flex items-center gap-0.5 flex-shrink-0">
-            <button @onclick="OnClick"
-                    class="@ToggleClass">
+<div class="w-full min-w-0 mb-2">
+    <!-- السطر الأول: أزرار التحكم + الكود + الاسم + الكمية + الوحدة + النتيجة -->
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div class="flex items-center gap-0.5 shrink-0">
+            <button @onclick="OnClick" class="@ToggleClass">
                 @(Task.Added ? "−" : "+")
             </button>
             <button @onclick="CollspanTask"
@@ -29,63 +29,65 @@
             @if (Task.Uncontrollable)
             {
                 <button @onclick="ToggleResources"
-                        class="px-2 py-1 border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white px-0.5 py-0 text-sm">
+                        class="border border-gray-500 text-gray-500 rounded transition hover:bg-gray-500 hover:text-white dark:border-gray-400 dark:text-gray-400 dark:hover:bg-gray-400 dark:hover:text-white px-0.5 py-0 text-sm">
                     @(_showResources ? ResourceApp.hiddenItems : ResourceApp.visibleItems)
                 </button>
             }
         </div>
 
-        <div class="flex min-w-[260px] flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
-            @if (HeaderContent is not null)
-            {
-                @HeaderContent
-            }
-            else if (ShowTaskName)
-            {
-                <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
-                    @Task.DisplayName
-                </span>
-            }
-
-            <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                @FormatNumber(Task.TotalCost)<span class="opacity-70">/ Unit: @Task.UnitCode</span>
-            </span>
-            <div class="w-[175px] shrink-0">
-                <select @bind="Task.StatusId" class="w-full h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-                    <option></option>
-                    @if (Statuses != null)
-                        foreach (var status in Statuses)
-                        {
-                            <option value="@status.Id">@status.Name</option>
-                        }
-                </select>
-            </div>
-        </div>
-
-        @if (ShouldShowDimensionInputs())
+        @if (HeaderContent is not null)
         {
-            <div class="flex min-w-[min(100%,360px)] flex-1 flex-wrap items-end gap-2 text-[12px]">
-                <DimensionInputs Task="Task"
-                                 MaxFractionDigits="MaxFractionDigits"
-                                 OnChanged="OnAnswersChanged"
-                                 OnApply="Apply" />
-                @if (!string.IsNullOrEmpty(_computeError))
-                {
-                    <div class="inline-flex max-w-full items-center rounded bg-red-100 px-2 py-[3px] text-[11px] text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                        @_computeError
-                    </div>
-                }
+            @HeaderContent
+        }
+        else if (ShowTaskName)
+        {
+            @if (!string.IsNullOrEmpty(Task.Code))
+            {
+                <span class="text-xs text-slate-500 whitespace-nowrap">[@Task.Code]</span>
+            }
+            <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[300px]">
+                @Task.DisplayName
+            </span>
+        }
 
-                @if (!string.IsNullOrEmpty(_resultText))
-                {
-                    <div class="inline-flex h-[27px] max-w-full items-center rounded border border-slate-200 bg-slate-50 px-2 text-[12px] text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
-                         title="@_resultFullText">
-                        <strong class="mr-1 font-semibold">@StorageLoc["storageResult"]:</strong>
-                        <span class="tabular-nums whitespace-nowrap">@_resultText (@Task.NewUnitCode)</span>
-                    </div>
-                }
+        <DimensionInputs Task="Task"
+                         MaxFractionDigits="MaxFractionDigits"
+                         OnChanged="OnAnswersChanged"
+                         OnApply="Apply" />
+
+        @if (!string.IsNullOrEmpty(_computeError))
+        {
+            <div class="inline-flex max-w-full items-center rounded bg-red-100 px-2 py-[3px] text-[11px] text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                @_computeError
             </div>
         }
+
+        @if (!string.IsNullOrEmpty(_resultText))
+        {
+            <div class="inline-flex h-[27px] max-w-full items-center rounded border border-slate-200 bg-slate-50 px-2 text-[12px] text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
+                title="@_resultFullText">
+                <strong class="mr-1 font-semibold">@StorageLoc["storageResult"]:</strong>
+                <span class="tabular-nums whitespace-nowrap">@_resultText (@ResultUnit)</span>
+            </div>
+        }
+    </div>
+
+    <!-- السطر الثاني: StateGroups + التكلفة + الحالة -->
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 pl-[52px]">
+        @Row2Content
+        <span class="text-sm font-semibold text-slate-800 dark:text-slate-100 whitespace-nowrap">
+            @FormatNumber(Task.TotalCost)<span class="opacity-70">/ @(!string.IsNullOrEmpty(Task.NewUnitCode) ? Task.NewUnitCode : Task.UnitCode)</span>
+        </span>
+        <div class="w-[175px] shrink-0">
+            <select @bind="Task.StatusId" class="w-full h-[25px] border border-gray-300 rounded px-2 text-[13px] leading-tight bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <option></option>
+                @if (Statuses != null)
+                    foreach (var status in Statuses)
+                    {
+                        <option value="@status.Id">@status.Name</option>
+                    }
+            </select>
+        </div>
     </div>
 
     @if (Task.Collspanded)
@@ -116,6 +118,7 @@
     [Parameter] public bool ShowTaskName { get; set; } = true;
     [Parameter] public bool InlineHeader { get; set; }
     [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment? Row2Content { get; set; }
     private const string ToggleClass =
             "inline-flex h-5 w-5 items-center justify-center rounded-md  " +
     "border border-slate-400 dark:border-slate-600 " +
@@ -128,6 +131,7 @@
     private string? _computeError;
     private string? _resultText;
     private string? _resultFullText;
+    private string ResultUnit => !string.IsNullOrWhiteSpace(Task.NewUnitCode) ? Task.NewUnitCode : Task.UnitCode;
     private void ToggleResources() => _showResources = !_showResources;
     private bool IsSummary(ResourceDto r) => r?.Id == SummaryId;
     private IEnumerable<ResourceDto> GetVisibleRows()
@@ -236,10 +240,10 @@
         }
     }
 
-    private void RefreshBaseResources()
+    public void RefreshBaseResources()
         => Compute.RefreshResources(Task.BaseResources, Task.Quantity, Task.ParameterValues);
 
-    private void ApplyCostAdjustments(IEnumerable<ResourceDto> resources)
+    public void ApplyCostAdjustments(IEnumerable<ResourceDto> resources)
     {
         if (!CostConfig) return;
         foreach (var res in resources)
@@ -247,7 +251,7 @@
                 res.Data.Cost = res.CostUserValue.Value;
     }
 
-    private void EnsureUncontrollableSummary()
+    public void EnsureUncontrollableSummary()
     {
         if (Task is null || !Task.Uncontrollable)
         {
@@ -295,16 +299,7 @@
             Task.BaseResources.Insert(0, summary);
         }
     }
-    private string FormatNumber(decimal value)
+    public string FormatNumber(decimal value)
         => NumericFormatHelper.Format(value, MaxFractionDigits);
 
-    private bool ShouldShowDimensionInputs()
-        => Task.Collspanded
-           || (InlineHeader && (HasUnitOptions() || HasWorkloadInputs()));
-
-    private bool HasUnitOptions()
-        => Task.UnitGroup?.Keys?.Any(x => !string.IsNullOrWhiteSpace(x)) == true;
-
-    private bool HasWorkloadInputs()
-        => Task.WorkloadThresholds?.Any(x => x > 0) == true;
 }
