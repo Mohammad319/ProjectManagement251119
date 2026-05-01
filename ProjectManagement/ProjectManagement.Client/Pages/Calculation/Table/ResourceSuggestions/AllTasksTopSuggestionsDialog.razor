@@ -1,0 +1,533 @@
+@using ProjectManagement.Client.Shared.MVVM.Calculation
+@using ProjectManagement.Client.Shared.ResourceFiles.Calculation
+@using ProjectManagement.Shared.DTO.Calculation
+@using ProjectManagement.Shared.Base.Calculation
+@using System.Globalization
+@inherits AppComponentBase
+
+<div class="flex flex-col gap-3 min-h-0">
+
+    <div class="flex flex-wrap items-center gap-4 rounded border border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-700 dark:bg-gray-900">
+
+        <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <input type="checkbox"
+                   checked="@_showSystem"
+                   @onchange="e => _showSystem = (bool)(e.Value ?? false)"
+                   class="h-4 w-4 cursor-pointer accent-blue-600" />
+            <span class="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">BlueprintTask</span>
+            <span>@CalcResource.resourceTypeSystem</span>
+        </label>
+
+        <label class="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <input type="checkbox"
+                   checked="@_showTenant"
+                   @onchange="e => _showTenant = (bool)(e.Value ?? false)"
+                   class="h-4 w-4 cursor-pointer accent-emerald-600" />
+            <span class="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">TenantTask</span>
+            <span>@CalcResource.resourceType</span>
+        </label>
+
+        <div class="flex-1"></div>
+
+        <button class="inline-flex h-8 items-center rounded border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 hover:border-blue-500 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                disabled="@(_loading || _saving)"
+                @onclick="LoadAsync">
+            @AppLoc["update"]
+        </button>
+
+        <button class="inline-flex h-8 items-center rounded border border-emerald-600 bg-emerald-600 px-3 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-emerald-500 dark:bg-emerald-500"
+                disabled="@(_loading || _saving || !_hasLoaded || !HasAnyIncluded)"
+                @onclick="SaveAllAsync">
+            @ResourceApp.save
+        </button>
+
+    </div>
+
+    @if (_loading)
+    {
+        <div class="py-12"><BlazorMHD.UI.Components.Feedback.Loading.MhdLoading /></div>
+    }
+    else if (!_hasLoaded)
+    {
+        <div class="rounded border border-dashed border-gray-300 px-3 py-10 text-center text-sm text-gray-400 dark:border-gray-700 dark:text-gray-500">
+            @AppLoc["update"]
+        </div>
+    }
+    else if (VisibleEntries.Count == 0)
+    {
+        <div class="rounded border border-dashed border-gray-300 px-3 py-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            @CalcResource.suggestionNoResults
+        </div>
+    }
+    else
+    {
+        <div class="flex flex-col gap-4 overflow-y-auto">
+            @foreach (var entry in VisibleEntries)
+            {
+                var top = entry.TopSuggestion!;
+
+                <div class="overflow-hidden rounded border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+
+                    <div class="flex min-w-0 items-center gap-2 border-b border-gray-100 bg-gray-50 px-3 py-2 dark:border-gray-800 dark:bg-gray-950">
+                        @if (!string.IsNullOrWhiteSpace(entry.Task.Code))
+                        {
+                            <span class="shrink-0 rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">@entry.Task.Code</span>
+                        }
+                        <span class="min-w-0 flex-1 truncate font-semibold text-gray-800 dark:text-gray-100">@entry.Task.Name</span>
+                        <span class="shrink-0 rounded px-1.5 py-0.5 text-xs font-medium @GetSourceBadgeClass(top.Source)">@top.Source</span>
+                        <div class="flex shrink-0 items-center gap-1.5">
+                            <div class="h-1.5 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                                <div class="h-full rounded-full @GetScoreColorClass(top.Score)"
+                                     style="width:@((top.Score * 100).ToString("0", CultureInfo.InvariantCulture))%"></div>
+                            </div>
+                            <span class="text-xs font-semibold @GetScoreTextClass(top.Score)">@top.Score.ToString("0%", CultureInfo.InvariantCulture)</span>
+                        </div>
+                    </div>
+
+                    @if (entry.Rows.Count == 0)
+                    {
+                        <div class="px-3 py-3 text-sm text-gray-400 dark:text-gray-500">@CalcResource.suggestionNoResults</div>
+                    }
+                    else
+                    {
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="border-b border-slate-200 bg-slate-50 text-xs dark:border-slate-800 dark:bg-slate-950">
+                                    <tr>
+                                        <th class="w-10 px-2 py-1.5"></th>
+                                        <th class="min-w-[10rem] px-2 py-1.5 text-left font-medium text-slate-500 dark:text-slate-400">@CalcResource.name</th>
+                                        <th class="px-2 py-1.5 text-left font-medium text-slate-500 dark:text-slate-400">@CalcResource.type</th>
+                                        <th class="px-2 py-1.5 text-left font-medium text-slate-500 dark:text-slate-400">@CalcResource.unit</th>
+                                        <th class="w-16 px-2 py-1.5 text-center font-medium text-slate-500 dark:text-slate-400">@CalcResource.active</th>
+                                        <th class="w-24 px-2 py-1.5 text-right font-medium text-slate-500 dark:text-slate-400">@CalcResource.cost</th>
+                                        <th class="w-24 px-2 py-1.5 text-right font-medium text-slate-500 dark:text-slate-400">@CalcResource.baseCost</th>
+                                        <th class="w-24 px-2 py-1.5 text-right font-medium text-slate-500 dark:text-slate-400">@CalcResource.changeFactor1</th>
+                                        <th class="w-20 px-2 py-1.5 text-center font-medium text-slate-500 dark:text-slate-400">CapTask</th>
+                                        <th class="w-24 px-2 py-1.5 text-right font-medium text-slate-500 dark:text-slate-400">@CalcResource.co2</th>
+                                        <th class="w-24 px-2 py-1.5 text-right font-medium text-slate-500 dark:text-slate-400">@CalcResource.cap</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in entry.Rows)
+                                    {
+                                        <tr style="@GetResourceRowStyle()" class="border-b border-slate-100 transition-opacity dark:border-slate-800 @(row.Included ? "" : "opacity-40")">
+
+                                            <td class="px-2 py-1.5 text-center align-middle">
+                                                <button class="flex h-6 w-6 items-center justify-center rounded border text-sm font-bold leading-none transition
+                                                               @(row.Included
+                                                                   ? "border-red-300 text-red-500 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
+                                                                   : "border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:border-emerald-600 dark:text-emerald-400")"
+                                                        @onclick="() => row.Included = !row.Included">
+                                                    @(row.Included ? "−" : "+")
+                                                </button>
+                                            </td>
+
+                                            <td class="px-2 py-1.5 align-middle">
+                                                <input type="text"
+                                                       value="@row.Name"
+                                                       @onchange="e => row.Name = e.Value?.ToString() ?? row.Name"
+                                                       disabled="@(!row.Included)"
+                                                       class="@InputCls" />
+                                            </td>
+
+                                            <td class="px-2 py-1.5 align-middle text-slate-500 dark:text-slate-400">@row.Resource.ResType</td>
+                                            <td class="px-2 py-1.5 align-middle text-slate-500 dark:text-slate-400">@(string.IsNullOrWhiteSpace(row.Resource.Unit) ? "—" : row.Resource.Unit)</td>
+
+                                            <td class="px-2 py-1.5 text-center align-middle">
+                                                <input type="checkbox"
+                                                       checked="@row.IsActive"
+                                                       @onchange="e => row.IsActive = (bool)(e.Value ?? true)"
+                                                       disabled="@(!row.Included)"
+                                                       class="h-4 w-4 cursor-pointer accent-blue-600" />
+                                            </td>
+
+                                            <td class="px-2 py-1.5 align-middle">
+                                                <input type="number" step="0.01"
+                                                       value="@row.Cost.ToString("0.##", CultureInfo.InvariantCulture)"
+                                                       @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) row.Cost = v; }"
+                                                       disabled="@(!row.Included)"
+                                                       class="@NumInputCls" />
+                                            </td>
+
+                                            <td class="px-2 py-1.5 align-middle">
+                                                <input type="number" step="0.01"
+                                                       value="@(row.BaseCost?.ToString("0.##", CultureInfo.InvariantCulture) ?? "")"
+                                                       @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) row.BaseCost = v; else row.BaseCost = null; }"
+                                                       disabled="@(!row.Included)"
+                                                       class="@NumInputCls" />
+                                            </td>
+
+                                            <td class="px-2 py-1.5 text-right align-middle">
+                                                @if (row.HasParameters)
+                                                {
+                                                    <span class="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                                        @row.ChangeFactor1.ToString("0.####", CultureInfo.InvariantCulture)
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <input type="number" step="0.0001"
+                                                           value="@row.ChangeFactor1.ToString("0.####", CultureInfo.InvariantCulture)"
+                                                           @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) row.ChangeFactor1 = v; }"
+                                                           disabled="@(!row.Included)"
+                                                           class="@NumInputCls" />
+                                                }
+                                            </td>
+
+                                            <td class="px-2 py-1.5 text-center align-middle">
+                                                <input type="checkbox"
+                                                       checked="@row.CapFromTask"
+                                                       @onchange="e => row.CapFromTask = (bool)(e.Value ?? false)"
+                                                       disabled="@(!row.Included)"
+                                                       class="h-4 w-4 cursor-pointer accent-emerald-600" />
+                                            </td>
+
+                                            <td class="px-2 py-1.5 align-middle">
+                                                <input type="number" step="0.01"
+                                                       value="@(row.CO2?.ToString("0.##", CultureInfo.InvariantCulture) ?? "")"
+                                                       @onchange="e => { if (double.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) row.CO2 = v; else row.CO2 = null; }"
+                                                       disabled="@(!row.Included)"
+                                                       class="@NumInputCls" />
+                                            </td>
+
+                                            <td class="px-2 py-1.5 align-middle">
+                                                <input type="number" step="0.0001"
+                                                       value="@row.CapWaste.ToString("0.####", CultureInfo.InvariantCulture)"
+                                                       @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) row.CapWaste = v; }"
+                                                       disabled="@(!row.Included)"
+                                                       class="@NumInputCls" />
+                                            </td>
+                                        </tr>
+
+                                        @foreach (var p in row.Resource.Data.Parameters)
+                                        {
+                                            <tr style="background-color:rgb(248,250,252);box-shadow:inset 3px 0 0 rgba(148,163,184,0.55);"
+                                                class="@(row.Included ? "" : "opacity-40")">
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <div class="flex min-w-0 items-start gap-2 pl-4">
+                                                        <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400"></span>
+                                                        <span class="truncate text-[11px] text-slate-700">@p.Name</span>
+                                                    </div>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <span class="text-[11px] text-slate-400">Param</span>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <span class="text-[11px] text-slate-600">@(string.IsNullOrWhiteSpace(p.Unit) ? "—" : p.Unit)</span>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 text-center align-middle">
+                                                    <input type="checkbox"
+                                                           checked="@p.IsActive"
+                                                           @onchange="e => { p.IsActive = (bool)(e.Value ?? true); row.RecomputeChangeFactor1(); }"
+                                                           disabled="@(!row.Included)"
+                                                           class="h-3.5 w-3.5 cursor-pointer accent-blue-600" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 text-right align-middle">
+                                                    <input type="number" step="0.0001"
+                                                           value="@p.Value.ToString("0.####", CultureInfo.InvariantCulture)"
+                                                           @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) { p.Value = v; row.RecomputeChangeFactor1(); } }"
+                                                           disabled="@(!row.Included)"
+                                                           class="@SmallNumInputCls" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                            </tr>
+                                        }
+
+                                        @foreach (var a in row.Resource.Data.AddOns)
+                                        {
+                                            <tr style="background-color:rgb(239,246,255);box-shadow:inset 3px 0 0 rgba(59,130,246,0.55);"
+                                                class="@(row.Included ? "" : "opacity-40")">
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <div class="flex min-w-0 items-start gap-2 pl-4">
+                                                        <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500"></span>
+                                                        <span class="truncate text-[11px] text-slate-700">@a.Name</span>
+                                                    </div>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <span class="text-[11px] text-slate-400">@a.Type</span>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <span class="text-[11px] text-slate-600">@(string.IsNullOrWhiteSpace(a.Unit) ? "—" : a.Unit)</span>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 text-center align-middle">
+                                                    <input type="checkbox"
+                                                           checked="@a.IsActive"
+                                                           @onchange="e => a.IsActive = (bool)(e.Value ?? true)"
+                                                           disabled="@(!row.Included)"
+                                                           class="h-3.5 w-3.5 cursor-pointer accent-blue-600" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <input type="number" step="0.01"
+                                                           value="@a.Cost.ToString("0.##", CultureInfo.InvariantCulture)"
+                                                           @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) a.Cost = v; }"
+                                                           disabled="@(!row.Included)"
+                                                           class="@SmallNumInputCls" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <input type="number" step="0.01"
+                                                           value="@a.BaseCost.ToString("0.##", CultureInfo.InvariantCulture)"
+                                                           @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) a.BaseCost = v; }"
+                                                           disabled="@(!row.Included)"
+                                                           class="@SmallNumInputCls" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 text-right align-middle">
+                                                    <span class="text-[11px] font-medium text-slate-700">@a.Factor.ToString("0.####", CultureInfo.InvariantCulture)</span>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                            </tr>
+                                        }
+
+                                        @foreach (var t in row.Resource.Data.Times)
+                                        {
+                                            <tr style="background-color:rgb(241,245,249);box-shadow:inset 3px 0 0 rgba(100,116,139,0.55);"
+                                                class="@(row.Included ? "" : "opacity-40")">
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <div class="flex min-w-0 items-start gap-2 pl-4">
+                                                        <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-500"></span>
+                                                        <span class="truncate text-[11px] text-slate-700">@t.Name</span>
+                                                    </div>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <span class="text-[11px] text-slate-400">Time</span>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <span class="text-[11px] text-slate-600">@(string.IsNullOrWhiteSpace(t.Unit) ? "—" : t.Unit)</span>
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 text-center align-middle">
+                                                    <input type="checkbox"
+                                                           checked="@t.IsActive"
+                                                           @onchange="e => t.IsActive = (bool)(e.Value ?? true)"
+                                                           disabled="@(!row.Included)"
+                                                           class="h-3.5 w-3.5 cursor-pointer accent-blue-600" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 align-middle">
+                                                    <input type="number" step="0.01"
+                                                           value="@t.Cost.ToString("0.##", CultureInfo.InvariantCulture)"
+                                                           @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) t.Cost = v; }"
+                                                           disabled="@(!row.Included)"
+                                                           class="@SmallNumInputCls" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 text-right align-middle">
+                                                    <input type="number" step="0.01"
+                                                           value="@(t.Percentage?.ToString("0.##", CultureInfo.InvariantCulture) ?? "")"
+                                                           @onchange="e => { if (decimal.TryParse(e.Value?.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) t.Percentage = v; else t.Percentage = null; }"
+                                                           disabled="@(!row.Included)"
+                                                           class="@SmallNumInputCls" />
+                                                </td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5"></td>
+                                                <td class="border-t border-slate-200/60 px-2 py-1.5 text-right align-middle">
+                                                    <span class="text-[11px] font-medium text-slate-700">@t.Quantity.ToString("0.###", CultureInfo.InvariantCulture)</span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter, EditorRequired] public CalculationMVVM CalcModel { get; set; } = default!;
+
+    private bool _showSystem = true;
+    private bool _showTenant = true;
+    private bool _loading;
+    private bool _saving;
+    private bool _hasLoaded;
+    private List<TaskEntry> _entries = [];
+
+    private const string InputCls       = "w-full min-w-[8rem] rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-gray-900 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-gray-700 dark:text-gray-100";
+    private const string NumInputCls    = "w-full rounded border border-gray-200 bg-transparent px-1.5 py-0.5 text-right text-gray-900 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-gray-700 dark:text-gray-100";
+    private const string SmallNumInputCls = "w-20 rounded border border-slate-200 bg-white px-1 py-0.5 text-right text-[11px] text-slate-800 focus:border-blue-400 focus:outline-none disabled:cursor-default dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200";
+
+    private List<TaskEntry> VisibleEntries => _entries.Where(e => e.TopSuggestion is not null).ToList();
+    private bool HasAnyIncluded => _entries.Any(e => e.Rows.Any(r => r.Included));
+
+    private static string GetResourceRowStyle() =>
+        "box-shadow: inset 3px 0 0 rgba(34,197,94,0.35);";
+
+    protected override Task OnInitializedAsync() => Task.CompletedTask;
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        var leafTasks = GetLeafTasksInOrder();
+
+        var suggestionResults = await Task.WhenAll(leafTasks.Select(async task =>
+        {
+            var suggestions = await Repo.Resource.GetSuggestionsAsync(task.Id, 10, includeResources: false);
+            return (task, suggestions);
+        }));
+
+        var entries = await Task.WhenAll(suggestionResults.Select(async r =>
+        {
+            var top = GetTopSuggestion(r.suggestions);
+            List<ResourcePostDTO> resources = [];
+            if (top is not null)
+                resources = (await Repo.Resource.GetSuggestionResourcesAsync(top.SourceTaskId, top.Source)).ToList();
+            return new TaskEntry(r.task, top, resources);
+        }));
+
+        _entries = entries.ToList();
+        _hasLoaded = true;
+        _loading = false;
+    }
+
+    private async Task SaveAllAsync()
+    {
+        _saving = true;
+        StateHasChanged();
+
+        foreach (var entry in _entries)
+        {
+            var toSave = entry.Rows
+                .Where(r => r.Included)
+                .Select(r =>
+                {
+                    r.Resource.Name               = r.Name;
+                    r.Resource.IsActive           = r.IsActive;
+                    r.Resource.Cost               = r.Cost;
+                    r.Resource.BaseCost           = r.BaseCost;
+                    r.Resource.Data.ChangeFactor1 = r.ChangeFactor1;
+                    r.Resource.Data.CapFromTask   = r.CapFromTask;
+                    r.Resource.Data.CO2           = r.CO2;
+                    r.Resource.Data.CapWaste      = r.CapWaste;
+                    return r.Resource;
+                })
+                .ToList();
+
+            if (toSave.Count > 0)
+                await Repo.Resource.CreateAsync(toSave, entry.Task.Id);
+        }
+
+        MHD.Notifications(ToastType.Add, true);
+        _saving = false;
+        Modal.Close();
+    }
+
+    private TaskResourceSuggestionDTO? GetTopSuggestion(IEnumerable<TaskResourceSuggestionDTO> suggestions) =>
+        suggestions
+            .Where(s =>
+                (_showSystem && s.Source == TaskResourceSuggestionSource.BlueprintTask) ||
+                (_showTenant && s.Source == TaskResourceSuggestionSource.TenantTask))
+            .MaxBy(s => s.Score);
+
+    private List<TaskListMVVM> GetLeafTasksInOrder()
+    {
+        var result = new List<TaskListMVVM>();
+        foreach (var root in CalcModel.RootTasks)
+            CollectLeaves(root, result);
+        return result;
+    }
+
+    private static void CollectLeaves(TaskListMVVM task, List<TaskListMVVM> result)
+    {
+        if (task.Tasks.Count == 0)
+        {
+            if (task.Type != TaskType.CodeName)
+                result.Add(task);
+            return;
+        }
+        foreach (var child in task.Tasks.OrderBy(t => t.SortOrder))
+            CollectLeaves(child, result);
+    }
+
+    private static string GetSourceBadgeClass(TaskResourceSuggestionSource source) => source switch
+    {
+        TaskResourceSuggestionSource.BlueprintTask => "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+        TaskResourceSuggestionSource.TenantTask    => "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+        _ => "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+    };
+
+    private static string GetScoreColorClass(double score) => score switch
+    {
+        >= 0.80 => "bg-green-500",
+        >= 0.55 => "bg-yellow-400",
+        _ => "bg-red-400"
+    };
+
+    private static string GetScoreTextClass(double score) => score switch
+    {
+        >= 0.80 => "text-green-600 dark:text-green-400",
+        >= 0.55 => "text-yellow-600 dark:text-yellow-400",
+        _ => "text-red-500 dark:text-red-400"
+    };
+
+    private sealed class TaskEntry
+    {
+        public TaskListMVVM Task { get; }
+        public TaskResourceSuggestionDTO? TopSuggestion { get; }
+        public List<ResourceRow> Rows { get; }
+
+        public TaskEntry(TaskListMVVM task, TaskResourceSuggestionDTO? top, IEnumerable<ResourcePostDTO> resources)
+        {
+            Task = task;
+            TopSuggestion = top;
+            Rows = resources.Select(r => new ResourceRow(r)).ToList();
+        }
+    }
+
+    private sealed class ResourceRow
+    {
+        public ResourcePostDTO Resource { get; }
+        public bool Included      { get; set; } = true;
+        public string Name        { get; set; }
+        public bool IsActive      { get; set; }
+        public decimal Cost       { get; set; }
+        public decimal? BaseCost  { get; set; }
+        public decimal ChangeFactor1 { get; set; }
+        public bool CapFromTask   { get; set; }
+        public double? CO2        { get; set; }
+        public decimal CapWaste   { get; set; }
+
+        public bool HasParameters => Resource.Data.Parameters.Count > 0;
+        public bool HasAddOns     => Resource.Data.AddOns.Count > 0;
+        public bool HasTimes      => Resource.Data.Times.Count > 0;
+
+        public ResourceRow(ResourcePostDTO resource)
+        {
+            Resource    = resource;
+            Name        = resource.Name;
+            IsActive    = resource.IsActive;
+            Cost        = resource.Cost;
+            BaseCost    = resource.BaseCost;
+            CapFromTask = resource.Data.CapFromTask;
+            CO2         = resource.Data.CO2;
+            CapWaste    = resource.Data.CapWaste;
+            RecomputeChangeFactor1();
+        }
+
+        public void RecomputeChangeFactor1()
+        {
+            if (!HasParameters)
+            {
+                ChangeFactor1 = Resource.Data.ChangeFactor1;
+                return;
+            }
+            var product = 1m;
+            foreach (var p in Resource.Data.Parameters.Where(p => p.IsActive))
+                product = Math.Round(product * p.Value, 4, MidpointRounding.AwayFromZero);
+            ChangeFactor1 = product;
+        }
+    }
+}

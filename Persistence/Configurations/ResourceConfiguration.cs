@@ -17,6 +17,9 @@ internal static class CalculationMetadataComputedColumns
 
     internal static string JsonInt(string propertyName, int defaultValue)
         => $"COALESCE(TRY_CONVERT(int, JSON_VALUE([Metadata], '$.{propertyName}')), {defaultValue})";
+
+    internal static string JsonDecimal(string propertyName, string precision = "18,3")
+        => $"TRY_CONVERT(decimal({precision}), JSON_VALUE([Metadata], '$.{propertyName}'))";
 }
 
 internal sealed class ResourceTypeConfiguration : IEntityTypeConfiguration<ResourceTypeEntity>
@@ -107,6 +110,12 @@ internal sealed class ResourceConfiguration : IEntityTypeConfiguration<ResourceE
         builder.Property(x => x.Unit)
             .HasComputedColumnSql(
                 CalculationMetadataComputedColumns.JsonString(nameof(ResourceEntity.Unit), FieldLengths.Unit),
+                stored: true);
+
+        builder.Property(x => x.Quantity)
+            .HasColumnType("decimal(18,3)")
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonDecimal(nameof(ResourceEntity.Quantity)),
                 stored: true);
 
         builder.HasIndex(x => new { x.TenantId, x.TaskId, x.SortOrder })
@@ -201,6 +210,12 @@ internal sealed class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
         builder.Property(x => x.Type)
             .HasComputedColumnSql(
                 CalculationMetadataComputedColumns.JsonInt(nameof(TaskEntity.Type), defaultValue: 0),
+                stored: true);
+
+        builder.Property(x => x.Quantity)
+            .HasColumnType("decimal(18,3)")
+            .HasComputedColumnSql(
+                CalculationMetadataComputedColumns.JsonDecimal(nameof(TaskEntity.Quantity)),
                 stored: true);
 
         builder.HasOne(x => x.Status)

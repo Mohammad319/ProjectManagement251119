@@ -5,7 +5,7 @@
 namespace TaskResourceBlueprints.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260425_1 : Migration
+    public partial class DB260201 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -133,6 +133,7 @@ namespace TaskResourceBlueprints.Migrations
                     RowNotes = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     VisibleFolderIds = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CapacityResourceId = table.Column<int>(type: "int", nullable: true),
+                    ConversionParameters = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     IsVisible = table.Column<bool>(type: "bit", nullable: false)
@@ -184,7 +185,10 @@ namespace TaskResourceBlueprints.Migrations
                     TaskDefinitionId = table.Column<int>(type: "int", nullable: false),
                     ResourceId = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
-                    IsFixed = table.Column<bool>(type: "bit", nullable: false)
+                    IsFixed = table.Column<bool>(type: "bit", nullable: false),
+                    Parameters = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AddOns = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Times = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

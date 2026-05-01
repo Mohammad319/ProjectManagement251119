@@ -113,6 +113,14 @@ else
                         @((MarkupString)Icons.SaveCloud)
                     </button>
 
+                    <button type="button"
+                            data-testid="status-all-tasks-top-suggestions"
+                            class="calc-status-chip calc-status-chip-toggle"
+                            title="Top resource suggestions for all leaf tasks"
+                            @onclick="OpenAllTasksTopSuggestionsDialog">
+                        &#9889;
+                    </button>
+
                     @if (SelectedItemCount > 0)
                     {
                         <button type="button"

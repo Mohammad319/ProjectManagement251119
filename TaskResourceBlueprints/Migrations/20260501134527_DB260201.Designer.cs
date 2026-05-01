@@ -11,8 +11,8 @@ using TaskResourceBlueprints.Infrastructure;
 namespace TaskResourceBlueprints.Migrations
 {
     [DbContext(typeof(TaskResourceBlueprintsContext))]
-    [Migration("20260428053422_AddConversionParametersToTask")]
-    partial class AddConversionParametersToTask
+    [Migration("20260501134527_DB260201")]
+    partial class DB260201
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -362,8 +362,16 @@ namespace TaskResourceBlueprints.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AddOns")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsFixed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Parameters")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Quantity")
                         .HasPrecision(18, 6)
@@ -375,6 +383,10 @@ namespace TaskResourceBlueprints.Migrations
 
                     b.Property<int>("TaskDefinitionId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Times")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

@@ -30,7 +30,7 @@ namespace ProjectManagement.Shared.Base.Calculation
 
     public class TaskMetadata
     {
-        [AllowNull, MaxLength(500)]
+        [AllowNull, MaxLength(FieldLengths.Note)]
         public string Note { get; set; } = string.Empty;
         public List<string> UpperNote { get; set; } = [];
         public string QuantityParam { get; set; } = string.Empty;
@@ -199,7 +199,7 @@ namespace ProjectManagement.Shared.Base.Calculation
     public class TaskBase
     {
         [Required(ErrorMessageResourceName = ErrorsMessages.FieldIsRequred, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
-        [MaxLength(FieldLengths.Name, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
+        [MaxLength(FieldLengths.TaskName, ErrorMessageResourceName = ErrorsMessages.MaxLength, ErrorMessageResourceType = typeof(Resource.ResLocalize))]
         public string Name { get; set; } = string.Empty;
         public int Order { get; set; }
 

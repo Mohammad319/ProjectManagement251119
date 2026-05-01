@@ -3,6 +3,7 @@ using BlazorMHD.UI.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Localization;
 using ProjectManagement.Client.Pages.Calculation.Table.Header;
+using ProjectManagement.Client.Pages.Calculation.Table.ResourceSuggestions;
 using ProjectManagement.Client.Services.Calculation;
 using ProjectManagement.Client.Services.Folder;
 using ProjectManagement.Client.Shared.MVVM.Calculation;
@@ -186,6 +187,19 @@ public partial class NelCalculationPage : ComponentBase, IDisposable
 
         Calc.OnlyActive = !Calc.OnlyActive;
         CalcService.RequestGridRefresh(CalculationGridRefreshKind.FlatList);
+    }
+
+    private void OpenAllTasksTopSuggestionsDialog()
+    {
+        if (Calc is null) return;
+
+        DialogService.ShowComponent<AllTasksTopSuggestionsDialog>(
+            "Top Resource Suggestions – All Tasks",
+            new Dictionary<string, object>
+            {
+                [nameof(AllTasksTopSuggestionsDialog.CalcModel)] = Calc,
+            },
+            DialogSize.FullScreen);
     }
 
     private void OpenDisplayPresetsDialog()

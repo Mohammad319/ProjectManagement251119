@@ -37,6 +37,8 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Comment)]
         public string? Note { get; private set; }
 
+        public decimal? Quantity { get; private set; }
+
         [MaxLength(FieldLengths.Code)]
         public string? Code { get; private set; }
 
@@ -108,7 +110,7 @@ namespace Domain.Entities.Calculation
         {
             ArgumentNullException.ThrowIfNull(dto);
 
-            Name = NormalizeRequired(dto.Name, "Task name is required.", FieldLengths.Name, nameof(dto.Name));
+            Name = NormalizeRequired(dto.Name, "Task name is required.", FieldLengths.TaskName, nameof(dto.Name));
             Metadata = CalculationItemMetadataMapper.BuildTaskMetadata(
                 dto.Metadata,
                 dto.Note,
@@ -164,7 +166,7 @@ namespace Domain.Entities.Calculation
 
         public void RefreshNormalizedTextSv()
         {
-            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, Unit, Metadata.Quantity);
+            NormalizedTextSv = SwedishTaskTextNormalizer.NormalizeTask(Name, Code, Unit, Quantity);
         }
 
         public void ClearOpportunity()
@@ -204,6 +206,7 @@ namespace Domain.Entities.Calculation
             IsActive = snapshot.IsActive;
             Type = snapshot.Type;
             IsOH = snapshot.IsOH;
+            Quantity = snapshot.Quantity;
         }
 
         private static TaskMetadata NormalizeMetadata(TaskMetadata? metadata)

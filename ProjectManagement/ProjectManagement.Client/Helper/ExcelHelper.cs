@@ -131,7 +131,7 @@ namespace ProjectManagement.Client.Helper
                     if (LooksLikeNumber(unit) && IsLikelyUnit(quantityStr))
                         (unit, quantityStr) = (quantityStr, unit);
 
-                    string importedName = LimitText(name, FieldLengths.Name);
+                    string importedName = LimitText(name, FieldLengths.TaskName);
                     string importedCode = LimitText(code, FieldLengths.Code);
                     string importedUnit = LimitText(unit, FieldLengths.Unit);
 
@@ -149,7 +149,7 @@ namespace ProjectManagement.Client.Helper
                         }
                     };
 
-                    if (name.Length > FieldLengths.Name)
+                    if (name.Length > FieldLengths.TaskName)
                         task.Metadata.Note = LimitText(name, FieldLengths.Note);
 
                     if (string.IsNullOrWhiteSpace(unit) && string.IsNullOrWhiteSpace(priceStr) && string.IsNullOrWhiteSpace(quantityStr))

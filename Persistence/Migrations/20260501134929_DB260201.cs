@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class DB260425_ : Migration
+    public partial class DB260201 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -174,7 +174,7 @@ namespace Persistence.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
                     CalculationId = table.Column<int>(type: "int", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -246,7 +246,7 @@ namespace Persistence.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
                     TenantId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
@@ -353,8 +353,8 @@ namespace Persistence.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    OpportunitiesRisks = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    OpportunityType = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    OpportunitiesRisks = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: false),
+                    OpportunityType = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
                     CalculationId = table.Column<int>(type: "int", nullable: false),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
@@ -975,7 +975,8 @@ namespace Persistence.Migrations
                     Unit = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true, computedColumnSql: "CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(30))", stored: true),
                     Type = table.Column<int>(type: "int", nullable: false, computedColumnSql: "COALESCE(TRY_CONVERT(int, JSON_VALUE([Metadata], '$.Type')), 0)", stored: true),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true, computedColumnSql: "CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(1000))", stored: true),
+                    Note = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true, computedColumnSql: "CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(3000))", stored: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,3)", nullable: true, computedColumnSql: "TRY_CONVERT(decimal(18,3), JSON_VALUE([Metadata], '$.Quantity'))", stored: true),
                     Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true, computedColumnSql: "CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Code'))), '') AS nvarchar(20))", stored: true),
                     IsOH = table.Column<bool>(type: "bit", nullable: false, computedColumnSql: "CAST(CASE LOWER(JSON_VALUE([Metadata], '$.IsOH')) WHEN 'true' THEN 1 WHEN '1' THEN 1 WHEN 'false' THEN 0 WHEN '0' THEN 0 ELSE 0 END AS bit)", stored: true),
                     ParentTaskId = table.Column<int>(type: "int", nullable: true),
@@ -1125,7 +1126,7 @@ namespace Persistence.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Attributes = table.Column<string>(type: "nvarchar(max)", maxLength: 8000, nullable: true),
-                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
                     CalculationId = table.Column<int>(type: "int", nullable: false),
                     OrganisationId = table.Column<int>(type: "int", nullable: false),
                     TenantId = table.Column<int>(type: "int", nullable: false),
@@ -1176,7 +1177,8 @@ namespace Persistence.Migrations
                     Unit = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true, computedColumnSql: "CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Unit'))), '') AS nvarchar(30))", stored: true),
                     ResType = table.Column<int>(type: "int", nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true, computedColumnSql: "CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(1000))", stored: true),
+                    Note = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true, computedColumnSql: "CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(3000))", stored: true),
+                    Quantity = table.Column<decimal>(type: "decimal(18,3)", nullable: true, computedColumnSql: "TRY_CONVERT(decimal(18,3), JSON_VALUE([Metadata], '$.Quantity'))", stored: true),
                     TaskId = table.Column<int>(type: "int", nullable: false),
                     OpportunityId = table.Column<int>(type: "int", nullable: true),
                     AccountId = table.Column<int>(type: "int", nullable: true),
@@ -1293,7 +1295,7 @@ namespace Persistence.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Comment = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    Comment = table.Column<string>(type: "nvarchar(3000)", maxLength: 3000, nullable: true),
                     Metadata = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OrganisationId = table.Column<int>(type: "int", nullable: true),
                     ResourceId = table.Column<int>(type: "int", nullable: false),

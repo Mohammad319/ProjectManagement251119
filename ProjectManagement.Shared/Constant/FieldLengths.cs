@@ -23,8 +23,8 @@
         public const int Unit = 30;
 
         // تعليق / ملاحظات
-        public const int Comment = 1000;
-        public const int Note = 1000;
+        public const int Comment = 3000;
+        public const int Note = 3000;
 
         // Email, Phone
         public const int Email = 254;

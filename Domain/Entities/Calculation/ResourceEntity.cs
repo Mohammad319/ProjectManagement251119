@@ -33,6 +33,10 @@ namespace Domain.Entities.Calculation
         [MaxLength(FieldLengths.Comment)]
         public string? Note { get; private set; }
 
+        public decimal? Quantity { get; private set; }
+
+        public IReadOnlyList<string> Notes => _metadata?.UpperNote ?? [];
+
         public int TaskId { get; private set; }
 
         [JsonIgnore]
@@ -199,6 +203,7 @@ namespace Domain.Entities.Calculation
             _metadata = snapshot;
             Note = NormalizeOptional(snapshot.Note);
             Unit = NormalizeOptional(snapshot.Unit);
+            Quantity = snapshot.Quantity;
         }
 
         private static ResourceMetadata NormalizeMetadata(ResourceMetadata? metadata)

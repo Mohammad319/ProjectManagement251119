@@ -12,8 +12,8 @@ using Persistence.Context;
 namespace Persistence.Migrations
 {
     [DbContext(typeof(ShardingSingleDbContext))]
-    [Migration("20260425011528_DB260425_")]
-    partial class DB260425_
+    [Migration("20260501134929_DB260201")]
+    partial class DB260201
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -470,8 +470,8 @@ namespace Persistence.Migrations
                         .HasComputedColumnSql("TRY_CONVERT(decimal(18,2), JSON_VALUE([Metadata], '$.BaseCost'))", true);
 
                     b.Property<string>("Comment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<decimal?>("CostValue")
                         .ValueGeneratedOnAddOrUpdate()
@@ -559,12 +559,12 @@ namespace Persistence.Migrations
 
                     b.Property<string>("OpportunitiesRisks")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<string>("OpportunityType")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -629,15 +629,20 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Note")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(1000))", true);
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(3000))", true);
 
                     b.Property<int?>("OpportunityId")
                         .HasColumnType("int");
 
                     b.Property<int?>("PrimaryOfferId")
                         .HasColumnType("int");
+
+                    b.Property<decimal?>("Quantity")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("decimal(18,3)")
+                        .HasComputedColumnSql("TRY_CONVERT(decimal(18,3), JSON_VALUE([Metadata], '$.Quantity'))", true);
 
                     b.Property<int>("ResType")
                         .HasColumnType("int");
@@ -974,15 +979,20 @@ namespace Persistence.Migrations
 
                     b.Property<string>("Note")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(1000))", true);
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)")
+                        .HasComputedColumnSql("CAST(NULLIF(LTRIM(RTRIM(JSON_VALUE([Metadata], '$.Note'))), '') AS nvarchar(3000))", true);
 
                     b.Property<int?>("OpportunityId")
                         .HasColumnType("int");
 
                     b.Property<int?>("ParentTaskId")
                         .HasColumnType("int");
+
+                    b.Property<decimal?>("Quantity")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("decimal(18,3)")
+                        .HasComputedColumnSql("TRY_CONVERT(decimal(18,3), JSON_VALUE([Metadata], '$.Quantity'))", true);
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -1321,8 +1331,8 @@ namespace Persistence.Migrations
                         .HasColumnType("nvarchar(80)");
 
                     b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<int>("TenantId")
                         .HasColumnType("int");
@@ -1359,8 +1369,8 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<int>("OrganisationId")
                         .HasColumnType("int");
@@ -2301,8 +2311,8 @@ namespace Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<string>("Name")
                         .IsRequired()

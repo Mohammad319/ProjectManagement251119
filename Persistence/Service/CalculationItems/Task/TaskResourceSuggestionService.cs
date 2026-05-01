@@ -318,15 +318,47 @@ public sealed class TaskResourceSuggestionService(
 
         await using var db = await blueprintFactory.CreateDbContextAsync(ct);
 
-        var task = await db.Tasks
+        var links = await db.TaskDefinitionResourceLinks
             .AsNoTracking()
-            .Where(x => x.Id == sourceTaskId && x.Status == TaskStatusEnum.Ready)
-            .FirstOrDefaultAsync(ct);
+            .Where(x => x.TaskDefinitionId == sourceTaskId)
+            .Include(x => x.Resource)
+                .ThenInclude(r => r!.TenantLinks.Where(t => t.TenantId == tenantId))
+            .ToListAsync(ct);
 
-        if (task is null)
+        if (links.Count == 0)
             return [];
 
-        return [];
+        return links
+            .Where(l => l.Resource is { IsActive: true })
+            .OrderBy(l => l.Resource!.SortOrder)
+            .Select(link =>
+            {
+                var res = link.Resource!;
+                var tenantLink = res.TenantLinks.FirstOrDefault();
+                var data = res.Data.Clone();
+
+                data.Quantity = link.Quantity;
+                data.Parameters = link.Parameters;
+                data.AddOns = link.AddOns;
+                data.Times = link.Times;
+
+                if (tenantLink?.Cost is not null)
+                    data.Cost = tenantLink.Cost.Value;
+
+                return new ResourcePostDTO
+                {
+                    Name = tenantLink?.Name is { Length: > 0 } n ? n : res.Name,
+                    ResType = res.ResType,
+                    IsActive = res.IsActive,
+                    StatusId = tenantLink?.StatusId,
+                    ResourceTypeId = tenantLink?.ResourceTypeId,
+                    ResourceSortId = tenantLink?.ResourceSortId,
+                    AccountId = tenantLink?.AccountId,
+                    SortOrder = res.SortOrder,
+                    Data = data,
+                };
+            })
+            .ToList();
     }
 
     private static double ScoreCandidate(
